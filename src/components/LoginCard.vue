@@ -1,0 +1,48 @@
+<template>
+  <div class="container container-tight py-6 mt-6">
+    <div class="text-center mb-4 mt-6">
+      <router-link :to="{ name: 'dashboard' }" class="navbar-brand navbar-brand-autodark">
+        <div class="d-flex align-items-center justify-content-center">
+          <img
+            src="/images/logo.png"
+            width="200"
+            alt="WISEFOOD"
+            class="me-3"
+          >
+        </div>
+      </router-link>
+    </div>
+
+    <div class="card card-md">
+      <div class="card-body">
+        <h2 class="h2 text-center mb-4">{{ $t('header.loginPrompt') }}</h2>
+
+        <button
+          type="button"
+          class="btn btn-primary w-100 mb-4"
+          @click="handleSSOLogin"
+        >
+          {{ $t('header.login') }}
+        </button>
+
+        <div class="text-center text-purple">
+          <a class="cursor-pointer">{{ $t('header.guestLogin') }}</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center text-secondary mt-3">
+      {{ $t('header.noAccount') }}
+      <router-link :to="{ name: 'signup' }">
+        <span class="text-blue">{{ $t('header.register') }}</span>
+      </router-link>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import KeycloakService from "@/services/keycloak";
+const handleSSOLogin = () => {
+  KeycloakService.CallLogin();
+};
+</script>

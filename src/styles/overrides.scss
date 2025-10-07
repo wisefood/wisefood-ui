@@ -1,0 +1,59 @@
+// @use "~@tabler/core/src/scss/tabler" as *;
+
+// /* Buttons */
+// .v-btn {
+//   @extend .btn;
+//   font-weight: 500;
+// }
+
+// .v-btn--variant-filled {
+//   @extend .btn-primary;
+// }
+
+// .v-btn--variant-tonal {
+//   @extend .btn-outline-primary;
+// }
+
+// .v-btn--variant-text {
+//   @extend .btn-link;
+// }
+
+// /* Cards */
+// .v-card {
+//   @extend .card;
+// }
+
+// .v-card-title {
+//   @extend .card-header;
+// }
+
+// .v-card-text {
+//   @extend .card-body;
+// }
+
+// /* Text fields */
+// .v-text-field {
+//   @extend .form-group;
+// }
+
+// .v-field__input {
+//   @extend .form-control;
+// }
+
+// .v-field__outline {
+//   display: none; // hide Vuetify's outline, use Tabler’s borders
+// }
+
+// /* Selects */
+// .v-select {
+//   @extend .form-select;
+// }
+
+// /* Alerts */
+// .v-alert {
+//   @extend .alert;
+// }
+
+// .v-alert--variant-tonal {
+//   @extend .alert-primary;
+// }

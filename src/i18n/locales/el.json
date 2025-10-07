@@ -1,0 +1,286 @@
+{
+  "welcome": "Καλώς ήρθατε",
+  "hello": "Γειά σου, {name}",
+  "navigation": {
+    "home": "Αρχική",
+    "about": "Σχετικά",
+    "contact": "Επικοινωνία",
+    "backToHome": "ΕΠΙΣΤΡΟΦΗ ΣΤΗΝ ΑΡΧΙΚΗ"
+  },
+  "pages":{
+    "login": {
+      "title": "Σύνδεση",
+      "description": "Συνδεθείτε στον λογαριασμό σας για να αποκτήσετε πρόσβαση στις υπηρεσίες διατροφής με τεχνητή νοημοσύνη του Wisefood."
+    },
+    "signup": {
+      "title": "Εγγραφή",
+      "description": "Δημιουργήστε έναν νέο λογαριασμό για να ξεκινήσετε με τις υπηρεσίες διατροφής με τεχνητή νοημοσύνη του Wisefood."
+    },
+    "dashboard":{
+      "title": "Αρχική",
+      "description": "Προβολή και διαχείριση του προφίλ σας, των αιτήσεων και των ρυθμίσεων λογαριασμού στον πίνακα ελέγχου χρήστη του Wisefood."
+    }
+  },
+  "buttons": {
+    "save": "ΑΠΟΘΗΚΕΥΣΗ",
+    "cancel": "ΑΚΥΡΩΣΗ",
+    "delete": "ΔΙΑΓΡΑΦΗ",
+    "retry": "ΕΠΑΝΑΛΗΨΗ",
+    "explore": "ΕΞΕΡΕΥΝΗΣΗ"
+  },
+  "common": {
+    "loading": "Φόρτωση...",
+    "error": "Παρουσιάστηκε σφάλμα",
+    "success": "Επιτυχία",
+    "noDataAvailable": "Δεν υπάρχουν διαθέσιμα δεδομένα",
+    "noResults": "Δεν βρέθηκαν αποτελέσματα",
+    "emptyList": "Η λίστα είναι κενή",
+    "none": "Κανένα",
+    "redirecting": "Ανακατεύθυνση..."
+  },
+  "errors": {
+    "pageNotFound": "Η Σελίδα Δεν Βρέθηκε",
+    "pageNotFoundDescription": "Η σελίδα που ψάχνετε μπορεί να έχει αφαιρεθεί, να έχει αλλάξει όνομα ή να μην είναι προσωρινά διαθέσιμη.",
+    "somethingWentWrong": "Κάτι πήγε στραβά",
+    "tryAgainLater": "Παρακαλώ δοκιμάστε ξανά αργότερα"
+  },
+  "api": {
+    "errors": {
+      "networkError": "Σφάλμα σύνδεσης δικτύου",
+      "serverError": "Παρουσιάστηκε σφάλμα διακομιστή",
+      "timeoutError": "Η αίτηση έληξε",
+      "unauthorizedError": "Δεν έχετε εξουσιοδότηση για αυτή την ενέργεια",
+      "forbiddenError": "Απαγορευμένη πρόσβαση",
+      "notFoundError": "Ο ζητούμενος πόρος δεν βρέθηκε",
+      "validationError": "Η επικύρωση απέτυχε",
+      "genericError": "Κάτι πήγε στραβά. Παρακαλώ δοκιμάστε ξανά."
+    }
+  },
+  "header": {
+    "account": "Λογαριασμός",
+    "notifications": "Ειδοποιήσεις",
+    "language": "Γλώσσα",
+    "login": "Σύνδεση μέσω SSO",
+    "loginPrompt": "Συνδεθείτε στον λογαριασμό σας",
+    "guestLogin": "Συνεχίστε ως Επισκέπτης",
+    "noAccount": "Δεν έχετε λογαριασμό;",
+    "register": "Εγγραφείτε",
+    "logout": "Αποσύνδεση",
+    "moreOptions": "Περισσότερες Επιλογές",
+    "myApplications": "Οι Αιτήσεις μου",
+    "applications": "Αιτήσεις"
+  },
+  "signup":{
+    "header": "Δημιουργήστε έναν νέο λογαριασμό",
+    "firstname": "Όνομα",
+    "lastname": "Επίθετο",
+    "email": "Ηλεκτρονικό Ταχυδρομείο",
+    "password": "Κωδικός Πρόσβασης",
+    "repeatPassword": "Επανάληψη Κωδικού Πρόσβασης",
+    "showPassword": "Εμφάνιση",
+    "createAccount": "Δημιουργία Λογαριασμού",
+    "passwordPrompt": "Ο κωδικός σας θα πρέπει να περιέχει τουλάχιστον 8 χαρακτήρες, ένα κεφαλαίο γράμμα, έναν αριθμό και ένα ειδικό χαρακτήρα."
+  },
+  "languages": {
+    "greek": "Ελληνικά",
+    "english": "English"
+  },
+  "home": {
+    "loginToAccessServices": "Συνδεθείτε για να αποκτήσετε πρόσβαση στις υπηρεσίες μας",
+    "welcomeToWisefood": "Καλώς ήρθατε στο",
+    "aiPoweredNutritionCompanion": "Ο Βοηθός Διατροφής με Τεχνητή Νοημοσύνη"
+  },
+  "services": {
+    "foodScholar": {
+      "title": "Food Scholar",
+      "subtitle": "Ολοκληρωμένη Έρευνα Διατροφής",
+      "description": "Πρόσβαση σε λεπτομερείς διατροφικές πληροφορίες, επιστημονικές μελέτες και έρευνα βασισμένη σε στοιχεία για τη διατροφή για τη λήψη τεκμηριωμένων διατροφικών αποφάσεων."
+    },
+    "recipeWrangler": {
+      "title": "Recipe Wrangler",
+      "subtitle": "Έξυπνη Ανάλυση & Διαχείριση Συνταγών",
+      "description": "Αναλύστε συνταγές για διατροφικό περιεχόμενο, λάβετε υποκατάστατα συστατικών και βελτιστοποιήστε το μαγείρεμά σας για καλύτερα αποτελέσματα υγείας."
+    },
+    "foodChat": {
+      "title": "Food Chat",
+      "subtitle": "Προσωπικός Βοηθός Διατροφής",
+      "description": "Συνομιλήστε με τον ειδικό διατροφής AI για εξατομικευμένες συμβουλές διατροφής, προγραμματισμό γευμάτων και απαντήσεις σε όλες τις διατροφικές σας ερωτήσεις."
+    }
+  },
+  "auth": {
+    "authenticationError": "Σφάλμα Πιστοποίησης",
+    "authenticationErrorMessage": "Δεν έχετε εξουσιοδότηση για πρόσβαση σε αυτή τη σελίδα. Παρακαλώ συνδεθείτε με κατάλληλα δικαιώματα.",
+    "accessDenied": "Άρνηση Πρόσβασης",
+    "insufficientPermissions": "Δεν έχετε επαρκή δικαιώματα για να εκτελέσετε αυτή την ενέργεια",
+    "loginRequired": "Απαιτείται Σύνδεση",
+    "sessionExpired": "Η συνεδρία σας έχει λήξει. Παρακαλώ συνδεθείτε ξανά",
+    "userAuthenticated": "Ο χρήστης έχει πιστοποιηθεί",
+    "userNotAuthenticated": "Ο χρήστης δεν έχει πιστοποιηθεί",
+    "keycloakInitFailed": "Η αρχικοποίηση Keycloak απέτυχε",
+    "tokenRefreshFailedInterval": "Η ανανέωση token απέτυχε στο διάστημα",
+    "tokenRefreshFailed": "Η ανανέωση token απέτυχε",
+    "failedToRefreshToken": "Αποτυχία ανανέωσης token"
+  },
+  "profile": {
+    "editInfo": "Επεξεργασία Προφίλ",
+    "editFoodProfile": "Επεξεργασία Διατροφικού Προφίλ",
+    "foodPreferences": "Διατροφικές Προτιμήσεις",
+    "cookingProfile": "Προφίλ Μαγειρικής",
+    "advancedOptions": "Προηγμένες Λειτουργίες",
+    "flavorProfile": "Γευστικές Προτιμήσεις",
+    "personalInformation": "Προσωπικές Πληροφορίες",
+    "accountSettings": "Ρυθμίσεις Λογαριασμού",
+    "advanced": {
+      "foodDeliveryApps": "Ενσωμάτωση με Εφαρμογές Παράδοσης Φαγητού",
+      "groceryShoppingPreferences": "Προτιμήσεις Αγορών Τροφίμων",
+      "nutritionalGoals": "Διατροφικοί Στόχοι ή Στόχοι Υγείας",
+      "culturalFoodBackground": "Πολιτισμικό Διατροφικό Υπόβαθρο"
+    },
+    "cooking": {
+      "skillLevel": "Επίπεδο Μαγειρικής Ικανότητας",
+      "availableEquipment": "Διαθέσιμος Εξοπλισμός Μαγειρικής",
+      "timePreferences": "Προτιμήσεις Χρόνου Μαγειρέματος",
+      "budgetConsiderations": "Προϋπολογιστικές Παράμετροι"
+    },
+    "food": {
+      "dietaryRestrictions": "Διατροφικοί Περιορισμοί",
+      "allergiesAndIntolerances": "Αλλεργίες και Δυσανεξίες Τροφίμων",
+      "cuisinePreferences": "Προτιμήσεις Κουζίνας",
+      "favouriteIngredients": "Αγαπημένα Συστατικά",
+      "foodToAvoid": "Τρόφιμα προς Αποφυγή",
+      "severity": "Σοβαρότητα",
+      "noDietaryRestrictions": "Χωρίς διατροφικούς περιορισμούς",
+      "noAllergies": "Χωρίς αλλεργίες",
+      "noCuisinePreferences": "Χωρίς προτιμήσεις κουζίνας",
+      "noFavouriteIngredients": "Χωρίς αγαπημένα συστατικά",
+      "noIngredientsToAvoid": "Χωρίς συστατικά προς αποφυγή"
+    },
+    "flavor": {
+      "cuisinePreferences": "Προτιμήσεις Κουζίνας",
+      "spicinessLevel": "Επίπεδο Πικάντικου",
+      "tastePreferences": "Γευστικές Προτιμήσεις"
+    },
+    "form": {
+      "firstName": "Όνομα",
+      "lastName": "Επώνυμο",
+      "email": "Email",
+      "birthDate": "Ημερομηνία Γέννησης",
+      "userId": "Αναγνωριστικό Χρήστη",
+      "readOnlyField": "Αυτό το πεδίο είναι μόνο για ανάγνωση"
+    },
+    "validation": {
+      "fieldRequired": "Αυτό το πεδίο είναι υποχρεωτικό",
+      "minLength": "Απαιτούνται τουλάχιστον {length} χαρακτήρες",
+      "maxLength": "Επιτρέπονται το πολύ {length} χαρακτήρες",
+      "birthDateRequired": "Η ημερομηνία γέννησης είναι υποχρεωτική",
+      "futureDateError": "Η ημερομηνία γέννησης δεν μπορεί να είναι στο μέλλον",
+      "invalidDate": "Παρακαλώ εισάγετε μια έγκυρη ημερομηνία γέννησης"
+    },
+    "messages": {
+      "profileUpdatedSuccessfully": "Το προφίλ ενημερώθηκε επιτυχώς"
+    },
+    "errors": {
+      "failedToLoadProfile": "Αποτυχία φόρτωσης προφίλ",
+      "failedToUpdateProfile": "Αποτυχία ενημέρωσης προφίλ"
+    }
+  },
+  "roles": {
+    "dietitian": "Διαιτολόγος",
+    "nutritionist": "Επιστήμονας Διατροφής",
+    "user": "Χρήστης",
+    "systemAdmin": "Διαχειριστής Συστήματος"
+  },
+  "application": {
+    "applicationType": "Τύπος Αίτησης",
+    "selectApplicationType": "Επιλέξτε τύπο αίτησης",
+    "coverLetter": "Συνοδευτική Επιστολή",
+    "coverLetterPlaceholder": "Γράψτε την συνοδευτική σας επιστολή εδώ...",
+    "supportingDocuments": "Υποστηρικτικά Έγγραφα",
+    "uploadFiles": "Ανέβασμα Αρχείων",
+    "dragDropText": "Σύρετε και αφήστε τα αρχεία εδώ ή κάντε κλικ για περιήγηση",
+    "chooseFiles": "ΕΠΙΛΟΓΗ ΑΡΧΕΙΩΝ",
+    "supportedFormats": "Υποστηριζόμενες μορφές: PDF, DOC, DOCX, JPG, PNG (Μέγιστο 5MB ανά αρχείο)",
+    "uploadedFiles": "Ανεβασμένα Αρχεία ({count})",
+    "submitApplication": "ΥΠΟΒΟΛΗ ΑΙΤΗΣΗΣ",
+    "registerDietitian": "Εγγραφή ως Διαιτολόγος",
+    "registerNutritionist": "Εγγραφή ως Επιστήμονας Διατροφής",
+    "filesUploaded": "{count} αρχείο(α) ανέβηκαν επιτυχώς",
+    "fileRemoved": "{filename} αφαιρέθηκε",
+    "createNewApplication": "ΔΗΜΙΟΥΡΓΙΑ ΝΕΑΣ ΑΙΤΗΣΗΣ",
+    "viewApplication": "Προβολή Αίτησης",
+    "filters": "ΦΙΛΤΡΑ",
+    "validation": {
+      "maxCharacters": "Επιτρέπονται το πολύ {count} χαρακτήρες",
+      "selectType": "Παρακαλώ επιλέξτε έναν τύπο αίτησης",
+      "provideDetails": "Παρακαλώ παρέχετε λεπτομέρειες αίτησης",
+      "uploadDocument": "Παρακαλώ ανεβάστε τουλάχιστον ένα υποστηρικτικό έγγραφο",
+      "fileSizeError": "{filename} υπερβαίνει το όριο των 5MB",
+      "fileExists": "{filename} έχει ήδη ανέβει",
+      "maxFiles": "Επιτρέπονται το πολύ {count} αρχεία"
+    },
+    "details": {
+      "id": "ID",
+      "submitted": "Υποβλήθηκε",
+      "noCoverLetter": "Δεν παρασχέθηκε συνοδευτική επιστολή",
+      "noDocuments": "Δεν ανέβηκαν έγγραφα"
+    },
+    "actions": {
+      "reject": "ΑΠΟΡΡΙΨΗ",
+      "approve": "ΕΓΚΡΙΣΗ"
+    },
+    "table": {
+      "applicationType": "Τύπος Αίτησης",
+      "submittedDate": "Ημερομηνία Υποβολής",
+      "status": "Κατάσταση",
+      "noApplicationsFound": "Δεν Βρέθηκαν Αιτήσεις",
+      "noApplicationsDescription": "Δεν έχετε υποβάλει ακόμη καμία αίτηση.",
+      "createFirstApplication": "ΔΗΜΙΟΥΡΓΗΣΤΕ ΤΗΝ ΠΡΩΤΗ ΣΑΣ ΑΙΤΗΣΗ",
+      "loadingApplications": "Φόρτωση αιτήσεων...",
+      "itemsPerPage": "Ενότητες ανά σελίδα"
+    },
+    "admin": {
+      "noApplicationsFound": "Δεν Βρέθηκαν Αιτήσεις",
+      "noApplicationsDescription": "Δεν υπάρχουν ακόμη αιτήσεις στο σύστημα."
+    },
+    "messages": {
+      "applicationRejected": "Η αίτηση απορρίφθηκε",
+      "applicationApproved": "Η αίτηση εγκρίθηκε",
+      "applicationSubmittedSuccessfully": "Η αίτηση υποβλήθηκε επιτυχώς"
+    },
+    "errors": {
+      "failedToLoadApplications": "Αποτυχία φόρτωσης αιτήσεων",
+      "failedToSubmitApplication": "Αποτυχία υποβολής αίτησης",
+      "failedToUpdateApplication": "Αποτυχία ενημέρωσης αίτησης"
+    },
+    "types": {
+      "registerDietitian": "Εγγραφή ως Διαιτολόγος",
+      "registerNutritionist": "Εγγραφή ως Επιστήμονας Διατροφής",
+      "jobApplication": "Αίτηση Εργασίας",
+      "internship": "Πρακτική Άσκηση",
+      "volunteer": "Εθελοντική Εργασία",
+      "scholarship": "Υποτροφία"
+    },
+    "status": {
+      "draft": "Προσχέδιο",
+      "submitted": "Υποβλήθηκε",
+      "underReview": "Υπό Εξέταση",
+      "approved": "Εγκρίθηκε",
+      "rejected": "Απορρίφθηκε",
+      "withdrawn": "Αποσύρθηκε"
+    }
+  },
+  "notifications": {
+    "showingResults": "Εμφάνιση {start} - {end} από {total} ειδοποιήσεις",
+    "new": "Νέο",
+    "showMore": "ΔΕΙΤΕ ΠΕΡΙΣΣΟΤΕΡΑ",
+    "showLess": "ΔΕΙΤΕ ΛΙΓΟΤΕΡΑ",
+    "justNow": "Μόλις τώρα",
+    "minutesAgo": "{minutes}λ πρίν",
+    "hoursAgo": "{hours}ω πρίν",
+    "errors": {
+      "failedToLoadNotifications": "Αποτυχία φόρτωσης ειδοποιήσεων",
+      "failedToMarkAsRead": "Αποτυχία σήμανσης ειδοποίησης ως αναγνωσμένη",
+      "failedToLoadUnreadCount": "Αποτυχία φόρτωσης μη αναγνωσμένων"
+    }
+  }
+}

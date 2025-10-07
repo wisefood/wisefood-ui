@@ -1,0 +1,282 @@
+{
+  "welcome": "Welcome",
+  "hello": "Hello {name}",
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact",
+    "backToHome": "BACK TO HOME",
+    "myRecipes": "My Recipes",
+    "pastSessions": "Past Sessions",
+    "wisefood": "WiseFood"
+  },
+  "pages":{
+    "login": {
+      "title": "Login",
+      "description": "Log in to your account to access Wisefood's AI-powered nutrition services."
+    },
+    "signup": {
+      "title": "Sign Up",
+      "description": "Create a new account to start using Wisefood's AI-powered nutrition services."
+    },
+    "dashboard":{
+      "title": "Overview",
+      "description": "View and manage your profile, requests, and account settings in Wisefood's user dashboard."
+    }
+  },
+  "buttons": {
+    "save": "SAVE",
+    "cancel": "CANCEL",
+    "delete": "DELETE",
+    "retry": "RETRY",
+    "explore": "EXPLORE"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "noDataAvailable": "No data available",
+    "noResults": "No results found",
+    "emptyList": "List is empty",
+    "none": "None",
+    "redirecting": "Redirecting..."
+  },
+  "errors": {
+    "pageNotFound": "Page Not Found",
+    "pageNotFoundDescription": "The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.",
+    "somethingWentWrong": "Something went wrong",
+    "tryAgainLater": "Please try again later"
+  },
+  "api": {
+    "errors": {
+      "networkError": "Network connection error",
+      "serverError": "Server error occurred",
+      "timeoutError": "Request timed out",
+      "unauthorizedError": "You are not authorized to perform this action",
+      "forbiddenError": "Access forbidden",
+      "notFoundError": "Requested resource not found",
+      "validationError": "Validation failed",
+      "genericError": "Something went wrong. Please try again."
+    }
+  },
+  "header": {
+    "account": "Account",
+    "notifications": "Notifications",
+    "language": "Language",
+    "login": "Login via SSO",
+    "loginPrompt": "Login to your account",
+    "logout": "Logout",
+    "noAccount": "Don't have an account yet?",
+    "guestLogin": "Continue as Guest",
+    "register": "Sign Up",
+    "moreOptions": "More Options",
+    "myApplications": "My Applications",
+    "applications": "Applications"
+  },
+  "signup":{
+    "header": "Create a New Account",
+    "firstname": "First Name",
+    "lastname": "Last Name",
+    "email": "Email",
+    "password": "Password",
+    "repeatPassword": "Repeat Password",
+    "showPassword": "Show Password",
+    "createAccount": "Create Account",
+    "passwordPrompt": "Your password must contain at least 8 characters, one uppercase letter, one number, and one special character."
+  },
+  "languages": {
+    "greek": "Ελληνικά",
+    "english": "English"
+  },
+  "home": {
+    "loginToAccessServices": "Log in to access our services",
+    "welcomeToWisefood": "Welcome to",
+    "aiPoweredNutritionCompanion": "Your AI-Powered Nutrition Companion"
+  },
+  "services": {
+    "foodScholar": {
+      "title": "Food Scholar",
+      "subtitle": "Comprehensive Nutrition Research",
+      "description": "Access detailed nutritional information, scientific studies, and evidence-based research about nutrition to make informed dietary decisions."
+    },
+    "recipeWrangler": {
+      "title": "Recipe Wrangler",
+      "subtitle": "Smart Recipe Analysis & Management",
+      "description": "Analyze recipes for nutritional content, get ingredient substitutions, and optimize your cooking for better health outcomes."
+    },
+    "foodChat": {
+      "title": "Food Chat",
+      "subtitle": "Personal Nutrition Assistant",
+      "description": "Chat with our AI nutrition expert for personalized dietary advice, personal or household meal planning , and answers to all your nutrition questions."
+    }
+  },
+  "auth": {
+    "authenticationError": "Authentication Error",
+    "authenticationErrorMessage": "You are not authorized to access this page. Please log in with appropriate permissions.",
+    "accessDenied": "Access Denied",
+    "insufficientPermissions": "You don't have sufficient permissions to perform this action",
+    "loginRequired": "Login Required",
+    "sessionExpired": "Your session has expired. Please log in again"
+  },
+  "profile": {
+    "editInfo": "Edit Profile",
+    "editFoodProfile": "Edit Food Profile",
+    "foodPreferences": "Food Preferences",
+    "cookingProfile": "Cooking Profile",
+    "advancedOptions": "Advanced Options",
+    "flavorProfile": "Flavor Profile",
+    "personalInformation": "Personal Information",
+    "accountSettings": "Account Settings",
+    "advanced": {
+      "foodDeliveryApps": "Integration with Food Delivery Apps",
+      "groceryShoppingPreferences": "Grocery Shopping Preferences",
+      "nutritionalGoals": "Nutritional Goals or Health Objectives",
+      "culturalFoodBackground": "Cultural Food Background"
+    },
+    "cooking": {
+      "skillLevel": "Cooking Skill Level",
+      "availableEquipment": "Available Cooking Equipment",
+      "timePreferences": "Typical Cooking Time Preferences",
+      "budgetConsiderations": "Budget Considerations"
+    },
+    "food": {
+      "dietaryRestrictions": "Dietary Restrictions",
+      "allergiesAndIntolerances": "Food Allergies and Intolerances",
+      "cuisinePreferences": "Cuisine Preferences",
+      "favouriteIngredients": "Favourite Ingredients",
+      "foodToAvoid": "Food to Avoid",
+      "severity": "Severity",
+      "noDietaryRestrictions": "No dietary restrictions",
+      "noAllergies": "No allergies",
+      "noCuisinePreferences": "No cuisine preferences",
+      "noFavouriteIngredients": "No favourite ingredients",
+      "noIngredientsToAvoid": "No ingredients to avoid"
+    },
+    "flavor": {
+      "cuisinePreferences": "Cuisine Preferences",
+      "spicinessLevel": "Spiciness Level",
+      "tastePreferences": "Taste Preferences"
+    },
+    "form": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "birthDate": "Birth Date",
+      "userId": "User ID",
+      "readOnlyField": "This field is read-only"
+    },
+    "validation": {
+      "fieldRequired": "This field is required",
+      "minLength": "Minimum {length} characters required",
+      "maxLength": "Maximum {length} characters allowed",
+      "birthDateRequired": "Birth date is required",
+      "futureDateError": "Birth date cannot be in the future",
+      "invalidDate": "Please enter a valid birth date"
+    },
+    "messages": {
+      "profileUpdatedSuccessfully": "Profile updated successfully"
+    },
+    "errors": {
+      "failedToLoadProfile": "Failed to load profile",
+      "failedToUpdateProfile": "Failed to update profile"
+    }
+  },
+  "roles": {
+    "dietitian": "Dietitian",
+    "nutritionist": "Nutritionist",
+    "user": "User",
+    "systemAdmin": "System Administrator"
+  },
+  "application": {
+    "applicationType": "Application Type",
+    "selectApplicationType": "Select application type",
+    "coverLetter": "Cover Letter",
+    "coverLetterPlaceholder": "Write your cover letter here...",
+    "supportingDocuments": "Supporting Documents",
+    "uploadFiles": "Upload Files",
+    "dragDropText": "Drag and drop files here or click to browse",
+    "chooseFiles": "CHOOSE FILES",
+    "supportedFormats": "Supported formats: PDF, DOC, DOCX, JPG, PNG (Max 5MB per file)",
+    "uploadedFiles": "Uploaded Files ({count})",
+    "submitApplication": "SUBMIT APPLICATION",
+    "registerDietitian": "Register as Dietitian",
+    "registerNutritionist": "Register as Nutritionist",
+    "filesUploaded": "{count} file(s) uploaded successfully",
+    "fileRemoved": "{filename} removed",
+    "createNewApplication": "CREATE NEW APPLICATION",
+    "viewApplication": "View Application",
+    "filters": "FILTERS",
+    "validation": {
+      "maxCharacters": "Maximum {count} characters allowed",
+      "selectType": "Please select an application type",
+      "provideDetails": "Please provide application details",
+      "uploadDocument": "Please upload at least one supporting document",
+      "fileSizeError": "{filename} exceeds 5MB limit",
+      "fileExists": "{filename} is already uploaded",
+      "maxFiles": "Maximum {count} files allowed"
+    },
+    "details": {
+      "id": "ID",
+      "submitted": "Submitted",
+      "noCoverLetter": "No cover letter provided",
+      "noDocuments": "No documents uploaded"
+    },
+    "actions": {
+      "reject": "REJECT",
+      "approve": "APPROVE"
+    },
+    "table": {
+      "applicationType": "Application Type",
+      "submittedDate": "Submitted Date",
+      "status": "Status",
+      "noApplicationsFound": "No Applications Found",
+      "noApplicationsDescription": "You haven't submitted any applications yet.",
+      "createFirstApplication": "CREATE YOUR FIRST APPLICATION",
+      "loadingApplications": "Loading applications...",
+      "itemsPerPage": "Items per page"
+    },
+    "admin": {
+      "noApplicationsFound": "No Applications Found",
+      "noApplicationsDescription": "There are no applications in the system yet."
+    },
+    "messages": {
+      "applicationRejected": "Application rejected",
+      "applicationApproved": "Application approved",
+      "applicationSubmittedSuccessfully": "Application submitted successfully"
+    },
+    "errors": {
+      "failedToLoadApplications": "Failed to load applications",
+      "failedToSubmitApplication": "Failed to submit application",
+      "failedToUpdateApplication": "Failed to update application"
+    },
+    "types": {
+      "registerDietitian": "Register as Dietitian",
+      "registerNutritionist": "Register as Nutritionist",
+      "jobApplication": "Job Application",
+      "internship": "Internship",
+      "volunteer": "Volunteer Work",
+      "scholarship": "Scholarship"
+    },
+    "status": {
+      "draft": "Draft",
+      "submitted": "Submitted",
+      "underReview": "Under Review",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "withdrawn": "Withdrawn"
+    }
+  },
+  "notifications": {
+    "showingResults": "Showing {start} - {end} of {total} notifications",
+    "new": "New",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "justNow": "Just now",
+    "minutesAgo": "{minutes}m ago",
+    "hoursAgo": "{hours}h ago",
+    "errors": {
+      "failedToLoadNotifications": "Failed to load notifications",
+      "failedToMarkAsRead": "Failed to mark notification as read"
+    }
+  }
+}

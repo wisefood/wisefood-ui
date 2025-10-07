@@ -1,0 +1,107 @@
+export enum FoodAllergy {
+  GLUTEN,
+  CRUSTACEANS,
+  EGGS,
+  FISH,
+  PEANUTS,
+  SOYBEANS,
+  MILK,
+  NUTS,
+  CELERY,
+  MUSTARD,
+  SESAME_SEEDS,
+  SULPHUR_DIOXIDE_AND_SULPHITES,
+  LUPIN,
+  MOLLUSCS,
+}
+
+export enum SpicinessLevel {
+  MILD,
+  MEDIUM,
+  HOT,
+  VERY_HOT,
+  EXTREMELY_HOT,
+}
+
+export enum TastePalette {
+  SWEET,
+  SALTY,
+  SOUR,
+  BITTER,
+  UMAMI,
+  SPICY,
+}
+
+export enum CuisineType {
+  AMERICAN,
+  ITALIAN,
+  CHINESE,
+  JAPANESE,
+  MEXICAN,
+  INDIAN,
+  FRENCH,
+  THAI,
+  GREEK,
+  MEDITERRANEAN,
+  KOREAN,
+  SPANISH,
+  MIDDLE_EASTERN,
+  VIETNAMESE,
+  GERMAN,
+  BRITISH,
+  BRAZILIAN,
+  MOROCCAN,
+  ETHIOPIAN,
+  CARIBBEAN,
+  FUSION,
+  INTERNATIONAL,
+}
+
+export enum CookingSkillLevel {
+  BEGINNER,
+  NOVICE,
+  INTERMEDIATE,
+  ADVANCED,
+  EXPERT,
+  PROFESSIONAL,
+}
+
+export enum CookingEquipment {
+  BASIC_STOVE,
+  OVEN,
+  MICROWAVE,
+  AIR_FRYER,
+  SLOW_COOKER,
+  PRESSURE_COOKER,
+  GRILL,
+  BLENDER,
+  FOOD_PROCESSOR,
+  STAND_MIXER,
+  RICE_COOKER,
+  TOASTER_OVEN,
+  SOUS_VIDE,
+  DEEP_FRYER,
+  STEAMER,
+  BREAD_MAKER,
+  JUICER,
+  ESPRESSO_MACHINE,
+}
+
+export enum CookingTime {
+  UNDER_15_MINUTES,
+  MINUTES_15_30,
+  MINUTES_30_45,
+  MINUTES_45_60,
+  HOUR_1_2,
+  HOURS_2_4,
+  OVER_4_HOURS,
+}
+
+export enum BudgetConsideration {
+  VERY_LOW,
+  LOW,
+  MODERATE,
+  HIGH,
+  LUXURY,
+  NO_BUDGET_LIMIT,
+}
