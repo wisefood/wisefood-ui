@@ -5,9 +5,9 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <h1 class="navbar-brand navbar-brand-autodark">
-        <a href="/dashboard" class="ms-3 mt-2">
+        <router-link to="/dashboard" class="ms-3 mt-2">
           <img src="/images/logo.png" alt="WiseFood" width="200px">
-        </a>
+        </router-link>
       </h1>
       <div class="navbar-nav flex-row d-lg-none">
         <div class="nav-item d-none d-lg-flex me-3">
@@ -131,25 +131,25 @@
             </div>
           </a>
           <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-            <a href="/my/settings" class="dropdown-item">Settings</a>
-            <a href="/logout" class="dropdown-item">Logout</a>
+            <router-link to="/my/settings" class="dropdown-item">Settings</router-link>
+            <router-link to="/logout" class="dropdown-item">Logout</router-link>
           </div>
         </div>
       </div>
       <div class="collapse navbar-collapse" id="sidebar-menu">
         <ul class="navbar-nav pt-lg-3">
           <li class="nav-item active">
-            <a class="nav-link" href="./" >
+            <router-link class="nav-link" to="/dashboard">
               <span class="nav-link-icon d-md-none d-lg-inline-block"><!-- Download SVG icon from http://tabler-icons.io/i/home -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l-2 0l9 -9l9 9l-2 0" /><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" /><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" /></svg>
               </span>
               <span class="nav-link-title">
                 Home
               </span>
-            </a>
+            </router-link>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="./form-elements.html" >
+            <router-link class="nav-link" to="/applications">
               <span class="nav-link-icon d-md-none d-lg-inline-block"><!-- Download SVG icon from http://tabler-icons.io/i/checkbox -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-file-database">
                                                             <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
@@ -157,12 +157,12 @@
                                                             <path d="M8 12.5v3.75c0 .966 1.79 1.75 4 1.75s4 -.784 4 -1.75v-3.75"></path>
                                                             <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
                                                             <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
-                                                        </svg>              
+                                                        </svg>
                                                       </span>
               <span class="nav-link-title">
                 Data Catalog
               </span>
-            </a>
+            </router-link>
           </li>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#navbar-layout" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button" aria-expanded="false" >
@@ -176,15 +176,15 @@
             <div class="dropdown-menu">
               <div class="dropdown-menu-columns">
                 <div class="dropdown-menu-column">
-                  <a class="dropdown-item" href="./layout-horizontal.html">
+                  <router-link class="dropdown-item" to="/my-applications">
                     Food Scholar
-                  </a>
-                  <a class="dropdown-item" href="./layout-boxed.html">
-                    Recipe Wrangler 
-                  </a>
-                  <a class="dropdown-item" href="./layout-vertical.html">
+                  </router-link>
+                  <router-link class="dropdown-item" to="/recipe-wrangler">
+                    Recipe Wrangler
+                  </router-link>
+                  <router-link class="dropdown-item" to="/applications">
                     Food Chat
-                  </a>
+                  </router-link>
                 </div>
               </div>
             </div>
@@ -202,9 +202,9 @@
               <a class="dropdown-item" href="https://tabler.io/docs" target="_blank" rel="noopener">
                 Documentation
               </a>
-              <a class="dropdown-item" href="./changelog.html">
+              <router-link class="dropdown-item" to="/changelog">
                 Changelog
-              </a>
+              </router-link>
               <a class="dropdown-item" href="https://github.com/tabler/tabler" target="_blank" rel="noopener">
                 Source code
               </a>
@@ -229,7 +229,7 @@ const props = defineProps({
   },
 });
 
-const computedRoles = computed(() => 
+const computedRoles = computed(() =>
   props.roles
     .filter(role => !["offline_access", "uma_authorization", "create-realm", "default-roles-master"].includes(role))
     .map(role => role.charAt(0).toUpperCase() + role.slice(1))

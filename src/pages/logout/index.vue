@@ -2,12 +2,9 @@
 
 <script setup lang="ts">
 import { onMounted } from "vue";
-import { useRouter } from "vue-router";
-import { useGlobalRouter } from "@/composables/useGlobalRouter";
-const { navigateTo } = useGlobalRouter();
-import KeycloakService from "@/services/keycloak";
+import { useAuthStore } from "@/stores/authStore";
 
-const router = useRouter();
+const authStore = useAuthStore();
 
 definePage({
   name: "logout",
@@ -17,6 +14,6 @@ definePage({
 });
 
 onMounted(() => {
-  KeycloakService.CallLogout();
+  authStore.logout();
 });
 </script>

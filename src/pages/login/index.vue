@@ -36,14 +36,8 @@
 <script lang="ts" setup>
 import { onMounted } from "vue";
 import { useI18nWithStorage } from "@/composables/useI18nWithStorage";
-import { useAuthStore } from "@/stores/authStore";
-import { useGlobalRouter } from "@/composables/useGlobalRouter";
-import KeycloakService from "@/services/keycloak";
-const { navigateTo } = useGlobalRouter();
 
 const { t } = useI18nWithStorage();
-const route = useRoute()
-const auth = useAuthStore();
 
 definePage({
   name: "login",
@@ -51,18 +45,6 @@ definePage({
     layout: 'auth',
     titleKey: 'pages.login.title',
     descriptionKey: 'pages.login.description'
-  }
-});
-
-
-onMounted(async () => {
-  if (auth.isAuthenticated) {
-    try {
-      await KeycloakService.CallTokenRefresh();
-      navigateTo("/dashboard");
-    } catch (err) {
-      console.error("Auto token refresh failed on /login, staying here", err);
-    }
   }
 });
 
@@ -81,10 +63,7 @@ onMounted(() => {
     };
     type();
   });
-
-  
 });
-
 </script>
 
 <style scoped>

@@ -1,5 +1,5 @@
 <template>
-  <a class="card card-link cursor-pointer" :href="serviceUrl">
+  <router-link class="card card-link cursor-pointer" :to="serviceUrl">
     <div
         :style="{ backgroundImage: `url(${icon})` }"
         class="card-img-top img-responsive img-responsive-21x10"
@@ -8,7 +8,7 @@
       <h2 class="text-secondary">{{ title }}</h2>
       <p class="text-gray-600 mb-2">{{ description }}</p>
     </div>
-  </a>
+  </router-link>
 </template>
 
 <script setup>

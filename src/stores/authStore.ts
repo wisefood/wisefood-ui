@@ -1,63 +1,89 @@
 import { defineStore } from "pinia";
+import KeycloakService from "@/services/keycloak";
+
+interface User {
+  id?: string;
+  username?: string;
+  email?: string;
+  given_name?: string;
+  family_name?: string;
+  name?: string;
+  roles: string[];
+}
 
 interface AuthState {
   isAuthenticated: boolean;
-  token: string | null;
-  tokenParsed: any | null;
-  refreshToken: string | null;
-  user: {
-    username: string | null;
-    email: string | null;
-    roles: string[] | null;
-    given_name: string | null;
-    family_name: string | null;
-    name: string | null;
-    id: string | null;
-  } | null;
+  user: User | null;
+  initialized: boolean;
 }
 
 export const useAuthStore = defineStore("auth", {
   state: (): AuthState => ({
     isAuthenticated: false,
     user: null,
-    token: null,
-    tokenParsed: null,
-    refreshToken: null,
+    initialized: false,
   }),
+
+  getters: {
+    currentUser: (state) => state.user,
+    isLoggedIn: (state) => state.isAuthenticated,
+    hasRole: (state) => (role: string) => state.user?.roles.includes(role) ?? false,
+  },
+
   actions: {
-    setAuth(authData: any) {
-      this.isAuthenticated = authData.isAuthenticated;
-      this.token = authData.token;
-      this.refreshToken = authData.refreshToken;
-      this.tokenParsed = authData.tokenParsed;
-      if (authData.user) {
-        this.user = authData.user;
+    async initialize() {
+      // If already initialized, just return current state
+      if (this.initialized) {
+        return this.isAuthenticated;
+      }
+
+      try {
+        const authenticated = await KeycloakService.init();
+
+        if (authenticated) {
+          this.isAuthenticated = true;
+          this.user = KeycloakService.getUserInfo();
+        } else {
+          this.isAuthenticated = false;
+          this.user = null;
+        }
+
+        this.initialized = true;
+        return authenticated;
+      } catch (error) {
+        console.error("Auth initialization failed:", error);
+        this.isAuthenticated = false;
+        this.user = null;
+        this.initialized = true;
+        return false;
       }
     },
 
-    clearAuth() {
-      this.isAuthenticated = false;
-      this.token = null;
-      this.refreshToken = null;
-      this.tokenParsed = null;
-      this.user = {
-        username: null,
-        email: null,
-        roles: [],
-        given_name: null,
-        family_name: null,
-        name: null,
-        id: null,
-      };
+    login() {
+      KeycloakService.login();
     },
-    getAllAuthData() {
-      return {
-        isAuthenticated: this.isAuthenticated,
-        token: this.token,
-        refreshToken: this.refreshToken,
-        tokenParsed: this.tokenParsed,
-        user: this.user,
-      };
+
+    logout() {
+      this.isAuthenticated = false;
+      this.user = null;
+      KeycloakService.logout();
+    },
+
+    async refreshToken() {
+      try {
+        const refreshed = await KeycloakService.refreshToken();
+        if (refreshed) {
+          this.user = KeycloakService.getUserInfo();
+        }
+        return refreshed;
+      } catch (error) {
+        console.error("Token refresh failed:", error);
+        return false;
+      }
+    },
+
+    getToken(): string | undefined {
+      return KeycloakService.getToken();
     },
   },
 });

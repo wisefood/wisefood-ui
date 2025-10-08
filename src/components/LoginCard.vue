@@ -20,7 +20,7 @@
         <button
           type="button"
           class="btn btn-primary w-100 mb-4"
-          @click="handleSSOLogin"
+          @click="handleLogin"
         >
           {{ $t('header.login') }}
         </button>
@@ -41,8 +41,11 @@
 </template>
 
 <script setup lang="ts">
-import KeycloakService from "@/services/keycloak";
-const handleSSOLogin = () => {
-  KeycloakService.CallLogin();
+import { useAuthStore } from "@/stores/authStore";
+
+const authStore = useAuthStore();
+
+const handleLogin = () => {
+  authStore.login();
 };
 </script>

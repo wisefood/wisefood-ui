@@ -31,25 +31,32 @@ router.onError((err, to) => {
   }
 })
 
-router.beforeEach((to) => {
-  const auth = useAuthStore();
+// Public routes that don't require authentication
+const PUBLIC_ROUTES = ['login', 'signup'];
 
-  if (
-    window.location.hash.includes("code=") ||
-    window.location.hash.includes("session_state=")
-  ) {
-    return true;
+router.beforeEach(async (to) => {
+  const authStore = useAuthStore();
+
+  // Wait for auth to be initialized (only happens once)
+  if (!authStore.initialized) {
+    await authStore.initialize();
   }
 
-  if (!auth.isAuthenticated && to.name !== "login" && to.name !== "signup") {
-    return { name: "login" };
+  const isPublicRoute = PUBLIC_ROUTES.includes(to.name as string);
+
+  // If user is authenticated and trying to access login/signup, redirect to dashboard
+  if (authStore.isAuthenticated && isPublicRoute) {
+    return { name: 'dashboard' };
   }
 
-  if (auth.isAuthenticated && (to.name === "login" || to.name === "signup")) {
-    return { name: "dashboard" };
+  // If user is NOT authenticated and trying to access protected route, redirect to login
+  if (!authStore.isAuthenticated && !isPublicRoute) {
+    return { name: 'login' };
   }
+
+  // Allow navigation
+  return true;
 });
-
 
 function applyPageMeta(to: any) {
   const t = i18n.global.t as (key: string) => string
