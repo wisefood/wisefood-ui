@@ -43,6 +43,7 @@ import ServiceCard from "@/components/ServiceCard.vue";
 definePage({
   name: "dashboard",
   meta: {
+    layout: "home",
     titleKey: 'pages.dashboard.title',
     descriptionKey: 'pages.dashboard.description'
   }

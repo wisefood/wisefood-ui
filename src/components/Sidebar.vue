@@ -1,12 +1,12 @@
 <template>
-<aside class="navbar navbar-vertical navbar-expand-lg bg-yellow" data-bs-theme="light">
+<aside class="navbar navbar-vertical navbar-expand-lg bg-yellow h3" style="margin-top: 56px;" data-bs-theme="light">
     <div class="container-fluid">
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu" aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <h1 class="navbar-brand navbar-brand-autodark">
-        <router-link to="/dashboard" class="ms-3 mt-2">
-          <img src="/images/logo.png" alt="WiseFood" width="200px">
+      <h1 class="navbar-brand navbar-brand-autodark d-lg-none">
+        <router-link to="/dashboard" class="p-2">
+          <img src="/images/logo.png" alt="WiseFood" width="180px">
         </router-link>
       </h1>
       <div class="navbar-nav flex-row d-lg-none">
