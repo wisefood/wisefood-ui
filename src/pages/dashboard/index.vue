@@ -11,6 +11,7 @@
           :title="t('services.foodScholar.title')"
           :subtitle="t('services.foodScholar.subtitle')"
           :description="t('services.foodScholar.description')"
+          :serviceUrl="'/food-scholar'"
           icon="/images/foodscholar.png"
         />
       </v-col>
@@ -28,6 +29,7 @@
           :title="t('services.foodChat.title')"
           :subtitle="t('services.foodChat.subtitle')"
           :description="t('services.foodChat.description')"
+          :serviceUrl="'/food-chat'"
           icon="/images/foodchat.png"
         />
       </v-col>

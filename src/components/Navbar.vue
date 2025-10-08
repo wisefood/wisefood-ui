@@ -9,18 +9,40 @@
           <img src="/images/logo.png" alt="WiseFood" width="135px">
         </router-link>
     </div>
-    <div class="vr mt-1" style="height: 40px;"></div>
+    <div class="vr mt-1 mx-2" style="height: 40px;"></div>
     <div class="collapse navbar-collapse" id="navbar-menu">
       <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link" href="https://preview.tabler.io/">
-            <span class="nav-link-icon d-md-none d-lg-inline-block"><!-- Download SVG icon from http://tabler.io/icons/icon/home -->
+        <li :class="['nav-item', { active: $route.path === '/dashboard' }]">
+          <router-link to="/dashboard" class="nav-link" aria-current="page">
+            <span class="nav-link-icon d-md-none d-lg-inline-block a">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
                 <path d="M5 12l-2 0l9 -9l9 9l-2 0"></path>
                 <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"></path>
                 <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"></path></svg></span>
             <span class="nav-link-title"> Home </span>
-          </a>
+          </router-link>
+        </li>
+        <li :class="['nav-item', { active: $route.path === '/food-scholar' }]">
+          <router-link to="/food-scholar" class="nav-link" aria-current="page">
+            <span class="nav-link-icon d-md-none d-lg-inline-block a">
+              <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-message-2-search"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 9h8" /><path d="M8 13h5" /><path d="M12 21l-.5 -.5l-2.5 -2.5h-3a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v4.5" /><path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /><path d="M20.2 20.2l1.8 1.8" /></svg>
+             </span>
+            <span class="nav-link-title"> Food Scholar </span>
+          </router-link>
+        </li>
+        <li :class="['nav-item', { active: $route.path === '/recipe-wrangler' }]">
+          <router-link to="/recipe-wrangler" class="nav-link" aria-current="page">
+            <span class="nav-link-icon d-md-none d-lg-inline-block a">
+              <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-ladle"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 14v1a6 6 0 1 0 12 0v-9a3 3 0 0 1 6 0" /><path d="M9 16c-.663 0 -1.3 -.036 -1.896 -.102l-.5 -.064c-2.123 -.308 -3.604 -1.013 -3.604 -1.834c0 -.82 1.482 -1.526 3.603 -1.834l.5 -.064a17.27 17.27 0 0 1 1.897 -.102c.663 0 1.3 .036 1.896 .102l.5 .064c2.123 .308 3.604 1.013 3.604 1.834c0 .82 -1.482 1.526 -3.603 1.834l-.5 .064a17.27 17.27 0 0 1 -1.897 .102z" /></svg>             </span>
+            <span class="nav-link-title"> Recipe Wrangler </span>
+          </router-link>
+        </li>
+        <li :class="['nav-item', { active: $route.path === '/food-chat' }]">
+          <router-link to="/food-chat" class="nav-link" aria-current="page">
+            <span class="nav-link-icon d-md-none d-lg-inline-block a">
+              <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-bubble-text"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 10h10" /><path d="M9 14h5" /><path d="M12.4 3a5.34 5.34 0 0 1 4.906 3.239a5.333 5.333 0 0 1 -1.195 10.6a4.26 4.26 0 0 1 -5.28 1.863l-3.831 2.298v-3.134a2.668 2.668 0 0 1 -1.795 -3.773a4.8 4.8 0 0 1 2.908 -8.933a5.33 5.33 0 0 1 4.287 -2.16" /></svg> </span>
+            <span class="nav-link-title"> Food Chat </span>
+          </router-link>
         </li>
       </ul>
     </div>

@@ -8,10 +8,12 @@
         :roles="roles"
       />
     </div>
-    <Sidebar 
-      :fullname="fullname"
-      :roles="roles"
-    />
+    <transition name="slide" appear>
+      <Sidebar 
+        :fullname="fullname"
+        :roles="roles"
+      />
+    </transition>
     <div class="page-wrapper">
        
       <div class="page-header d-print-none">
@@ -19,13 +21,12 @@
           <div class="row g-2 align-items-center">
             <div class="col-lg">
               <div class="page-pretitle">
-                OVERVIEW
+                
               </div>
               <h3 class="page-title">
                 <ol class="breadcrumb breadcrumb-arrows">
                   <li class="breadcrumb-item">
                     <p class="text-secondary">
-                       My Daily Outline
                     </p>
                   </li>
                 </ol>
@@ -39,7 +40,9 @@
           <router-view />
         </div>
       </div>
-      <AppFooter />
+      <transition name="fade" appear>
+        <AppFooter />
+      </transition>
     </div>
   </div>
   </body>
@@ -54,3 +57,31 @@ const fullname = authStore.user?.given_name + ' ' + authStore.user?.family_name 
 const roles = authStore.user?.roles || [];
 
 </script>
+
+<style>
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 1.0s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+/* Slide transition for Sidebar */
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.8s ease, opacity 0.8s ease;
+}
+
+/* Starting and ending states for enter/leave */
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.slide-enter-to,
+.slide-leave-from {
+  transform: translateX(0);
+  opacity: 1;
+}
+</style>

@@ -18,6 +18,7 @@ declare module 'vue' {
     ApplicationsWrapperAdmin: typeof import('./components/my-applications/ApplicationsWrapperAdmin.vue')['default']
     AppNavbar: typeof import('./components/AppNavbar.vue')['default']
     AppSidebar: typeof import('./components/AppSidebar.vue')['default']
+    Chatbar: typeof import('./components/Chatbar.vue')['default']
     CookingProfile: typeof import('./components/user-profile/CookingProfile.vue')['default']
     CookingProfileEdit: typeof import('./components/user-profile/CookingProfileEdit.vue')['default']
     CreateApplicationPanel: typeof import('./components/off-canvas/CreateApplicationPanel.vue')['default']

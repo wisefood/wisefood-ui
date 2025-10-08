@@ -1,5 +1,5 @@
 <template>
-  <footer class="footer footer-transparent d-print-none" height="40" color="background">
+  <footer class="footer footer-transparent d-print-none" style="font-size: smaller;" height="50" color="background">
     <div class="container-xl">
         <div class="row text-center align-items-center flex-row-reverse">
             <div class="col-lg-auto ms-lg-auto">
