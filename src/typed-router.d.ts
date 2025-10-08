@@ -20,11 +20,11 @@ declare module 'vue-router/auto-routes' {
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
     '/[...all]': RouteRecordInfo<'/[...all]', '/:all(.*)', { all: ParamValue<true> }, { all: ParamValue<false> }>,
-    '/applications/': RouteRecordInfo<'/applications/', '/applications', Record<never, never>, Record<never, never>>,
     'dashboard': RouteRecordInfo<'dashboard', '/dashboard', Record<never, never>, Record<never, never>>,
     'login': RouteRecordInfo<'login', '/login', Record<never, never>, Record<never, never>>,
     'logout': RouteRecordInfo<'logout', '/logout', Record<never, never>, Record<never, never>>,
     '/my-applications/': RouteRecordInfo<'/my-applications/', '/my-applications', Record<never, never>, Record<never, never>>,
+    '/profiles/': RouteRecordInfo<'/profiles/', '/profiles', Record<never, never>, Record<never, never>>,
     '/recipe-wrangler/': RouteRecordInfo<'/recipe-wrangler/', '/recipe-wrangler', Record<never, never>, Record<never, never>>,
     'signup': RouteRecordInfo<'signup', '/signup', Record<never, never>, Record<never, never>>,
     '/user/[userId]/profile/': RouteRecordInfo<'/user/[userId]/profile/', '/user/:userId/profile', { userId: ParamValue<true> }, { userId: ParamValue<false> }>,

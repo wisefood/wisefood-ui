@@ -42,6 +42,8 @@ class KeycloakAuthService {
         const kc = this.getKeycloak();
 
         const authenticated = await kc.init({
+          onLoad: "check-sso",
+          silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
           pkceMethod: this.hasWebCrypto() ? "S256" : undefined,
           checkLoginIframe: false,
         });
