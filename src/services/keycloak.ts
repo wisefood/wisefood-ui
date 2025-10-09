@@ -19,16 +19,23 @@ class KeycloakAuthService {
   }
 
   private hasWebCrypto(): boolean {
-    return typeof window !== "undefined" && !!window.crypto && !!window.crypto.subtle;
+    return (
+      typeof window !== "undefined" &&
+      !!window.crypto &&
+      !!window.crypto.subtle
+    );
   }
 
-  /** Initialize Keycloak */
   async init(): Promise<boolean> {
+    // If already initialized and authenticated, return the cached result
     if (this.initPromise && this.keycloak) {
       return this.keycloak.authenticated || false;
     }
 
-    if (this.initPromise) return this.initPromise;
+    // Only initialize once
+    if (this.initPromise) {
+      return this.initPromise;
+    }
 
     this.initPromise = (async () => {
       try {
@@ -36,16 +43,19 @@ class KeycloakAuthService {
 
         const authenticated = await kc.init({
           onLoad: "check-sso",
-          silentCheckSsoRedirectUri: `${window.location.origin}/app/silent-check-sso.html`,
+          silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
           pkceMethod: this.hasWebCrypto() ? "S256" : undefined,
           checkLoginIframe: false,
         });
 
-        if (authenticated) this.setupTokenRefresh();
+        // Setup token refresh if authenticated
+        if (authenticated) {
+          this.setupTokenRefresh();
+        }
 
         return authenticated;
       } catch (error) {
-        console.error("[Keycloak] Init failed:", error);
+        console.error("Keycloak init failed:", error);
         return false;
       }
     })();
@@ -53,80 +63,62 @@ class KeycloakAuthService {
     return this.initPromise;
   }
 
-  /** Setup automatic token refresh */
   private setupTokenRefresh(): void {
     const kc = this.getKeycloak();
 
-    const interval = setInterval(async () => {
+    // Refresh token every 60 seconds
+    setInterval(async () => {
       try {
-        const refreshed = await kc.updateToken(70);
-        if (!refreshed) {
-          console.warn("[Keycloak] Token not refreshed, may be expired.");
-        }
+        await kc.updateToken(70);
       } catch (error) {
-        console.error("[Keycloak] Token refresh failed:", error);
-        clearInterval(interval);
+        console.error("Token refresh failed:", error);
         this.logout();
       }
-    }, 60000); // every 60 seconds
+    }, 60000);
   }
 
-  /** Redirect to login page */
-  login(redirectUri?: string): void {
+  login(): void {
     const kc = this.getKeycloak();
+    const redirectUri = window.location.origin + "/dashboard";
+    console.log('[Keycloak] Redirecting to login. Redirect URI:', redirectUri);
     kc.login({
-      redirectUri: redirectUri || window.location.origin + "/dashboard",
+      redirectUri: redirectUri,
     });
   }
 
-  /** Redirect to registration page */
-  register(redirectUri?: string): void {
-    const kc = this.getKeycloak();
-    kc.register({
-      redirectUri: redirectUri || window.location.origin + "/dashboard",
-    });
-  }
-
-  /** Logout and redirect */
-  logout(redirectUri?: string): void {
+  logout(): void {
     const kc = this.getKeycloak();
     kc.logout({
-      redirectUri: redirectUri || window.location.origin + "/login",
+      redirectUri: window.location.origin + "/login",
     });
   }
 
-  /** Force token refresh manually */
   async refreshToken(): Promise<boolean> {
     try {
       const kc = this.getKeycloak();
       return await kc.updateToken(70);
     } catch (error) {
-      console.error("[Keycloak] Failed to refresh token:", error);
+      console.error("Failed to refresh token:", error);
       return false;
     }
   }
 
-  /** Check authentication */
   isAuthenticated(): boolean {
     return this.keycloak?.authenticated ?? false;
   }
 
-  /** Get access token */
   getToken(): string | undefined {
     return this.keycloak?.token;
   }
 
-  /** Get refresh token */
   getRefreshToken(): string | undefined {
     return this.keycloak?.refreshToken;
   }
 
-  /** Get parsed token info */
   getTokenParsed(): any {
     return this.keycloak?.tokenParsed;
   }
 
-  /** Get basic user info */
   getUserInfo() {
     const parsed = this.keycloak?.tokenParsed;
     if (!parsed) return null;

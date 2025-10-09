@@ -8,12 +8,6 @@
         :roles="roles"
       />
     </div>
-    <transition name="slide" appear>
-      <Sidebar 
-        :fullname="fullname"
-        :roles="roles"
-      />
-    </transition>
     <div class="page-wrapper">
       <div class="page-header d-print-none">
         <div class="container-xl">
