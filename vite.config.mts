@@ -16,7 +16,7 @@ import { fileURLToPath, URL } from "node:url";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: process.env.VITE_APP_BASE_PATH || '/',
+  base: '/app/',
   build: {
     target: "esnext", // or 'es2022'
     // Alternative: specify modern browsers

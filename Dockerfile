@@ -1,34 +1,26 @@
-# Multi-stage build for Vite Vue app
+# Stage 1: Build Vue app
+FROM node:lts-alpine AS build
 
-# Stage 1: Build the application
-FROM node:18-alpine AS build
-
-# Set working directory
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
+RUN npm install
 
-# Install dependencies
-RUN npm ci
-
-# Copy source code
 COPY . .
+RUN npm run build-only || npx vite build
 
-# Build the app for production (skip type checking)
-RUN npx vite build
+# Stage 2: Serve with Nginx
+FROM nginx:alpine
 
-# Stage 2: Serve the application
-FROM nginx:alpine AS production
+# Remove default website
+RUN rm -rf /usr/share/nginx/html/*
 
-# Copy built assets from build stage
+# Copy built app
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copy custom nginx config (optional)
+# Copy custom Nginx config
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Expose port 80
 EXPOSE 80
 
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

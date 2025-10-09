@@ -12,7 +12,7 @@ import { routes } from 'vue-router/auto-routes'
 import { useAuthStore } from "@/stores/authStore";
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.VITE_APP_BASE_PATH || '/'),
+  history: createWebHistory('/app/'),
   routes: setupLayouts(routes),
 })
 
