@@ -12,7 +12,7 @@
           :subtitle="t('services.foodScholar.subtitle')"
           :description="t('services.foodScholar.description')"
           :serviceUrl="'/food-scholar'"
-          icon="/app/images/foodscholar.png"
+          icon="images/foodscholar.png"
         />
       </v-col>
       <v-col cols="12" md="6" lg="4">
@@ -21,7 +21,7 @@
           :subtitle="t('services.recipeWrangler.subtitle')"
           :description="t('services.recipeWrangler.description')"
           :serviceUrl="'/recipe-wrangler'"
-          icon="/app/images/recipewrangler.png"
+          icon="images/recipewrangler.png"
         />
       </v-col>
       <v-col cols="12" md="6" lg="4">
@@ -30,7 +30,7 @@
           :subtitle="t('services.foodChat.subtitle')"
           :description="t('services.foodChat.description')"
           :serviceUrl="'/food-chat'"
-          icon="/app/images/foodchat.png"
+          icon="images/foodchat.png"
         />
       </v-col>
     </v-row>
