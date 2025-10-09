@@ -6,13 +6,13 @@
         <v-alert
           v-for="alert in alerts"
           :key="alert.id"
-          :closable="alert.closable"
+          :closable="!!alert.closable"
           :icon="getIcon(alert)"
-          :title="alert.title"
-          :text="alert.text"
+          :title="alert.title ?? undefined"
+          :text="alert.text ?? undefined"
           :type="alert.type"
-          :color="alert.color"
-          :variant="alert.variant"
+          :color="alert.color ?? undefined"
+          :variant="alert.variant ?? undefined"
           class="notification-alert mb-2"
           @click:close="removeAlert(alert.id)"
         >
@@ -26,25 +26,47 @@
 <script setup lang="ts">
 import { useNotifications, type Alert } from "@/composables/useNotifications";
 
+/**
+ * NOTE:
+ * - We return `false | string | undefined` from getIcon so it lines up with
+ *   component props that accept an icon name (string) or false (no icon).
+ * - We normalize nullable values when passing to v-alert using `?? undefined`
+ *   and coerce booleans with `!!` to avoid `string | null | undefined` errors.
+ */
+
 // Get global alerts and methods
 const { alerts, removeAlert } = useNotifications();
 
-// Get icon for alert type
-const getIcon = (alert: Alert): string | boolean => {
-  if (alert.icon !== null) return alert.icon;
+/**
+ * Return type: `false | string | undefined`
+ * - `false` -> explicitly disable icon
+ * - `string` -> icon identifier (e.g. "mdi-check-circle")
+ * - `undefined` -> let the v-alert decide a default if any
+ */
+const getIcon = (alert: Alert): false | string | undefined => {
+  // if icon is explicitly present and not null/undefined, prefer it
+  if (alert.icon !== null && alert.icon !== undefined) {
+    // if you store boolean false to mean "no icon" keep it
+    if (alert.icon === false) return false;
+    // otherwise assume it's a string icon name — guard just in case
+    if (typeof alert.icon === "string") return alert.icon;
+  }
 
-  const icons: Record<Alert["type"], string> = {
+  // default icon mapping by type
+  const icons: Record<NonNullable<Alert["type"]>, string> = {
     success: "mdi-check-circle",
     error: "mdi-alert-circle",
     warning: "mdi-alert",
     info: "mdi-information",
   };
 
-  return icons[alert.type] || "mdi-information";
+  // alert.type should be one of the keys; fallback to info icon
+  return icons[(alert.type as NonNullable<Alert["type"]>) ?? "info"] ?? "mdi-information";
 };
 </script>
 
 <style scoped>
+/* ... your styles unchanged ... */
 .notification-container {
   position: fixed;
   top: 20px;

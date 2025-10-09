@@ -15,7 +15,7 @@
             rel="stylesheet"
           >
           <h1
-            class="text-h3 font-weight-bold mb-4"
+            class="text-h3 font-weight-bold mb-4 mt-6"
             style="font-family: 'Nova Mono', cursive;"
           >
             {{ t("home.welcomeToWisefood") }}

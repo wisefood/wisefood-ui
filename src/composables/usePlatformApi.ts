@@ -22,11 +22,6 @@ api.interceptors.request.use(
     // Set baseURL
     config.baseURL = import.meta.env.VITE_API_PLATFORM_BASE_URL;
 
-    // Add auth token
-    if (authStore.token) {
-      config.headers.Authorization = `Bearer ${authStore.token}`;
-    }
-
     // Handle FormData - remove Content-Type to let Axios set it with boundary
     if (config.data instanceof FormData) {
       delete config.headers["Content-Type"];
@@ -51,7 +46,6 @@ api.interceptors.response.use(
 
     // Handle 401 Unauthorized
     if (error.response?.status === 401) {
-      authStore.clearAuth();
       showError(t("auth.sessionExpired"));
       navigateTo("/login");
       return Promise.reject(error);

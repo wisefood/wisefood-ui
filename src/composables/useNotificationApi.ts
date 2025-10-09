@@ -22,10 +22,6 @@ notificationApi.interceptors.request.use(
     // Set baseURL for notification service
     config.baseURL = import.meta.env.VITE_API_NOTIFICATION_BASE_URL;
 
-    // Add auth token
-    if (authStore.token) {
-      config.headers.Authorization = `Bearer ${authStore.token}`;
-    }
 
     // Handle FormData - remove Content-Type to let Axios set it with boundary
     if (config.data instanceof FormData) {
@@ -51,7 +47,6 @@ notificationApi.interceptors.response.use(
 
     // Handle 401 Unauthorized
     if (error.response?.status === 401) {
-      authStore.clearAuth();
       showError(t("auth.sessionExpired"));
       navigateTo("/login");
       return Promise.reject(error);

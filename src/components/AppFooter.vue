@@ -24,7 +24,7 @@
                     <li class="list-inline-item"><a href="https://tabler.io/license" target="_blank" class="link-secondary">License</a></li>
                 </ul>
             </div>
-            <div class="col-12 col-lg-auto mt-3 mt-lg-0">
+            <div class="col-12 col-lg-auto mt-lg-0">
                 <ul class="list-inline list-inline-dots mb-0">
                     <li class="list-inline-item">
                         Copyright © 2025
@@ -33,7 +33,7 @@
                     </li>
                     <li class="list-inline-item">
                         <a href="https://cordis.europa.eu/project/id/101181895" target="_blank" class="link-secondary">
-                            <img src="/images/eu.png" style="height: 1.5rem;" alt="EU Logo"/>
+                            <img src="/images/eu.png" style="height: 1.2rem;" alt="EU Logo"/>
                         </a>
                     </li>
                     <li class="list-inline-item">

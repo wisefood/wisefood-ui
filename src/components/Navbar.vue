@@ -11,7 +11,7 @@
     </div>
     <div class="vr mt-1 mx-2" style="height: 40px;"></div>
     <div class="collapse navbar-collapse" id="navbar-menu">
-      <ul class="navbar-nav">
+      <ul class="navbar-nav h4">
         <li :class="['nav-item', { active: $route.path === '/dashboard' }]">
           <router-link to="/dashboard" class="nav-link" aria-current="page">
             <span class="nav-link-icon d-md-none d-lg-inline-block a">
@@ -148,23 +148,21 @@
 </header>
 </template>
 
-<script setup>
-// Define props with defaults
-const props = defineProps({
-  fullname: {
-    type: String,
-    default: "Guest User",
-  },
-  roles: {
-    type: Array,
-    default: () => [],
-  },
-});
+<script setup lang="ts">
+import { computed, withDefaults, defineProps } from 'vue'
+
+const props = withDefaults(
+  defineProps<{ fullname?: string; roles?: string[] }>(),
+  {
+    fullname: 'Guest User',
+    roles: () => []
+  }
+)
 
 const computedRoles = computed(() =>
   props.roles
-    .filter(role => !["offline_access", "uma_authorization", "create-realm", "default-roles-master"].includes(role))
+    .filter(role => !['offline_access', 'uma_authorization', 'create-realm', 'default-roles-master'].includes(role))
     .map(role => role.charAt(0).toUpperCase() + role.slice(1))
     .join(', ')
-);
+)
 </script>

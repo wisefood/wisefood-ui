@@ -11,7 +11,7 @@
   </router-link>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // Define props with defaults
 const props = defineProps({
   title: {

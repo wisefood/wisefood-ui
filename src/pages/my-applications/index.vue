@@ -11,7 +11,6 @@ import { onMounted, computed } from "vue";
 import { useGlobalRouter } from "@/composables/useGlobalRouter";
 import { useNotifications } from "@/composables/useNotifications";
 import { useI18nWithStorage } from "@/composables/useI18nWithStorage";
-import ApplicationsWrapper from "@/components/my-applications/ApplicationsWrapper.vue";
 
 const { t } = useI18nWithStorage();
 const { error } = useNotifications();
