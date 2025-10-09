@@ -3,12 +3,7 @@
     <div class="text-center mb-4 mt-6">
       <router-link :to="{ name: 'dashboard' }" class="navbar-brand navbar-brand-autodark">
         <div class="d-flex align-items-center justify-content-center">
-          <img
-            src="/images/logo.png"
-            width="200"
-            alt="WISEFOOD"
-            class="me-3"
-          >
+          <img src="/images/logo.png" width="200" alt="WISEFOOD" class="me-3" />
         </div>
       </router-link>
     </div>
@@ -33,19 +28,25 @@
 
     <div class="text-center text-secondary mt-3">
       {{ $t('header.noAccount') }}
-      <router-link :to="{ name: 'signup' }">
-        <span class="text-blue">{{ $t('header.register') }}</span>
-      </router-link>
+      <a class="text-blue cursor-pointer" @click="handleRegister">
+        Register
+      </a>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useAuthStore } from "@/stores/authStore";
+import KeycloakAuthService from "@/services/keycloak";
 
 const authStore = useAuthStore();
 
 const handleLogin = () => {
   authStore.login();
+};
+
+const handleRegister = () => {
+  // This will redirect to Keycloak registration page with proper PKCE
+  KeycloakAuthService.register();
 };
 </script>
