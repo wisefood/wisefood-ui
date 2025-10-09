@@ -20,9 +20,9 @@
           {{ $t('header.login') }}
         </button>
 
-        <div class="text-center text-purple">
+        <!-- <div class="text-center text-purple">
           <a class="cursor-pointer">{{ $t('header.guestLogin') }}</a>
-        </div>
+        </div> -->
       </div>
     </div>
 
