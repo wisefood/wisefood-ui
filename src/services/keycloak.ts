@@ -19,23 +19,16 @@ class KeycloakAuthService {
   }
 
   private hasWebCrypto(): boolean {
-    return (
-      typeof window !== "undefined" &&
-      !!window.crypto &&
-      !!window.crypto.subtle
-    );
+    return typeof window !== "undefined" && !!window.crypto && !!window.crypto.subtle;
   }
 
+  /** Initialize Keycloak */
   async init(): Promise<boolean> {
-    // If already initialized and authenticated, return the cached result
     if (this.initPromise && this.keycloak) {
       return this.keycloak.authenticated || false;
     }
 
-    // Only initialize once
-    if (this.initPromise) {
-      return this.initPromise;
-    }
+    if (this.initPromise) return this.initPromise;
 
     this.initPromise = (async () => {
       try {
@@ -48,14 +41,11 @@ class KeycloakAuthService {
           checkLoginIframe: false,
         });
 
-        // Setup token refresh if authenticated
-        if (authenticated) {
-          this.setupTokenRefresh();
-        }
+        if (authenticated) this.setupTokenRefresh();
 
         return authenticated;
       } catch (error) {
-        console.error("Keycloak init failed:", error);
+        console.error("[Keycloak] Init failed:", error);
         return false;
       }
     })();
@@ -63,62 +53,80 @@ class KeycloakAuthService {
     return this.initPromise;
   }
 
+  /** Setup automatic token refresh */
   private setupTokenRefresh(): void {
     const kc = this.getKeycloak();
 
-    // Refresh token every 60 seconds
-    setInterval(async () => {
+    const interval = setInterval(async () => {
       try {
-        await kc.updateToken(70);
+        const refreshed = await kc.updateToken(70);
+        if (!refreshed) {
+          console.warn("[Keycloak] Token not refreshed, may be expired.");
+        }
       } catch (error) {
-        console.error("Token refresh failed:", error);
+        console.error("[Keycloak] Token refresh failed:", error);
+        clearInterval(interval);
         this.logout();
       }
-    }, 60000);
+    }, 60000); // every 60 seconds
   }
 
-  login(): void {
+  /** Redirect to login page */
+  login(redirectUri?: string): void {
     const kc = this.getKeycloak();
-    const redirectUri = window.location.origin + "/dashboard";
-    console.log('[Keycloak] Redirecting to login. Redirect URI:', redirectUri);
     kc.login({
-      redirectUri: redirectUri,
+      redirectUri: redirectUri || window.location.origin + "/dashboard",
     });
   }
 
-  logout(): void {
+  /** Redirect to registration page */
+  register(redirectUri?: string): void {
+    const kc = this.getKeycloak();
+    kc.register({
+      redirectUri: redirectUri || window.location.origin + "/dashboard",
+    });
+  }
+
+  /** Logout and redirect */
+  logout(redirectUri?: string): void {
     const kc = this.getKeycloak();
     kc.logout({
-      redirectUri: window.location.origin + "/login",
+      redirectUri: redirectUri || window.location.origin + "/login",
     });
   }
 
+  /** Force token refresh manually */
   async refreshToken(): Promise<boolean> {
     try {
       const kc = this.getKeycloak();
       return await kc.updateToken(70);
     } catch (error) {
-      console.error("Failed to refresh token:", error);
+      console.error("[Keycloak] Failed to refresh token:", error);
       return false;
     }
   }
 
+  /** Check authentication */
   isAuthenticated(): boolean {
     return this.keycloak?.authenticated ?? false;
   }
 
+  /** Get access token */
   getToken(): string | undefined {
     return this.keycloak?.token;
   }
 
+  /** Get refresh token */
   getRefreshToken(): string | undefined {
     return this.keycloak?.refreshToken;
   }
 
+  /** Get parsed token info */
   getTokenParsed(): any {
     return this.keycloak?.tokenParsed;
   }
 
+  /** Get basic user info */
   getUserInfo() {
     const parsed = this.keycloak?.tokenParsed;
     if (!parsed) return null;
