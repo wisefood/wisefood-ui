@@ -21,7 +21,8 @@
     },
     "dashboard":{
       "title": "Overview",
-      "description": "View and manage your profile, requests, and account settings in Wisefood's user dashboard."
+      "description": "View and manage your profile, requests, and account settings in Wisefood's user dashboard.",
+      "noHouseholdDescription": "We couldn't find a household attached to your account yet. Create one to unlock personalized recommendations."
     }
   },
   "buttons": {
