@@ -139,25 +139,31 @@
         </div>
         </a>
         <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-        <a href="/my/settings" class="dropdown-item">Settings</a>
+        <a :href="computedUrl" target="_blank" class="dropdown-item">Account Settings</a>
         <router-link :to="{ name: 'logout' }" class="dropdown-item">Logout</router-link>
         </div>
-      </div>
-    </div>
-  </div>
-</header>
-</template>
+            </div>
+          </div>
+        </div>
+      </header>
+      </template>
 
 <script setup lang="ts">
 import { computed, withDefaults, defineProps } from 'vue'
+
+const settings_url = import.meta.env.VITE_KEYCLOAK_URL + '/realms/' + import.meta.env.VITE_KEYCLOAK_REALM + '/account'
 
 const props = withDefaults(
   defineProps<{ fullname?: string; roles?: string[] }>(),
   {
     fullname: 'Guest User',
-    roles: () => []
+    roles: () => [],
+    settings_url: 'nil',
   }
 )
+
+const computedUrl = computed(() => settings_url)
+
 
 const computedRoles = computed(() =>
   props.roles
