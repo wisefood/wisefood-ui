@@ -131,11 +131,16 @@
       <div class="nav-item dropdown">
         <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
         <span class="avatar avatar-sm bg-blue-lt text-uppercase">
-          {{fullname.split(' ').map((name: string) => name[0]).join('')}}
+          {{ fullname.split(' ').map((name: string) => name[0]).join('') }}
         </span>
         <div class="d-none d-xl-block ps-2">
           <div>{{ fullname }}</div>
-          <div class="mt-1 small text-secondary">{{ computedRoles }}</div>
+          <div class="mt-1 small text-secondary">
+            <span v-if="operatingAsText">{{ operatingAsText }}</span>
+            <span v-if="memberListText">
+              <span v-if="operatingAsText"> </span>
+            </span>
+          </div>
         </div>
         </a>
         <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
@@ -149,7 +154,9 @@
       </template>
 
 <script setup lang="ts">
-import { computed, withDefaults, defineProps } from 'vue'
+import { computed, defineProps, onMounted, withDefaults } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useSessionStore } from '@/stores/sessionStore'
 
 const settings_url = import.meta.env.VITE_KEYCLOAK_URL + '/realms/' + import.meta.env.VITE_KEYCLOAK_REALM + '/account'
 
@@ -164,11 +171,21 @@ const props = withDefaults(
 
 const computedUrl = computed(() => settings_url)
 
+const sessionStore = useSessionStore()
+const { householdName, members: storeMembers, activeMember } = storeToRefs(sessionStore)
 
-const computedRoles = computed(() =>
-  props.roles
-    .filter(role => !['offline_access', 'uma_authorization', 'create-realm', 'default-roles-master'].includes(role))
-    .map(role => role.charAt(0).toUpperCase() + role.slice(1))
-    .join(', ')
-)
+onMounted(() => {
+  sessionStore.initialize().catch(() => {
+    // errors are logged inside the session store
+  })
+})
+
+const fullname = computed(() => householdName.value ?? props.fullname)
+
+const memberListText = computed(() => storeMembers.value.map(member => member.name).join(', '))
+
+const operatingAsText = computed(() => {
+  const name = activeMember.value?.name
+  return name ? `Operating as ${name}` : ''
+})
 </script>
