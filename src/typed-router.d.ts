@@ -26,6 +26,7 @@ declare module 'vue-router/auto-routes' {
     'logout': RouteRecordInfo<'logout', '/logout', Record<never, never>, Record<never, never>>,
     '/my-applications/': RouteRecordInfo<'/my-applications/', '/my-applications', Record<never, never>, Record<never, never>>,
     'profile': RouteRecordInfo<'profile', '/profiles', Record<never, never>, Record<never, never>>,
+    'profile-members': RouteRecordInfo<'profile-members', '/profiles/members', Record<never, never>, Record<never, never>>,
     '/recipe-wrangler/': RouteRecordInfo<'/recipe-wrangler/', '/recipe-wrangler', Record<never, never>, Record<never, never>>,
     'signup': RouteRecordInfo<'signup', '/signup', Record<never, never>, Record<never, never>>,
     '/user/[userId]/profile/': RouteRecordInfo<'/user/[userId]/profile/', '/user/:userId/profile', { userId: ParamValue<true> }, { userId: ParamValue<false> }>,

@@ -28,11 +28,6 @@
             </button>
         </div>
         </div>
-
-        <!-- Scrollable Area for future chat results -->
-        <div class="m-6 h2 overflow-y-auto" style="max-height: 200px;" v-if="showStages">
-        <slot name="results" />
-        </div>
     </div>
   </div>
 </template>

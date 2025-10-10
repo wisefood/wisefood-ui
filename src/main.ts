@@ -18,6 +18,8 @@ import { createApp } from "vue";
 import "flag-icons/css/flag-icons.min.css";
 import 'vuetify/styles'
 import '@tabler/core/dist/css/tabler.min.css'
+import '@tabler/core/dist/css/tabler-vendors.min.css'
+import '@tabler/core/dist/css/tabler-flags.min.css'
 import "./styles/wisefood.css";
 
 const app = createApp(App);

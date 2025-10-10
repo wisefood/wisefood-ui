@@ -34,16 +34,54 @@ export type HouseholdMember = {
  */
 
 export async function getUserHousehold(signal?: AbortSignal) {
-  return api.get<{ result: Household }>(`${PATH}/me`, { signal }).then(res => res.result)
+  return api.get<Household>(`${PATH}/me`, { signal })
 }
 
 export async function getHouseholdMembers(household_id: string, signal?: AbortSignal) {
   const id = encodeURIComponent(household_id)
-  return api.get<{ result: HouseholdMember[] }>(`${PATH}/${id}/members`, { signal }).then(res => res.result)
+  return api.get<HouseholdMember[]>(`${PATH}/${id}/members`, { signal })
 }
 
 export async function getHouseholdMember(household_id: string, member_id: string, signal?: AbortSignal) {
   const hid = encodeURIComponent(household_id)
   const mid = encodeURIComponent(member_id)
-  return api.get<{ result: HouseholdMember }>(`${PATH}/${hid}/members/${mid}`, { signal }).then(res => res.result)
+  return api.get<HouseholdMember>(`${PATH}/${hid}/members/${mid}`, { signal })
+}
+
+export type CreateHouseholdPayload = {
+  name: string
+  region: string
+  member_count?: number
+  metadata?: Record<string, unknown>
+  members?: Array<{
+    name: string
+    age_group: string
+    image_url?: string
+    profile?: {
+      nutritional_preferences?: Record<string, unknown>
+      dietary_groups?: string[]
+    }
+  }>
+}
+
+/**
+ * Create a new household record for the current user (POST /households)
+ */
+export async function createHousehold(payload: CreateHouseholdPayload, signal?: AbortSignal) {
+  return api.post<Household>(PATH, payload, { signal })
+}
+
+export type CreateHouseholdMemberPayload = {
+  name: string
+  age_group: string
+  image_url?: string
+  profile: {
+    nutritional_preferences: Record<string, unknown>
+    dietary_groups: string[]
+  }
+}
+
+export async function createHouseholdMember(household_id: string, payload: CreateHouseholdMemberPayload, signal?: AbortSignal) {
+  const id = encodeURIComponent(household_id)
+  return api.post<HouseholdMember>(`${PATH}/${id}/members`, payload, { signal })
 }

@@ -23,6 +23,14 @@
       "title": "Overview",
       "description": "View and manage your profile, requests, and account settings in Wisefood's user dashboard.",
       "noHouseholdDescription": "We couldn't find a household attached to your account yet. Create one to unlock personalized recommendations."
+    },
+    "profiles":{
+      "title": "Welcome to Wisefood - Create Profile",
+      "description": "Create your food profile to receive personalized meal suggestions and nutrition tips.",
+      "members": {
+        "title": "Household Members",
+        "description": "Add each household member to personalise recommendations and shared plans."
+      }
     }
   },
   "buttons": {
