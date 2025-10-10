@@ -1,15 +1,5 @@
 <template>
   <div class="d-flex">
-    <!-- Sidebar -->
-    <transition name="slide" appear>
-      <Sidebar 
-        :fullname="'Anonymous User'" 
-        :roles="[]" 
-        :fixed-items="staticSidebarItems"
-        :scroll-items="sidebarSessions"
-      />
-    </transition>
-
     <!-- Main Chat Content -->
     <div class="flex-grow-1 p-4">
       <Chatbar @search="handleChatMessage" />

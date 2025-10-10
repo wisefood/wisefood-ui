@@ -1,7 +1,12 @@
 <template>
   <body>
   <div class="page">
-    
+    <transition name="slide" appear>
+      <Sidebar 
+        :fullname="'Anonymous User'" 
+        :roles="[]" 
+      />
+    </transition>
     <div class="layout-fluid">
       <Navbar 
         :fullname="fullname" 
