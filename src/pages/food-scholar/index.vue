@@ -48,6 +48,9 @@
         />
       </template>
     </ChatArea>
+    <div class="text-center m-0 p-0 text-gray" style="font-size: 0.75rem">
+      <p class="m-0 p-0">FoodScholar is an AI-powered application. It might make mistakes. Always consult experts for medical advice.</p>
+    </div>
   </div>
 </template>
 
@@ -409,14 +412,15 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .food-scholar {
+  background: transparent;
   display: flex;
   flex-direction: column;
   gap: 1.0rem;
-  min-height: 50vh;
+  min-height: 20vh;
 }
 
 .food-scholar :deep(.chat-area) {
-  height: clamp(500px, 80vh, 920px);
+  height: clamp(450px, 78vh, 920px);
 }
 
 .food-scholar__header {
@@ -477,7 +481,7 @@ onBeforeUnmount(() => {
 
 .food-scholar__empty {
   text-align: center;
-  padding: 3rem 1rem;
+  padding: 10rem 1rem;
   color: rgba(71, 85, 105, 0.85);
 }
 

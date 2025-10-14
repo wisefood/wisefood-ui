@@ -1,10 +1,5 @@
 <template>
   <form class="chatbar" @submit.prevent="handleSubmit">
-    <label class="chatbar__label" for="chatbar-input">
-      <span class="chatbar__title">Ask FoodScholar</span>
-      <span v-if="helperText" class="chatbar__helper">{{ helperText }}</span>
-    </label>
-
     <div class="chatbar__input-wrapper">
       <textarea
         id="chatbar-input"
@@ -150,7 +145,7 @@ nextTick(resize)
 .chatbar__label {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.1rem;
 }
 
 .chatbar__title {
@@ -166,12 +161,13 @@ nextTick(resize)
 
 .chatbar__input-wrapper {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.65rem;
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 18px;
-  padding: 0rem 0.75rem 0.9rem 1rem;
+  padding: 0.5rem 1rem 0.5rem 1rem;
   box-shadow: 0 16px 30px -18px rgba(15, 23, 42, 0.35);
 }
 
@@ -181,8 +177,8 @@ nextTick(resize)
   border: none;
   resize: none;
   outline: none;
-  font-size: 1rem;
-  line-height: 1.5;
+  font-size: 1.1rem;
+  line-height: 1.3rem;
   color: rgba(15, 23, 42, 0.92);
 }
 
@@ -256,8 +252,8 @@ nextTick(resize)
 }
 
 .chatbar__suggestion:hover:not(:disabled) {
-  background: rgba(99, 102, 241, 0.16);
-  border-color: rgba(79, 70, 229, 0.55);
+  background: rgba(241, 99, 132, 0.16);
+  border-color: rgba(229, 70, 163, 0.55);
 }
 
 .chatbar__suggestion:disabled {

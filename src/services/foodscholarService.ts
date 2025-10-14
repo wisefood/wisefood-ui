@@ -71,8 +71,19 @@ export async function getSessionHistory(session_id: string, signal?: AbortSignal
   return api.get<SessionHistoryResult>(`${PATH}/sessions/${id}/history`, { signal })
 }
 
-export async function startNewSession(body?: { title?: string }, signal?: AbortSignal) {
-  return api.post<StartSessionResult>(`${PATH}/sessions`, body, { signal })
+export type StartSessionPayload = {
+  title?: string
+  memberId?: string
+}
+
+export async function startNewSession(payload?: StartSessionPayload, signal?: AbortSignal) {
+  const { memberId, title } = payload ?? {}
+  const body = title !== undefined ? { title } : undefined
+
+  return api.post<StartSessionResult>(`${PATH}/sessions`, body, {
+    signal,
+    params: memberId ? { member_id: memberId } : undefined,
+  })
 }
 
 export async function chatInSession(session_id: string, message: string, signal?: AbortSignal) {
