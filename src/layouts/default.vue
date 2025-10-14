@@ -3,8 +3,10 @@
   <div class="page">
     <transition name="slide" appear>
       <Sidebar 
-        :fullname="'Anonymous User'" 
-        :roles="[]" 
+        :fullname="fullname" 
+        :roles="roles" 
+        :fixed-items="fixedSidebarItems"
+        :scroll-items="scrollSidebarItems"
       />
     </transition>
     <div class="layout-fluid">
@@ -14,25 +16,6 @@
       />
     </div>
     <div class="page-wrapper">
-      <div class="page-header d-print-none">
-        <div class="container-xl">
-          <div class="row g-2 align-items-center">
-            <div class="col-lg">
-              <div class="page-pretitle">
-                
-              </div>
-              <h3 class="page-title">
-                <ol class="breadcrumb breadcrumb-arrows">
-                  <li class="breadcrumb-item">
-                    <p class="text-secondary">
-                    </p>
-                  </li>
-                </ol>
-              </h3>
-            </div>
-          </div>
-        </div>
-      </div>
       <div class="page-body">
         <div class="container-xl">
           <router-view />
@@ -47,13 +30,28 @@
 </template>
 
 <script lang="ts" setup>
+import { computed } from 'vue'
 import { useAuthStore } from "@/stores/authStore";
+import { useAppStore, type SidebarItem } from '@/stores/app'
 
 const authStore = useAuthStore();
+const appStore = useAppStore()
 
 const fullname = authStore.user?.given_name + ' ' + authStore.user?.family_name || 'Guest User';
 const roles = authStore.user?.roles || [];
 
+const fallbackFixedItems: SidebarItem[] = [
+  { label: 'Dashboard', to: '/dashboard' },
+  { label: 'Food Scholar', to: '/food-scholar' },
+  { label: 'Recipe Wrangler', to: '/recipe-wrangler' },
+  { label: 'Food Chat', to: '/food-chat' },
+]
+
+const fixedSidebarItems = computed(() =>
+  appStore.sidebarFixedItems.length ? appStore.sidebarFixedItems : fallbackFixedItems
+)
+
+const scrollSidebarItems = computed(() => appStore.sidebarScrollItems)
 </script>
 
 <style>

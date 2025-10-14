@@ -1,31 +1,65 @@
 <template>
   <div :class="['chat-message', message.role === 'user' ? 'user' : 'assistant']">
-    <div class="bubble">{{ message.content }}</div>
+    <div class="bubble">
+      <div class="chat-bubble-body">
+        <p>{{ message.content }}</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { defineProps } from 'vue'
-import type { Message } from '@/composables/useFoodscholarSessions'
 
-const props = defineProps<{ message: Message }>()
+type ChatMessagePayload = {
+  role: 'user' | 'ai' | 'assistant'
+  content: string
+}
+
+const props = defineProps<{ message: ChatMessagePayload }>()
 </script>
 
 <style scoped>
 .chat-message {
   display: flex;
-  margin: 4px 0;
+  margin: 0.5rem 0;
 }
+
+.chat-message.assistant {
+  justify-content: flex-start;
+}
+
 .chat-message.user {
   justify-content: flex-end;
 }
-.chat-message .bubble {
-  max-width: 60%;
-  padding: 8px 12px;
-  border-radius: 16px;
-  background-color: #eee;
+
+.bubble {
+  max-width: min(680px, 90%);
+  border-radius: 18px;
+  padding: 0.85rem 1.1rem;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  background: rgba(241, 245, 249, 0.9);
+  color: rgba(15, 23, 42, 0.88);
 }
+
 .chat-message.user .bubble {
-  background-color: #cce5ff;
+  background: linear-gradient(135deg, rgba(199, 140, 168, 0.92), rgba(248, 129, 157, 0.92));
+  color: #fff;
+  border-bottom-right-radius: 6px;
+}
+
+.chat-message.assistant .bubble {
+  border-bottom-left-radius: 6px;
+}
+
+.chat-bubble-body {
+  display: block;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.55;
+}
+
+.chat-bubble-body p {
+  margin: 0;
 }
 </style>

@@ -13,8 +13,8 @@ export function useChatSession() {
     loading.value = true
     error.value = null
     try {
-      const data = await foodScholarService.getSessionHistory(sessionId)
-      messages.value = data.result.messages
+      const history = await foodScholarService.getSessionHistory(sessionId)
+      messages.value = history?.messages ?? []
     } catch (err: any) {
       error.value = err.message ?? String(err)
     } finally {
@@ -27,7 +27,18 @@ export function useChatSession() {
     try {
       const res = await foodScholarService.chatInSession(currentSessionId.value, content)
       messages.value.push({ type: 'human', content })
-      if (res.result) messages.value.push(...res.result.messages)
+      if (res?.response) {
+        messages.value.push({
+          type: 'ai',
+          content: JSON.stringify(res.response),
+          structured_response: {
+            answer: res.response.answer,
+            facts: res.response.facts ?? [],
+            references: res.response.references ?? [],
+            follow_up_suggestions: res.response.follow_up_suggestions ?? [],
+          },
+        })
+      }
     } catch (err: any) {
       console.error(err)
     }

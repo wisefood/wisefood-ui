@@ -24,10 +24,33 @@ export type SessionHistoryResponse = {
   success: boolean
   result: {
     session_id: string
-    user_context: string
-    session_title: string
+    user_context?: string
+    session_title?: string | null
+    metadata?: { title?: string }
     messages: Message[]
   }
+}
+
+export type SessionHistoryResult = SessionHistoryResponse['result']
+
+export type ChatResponsePayload = {
+  session_id: string
+  response: {
+    answer: string
+    facts?: { fact: string; category?: string; confidence?: string }[] | null
+    references?: { source_type?: string; description?: string }[] | null
+    follow_up_suggestions?: string[] | null
+  }
+  timestamp?: string
+  is_first_message?: boolean
+  session_title?: string | null
+}
+
+export type StartSessionResult = {
+  session_id: string
+  session_title?: string | null
+  metadata?: { title?: string }
+  user_context?: string
 }
 
 /**
@@ -45,14 +68,14 @@ export async function getSessions(signal?: AbortSignal) {
 
 export async function getSessionHistory(session_id: string, signal?: AbortSignal) {
   const id = encodeURIComponent(session_id)
-  return api.get<SessionHistoryResponse>(`${PATH}/sessions/${id}/history`, { signal })
+  return api.get<SessionHistoryResult>(`${PATH}/sessions/${id}/history`, { signal })
 }
 
 export async function startNewSession(body?: { title?: string }, signal?: AbortSignal) {
-  return api.post(`${PATH}/sessions`, body, { signal })
+  return api.post<StartSessionResult>(`${PATH}/sessions`, body, { signal })
 }
 
 export async function chatInSession(session_id: string, message: string, signal?: AbortSignal) {
   const id = encodeURIComponent(session_id)
-  return api.post(`${PATH}/chat/${id}`, { message }, { signal })
+  return api.post<ChatResponsePayload>(`${PATH}/chat/${id}`, { message }, { signal })
 }

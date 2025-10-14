@@ -62,7 +62,6 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
 type SidebarItem = { label: string; to: string; icon?: string }

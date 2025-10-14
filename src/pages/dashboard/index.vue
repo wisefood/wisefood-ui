@@ -45,6 +45,7 @@ import { useRouter } from "vue-router";
 import { ApiError } from "@/lib/apiClient";
 import { useI18nWithStorage } from "@/composables/useI18nWithStorage";
 import { useAuthStore } from "@/stores/authStore";
+import { useSessionStore } from "@/stores/sessionStore";
 import { useUserHousehold } from "@/composables/useHouseholds";
 
 import ServiceCard from "@/components/ServiceCard.vue";
@@ -61,6 +62,7 @@ definePage({
 const { t } = useI18nWithStorage();
 const auth = useAuthStore();
 const router = useRouter();
+const session = useSessionStore();
 
 const {
   data: household,
@@ -78,24 +80,6 @@ const isHouseholdMissing = computed(() => {
   return err instanceof ApiError && err.status === 404;
 });
 
-const showHouseholdError = computed(() => {
-  if (householdLoading.value) return false;
-  const err = householdError.value;
-  return Boolean(err) && !(err instanceof ApiError && err.status === 404);
-});
-
-const householdErrorMessage = computed(() => {
-  const err = householdError.value;
-  if (!err) return "";
-  if (err instanceof ApiError) return err.message ?? t("common.error");
-  if (err instanceof Error) return err.message;
-  return String(err);
-});
-
-const retryFetchHousehold = () => {
-  fetchHousehold();
-};
-
 function getVocativeName(name: string | undefined) {
   if (!name) return '';
   if (name.endsWith('ος')) return name.slice(0, -2) + 'ο';
@@ -108,12 +92,19 @@ onMounted(() => {
   if (auth.isAuthenticated) {
     fetchHousehold();
   }
-
+  
   const nameElement = document.getElementById('vocative-name');
-  if (nameElement && auth.user) {
-    nameElement.textContent = getVocativeName(auth.user.given_name);
+  if (nameElement) {
+    watch(
+      () => session.activeMember?.name,
+      (name) => {
+        nameElement.textContent = getVocativeName(name);
+      },
+      { immediate: true }
+    );
   }
 });
+
 
 watch(
   () => auth.isAuthenticated,

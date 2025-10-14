@@ -21,6 +21,7 @@ declare module 'vue' {
     ChatArea: typeof import('./components/ChatArea.vue')['default']
     Chatbar: typeof import('./components/Chatbar.vue')['default']
     ChatMessage: typeof import('./components/ChatMessage.vue')['default']
+    ChatResponse: typeof import('./components/ChatResponse.vue')['default']
     CookingProfile: typeof import('./components/user-profile/CookingProfile.vue')['default']
     CookingProfileEdit: typeof import('./components/user-profile/CookingProfileEdit.vue')['default']
     CountrySelector: typeof import('./components/CountrySelector.vue')['default']
