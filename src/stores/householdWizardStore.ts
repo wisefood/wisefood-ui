@@ -10,12 +10,14 @@ export type AgeGroup =
   | "baby"
   | "child"
   | "teen"
-  | "yound_adult"
+  | "young_adult"
   | "adult"
   | "middle_aged"
   | "senio";
 
 export type GenderOption = "female" | "male" | "non_binary" | "prefer_not_to_say" | "other";
+
+export type DietaryPreferenceLevel = "off" | "like" | "neutral" | "avoid";
 
 export interface HouseholdWizardState {
   householdName: string;
@@ -38,6 +40,8 @@ export interface HouseholdMemberDraft {
   ageGroup: AgeGroup;
   imageUrl: string;
   dietaryGroups: string[];
+  dietaryPreferences: Record<string, Record<string, DietaryPreferenceLevel>>;
+  customDietaryFoods: Record<string, string[]>;
   nutritionalNotes: string;
   isPrimary: boolean;
 }
@@ -54,6 +58,8 @@ function createMemberDraft(isPrimary = false): HouseholdMemberDraft {
     ageGroup: "adult",
     imageUrl: "",
     dietaryGroups: [],
+    dietaryPreferences: {},
+    customDietaryFoods: {},
     nutritionalNotes: "",
     isPrimary,
   };
@@ -103,6 +109,35 @@ export const useHouseholdWizardStore = defineStore("householdWizard", {
       return state.memberDrafts.map((draft) => {
         const dietary = draft.dietaryGroups.length ? draft.dietaryGroups : ["omnivore"];
         const preferences: Record<string, unknown> = {};
+
+        const selectedGroupSet = new Set(draft.dietaryGroups);
+        const preferenceEntries = Object.entries(draft.dietaryPreferences).reduce<
+          Record<string, Record<string, DietaryPreferenceLevel>>
+        >((acc, [group, foods]) => {
+          if (!selectedGroupSet.has(group)) return acc;
+          const filtered = Object.entries(foods).filter(([, level]) => level !== "off");
+          if (filtered.length) {
+            acc[group] = Object.fromEntries(filtered);
+          }
+          return acc;
+        }, {});
+
+        if (Object.keys(preferenceEntries).length) {
+          preferences.dietary_preferences = preferenceEntries;
+        }
+
+        const customFoods = Object.entries(draft.customDietaryFoods).reduce<Record<string, string[]>>(
+          (acc, [group, items]) => {
+            if (selectedGroupSet.has(group) && items && items.length) {
+              acc[group] = items;
+            }
+            return acc;
+          },
+          {}
+        );
+        if (Object.keys(customFoods).length) {
+          preferences.custom_dietary_foods = customFoods;
+        }
 
         const trimmedNotes = draft.nutritionalNotes.trim();
         if (trimmedNotes) preferences.notes = trimmedNotes;
@@ -265,6 +300,19 @@ export const useHouseholdWizardStore = defineStore("householdWizard", {
       if (payload.ageGroup !== undefined) draft.ageGroup = payload.ageGroup;
       if (payload.imageUrl !== undefined) draft.imageUrl = payload.imageUrl;
       if (payload.dietaryGroups !== undefined) draft.dietaryGroups = [...payload.dietaryGroups];
+      if (payload.dietaryPreferences !== undefined) {
+        draft.dietaryPreferences = Object.fromEntries(
+          Object.entries(payload.dietaryPreferences).map(([group, foods]) => [
+            group,
+            { ...foods },
+          ])
+        );
+      }
+      if (payload.customDietaryFoods !== undefined) {
+        draft.customDietaryFoods = Object.fromEntries(
+          Object.entries(payload.customDietaryFoods).map(([group, foods]) => [group, [...foods]])
+        );
+      }
       if (payload.nutritionalNotes !== undefined) draft.nutritionalNotes = payload.nutritionalNotes;
     },
 
