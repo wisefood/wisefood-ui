@@ -2,9 +2,7 @@
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
-    '@nuxt/ui',
-    '@nuxt/image',
-    '@nuxt/scripts'
+    '@nuxt/ui'
   ],
 
   devtools: {
