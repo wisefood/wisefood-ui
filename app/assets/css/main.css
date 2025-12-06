@@ -7,6 +7,9 @@
 }
 
 @theme static {
+
+  --font-sans:  system-ui, sans-serif;
+  --font-mono: monospace;
   --color-brandg-50: #f9fae9;
   --color-brandg-100: #edf0d5;
   --color-brandg-200: #dbe1aa;
