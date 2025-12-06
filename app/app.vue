@@ -1,30 +1,3 @@
-<script setup>
-useHead({
-  meta: [
-    { name: 'viewport', content: 'width=device-width, initial-scale=1' }
-  ],
-  link: [
-    { rel: 'icon', href: '/favicon.ico' }
-  ],
-  htmlAttrs: {
-    lang: 'en'
-  }
-})
-
-const title = 'WiseFood'
-const description = 'WiseFood - Your Ultimate Foodie Companion: Discover, Share, and Savor Culinary Delights!'
-
-useSeoMeta({
-  title,
-  description,
-  ogTitle: title,
-  ogDescription: description,
-  ogImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
-  twitterImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
-  twitterCard: 'summary_large_image'
-})
-</script>
-
 <template>
   <UApp>
     <UHeader>
@@ -32,32 +5,39 @@ useSeoMeta({
         <NuxtLink to="/">
           <AppLogo class="w-auto h-10 shrink-0" />
         </NuxtLink>
-
         <TemplateMenu />
       </template>
       <template #right>
         <UColorModeButton />
+        <!-- Simple locale switcher -->
+        <USelect 
+          v-model="currentLocale" 
+          :items="locales"
+          value-key="code"
+          label-key="name"
+          class="w-48" 
+        />
         <UButton
-            color="primary"
-            variant="solid"
-            trailing-icon="i-lucide-lock"
-            class="shadow-xl shadow-brand-500/20 hover:shadow-2xl text-white hover:shadow-brand-500/30 transition-shadow cursor-pointer"
-          >
-          Sign In 
+          color="primary"
+          variant="solid"
+          trailing-icon="i-lucide-lock"
+          class="shadow-xl shadow-brand-500/20 hover:shadow-2xl text-white hover:shadow-brand-500/30 transition-shadow cursor-pointer"
+        >
+          {{ $t('nav.signIn') }} 
         </UButton>
-        </template>
+      </template>
     </UHeader>
 
     <UMain>
       <NuxtPage />
     </UMain>
 
-    <USeparator/>
+    <USeparator />
 
     <UFooter class="bg-neutral-300 dark:bg-zinc-800">
       <template #left>
         <p class="text-sm text-muted">
-          © {{ new Date().getFullYear() }} The WiseFood Consortium, All rights reserved.
+          © 2025 The WiseFood Consortium, All rights reserved.
         </p>
         <span class="mx-2 text-sm text-muted">
           <NuxtLink to="https://cordis.europa.eu/project/id/101181895" target="_blank" rel="noopener noreferrer">
@@ -67,10 +47,9 @@ useSeoMeta({
       </template>
 
       <template #right>
-         <p class="text-sm text-muted">
-          Terms & Conditions | GDPR 
+        <p class="text-sm text-muted">
+          {{ $t('nav.legal') }} 
         </p>
-
         <UButton
           to="https://github.com/nuxt-ui-templates/starter"
           target="_blank"
@@ -87,7 +66,7 @@ useSeoMeta({
           color="neutral"
           variant="ghost"
         />
-         <UButton
+        <UButton
           to="https://www.instagram.com/wisefood_project/"
           target="_blank"
           icon="i-simple-icons-instagram"
@@ -99,3 +78,41 @@ useSeoMeta({
     </UFooter>
   </UApp>
 </template>
+
+<script lang="ts" setup>
+import { useI18n } from 'vue-i18n'
+
+const { t, locale } = useI18n()
+
+const locales = [
+  { code: 'en', name: 'English' },
+  { code: 'el', name: 'Ελληνικά' }
+]
+
+const currentLocale = computed({
+  get: () => locale.value,
+  set: (code: string) => { locale.value = code as 'en' | 'el' }
+})
+
+useHead({
+  meta: [
+    { name: 'viewport', content: 'width=device-width, initial-scale=1' }
+  ],
+  link: [
+    { rel: 'icon', href: '/favicon.ico' }
+  ],
+  htmlAttrs: {
+    lang: locale.value
+  }
+})
+
+useSeoMeta({
+  title: t('meta.title'),
+  description: t('meta.description'),
+  ogTitle: t('meta.title'),
+  ogDescription: t('meta.description'),
+  ogImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
+  twitterImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
+  twitterCard: 'summary_large_image'
+})
+</script>

@@ -2,11 +2,17 @@
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
-    '@nuxt/ui'
+    '@nuxt/ui',
   ],
 
   devtools: {
     enabled: true
+  },
+  debug: true,
+  vite: {
+    define: {
+      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: true
+    }
   },
 
   css: ['~/assets/css/main.css'],

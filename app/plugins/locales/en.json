@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "title": "WiseFood",
+    "description": "WiseFood - Your Ultimate Foodie Companion: Discover, Share, and Savor Culinary Delights!"
+  },
+  "nav": {
+    "signIn": "Sign In",
+    "legal": "Terms & Conditions | GDPR"
+  },
+  "hero": {
+    "eyebrow": "Nutrition · Sustainability · Wellness",
+    "titleLead": "Empowered Citizens",
+    "titleAccent": "Healthier Communities",
+    "description": "Transform your food choices with smart, AI-powered tools towards healthier and more sustainable living.",
+    "ctaPrimary": "Get Started",
+    "ctaSecondary": "Watch Demo"
+  },
+  "features": {
+    "heading": "Built for",
+    "headingAccent": "humans",
+    "subheading": "Discover the powerful features that make WiseFood the ultimate nutritional companion.",
+    "items": {
+      "scientific": {
+        "title": "Scientific Knowledge",
+        "description": "Access cutting-edge nutrition research made simple. We translate complex scientific studies into clear, actionable insights."
+      },
+      "personalized": {
+        "title": "Personalized For You",
+        "description": "Every recommendation adapts to your unique profile. Your dietary preferences, allergies, and goals shape all suggestions."
+      },
+      "culinary": {
+        "title": "Culinary Inspiration",
+        "description": "Discover recipes matching your taste and health goals. From quick weeknight meals to gourmet dishes, find new favorites."
+      },
+      "ai": {
+        "title": "AI-Powered Insights",
+        "description": "Smart algorithms analyze your eating habits continuously. Get proactive suggestions to make better food choices daily."
+      },
+      "planning": {
+        "title": "Meal Planning",
+        "description": "Cooking for all household members has never been made easier. Receive meal plans suggestions that keep everyone happy."
+      },
+      "progress": {
+        "title": "Track Your Progress",
+        "description": "Beautiful dashboards visualize your health journey clearly. Celebrate milestones and stay motivated with smart tracking."
+      }
+    }
+  },
+  "steps": {
+    "heading": "Simple",
+    "headingAccent": "steps",
+    "subheading": "Get started in minutes and transform your relationship with food.",
+    "items": {
+      "profile": {
+        "title": "Create Your Profile",
+        "description": "Share your dietary preferences, health goals, and any restrictions. Getting started takes just a couple of minutes."
+      },
+      "recommendations": {
+        "title": "Get Recommendations",
+        "description": "Our AI analyzes your profile instantly and delivers personalized meal plans, recipes, and nutritional guidance."
+      },
+      "track": {
+        "title": "Track & Improve",
+        "description": "Log your meals and monitor your progress over time. Watch as our system learns and adapts to serve you better."
+      }
+    }
+  },
+  "cta": {
+    "heading": "Ready to transform your",
+    "accent": "relationship with food?",
+    "description": "Join a community of users building healthier habits with WiseFood. Start your journey today and discover a smarter way to nourish your body.",
+    "primary": "Start Today"
+  }
+}
