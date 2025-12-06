@@ -37,7 +37,15 @@ useSeoMeta({
       </template>
       <template #right>
         <UColorModeButton />
-      </template>
+        <UButton
+            color="primary"
+            variant="solid"
+            trailing-icon="i-lucide-lock"
+            class="shadow-xl shadow-brand-500/20 hover:shadow-2xl text-white hover:shadow-brand-500/30 transition-shadow cursor-pointer"
+          >
+          Sign In 
+        </UButton>
+        </template>
     </UHeader>
 
     <UMain>
@@ -49,16 +57,20 @@ useSeoMeta({
     <UFooter class="bg-neutral-300 dark:bg-zinc-800">
       <template #left>
         <p class="text-sm text-muted">
-          © {{ new Date().getFullYear() }} | The WiseFood Consortium, All rights reserved.
+          © {{ new Date().getFullYear() }} The WiseFood Consortium, All rights reserved.
         </p>
         <span class="mx-2 text-sm text-muted">
-          <NuxtLink to="https://cordis.europa.eu/project/id/101181895/de" target="_blank" rel="noopener noreferrer">
-            <img src="/eu.png" alt="WiseFood Logo" class="inline h-15 mr-1" />
+          <NuxtLink to="https://cordis.europa.eu/project/id/101181895" target="_blank" rel="noopener noreferrer">
+            <img src="/eu.png" alt="WiseFood Logo" class="inline h-10 mr-1" />
           </NuxtLink>
         </span>
       </template>
 
       <template #right>
+         <p class="text-sm text-muted">
+          Terms & Conditions | GDPR 
+        </p>
+
         <UButton
           to="https://github.com/nuxt-ui-templates/starter"
           target="_blank"

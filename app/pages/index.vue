@@ -38,7 +38,7 @@
               color="primary"
               variant="solid"
               trailing-icon="i-lucide-arrow-right"
-              class="shadow-xl shadow-brand-500/20 hover:shadow-2xl hover:shadow-brand-500/30 transition-shadow"
+              class="shadow-xl shadow-brand-500/20 hover:shadow-2xl text-white hover:shadow-brand-500/30 transition-shadow cursor-pointer"
             >
               Get Started
             </UButton>
@@ -46,7 +46,7 @@
               size="xl"
               variant="ghost"
               leading-icon="i-lucide-play-circle"
-              class="backdrop-blur-sm text-brandg-500"
+              class="backdrop-blur-sm text-brandg-500 cursor-pointer"
             >
               Watch Demo
             </UButton>
@@ -57,7 +57,7 @@
 
 
      <UPageSection id="features">
-      <div class="text-center mb-16 sm:mb-20 scroll-fade-in">
+      <div class="text-center mb-6 sm:mb-10 scroll-fade-in">
         <h2 class="text-6xl sm:text-5xl lg:text-6xl font-light text-gray-900 dark:text-white tracking-tight">
           Built for <span class="text-brand-500 text-5xl sm:text-6xl lg:text-7xl  font-serif italic">humans</span>
         </h2>
@@ -95,7 +95,7 @@
       </div>
     </UPageSection>
 
-     <UPageSection class="bg-gray-50 dark:bg-gray-900/30">
+     <UPageSection>
         <div class="text-center sm:mb-6 scroll-fade-in">
           <h2 class="text-4xl sm:text-5xl lg:text-6xl font-light text-gray-900 dark:text-white tracking-tight">
             Simple <span class="text-brandg-500 text-5xl sm:text-6xl lg:text-7xl  font-serif italic">steps</span>
@@ -148,7 +148,7 @@
             cursor="pointer"
             variant="solid"
             trailing-icon="i-lucide-arrow-right"
-            class="shadow-xl shadow-brand-500/20 hover:shadow-2xl hover:shadow-brand-500/30 transition-shadow"
+            class="shadow-xl shadow-brand-500/20 hover:shadow-2xl hover:shadow-brand-500/30 transition-shadow cursor-pointer"
           >
             Start Today
           </UButton>
