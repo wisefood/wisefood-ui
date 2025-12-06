@@ -11,8 +11,8 @@ useHead({
   }
 })
 
-const title = 'Nuxt Starter Template'
-const description = 'A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours.'
+const title = 'WiseFood'
+const description = 'WiseFood - Your Ultimate Foodie Companion: Discover, Share, and Savor Culinary Delights!'
 
 useSeoMeta({
   title,
@@ -30,15 +30,35 @@ useSeoMeta({
     <UHeader>
       <template #left>
         <NuxtLink to="/">
-          <AppLogo class="w-auto h-6 shrink-0" />
+          <AppLogo class="w-auto h-10 shrink-0" />
         </NuxtLink>
 
         <TemplateMenu />
       </template>
-
       <template #right>
         <UColorModeButton />
+      </template>
+    </UHeader>
 
+    <UMain>
+      <NuxtPage />
+    </UMain>
+
+    <USeparator/>
+
+    <UFooter class="bg-neutral-300 dark:bg-zinc-800">
+      <template #left>
+        <p class="text-sm text-muted">
+          © {{ new Date().getFullYear() }} | The WiseFood Consortium, All rights reserved.
+        </p>
+        <span class="mx-2 text-sm text-muted">
+          <NuxtLink to="https://cordis.europa.eu/project/id/101181895/de" target="_blank" rel="noopener noreferrer">
+            <img src="/eu.png" alt="WiseFood Logo" class="inline h-15 mr-1" />
+          </NuxtLink>
+        </span>
+      </template>
+
+      <template #right>
         <UButton
           to="https://github.com/nuxt-ui-templates/starter"
           target="_blank"
@@ -47,28 +67,19 @@ useSeoMeta({
           color="neutral"
           variant="ghost"
         />
-      </template>
-    </UHeader>
-
-    <UMain>
-      <NuxtPage />
-    </UMain>
-
-    <USeparator icon="i-simple-icons-nuxtdotjs" />
-
-    <UFooter>
-      <template #left>
-        <p class="text-sm text-muted">
-          Built with Nuxt UI • © {{ new Date().getFullYear() }}
-        </p>
-      </template>
-
-      <template #right>
         <UButton
-          to="https://github.com/nuxt-ui-templates/starter"
+          to="https://www.linkedin.com/company/wisefood-project"
           target="_blank"
-          icon="i-simple-icons-github"
-          aria-label="GitHub"
+          icon="i-simple-icons-linkedin"
+          aria-label="LinkedIn"
+          color="neutral"
+          variant="ghost"
+        />
+         <UButton
+          to="https://www.instagram.com/wisefood_project/"
+          target="_blank"
+          icon="i-simple-icons-instagram"
+          aria-label="WiseFood Instagram"
           color="neutral"
           variant="ghost"
         />
