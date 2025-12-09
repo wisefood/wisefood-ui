@@ -15,13 +15,13 @@
     <UCard 
       class="shadow-xl"
       :ui="{
-        body: { padding: 'sm:p-8 p-' },
+        body: { padding: 'sm:p-8 p-6' },
         ring: 'ring-1 ring-gray-200 dark:ring-gray-800',
         rounded: 'rounded-2xl'
       }"
     >
       <!-- Header -->
-      <div class="mb-8">
+      <div class="mb-8 mt-6">
         <h1 class="text-5xl font-medium text-brandg-500 font-serif italic text-center mb-2">
             {{ t('auth.welcome') || 'Welcome back' }}
         </h1>
@@ -44,9 +44,7 @@
       </div>
 
       <!-- Login Form -->
-      <div v-else class="space-y-6">
-        
-
+      <div v-else class="space-y-7 p-8">
         <!-- Login Button -->
         <UButton 
           color="primary" 
