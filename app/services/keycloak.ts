@@ -1,18 +1,21 @@
-// plugins/keycloak.client.ts
-import { defineNuxtPlugin } from '#app'
 import Keycloak from 'keycloak-js'
-import type { KeycloakConfig, KeycloakInstance } from 'keycloak-js'
+import type { KeycloakConfig } from 'keycloak-js'
+
+const options: KeycloakConfig = {
+  url: import.meta.env.VITE_KEYCLOAK_URL,
+  clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
+  realm: import.meta.env.VITE_KEYCLOAK_REALM,
+};
 
 class KeycloakAuthService {
-  private keycloak: KeycloakInstance | null = null
+  private keycloak: Keycloak | null = null
   private initPromise: Promise<boolean> | null = null
-
-  private getKeycloak(): KeycloakInstance {
+  
+  private getKeycloak(): Keycloak {
     if (!this.keycloak) {
-      const config = this.getConfig()
-      this.keycloak = new Keycloak(config)
+      this.keycloak = new Keycloak(options);
     }
-    return this.keycloak
+    return this.keycloak;
   }
 
   private getConfig(): KeycloakConfig {
@@ -84,6 +87,13 @@ class KeycloakAuthService {
     })
   }
 
+  register(redirectUri?: string): void {
+    const kc = this.getKeycloak();
+    kc.register({
+      redirectUri: redirectUri || window.location.origin + "/dashboard",
+    });
+  }
+
   refreshToken(): Promise<boolean> {
     return this.getKeycloak().updateToken(70)
       .catch((err) => { console.error(err); return false })
@@ -118,7 +128,4 @@ class KeycloakAuthService {
   }
 }
 
-export default defineNuxtPlugin((nuxtApp) => {
-  const keycloakService = new KeycloakAuthService()
-  nuxtApp.provide('keycloak', keycloakService)
-})
+export default new KeycloakAuthService();
