@@ -2,8 +2,8 @@ import { createI18n } from "vue-i18n";
 import type { App } from "vue";
 
 // Import translation files
-import en from "../plugins/locales/en.json";
-import el from "../plugins/locales/el.json";
+import en from "./locales/en.json";
+import el from "./locales/el.json";
 
 export type SupportedLanguages = "en" | "el";
 
