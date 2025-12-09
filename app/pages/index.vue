@@ -31,13 +31,26 @@
           
           <div class="flex flex-col sm:flex-row items-center justify-center mt-10 sm:mt-12 gap-4 animate-fade-up animation-delay-800">
             <UButton
+              v-if="status !== 'authenticated'"
               size="xl"
               color="primary"
               variant="solid"
               trailing-icon="i-lucide-arrow-right"
+              to="/login"
               class="shadow-xl shadow-brand-500/20 hover:shadow-2xl text-white hover:shadow-brand-500/30 transition-shadow cursor-pointer"
             >
               {{ t('hero.ctaPrimary') }}
+            </UButton>
+            <UButton
+              v-else
+              size="xl"
+              color="primary"
+              variant="solid"
+              trailing-icon="i-lucide-arrow-right"
+              to="/dashboard"
+              class="shadow-xl shadow-brand-500/20 hover:shadow-2xl text-white hover:shadow-brand-500/30 transition-shadow cursor-pointer"
+            >
+              Go to Dashboard
             </UButton>
             <UButton
               size="xl"
@@ -150,8 +163,15 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n()
+const auth = useAuthStore()
+
+definePageMeta({
+  layout: 'default',
+  auth: false
+})
 
 const features = [
   { key: 'scientific', icon: 'i-lucide-microscope' },
@@ -197,7 +217,8 @@ const runTypingEffect = (text: string) => {
   typingTimeout = setTimeout(type, 200)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await auth.initialize()
   runTypingEffect(typingText.value)
 
   const observerOptions = {
@@ -219,6 +240,7 @@ onMounted(() => {
     observer?.observe(el)
   })
 })
+
 
 watch(typingText, (newText) => {
   runTypingEffect(newText)

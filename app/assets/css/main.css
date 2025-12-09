@@ -1,15 +1,23 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
-:root{
-  --font-sans:  system-ui, sans-serif;
-  --font-mono: monospace;
+
+/* System font stack - matches Nuxt UI default */
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* Apply system fonts globally */
+body {
+  font-family: var(--font-sans);
+}
+
+/* Reset any custom fonts that might be applied */
+* {
+  font-family: inherit;
 }
 
 @theme static {
-
-  --font-sans:  system-ui, sans-serif;
-  --font-mono: monospace;
   --color-brandg-50: #f9fae9;
   --color-brandg-100: #edf0d5;
   --color-brandg-200: #dbe1aa;
