@@ -14,7 +14,13 @@ export default defineNuxtConfig({
     }
   },
 
-
+  runtimeConfig: {
+    public: {
+      keycloakUrl: process.env.VITE_KEYCLOAK_URL,
+      keycloakRealm: process.env.VITE_KEYCLOAK_REALM,
+      keycloakClientId: process.env.VITE_KEYCLOAK_CLIENT_ID,
+    }
+  },  
 
   css: ['~/assets/css/main.css'],
 
