@@ -2,21 +2,14 @@
   <UApp>
     <UHeader>
       <template #left>
-        <NuxtLink to="/">
-          <AppLogo class="w-auto h-10 shrink-0" />
-        </NuxtLink>
+        <AppLogo class="w-auto h-10 shrink-0" height="12" />
         <TemplateMenu />
       </template>
       <template #right>
         <UColorModeButton />
-        <!-- Simple locale switcher -->
-        <USelect 
-          v-model="currentLocale" 
-          :items="locales"
-          value-key="code"
-          label-key="name"
-          class="w-48" 
-        />
+
+        <LocaleSelector />
+       
         <UButton
           to="/login"
           color="primary"
@@ -35,22 +28,6 @@
 
     <USeparator />
 
-    <WFooter />
+    <WFooter/>
   </UApp>
 </template>
-
-<script setup lang="ts">
-import { useI18n } from 'vue-i18n'
-
-const { locale } = useI18n()
-
-const locales = [
-  { code: 'en', name: 'English' },
-  { code: 'el', name: 'Ελληνικά' }
-]
-
-const currentLocale = computed({
-  get: () => locale.value,
-  set: (code: string) => { locale.value = code as 'en' | 'el' }
-})
-</script>

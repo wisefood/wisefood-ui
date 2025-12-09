@@ -17,7 +17,7 @@ useHead({
     { rel: 'icon', href: '/favicon.ico' }
   ],
   htmlAttrs: {
-    lang: locale.value
+    lang: computed(() => locale.value)
   }
 })
 

@@ -30,8 +30,9 @@
           </p>
           
           <div class="flex flex-col sm:flex-row items-center justify-center mt-10 sm:mt-12 gap-4 animate-fade-up animation-delay-800">
+              <ClientOnly>
             <UButton
-              v-if="status !== 'authenticated'"
+              v-if="!auth.isAuthenticated"
               size="xl"
               color="primary"
               variant="solid"
@@ -60,6 +61,7 @@
             >
               {{ t('hero.ctaSecondary') }}
             </UButton>
+            </ClientOnly>
           </div>
         </div>
       </div>
