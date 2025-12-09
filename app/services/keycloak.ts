@@ -1,29 +1,24 @@
 import Keycloak from 'keycloak-js'
 import type { KeycloakConfig } from 'keycloak-js'
 
-const options: KeycloakConfig = {
-  url: import.meta.env.VITE_KEYCLOAK_URL,
-  clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
-  realm: import.meta.env.VITE_KEYCLOAK_REALM,
-};
-
 class KeycloakAuthService {
   private keycloak: Keycloak | null = null
   private initPromise: Promise<boolean> | null = null
   
   private getKeycloak(): Keycloak {
     if (!this.keycloak) {
-      this.keycloak = new Keycloak(options);
+      const config = this.getConfig()
+      this.keycloak = new Keycloak(config)
     }
-    return this.keycloak;
+    return this.keycloak
   }
 
   private getConfig(): KeycloakConfig {
     const config = useRuntimeConfig().public
     return {
-      url: config.keycloakUrl,
-      realm: config.keycloakRealm,
-      clientId: config.keycloakClientId,
+      url: config.keycloakUrl as string,
+      realm: config.keycloakRealm as string,
+      clientId: config.keycloakClientId as string,
     }
   }
 
@@ -31,7 +26,21 @@ class KeycloakAuthService {
     return typeof window !== 'undefined' && !!window.crypto && !!window.crypto.subtle
   }
 
-  /** Initialize Keycloak */
+  // Helper to create absolute URL
+  private getAbsoluteUrl(path: string): string {
+    if (typeof window === 'undefined') return path
+    
+    // If it's already absolute, return as is
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path
+    }
+    
+    // Make it absolute
+    const origin = window.location.origin
+    const fullPath = path.startsWith('/') ? path : `/${path}`
+    return `${origin}${fullPath}`
+  }
+
   async init(): Promise<boolean> {
     if (this.initPromise && this.keycloak) {
       return this.keycloak.authenticated || false
@@ -41,14 +50,22 @@ class KeycloakAuthService {
     this.initPromise = (async () => {
       try {
         const kc = this.getKeycloak()
+        
+        console.log('[Keycloak] Starting initialization...')
+        
         const authenticated = await kc.init({
           onLoad: 'check-sso',
-          silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
+          silentCheckSsoRedirectUri: this.getAbsoluteUrl('/silent-check-sso.html'),
           pkceMethod: this.hasWebCrypto() ? 'S256' : undefined,
           checkLoginIframe: false,
         })
 
-        if (authenticated) this.setupTokenRefresh()
+        console.log('[Keycloak] Initialization complete. Authenticated:', authenticated)
+
+        if (authenticated) {
+          console.log('[Keycloak] User info:', this.getUserInfo())
+          this.setupTokenRefresh()
+        }
 
         return authenticated
       } catch (error) {
@@ -60,7 +77,6 @@ class KeycloakAuthService {
     return this.initPromise
   }
 
-  /** Automatic token refresh */
   private setupTokenRefresh(): void {
     const kc = this.getKeycloak()
     const interval = setInterval(async () => {
@@ -76,22 +92,40 @@ class KeycloakAuthService {
   }
 
   login(redirectUri?: string): void {
+    const absoluteUrl = redirectUri 
+      ? this.getAbsoluteUrl(redirectUri) 
+      : this.getAbsoluteUrl('/dashboard')
+    
+    console.log('[Keycloak] Login with redirect:', absoluteUrl)
+    
     this.getKeycloak().login({
-      redirectUri: redirectUri || window.location.origin + '/dashboard',
+      redirectUri: absoluteUrl,
     })
   }
 
   logout(redirectUri?: string): void {
+    const absoluteUrl = redirectUri 
+      ? this.getAbsoluteUrl(redirectUri) 
+      : this.getAbsoluteUrl('/login')
+    
+    console.log('[Keycloak] Logout with redirect:', absoluteUrl)
+    
     this.getKeycloak().logout({
-      redirectUri: redirectUri || window.location.origin + '/login',
+      redirectUri: absoluteUrl,
     })
   }
 
   register(redirectUri?: string): void {
-    const kc = this.getKeycloak();
+    const absoluteUrl = redirectUri 
+      ? this.getAbsoluteUrl(redirectUri) 
+      : this.getAbsoluteUrl('/dashboard')
+    
+    console.log('[Keycloak] Register with redirect:', absoluteUrl)
+    
+    const kc = this.getKeycloak()
     kc.register({
-      redirectUri: redirectUri || window.location.origin + "/dashboard",
-    });
+      redirectUri: absoluteUrl,
+    })
   }
 
   refreshToken(): Promise<boolean> {
@@ -119,7 +153,7 @@ class KeycloakAuthService {
     const parsed = this.keycloak?.tokenParsed
     if (!parsed) return null
     return {
-      id: parsed.sub,
+      id: parsed.sub || '',
       username: parsed.preferred_username,
       email: parsed.email,
       name: parsed.name,
@@ -128,4 +162,4 @@ class KeycloakAuthService {
   }
 }
 
-export default new KeycloakAuthService();
+export default new KeycloakAuthService()

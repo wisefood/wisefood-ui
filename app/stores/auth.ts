@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { useNuxtApp } from '#app'
+import KeycloakAuthService from '~/services/keycloak'
 
 interface User {
   id?: string
@@ -31,16 +31,14 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
-    /** Initialize auth state */
     async initialize() {
       if (this.initialized) return this.isAuthenticated
 
-      const { $keycloak } = useNuxtApp()
       try {
-        const authenticated = await $keycloak.init()
+        const authenticated = await KeycloakAuthService.init()
         if (authenticated) {
           this.isAuthenticated = true
-          this.user = $keycloak.getUserInfo() ?? { roles: [] }
+          this.user = KeycloakAuthService.getUserInfo() ?? { roles: [] }
           await this.refreshToken()
         } else {
           this.isAuthenticated = false
@@ -57,27 +55,22 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    /** Login */
-    async login(redirectUri?: string) {
-      const { $keycloak } = useNuxtApp()
-      await $keycloak.login(redirectUri)
+    // Accept both relative and absolute paths
+    async login(redirectUri: string = '/dashboard') {
+      await KeycloakAuthService.login(redirectUri)
     },
 
-    /** Logout */
-    async logout(redirectUri?: string) {
-      const { $keycloak } = useNuxtApp()
+    async logout(redirectUri: string = '/login') {
       this.isAuthenticated = false
       this.user = null
-      await $keycloak.logout(redirectUri)
+      await KeycloakAuthService.logout(redirectUri)
     },
 
-    /** Refresh access token */
     async refreshToken() {
-      const { $keycloak } = useNuxtApp()
       try {
-        const refreshed = await $keycloak.refreshToken()
+        const refreshed = await KeycloakAuthService.refreshToken()
         if (refreshed) {
-          this.user = $keycloak.getUserInfo() ?? { roles: [] }
+          this.user = KeycloakAuthService.getUserInfo() ?? { roles: [] }
         }
         return refreshed
       } catch (err) {
@@ -86,10 +79,8 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    /** Get access token */
     getToken(): string | undefined {
-      const { $keycloak } = useNuxtApp()
-      return $keycloak.getToken()
+      return KeycloakAuthService.getToken()
     },
   },
 })

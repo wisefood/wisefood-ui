@@ -1,13 +1,14 @@
-import KeycloakAuthService from '~/services/keycloak'
+// types/keycloak.d.ts
+import KeycloakAuthService from '@/services/keycloak';
 
 declare module '#app' {
   interface NuxtApp {
-    $keycloak: KeycloakAuthService
+    $keycloak: KeycloakAuthService;
   }
 }
 
 declare module 'vue' {
   interface ComponentCustomProperties {
-    $keycloak: KeycloakAuthService
+    $keycloak: KeycloakAuthService;
   }
 }
