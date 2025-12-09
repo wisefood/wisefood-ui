@@ -7,6 +7,13 @@
     "signIn": "Sign In",
     "legal": "Terms & Conditions | GDPR"
   },
+  "auth": {
+    "login": "Sign In",
+    "register": "Register",
+    "logout": "Sign Out",
+    "loginPrompt": "Sign in to your account",
+    "noAccount": "Don't have an account?"
+  },
   "hero": {
     "eyebrow": "Nutrition · Sustainability · Wellness",
     "titleLead": "Empowered Citizens",
