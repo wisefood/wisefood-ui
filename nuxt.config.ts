@@ -1,10 +1,9 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
     '@nuxt/ui',
+    '@pinia/nuxt',
   ],
-
   devtools: {
     enabled: true
   },
@@ -14,6 +13,14 @@ export default defineNuxtConfig({
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: true
     }
   },
+
+  runtimeConfig: {
+    public: {
+      keycloakUrl: process.env.KEYCLOAK_URL,
+      keycloakRealm: process.env.KEYCLOAK_REALM,
+      keycloakClientId: process.env.KEYCLOAK_CLIENT_ID,
+    }
+  }
 
   css: ['~/assets/css/main.css'],
 
