@@ -75,45 +75,87 @@
         </NuxtLink>
       </div>
 
-      <!-- Today's Spotlight -->
-      <div class="mb-12 scroll-fade-in" style="--delay: 0.2s">
-        <div class="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 shadow-xl">
-          <div class="grid grid-cols-1 lg:grid-cols-2">
-            <!-- Image Section -->
-            <div class="relative h-64 lg:h-auto bg-gradient-to-br from-brand-100 to-brand-200 dark:from-brand-900/40 dark:to-brand-800/40">
-              <div class="absolute inset-0 flex items-center justify-center">
-                <UIcon name="i-lucide-sparkles" class="w-20 h-20 text-brand-500 opacity-50" />
-              </div>
-              <div class="absolute top-4 left-4">
-                <UBadge color="primary" variant="solid" size="lg">Today's Focus</UBadge>
-              </div>
+      <!-- Today's Spotlight & Meal Schedule -->
+      <div class="mb-12 scroll-fade-in grid grid-cols-1 lg:grid-cols-3 gap-6" style="--delay: 0.2s">
+        <!-- Recipe Spotlight Card -->
+        <div class="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 shadow-xl lg:col-span-1">
+          <!-- Image Section -->
+          <div class="relative h-40 bg-gradient-to-br from-brand-100 to-brand-200 dark:from-brand-900/40 dark:to-brand-800/40">
+            <div class="absolute inset-0 flex items-center justify-center">
+              <UIcon name="i-lucide-sparkles" class="w-16 h-16 text-brand-500 opacity-50" />
             </div>
+            <div class="absolute top-3 left-3">
+              <UBadge color="primary" variant="solid" size="sm">Today's Focus</UBadge>
+            </div>
+          </div>
 
-            <!-- Content Section -->
-            <div class="p-8 lg:p-10 flex flex-col justify-center">
-              <h2 class="text-3xl sm:text-4xl font-light text-gray-900 dark:text-white mb-3">
-                {{ spotlight.title }}
-              </h2>
-              <p class="text-lg text-gray-600 dark:text-gray-300 font-light mb-6 leading-relaxed">
-                {{ spotlight.description }}
-              </p>
-              <div class="flex gap-3">
-                <UButton
-                  color="primary"
-                  size="lg"
-                  trailing-icon="i-lucide-arrow-right"
-                  class="cursor-pointer"
-                >
-                  Explore Recipe
-                </UButton>
-                <UButton
-                  variant="outline"
-                  size="lg"
-                  leading-icon="i-lucide-bookmark"
-                  class="cursor-pointer"
-                >
-                  Save
-                </UButton>
+          <!-- Content Section -->
+          <div class="p-5">
+            <h2 class="text-xl font-light text-gray-900 dark:text-white mb-2">
+              {{ spotlight.title }}
+            </h2>
+            <p class="text-sm text-gray-600 dark:text-gray-300 font-light mb-4 leading-relaxed">
+              {{ spotlight.description }}
+            </p>
+            <div class="flex flex-col gap-2">
+              <UButton
+                color="primary"
+                size="sm"
+                trailing-icon="i-lucide-arrow-right"
+                class="cursor-pointer"
+              >
+                Explore Recipe
+              </UButton>
+              <UButton
+                variant="outline"
+                size="sm"
+                leading-icon="i-lucide-bookmark"
+                class="cursor-pointer"
+              >
+                Save
+              </UButton>
+            </div>
+          </div>
+        </div>
+
+        <!-- Meal Schedule Calendar Card -->
+        <div class="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 shadow-xl p-5 lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-xl font-light text-gray-900 dark:text-white">Today's Schedule</h2>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ currentDateTime }}</p>
+            </div>
+            <UIcon name="i-lucide-calendar-days" class="w-7 h-7 text-brand-500" />
+          </div>
+
+          <!-- Upcoming Meals Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div
+              v-for="meal in upcomingMeals"
+              :key="meal.id"
+              class="flex flex-col gap-2 p-3 rounded-xl transition-all border"
+              :class="meal.isPast ? 'opacity-50 border-transparent' : meal.isNow ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-200 dark:border-brand-800' : 'border-transparent hover:bg-gray-50 dark:hover:bg-zinc-700/50'"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <UIcon
+                    :name="meal.icon"
+                    class="w-5 h-5"
+                    :class="meal.isNow ? 'text-brand-500' : 'text-gray-400'"
+                  />
+                  <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ meal.time }}</span>
+                </div>
+                <UBadge v-if="meal.isNow" color="primary" variant="solid" size="xs">Now</UBadge>
+              </div>
+              <div>
+                <h3 class="font-semibold text-sm text-gray-900 dark:text-white mb-1">{{ meal.name }}</h3>
+                <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{{ meal.description }}</p>
+              </div>
+              <div class="flex items-center gap-2 mt-auto">
+                <UBadge color="gray" variant="subtle" size="xs">{{ meal.calories }} cal</UBadge>
+                <UBadge v-if="meal.prepared" color="green" variant="subtle" size="xs">
+                  <UIcon name="i-lucide-check" class="w-3 h-3" />
+                </UBadge>
               </div>
             </div>
           </div>
@@ -210,7 +252,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 
 definePageMeta({
@@ -225,6 +267,92 @@ useSeoMeta({
 const authStore = useAuthStore()
 
 const { hero, spotlight, trendingRecipes, rings, sustainability, discoveries } = useDashboardData()
+
+// Current date and time
+const currentTime = ref(new Date())
+const currentDateTime = computed(() => {
+  const now = currentTime.value
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+  const dayName = days[now.getDay()]
+  const monthName = months[now.getMonth()]
+  const date = now.getDate()
+  const hours = now.getHours().toString().padStart(2, '0')
+  const minutes = now.getMinutes().toString().padStart(2, '0')
+
+  return `${dayName}, ${monthName} ${date} • ${hours}:${minutes}`
+})
+
+// Meal schedule data
+const upcomingMeals = computed(() => {
+  const now = currentTime.value
+  const currentHour = now.getHours()
+  const currentMinutes = now.getMinutes()
+  const currentTimeInMinutes = currentHour * 60 + currentMinutes
+
+  const meals = [
+    {
+      id: 1,
+      name: 'Breakfast',
+      time: '08:00',
+      timeInMinutes: 8 * 60,
+      description: 'Oatmeal with berries and nuts',
+      calories: 350,
+      icon: 'i-lucide-coffee',
+      prepared: true
+    },
+    {
+      id: 2,
+      name: 'Morning Snack',
+      time: '10:30',
+      timeInMinutes: 10 * 60 + 30,
+      description: 'Greek yogurt with honey',
+      calories: 150,
+      icon: 'i-lucide-apple',
+      prepared: false
+    },
+    {
+      id: 3,
+      name: 'Lunch',
+      time: '13:00',
+      timeInMinutes: 13 * 60,
+      description: 'Mediterranean Quinoa Bowl',
+      calories: 520,
+      icon: 'i-lucide-utensils',
+      prepared: false
+    },
+    {
+      id: 4,
+      name: 'Afternoon Snack',
+      time: '16:00',
+      timeInMinutes: 16 * 60,
+      description: 'Hummus with veggie sticks',
+      calories: 180,
+      icon: 'i-lucide-carrot',
+      prepared: false
+    },
+    {
+      id: 5,
+      name: 'Dinner',
+      time: '19:30',
+      timeInMinutes: 19 * 60 + 30,
+      description: 'Grilled salmon with roasted vegetables',
+      calories: 480,
+      icon: 'i-lucide-utensils',
+      prepared: false
+    }
+  ]
+
+  return meals.map(meal => ({
+    ...meal,
+    isPast: currentTimeInMinutes > meal.timeInMinutes + 60,
+    isNow: currentTimeInMinutes >= meal.timeInMinutes && currentTimeInMinutes < meal.timeInMinutes + 60
+  }))
+})
+
+// Update time every minute
+let timeInterval: NodeJS.Timeout | null = null
 
 let observer: IntersectionObserver | null = null
 
@@ -247,10 +375,18 @@ onMounted(() => {
   document.querySelectorAll('.scroll-fade-in').forEach((el) => {
     observer?.observe(el)
   })
+
+  // Update current time every minute
+  timeInterval = setInterval(() => {
+    currentTime.value = new Date()
+  }, 60000)
 })
 
 onUnmounted(() => {
   observer?.disconnect()
+  if (timeInterval) {
+    clearInterval(timeInterval)
+  }
 })
 </script>
 
