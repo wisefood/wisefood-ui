@@ -57,6 +57,7 @@
               size="xl"
               variant="ghost"
               leading-icon="i-lucide-play-circle"
+              to="/demo"
               class="backdrop-blur-sm text-brandg-500 cursor-pointer"
             >
               {{ t('hero.ctaSecondary') }}

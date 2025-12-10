@@ -5,7 +5,11 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
   ],
   devtools: {
-    enabled: true
+    enabled: true,
+
+    timeline: {
+      enabled: true
+    }
   },
   debug: true,
   vite: {
@@ -13,6 +17,8 @@ export default defineNuxtConfig({
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: true
     }
   },
+
+  
 
   runtimeConfig: {
     public: {
