@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+  <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
     <!-- Header -->
-    <div class="border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm sticky top-0 z-10">
+    <div class="border-b border-gray-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-10">
       <div class="max-w-7xl mx-auto px-4 py-6">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-4">
@@ -30,7 +30,7 @@
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 py-12">
       <section class="mb-12 scroll-fade-in" style="--delay: 0.4s">
-        <div class="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-3xl p-6 sm:p-8 shadow-xl">
+        <div class="bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 rounded-3xl p-6 sm:p-8 shadow-xl">
           <div class="flex items-center gap-3 mb-6">
             <div class="w-10 h-10 rounded-full bg-brand-500 flex items-center justify-center shrink-0">
               <UIcon name="i-lucide-sparkles" class="w-5 h-5 text-white" />
@@ -56,7 +56,7 @@
               @keyup.enter="askScholarAI"
               type="text"
               placeholder="Ask about nutrition, ingredients, or food science..."
-              class="w-full pl-10 pr-14 py-4 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              class="w-full pl-10 pr-14 py-4 rounded-2xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
          
           </div>
@@ -67,7 +67,7 @@
               v-for="quickQ in quickQuestions"
               :key="quickQ"
               @click="askQuickQuestion(quickQ)"
-              class="px-3 py-1.5 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-brand-100 dark:hover:bg-brand-900/30 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
+              class="px-3 py-1.5 text-xs rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 hover:bg-brand-100 dark:hover:bg-brand-900/30 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
             >
               {{ quickQ }}
             </button>
@@ -91,7 +91,7 @@
               'px-6 py-2 rounded-full font-medium transition-all duration-300',
               selectedCategory === category
                 ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/30'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                : 'bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700'
             ]"
           >
             {{ category }}
@@ -106,7 +106,7 @@
             v-model="searchQuery"
             type="text"
             placeholder="Search by topic, keyword, or tag..."
-            class="w-full pl-12 pr-4 py-3 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+            class="w-full pl-12 pr-4 py-3 rounded-xl bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
       </section>
@@ -119,7 +119,7 @@
             v-for="(article, index) in filteredArticles"
             :key="article.id"
             :to="`/foodscholar/${article.id}`"
-            class="scroll-fade-in group p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+            class="scroll-fade-in group p-6 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
             :style="{ '--delay': `${index * 0.1}s` }"
           >
             <div class="flex items-start justify-between mb-3">
@@ -172,7 +172,7 @@
           <div
             v-for="topic in topics"
             :key="topic.title"
-            class="p-6 rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-white dark:hover:bg-gray-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+            class="p-6 rounded-2xl bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm border border-gray-200 dark:border-zinc-700 cursor-pointer hover:bg-white dark:hover:bg-zinc-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
           >
             <div class="w-12 h-12 rounded-xl bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center mb-4">
               <UIcon :name="topic.icon" class="w-6 h-6 text-brand-600 dark:text-brand-400" />

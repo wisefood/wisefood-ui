@@ -1,6 +1,6 @@
 <!-- WiseFood Dashboard - Inspiring & Welcoming -->
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+  <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
 
     <!-- Loading State -->
     <div v-if="!authStore.initialized" class="flex items-center justify-center py-20">
@@ -77,7 +77,7 @@
 
       <!-- Today's Spotlight -->
       <div class="mb-12 scroll-fade-in" style="--delay: 0.2s">
-        <div class="relative overflow-hidden rounded-3xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 shadow-xl">
+        <div class="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 shadow-xl">
           <div class="grid grid-cols-1 lg:grid-cols-2">
             <!-- Image Section -->
             <div class="relative h-64 lg:h-auto bg-gradient-to-br from-brand-100 to-brand-200 dark:from-brand-900/40 dark:to-brand-800/40">
@@ -129,13 +129,13 @@
           <div
             v-for="ring in rings"
             :key="ring.id"
-            class="p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+            class="p-6 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700"
           >
             <div class="flex items-center justify-between mb-3">
               <h3 class="font-medium text-gray-900 dark:text-white">{{ ring.label }}</h3>
               <span class="text-2xl font-light text-brand-500">{{ ring.percent }}%</span>
             </div>
-            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
+            <div class="w-full bg-gray-200 dark:bg-zinc-700 rounded-full h-2 mb-2">
               <div
                 class="bg-brand-500 h-2 rounded-full transition-all duration-500"
                 :style="{ width: ring.percent + '%' }"
@@ -152,7 +152,7 @@
         <div
           v-for="(recipe, index) in trendingRecipes"
           :key="recipe.id"
-          class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300"
+          class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 hover:shadow-lg transition-all duration-300"
           :style="{ '--delay': `${0.4 + index * 0.1}s` }"
         >
           <div class="flex items-start gap-4">

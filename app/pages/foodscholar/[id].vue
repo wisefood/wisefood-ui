@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+  <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
     <!-- Header -->
-    <div class="border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm sticky top-0 z-20">
+    <div class="border-b border-gray-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-20">
       <div class="max-w-7xl mx-auto px-4 py-6">
         <NuxtLink
           to="/foodscholar"
@@ -74,7 +74,7 @@
             </div>
 
             <!-- Reactions -->
-            <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex flex-wrap gap-3 pt-4 border-t border-gray-200 dark:border-zinc-700">
               <button
                 v-for="(count, reaction) in article.reactions"
                 :key="reaction"
@@ -83,7 +83,7 @@
                   'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all',
                   userReactions.includes(reaction)
                     ? 'bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 border-2 border-brand-500'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    : 'bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-zinc-700 hover:bg-gray-200 dark:hover:bg-zinc-700'
                 ]"
               >
                 <UIcon
@@ -128,7 +128,7 @@
             class="scroll-fade-in"
             :style="{ '--delay': `${0.3 + index * 0.1}s` }"
           >
-            <div class="p-8 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+            <div class="p-8 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700">
               <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
                 {{ section.title }}
               </h2>

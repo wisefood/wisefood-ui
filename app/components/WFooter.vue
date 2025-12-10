@@ -16,7 +16,7 @@
         {{ $t('nav.legal') }} 
     </p>
     <UButton
-        to="https://github.com/nuxt-ui-templates/starter"
+        to="https://github.com/wisefood"
         target="_blank"
         icon="i-simple-icons-github"
         aria-label="GitHub"
