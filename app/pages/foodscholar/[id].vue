@@ -199,6 +199,124 @@
               </div>
             </div>
 
+            <!-- Concepts Graph -->
+            <div class="scroll-fade-in p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-800" style="--delay: 0.15s">
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <UIcon name="i-lucide-network" class="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                Concepts Addressed
+              </h3>
+
+              <!-- Network Graph Visualization -->
+              <div class="relative w-full h-80 bg-white dark:bg-purple-950/30 rounded-xl overflow-hidden">
+                <svg class="w-full h-full" viewBox="0 0 300 300">
+                  <!-- Define gradient for connections -->
+                  <defs>
+                    <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style="stop-color:rgb(147, 51, 234);stop-opacity:0.3" />
+                      <stop offset="100%" style="stop-color:rgb(59, 130, 246);stop-opacity:0.3" />
+                    </linearGradient>
+                  </defs>
+
+                  <!-- Connection lines -->
+                  <line
+                    v-for="(connection, index) in conceptConnections"
+                    :key="`connection-${index}`"
+                    :x1="connection.x1"
+                    :y1="connection.y1"
+                    :x2="connection.x2"
+                    :y2="connection.y2"
+                    stroke="url(#connectionGradient)"
+                    stroke-width="1.5"
+                    class="concept-line"
+                    :style="{ animationDelay: `${index * 0.1}s` }"
+                  />
+
+                  <!-- Nodes -->
+                  <g
+                    v-for="(node, index) in conceptNodes"
+                    :key="node.id"
+                    class="concept-node"
+                    :style="{ animationDelay: `${index * 0.15}s` }"
+                  >
+                    <!-- Node circle -->
+                    <circle
+                      :cx="node.x"
+                      :cy="node.y"
+                      :r="node.size"
+                      :fill="node.color"
+                      :class="node.primary ? 'opacity-90' : 'opacity-75'"
+                    />
+
+                    <!-- Node label background -->
+                    <rect
+                      v-if="node.label.length <= 12"
+                      :x="node.x - node.labelWidth / 2"
+                      :y="node.y + node.size + 5"
+                      :width="node.labelWidth"
+                      height="16"
+                      rx="8"
+                      :fill="node.primary ? 'rgb(147, 51, 234)' : 'rgb(100, 116, 139)'"
+                      opacity="0.9"
+                    />
+
+                    <!-- Node label text -->
+                    <text
+                      :x="node.x"
+                      :y="node.y + node.size + 16"
+                      text-anchor="middle"
+                      class="text-[8px] fill-white font-medium"
+                      style="pointer-events: none;"
+                    >
+                      {{ node.label }}
+                    </text>
+
+                    <!-- Multi-line label for longer text -->
+                    <g v-if="node.label.length > 12">
+                      <rect
+                        :x="node.x - 30"
+                        :y="node.y + node.size + 5"
+                        width="60"
+                        height="24"
+                        rx="8"
+                        :fill="node.primary ? 'rgb(147, 51, 234)' : 'rgb(100, 116, 139)'"
+                        opacity="0.9"
+                      />
+                      <text
+                        :x="node.x"
+                        :y="node.y + node.size + 14"
+                        text-anchor="middle"
+                        class="text-[7px] fill-white font-medium"
+                        style="pointer-events: none;"
+                      >
+                        {{ node.label.substring(0, 12) }}
+                      </text>
+                      <text
+                        :x="node.x"
+                        :y="node.y + node.size + 23"
+                        text-anchor="middle"
+                        class="text-[7px] fill-white font-medium"
+                        style="pointer-events: none;"
+                      >
+                        {{ node.label.substring(12) }}
+                      </text>
+                    </g>
+
+                    <!-- Pulse effect for primary node -->
+                    <circle
+                      v-if="node.primary"
+                      :cx="node.x"
+                      :cy="node.y"
+                      :r="node.size"
+                      fill="none"
+                      :stroke="node.color"
+                      stroke-width="2"
+                      class="pulse-ring"
+                    />
+                  </g>
+                </svg>
+              </div>
+            </div>
+
             <!-- Tags -->
             <div class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.2s">
               <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Tags</h3>
@@ -554,6 +672,84 @@ const summaryNotesList = computed(() => {
     .map(line => line.replace(/^[-•]\s*/, '').trim())
 })
 
+// Network graph nodes - concepts as interconnected nodes
+const conceptNodes = computed(() => {
+  if (!article.value) return []
+
+  // Central node - main article topic
+  const centerNode = {
+    id: 'center',
+    label: article.value.category,
+    x: 150,
+    y: 150,
+    size: 20,
+    color: 'rgb(147, 51, 234)',
+    primary: true,
+    labelWidth: 50
+  }
+
+  // Surrounding nodes based on tags - positioned in a circle
+  const tags = article.value.tags.slice(0, 6)
+  const radius = 80
+  const angleStep = (2 * Math.PI) / Math.max(tags.length, 4)
+
+  const tagNodes = tags.map((tag, index) => {
+    const angle = angleStep * index - Math.PI / 2
+    const colors = [
+      'rgb(59, 130, 246)',  // blue
+      'rgb(16, 185, 129)',  // green
+      'rgb(245, 158, 11)',  // amber
+      'rgb(236, 72, 153)',  // pink
+      'rgb(139, 92, 246)',  // violet
+      'rgb(20, 184, 166)',  // teal
+    ]
+
+    return {
+      id: `tag-${index}`,
+      label: tag,
+      x: 150 + radius * Math.cos(angle),
+      y: 150 + radius * Math.sin(angle),
+      size: 14,
+      color: colors[index % colors.length],
+      primary: false,
+      labelWidth: Math.min(tag.length * 6, 60)
+    }
+  })
+
+  return [centerNode, ...tagNodes]
+})
+
+// Network graph connections - lines between nodes
+const conceptConnections = computed(() => {
+  if (!article.value || conceptNodes.value.length === 0) return []
+
+  const connections = []
+  const centerNode = conceptNodes.value[0]
+
+  // Connect center to all other nodes
+  for (let i = 1; i < conceptNodes.value.length; i++) {
+    connections.push({
+      x1: centerNode.x,
+      y1: centerNode.y,
+      x2: conceptNodes.value[i].x,
+      y2: conceptNodes.value[i].y
+    })
+  }
+
+  // Connect adjacent nodes in a ring
+  for (let i = 1; i < conceptNodes.value.length; i++) {
+    const nextIndex = i === conceptNodes.value.length - 1 ? 1 : i + 1
+    connections.push({
+      x1: conceptNodes.value[i].x,
+      y1: conceptNodes.value[i].y,
+      x2: conceptNodes.value[nextIndex].x,
+      y2: conceptNodes.value[nextIndex].y
+    })
+  }
+
+  return connections
+})
+
 const handleReaction = (reaction: string) => {
   const index = userReactions.value.indexOf(reaction)
   if (index > -1) {
@@ -643,5 +839,54 @@ onUnmounted(() => {
 
 .prose {
   max-width: none;
+}
+
+/* Network Graph Animations */
+.concept-node {
+  animation: fadeInScale 0.6s ease-out forwards;
+  opacity: 0;
+  transform-origin: center;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.concept-line {
+  animation: drawLine 0.8s ease-out forwards;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+}
+
+@keyframes drawLine {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.pulse-ring {
+  animation: pulse 2s ease-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
 }
 </style>

@@ -49,17 +49,33 @@
             </div>
           </div>
 
-          <!-- Chat Input -->
-          <div class="relative">
-            <input
-              v-model="chatQuery"
-              @keyup.enter="askScholarAI"
-              type="text"
-              placeholder="Ask about nutrition, ingredients, or food science..."
-              class="w-full pl-10 pr-14 py-4 rounded-2xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-            />
-         
-          </div>
+            <!-- Chat Input (uses shared component with left/right slots) -->
+            <div>
+            <FoodscholarNLInput v-model="chatQuery" @enter="askScholarAI">
+              <template #left>
+              <UIcon name="i-lucide-search" class="w-5 h-5 text-gray-400" />
+              </template>
+
+              <template #right>
+              <button
+                @click="askScholarAI"
+                :disabled="isThinking"
+                class="h-10 w-10 flex items-center justify-center rounded-xl bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50 transition-colors"
+              >
+                <UIcon
+                v-if="isThinking"
+                name="i-lucide-loader-2"
+                class="w-4 h-4 animate-spin text-white"
+                />
+                <UIcon
+                v-else
+                name="i-lucide-arrow-right"
+                class="w-4 h-4 text-white"
+                />
+              </button>
+              </template>
+            </FoodscholarNLInput>
+            </div>
 
           <!-- Quick Questions -->
           <div class="mt-4 flex flex-wrap gap-2">
@@ -113,55 +129,23 @@
 
       <!-- Articles Grid -->
       <section class="mb-16">
-        <h2 class="text-3xl font-serif font-semibold mb-8 text-gray-900 dark:text-white">Scientific Articles</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="flex items-center justify-between mb-8">
+          <h2 class="text-3xl font-serif font-semibold text-gray-900 dark:text-white">Popular Articles</h2>
           <NuxtLink
+            to="/foodscholar/catalog"
+            class="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-300 dark:border-zinc-600 bg-transparent hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-700 dark:text-gray-300 font-medium transition-colors"
+          >
+            <span>Browse more articles</span>
+            <UIcon name="i-lucide-arrow-right" class="w-4 h-4" />
+          </NuxtLink>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FoodscholarArticleCard
             v-for="(article, index) in filteredArticles"
             :key="article.id"
-            :to="`/foodscholar/${article.id}`"
-            class="scroll-fade-in group p-6 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-            :style="{ '--delay': `${index * 0.1}s` }"
-          >
-            <div class="flex items-start justify-between mb-3">
-              <span class="text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
-                {{ article.category }}
-              </span>
-              <span class="text-xs text-gray-500 dark:text-gray-400">{{ article.readTime }} min read</span>
-            </div>
-
-            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-              {{ article.title }}
-            </h3>
-
-            <p class="text-gray-600 dark:text-gray-300 font-light leading-relaxed mb-4">
-              {{ article.excerpt }}
-            </p>
-
-            <!-- Reactions and Citations -->
-            <div class="flex items-center gap-4 mb-4 text-xs text-gray-500 dark:text-gray-400">
-              <div class="flex items-center gap-1">
-                <UIcon name="i-lucide-thumbs-up" class="w-3.5 h-3.5" />
-                <span>{{ article.reactions?.helpful || 0 }}</span>
-              </div>
-              <div class="flex items-center gap-1">
-                <UIcon name="i-lucide-lightbulb" class="w-3.5 h-3.5" />
-                <span>{{ article.reactions?.insightful || 0 }}</span>
-              </div>
-              <div class="flex items-center gap-1">
-                <UIcon name="i-lucide-star" class="w-3.5 h-3.5" />
-                <span>{{ article.reactions?.interesting || 0 }}</span>
-              </div>
-              <div class="flex items-center gap-1 ml-auto">
-                <UIcon name="i-lucide-quote" class="w-3.5 h-3.5" />
-                <span>{{ article.citations || 0 }} citations</span>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-2 text-brand-600 dark:text-brand-400 font-medium text-sm">
-              Read Article
-              <UIcon name="i-lucide-arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </NuxtLink>
+            :article="article"
+            :index="index"
+          />
         </div>
       </section>
 
@@ -182,9 +166,7 @@
           </div>
         </div>
       </section>
-
-      <!-- AI Scholar Assistant Chat -->
-      
+            
     </main>
   </div>
 </template>
