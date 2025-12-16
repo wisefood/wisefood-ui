@@ -167,30 +167,35 @@
                 <p class="text-sm text-gray-500 dark:text-gray-400">Search using plain English queries</p>
               </div>
             </div>
-            <div class="relative">
-              <input
+            <div>
+              <FoodscholarNLInput
                 v-model="nlQuery"
-                type="text"
+                @enter="performNLSearch"
                 placeholder='Try "articles about gut health and probiotics" or "sustainable protein sources"'
-                class="w-full pl-4 pr-12 py-3 rounded-lg bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                @keyup.enter="performNLSearch"
-              />
-              <button
-                @click="performNLSearch"
-                class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white transition-colors"
               >
-                <UIcon name="i-lucide-arrow-right" class="w-4 h-4" />
-              </button>
-            </div>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <button
-                v-for="example in exampleQueries"
-                :key="example"
-                @click="nlQuery = example; performNLSearch()"
-                class="px-3 py-1.5 text-xs rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 hover:bg-brand-100 dark:hover:bg-brand-900/30 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
-              >
-                {{ example }}
-              </button>
+                <template #right>
+                  <button
+                    @click="performNLSearch"
+                    class="h-10 w-10 flex items-center justify-center rounded-xl bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50 transition-colors"
+                  >
+                    <UIcon
+                      name="i-lucide-arrow-right"
+                      class="w-4 h-4 text-white"
+                    />
+                  </button>
+                </template>
+              </FoodscholarNLInput>
+
+              <div class="mt-3 flex flex-wrap gap-2">
+                <button
+                  v-for="example in exampleQueries"
+                  :key="example"
+                  @click="nlQuery = example; performNLSearch()"
+                  class="px-3 py-1.5 text-xs rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 hover:bg-brand-100 dark:hover:bg-brand-900/30 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
+                >
+                  {{ example }}
+                </button>
+              </div>
             </div>
           </div>
 
