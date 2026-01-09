@@ -46,25 +46,20 @@
       <!-- Content -->
       <div v-else class="flex gap-6">
         <!-- Left Sidebar - Filters -->
-        <aside
-          :class="[
-            'lg:block lg:w-64 flex-shrink-0',
-            showFilters ? 'block fixed inset-0 z-20 bg-white dark:bg-zinc-900 p-4 overflow-y-auto' : 'hidden'
-          ]"
+        <Transition
+          enter-active-class="transition-all duration-300 ease-out"
+          leave-active-class="transition-all duration-300 ease-in"
+          enter-from-class="opacity-0 -translate-x-full"
+          enter-to-class="opacity-100 translate-x-0"
+          leave-from-class="opacity-100 translate-x-0"
+          leave-to-class="opacity-0 -translate-x-full"
         >
-          <div class="sticky top-24">
-            <!-- Mobile close button -->
-            <div v-if="showFilters" class="lg:hidden flex justify-between items-center mb-4 pb-4 border-b border-gray-200 dark:border-zinc-800">
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Filters</h2>
-              <button
-                @click="showFilters = false"
-                class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800"
-              >
-                <UIcon name="i-lucide-x" class="w-5 h-5" />
-              </button>
-            </div>
-
-            <div class="space-y-8">
+          <aside
+            v-if="showFilters"
+            class="w-64 shrink-0"
+          >
+            <div class="sticky top-24">
+              <div class="space-y-8">
               <!-- Category Filter -->
               <div v-if="categoryFacets.length > 0">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
@@ -228,9 +223,19 @@
             </div>
           </div>
         </aside>
+        </Transition>
 
         <!-- Main Content Area -->
         <main class="flex-1 min-w-0">
+          <!-- Filter Toggle Button -->
+          <button
+            @click="showFilters = !showFilters"
+            class="mb-4 px-4 py-2 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+          >
+            <UIcon :name="showFilters ? 'i-lucide-panel-left-close' : 'i-lucide-panel-left-open'" class="w-4 h-4" />
+            {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+          </button>
+
           <!-- Natural Language Search -->
           <div class="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-6 mb-6">
             <div class="flex items-center gap-3 mb-4">
@@ -274,6 +279,136 @@
             </div>
           </div>
 
+          <!-- Search Summary -->
+          <div v-if="summaryLoading || searchSummary || summaryError" class="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl mb-6 overflow-hidden">
+            <!-- Loading State -->
+            <div v-if="summaryLoading" class="p-6">
+              <div class="flex items-center gap-3">
+                <div class="w-5 h-5 border-2 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Generating AI summary...</p>
+              </div>
+            </div>
+
+            <!-- Error State -->
+            <div v-else-if="summaryError" class="p-6">
+              <div class="flex items-start gap-3">
+                <UIcon name="i-lucide-alert-circle" class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
+                <div>
+                  <p class="text-sm font-medium text-red-900 dark:text-red-100">Failed to generate summary</p>
+                  <p class="text-sm text-red-700 dark:text-red-300 mt-1">{{ summaryError }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Summary Content -->
+            <div v-else-if="searchSummary" class="relative">
+              <!-- Header - Always Visible -->
+              <button
+                @click="summaryExpanded = !summaryExpanded"
+                class="w-full p-6 flex items-start gap-4 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors text-left"
+              >
+                <div class="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center shrink-0">
+                  <UIcon name="i-lucide-sparkles" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-2">
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-white">AI Summary</h3>
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300">
+                      {{ searchSummary.total_articles_analyzed }} articles
+                    </span>
+                  </div>
+                  <p class="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">{{ searchSummary.summary }}</p>
+                  <div v-if="!summaryExpanded && searchSummary.summary.length > 200" class="mt-2">
+                    <span class="text-sm text-brand-600 dark:text-brand-400 font-medium">Click to read more</span>
+                  </div>
+                </div>
+                <UIcon
+                  :name="summaryExpanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+                  class="w-5 h-5 text-gray-400 shrink-0 transition-transform"
+                />
+              </button>
+
+              <!-- Expanded Content -->
+              <div v-if="summaryExpanded" class="px-6 pb-6 space-y-6">
+                <!-- Full Summary -->
+                <div class="prose prose-sm dark:prose-invert max-w-none" v-html="renderMarkdown(searchSummary.summary)"></div>
+
+                <!-- Key Findings -->
+                <div v-if="searchSummary.key_findings && searchSummary.key_findings.length > 0">
+                  <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <UIcon name="i-lucide-list-checks" class="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                    Key Findings
+                  </h4>
+                  <div class="space-y-4">
+                    <div
+                      v-for="(finding, idx) in searchSummary.key_findings"
+                      :key="idx"
+                      class="bg-gray-50 dark:bg-zinc-800/50 rounded-lg p-4"
+                    >
+                      <div class="flex items-start gap-3">
+                        <div class="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center shrink-0 mt-0.5">
+                          <span class="text-xs font-semibold text-brand-700 dark:text-brand-300">{{ idx + 1 }}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <div class="text-sm text-gray-700 dark:text-gray-300 mb-2 prose prose-sm dark:prose-invert max-w-none" v-html="renderMarkdown(finding.finding)"></div>
+
+                          <!-- Supporting Citations -->
+                          <div v-if="finding.supporting_citations && finding.supporting_citations.length > 0" class="space-y-2 mt-3">
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Supporting evidence:</p>
+                            <NuxtLink
+                              v-for="(citation, citIdx) in finding.supporting_citations.slice(0, 3)"
+                              :key="citIdx"
+                              :to="`/foodscholar/${citation.article_urn}`"
+                              class="block text-xs bg-white dark:bg-zinc-900 rounded p-2 border border-gray-200 dark:border-zinc-700 hover:border-brand-400 dark:hover:border-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors cursor-pointer"
+                            >
+                              <p class="font-medium text-gray-900 dark:text-white mb-1 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">{{ citation.article_title }}</p>
+                              <p class="text-gray-600 dark:text-gray-400 italic mb-1">"{{ citation.quote }}"</p>
+                              <p class="text-gray-500 dark:text-gray-500">
+                                {{ citation.authors.join(', ') }} ({{ citation.year }})
+                              </p>
+                            </NuxtLink>
+                          </div>
+
+                          <!-- Confidence Badge -->
+                          <div class="mt-2">
+                            <span
+                              :class="[
+                                'text-xs px-2 py-0.5 rounded-full font-medium',
+                                finding.confidence === 'high' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' :
+                                finding.confidence === 'medium' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' :
+                                'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                              ]"
+                            >
+                              {{ finding.confidence }} confidence
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Follow-up Suggestions -->
+                <div v-if="searchSummary.follow_up_suggestions && searchSummary.follow_up_suggestions.length > 0">
+                  <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <UIcon name="i-lucide-lightbulb" class="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                    Related Topics to Explore
+                  </h4>
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      v-for="(suggestion, idx) in searchSummary.follow_up_suggestions"
+                      :key="idx"
+                      @click="nlQuery = suggestion; performNLSearch()"
+                      class="text-xs px-3 py-1.5 rounded-full bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-900/40 transition-colors border border-brand-200 dark:border-brand-800"
+                    >
+                      {{ suggestion }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Sorting Options -->
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
@@ -282,6 +417,7 @@
                 v-model="sortBy"
                 class="px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
+                <option value="score desc">Relevance</option>
                 <option value="created_at desc">Most Recent</option>
                 <option value="publication_year desc">Publication Year (Newest)</option>
                 <option value="publication_year asc">Publication Year (Oldest)</option>
@@ -380,6 +516,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useArticles } from '~/composables/useArticles'
 import type { Article } from '~/services/articlesApi'
+import { marked } from 'marked'
 
 definePageMeta({
   middleware: 'auth'
@@ -412,10 +549,16 @@ const selectedVenues = ref<string[]>([])
 const selectedYears = ref<string[]>([])
 const selectedTags = ref<string[]>([])
 const nlQuery = ref("")
-const sortBy = ref("created_at desc")
-const showFilters = ref(false)
+const sortBy = ref("score desc")
+const showFilters = ref(true)
 const page = ref(1)
 const itemsPerPage = 6
+
+// Search Summary State
+const searchSummary = ref<any>(null)
+const summaryLoading = ref(false)
+const summaryError = ref<string | null>(null)
+const summaryExpanded = ref(false)
 
 // Show More states
 const showAllCategories = ref(false)
@@ -437,6 +580,12 @@ const exampleQueries = [
   "sustainable protein alternatives",
   "vitamin D deficiency studies",
 ]
+
+// Markdown rendering function
+const renderMarkdown = (text: string): string => {
+  if (!text) return ''
+  return marked(text, { breaks: true }) as string
+}
 
 // Transform articles to match ArticleCard interface
 const displayArticles = computed(() => {
@@ -641,14 +790,71 @@ const loadArticles = async () => {
       fq: fq.length > 0 ? fq : null,
       fields: [], // Don't request facets here since we get them separately
     })
+
+    // Fetch summary only for the first page and when there's a query
+    if (page.value === 1 && nlQuery.value && articles.value.length > 0) {
+      await fetchSearchSummary(nlQuery.value, articles.value)
+    }
   } catch (err) {
     console.error('Failed to load articles:', err)
   }
 }
 
 // Methods
+const fetchSearchSummary = async (query: string, results: Article[]) => {
+  if (!query || results.length === 0) {
+    searchSummary.value = null
+    return
+  }
+
+  summaryLoading.value = true
+  summaryError.value = null
+
+  try {
+    const requestBody = {
+      query: query,
+      results: results.map(article => ({
+        urn: article.urn,
+        title: article.title,
+        abstract: article.abstract || article.description || '',
+        authors: article.authors || [],
+        venue: article.venue || '',
+        publication_year: article.publication_year || '',
+        category: article.category || article.ai_category || '',
+        _score: 1.0 // Placeholder score
+      })),
+      expertise_level: 'intermediate',
+      language: 'en'
+    }
+
+    const response = await fetch('http://localhost:8080/api/v1/search/summarize', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody)
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch summary: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    searchSummary.value = data
+    summaryExpanded.value = false // Start collapsed
+  } catch (err: any) {
+    console.error('Error fetching search summary:', err)
+    summaryError.value = err.message || 'Failed to generate summary'
+    searchSummary.value = null
+  } finally {
+    summaryLoading.value = false
+  }
+}
+
 const performNLSearch = () => {
   page.value = 1
+  searchSummary.value = null // Clear previous summary
+  sortBy.value = "score desc" // Switch to relevance sorting for searches
   loadArticles()
 }
 
@@ -660,16 +866,21 @@ const resetFilters = () => {
   nlQuery.value = ""
   sortBy.value = "created_at desc"
   page.value = 1
+  searchSummary.value = null // Clear summary when resetting
   loadArticles()
 }
 
 // Watch for changes
 watch([selectedCategories, selectedVenues, selectedYears, selectedTags, sortBy], () => {
   page.value = 1
+  searchSummary.value = null // Clear summary when filters change
   loadArticles()
 }, { deep: true })
 
 watch(page, () => {
+  if (page.value > 1) {
+    searchSummary.value = null // Clear summary when navigating away from page 1
+  }
   loadArticles()
   window.scrollTo({ top: 0, behavior: 'smooth' })
   setupObserver()
