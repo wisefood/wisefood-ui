@@ -14,7 +14,37 @@
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 py-6">
-      <div class="flex gap-6">
+      <!-- Loading State -->
+      <div v-if="loading && (!articles || articles.length === 0)" class="flex justify-center items-center py-24">
+        <div class="text-center">
+          <div class="w-16 h-16 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p class="text-gray-600 dark:text-gray-400">Loading articles...</p>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="max-w-2xl mx-auto">
+        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center shrink-0">
+              <UIcon name="i-lucide-alert-circle" class="w-5 h-5 text-red-600 dark:text-red-400" />
+            </div>
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">Failed to load articles</h3>
+              <p class="text-red-700 dark:text-red-300 mb-4">{{ error }}</p>
+              <button
+                @click="loadArticles"
+                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div v-else class="flex gap-6">
         <!-- Left Sidebar - Filters -->
         <aside
           :class="[
@@ -34,119 +64,164 @@
               </button>
             </div>
 
-            <div class="space-y-6">
+            <div class="space-y-8">
               <!-- Category Filter -->
-              <div class="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-4">
-                <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                  <UIcon name="i-lucide-folder" class="w-4 h-4" />
+              <div v-if="categoryFacets.length > 0">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <UIcon name="i-lucide-folder" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
                   Category
                 </h3>
-                <div class="space-y-2">
-                  <label
-                    v-for="category in categories"
-                    :key="category"
-                    class="flex items-center gap-2 cursor-pointer group"
-                  >
-                    <input
-                      type="checkbox"
-                      :value="category"
-                      v-model="selectedCategories"
-                      class="w-4 h-4 rounded border-gray-300 dark:border-zinc-600 text-brand-600 focus:ring-brand-500"
-                    />
-                    <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
-                      {{ category }}
-                    </span>
-                    <span class="ml-auto text-xs text-gray-500">
-                      {{ getCategoryCount(category) }}
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Read Time Filter -->
-              <div class="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-4">
-                <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                  <UIcon name="i-lucide-clock" class="w-4 h-4" />
-                  Read Time
-                </h3>
-                <div class="space-y-2">
-                  <label
-                    v-for="range in readTimeRanges"
-                    :key="range.label"
-                    class="flex items-center gap-2 cursor-pointer group"
-                  >
-                    <input
-                      type="checkbox"
-                      :value="range.label"
-                      v-model="selectedReadTimes"
-                      class="w-4 h-4 rounded border-gray-300 dark:border-zinc-600 text-brand-600 focus:ring-brand-500"
-                    />
-                    <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
-                      {{ range.label }}
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Citations Filter -->
-              <div class="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-4">
-                <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                  <UIcon name="i-lucide-quote" class="w-4 h-4" />
-                  Citations
-                </h3>
-                <div class="space-y-3">
-                  <div>
-                    <label class="text-xs text-gray-600 dark:text-gray-400">Minimum citations</label>
-                    <input
-                      type="range"
-                      v-model.number="minCitations"
-                      min="0"
-                      max="100"
-                      class="w-full mt-2"
-                    />
-                    <div class="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>0</span>
-                      <span class="font-medium text-brand-600">{{ minCitations }}</span>
-                      <span>100+</span>
-                    </div>
+                <div>
+                  <div :class="['space-y-3', showAllCategories && categoryFacets.length > initialFilterCount ? 'max-h-80 overflow-y-auto pr-2' : '']">
+                    <label
+                      v-for="facet in displayedCategoryFacets"
+                      :key="facet.value"
+                      class="flex items-center gap-3 cursor-pointer group"
+                    >
+                      <input
+                        type="checkbox"
+                        :value="facet.value"
+                        v-model="selectedCategories"
+                        class="w-4 h-4 rounded border-gray-300 dark:border-zinc-600 text-brand-600 focus:ring-brand-500"
+                      />
+                      <span class="text-base text-gray-700 dark:text-gray-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 flex-1 transition-colors">
+                        {{ facet.label }}
+                      </span>
+                      <span class="text-sm font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
+                        {{ facet.count }}
+                      </span>
+                    </label>
                   </div>
+                  <button
+                    v-if="categoryFacets.length > initialFilterCount"
+                    @click="showAllCategories = !showAllCategories"
+                    class="text-sm text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium transition-colors flex items-center gap-1 mt-3"
+                  >
+                    {{ showAllCategories ? 'Show Less' : `Show ${categoryFacets.length - initialFilterCount} More` }}
+                    <UIcon :name="showAllCategories ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
-              <!-- Engagement Filter -->
-              <div class="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl p-4">
-                <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                  <UIcon name="i-lucide-trending-up" class="w-4 h-4" />
-                  Engagement
+              <!-- Venue Filter -->
+              <div v-if="venueFacets.length > 0">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <UIcon name="i-lucide-book-open" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                  Venue
                 </h3>
-                <div class="space-y-2">
-                  <label class="flex items-center gap-2 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      v-model="filters.highlyRated"
-                      class="w-4 h-4 rounded border-gray-300 dark:border-zinc-600 text-brand-600 focus:ring-brand-500"
-                    />
-                    <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
-                      Highly rated (200+ reactions)
-                    </span>
-                  </label>
-                  <label class="flex items-center gap-2 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      v-model="filters.widelyCited"
-                      class="w-4 h-4 rounded border-gray-300 dark:border-zinc-600 text-brand-600 focus:ring-brand-500"
-                    />
-                    <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
-                      Widely cited (40+ citations)
-                    </span>
-                  </label>
+                <div>
+                  <div :class="['space-y-3', showAllVenues && venueFacets.length > initialFilterCount ? 'max-h-80 overflow-y-auto pr-2' : '']">
+                    <label
+                      v-for="facet in displayedVenueFacets"
+                      :key="facet.value"
+                      class="flex items-start gap-3 cursor-pointer group"
+                    >
+                      <input
+                        type="checkbox"
+                        :value="facet.value"
+                        v-model="selectedVenues"
+                        class="w-4 h-4 mt-0.5 rounded border-gray-300 dark:border-zinc-600 text-brand-600 focus:ring-brand-500"
+                      />
+                      <span class="text-base text-gray-700 dark:text-gray-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 flex-1 leading-tight transition-colors">
+                        {{ facet.value }}
+                      </span>
+                      <span class="text-sm font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
+                        {{ facet.count }}
+                      </span>
+                    </label>
+                  </div>
+                  <button
+                    v-if="venueFacets.length > initialFilterCount"
+                    @click="showAllVenues = !showAllVenues"
+                    class="text-sm text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium transition-colors flex items-center gap-1 mt-3"
+                  >
+                    {{ showAllVenues ? 'Show Less' : `Show ${venueFacets.length - initialFilterCount} More` }}
+                    <UIcon :name="showAllVenues ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Publication Year Filter -->
+              <div v-if="yearFacets.length > 0">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <UIcon name="i-lucide-calendar" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                  Publication Year
+                </h3>
+                <div>
+                  <div :class="['space-y-3', showAllYears && yearFacets.length > initialFilterCount ? 'max-h-80 overflow-y-auto pr-2' : '']">
+                    <label
+                      v-for="facet in displayedYearFacets"
+                      :key="facet.value"
+                      class="flex items-center gap-3 cursor-pointer group"
+                    >
+                      <input
+                        type="checkbox"
+                        :value="facet.value"
+                        v-model="selectedYears"
+                        class="w-4 h-4 rounded border-gray-300 dark:border-zinc-600 text-brand-600 focus:ring-brand-500"
+                      />
+                      <span class="text-base text-gray-700 dark:text-gray-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 flex-1 transition-colors">
+                        {{ facet.value }}
+                      </span>
+                      <span class="text-sm font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
+                        {{ facet.count }}
+                      </span>
+                    </label>
+                  </div>
+                  <button
+                    v-if="yearFacets.length > initialFilterCount"
+                    @click="showAllYears = !showAllYears"
+                    class="text-sm text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium transition-colors flex items-center gap-1 mt-3"
+                  >
+                    {{ showAllYears ? 'Show Less' : `Show ${yearFacets.length - initialFilterCount} More` }}
+                    <UIcon :name="showAllYears ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tags Filter -->
+              <div v-if="tagFacets.length > 0">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <UIcon name="i-lucide-tags" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                  Tags
+                </h3>
+                <div>
+                  <div :class="['space-y-3', showAllTags && tagFacets.length > initialFilterCount ? 'max-h-80 overflow-y-auto pr-2' : '']">
+                    <label
+                      v-for="facet in displayedTagFacets"
+                      :key="facet.value"
+                      class="flex items-start gap-3 cursor-pointer group"
+                    >
+                      <input
+                        type="checkbox"
+                        :value="facet.value"
+                        v-model="selectedTags"
+                        class="w-4 h-4 mt-0.5 rounded border-gray-300 dark:border-zinc-600 text-brand-600 focus:ring-brand-500"
+                      />
+                      <span class="text-base text-gray-700 dark:text-gray-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 flex-1 leading-tight transition-colors">
+                        {{ facet.label }}
+                      </span>
+                      <span class="text-sm font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
+                        {{ facet.count }}
+                      </span>
+                    </label>
+                  </div>
+                  <button
+                    v-if="tagFacets.length > initialFilterCount"
+                    @click="showAllTags = !showAllTags"
+                    class="text-sm text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium transition-colors flex items-center gap-1 mt-3"
+                  >
+                    {{ showAllTags ? 'Show Less' : `Show ${tagFacets.length - initialFilterCount} More` }}
+                    <UIcon :name="showAllTags ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-4 h-4" />
+                  </button>
                 </div>
               </div>
 
               <!-- Reset Filters -->
               <button
+                v-if="hasActiveFilters"
                 @click="resetFilters"
-                class="w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"
+                class="w-full px-4 py-3 text-base font-medium text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition-colors shadow-sm"
               >
                 Reset All Filters
               </button>
@@ -207,11 +282,10 @@
                 v-model="sortBy"
                 class="px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
-                <option value="relevance">Relevance</option>
-                <option value="citations">Citations (High to Low)</option>
-                <option value="reactions">Engagement (High to Low)</option>
-                <option value="readTime">Read Time (Short to Long)</option>
-                <option value="recent">Most Recent</option>
+                <option value="created_at desc">Most Recent</option>
+                <option value="publication_year desc">Publication Year (Newest)</option>
+                <option value="publication_year asc">Publication Year (Oldest)</option>
+                <option value="title asc">Title (A-Z)</option>
               </select>
             </div>
           </div>
@@ -229,21 +303,41 @@
               <UIcon name="i-lucide-x" class="w-3 h-3" />
             </button>
             <button
-              v-if="minCitations > 0"
-              @click="minCitations = 0"
+              v-for="venue in selectedVenues"
+              :key="`venue-${venue}`"
+              @click="selectedVenues = selectedVenues.filter(v => v !== venue)"
               class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 hover:bg-brand-200 dark:hover:bg-brand-900/50"
             >
-              Min {{ minCitations }} citations
+              {{ venue }}
+              <UIcon name="i-lucide-x" class="w-3 h-3" />
+            </button>
+            <button
+              v-for="year in selectedYears"
+              :key="`year-${year}`"
+              @click="selectedYears = selectedYears.filter(y => y !== year)"
+              class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 hover:bg-brand-200 dark:hover:bg-brand-900/50"
+            >
+              {{ year }}
+              <UIcon name="i-lucide-x" class="w-3 h-3" />
+            </button>
+            <button
+              v-for="tag in selectedTags"
+              :key="`tag-${tag}`"
+              @click="selectedTags = selectedTags.filter(t => t !== tag)"
+              class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 hover:bg-brand-200 dark:hover:bg-brand-900/50"
+            >
+              <UIcon name="i-lucide-tag" class="w-3 h-3" />
+              {{ tag }}
               <UIcon name="i-lucide-x" class="w-3 h-3" />
             </button>
           </div>
 
           <!-- Articles List -->
-          <div v-if="sortedArticles.length > 0">
+          <div v-if="displayArticles.length > 0">
             <div class="grid grid-cols-1 gap-6 mb-8">
               <FoodscholarArticleCard
-                v-for="(article, index) in paginatedArticles"
-                :key="article.id"
+                v-for="(article, index) in displayArticles"
+                :key="article.urn"
                 :article="article"
                 :fade="false"
                 :index="index"
@@ -254,13 +348,10 @@
             <div class="flex justify-center">
               <UPagination
                 v-model:page="page"
-                :total="sortedArticles.length"
+                :total="totalResults"
                 :items-per-page="itemsPerPage"
                 :sibling-count="1"
                 show-edges
-                :ui="{
-                  base: 'min-w-[2rem] justify-center',
-                }"
               />
             </div>
           </div>
@@ -287,6 +378,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useArticles } from '~/composables/useArticles'
+import type { Article } from '~/services/articlesApi'
 
 definePageMeta({
   middleware: 'auth'
@@ -300,117 +393,44 @@ useSeoMeta({
   description: 'Advanced search and filtering for nutrition science literature'
 })
 
-interface Article {
-  id: number
-  title: string
-  category: string
-  excerpt: string
-  readTime: number
-  reactions?: {
-    helpful: number
-    insightful: number
-    interesting: number
-  }
-  citations?: number
-}
+// Composable
+const {
+  articles,
+  loading,
+  error,
+  totalResults,
+  searchArticles,
+  clearError
+} = useArticles()
 
-// Mock data - replace with API call
-const allArticles: Article[] = [
-  {
-    id: 1,
-    title: "Understanding Plant-Based Proteins",
-    category: "Nutrition",
-    excerpt: "Explore the complete amino acid profiles of legumes, grains, and plant-based sources.",
-    readTime: 5,
-    reactions: { helpful: 124, insightful: 89, interesting: 156 },
-    citations: 23,
-  },
-  {
-    id: 2,
-    title: "The Carbon Footprint of Your Diet",
-    category: "Sustainability",
-    excerpt: "Learn how different foods impact the environment and discover lower-impact alternatives.",
-    readTime: 7,
-    reactions: { helpful: 201, insightful: 167, interesting: 243 },
-    citations: 42,
-  },
-  {
-    id: 3,
-    title: "Micronutrients You Might Be Missing",
-    category: "Health",
-    excerpt: "A science-based guide to identifying and addressing common micronutrient deficiencies.",
-    readTime: 6,
-    reactions: { helpful: 178, insightful: 142, interesting: 91 },
-    citations: 31,
-  },
-  {
-    id: 4,
-    title: "Seasonal Eating for Optimal Nutrition",
-    category: "Wellness",
-    excerpt: "Discover why eating seasonally benefits both your health and the planet.",
-    readTime: 4,
-    reactions: { helpful: 95, insightful: 73, interesting: 112 },
-    citations: 18,
-  },
-  {
-    id: 5,
-    title: "Fermented Foods and Gut Health",
-    category: "Health",
-    excerpt: "Understanding the science behind probiotics and their role in digestive wellness.",
-    readTime: 8,
-    reactions: { helpful: 215, insightful: 189, interesting: 267 },
-    citations: 56,
-  },
-  {
-    id: 6,
-    title: "Water Footprint of Different Foods",
-    category: "Sustainability",
-    excerpt: "How much water does it take to produce your favorite foods? A comprehensive analysis.",
-    readTime: 5,
-    reactions: { helpful: 167, insightful: 134, interesting: 198 },
-    citations: 38,
-  },
-  {
-    id: 7,
-    title: "Omega-3 Fatty Acids: Sources and Benefits",
-    category: "Nutrition",
-    excerpt: "A deep dive into EPA, DHA, and ALA - their sources, conversion rates, and health impacts.",
-    readTime: 9,
-    reactions: { helpful: 289, insightful: 234, interesting: 312 },
-    citations: 67,
-  },
-  {
-    id: 8,
-    title: "The Role of Fiber in Disease Prevention",
-    category: "Health",
-    excerpt: "Evidence-based review of dietary fiber's impact on cardiovascular health, diabetes, and cancer.",
-    readTime: 10,
-    reactions: { helpful: 342, insightful: 298, interesting: 401 },
-    citations: 89,
-  },
-]
+// Facets from API
+const facets = ref<Record<string, Array<{ value: any, count: number }>>>({})
 
 // Filter and Search State
-const categories = ["Nutrition", "Sustainability", "Health", "Wellness"]
 const selectedCategories = ref<string[]>([])
-const selectedReadTimes = ref<string[]>([])
-const minCitations = ref(0)
+const selectedVenues = ref<string[]>([])
+const selectedYears = ref<string[]>([])
+const selectedTags = ref<string[]>([])
 const nlQuery = ref("")
-const sortBy = ref("relevance")
+const sortBy = ref("created_at desc")
 const showFilters = ref(false)
 const page = ref(1)
 const itemsPerPage = 6
 
-const filters = ref({
-  highlyRated: false,
-  widelyCited: false,
-})
+// Show More states
+const showAllCategories = ref(false)
+const showAllVenues = ref(false)
+const showAllYears = ref(false)
+const showAllTags = ref(false)
+const initialFilterCount = 5
 
-const readTimeRanges = [
-  { label: "Quick read (< 5 min)", min: 0, max: 4 },
-  { label: "Medium read (5-7 min)", min: 5, max: 7 },
-  { label: "Long read (8+ min)", min: 8, max: 999 },
-]
+// Annotated facet interface for tracking field source
+interface AnnotatedFacet {
+  value: string
+  count: number
+  field: string // The actual field name (category, ai_category, tags, ai_tags)
+  label?: string // Optional label for display (e.g., "Clinical Nutrition (AI)")
+}
 
 const exampleQueries = [
   "gut microbiome research",
@@ -418,127 +438,242 @@ const exampleQueries = [
   "vitamin D deficiency studies",
 ]
 
+// Transform articles to match ArticleCard interface
+const displayArticles = computed(() => {
+  return articles.value.map(article => ({
+    ...article,
+    id: article.id,
+    urn: article.urn,
+    category: article.category || article.ai_category || 'Uncategorized',
+    ai_category: article.ai_category,
+    excerpt: article.abstract || article.description || '',
+    readTime: calculateReadTime(article.content || ''),
+    authors: article.authors || [],
+    tags: article.tags || [],
+    ai_tags: article.ai_tags || [],
+    venue: article.venue,
+    publication_year: article.publication_year,
+  }))
+})
+
+// Helper to calculate read time
+const calculateReadTime = (content: string | undefined): number => {
+  if (!content) return 1
+  const wordsPerMinute = 225
+  const wordCount = content.trim().split(/\s+/).length
+  const minutes = Math.ceil(wordCount / wordsPerMinute)
+  return Math.max(1, minutes)
+}
+
+// Computed facets for UI - merged Category (category + ai_category)
+const categoryFacets = computed((): AnnotatedFacet[] => {
+  const humanCategories = (facets.value.category || []).map(f => ({
+    value: f.value,
+    count: f.count,
+    field: 'category',
+    label: f.value
+  }))
+
+  const aiCategories = (facets.value.ai_category || []).map(f => ({
+    value: f.value,
+    count: f.count,
+    field: 'ai_category',
+    label: `${f.value} (AI)`
+  }))
+
+  // Merge and deduplicate by value, prioritizing human-reviewed
+  const merged = new Map<string, AnnotatedFacet>()
+
+  humanCategories.forEach(cat => merged.set(cat.value, cat))
+  aiCategories.forEach(cat => {
+    if (!merged.has(cat.value)) {
+      merged.set(cat.value, cat)
+    } else {
+      // Add AI count to existing human category
+      const existing = merged.get(cat.value)!
+      existing.count += cat.count
+    }
+  })
+
+  return Array.from(merged.values()).sort((a, b) => b.count - a.count)
+})
+
+const venueFacets = computed(() => facets.value.venue || [])
+
+const yearFacets = computed(() => {
+  // Convert timestamps to year strings and sort descending
+  return (facets.value.publication_year || [])
+    .map(f => ({
+      value: new Date(f.value).getFullYear().toString(),
+      count: f.count
+    }))
+    .sort((a, b) => parseInt(b.value) - parseInt(a.value))
+})
+
+// Computed facets for Tags (tags + ai_tags)
+const tagFacets = computed((): AnnotatedFacet[] => {
+  const humanTags = (facets.value.tags || []).map(f => ({
+    value: f.value,
+    count: f.count,
+    field: 'tags',
+    label: f.value
+  }))
+
+  const aiTags = (facets.value.ai_tags || []).map(f => ({
+    value: f.value,
+    count: f.count,
+    field: 'ai_tags',
+    label: `${f.value} (AI)`
+  }))
+
+  // Merge and deduplicate by value, prioritizing human-reviewed
+  const merged = new Map<string, AnnotatedFacet>()
+
+  humanTags.forEach(tag => merged.set(tag.value, tag))
+  aiTags.forEach(tag => {
+    if (!merged.has(tag.value)) {
+      merged.set(tag.value, tag)
+    } else {
+      // Add AI count to existing human tag
+      const existing = merged.get(tag.value)!
+      existing.count += tag.count
+    }
+  })
+
+  return Array.from(merged.values()).sort((a, b) => b.count - a.count)
+})
+
+// Displayed facets (with Show More logic)
+const displayedCategoryFacets = computed(() =>
+  showAllCategories.value ? categoryFacets.value : categoryFacets.value.slice(0, initialFilterCount)
+)
+const displayedVenueFacets = computed(() =>
+  showAllVenues.value ? venueFacets.value : venueFacets.value.slice(0, initialFilterCount)
+)
+const displayedYearFacets = computed(() =>
+  showAllYears.value ? yearFacets.value : yearFacets.value.slice(0, initialFilterCount)
+)
+const displayedTagFacets = computed(() =>
+  showAllTags.value ? tagFacets.value : tagFacets.value.slice(0, initialFilterCount)
+)
+
 // Computed
 const hasActiveFilters = computed(() => {
   return selectedCategories.value.length > 0 ||
-    selectedReadTimes.value.length > 0 ||
-    minCitations.value > 0 ||
-    filters.value.highlyRated ||
-    filters.value.widelyCited
+         selectedVenues.value.length > 0 ||
+         selectedYears.value.length > 0 ||
+         selectedTags.value.length > 0 ||
+         nlQuery.value.trim() !== ''
 })
 
-const filteredArticles = computed(() => {
-  let filtered = [...allArticles]
-
-  // Category filter
-  if (selectedCategories.value.length > 0) {
-    filtered = filtered.filter(article =>
-      selectedCategories.value.includes(article.category)
-    )
-  }
-
-  // Read time filter
-  if (selectedReadTimes.value.length > 0) {
-    filtered = filtered.filter(article => {
-      return selectedReadTimes.value.some(rangeLabel => {
-        const range = readTimeRanges.find(r => r.label === rangeLabel)
-        return range && article.readTime >= range.min && article.readTime <= range.max
-      })
+// Load all facets (without filters) to keep facet options always available
+const loadFacets = async () => {
+  try {
+    // Request facets without any filters to get all available facet values
+    const facetResponse = await searchArticles({
+      q: null,
+      limit: 1, // Minimum required by API (we only need facets)
+      offset: 0,
+      sort: sortBy.value,
+      fl: ['urn'], // Minimal field list since we only need facets
+      fq: null,
+      fields: [],
     })
+
+    // Store facets from response
+    if (facetResponse.result.facets) {
+      facets.value = facetResponse.result.facets
+    }
+  } catch (err) {
+    console.error('Failed to load facets:', err)
   }
-
-  // Citations filter
-  if (minCitations.value > 0) {
-    filtered = filtered.filter(article =>
-      (article.citations || 0) >= minCitations.value
-    )
-  }
-
-  // Engagement filters
-  if (filters.value.highlyRated) {
-    filtered = filtered.filter(article => {
-      const total = (article.reactions?.helpful || 0) +
-        (article.reactions?.insightful || 0) +
-        (article.reactions?.interesting || 0)
-      return total >= 200
-    })
-  }
-
-  if (filters.value.widelyCited) {
-    filtered = filtered.filter(article =>
-      (article.citations || 0) >= 40
-    )
-  }
-
-  // Natural language search (simple keyword matching for demo)
-  if (nlQuery.value.trim()) {
-    const query = nlQuery.value.toLowerCase()
-    filtered = filtered.filter(article =>
-      article.title.toLowerCase().includes(query) ||
-      article.excerpt.toLowerCase().includes(query) ||
-      article.category.toLowerCase().includes(query)
-    )
-  }
-
-  return filtered
-})
-
-const sortedArticles = computed(() => {
-  const sorted = [...filteredArticles.value]
-
-  switch (sortBy.value) {
-    case 'citations':
-      return sorted.sort((a, b) => (b.citations || 0) - (a.citations || 0))
-    case 'reactions':
-      return sorted.sort((a, b) => {
-        const totalA = (a.reactions?.helpful || 0) + (a.reactions?.insightful || 0) + (a.reactions?.interesting || 0)
-        const totalB = (b.reactions?.helpful || 0) + (b.reactions?.insightful || 0) + (b.reactions?.interesting || 0)
-        return totalB - totalA
-      })
-    case 'readTime':
-      return sorted.sort((a, b) => a.readTime - b.readTime)
-    case 'recent':
-      return sorted.reverse()
-    default: // relevance
-      return sorted
-  }
-})
-
-const paginatedArticles = computed(() => {
-  const start = (page.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return sortedArticles.value.slice(start, end)
-})
-
-const totalPages = computed(() => {
-  return Math.ceil(sortedArticles.value.length / itemsPerPage)
-})
-
-// Methods
-const getCategoryCount = (category: string) => {
-  return allArticles.filter(a => a.category === category).length
 }
 
+// Load articles from backend with filters
+const loadArticles = async () => {
+  clearError()
+
+  try {
+    // Build filter queries
+    const fq: string[] = []
+
+    // Category filter: build OR query across both category and ai_category fields
+    if (selectedCategories.value.length > 0) {
+      const categoryFilters: string[] = []
+      selectedCategories.value.forEach(cat => {
+        // Search in both category and ai_category fields for each selected value
+        categoryFilters.push(`category:"${cat}"`)
+        categoryFilters.push(`ai_category:"${cat}"`)
+      })
+      const categoryFilter = categoryFilters.join(' OR ')
+      fq.push(categoryFilters.length > 1 ? `(${categoryFilter})` : categoryFilter)
+    }
+
+    if (selectedVenues.value.length > 0) {
+      const venueFilter = selectedVenues.value.map(v => `venue:"${v}"`).join(' OR ')
+      fq.push(selectedVenues.value.length > 1 ? `(${venueFilter})` : venueFilter)
+    }
+
+    if (selectedYears.value.length > 0) {
+      const yearFilter = selectedYears.value.map(y => `publication_year:${y}-*`).join(' OR ')
+      fq.push(selectedYears.value.length > 1 ? `(${yearFilter})` : yearFilter)
+    }
+
+    // Tags filter: build OR query across both tags and ai_tags fields
+    if (selectedTags.value.length > 0) {
+      const tagFilters: string[] = []
+      selectedTags.value.forEach(tag => {
+        // Search in both tags and ai_tags fields for each selected value
+        tagFilters.push(`tags:"${tag}"`)
+        tagFilters.push(`ai_tags:"${tag}"`)
+      })
+      const tagFilter = tagFilters.join(' OR ')
+      fq.push(tagFilters.length > 1 ? `(${tagFilter})` : tagFilter)
+    }
+
+    // Load articles with filters (no facets needed from this request)
+    await searchArticles({
+      q: nlQuery.value || null,
+      limit: itemsPerPage,
+      offset: (page.value - 1) * itemsPerPage,
+      sort: sortBy.value,
+      fl: ['urn', 'title', 'authors', 'tags', 'ai_tags', 'abstract', 'description', 'venue', 'publication_year', 'category', 'ai_category'],
+      fq: fq.length > 0 ? fq : null,
+      fields: [], // Don't request facets here since we get them separately
+    })
+  } catch (err) {
+    console.error('Failed to load articles:', err)
+  }
+}
+
+// Methods
 const performNLSearch = () => {
-  // In a real app, this would call an AI search API
-  console.log('Performing NL search:', nlQuery.value)
+  page.value = 1
+  loadArticles()
 }
 
 const resetFilters = () => {
   selectedCategories.value = []
-  selectedReadTimes.value = []
-  minCitations.value = 0
-  filters.value.highlyRated = false
-  filters.value.widelyCited = false
+  selectedVenues.value = []
+  selectedYears.value = []
+  selectedTags.value = []
   nlQuery.value = ""
-  sortBy.value = "relevance"
+  sortBy.value = "created_at desc"
   page.value = 1
+  loadArticles()
 }
 
-// Reset to page 1 when filters or sort changes
-watch([selectedCategories, selectedReadTimes, minCitations, filters, sortBy, nlQuery], () => {
+// Watch for changes
+watch([selectedCategories, selectedVenues, selectedYears, selectedTags, sortBy], () => {
   page.value = 1
+  loadArticles()
 }, { deep: true })
+
+watch(page, () => {
+  loadArticles()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+  setupObserver()
+})
 
 // Intersection Observer for animations
 let observer: IntersectionObserver | null = null
@@ -575,11 +710,8 @@ const setupObserver = () => {
 }
 
 onMounted(() => {
-  setupObserver()
-})
-
-// Re-setup observer when page changes
-watch(page, () => {
+  loadFacets() // Load all available facets once
+  loadArticles() // Load filtered articles
   setupObserver()
 })
 

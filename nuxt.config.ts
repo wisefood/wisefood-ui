@@ -33,6 +33,7 @@ export default defineNuxtConfig({
       keycloakUrl: process.env.VITE_KEYCLOAK_URL,
       keycloakRealm: process.env.VITE_KEYCLOAK_REALM,
       keycloakClientId: process.env.VITE_KEYCLOAK_CLIENT_ID,
+      wisefoodApiUrl: process.env.VITE_WISEFOOD_API_URL,
     }
   },  
 
