@@ -238,8 +238,11 @@ definePageMeta({
   middleware: 'auth'
 })
 
+useHead({
+  title: 'RecipeWrangler'
+})
+
 useSeoMeta({
-  title: 'RecipeWrangler - WiseFood',
   description: 'Discover personalized recipes tailored to your nutritional goals'
 })
 

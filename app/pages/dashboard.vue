@@ -38,7 +38,7 @@
           {{ hero.greeting }}
         </p>
         <h1 class="text-4xl sm:text-5xl lg:text-6xl font-light text-gray-900 dark:text-white tracking-tight mb-4">
-          Your <span class="font-serif italic text-brand-500 text-5xl sm:text-6xl lg:text-7xl">WiseFood</span>
+          Welcome, <span class="font-serif italic text-brand-500 text-5xl sm:text-6xl lg:text-7xl">{{ userGreeting }}</span>
         </h1>
         <p class="text-lg text-gray-600 dark:text-gray-300 font-light max-w-2xl mx-auto">
           {{ hero.encouragement }}
@@ -255,16 +255,30 @@
 import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 
+
 definePageMeta({
   middleware: 'auth'
 })
 
+useHead({
+  title: 'Dashboard'
+})
+
 useSeoMeta({
-  title: 'Dashboard - WiseFood',
   description: 'Your personalized food wellness snapshot'
 })
 
 const authStore = useAuthStore()
+const userGreeting = computed(() => {
+  const user = authStore.currentUser
+  console.log('Current User:', user)
+
+  if (user?.name ) {
+    return `${user.name}`
+  }
+  
+  return 'U'
+})
 
 const { hero, spotlight, trendingRecipes, rings, sustainability, discoveries } = useDashboardData()
 

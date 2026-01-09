@@ -7,8 +7,11 @@ definePageMeta({
   layout: 'auth'
 })
 
+useHead({
+  title: 'Login'
+})
+
 useSeoMeta({
-  title: 'Login - WiseFood',
   description: 'Sign in to your WiseFood account'
 })
 </script>

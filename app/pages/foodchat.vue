@@ -126,8 +126,11 @@ definePageMeta({
   middleware: 'auth'
 })
 
+useHead({
+  title: 'FoodChat'
+})
+
 useSeoMeta({
-  title: 'FoodChat - WiseFood',
   description: 'Your AI nutrition assistant'
 })
 

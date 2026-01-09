@@ -178,8 +178,11 @@ definePageMeta({
   middleware: 'auth'
 })
 
+useHead({
+  title: 'FoodScholar'
+})
+
 useSeoMeta({
-  title: 'FoodScholar - WiseFood',
   description: 'Educational content and nutritional insights about sustainable eating'
 })
 

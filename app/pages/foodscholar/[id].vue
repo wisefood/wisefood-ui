@@ -785,8 +785,11 @@ const copyNotesToClipboard = () => {
   }, 2000)
 }
 
+useHead({
+  title: computed(() => article.value ? `${article.value.title} - FoodScholar` : 'Article - FoodScholar')
+})
+
 useSeoMeta({
-  title: computed(() => article.value ? `${article.value.title} - FoodScholar` : 'Article - FoodScholar'),
   description: computed(() => article.value?.excerpt || 'Learn about nutrition and sustainable eating')
 })
 

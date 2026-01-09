@@ -164,7 +164,7 @@
               </div>
               <div>
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Natural Language Search</h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Search using plain English queries</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Search articles using natural language</p>
               </div>
             </div>
             <div>
@@ -292,8 +292,11 @@ definePageMeta({
   middleware: 'auth'
 })
 
+useHead({
+  title: 'Article Catalog - FoodScholar'
+})
+
 useSeoMeta({
-  title: 'Article Catalog - FoodScholar',
   description: 'Advanced search and filtering for nutrition science literature'
 })
 

@@ -176,6 +176,15 @@ definePageMeta({
   auth: false
 })
 
+useHead({
+  titleTemplate: '',  // Override the template for homepage
+  title: 'WiseFood - Your Personalized Nutrition Journey'
+})
+
+useSeoMeta({
+  description: 'Transform your relationship with food through science-backed insights and AI-powered recommendations.'
+})
+
 const features = [
   { key: 'scientific', icon: 'i-lucide-microscope' },
   { key: 'personalized', icon: 'i-lucide-fingerprint' },

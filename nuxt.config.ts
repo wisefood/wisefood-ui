@@ -4,6 +4,14 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@pinia/nuxt',
   ],
+
+  app: {
+    head: {
+      title: 'Loading - WiseFood',
+      titleTemplate: '%s - WiseFood',
+    }
+  },
+
   devtools: {
     enabled: true,
 
@@ -18,7 +26,7 @@ export default defineNuxtConfig({
     }
   },
 
-  
+
 
   runtimeConfig: {
     public: {
@@ -31,7 +39,11 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   routeRules: {
-    '/': { prerender: true }
+    '/': { prerender: true },
+    '/dashboard': { ssr: false },
+    '/foodscholar/**': { ssr: false },
+    '/recipe-wrangler/**': { ssr: false },
+    '/foodchat/**': { ssr: false },
   },
 
   compatibilityDate: '2025-01-15',

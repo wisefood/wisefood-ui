@@ -42,29 +42,46 @@ class KeycloakAuthService {
   }
 
   async init(): Promise<boolean> {
-    if (this.initPromise && this.keycloak) {
-      return this.keycloak.authenticated || false
+    // If already initialized and authenticated, verify token is still valid
+    if (this.initPromise && this.keycloak?.authenticated) {
+      try {
+        // Try to refresh token to ensure it's still valid
+        await this.keycloak.updateToken(5)
+        console.log('[Keycloak] Already initialized and authenticated')
+        return true
+      } catch (error) {
+        console.warn('[Keycloak] Token validation failed, re-initializing:', error)
+        // Reset and re-initialize
+        this.keycloak = null
+        this.initPromise = null
+      }
     }
+
     if (this.initPromise) return this.initPromise
 
     this.initPromise = (async () => {
       try {
         const kc = this.getKeycloak()
-        
+
         console.log('[Keycloak] Starting initialization...')
-        
+
         const authenticated = await kc.init({
           onLoad: 'check-sso',
           silentCheckSsoRedirectUri: this.getAbsoluteUrl('/silent-check-sso.html'),
           pkceMethod: this.hasWebCrypto() ? 'S256' : undefined,
           checkLoginIframe: false,
+          enableLogging: true,
         })
 
         console.log('[Keycloak] Initialization complete. Authenticated:', authenticated)
 
         if (authenticated) {
           console.log('[Keycloak] User info:', this.getUserInfo())
+          console.log('[Keycloak] Token expires in:', kc.tokenParsed?.exp ?
+            new Date(kc.tokenParsed.exp * 1000).toLocaleString() : 'unknown')
           this.setupTokenRefresh()
+        } else {
+          console.log('[Keycloak] Not authenticated - no valid SSO session found')
         }
 
         return authenticated
