@@ -14,7 +14,7 @@ class WiseFoodApiService {
   private getBaseUrl(): string {
     // Get base URL from runtime config or use default
     const config = useRuntimeConfig()
-    return (config.public.wisefoodApiUrl as string) || 'http://localhost:8080/api'
+    return (config.public.wisefoodApiUrl as string) || 'https://wisefood.gr/dc/api'
   }
 
   /**

@@ -229,8 +229,7 @@ const runTypingEffect = (text: string) => {
   typingTimeout = setTimeout(type, 200)
 }
 
-onMounted(async () => {
-  await auth.initialize()
+onMounted(() => {
   runTypingEffect(typingText.value)
 
   const observerOptions = {

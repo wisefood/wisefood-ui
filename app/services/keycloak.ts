@@ -1,9 +1,10 @@
 import Keycloak from 'keycloak-js'
-import type { KeycloakConfig } from 'keycloak-js'
+import type { KeycloakConfig, KeycloakInitOptions } from 'keycloak-js'
 
 class KeycloakAuthService {
   private keycloak: Keycloak | null = null
   private initPromise: Promise<boolean> | null = null
+  private silentCheckDisabled = false
   
   private getKeycloak(): Keycloak {
     if (!this.keycloak) {
@@ -14,6 +15,17 @@ class KeycloakAuthService {
   }
 
   private getConfig(): KeycloakConfig {
+    // First try to get from window.__RUNTIME_CONFIG__ (injected at container startup)
+    if (typeof window !== 'undefined' && (window as any).__RUNTIME_CONFIG__) {
+      const runtimeConfig = (window as any).__RUNTIME_CONFIG__
+      return {
+        url: runtimeConfig.keycloakUrl,
+        realm: runtimeConfig.keycloakRealm,
+        clientId: runtimeConfig.keycloakClientId,
+      }
+    }
+
+    // Fallback to Nuxt runtime config (for local development)
     const config = useRuntimeConfig().public
     return {
       url: config.keycloakUrl as string,
@@ -24,6 +36,31 @@ class KeycloakAuthService {
 
   private hasWebCrypto(): boolean {
     return typeof window !== 'undefined' && !!window.crypto && !!window.crypto.subtle
+  }
+
+  private is3pCookieTimeout(error: unknown): boolean {
+    return error instanceof Error && error.message.includes('3rd party check iframe message')
+  }
+
+  private getBaseUrl(): string {
+    const baseUrl = useRuntimeConfig().app.baseURL || '/'
+    if (!baseUrl.startsWith('/')) return `/${baseUrl}`
+    return baseUrl
+  }
+
+  private withBaseUrl(path: string): string {
+    const baseUrl = this.getBaseUrl()
+    const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`
+    const baseNoTrailing = normalizedBase.replace(/\/$/, '')
+
+    if (baseUrl !== '/' && (normalizedPath === baseUrl || normalizedPath === baseNoTrailing || normalizedPath.startsWith(normalizedBase))) {
+      return normalizedPath
+    }
+
+    if (baseUrl === '/') return normalizedPath
+
+    return `${normalizedBase}${normalizedPath.replace(/^\/+/, '')}`
   }
 
   // Helper to create absolute URL
@@ -37,7 +74,7 @@ class KeycloakAuthService {
     
     // Make it absolute
     const origin = window.location.origin
-    const fullPath = path.startsWith('/') ? path : `/${path}`
+    const fullPath = this.withBaseUrl(path)
     return `${origin}${fullPath}`
   }
 
@@ -61,17 +98,46 @@ class KeycloakAuthService {
 
     this.initPromise = (async () => {
       try {
-        const kc = this.getKeycloak()
+        let kc = this.getKeycloak()
 
         console.log('[Keycloak] Starting initialization...')
+        console.log('[Keycloak] Config:', this.getConfig())
 
-        const authenticated = await kc.init({
-          onLoad: 'check-sso',
-          silentCheckSsoRedirectUri: this.getAbsoluteUrl('/silent-check-sso.html'),
+        if (!this.silentCheckDisabled) {
+          console.log('[Keycloak] Silent check SSO URL:', this.getAbsoluteUrl('/silent-check-sso.html'))
+        }
+
+        const initOptions: KeycloakInitOptions = {
           pkceMethod: this.hasWebCrypto() ? 'S256' : undefined,
           checkLoginIframe: false,
           enableLogging: true,
-        })
+          silentCheckSsoFallback: false,
+          messageReceiveTimeout: 5000,
+        }
+
+        if (!this.silentCheckDisabled) {
+          initOptions.onLoad = 'check-sso'
+          initOptions.silentCheckSsoRedirectUri = this.getAbsoluteUrl('/silent-check-sso.html')
+        }
+
+        let authenticated: boolean
+        try {
+          authenticated = await kc.init(initOptions)
+        } catch (error) {
+          if (!this.silentCheckDisabled && this.is3pCookieTimeout(error)) {
+            console.warn('[Keycloak] 3rd-party cookie check timed out; disabling silent SSO for this session.')
+            this.silentCheckDisabled = true
+            this.keycloak = null
+            kc = this.getKeycloak()
+            authenticated = await kc.init({
+              ...initOptions,
+              onLoad: undefined,
+              silentCheckSsoRedirectUri: undefined,
+            })
+          } else {
+            throw error
+          }
+        }
 
         console.log('[Keycloak] Initialization complete. Authenticated:', authenticated)
 

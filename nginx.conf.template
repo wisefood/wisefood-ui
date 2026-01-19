@@ -1,0 +1,52 @@
+events {
+    worker_connections 1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    server {
+        listen 80;
+        server_name localhost;
+        root /usr/share/nginx/html;
+        index index.html;
+
+        # CRITICAL: Force browser to treat this as secure context
+        add_header Content-Security-Policy "upgrade-insecure-requests" always;
+        
+        # Tell browser this is a secure context (for localhost)
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+        
+        # Additional security headers
+        add_header X-Content-Type-Options nosniff always;
+        add_header X-Frame-Options SAMEORIGIN always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        
+        # Critical for Web Crypto API
+        add_header Permissions-Policy "crypto=*" always;
+
+        # Handle static assets first
+        location ~* ^/assets/.*\.(js|css|png|jpg|woff|jpeg|gif|ico|svg|woff2|ttf|eot)$ {
+            try_files $uri =404;
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        # Handle Vue Router history mode - serve index.html for all non-file routes
+        location / {
+            try_files $uri $uri/ /index.html;
+            
+            # Prevent caching of index.html
+            add_header Cache-Control "no-cache, no-store, must-revalidate";
+            add_header Pragma "no-cache";
+            add_header Expires "0";
+        }
+
+        # Enable gzip compression
+        gzip on;
+        gzip_vary on;
+        gzip_min_length 1024;
+        gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;
+    }
+}

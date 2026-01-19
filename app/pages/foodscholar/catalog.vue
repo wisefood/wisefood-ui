@@ -317,7 +317,10 @@
                       {{ searchSummary.total_articles_analyzed }} articles
                     </span>
                   </div>
-                  <p class="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">{{ searchSummary.summary }}</p>
+                  <div
+                    class="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 prose prose-sm dark:prose-invert max-w-none [&_p]:leading-relaxed [&_p]:mb-3"
+                    v-html="renderMarkdown(searchSummary.summary)"
+                  ></div>
                   <div v-if="!summaryExpanded && searchSummary.summary.length > 200" class="mt-2">
                     <span class="text-sm text-brand-600 dark:text-brand-400 font-medium">Click to read more</span>
                   </div>
@@ -331,7 +334,7 @@
               <!-- Expanded Content -->
               <div v-if="summaryExpanded" class="px-6 pb-6 space-y-6">
                 <!-- Full Summary -->
-                <div class="prose prose-sm dark:prose-invert max-w-none" v-html="renderMarkdown(searchSummary.summary)"></div>
+                <div class="prose prose-base dark:prose-invert max-w-none [&_p]:leading-relaxed [&_p]:mb-4 [&_ul]:my-4 [&_li]:mb-2" v-html="renderMarkdown(searchSummary.summary)"></div>
 
                 <!-- Key Findings -->
                 <div v-if="searchSummary.key_findings && searchSummary.key_findings.length > 0">
@@ -347,10 +350,10 @@
                     >
                       <div class="flex items-start gap-3">
                         <div class="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center shrink-0 mt-0.5">
-                          <span class="text-xs font-semibold text-brand-700 dark:text-brand-300">{{ idx + 1 }}</span>
+                          <span class="text-xs font-semibold text-brand-700 dark:text-brand-300">{{ Number(idx) + 1 }}</span>
                         </div>
                         <div class="flex-1 min-w-0">
-                          <div class="text-sm text-gray-700 dark:text-gray-300 mb-2 prose prose-sm dark:prose-invert max-w-none" v-html="renderMarkdown(finding.finding)"></div>
+                          <div class="text-sm text-gray-700 dark:text-gray-300 mb-2 prose prose-sm dark:prose-invert max-w-none [&_p]:leading-relaxed [&_p]:mb-3" v-html="renderMarkdown(finding.finding)"></div>
 
                           <!-- Supporting Citations -->
                           <div v-if="finding.supporting_citations && finding.supporting_citations.length > 0" class="space-y-2 mt-3">
@@ -515,8 +518,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useArticles } from '~/composables/useArticles'
+import { useAuthStore } from '~/stores/auth'
 import type { Article } from '~/services/articlesApi'
 import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 
 definePageMeta({
   middleware: 'auth'
@@ -581,10 +586,34 @@ const exampleQueries = [
   "vitamin D deficiency studies",
 ]
 
-// Markdown rendering function
+// Markdown rendering function with sanitization
 const renderMarkdown = (text: string): string => {
   if (!text) return ''
-  return marked(text, { breaks: true }) as string
+
+  // Pre-process: Convert URN references to clickable links
+  // Matches patterns like: (urn:article:some-article-id) or *text* (urn:article:some-article-id)
+  let processedText = text.replace(
+    /\(urn:article:([a-zA-Z0-9\-]+)\)/g,
+    '([View article](/foodscholar/$1))'
+  )
+
+  // Also handle inline URN references without parentheses
+  processedText = processedText.replace(
+    /urn:article:([a-zA-Z0-9\-]+)/g,
+    '[urn:article:$1](/foodscholar/urn:article:$1)'
+  )
+
+  // Configure marked to properly handle line breaks
+  // breaks: true converts single \n to <br>
+  // gfm: true enables GitHub Flavored Markdown which handles \n\n as paragraphs
+  const rawHtml = marked(processedText, {
+    breaks: true,
+    gfm: true
+  }) as string
+
+  return DOMPurify.sanitize(rawHtml, {
+    ADD_ATTR: ['target'], // Allow target attribute for links
+  })
 }
 
 // Transform articles to match ArticleCard interface
@@ -811,6 +840,13 @@ const fetchSearchSummary = async (query: string, results: Article[]) => {
   summaryError.value = null
 
   try {
+    const authStore = useAuthStore()
+    const token = authStore.getToken()
+
+    if (!token) {
+      throw new Error('No authentication token available')
+    }
+
     const requestBody = {
       query: query,
       results: results.map(article => ({
@@ -827,10 +863,11 @@ const fetchSearchSummary = async (query: string, results: Article[]) => {
       language: 'en'
     }
 
-    const response = await fetch('http://localhost:8080/api/v1/search/summarize', {
+    const response = await fetch('https://wisefood.gr/rest/api/v1/foodscholar/search/summarize', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify(requestBody)
     })
@@ -840,7 +877,7 @@ const fetchSearchSummary = async (query: string, results: Article[]) => {
     }
 
     const data = await response.json()
-    searchSummary.value = data
+    searchSummary.value = data.result
     summaryExpanded.value = false // Start collapsed
   } catch (err: any) {
     console.error('Error fetching search summary:', err)
@@ -942,5 +979,96 @@ onUnmounted(() => {
 .scroll-fade-in.is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Enhanced prose styling for better readability */
+:deep(.prose) {
+  line-height: 1.75;
+}
+
+:deep(.prose p) {
+  margin-bottom: 1rem;
+  line-height: 1.75;
+}
+
+:deep(.prose p + p) {
+  margin-top: 1rem;
+}
+
+:deep(.prose ul),
+:deep(.prose ol) {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+:deep(.prose li) {
+  margin-bottom: 0.5rem;
+  line-height: 1.75;
+}
+
+:deep(.prose strong) {
+  font-weight: 600;
+  color: rgb(17 24 39);
+}
+
+:deep(.dark .prose strong) {
+  color: rgb(249 250 251);
+}
+
+/* Ensure proper spacing in summary sections */
+:deep(.prose-sm p) {
+  font-size: 0.875rem;
+  line-height: 1.75;
+}
+
+:deep(.prose-base p) {
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+/* Style URN links to be visually distinct */
+:deep(.prose a) {
+  color: rgb(37 99 235);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+:deep(.prose a:hover) {
+  color: rgb(29 78 216);
+  text-decoration: underline;
+}
+
+:deep(.dark .prose a) {
+  color: rgb(96 165 250);
+}
+
+:deep(.dark .prose a:hover) {
+  color: rgb(147 197 253);
+}
+
+/* Special styling for article reference links */
+:deep(.prose a[href*="/foodscholar/"]) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  background-color: rgb(239 246 255);
+  border-radius: 0.375rem;
+  font-size: 0.875em;
+  white-space: nowrap;
+}
+
+:deep(.dark .prose a[href*="/foodscholar/"]) {
+  background-color: rgba(37, 99, 235, 0.15);
+}
+
+:deep(.prose a[href*="/foodscholar/"]:hover) {
+  background-color: rgb(219 234 254);
+}
+
+:deep(.dark .prose a[href*="/foodscholar/"]:hover) {
+  background-color: rgba(37, 99, 235, 0.25);
 }
 </style>
