@@ -82,7 +82,8 @@ export const useAuthStore = defineStore('auth', {
     },
 
     // Accept both relative and absolute paths
-    async login(redirectUri: string = '/dashboard') {
+    async login(redirectUri: string = '/profiles') {
+      console.log('[AuthStore] Login requested with redirect:', redirectUri)
       await KeycloakAuthService.login(redirectUri)
     },
 

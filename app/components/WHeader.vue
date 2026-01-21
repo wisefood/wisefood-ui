@@ -146,6 +146,12 @@ const userDisplayName = computed(() => {
 // User dropdown menu items
 const userMenuItems = computed<DropdownMenuItem[]>(() => [
   {
+    label: 'My Profile',
+    icon: 'i-lucide-user',
+    disabled: !householdStore.currentMember,
+    onSelect: () => navigateTo('/my-profile')
+  },
+  {
     label: 'Switch Profile',
     icon: 'i-lucide-users',
     onSelect: () => {

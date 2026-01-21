@@ -132,7 +132,7 @@ class HouseholdsApiService {
   }
 
   async updateMemberProfile(memberId: string, data: MemberProfile): Promise<ApiResponse<MemberProfile>> {
-    const result = await wisefoodRestApi.put<MemberProfile, MemberProfile>(`/members/${memberId}/profile`, data)
+    const result = await wisefoodRestApi.patch<MemberProfile, MemberProfile>(`/members/${memberId}/profile`, data)
     return { success: true, result }
   }
 

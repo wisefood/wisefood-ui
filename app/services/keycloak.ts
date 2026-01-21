@@ -175,12 +175,12 @@ class KeycloakAuthService {
   }
 
   login(redirectUri?: string): void {
-    const absoluteUrl = redirectUri 
-      ? this.getAbsoluteUrl(redirectUri) 
-      : this.getAbsoluteUrl('/dashboard')
-    
+    const absoluteUrl = redirectUri
+      ? this.getAbsoluteUrl(redirectUri)
+      : this.getAbsoluteUrl('/profiles')
+
     console.log('[Keycloak] Login with redirect:', absoluteUrl)
-    
+
     this.getKeycloak().login({
       redirectUri: absoluteUrl,
     })
@@ -199,12 +199,12 @@ class KeycloakAuthService {
   }
 
   register(redirectUri?: string): void {
-    const absoluteUrl = redirectUri 
-      ? this.getAbsoluteUrl(redirectUri) 
-      : this.getAbsoluteUrl('/dashboard')
-    
+    const absoluteUrl = redirectUri
+      ? this.getAbsoluteUrl(redirectUri)
+      : this.getAbsoluteUrl('/profiles')
+
     console.log('[Keycloak] Register with redirect:', absoluteUrl)
-    
+
     const kc = this.getKeycloak()
     kc.register({
       redirectUri: absoluteUrl,
