@@ -26,11 +26,16 @@ http {
         # Critical for Web Crypto API
         add_header Permissions-Policy "crypto=*" always;
 
-        # Handle static assets first
-        location ~* ^/assets/.*\.(js|css|png|jpg|woff|jpeg|gif|ico|svg|woff2|ttf|eot)$ {
+        # Handle static assets first (including _nuxt and _fonts directories)
+        location ~* ^/(assets|_nuxt|_fonts)/.*\.(js|css|png|jpg|woff|jpeg|gif|ico|svg|woff2|ttf|eot)$ {
             try_files $uri =404;
             expires 1y;
             add_header Cache-Control "public, immutable";
+
+            # CORS headers for fonts (required by browsers)
+            add_header Access-Control-Allow-Origin "*" always;
+            add_header Access-Control-Allow-Methods "GET, OPTIONS" always;
+            add_header Access-Control-Allow-Headers "Range" always;
         }
 
         # Handle Vue Router history mode - serve index.html for all non-file routes

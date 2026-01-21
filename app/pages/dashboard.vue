@@ -254,6 +254,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useHouseholdStore } from '@/stores/household'
 
 
 definePageMeta({
@@ -269,15 +270,24 @@ useSeoMeta({
 })
 
 const authStore = useAuthStore()
-const userGreeting = computed(() => {
-  const user = authStore.currentUser
-  console.log('Current User:', user)
+const householdStore = useHouseholdStore()
 
-  if (user?.name ) {
-    return `${user.name}`
+const userGreeting = computed(() => {
+  // First priority: selected member name from household
+  if (householdStore.currentMember?.name) {
+    return householdStore.currentMember.name
   }
-  
-  return 'U'
+
+  // Second priority: account given_name or full name
+  const user = authStore.currentUser
+  if (user?.given_name) {
+    return user.given_name
+  }
+  if (user?.name) {
+    return user.name
+  }
+
+  return 'Friend'
 })
 
 const { hero, spotlight, trendingRecipes, rings, sustainability, discoveries } = useDashboardData()

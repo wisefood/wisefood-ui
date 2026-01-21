@@ -9,7 +9,8 @@ window.__RUNTIME_CONFIG__ = {
   keycloakUrl: '${VITE_KEYCLOAK_URL}',
   keycloakRealm: '${VITE_KEYCLOAK_REALM}',
   keycloakClientId: '${VITE_KEYCLOAK_CLIENT_ID}',
-  wisefoodApiUrl: '${VITE_WISEFOOD_API_URL}'
+  wisefoodApiUrl: '${VITE_WISEFOOD_API_URL}',
+  wisefoodRestApiUrl: '${VITE_WISEFOOD_REST_API_URL}'
 };
 EOF
 

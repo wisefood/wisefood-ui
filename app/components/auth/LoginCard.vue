@@ -161,8 +161,8 @@ onMounted(async () => {
   }
   
   if (authStore.isAuthenticated) {
-    console.log('[LoginCard] User already authenticated, redirecting to dashboard')
-    await router.push('/dashboard')
+    console.log('[LoginCard] User already authenticated, redirecting to profiles')
+    await router.push('/profiles')
     return
   }
   
@@ -171,12 +171,12 @@ onMounted(async () => {
 
 const handleLogin = () => {
   isLoggingIn.value = true
-  authStore.login('/dashboard')
+  authStore.login('/profiles')
 }
 
 const handleRegister = () => {
   isRegistering.value = true
-  KeycloakAuthService.register('/dashboard')
+  KeycloakAuthService.register('/profiles')
 }
 </script>
 

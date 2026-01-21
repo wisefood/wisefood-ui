@@ -23,14 +23,36 @@
         }"
       >
         <button
-          class="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white font-semibold text-sm hover:shadow-lg hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
+          class="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
         >
-          {{ userInitials }}
+          <!-- Profile Avatar -->
+          <div class="relative">
+            <ProfileAvatar
+              v-if="currentMemberAvatar"
+              :avatar="currentMemberAvatar"
+              size="sm"
+              class="w-9 h-9"
+            />
+            <div
+              v-else
+              class="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white font-semibold text-sm"
+            >
+              {{ memberInitials }}
+            </div>
+          </div>
+          <!-- Member name (hidden on mobile) -->
+          <span class="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300 max-w-24 truncate">
+            {{ currentMemberName }}
+          </span>
+          <UIcon name="i-lucide-chevron-down" class="w-4 h-4 text-gray-400" />
         </button>
         <template #header>
           <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-700">
             <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ userDisplayName }}</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">{{ authStore.currentUser?.email }}</p>
+            <p v-if="householdStore.currentMember" class="text-xs text-brand-500 mt-1">
+              Using: {{ householdStore.currentMember.name }}
+            </p>
           </div>
         </template>
       </UDropdownMenu>
@@ -53,12 +75,42 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useHouseholdStore } from '@/stores/household'
+import { stringToAvatarConfig } from '~/utils/avatarPresets'
 import type { DropdownMenuItem } from '@nuxt/ui'
 
 const authStore = useAuthStore()
+const householdStore = useHouseholdStore()
 
-// Compute user initials from name
-const userInitials = computed(() => {
+// Initialize household store when auth is ready
+onMounted(async () => {
+  if (authStore.isLoggedIn && !householdStore.initialized) {
+    await householdStore.initialize()
+  }
+})
+
+// Get current member avatar config
+const currentMemberAvatar = computed(() => {
+  const member = householdStore.currentMember
+  if (!member?.image_url) return null
+  return stringToAvatarConfig(member.image_url)
+})
+
+// Current member name or fallback to user
+const currentMemberName = computed(() => {
+  const member = householdStore.currentMember
+  if (member) return member.name
+  const user = authStore.currentUser
+  return user?.given_name || user?.name || 'User'
+})
+
+// Member initials for fallback avatar
+const memberInitials = computed(() => {
+  const member = householdStore.currentMember
+  if (member) {
+    return member.name.charAt(0).toUpperCase()
+  }
+
   const user = authStore.currentUser
   if (!user) return 'U'
 
@@ -94,19 +146,33 @@ const userDisplayName = computed(() => {
 // User dropdown menu items
 const userMenuItems = computed<DropdownMenuItem[]>(() => [
   {
-    label: 'Dashboard',
-    icon: 'i-lucide-layout-dashboard',
-    onSelect: () => navigateTo('/dashboard')
+    label: 'Switch Profile',
+    icon: 'i-lucide-users',
+    onSelect: () => {
+      householdStore.clearSelectedMember()
+      navigateTo('/profiles')
+    }
   },
   {
-    label: 'Profile',
-    icon: 'i-lucide-user',
-    onSelect: () => navigateTo('/profile')
+    label: 'Manage Household',
+    icon: 'i-lucide-home',
+    onSelect: () => navigateTo('/profiles')
   },
   {
-    label: 'Settings',
+    type: 'separator'
+  },
+  {
+    label: 'Account Settings',
     icon: 'i-lucide-settings',
-    onSelect: () => navigateTo('/settings')
+    onSelect: () => {
+      const keycloakUrl = import.meta.env.VITE_KEYCLOAK_URL
+      const keycloakRealm = import.meta.env.VITE_KEYCLOAK_REALM
+      if (keycloakUrl && keycloakRealm) {
+        navigateTo(`${keycloakUrl}/realms/${keycloakRealm}/account`)
+      } else {
+        console.error('Keycloak environment variables are not defined')
+      }
+    }
   },
   {
     type: 'separator'
@@ -114,7 +180,10 @@ const userMenuItems = computed<DropdownMenuItem[]>(() => [
   {
     label: 'Sign out',
     icon: 'i-lucide-log-out',
-    onSelect: () => authStore.logout('/')
+    onSelect: () => {
+      householdStore.reset()
+      authStore.logout('/')
+    }
   }
 ])
 </script>
