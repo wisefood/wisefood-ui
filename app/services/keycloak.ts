@@ -1,6 +1,29 @@
 import Keycloak from 'keycloak-js'
 import type { KeycloakConfig, KeycloakInitOptions } from 'keycloak-js'
 
+// Check if keycloak debug logging is enabled
+const isDebugEnabled = (): boolean => {
+  if (typeof window === 'undefined') return false
+  // Check for runtime config first, then fall back to import.meta.env
+  const runtimeConfig = (window as any).__RUNTIME_CONFIG__
+  if (runtimeConfig?.keycloakDebug !== undefined) {
+    return runtimeConfig.keycloakDebug === true || runtimeConfig.keycloakDebug === 'true'
+  }
+  return import.meta.env.VITE_KEYCLOAK_DEBUG === 'true'
+}
+
+const log = (...args: unknown[]) => {
+  if (isDebugEnabled()) {
+    console.log(...args)
+  }
+}
+
+const warn = (...args: unknown[]) => {
+  if (isDebugEnabled()) {
+    console.warn(...args)
+  }
+}
+
 class KeycloakAuthService {
   private keycloak: Keycloak | null = null
   private initPromise: Promise<boolean> | null = null
@@ -84,10 +107,10 @@ class KeycloakAuthService {
       try {
         // Try to refresh token to ensure it's still valid
         await this.keycloak.updateToken(5)
-        console.log('[Keycloak] Already initialized and authenticated')
+        log('[Keycloak] Already initialized and authenticated')
         return true
       } catch (error) {
-        console.warn('[Keycloak] Token validation failed, re-initializing:', error)
+        warn('[Keycloak] Token validation failed, re-initializing:', error)
         // Reset and re-initialize
         this.keycloak = null
         this.initPromise = null
@@ -100,11 +123,11 @@ class KeycloakAuthService {
       try {
         let kc = this.getKeycloak()
 
-        console.log('[Keycloak] Starting initialization...')
-        console.log('[Keycloak] Config:', this.getConfig())
+        log('[Keycloak] Starting initialization...')
+        log('[Keycloak] Config:', this.getConfig())
 
         if (!this.silentCheckDisabled) {
-          console.log('[Keycloak] Silent check SSO URL:', this.getAbsoluteUrl('/silent-check-sso.html'))
+          log('[Keycloak] Silent check SSO URL:', this.getAbsoluteUrl('/silent-check-sso.html'))
         }
 
         const initOptions: KeycloakInitOptions = {
@@ -125,7 +148,7 @@ class KeycloakAuthService {
           authenticated = await kc.init(initOptions)
         } catch (error) {
           if (!this.silentCheckDisabled && this.is3pCookieTimeout(error)) {
-            console.warn('[Keycloak] 3rd-party cookie check timed out; disabling silent SSO for this session.')
+            warn('[Keycloak] 3rd-party cookie check timed out; disabling silent SSO for this session.')
             this.silentCheckDisabled = true
             this.keycloak = null
             kc = this.getKeycloak()
@@ -139,15 +162,15 @@ class KeycloakAuthService {
           }
         }
 
-        console.log('[Keycloak] Initialization complete. Authenticated:', authenticated)
+        log('[Keycloak] Initialization complete. Authenticated:', authenticated)
 
         if (authenticated) {
-          console.log('[Keycloak] User info:', this.getUserInfo())
-          console.log('[Keycloak] Token expires in:', kc.tokenParsed?.exp ?
+          log('[Keycloak] User info:', this.getUserInfo())
+          log('[Keycloak] Token expires in:', kc.tokenParsed?.exp ?
             new Date(kc.tokenParsed.exp * 1000).toLocaleString() : 'unknown')
           this.setupTokenRefresh()
         } else {
-          console.log('[Keycloak] Not authenticated - no valid SSO session found')
+          log('[Keycloak] Not authenticated - no valid SSO session found')
         }
 
         return authenticated
@@ -165,7 +188,7 @@ class KeycloakAuthService {
     const interval = setInterval(async () => {
       try {
         const refreshed = await kc.updateToken(70)
-        if (!refreshed) console.warn('[Keycloak] Token not refreshed')
+        if (!refreshed) warn('[Keycloak] Token not refreshed')
       } catch (error) {
         console.error('[Keycloak] Token refresh failed:', error)
         clearInterval(interval)
@@ -179,7 +202,7 @@ class KeycloakAuthService {
       ? this.getAbsoluteUrl(redirectUri)
       : this.getAbsoluteUrl('/profiles')
 
-    console.log('[Keycloak] Login with redirect:', absoluteUrl)
+    log('[Keycloak] Login with redirect:', absoluteUrl)
 
     this.getKeycloak().login({
       redirectUri: absoluteUrl,
@@ -191,7 +214,7 @@ class KeycloakAuthService {
       ? this.getAbsoluteUrl(redirectUri) 
       : this.getAbsoluteUrl('/login')
     
-    console.log('[Keycloak] Logout with redirect:', absoluteUrl)
+    log('[Keycloak] Logout with redirect:', absoluteUrl)
     
     this.getKeycloak().logout({
       redirectUri: absoluteUrl,
@@ -203,7 +226,7 @@ class KeycloakAuthService {
       ? this.getAbsoluteUrl(redirectUri)
       : this.getAbsoluteUrl('/profiles')
 
-    console.log('[Keycloak] Register with redirect:', absoluteUrl)
+    log('[Keycloak] Register with redirect:', absoluteUrl)
 
     const kc = this.getKeycloak()
     kc.register({

@@ -1,6 +1,21 @@
 import { defineStore } from 'pinia'
 import KeycloakAuthService from '~/services/keycloak'
 
+const isDebugEnabled = (): boolean => {
+  if (typeof window === 'undefined') return false
+  const runtimeConfig = (window as any).__RUNTIME_CONFIG__
+  if (runtimeConfig?.keycloakDebug !== undefined) {
+    return runtimeConfig.keycloakDebug === true || runtimeConfig.keycloakDebug === 'true'
+  }
+  return import.meta.env.VITE_KEYCLOAK_DEBUG === 'true'
+}
+
+const log = (...args: unknown[]) => {
+  if (isDebugEnabled()) {
+    console.log(...args)
+  }
+}
+
 interface User {
   id?: string
   username?: string
@@ -36,20 +51,20 @@ export const useAuthStore = defineStore('auth', {
     async initialize(forceRecheck = false) {
       // If there's already an initialization in progress, wait for it
       if (this.initPromise && !forceRecheck) {
-        console.log('[AuthStore] Initialization already in progress, waiting...')
+        log('[AuthStore] Initialization already in progress, waiting...')
         return this.initPromise
       }
 
       // If already initialized and authenticated, we can skip re-initialization
       // UNLESS we're forcing a recheck
       if (this.initialized && this.isAuthenticated && !forceRecheck) {
-        console.log('[AuthStore] Already initialized and authenticated:', this.user?.username)
+        log('[AuthStore] Already initialized and authenticated:', this.user?.username)
         return this.isAuthenticated
       }
 
       // If initialized but NOT authenticated, don't skip - we should recheck
       // because the user might have logged in on another tab
-      console.log('[AuthStore] Initializing auth store (initialized:', this.initialized, ', authenticated:', this.isAuthenticated, ')')
+      log('[AuthStore] Initializing auth store (initialized:', this.initialized, ', authenticated:', this.isAuthenticated, ')')
 
       // Create and store the initialization promise
       this.initPromise = (async () => {
@@ -58,12 +73,12 @@ export const useAuthStore = defineStore('auth', {
           if (authenticated) {
             this.isAuthenticated = true
             this.user = KeycloakAuthService.getUserInfo() ?? { roles: [] }
-            console.log('[AuthStore] User authenticated:', this.user?.username)
+            log('[AuthStore] User authenticated:', this.user?.username)
             await this.refreshToken()
           } else {
             this.isAuthenticated = false
             this.user = null
-            console.log('[AuthStore] User not authenticated')
+            log('[AuthStore] User not authenticated')
           }
           this.initialized = true
           this.initPromise = null  // Clear the promise once done
@@ -83,7 +98,7 @@ export const useAuthStore = defineStore('auth', {
 
     // Accept both relative and absolute paths
     async login(redirectUri: string = '/profiles') {
-      console.log('[AuthStore] Login requested with redirect:', redirectUri)
+      log('[AuthStore] Login requested with redirect:', redirectUri)
       await KeycloakAuthService.login(redirectUri)
     },
 
