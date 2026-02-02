@@ -235,7 +235,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 definePageMeta({
-  middleware: 'auth'
+  middleware: ['auth', 'profile']
 })
 
 useHead({

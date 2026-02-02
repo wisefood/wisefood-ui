@@ -226,7 +226,7 @@ import { useArticles } from '~/composables/useArticles'
 import { calculateReadTime, formatDoiUrl } from '~/utils/articleHelpers'
 
 definePageMeta({
-  middleware: 'auth'
+  middleware: ['auth', 'profile']
 })
 
 const route = useRoute()

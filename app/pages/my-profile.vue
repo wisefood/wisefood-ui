@@ -750,7 +750,7 @@ import {
 import type { MemberProfile } from '~/services/householdsApi'
 
 definePageMeta({
-  middleware: 'auth'
+  middleware: ['auth', 'profile']
 })
 
 useHead({

@@ -159,23 +159,19 @@ const userMenuItems = computed<DropdownMenuItem[]>(() => [
     }
   },
   {
-    label: 'Manage Household',
-    icon: 'i-lucide-home',
-    onSelect: () => navigateTo('/profiles')
-  },
-  {
     type: 'separator'
   },
   {
     label: 'Account Settings',
     icon: 'i-lucide-settings',
     onSelect: () => {
-      const keycloakUrl = import.meta.env.VITE_KEYCLOAK_URL
-      const keycloakRealm = import.meta.env.VITE_KEYCLOAK_REALM
+      const config = useRuntimeConfig()
+      const keycloakUrl = config.public.keycloakUrl
+      const keycloakRealm = config.public.keycloakRealm
       if (keycloakUrl && keycloakRealm) {
-        navigateTo(`${keycloakUrl}/realms/${keycloakRealm}/account`)
+        window.open(`${keycloakUrl}/realms/${keycloakRealm}/account`, '_blank')
       } else {
-        console.error('Keycloak environment variables are not defined')
+        console.error('Keycloak configuration is not defined in runtime config')
       }
     }
   },

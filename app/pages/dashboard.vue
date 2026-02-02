@@ -258,7 +258,7 @@ import { useHouseholdStore } from '@/stores/household'
 
 
 definePageMeta({
-  middleware: 'auth'
+  middleware: ['auth', 'profile']
 })
 
 useHead({

@@ -123,7 +123,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 
 definePageMeta({
-  middleware: 'auth'
+  middleware: ['auth', 'profile']
 })
 
 useHead({

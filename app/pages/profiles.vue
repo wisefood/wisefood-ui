@@ -24,7 +24,7 @@
       <!-- Header changes based on whether user has profiles -->
       <template v-if="members.length > 0">
         <h1 class="text-3xl sm:text-4xl font-light text-white text-center mb-2">
-          Who's <span class="font-serif italic text-brand-400">eating?</span>
+          Who's <span class="font-serif text-4xl sm:text-5xl italic text-brand-400">eating?</span>
         </h1>
         <p class="text-gray-400 text-center mb-12">
           Select your profile to get personalized recommendations
@@ -332,11 +332,9 @@ onMounted(async () => {
     showSetupWizard.value = true
   }
 
-  // If user has a selected member already, go to dashboard
-  if (householdStore.currentMember) {
-    router.push('/dashboard')
-    return
-  }
+  // Always show profile selection - user must choose who's eating
+  // Clear any previously selected member so they must choose again
+  householdStore.clearSelectedMember()
 
   loading.value = false
 })

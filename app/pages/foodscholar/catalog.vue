@@ -524,7 +524,7 @@ import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 
 definePageMeta({
-  middleware: 'auth'
+  middleware: ['auth', 'profile']
 })
 
 useHead({
