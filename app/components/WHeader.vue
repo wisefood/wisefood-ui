@@ -165,9 +165,11 @@ const userMenuItems = computed<DropdownMenuItem[]>(() => [
     label: 'Account Settings',
     icon: 'i-lucide-settings',
     onSelect: () => {
-      const config = useRuntimeConfig()
-      const keycloakUrl = config.public.keycloakUrl
-      const keycloakRealm = config.public.keycloakRealm
+      // Check runtime config injected at container startup first, then fall back to Nuxt config
+      const runtimeConfig = (window as any).__RUNTIME_CONFIG__
+      const nuxtConfig = useRuntimeConfig()
+      const keycloakUrl = runtimeConfig?.keycloakUrl || nuxtConfig.public.keycloakUrl
+      const keycloakRealm = runtimeConfig?.keycloakRealm || nuxtConfig.public.keycloakRealm
       if (keycloakUrl && keycloakRealm) {
         window.open(`${keycloakUrl}/realms/${keycloakRealm}/account`, '_blank')
       } else {
