@@ -17,10 +17,10 @@ export default defineNuxtConfig({
     enabled: true,
 
     timeline: {
-      enabled: true
+      enabled: false
     }
   },
-  debug: true,
+  debug: false,
   vite: {
     define: {
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: true
