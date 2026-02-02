@@ -2,7 +2,6 @@
   <UHeader>
     <template #left>
       <AppLogo class="w-auto h-10 shrink-0" height="10" />
-      <TemplateMenu />
     </template>
     <template #right>
       <UColorModeButton />

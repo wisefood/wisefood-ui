@@ -58,18 +58,18 @@
 
         <NuxtLink
           to="/recipe-wrangler"
-          class="group p-6 rounded-2xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border border-green-200 dark:border-green-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+          class="group p-6 rounded-2xl bg-gradient-to-br from-brandg-50 to-brandg-200 dark:from-brandg-900/20 dark:to-brandg-800/20 border border-brandg-200 dark:border-brandg-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
         >
-          <UIcon name="i-lucide-chef-hat" class="w-8 h-8 text-green-600 dark:text-green-400 mb-3" />
+          <UIcon name="i-lucide-chef-hat" class="w-8 h-8 text-brandg-600 dark:text-brandg-400 mb-3" />
           <h3 class="font-semibold text-gray-900 dark:text-white mb-1">RecipeWrangler</h3>
           <p class="text-sm text-gray-600 dark:text-gray-300 font-light">Find recipes</p>
         </NuxtLink>
 
         <NuxtLink
           to="/foodchat"
-          class="group p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+          class="group p-6 rounded-2xl bg-gradient-to-br from-brandp-50 to-brandp-100 dark:from-brandp-900/20 dark:to-brandp-800/20 border border-brandp-200 dark:border-brandp-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
         >
-          <UIcon name="i-lucide-message-circle" class="w-8 h-8 text-purple-600 dark:text-purple-400 mb-3" />
+          <UIcon name="i-lucide-message-circle" class="w-8 h-8 text-brandp-400 dark:text-brandp-400 mb-3" />
           <h3 class="font-semibold text-gray-900 dark:text-white mb-1">FoodChat</h3>
           <p class="text-sm text-gray-600 dark:text-gray-300 font-light">Ask anything</p>
         </NuxtLink>

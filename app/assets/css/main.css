@@ -44,6 +44,17 @@ body {
   --color-brandg-900: #212409;
   --color-brandg-950: #161803;
 
+  --color-brandp-50: #eee5f7;
+  --color-brandp-100: #ddcaef;
+  --color-brandp-200: #be95df;
+  --color-brandp-300: #a25ece;
+  --color-brandp-400: #733c95;
+  --color-brandp-500: #44215a;
+  --color-brandp-600: #381a4b;
+  --color-brandp-700: #2d143d;
+  --color-brandp-800: #230e30;
+  --color-brandp-900: #170720;
+  --color-brandp-950: #0d0415;
 
   --color-brand-50: #fff1f2;
   --color-brand-100: #f7d6dd;

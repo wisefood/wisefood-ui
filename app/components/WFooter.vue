@@ -2,7 +2,7 @@
 <UFooter class="bg-neutral-300 dark:bg-zinc-800">
     <template #left>
     <p class="text-sm text-muted">
-        © 2025 The WiseFood Consortium, All rights reserved.
+        © {{ new Date().getFullYear() }} The WiseFood Consortium, All rights reserved.
     </p>
     <span class="mx-2 text-sm text-muted">
         <NuxtLink to="https://cordis.europa.eu/project/id/101181895" target="_blank" rel="noopener noreferrer">
