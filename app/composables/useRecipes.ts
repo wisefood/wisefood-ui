@@ -38,15 +38,44 @@ export function useRecipes() {
   /**
    * Search for recipes using natural language query
    */
-  const searchRecipes = async (params: RecipeSearchParams) => {
+  const searchRecipes = async (params: RecipeSearchParams, useCache = true) => {
     error.value = null
     lastSearchQuery.value = params.question
+
+    // Check cache first if enabled
+    if (useCache && import.meta.client) {
+      const { useRecipeStore } = await import('~/stores/recipe')
+      const recipeStore = useRecipeStore()
+      const cachedResults = recipeStore.getCachedSearch(
+        params.question,
+        params.exclude_allergens || []
+      )
+
+      if (cachedResults) {
+        recipes.value = cachedResults
+        totalResults.value = cachedResults.length
+        return cachedResults
+      }
+    }
+
     loading.value = true
 
     try {
       const results = await recipeApi.searchRecipes(params)
       recipes.value = results
       totalResults.value = results.length
+
+      // Cache the results
+      if (import.meta.client) {
+        const { useRecipeStore } = await import('~/stores/recipe')
+        const recipeStore = useRecipeStore()
+        recipeStore.cacheSearchResults(
+          params.question,
+          params.exclude_allergens || [],
+          results
+        )
+      }
+
       return results
     } catch (err) {
       const apiError = err as ApiError
@@ -84,17 +113,40 @@ export function useRecipes() {
    */
   const fetchRecipesByCategory = async (
     category: string,
-    excludeAllergens?: string[]
+    excludeAllergens?: string[],
+    useCache = true
   ) => {
     error.value = null
     const query = `${category} recipes`
     lastSearchQuery.value = query
+
+    // Check cache first if enabled
+    if (useCache && import.meta.client) {
+      const { useRecipeStore } = await import('~/stores/recipe')
+      const recipeStore = useRecipeStore()
+      const cachedResults = recipeStore.getCachedSearch(query, excludeAllergens || [])
+
+      if (cachedResults) {
+        recipes.value = cachedResults
+        totalResults.value = cachedResults.length
+        return cachedResults
+      }
+    }
+
     loading.value = true
 
     try {
       const results = await recipeApi.getRecipesByCategory(category, excludeAllergens)
       recipes.value = results
       totalResults.value = results.length
+
+      // Cache the results
+      if (import.meta.client) {
+        const { useRecipeStore } = await import('~/stores/recipe')
+        const recipeStore = useRecipeStore()
+        recipeStore.cacheSearchResults(query, excludeAllergens || [], results)
+      }
+
       return results
     } catch (err) {
       const apiError = err as ApiError

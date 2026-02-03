@@ -275,11 +275,15 @@
                   <div
                     v-if="getNutriScoreGrade(recipe.nutri_score) === grade"
                     :class="[
-                      'absolute -bottom-3 left-1/2 -translate-x-1/2 w-0 h-0',
+                      'absolute -bottom-3 w-0 h-0',
                       'border-l-[12px] border-l-transparent',
                       'border-r-[12px] border-r-transparent',
                       'border-t-[12px]',
-                      getNutriScoreArrowColor(grade)
+                      getNutriScoreArrowColor(grade),
+                      // Adjust position for edge grades (A and E)
+                      idx === 0 ? 'left-1/2 translate-x-1' : '',
+                      idx === 4 ? 'right-1/2 -translate-x-1' : '',
+                      idx !== 0 && idx !== 4 ? 'left-1/2 -translate-x-1/2' : ''
                     ]"
                   ></div>
                 </div>
