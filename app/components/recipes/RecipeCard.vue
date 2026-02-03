@@ -23,9 +23,27 @@
         />
       </div>
 
+      <!-- Compare Checkbox -->
+      <button
+        class="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg hover:scale-110 transition-all duration-200 z-10 flex items-center justify-center"
+        @click="toggleCompare"
+        :aria-label="isInCompare ? 'Remove from comparison' : 'Add to comparison'"
+        :disabled="!isInCompare && recipeStore.compareCount >= 4"
+      >
+        <UIcon
+          :name="isInCompare ? 'i-lucide-check-square' : 'i-lucide-square'"
+          :class="[
+            'w-5 h-5 transition-colors duration-200',
+            isInCompare
+              ? 'text-brandg-600 dark:text-brandg-400'
+              : 'text-gray-600 dark:text-gray-300'
+          ]"
+        />
+      </button>
+
       <!-- Favorite Button -->
       <button
-        class="absolute top-3 right-3 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg hover:scale-110 transition-all duration-200 z-10"
+        class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg hover:scale-110 transition-all duration-200 z-10 flex items-center justify-center"
         @click="toggleFavorite"
         :aria-label="isFavorite ? 'Remove from favorites' : 'Add to favorites'"
       >
@@ -137,10 +155,17 @@ const recipeStore = useRecipeStore()
 // Computed
 // ============================================================================
 const isFavorite = computed(() => recipeStore.isFavorite(props.recipe.recipe_id))
+const isInCompare = computed(() => recipeStore.isInCompareList(props.recipe.recipe_id))
 
 // ============================================================================
 // Methods
 // ============================================================================
+const toggleCompare = (event: Event) => {
+  event.preventDefault()
+  event.stopPropagation()
+  recipeStore.toggleCompare(props.recipe.recipe_id)
+}
+
 const getNutriScoreGrade = (score: number): string => {
   if (score <= 0) return 'A'
   if (score <= 2) return 'B'

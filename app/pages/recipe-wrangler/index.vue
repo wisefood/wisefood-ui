@@ -1,22 +1,22 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
     <!-- Header -->
-    <div class="border-b border-gray-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-10">
+    <div class="border-b border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-10">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
         <div class="flex items-center justify-between">
           <NuxtLink
             to="/dashboard"
-            class="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+            class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
           >
             <UIcon name="i-lucide-arrow-left" class="w-5 h-5" />
             <span class="text-sm font-medium hidden sm:inline">Back to Dashboard</span>
           </NuxtLink>
         </div>
         <div class="mt-3 sm:mt-4">
-          <h1 class="text-2xl sm:text-3xl md:text-4xl font-light text-gray-900 dark:text-white tracking-tight">
+          <h1 class="text-2xl sm:text-3xl md:text-4xl font-light text-zinc-900 dark:text-white tracking-tight">
             <span class="font-serif italic text-brandg-500 dark:text-brandg-400 text-3xl sm:text-4xl md:text-5xl">RecipeWrangler</span>
           </h1>
-          <p class="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-300 font-light">
+          <p class="mt-2 text-sm sm:text-base text-zinc-600 dark:text-zinc-300 font-light">
             Discover personalized recipes tailored to your nutritional goals
           </p>
         </div>
@@ -29,18 +29,18 @@
       <section class="mb-8 sm:mb-12">
         <div class="max-w-2xl mx-auto">
           <div class="relative">
-            <UIcon name="i-lucide-search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+            <UIcon name="i-lucide-search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-zinc-400" />
             <input
               v-model="searchQuery"
               type="text"
               placeholder="Ask for recipes (e.g., 'pasta recipes', 'quick vegan meals')..."
-              class="w-full pl-11 sm:pl-12 pr-12 sm:pr-16 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brandg-500 text-sm sm:text-base"
+              class="w-full pl-11 sm:pl-12 pr-12 sm:pr-16 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-brandg-500 text-sm sm:text-base"
               @keypress="handleSearchKeypress"
             />
             <button
               @click="performSearch"
               :disabled="!searchQuery.trim() || loading"
-              class="absolute right-2 top-1/2 -translate-y-1/2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-brandg-500 hover:bg-brandg-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white text-sm font-medium transition-colors disabled:cursor-not-allowed"
+              class="absolute right-2 top-1/2 -translate-y-1/2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-brandg-500 hover:bg-brandg-600 disabled:bg-zinc-300 dark:disabled:bg-zinc-700 text-white text-sm font-medium transition-colors disabled:cursor-not-allowed"
             >
               <UIcon v-if="loading" name="i-lucide-loader-2" class="w-4 h-4 animate-spin" />
               <UIcon v-else name="i-lucide-search" class="w-4 h-4" />
@@ -49,12 +49,12 @@
 
           <!-- Recent Searches -->
           <div v-if="recipeStore.searchHistory.length > 0 && !searchQuery" class="mt-3 flex flex-wrap gap-2">
-            <span class="text-xs text-gray-500 dark:text-gray-400 w-full mb-1">Recent searches:</span>
+            <span class="text-xs text-zinc-500 dark:text-zinc-400 w-full mb-1">Recent searches:</span>
             <button
               v-for="query in recipeStore.recentSearches.slice(0, 5)"
               :key="query"
               @click="searchQuery = query; performSearch()"
-              class="px-3 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-brandg-600 dark:hover:text-brandg-400 transition-colors"
+              class="px-3 py-1 rounded-full text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-brandg-600 dark:hover:text-brandg-400 transition-colors"
             >
               {{ query }}
             </button>
@@ -65,12 +65,12 @@
       <!-- Filters Sidebar Toggle -->
       <section class="mb-6 sm:mb-8">
         <div class="flex items-center justify-between">
-          <h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+          <h2 class="text-base sm:text-lg font-semibold text-zinc-900 dark:text-white">
             Filters & Preferences
           </h2>
           <button
             @click="showFilters = !showFilters"
-            class="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
+            class="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-sm"
           >
             <UIcon name="i-lucide-sliders" class="w-4 h-4" />
             <span>{{ showFilters ? 'Hide' : 'Show' }} Filters</span>
@@ -95,7 +95,7 @@
       <section class="mb-12 sm:mb-16">
         <div class="flex items-center justify-between mb-6 sm:mb-8">
           <div class="flex items-center gap-3">
-            <h2 class="text-2xl sm:text-3xl font-serif font-semibold text-gray-900 dark:text-white">
+            <h2 class="text-2xl sm:text-3xl font-serif font-semibold text-zinc-900 dark:text-white">
               <span v-if="loading">Searching...</span>
               <span v-else-if="error">Error loading recipes</span>
               <span v-else-if="!initialLoadComplete">Loading recipes...</span>
@@ -104,9 +104,17 @@
           </div>
           <div class="flex items-center gap-2">
             <button
+              v-if="recipeStore.compareCount >= 2"
+              @click="navigateToCompare"
+              class="flex items-center gap-2 px-4 py-2 rounded-lg bg-brandg-600 dark:bg-brandg-500 text-white hover:bg-brandg-700 dark:hover:bg-brandg-600 transition-colors text-sm font-medium shadow-md"
+            >
+              <UIcon name="i-lucide-git-compare" class="w-4 h-4" />
+              <span>Compare ({{ recipeStore.compareCount }})</span>
+            </button>
+            <button
               v-if="recipeStore.favorites.length > 0"
               @click="() => {}"
-              class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
+              class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-sm"
             >
               <UIcon name="i-lucide-heart" class="w-4 h-4 text-red-500" />
               <span class="hidden sm:inline">{{ recipeStore.favorites.length }}</span>
@@ -243,17 +251,17 @@
             <div
               v-for="i in 6"
               :key="`skeleton-${i}`"
-              class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden animate-pulse"
+              class="rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden animate-pulse"
             >
-              <div class="aspect-[4/3] bg-gray-200 dark:bg-gray-700"></div>
+              <div class="aspect-[4/3] bg-zinc-200 dark:bg-zinc-700"></div>
               <div class="p-4 space-y-3">
-                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+                <div class="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-3/4"></div>
+                <div class="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-full"></div>
+                <div class="h-3 bg-zinc-200 dark:bg-zinc-700 rounded w-5/6"></div>
                 <div class="flex gap-2">
-                  <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded flex-1"></div>
-                  <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded flex-1"></div>
-                  <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded flex-1"></div>
+                  <div class="h-6 bg-zinc-200 dark:bg-zinc-700 rounded flex-1"></div>
+                  <div class="h-6 bg-zinc-200 dark:bg-zinc-700 rounded flex-1"></div>
+                  <div class="h-6 bg-zinc-200 dark:bg-zinc-700 rounded flex-1"></div>
                 </div>
               </div>
             </div>
@@ -265,11 +273,11 @@
           v-else-if="!hasRecipes && initialLoadComplete"
           class="text-center py-12"
         >
-          <UIcon name="i-lucide-search-x" class="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <UIcon name="i-lucide-search-x" class="w-16 h-16 text-zinc-400 mx-auto mb-4" />
+          <h3 class="text-xl font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
             No recipes found
           </h3>
-          <p class="text-gray-500 dark:text-gray-400 mb-6">
+          <p class="text-zinc-500 dark:text-zinc-400 mb-6">
             Try adjusting your search or browse our categories below
           </p>
         </div>
@@ -293,7 +301,7 @@
             <button
               @click="goToPage(currentPage - 1)"
               :disabled="currentPage === 1"
-              class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              class="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               aria-label="Previous page"
             >
               <UIcon name="i-lucide-chevron-left" class="w-5 h-5" />
@@ -309,12 +317,12 @@
                   'px-4 py-2 rounded-lg border transition-colors',
                   page === currentPage
                     ? 'border-brandg-500 bg-brandg-500 text-white'
-                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700'
                 ]"
               >
                 {{ page }}
               </button>
-              <span v-if="totalPages > 5" class="px-2 text-gray-500">...</span>
+              <span v-if="totalPages > 5" class="px-2 text-zinc-500">...</span>
               <button
                 v-if="totalPages > 5 && currentPage < totalPages"
                 @click="goToPage(totalPages)"
@@ -322,7 +330,7 @@
                   'px-4 py-2 rounded-lg border transition-colors',
                   totalPages === currentPage
                     ? 'border-brandg-500 bg-brandg-500 text-white'
-                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700'
                 ]"
               >
                 {{ totalPages }}
@@ -333,7 +341,7 @@
             <button
               @click="goToPage(currentPage + 1)"
               :disabled="currentPage === totalPages"
-              class="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              class="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               aria-label="Next page"
             >
               <UIcon name="i-lucide-chevron-right" class="w-5 h-5" />
@@ -344,19 +352,19 @@
 
       <!-- Categories Section -->
       <section class="bg-gradient-to-br from-brandg-50 to-brandg-100 dark:from-brandg-900/20 dark:to-brandg-800/20 border border-brandg-200 dark:border-brandg-800 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12">
-        <h2 class="text-2xl sm:text-3xl font-serif font-semibold mb-6 sm:mb-8 text-gray-900 dark:text-white">Browse by Category</h2>
+        <h2 class="text-2xl sm:text-3xl font-serif font-semibold mb-6 sm:mb-8 text-zinc-900 dark:text-white">Browse by Category</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
           <button
             v-for="category in categories"
             :key="category.name"
             @click="browseCategory(category)"
             :disabled="loading"
-            class="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-white dark:hover:bg-gray-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-center disabled:opacity-50 disabled:cursor-not-allowed"
+            class="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm border border-zinc-200 dark:border-zinc-700 cursor-pointer hover:bg-white dark:hover:bg-zinc-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-brandg-100 dark:bg-brandg-900/50 flex items-center justify-center mb-2 sm:mb-3 mx-auto">
               <UIcon :name="category.icon" class="w-5 h-5 sm:w-6 sm:h-6 text-brandg-600 dark:text-brandg-400" />
             </div>
-            <h3 class="font-semibold text-gray-900 dark:text-white text-xs sm:text-sm">{{ category.name }}</h3>
+            <h3 class="font-semibold text-zinc-900 dark:text-white text-xs sm:text-sm">{{ category.name }}</h3>
           </button>
         </div>
       </section>
@@ -601,6 +609,13 @@ const handleMouseLeave = () => {
 const hatStyle = computed(() => ({
   transform: `perspective(1000px) rotateX(${hatRotateX.value}deg) rotateY(${hatRotateY.value}deg)`
 }))
+
+/**
+ * Navigate to comparison page
+ */
+const navigateToCompare = () => {
+  navigateTo('/recipe-wrangler/compare')
+}
 
 // ============================================================================
 // Lifecycle

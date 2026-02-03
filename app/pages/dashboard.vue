@@ -67,7 +67,7 @@
 
         <NuxtLink
           to="/foodchat"
-          class="group p-6 rounded-2xl bg-gradient-to-br from-brandp-50 to-brandp-100 dark:from-brandp-900/20 dark:to-brandp-800/20 border border-brandp-200 dark:border-brandp-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+          class="group p-6 rounded-2xl bg-gradient-to-br from-brandp-50 to-brandp-100 dark:from-brandp-600/20 dark:to-brandp-600/20 border border-brandp-200 dark:border-brandp-500 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
         >
           <UIcon name="i-lucide-message-circle" class="w-8 h-8 text-brandp-400 dark:text-brandp-400 mb-3" />
           <h3 class="font-semibold text-gray-900 dark:text-white mb-1">FoodChat</h3>

@@ -14,6 +14,7 @@ export const useRecipeStore = defineStore('recipe', {
     recentlyViewed: [] as string[],
     searchHistory: [] as string[],
     excludedAllergens: [] as string[],
+    compareList: [] as string[], // Recipe IDs for comparison
 
     // UI preferences
     viewMode: 'grid' as 'grid' | 'list',
@@ -79,6 +80,18 @@ export const useRecipeStore = defineStore('recipe', {
      * Get recent search queries (max 10)
      */
     recentSearches: (state) => state.searchHistory.slice(0, 10),
+
+    /**
+     * Check if recipe is in compare list
+     */
+    isInCompareList: (state) => (recipeId: string) => {
+      return state.compareList.includes(recipeId)
+    },
+
+    /**
+     * Get compare list count
+     */
+    compareCount: (state) => state.compareList.length,
   },
 
   // ============================================================================
@@ -322,6 +335,47 @@ export const useRecipeStore = defineStore('recipe', {
       })
 
       keysToDelete.forEach(key => this.searchCache.delete(key))
+    },
+
+    /**
+     * Toggle recipe in compare list (max 4 recipes)
+     */
+    toggleCompare(recipeId: string) {
+      const index = this.compareList.indexOf(recipeId)
+      if (index > -1) {
+        this.compareList.splice(index, 1)
+      } else {
+        // Limit to 4 recipes for comparison
+        if (this.compareList.length < 4) {
+          this.compareList.push(recipeId)
+        }
+      }
+    },
+
+    /**
+     * Add recipe to compare list
+     */
+    addToCompare(recipeId: string) {
+      if (!this.compareList.includes(recipeId) && this.compareList.length < 4) {
+        this.compareList.push(recipeId)
+      }
+    },
+
+    /**
+     * Remove recipe from compare list
+     */
+    removeFromCompare(recipeId: string) {
+      const index = this.compareList.indexOf(recipeId)
+      if (index > -1) {
+        this.compareList.splice(index, 1)
+      }
+    },
+
+    /**
+     * Clear compare list
+     */
+    clearCompareList() {
+      this.compareList = []
     },
 
     /**
