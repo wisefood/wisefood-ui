@@ -64,11 +64,11 @@
               <th
                 v-for="recipe in compareRecipes"
                 :key="recipe.recipe_id"
-                class="p-4 sm:p-6 bg-zinc-50 dark:bg-zinc-900 w-[280px]"
+                class="p-4 sm:p-6 bg-zinc-50 dark:bg-zinc-900 w-[320px]"
               >
                 <div class="space-y-3">
                   <!-- Recipe Image with Title Overlay -->
-                  <div class="relative h-[210px] rounded-xl overflow-hidden bg-gradient-to-br from-brandg-100 to-brandg-200 dark:from-brandg-900/40 dark:to-brandg-800/40 shadow-md">
+                  <div class="relative h-[240px] rounded-xl overflow-hidden bg-gradient-to-br from-brandg-100 to-brandg-200 dark:from-brandg-900/40 dark:to-brandg-800/40 shadow-md">
                     <img
                       v-if="recipe.image_url"
                       :src="recipe.image_url"
@@ -84,7 +84,7 @@
 
                     <!-- Title Overlay -->
                     <div class="absolute bottom-0 left-0 right-0 p-4">
-                      <h3 class="text-base font-serif font-bold text-white drop-shadow-lg line-clamp-2">
+                      <h3 class="text-lg font-serif font-bold text-white drop-shadow-lg line-clamp-2">
                         {{ recipe.title }}
                       </h3>
                     </div>
