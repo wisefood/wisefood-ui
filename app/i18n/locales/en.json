@@ -94,5 +94,105 @@
     "accent": "relationship with food?",
     "description": "Join a community of users building healthier habits with WiseFood. Start your journey today and discover a smarter way to nourish your body.",
     "primary": "Start Today"
+  },
+  "recipeWrangler": {
+    "title": "RecipeWrangler",
+    "subtitle": "Discover personalized recipes tailored to your nutritional goals and environmental impact",
+    "backToDashboard": "Back to Dashboard",
+    "backToRecipes": "Back to Recipes",
+    "search": {
+      "placeholder": "Ask for recipes (e.g., 'pasta recipes', 'quick vegan meals')...",
+      "button": "Search",
+      "searching": "Searching...",
+      "recentSearches": "Recent searches:"
+    },
+    "analyzer": {
+      "title": "AI Recipe Analyzer",
+      "description": "Paste any recipe URL or ingredients list to get instant nutritional analysis",
+      "placeholder": "Paste recipe URL, ingredients, or recipe text here...",
+      "analyze": "Analyze Recipe",
+      "analyzing": "Analyzing...",
+      "results": "Analysis Results",
+      "calories": "Calories",
+      "protein": "Protein",
+      "carbs": "Carbs",
+      "fat": "Fat"
+    },
+    "filters": {
+      "title": "Filters & Preferences",
+      "show": "Show Filters",
+      "hide": "Hide Filters",
+      "excludeAllergens": "Exclude Allergens",
+      "clearAll": "Clear all",
+      "quickFilters": "Quick Filters",
+      "sortBy": "Sort By"
+    },
+    "allergens": {
+      "peanuts": "Peanuts",
+      "treeNuts": "Tree Nuts",
+      "dairy": "Dairy",
+      "eggs": "Eggs",
+      "soy": "Soy",
+      "wheat": "Wheat",
+      "fish": "Fish",
+      "shellfish": "Shellfish",
+      "gluten": "Gluten",
+      "lactose": "Lactose"
+    },
+    "quickFilters": {
+      "quick": "Quick & Easy (< 30 min)",
+      "healthy": "Healthy & Nutritious",
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan",
+      "lowCalorie": "Low Calorie"
+    },
+    "sort": {
+      "relevance": "Most Relevant",
+      "duration": "Cooking Time",
+      "calories": "Calories",
+      "nutriScore": "Nutrition Score"
+    },
+    "results": {
+      "found": "{count} Recipe Found | {count} Recipes Found",
+      "searching": "Searching...",
+      "error": "Error loading recipes",
+      "loading": "Loading recipes...",
+      "noResults": "No recipes found",
+      "noResultsMessage": "Try adjusting your search or browse our categories below",
+      "tryAgain": "Try Again"
+    },
+    "recipe": {
+      "viewRecipe": "View Recipe",
+      "save": "Save",
+      "saved": "Saved",
+      "servings": "serving | servings",
+      "minutes": "minutes",
+      "nutriScore": "Nutri-Score"
+    },
+    "categories": {
+      "title": "Browse by Category",
+      "pasta": "Pasta",
+      "salad": "Salad",
+      "soup": "Soup",
+      "breakfast": "Breakfast",
+      "dessert": "Dessert",
+      "snacks": "Snacks",
+      "beverages": "Beverages",
+      "quickMeals": "Quick Meals"
+    },
+    "detail": {
+      "nutritionalInfo": "Nutritional Information",
+      "perServing": "per serving",
+      "ingredients": "Ingredients",
+      "instructions": "Instructions",
+      "environmentalImpact": "Environmental Impact",
+      "sustainabilityMessage": "This recipe has a sustainability score based on ingredient sourcing and preparation methods.",
+      "sustainabilityGood": "Good",
+      "failedToLoad": "Failed to load recipe",
+      "fiber": "Fiber",
+      "sugar": "Sugar",
+      "sodium": "Sodium",
+      "cholesterol": "Cholesterol"
+    }
   }
 }
