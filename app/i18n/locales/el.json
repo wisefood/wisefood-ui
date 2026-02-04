@@ -3,6 +3,88 @@
     "title": "WiseFood",
     "description": "WiseFood - Ο απόλυτος σύμμαχος για τους foodies: Ανακάλυψε, μοιράσου και απόλαυσε γαστρονομικές εμπειρίες!"
   },
+  "dashboard": {
+    "greeting": {
+      "morning": "Καλημέρα",
+      "afternoon": "Καλό απόγευμα",
+      "evening": "Καλησπέρα"
+    },
+    "welcome": "Καλώς ήρθες,",
+    "encouragement": "Το προσωποποιημένο ταξίδι ευεξίας σου ξεκινά εδώ",
+    "loading": "Φόρτωση του πίνακα ελέγχου σας...",
+    "notAuthenticated": "Μη Ταυτοποιημένος",
+    "signInPrompt": "Παρακαλώ συνδεθείτε για πρόσβαση στον πίνακα ελέγχου",
+    "goToLogin": "Μετάβαση στη Σύνδεση",
+    "title": "Πίνακας Ελέγχου",
+    "seoDescription": "Το προσωποποιημένο στιγμιότυπο διατροφικής ευεξίας σας",
+    "apps": {
+      "foodScholar": {
+        "title": "FoodScholar",
+        "description": "Μάθε & ανακάλυψε"
+      },
+      "recipeWrangler": {
+        "title": "RecipeWrangler",
+        "description": "Βρες συνταγές"
+      },
+      "foodChat": {
+        "title": "FoodChat",
+        "description": "Ρώτα ό,τι θέλεις"
+      }
+    },
+    "spotlight": {
+      "badge": "Σημερινή Εστίαση",
+      "exploreRecipe": "Εξερεύνησε τη Συνταγή",
+      "save": "Αποθήκευση"
+    },
+    "schedule": {
+      "title": "Σημερινό Πρόγραμμα",
+      "now": "Τώρα",
+      "cal": "θερμ",
+      "days": {
+        "sunday": "Κυριακή",
+        "monday": "Δευτέρα",
+        "tuesday": "Τρίτη",
+        "wednesday": "Τετάρτη",
+        "thursday": "Πέμπτη",
+        "friday": "Παρασκευή",
+        "saturday": "Σάββατο"
+      },
+      "months": {
+        "jan": "Ιαν",
+        "feb": "Φεβ",
+        "mar": "Μαρ",
+        "apr": "Απρ",
+        "may": "Μάι",
+        "jun": "Ιούν",
+        "jul": "Ιούλ",
+        "aug": "Αύγ",
+        "sep": "Σεπ",
+        "oct": "Οκτ",
+        "nov": "Νοέ",
+        "dec": "Δεκ"
+      }
+    },
+    "progress": {
+      "title": "Η Πρόοδός σου",
+      "today": "Σήμερα",
+      "ofTarget": "του στόχου"
+    },
+    "badges": {
+      "healthy": "Υγιεινό",
+      "sustainable": "Βιώσιμο"
+    },
+    "recipes": {
+      "recommendedForYou": "Προτείνεται για εσένα"
+    },
+    "insights": {
+      "didYouKnow": "Το ήξερες;",
+      "learnMore": "Μάθε περισσότερα στο FoodScholar"
+    },
+    "sustainability": {
+      "title": "Βιώσιμη Επιλογή"
+    },
+    "friend": "Φίλε"
+  },
   "nav": {
     "signIn": "Σύνδεση",
     "legal": "Όροι χρήσης | GDPR"

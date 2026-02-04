@@ -1,7 +1,20 @@
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+// Returns the appropriate greeting key based on current hour
+function getGreetingKey(): 'morning' | 'afternoon' | 'evening' {
+  const hour = new Date().getHours()
+  if (hour >= 5 && hour < 12) {
+    return 'morning'
+  } else if (hour >= 12 && hour < 18) {
+    return 'afternoon'
+  } else {
+    return 'evening'
+  }
+}
+
 // Mock data for the WiseFood dashboard
 export const hero = {
-  greeting: "Good morning",
-  encouragement: "Your personalized wellness journey starts here",
   wellnessPercent: 72,
   callout: "Balanced carbs today"
 }
@@ -35,8 +48,19 @@ export const discoveries = [
 ]
 
 export function useDashboardData() {
+  const { t } = useI18n()
+
+  const greeting = computed(() => {
+    const key = getGreetingKey()
+    return t(`dashboard.greeting.${key}`)
+  })
+
+  const encouragement = computed(() => t('dashboard.encouragement'))
+
   return {
     hero,
+    greeting,
+    encouragement,
     spotlight,
     trendingRecipes,
     rings,

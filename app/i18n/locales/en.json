@@ -3,6 +3,88 @@
     "title": "WiseFood",
     "description": "WiseFood - Your Ultimate Foodie Companion: Discover, Share, and Savor Culinary Delights!"
   },
+  "dashboard": {
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "welcome": "Welcome,",
+    "encouragement": "Your personalized wellness journey starts here",
+    "loading": "Loading your dashboard...",
+    "notAuthenticated": "Not Authenticated",
+    "signInPrompt": "Please sign in to access your dashboard",
+    "goToLogin": "Go to Login",
+    "title": "Dashboard",
+    "seoDescription": "Your personalized food wellness snapshot",
+    "apps": {
+      "foodScholar": {
+        "title": "FoodScholar",
+        "description": "Learn & discover"
+      },
+      "recipeWrangler": {
+        "title": "RecipeWrangler",
+        "description": "Find recipes"
+      },
+      "foodChat": {
+        "title": "FoodChat",
+        "description": "Ask anything"
+      }
+    },
+    "spotlight": {
+      "badge": "Today's Focus",
+      "exploreRecipe": "Explore Recipe",
+      "save": "Save"
+    },
+    "schedule": {
+      "title": "Today's Schedule",
+      "now": "Now",
+      "cal": "cal",
+      "days": {
+        "sunday": "Sunday",
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday"
+      },
+      "months": {
+        "jan": "Jan",
+        "feb": "Feb",
+        "mar": "Mar",
+        "apr": "Apr",
+        "may": "May",
+        "jun": "Jun",
+        "jul": "Jul",
+        "aug": "Aug",
+        "sep": "Sep",
+        "oct": "Oct",
+        "nov": "Nov",
+        "dec": "Dec"
+      }
+    },
+    "progress": {
+      "title": "Your Progress",
+      "today": "Today",
+      "ofTarget": "of target"
+    },
+    "badges": {
+      "healthy": "Healthy",
+      "sustainable": "Sustainable"
+    },
+    "recipes": {
+      "recommendedForYou": "Recommended for you"
+    },
+    "insights": {
+      "didYouKnow": "Did you know?",
+      "learnMore": "Learn more in FoodScholar"
+    },
+    "sustainability": {
+      "title": "Sustainable Choice"
+    },
+    "friend": "Friend"
+  },
   "nav": {
     "signIn": "Sign In",
     "legal": "Terms & Conditions | GDPR"

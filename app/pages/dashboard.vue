@@ -7,7 +7,7 @@
       <div class="text-center">
         <UIcon name="i-lucide-loader-2" class="h-12 w-12 animate-spin mx-auto mb-4 text-brandg" />
         <p class="text-gray-600 dark:text-gray-400">
-          Loading your dashboard...
+          {{ t('dashboard.loading') }}
         </p>
       </div>
     </div>
@@ -18,13 +18,13 @@
         <div class="text-center">
           <UIcon name="i-lucide-alert-circle" class="h-12 w-12 text-brand mx-auto mb-4" />
           <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            Not Authenticated
+            {{ t('dashboard.notAuthenticated') }}
           </h2>
           <p class="text-gray-600 dark:text-gray-400 mb-6">
-            Please sign in to access your dashboard
+            {{ t('dashboard.signInPrompt') }}
           </p>
           <UButton @click="navigateTo('/login')">
-            Go to Login
+            {{ t('dashboard.goToLogin') }}
           </UButton>
         </div>
       </UCard>
@@ -35,13 +35,13 @@
       <!-- Hero Section -->
       <div class="mb-12 text-center scroll-fade-in">
         <p class="text-sm uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 font-light mb-3">
-          {{ hero.greeting }}
+          {{ greeting }}
         </p>
         <h1 class="text-4xl sm:text-5xl lg:text-6xl font-light text-gray-900 dark:text-white tracking-tight mb-4">
-          Welcome, <span class="font-serif italic text-brand-500 text-5xl sm:text-6xl lg:text-7xl">{{ userGreeting }}</span>
+          {{ t('dashboard.welcome') }} <span class="font-serif italic text-brand-500 text-5xl sm:text-6xl lg:text-7xl">{{ userGreeting }}</span>
         </h1>
         <p class="text-lg text-gray-600 dark:text-gray-300 font-light max-w-2xl mx-auto">
-          {{ hero.encouragement }}
+          {{ encouragement }}
         </p>
       </div>
 
@@ -52,8 +52,8 @@
           class="group p-6 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/20 dark:to-brand-800/20 border border-brand-200 dark:border-brand-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
         >
           <UIcon name="i-lucide-graduation-cap" class="w-8 h-8 text-brand-600 dark:text-brand-400 mb-3" />
-          <h3 class="font-semibold text-gray-900 dark:text-white mb-1">FoodScholar</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300 font-light">Learn & discover</p>
+          <h3 class="font-semibold text-gray-900 dark:text-white mb-1">{{ t('dashboard.apps.foodScholar.title') }}</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 font-light">{{ t('dashboard.apps.foodScholar.description') }}</p>
         </NuxtLink>
 
         <NuxtLink
@@ -61,8 +61,8 @@
           class="group p-6 rounded-2xl bg-gradient-to-br from-brandg-50 to-brandg-200 dark:from-brandg-900/20 dark:to-brandg-800/20 border border-brandg-200 dark:border-brandg-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
         >
           <UIcon name="i-lucide-chef-hat" class="w-8 h-8 text-brandg-600 dark:text-brandg-400 mb-3" />
-          <h3 class="font-semibold text-gray-900 dark:text-white mb-1">RecipeWrangler</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300 font-light">Find recipes</p>
+          <h3 class="font-semibold text-gray-900 dark:text-white mb-1">{{ t('dashboard.apps.recipeWrangler.title') }}</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 font-light">{{ t('dashboard.apps.recipeWrangler.description') }}</p>
         </NuxtLink>
 
         <NuxtLink
@@ -70,8 +70,8 @@
           class="group p-6 rounded-2xl bg-gradient-to-br from-brandp-50 to-brandp-100 dark:from-brandp-600/20 dark:to-brandp-600/20 border border-brandp-200 dark:border-brandp-500 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
         >
           <UIcon name="i-lucide-message-circle" class="w-8 h-8 text-brandp-400 dark:text-brandp-400 mb-3" />
-          <h3 class="font-semibold text-gray-900 dark:text-white mb-1">FoodChat</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300 font-light">Ask anything</p>
+          <h3 class="font-semibold text-gray-900 dark:text-white mb-1">{{ t('dashboard.apps.foodChat.title') }}</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300 font-light">{{ t('dashboard.apps.foodChat.description') }}</p>
         </NuxtLink>
       </div>
 
@@ -85,7 +85,7 @@
               <UIcon name="i-lucide-sparkles" class="w-16 h-16 text-brand-500 opacity-50" />
             </div>
             <div class="absolute top-3 left-3">
-              <UBadge color="primary" variant="solid" size="sm">Today's Focus</UBadge>
+              <UBadge color="primary" variant="solid" size="sm">{{ t('dashboard.spotlight.badge') }}</UBadge>
             </div>
           </div>
 
@@ -104,7 +104,7 @@
                 trailing-icon="i-lucide-arrow-right"
                 class="cursor-pointer"
               >
-                Explore Recipe
+                {{ t('dashboard.spotlight.exploreRecipe') }}
               </UButton>
               <UButton
                 variant="outline"
@@ -112,7 +112,7 @@
                 leading-icon="i-lucide-bookmark"
                 class="cursor-pointer"
               >
-                Save
+                {{ t('dashboard.spotlight.save') }}
               </UButton>
             </div>
           </div>
@@ -122,7 +122,7 @@
         <div class="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 shadow-xl p-5 lg:col-span-2">
           <div class="flex items-center justify-between mb-4">
             <div>
-              <h2 class="text-xl font-light text-gray-900 dark:text-white">Today's Schedule</h2>
+              <h2 class="text-xl font-light text-gray-900 dark:text-white">{{ t('dashboard.schedule.title') }}</h2>
               <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ currentDateTime }}</p>
             </div>
             <UIcon name="i-lucide-calendar-days" class="w-7 h-7 text-brand-500" />
@@ -145,14 +145,14 @@
                   />
                   <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ meal.time }}</span>
                 </div>
-                <UBadge v-if="meal.isNow" color="primary" variant="solid" size="xs">Now</UBadge>
+                <UBadge v-if="meal.isNow" color="primary" variant="solid" size="xs">{{ t('dashboard.schedule.now') }}</UBadge>
               </div>
               <div>
                 <h3 class="font-semibold text-sm text-gray-900 dark:text-white mb-1">{{ meal.name }}</h3>
                 <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{{ meal.description }}</p>
               </div>
               <div class="flex items-center gap-2 mt-auto">
-                <UBadge color="gray" variant="subtle" size="xs">{{ meal.calories }} cal</UBadge>
+                <UBadge color="gray" variant="subtle" size="xs">{{ meal.calories }} {{ t('dashboard.schedule.cal') }}</UBadge>
                 <UBadge v-if="meal.prepared" color="green" variant="subtle" size="xs">
                   <UIcon name="i-lucide-check" class="w-3 h-3" />
                 </UBadge>
@@ -165,7 +165,7 @@
       <!-- Your Progress -->
       <div class="mb-12 scroll-fade-in" style="--delay: 0.3s">
         <h2 class="text-2xl font-light text-gray-900 dark:text-white mb-6">
-          Your Progress <span class="font-serif italic text-brand-500 text-3xl">Today</span>
+          {{ t('dashboard.progress.title') }} <span class="font-serif italic text-brand-500 text-3xl">{{ t('dashboard.progress.today') }}</span>
         </h2>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div
@@ -183,7 +183,7 @@
                 :style="{ width: ring.percent + '%' }"
               ></div>
             </div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">{{ ring.value }} of target</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ ring.value }} {{ t('dashboard.progress.ofTarget') }}</p>
           </div>
         </div>
       </div>
@@ -203,11 +203,11 @@
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-2">
-                <UBadge v-if="recipe.healthy" color="green" variant="subtle" size="xs">Healthy</UBadge>
-                <UBadge v-if="recipe.sustainable" color="blue" variant="subtle" size="xs">Sustainable</UBadge>
+                <UBadge v-if="recipe.healthy" color="green" variant="subtle" size="xs">{{ t('dashboard.badges.healthy') }}</UBadge>
+                <UBadge v-if="recipe.sustainable" color="blue" variant="subtle" size="xs">{{ t('dashboard.badges.sustainable') }}</UBadge>
               </div>
               <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-1">{{ recipe.title }}</h3>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Recommended for you</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('dashboard.recipes.recommendedForYou') }}</p>
             </div>
             <UButton variant="ghost" icon="i-lucide-chevron-right" class="cursor-pointer shrink-0" />
           </div>
@@ -220,10 +220,10 @@
               <UIcon name="i-lucide-lightbulb" class="w-6 h-6 text-white" />
             </div>
             <div class="flex-1">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Did you know?</h3>
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-1">{{ t('dashboard.insights.didYouKnow') }}</h3>
               <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">{{ discoveries[0].summary }}</p>
               <NuxtLink to="/foodscholar" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
-                Learn more in FoodScholar →
+                {{ t('dashboard.insights.learnMore') }} →
               </NuxtLink>
             </div>
           </div>
@@ -236,7 +236,7 @@
               <UIcon name="i-lucide-leaf" class="w-6 h-6 text-white" />
             </div>
             <div class="flex-1">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Sustainable Choice</h3>
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-1">{{ t('dashboard.sustainability.title') }}</h3>
               <p class="text-sm text-gray-600 dark:text-gray-300 mb-1">
                 <strong>{{ sustainability.ingredient }}</strong> - {{ sustainability.note }}
               </p>
@@ -253,20 +253,22 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useHouseholdStore } from '@/stores/household'
 
+const { t } = useI18n()
 
 definePageMeta({
   middleware: ['auth', 'profile']
 })
 
 useHead({
-  title: 'Dashboard'
+  title: computed(() => t('dashboard.title'))
 })
 
 useSeoMeta({
-  description: 'Your personalized food wellness snapshot'
+  description: computed(() => t('dashboard.seoDescription'))
 })
 
 const authStore = useAuthStore()
@@ -287,20 +289,20 @@ const userGreeting = computed(() => {
     return user.name
   }
 
-  return 'Friend'
+  return t('dashboard.friend')
 })
 
-const { hero, spotlight, trendingRecipes, rings, sustainability, discoveries } = useDashboardData()
+const { hero, greeting, encouragement, spotlight, trendingRecipes, rings, sustainability, discoveries } = useDashboardData()
 
 // Current date and time
 const currentTime = ref(new Date())
 const currentDateTime = computed(() => {
   const now = currentTime.value
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const dayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+  const monthKeys = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
-  const dayName = days[now.getDay()]
-  const monthName = months[now.getMonth()]
+  const dayName = t(`dashboard.schedule.days.${dayKeys[now.getDay()]}`)
+  const monthName = t(`dashboard.schedule.months.${monthKeys[now.getMonth()]}`)
   const date = now.getDate()
   const hours = now.getHours().toString().padStart(2, '0')
   const minutes = now.getMinutes().toString().padStart(2, '0')
