@@ -142,107 +142,19 @@
         </div>
 
         <!-- Loading State -->
-        <div v-else-if="loading" class="space-y-6">
-          <!-- Cooking Animation -->
-          <div
-            ref="cookingContainer"
-            class="relative p-8 sm:p-12 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-800 overflow-hidden"
-            @mousemove="handleMouseMove"
-            @mouseleave="handleMouseLeave"
-          >
-            <!-- Animated Background Elements -->
-            <div class="absolute inset-0 overflow-hidden pointer-events-none">
-              <div
-                v-for="i in 8"
-                :key="`bubble-${i}`"
-                :class="bubbleClasses[i % 3]"
-                :style="{
-                  left: `${(i * 12) % 100}%`,
-                  animationDelay: `${i * 0.3}s`,
-                  animationDuration: `${3 + (i % 3)}s`
-                }"
-              />
+        <div v-else-if="loading" class="space-y-8">
+          <!-- Cooking Animation - Clean, minimal container -->
+          <div class="relative py-12 sm:py-16">
+            <!-- SVG Cooking Animation Component -->
+            <div class="flex items-center justify-center">
+              <RecipesCookingAnimation />
             </div>
 
-            <!-- Cooking Scene -->
-            <div class="relative z-10 flex flex-col items-center justify-center min-h-[300px]">
-              <!-- Chef's Hat (follows mouse) -->
-              <div
-                class="chef-hat mb-4 transition-transform duration-300 ease-out"
-                :style="hatStyle"
-              >
-                <div class="text-6xl sm:text-7xl">👨‍🍳</div>
-              </div>
-
-              <!-- Cooking Pot with Steam -->
-              <div class="relative mb-6">
-                <!-- Steam particles -->
-                <div class="absolute -top-12 left-1/2 -translate-x-1/2">
-                  <div
-                    v-for="j in 3"
-                    :key="`steam-${j}`"
-                    class="steam-particle"
-                    :style="{
-                      left: `${(j - 2) * 15}px`,
-                      animationDelay: `${j * 0.4}s`
-                    }"
-                  >
-                    💨
-                  </div>
-                </div>
-
-                <!-- Pot -->
-                <div class="text-6xl sm:text-7xl cooking-pot">
-                  🍲
-                </div>
-
-                <!-- Ingredients flying in -->
-                <div class="absolute inset-0">
-                  <div
-                    v-for="(ingredient, idx) in floatingIngredients"
-                    :key="`ingredient-${idx}`"
-                    class="ingredient-float"
-                    :style="{
-                      left: `${ingredient.x}px`,
-                      top: `${ingredient.y}px`,
-                      animationDelay: `${idx * 0.5}s`
-                    }"
-                  >
-                    {{ ingredient.emoji }}
-                  </div>
-                </div>
-              </div>
-
-              <!-- Loading Text -->
-              <div class="text-center space-y-3">
-                <h3 class="text-xl sm:text-2xl font-bold text-orange-800 dark:text-orange-300 flex items-center justify-center gap-2">
-                  <span class="animate-pulse">Cooking up</span>
-                  <span class="cooking-text">delicious recipes</span>
-                  <span class="dots">
-                    <span class="dot">.</span>
-                    <span class="dot">.</span>
-                    <span class="dot">.</span>
-                  </span>
-                </h3>
-                <p class="text-sm sm:text-base text-orange-700 dark:text-orange-400">
-                  Stirring ingredients and analyzing nutrition
-                </p>
-                <p class="text-xs text-orange-600 dark:text-orange-500">
-                  This may take up to 60 seconds
-                </p>
-              </div>
-
-              <!-- Progress hints -->
-              <div class="mt-6 flex gap-2">
-                <div class="w-2 h-2 rounded-full bg-orange-400 animate-bounce" style="animation-delay: 0s"></div>
-                <div class="w-2 h-2 rounded-full bg-orange-400 animate-bounce" style="animation-delay: 0.2s"></div>
-                <div class="w-2 h-2 rounded-full bg-orange-400 animate-bounce" style="animation-delay: 0.4s"></div>
-              </div>
-            </div>
-
-            <!-- Interactive hint -->
-            <div class="absolute bottom-4 right-4 text-xs text-orange-500 dark:text-orange-400 opacity-70">
-              Move your cursor around! 🖱️
+            <!-- Time estimate - subtle -->
+            <div class="text-center mt-6">
+              <p class="text-xs text-stone-400 dark:text-stone-500 tracking-wide">
+                This may take up to 60 seconds
+              </p>
             </div>
           </div>
 
@@ -405,30 +317,6 @@ const initialLoadComplete = ref(false)
 const currentPage = ref(1)
 const itemsPerPage = 10
 
-// Cooking animation state
-const cookingContainer = ref<HTMLElement | null>(null)
-const mouseX = ref(0)
-const mouseY = ref(0)
-const hatRotateX = ref(0)
-const hatRotateY = ref(0)
-
-// Bubble animation classes
-const bubbleClasses = [
-  'bubble bubble-1',
-  'bubble bubble-2',
-  'bubble bubble-3'
-]
-
-// Floating ingredients
-const floatingIngredients = [
-  { emoji: '🥕', x: -60, y: -20 },
-  { emoji: '🍅', x: 60, y: -30 },
-  { emoji: '🧄', x: -50, y: 20 },
-  { emoji: '🧅', x: 70, y: 10 },
-  { emoji: '🌿', x: -70, y: -10 },
-  { emoji: '🥬', x: 50, y: -40 }
-]
-
 // ============================================================================
 // Categories
 // ============================================================================
@@ -581,36 +469,6 @@ const handleQuickFilter = async (filterType: string) => {
 }
 
 /**
- * Handle mouse movement for cooking animation
- */
-const handleMouseMove = (event: MouseEvent) => {
-  if (!cookingContainer.value) return
-
-  const rect = cookingContainer.value.getBoundingClientRect()
-  const centerX = rect.width / 2
-  const centerY = rect.height / 2
-
-  mouseX.value = event.clientX - rect.left
-  mouseY.value = event.clientY - rect.top
-
-  // Calculate rotation based on mouse position
-  const deltaX = (mouseX.value - centerX) / centerX
-  const deltaY = (mouseY.value - centerY) / centerY
-
-  hatRotateY.value = deltaX * 20 // Max 20deg rotation
-  hatRotateX.value = -deltaY * 15 // Max 15deg rotation
-}
-
-const handleMouseLeave = () => {
-  hatRotateX.value = 0
-  hatRotateY.value = 0
-}
-
-const hatStyle = computed(() => ({
-  transform: `perspective(1000px) rotateX(${hatRotateX.value}deg) rotateY(${hatRotateY.value}deg)`
-}))
-
-/**
  * Navigate to comparison page
  */
 const navigateToCompare = () => {
@@ -640,192 +498,5 @@ onMounted(async () => {
 
 .font-serif {
   font-family: 'Cormorant Garamond', Georgia, serif;
-}
-
-/* ============================================================================ */
-/* Cooking Animation Styles */
-/* ============================================================================ */
-
-/* Bubbles floating up */
-.bubble {
-  position: absolute;
-  bottom: -20px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  opacity: 0.3;
-  animation: float-up 4s infinite ease-in-out;
-}
-
-.bubble-1 {
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 200, 100, 0.3));
-}
-
-.bubble-2 {
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 150, 50, 0.3));
-  width: 15px;
-  height: 15px;
-}
-
-.bubble-3 {
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 180, 80, 0.3));
-  width: 25px;
-  height: 25px;
-}
-
-@keyframes float-up {
-  0% {
-    transform: translateY(0) scale(1);
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.3;
-  }
-  90% {
-    opacity: 0.3;
-  }
-  100% {
-    transform: translateY(-400px) scale(1.5);
-    opacity: 0;
-  }
-}
-
-/* Chef hat animation */
-.chef-hat {
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
-  animation: bob 2s ease-in-out infinite;
-}
-
-@keyframes bob {
-  0%, 100% {
-    transform: translateY(0) perspective(1000px);
-  }
-  50% {
-    transform: translateY(-10px) perspective(1000px);
-  }
-}
-
-/* Cooking pot wobble */
-.cooking-pot {
-  display: inline-block;
-  animation: wobble 3s ease-in-out infinite;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
-}
-
-@keyframes wobble {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-3deg);
-  }
-  75% {
-    transform: rotate(3deg);
-  }
-}
-
-/* Steam particles */
-.steam-particle {
-  position: absolute;
-  font-size: 24px;
-  animation: steam-rise 2s ease-out infinite;
-  opacity: 0;
-}
-
-@keyframes steam-rise {
-  0% {
-    transform: translateY(0) scale(0.5);
-    opacity: 0;
-  }
-  20% {
-    opacity: 0.8;
-  }
-  100% {
-    transform: translateY(-60px) scale(1.2);
-    opacity: 0;
-  }
-}
-
-/* Floating ingredients */
-.ingredient-float {
-  position: absolute;
-  font-size: 32px;
-  animation: ingredient-spin 3s ease-in-out infinite;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-}
-
-@keyframes ingredient-spin {
-  0%, 100% {
-    transform: translate(0, 0) rotate(0deg) scale(1);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  50% {
-    transform: translate(20px, -30px) rotate(180deg) scale(1.2);
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate(0, 0) rotate(360deg) scale(1);
-    opacity: 0;
-  }
-}
-
-/* Cooking text shimmer */
-.cooking-text {
-  background: linear-gradient(
-    90deg,
-    #f97316 0%,
-    #fb923c 25%,
-    #fbbf24 50%,
-    #fb923c 75%,
-    #f97316 100%
-  );
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: shimmer 3s linear infinite;
-}
-
-@keyframes shimmer {
-  to {
-    background-position: 200% center;
-  }
-}
-
-/* Animated dots */
-.dots {
-  display: inline-flex;
-  gap: 2px;
-}
-
-.dot {
-  animation: dot-pulse 1.4s ease-in-out infinite;
-}
-
-.dot:nth-child(1) {
-  animation-delay: 0s;
-}
-
-.dot:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.dot:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-@keyframes dot-pulse {
-  0%, 60%, 100% {
-    opacity: 1;
-  }
-  30% {
-    opacity: 0.3;
-  }
 }
 </style>
