@@ -156,7 +156,7 @@
                         class="w-4 h-4 rounded border-gray-300 dark:border-zinc-600 text-brand-600 focus:ring-brand-500"
                       />
                       <span class="text-base text-gray-700 dark:text-gray-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 flex-1 transition-colors">
-                        {{ facet.value }}
+                        {{ facet.label }}
                       </span>
                       <span class="text-sm font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
                         {{ facet.count }}
@@ -456,7 +456,7 @@
               @click="selectedYears = selectedYears.filter(y => y !== year)"
               class="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 hover:bg-brand-200 dark:hover:bg-brand-900/50"
             >
-              {{ year }}
+              {{ new Date(year).getFullYear() }}
               <UIcon name="i-lucide-x" class="w-3 h-3" />
             </button>
             <button
@@ -679,13 +679,13 @@ const categoryFacets = computed((): AnnotatedFacet[] => {
 const venueFacets = computed(() => facets.value.venue || [])
 
 const yearFacets = computed(() => {
-  // Convert timestamps to year strings and sort descending
   return (facets.value.publication_year || [])
     .map(f => ({
-      value: new Date(f.value).getFullYear().toString(),
+      value: f.value, // preserve full date for exact match (e.g. "2014-01-01")
+      label: new Date(f.value).getFullYear().toString(),
       count: f.count
     }))
-    .sort((a, b) => parseInt(b.value) - parseInt(a.value))
+    .sort((a, b) => parseInt(b.label) - parseInt(a.label))
 })
 
 // Computed facets for Tags (tags + ai_tags)
@@ -793,7 +793,7 @@ const loadArticles = async () => {
     }
 
     if (selectedYears.value.length > 0) {
-      const yearFilter = selectedYears.value.map(y => `publication_year:${y}-*`).join(' OR ')
+      const yearFilter = selectedYears.value.map(y => `publication_year:"${y}"`).join(' OR ')
       fq.push(selectedYears.value.length > 1 ? `(${yearFilter})` : yearFilter)
     }
 
