@@ -324,17 +324,22 @@ onMounted(async () => {
     return
   }
 
-  // Initialize household store
+  // Initialize household store (this also restores selected member from localStorage)
   await householdStore.initialize()
 
   // Check if user needs to set up household
   if (householdStore.needsHouseholdSetup) {
     showSetupWizard.value = true
+    loading.value = false
+    return
   }
 
-  // Always show profile selection - user must choose who's eating
-  // Clear any previously selected member so they must choose again
-  householdStore.clearSelectedMember()
+  // If user already has a selected member (restored from localStorage),
+  // redirect them directly to dashboard - they don't need to re-select
+  if (householdStore.currentMember) {
+    router.push('/dashboard')
+    return
+  }
 
   loading.value = false
 })

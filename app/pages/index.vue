@@ -1,5 +1,8 @@
 <template>
-  <div>
+  <!-- Show nothing while checking auth to prevent flash -->
+  <div v-if="isCheckingAuth" class="min-h-screen"></div>
+
+  <div v-else>
     <div class="relative pt-48 pb-12 xl:pt-60 sm:pb-16 lg:pb-32 xl:pb-48 2xl:pb-56 overflow-hidden">
       <div class="absolute inset-0">
         <img 
@@ -167,9 +170,12 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
+import { useHouseholdStore } from '@/stores/household'
 
 const { t } = useI18n()
 const auth = useAuthStore()
+const householdStore = useHouseholdStore()
+const router = useRouter()
 
 definePageMeta({
   layout: 'default',
@@ -200,6 +206,9 @@ const steps = [
   { key: 'track' }
 ]
 
+// Auth check state - hide content until we know auth status
+const isCheckingAuth = ref(true)
+
 // Typing effect
 const typingElement = ref<HTMLElement | null>(null)
 const typingText = computed(() => t('hero.titleAccent'))
@@ -229,7 +238,31 @@ const runTypingEffect = (text: string) => {
   typingTimeout = setTimeout(type, 200)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Check auth and redirect authenticated users
+  // Initialize auth if needed
+  if (!auth.initialized) {
+    await auth.initialize()
+  }
+
+  if (auth.isAuthenticated) {
+    // Initialize household to check for selected member
+    if (!householdStore.initialized) {
+      await householdStore.initialize()
+    }
+
+    if (householdStore.currentMember) {
+      router.push('/dashboard')
+      return
+    } else {
+      router.push('/profiles')
+      return
+    }
+  }
+
+  // Not authenticated - show the landing page
+  isCheckingAuth.value = false
+
   runTypingEffect(typingText.value)
 
   const observerOptions = {

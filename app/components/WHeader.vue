@@ -10,7 +10,7 @@
 
       <!-- User Avatar Dropdown when logged in -->
       <UDropdownMenu
-        v-if="authStore.isLoggedIn"
+        v-if="authStore.initialized && authStore.isLoggedIn"
         :items="userMenuItems"
         :content="{
           align: 'end',
@@ -56,9 +56,9 @@
         </template>
       </UDropdownMenu>
 
-      <!-- Sign In Button when not logged in -->
+      <!-- Sign In Button when not logged in (only show after auth is initialized) -->
       <UButton
-        v-else
+        v-else-if="authStore.initialized && !authStore.isLoggedIn"
         to="/login"
         color="primary"
         variant="solid"

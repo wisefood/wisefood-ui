@@ -1,18 +1,36 @@
 <template>
-  <NuxtLink to="/" class="inline-block">
-    <img 
-      src="/logo.png" 
-      alt="WISEFOOD" 
-      :class="`h-${height} w-auto mx-auto transition-transform hover:scale-105`" 
+  <NuxtLink :to="logoDestination" class="inline-block">
+    <img
+      src="/logo.png"
+      alt="WISEFOOD"
+      :class="`h-${height} w-auto mx-auto transition-transform hover:scale-105`"
     />
   </NuxtLink>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useAuthStore } from '~/stores/auth'
+import { useHouseholdStore } from '~/stores/household'
+
 defineProps({
   height: {
     type: String,
     default: '16'
   }
+})
+
+const authStore = useAuthStore()
+const householdStore = useHouseholdStore()
+
+// Smart routing: go to dashboard if authenticated with profile, otherwise home
+const logoDestination = computed(() => {
+  if (authStore.isAuthenticated && householdStore.currentMember) {
+    return '/dashboard'
+  }
+  if (authStore.isAuthenticated) {
+    return '/profiles'
+  }
+  return '/'
 })
 </script>
