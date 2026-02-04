@@ -141,7 +141,7 @@
                 </span>
               </button>
             </div>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-8">Per serving</p>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-8">Per serving · <span class="italic">Based on the USDA Food Composition Table</span></p>
 
             <!-- Animated Container for View Switching -->
             <div class="relative overflow-hidden">
@@ -299,7 +299,7 @@
         <!-- Sidebar (Right Column) -->
         <div class="space-y-8">
           <!-- Nutri-Score Display -->
-          <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 border border-zinc-200 dark:border-zinc-700 shadow-lg relative z-10">
+          <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 border border-zinc-200 dark:border-zinc-700 shadow-lg relative">
             <h3 class="text-xl font-semibold text-zinc-900 dark:text-white mb-6 flex items-center gap-3">
               <UIcon name="i-lucide-award" class="w-6 h-6 text-brandg-600 dark:text-brandg-400" />
               Nutri-Score
@@ -347,7 +347,7 @@
           </section>
 
           <!-- Environmental Impact -->
-          <section class="bg-gradient-to-br from-brandg-50 to-brandg-100 dark:from-brandg-900/20 dark:to-brandg-800/20 rounded-3xl p-8 border border-brandg-200 dark:border-brandg-800 shadow-lg relative z-10">
+          <section class="bg-gradient-to-br from-brandg-50 to-brandg-100 dark:from-brandg-900/20 dark:to-brandg-800/20 rounded-3xl p-8 border border-brandg-200 dark:border-brandg-800 shadow-lg relative">
             <h3 class="text-xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
               <UIcon name="i-lucide-leaf" class="w-6 h-6 text-brandg-600 dark:text-brandg-400" />
               Environmental Impact
@@ -364,7 +364,7 @@
           </section>
 
           <!-- Ingredients -->
-          <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 border border-zinc-200 dark:border-zinc-700 shadow-lg sticky top-24 z-20">
+          <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 border border-zinc-200 dark:border-zinc-700 shadow-lg sticky top-24 z-0">
             <h2 class="text-2xl font-serif font-semibold text-zinc-900 dark:text-white mb-6 flex items-center gap-3">
               <UIcon name="i-lucide-shopping-basket" class="w-6 h-6 text-brandg-600 dark:text-brandg-400" />
               Ingredients
