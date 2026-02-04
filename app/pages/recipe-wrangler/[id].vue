@@ -123,80 +123,132 @@
 
           <!-- Nutrition Information -->
           <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 sm:p-10 border border-zinc-200 dark:border-zinc-700 shadow-lg">
-            <h2 class="text-3xl font-serif font-semibold text-zinc-900 dark:text-white mb-3 flex items-center gap-3">
-              <UIcon name="i-lucide-activity" class="w-7 h-7 text-brandg-600 dark:text-brandg-400" />
-              Nutritional Information
-            </h2>
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-3xl font-serif font-semibold text-zinc-900 dark:text-white flex items-center gap-3">
+                <UIcon name="i-lucide-activity" class="w-7 h-7 text-brandg-600 dark:text-brandg-400" />
+                Nutritional Information
+              </h2>
+              <button
+                @click="toggleNutrientView"
+                class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brandg-50 to-brandg-100 dark:from-brandg-900/30 dark:to-brandg-800/30 border border-brandg-200 dark:border-brandg-700 hover:from-brandg-100 hover:to-brandg-200 dark:hover:from-brandg-900/50 dark:hover:to-brandg-800/50 transition-all group"
+              >
+                <UIcon
+                  :name="showRadarChart ? 'i-lucide-layout-grid' : 'i-lucide-radar'"
+                  class="w-5 h-5 text-brandg-600 dark:text-brandg-400 group-hover:scale-110 transition-transform"
+                />
+                <span class="text-sm font-medium text-brandg-700 dark:text-brandg-300">
+                  {{ showRadarChart ? 'Grid View' : 'Chart View' }}
+                </span>
+              </button>
+            </div>
             <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-8">Per serving</p>
 
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-              <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border border-orange-200 dark:border-orange-800 hover:shadow-md transition-shadow">
-                <div class="flex items-center gap-2 mb-3">
-                  <UIcon name="i-lucide-flame" class="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                  <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">Calories</p>
-                </div>
-                <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
-                  {{ Math.round(recipe.total_kcal_per_serving) }}
-                </p>
-              </div>
+            <!-- Animated Container for View Switching -->
+            <div class="relative overflow-hidden">
+              <!-- Grid View -->
+              <Transition
+                enter-active-class="transition-all duration-500 ease-out"
+                enter-from-class="opacity-0 scale-95"
+                enter-to-class="opacity-100 scale-100"
+                leave-active-class="transition-all duration-500 ease-out absolute inset-0"
+                leave-from-class="opacity-100 scale-100"
+                leave-to-class="opacity-0 scale-95"
+              >
+                <div v-if="!showRadarChart" class="space-y-8">
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+                    <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border border-orange-200 dark:border-orange-800 hover:shadow-md transition-shadow">
+                      <div class="flex items-center gap-2 mb-3">
+                        <UIcon name="i-lucide-flame" class="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                        <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">Calories</p>
+                      </div>
+                      <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
+                        {{ Math.round(recipe.total_kcal_per_serving) }}
+                      </p>
+                    </div>
 
-              <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-800 hover:shadow-md transition-shadow">
-                <div class="flex items-center gap-2 mb-3">
-                  <UIcon name="i-lucide-dumbbell" class="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                  <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">Protein</p>
-                </div>
-                <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
-                  {{ recipe.total_protein_g_per_serving.toFixed(1) }}<span class="text-xl text-zinc-500">g</span>
-                </p>
-              </div>
+                    <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-800 hover:shadow-md transition-shadow">
+                      <div class="flex items-center gap-2 mb-3">
+                        <UIcon name="i-lucide-dumbbell" class="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                        <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">Protein</p>
+                      </div>
+                      <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
+                        {{ recipe.total_protein_g_per_serving.toFixed(1) }}<span class="text-xl text-zinc-500">g</span>
+                      </p>
+                    </div>
 
-              <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-800 hover:shadow-md transition-shadow">
-                <div class="flex items-center gap-2 mb-3">
-                  <UIcon name="i-lucide-wheat" class="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                  <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">Carbs</p>
-                </div>
-                <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
-                  {{ recipe.total_carbs_g_per_serving.toFixed(1) }}<span class="text-xl text-zinc-500">g</span>
-                </p>
-              </div>
+                    <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-800 hover:shadow-md transition-shadow">
+                      <div class="flex items-center gap-2 mb-3">
+                        <UIcon name="i-lucide-wheat" class="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                        <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">Carbs</p>
+                      </div>
+                      <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
+                        {{ recipe.total_carbs_g_per_serving.toFixed(1) }}<span class="text-xl text-zinc-500">g</span>
+                      </p>
+                    </div>
 
-              <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 border border-yellow-200 dark:border-yellow-800 hover:shadow-md transition-shadow">
-                <div class="flex items-center gap-2 mb-3">
-                  <UIcon name="i-lucide-droplet" class="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-                  <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">Fat</p>
-                </div>
-                <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
-                  {{ recipe.total_fat_g_per_serving.toFixed(1) }}<span class="text-xl text-zinc-500">g</span>
-                </p>
-              </div>
-            </div>
+                    <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 border border-yellow-200 dark:border-yellow-800 hover:shadow-md transition-shadow">
+                      <div class="flex items-center gap-2 mb-3">
+                        <UIcon name="i-lucide-droplet" class="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                        <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">Fat</p>
+                      </div>
+                      <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
+                        {{ recipe.total_fat_g_per_serving.toFixed(1) }}<span class="text-xl text-zinc-500">g</span>
+                      </p>
+                    </div>
+                  </div>
 
-            <!-- Additional Nutrition -->
-            <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-700 grid grid-cols-2 sm:grid-cols-4 gap-6">
-              <div class="text-center sm:text-left">
-                <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">Fiber</p>
-                <p class="text-2xl font-bold text-zinc-900 dark:text-white">
-                  {{ recipe.total_fiber_g_per_serving.toFixed(1) }}<span class="text-base text-zinc-500">g</span>
-                </p>
-              </div>
-              <div class="text-center sm:text-left">
-                <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">Sugar</p>
-                <p class="text-2xl font-bold text-zinc-900 dark:text-white">
-                  {{ recipe.total_sugar_g_per_serving.toFixed(1) }}<span class="text-base text-zinc-500">g</span>
-                </p>
-              </div>
-              <div class="text-center sm:text-left">
-                <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">Sodium</p>
-                <p class="text-2xl font-bold text-zinc-900 dark:text-white">
-                  {{ recipe.total_sodium_mg_per_serving.toFixed(0) }}<span class="text-base text-zinc-500">mg</span>
-                </p>
-              </div>
-              <div class="text-center sm:text-left">
-                <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">Cholesterol</p>
-                <p class="text-2xl font-bold text-zinc-900 dark:text-white">
-                  {{ recipe.total_cholesterol_mg_per_serving.toFixed(0) }}<span class="text-base text-zinc-500">mg</span>
-                </p>
-              </div>
+                  <!-- Additional Nutrition -->
+                  <div class="pt-8 border-t border-zinc-200 dark:border-zinc-700 grid grid-cols-2 sm:grid-cols-4 gap-6">
+                    <div class="text-center sm:text-left">
+                      <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">Fiber</p>
+                      <p class="text-2xl font-bold text-zinc-900 dark:text-white">
+                        {{ recipe.total_fiber_g_per_serving.toFixed(1) }}<span class="text-base text-zinc-500">g</span>
+                      </p>
+                    </div>
+                    <div class="text-center sm:text-left">
+                      <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">Sugar</p>
+                      <p class="text-2xl font-bold text-zinc-900 dark:text-white">
+                        {{ recipe.total_sugar_g_per_serving.toFixed(1) }}<span class="text-base text-zinc-500">g</span>
+                      </p>
+                    </div>
+                    <div class="text-center sm:text-left">
+                      <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">Sodium</p>
+                      <p class="text-2xl font-bold text-zinc-900 dark:text-white">
+                        {{ recipe.total_sodium_mg_per_serving.toFixed(0) }}<span class="text-base text-zinc-500">mg</span>
+                      </p>
+                    </div>
+                    <div class="text-center sm:text-left">
+                      <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">Cholesterol</p>
+                      <p class="text-2xl font-bold text-zinc-900 dark:text-white">
+                        {{ recipe.total_cholesterol_mg_per_serving.toFixed(0) }}<span class="text-base text-zinc-500">mg</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Transition>
+
+              <!-- Radar Chart View -->
+              <Transition
+                enter-active-class="transition-all duration-500 ease-out"
+                enter-from-class="opacity-0 scale-95"
+                enter-to-class="opacity-100 scale-100"
+                leave-active-class="transition-all duration-500 ease-out absolute inset-0"
+                leave-from-class="opacity-100 scale-100"
+                leave-to-class="opacity-0 scale-95"
+              >
+                <div v-if="showRadarChart" class="py-4">
+                  <NutrientRadarChart
+                    :calories="recipe.total_kcal_per_serving"
+                    :protein="recipe.total_protein_g_per_serving"
+                    :carbs="recipe.total_carbs_g_per_serving"
+                    :fat="recipe.total_fat_g_per_serving"
+                    :fiber="recipe.total_fiber_g_per_serving"
+                    :sugar="recipe.total_sugar_g_per_serving"
+                    :sodium="recipe.total_sodium_mg_per_serving"
+                    :cholesterol="recipe.total_cholesterol_mg_per_serving"
+                  />
+                </div>
+              </Transition>
             </div>
           </section>
 
@@ -387,6 +439,7 @@ const recipeStore = useRecipeStore()
 // ============================================================================
 const checkedIngredients = ref<Record<number, boolean>>({})
 const checkedInstructions = ref<Record<number, boolean>>({})
+const showRadarChart = ref(false)
 
 // ============================================================================
 // Computed
@@ -431,6 +484,10 @@ const toggleIngredient = (index: number) => {
 
 const toggleInstruction = (index: number) => {
   checkedInstructions.value[index] = !checkedInstructions.value[index]
+}
+
+const toggleNutrientView = () => {
+  showRadarChart.value = !showRadarChart.value
 }
 
 const getNutriScoreGrade = (score: number): string => {
