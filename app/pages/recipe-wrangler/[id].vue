@@ -309,36 +309,40 @@
             <div class="flex flex-col items-center">
               <p class="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3">Nutritional Quality</p>
               <div class="flex gap-1 relative">
-                <div
+                <UTooltip
                   v-for="(grade, idx) in ['A', 'B', 'C', 'D', 'E']"
                   :key="grade"
-                  :class="[
-                    'relative flex items-center justify-center font-black text-white transition-all',
-                    getNutriScoreGrade(recipe.nutri_score) === grade
-                      ? 'w-16 h-20 text-3xl z-10'
-                      : 'w-12 h-16 text-xl opacity-50',
-                    idx === 0 ? 'rounded-l-full' : '',
-                    idx === 4 ? 'rounded-r-full' : '',
-                    getNutriScoreColorBg(grade)
-                  ]"
+                  :text="getNutriScoreTooltip(grade)"
                 >
-                  <span class="relative z-10">{{ grade }}</span>
-                  <!-- Arrow pointer for active grade -->
                   <div
-                    v-if="getNutriScoreGrade(recipe.nutri_score) === grade"
                     :class="[
-                      'absolute -bottom-3 w-0 h-0',
-                      'border-l-[12px] border-l-transparent',
-                      'border-r-[12px] border-r-transparent',
-                      'border-t-[12px]',
-                      getNutriScoreArrowColor(grade),
-                      // Adjust position for edge grades (A and E)
-                      idx === 0 ? 'left-1/2 translate-x-1' : '',
-                      idx === 4 ? 'right-1/2 -translate-x-1' : '',
-                      idx !== 0 && idx !== 4 ? 'left-1/2 -translate-x-1/2' : ''
+                      'relative flex items-center justify-center font-black text-white transition-all cursor-help',
+                      getNutriScoreGrade(recipe.nutri_score) === grade
+                        ? 'w-16 h-20 text-3xl z-10'
+                        : 'w-12 h-16 text-xl opacity-50',
+                      idx === 0 ? 'rounded-l-full' : '',
+                      idx === 4 ? 'rounded-r-full' : '',
+                      getNutriScoreColorBg(grade)
                     ]"
-                  ></div>
-                </div>
+                  >
+                    <span class="relative z-10">{{ grade }}</span>
+                    <!-- Arrow pointer for active grade -->
+                    <div
+                      v-if="getNutriScoreGrade(recipe.nutri_score) === grade"
+                      :class="[
+                        'absolute -bottom-3 w-0 h-0',
+                        'border-l-[12px] border-l-transparent',
+                        'border-r-[12px] border-r-transparent',
+                        'border-t-[12px]',
+                        getNutriScoreArrowColor(grade),
+                        // Adjust position for edge grades (A and E)
+                        idx === 0 ? 'left-1/2 translate-x-1' : '',
+                        idx === 4 ? 'right-1/2 -translate-x-1' : '',
+                        idx !== 0 && idx !== 4 ? 'left-1/2 -translate-x-1/2' : ''
+                      ]"
+                    ></div>
+                  </div>
+                </UTooltip>
               </div>
               <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-6 text-center">
                 {{ getNutriScoreDescription(getNutriScoreGrade(recipe.nutri_score)) }}
@@ -529,6 +533,17 @@ const getNutriScoreDescription = (grade: string): string => {
     'E': 'Low nutritional quality'
   }
   return descriptions[grade as keyof typeof descriptions] || 'Unknown'
+}
+
+const getNutriScoreTooltip = (grade: string): string => {
+  const tooltips = {
+    'A': 'Grade A: Rich in fiber, protein, vitamins, and minerals. Great for everyday meals.',
+    'B': 'Grade B: A nutritious option with a good balance of beneficial nutrients.',
+    'C': 'Grade C: A balanced choice that fits well into a varied diet.',
+    'D': 'Grade D: Can be enjoyed occasionally as part of a diverse, balanced diet.',
+    'E': 'Grade E: Best enjoyed as an occasional treat within a balanced lifestyle.'
+  }
+  return tooltips[grade as keyof typeof tooltips] || 'Unknown grade'
 }
 
 const handleImageError = (event: Event) => {
