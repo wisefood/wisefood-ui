@@ -1,204 +1,281 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+  <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
     <!-- Header -->
-    <div class="border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm sticky top-0 z-10">
-      <div class="max-w-7xl mx-auto px-4 py-6">
+    <div class="border-b border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-10">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-4">
-            <NuxtLink
-              to="/dashboard"
-              class="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
-            >
-              <UIcon name="i-lucide-arrow-left" class="w-5 h-5" />
-              <span class="text-sm font-medium">Back to Dashboard</span>
-            </NuxtLink>
-          </div>
+          <NuxtLink
+            to="/dashboard"
+            class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+          >
+            <UIcon name="i-lucide-arrow-left" class="w-5 h-5" />
+            <span class="text-sm font-medium hidden sm:inline">Back to Dashboard</span>
+          </NuxtLink>
         </div>
-        <div class="mt-4">
-          <h1 class="text-3xl sm:text-4xl font-light text-gray-900 dark:text-white tracking-tight">
-            <span class="font-serif italic text-purple-600 dark:text-purple-400 text-4xl sm:text-5xl">FoodChat</span>
+        <div class="mt-3 sm:mt-4">
+          <h1 class="text-2xl sm:text-3xl md:text-4xl font-light text-zinc-900 dark:text-white tracking-tight">
+            <span class="font-serif italic text-brandp-500 dark:text-brandp-400 text-3xl sm:text-4xl md:text-5xl">FoodChat</span>
           </h1>
-          <p class="mt-2 text-gray-600 dark:text-gray-300 font-light">
-            Your AI nutrition assistant - Ask anything about food, health, and wellness
+          <p class="mt-2 text-sm sm:text-base text-zinc-600 dark:text-zinc-300 font-light">
+            Describe what you'd like to eat and get a personalised meal plan instantly
           </p>
         </div>
       </div>
     </div>
 
-    <!-- Main Content -->
-    <main class="max-w-4xl mx-auto px-4 py-12">
-      <!-- Chat Container -->
-      <div class="mb-6 scroll-fade-in">
-        <div class="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-3xl p-8 min-h-[500px] flex flex-col">
-          <!-- Messages Area -->
-          <div class="flex-1 space-y-6 mb-6">
-            <!-- Welcome Message -->
-            <div class="flex items-start gap-4">
-              <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center shrink-0">
-                <UIcon name="i-lucide-bot" class="w-5 h-5 text-white" />
-              </div>
-              <div class="flex-1 bg-purple-50 dark:bg-purple-900/20 rounded-2xl rounded-tl-none p-4">
-                <p class="text-gray-900 dark:text-white font-light leading-relaxed">
-                  Hello! I'm your nutrition AI assistant. I can help you with meal planning, nutritional information,
-                  dietary advice, recipe suggestions, and answer any questions about food and wellness.
-                  What would you like to know?
-                </p>
-              </div>
-            </div>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
 
-            <!-- Sample User Message (placeholder) -->
-            <div v-if="messages.length > 0" class="flex items-start gap-4 justify-end">
-              <div class="flex-1 bg-brand-500 text-white rounded-2xl rounded-tr-none p-4 max-w-md ml-auto">
-                <p class="font-light leading-relaxed">
-                  {{ messages[0] }}
-                </p>
-              </div>
-              <div class="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900 flex items-center justify-center shrink-0">
-                <UIcon name="i-lucide-user" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
-              </div>
-            </div>
+      <!-- Input bar — borderless, clean -->
+      <div class="mb-12 scroll-fade-in" style="--delay: 0.1s">
+        <form class="flex items-end gap-4" @submit.prevent="handleSend">
+          <textarea
+            ref="inputRef"
+            v-model="inputText"
+            rows="1"
+            :disabled="sending"
+            :placeholder="hasMealPlans ? 'Modify your meal plan — e.g. swap lunch for something lighter...' : 'Describe your ideal meals — e.g. high-protein, Mediterranean style...'"
+            class="flex-1 resize-none bg-transparent border-b-2 border-zinc-200 dark:border-zinc-700 px-2 py-3.5 text-base text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-brandp-500 dark:focus:border-brandp-400 disabled:opacity-40 max-h-28 font-light transition-colors"
+            @input="autoResize"
+            @keydown="handleKeydown"
+          />
+          <UButton
+            type="submit"
+            :disabled="!canSend"
+            color="primary"
+            size="sm"
+            trailing-icon="i-lucide-arrow-up"
+            class="cursor-pointer shrink-0 mb-1.5"
+          >
+            Generate
+          </UButton>
+        </form>
+      </div>
+
+      <!-- Welcome state: suggested questions (no meal plan yet, not loading) -->
+      <div v-if="!hasMealPlans && !sending" class="mb-16 scroll-fade-in" style="--delay: 0.15s">
+        <div class="text-center mb-10">
+          <h2 class="text-2xl sm:text-3xl font-light text-gray-900 dark:text-white mb-3">
+            What shall we <span class="font-serif italic text-brandp-500 text-3xl sm:text-4xl">cook</span> today?
+          </h2>
+          <p class="text-sm sm:text-base text-gray-500 dark:text-gray-400 font-light">
+            Pick a suggestion or type your own request above.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          <button
+            v-for="q in suggestedQuestions"
+            :key="q.text"
+            class="group p-5 rounded-2xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/30 text-left hover:border-brandp-200 dark:hover:border-brandp-800 hover:bg-brandp-50/50 dark:hover:bg-brandp-900/10 hover:-translate-y-0.5 hover:shadow-md hover:shadow-brandp-500/5 transition-all duration-200"
+            @click="handleQuickAsk(q.text)"
+          >
+            <UIcon :name="q.icon" class="w-5 h-5 mb-3 text-brandp-500" />
+            <p class="text-sm text-gray-600 dark:text-gray-400 font-light leading-relaxed group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">{{ q.text }}</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- Generating state -->
+      <div v-if="sending" class="mb-16 scroll-fade-in" style="--delay: 0.15s">
+        <div class="rounded-3xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 shadow-xl p-12 text-center">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brandp-100 to-brandp-200 dark:from-brandp-900/40 dark:to-brandp-800/40 mb-5">
+            <UIcon name="i-lucide-chef-hat" class="w-8 h-8 text-brandp-500 animate-pulse" />
           </div>
-
-          <!-- Input Area -->
-          <div class="relative">
-            <input
-              v-model="currentMessage"
-              @keyup.enter="sendMessage"
-              type="text"
-              placeholder="Ask me anything about nutrition, recipes, or wellness..."
-              class="w-full pl-6 pr-14 py-4 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            />
-            <button
-              @click="sendMessage"
-              class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-purple-500 hover:bg-purple-600 flex items-center justify-center transition-colors"
-            >
-              <UIcon name="i-lucide-send" class="w-5 h-5 text-white" />
-            </button>
+          <h3 class="text-xl font-light text-gray-900 dark:text-white mb-2">
+            Preparing your <span class="font-serif italic text-brandp-500 text-2xl">meal plan</span>
+          </h3>
+          <p class="text-sm sm:text-base text-gray-500 dark:text-gray-400 font-light">
+            This may take a moment...
+          </p>
+          <div class="flex items-center justify-center gap-2 mt-6">
+            <span class="w-2 h-2 bg-brandp-400 rounded-full animate-bounce [animation-delay:0ms]" />
+            <span class="w-2 h-2 bg-brandp-400 rounded-full animate-bounce [animation-delay:150ms]" />
+            <span class="w-2 h-2 bg-brandp-400 rounded-full animate-bounce [animation-delay:300ms]" />
           </div>
         </div>
       </div>
 
-      <!-- Suggested Questions -->
-      <section class="scroll-fade-in" style="--delay: 0.1s">
-        <h2 class="text-2xl font-serif font-semibold mb-6 text-gray-900 dark:text-white">Suggested Questions</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Meal Plan Display -->
+      <div v-if="hasMealPlans && !sending" class="mb-16 scroll-fade-in" style="--delay: 0.2s">
+        <div class="flex items-center justify-between mb-8">
+          <h2 class="text-2xl sm:text-3xl font-light text-gray-900 dark:text-white">
+            Your meal <span class="font-serif italic text-brandp-500 text-3xl sm:text-4xl">plan</span>
+          </h2>
           <button
-            v-for="question in suggestedQuestions"
-            :key="question"
-            @click="askQuestion(question)"
-            class="p-4 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 text-left hover:shadow-lg hover:-translate-y-1 hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-300 group"
+            class="text-xs text-gray-400 hover:text-brandp-500 dark:hover:text-brandp-400 font-light transition-colors"
+            @click="handleStartOver"
           >
-            <div class="flex items-start gap-3">
-              <UIcon name="i-lucide-message-circle-question" class="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
-              <p class="text-gray-900 dark:text-white font-light group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                {{ question }}
-              </p>
-            </div>
+            <UIcon name="i-lucide-refresh-cw" class="w-3.5 h-3.5 inline mr-1" />
+            Start fresh
           </button>
         </div>
-      </section>
 
-      <!-- Features Section -->
-      <section class="mt-12 scroll-fade-in bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-800 rounded-3xl p-8 sm:p-12" style="--delay: 0.2s">
-        <h2 class="text-3xl font-serif font-semibold mb-8 text-gray-900 dark:text-white">What I Can Help You With</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="space-y-8">
           <div
-            v-for="feature in features"
-            :key="feature.title"
-            class="p-6 rounded-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700"
+            v-for="plan in mealPlans"
+            :key="plan.id"
+            class="rounded-3xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 shadow-xl overflow-hidden"
           >
-            <div class="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center mb-4">
-              <UIcon :name="feature.icon" class="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            <!-- Plan header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-zinc-700/50 bg-gradient-to-r from-brandp-50/60 to-earth-1/40 dark:from-brandp-950/20 dark:to-zinc-800/20">
+              <div class="flex items-center gap-2.5">
+                <UIcon name="i-lucide-calendar-days" class="w-5 h-5 text-brandp-500" />
+                <span class="text-sm font-medium text-gray-900 dark:text-white">Daily Plan</span>
+              </div>
+              <span class="text-xs text-gray-400 font-light">{{ formatPlanDate(plan.created_at) }}</span>
             </div>
-            <h3 class="font-semibold text-gray-900 dark:text-white mb-2">{{ feature.title }}</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-300 font-light">{{ feature.description }}</p>
+
+            <!-- Meals grid — dynamic columns based on available meals -->
+            <div
+              class="grid gap-px bg-gray-100 dark:bg-zinc-700/30"
+              :class="mealGridCols(plan)"
+            >
+              <FoodchatMealScheduleCard
+                v-if="plan.breakfast"
+                type="Breakfast"
+                time="08:00"
+                icon="i-lucide-coffee"
+                :recipe="plan.breakfast"
+              />
+              <FoodchatMealScheduleCard
+                v-if="plan.lunch"
+                type="Lunch"
+                time="13:00"
+                icon="i-lucide-utensils"
+                :recipe="plan.lunch"
+              />
+              <FoodchatMealScheduleCard
+                v-if="plan.dinner"
+                type="Dinner"
+                time="19:30"
+                icon="i-lucide-moon"
+                :recipe="plan.dinner"
+              />
+              <FoodchatMealScheduleCard
+                v-if="plan.snack"
+                type="Snack"
+                time="16:00"
+                icon="i-lucide-cookie"
+                :recipe="plan.snack"
+              />
+            </div>
+
+            <!-- Reasoning + vote -->
+            <div class="flex items-start gap-4 px-6 py-4 border-t border-gray-100 dark:border-zinc-700/50">
+              <div v-if="plan.reasoning" class="flex items-start gap-2.5 flex-1 min-w-0">
+                <UIcon name="i-lucide-lightbulb" class="w-4 h-4 text-brandp-400 mt-0.5 shrink-0" />
+                <p class="text-sm text-gray-500 dark:text-gray-400 font-light leading-relaxed">{{ plan.reasoning }}</p>
+              </div>
+              <div v-else class="flex-1" />
+
+              <!-- Upvote / Downvote -->
+              <div class="flex items-center gap-1 shrink-0">
+                <UTooltip text="This plan works well">
+                  <UButton
+                    variant="ghost"
+                    color="neutral"
+                    size="xs"
+                    icon="i-lucide-thumbs-up"
+                    :class="planVotes[plan.id] === 'up' ? 'text-brandp-500' : ''"
+                    @click="votePlan(plan.id, 'up')"
+                  />
+                </UTooltip>
+                <UTooltip text="Needs improvement">
+                  <UButton
+                    variant="ghost"
+                    color="neutral"
+                    size="xs"
+                    icon="i-lucide-thumbs-down"
+                    :class="planVotes[plan.id] === 'down' ? 'text-brand-500' : ''"
+                    @click="votePlan(plan.id, 'down')"
+                  />
+                </UTooltip>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
+
+      <!-- Disclaimer -->
+      <div class="text-center scroll-fade-in" style="--delay: 0.3s">
+        <p class="text-[10px] text-gray-400 dark:text-gray-500 font-light">
+          Responses are informational. Consult a nutritionist for medical advice.
+        </p>
+      </div>
+
+      <!-- Error toast -->
+      <div
+        v-if="error"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 max-w-md w-full px-4 z-50"
+      >
+        <div class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200/80 dark:border-red-800/50 text-sm text-red-700 dark:text-red-300 shadow-lg shadow-red-500/5">
+          <UIcon name="i-lucide-alert-circle" class="w-4 h-4 shrink-0" />
+          <span class="flex-1 font-light">{{ error }}</span>
+          <button class="shrink-0 text-red-400 hover:text-red-600 transition-colors" @click="clearError">
+            <UIcon name="i-lucide-x" class="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, nextTick, onMounted, onUnmounted } from 'vue'
+import { useFoodChat } from '~/composables/useFoodChat'
+import type { MealPlan } from '~/services/foodchatApi'
 
 definePageMeta({
+  layout: 'default',
   middleware: ['auth', 'profile']
 })
 
-useHead({
-  title: 'FoodChat'
-})
+useHead({ title: 'FoodChat' })
 
-useSeoMeta({
-  description: 'Your AI nutrition assistant'
-})
+const {
+  activeSession,
+  mealPlans,
+  hasMealPlans,
+  sending,
+  error,
+  loadSessions,
+  newSession,
+  sendMessage,
+  clearError
+} = useFoodChat()
 
-const currentMessage = ref('')
-const messages = ref<string[]>([])
+const inputText = ref('')
+const inputRef = ref<HTMLTextAreaElement | null>(null)
+const planVotes = reactive<Record<string, 'up' | 'down' | null>>({})
+
+const canSend = computed(() => inputText.value.trim().length > 0 && !sending.value)
 
 const suggestedQuestions = [
-  "What are some high-protein vegetarian meal ideas?",
-  "How can I reduce my sugar intake without sacrificing taste?",
-  "What's the nutritional difference between quinoa and rice?",
-  "Can you suggest a meal plan for weight management?",
-  "What foods are good for gut health?",
-  "How do I calculate my daily calorie needs?",
+  { text: 'Create a balanced weekly meal plan', icon: 'i-lucide-calendar-days' },
+  { text: 'High-protein vegetarian ideas', icon: 'i-lucide-leaf' },
+  { text: 'Mediterranean diet for today', icon: 'i-lucide-heart-pulse' },
+  { text: 'Low-sugar dessert alternatives', icon: 'i-lucide-cherry' }
 ]
 
-const features = [
-  {
-    title: "Meal Planning",
-    description: "Get personalized meal plans based on your goals and preferences",
-    icon: "i-lucide-calendar-days"
-  },
-  {
-    title: "Nutrition Facts",
-    description: "Learn about nutritional content, vitamins, and minerals in foods",
-    icon: "i-lucide-info"
-  },
-  {
-    title: "Recipe Suggestions",
-    description: "Discover recipes tailored to your dietary needs and restrictions",
-    icon: "i-lucide-chef-hat"
-  },
-  {
-    title: "Health Guidance",
-    description: "Get evidence-based advice on diet and wellness topics",
-    icon: "i-lucide-heart-pulse"
-  },
-  {
-    title: "Substitutions",
-    description: "Find healthy alternatives for ingredients in your recipes",
-    icon: "i-lucide-repeat"
-  },
-  {
-    title: "Dietary Support",
-    description: "Support for various diets: vegan, keto, Mediterranean, and more",
-    icon: "i-lucide-apple"
-  },
-]
-
-const sendMessage = () => {
-  if (currentMessage.value.trim()) {
-    messages.value.unshift(currentMessage.value)
-    currentMessage.value = ''
-  }
+/** Returns the grid-cols class based on how many meals are in the plan */
+function mealGridCols(plan: MealPlan): string {
+  const count = [plan.breakfast, plan.lunch, plan.dinner, plan.snack].filter(Boolean).length
+  if (count <= 1) return 'grid-cols-1'
+  if (count === 2) return 'grid-cols-1 sm:grid-cols-2'
+  if (count === 3) return 'grid-cols-1 sm:grid-cols-3'
+  return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
 }
 
-const askQuestion = (question: string) => {
-  currentMessage.value = question
-  sendMessage()
+function votePlan(planId: string, vote: 'up' | 'down') {
+  planVotes[planId] = planVotes[planId] === vote ? null : vote
 }
 
+// Scroll animations
 let observer: IntersectionObserver | null = null
 
-onMounted(() => {
-  const observerOptions = {
-    root: null,
-    rootMargin: '0px 0px -80px 0px',
-    threshold: 0.1
-  }
+onMounted(async () => {
+  await loadSessions()
 
   observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
@@ -207,7 +284,7 @@ onMounted(() => {
         observer?.unobserve(entry.target)
       }
     })
-  }, observerOptions)
+  }, { root: null, rootMargin: '0px 0px -80px 0px', threshold: 0.1 })
 
   document.querySelectorAll('.scroll-fade-in').forEach((el) => {
     observer?.observe(el)
@@ -217,9 +294,53 @@ onMounted(() => {
 onUnmounted(() => {
   observer?.disconnect()
 })
+
+/** Ensure a session exists, then send */
+async function ensureSessionAndSend(content: string) {
+  if (!activeSession.value) {
+    await newSession()
+  }
+  await sendMessage(content)
+}
+
+async function handleSend() {
+  const text = inputText.value.trim()
+  if (!text) return
+  inputText.value = ''
+  nextTick(() => {
+    if (inputRef.value) inputRef.value.style.height = 'auto'
+  })
+  await ensureSessionAndSend(text)
+}
+
+async function handleQuickAsk(question: string) {
+  await ensureSessionAndSend(question)
+}
+
+async function handleStartOver() {
+  await newSession()
+}
+
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
+    handleSend()
+  }
+}
+
+function autoResize(e: Event) {
+  const textarea = e.target as HTMLTextAreaElement
+  textarea.style.height = 'auto'
+  textarea.style.height = Math.min(textarea.scrollHeight, 96) + 'px'
+}
+
+function formatPlanDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
 </script>
 
-<style scoped>
+<style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap');
 
 .font-serif {

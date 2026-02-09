@@ -276,5 +276,27 @@
       "sodium": "Sodium",
       "cholesterol": "Cholesterol"
     }
+  },
+  "foodChat": {
+    "title": "FoodChat",
+    "welcome": "Welcome to FoodChat",
+    "description": "Your AI nutrition assistant. Ask about meal planning, nutritional info, dietary advice, or recipe suggestions.",
+    "newChat": "New FoodChat",
+    "noSessions": "No conversations yet",
+    "noSessionsHint": "Start a new FoodChat above",
+    "sendPlaceholder": "Ask about nutrition, meal plans, recipes...",
+    "sendFirst": "Send a message to get started",
+    "mealPlan": "Meal Plan",
+    "noMealPlan": "No meal plan yet",
+    "noMealPlanHint": "Ask the assistant to generate a meal plan",
+    "ingredients": "Ingredients",
+    "directions": "Directions",
+    "backToDashboard": "Dashboard",
+    "suggested": {
+      "mealPlan": "Can you suggest a meal plan for weight management?",
+      "highProtein": "What are some high-protein vegetarian meal ideas?",
+      "gutHealth": "What foods are good for gut health?",
+      "reduceSugar": "How can I reduce my sugar intake without sacrificing taste?"
+    }
   }
 }
