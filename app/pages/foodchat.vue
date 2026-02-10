@@ -109,7 +109,7 @@
         <div v-if="hasMealPlans && !sending" class="mb-16">
           <div class="flex items-center justify-between mb-8">
             <h2 class="text-2xl sm:text-3xl font-light text-gray-900 dark:text-white">
-              Your meal <span class="font-serif italic text-brandp-500 text-3xl sm:text-4xl">plan</span>
+              Your <span class="font-serif italic text-brandp-500 text-3xl sm:text-4xl">meal plan</span>
             </h2>
             <button
               class="text-xs text-gray-400 hover:text-brandp-500 dark:hover:text-brandp-400 font-light transition-colors"
