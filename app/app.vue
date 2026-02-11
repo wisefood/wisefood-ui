@@ -18,7 +18,7 @@ useHead({
     { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
     { rel: 'icon', type: 'image/png', sizes: '96x96', href: '/favicon-96x96.png' },
     { rel: 'apple-touch-icon', sizes: '96x96', href: '/favicon-96x96.png' },
-    { rel: 'manifest', href: '/site.webmanifest' }
+    { rel: 'manifest', href: '/manifest.json' }
   ],
   htmlAttrs: {
     lang: computed(() => locale.value)
