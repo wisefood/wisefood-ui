@@ -17,14 +17,29 @@ export interface HouseholdMember {
   age_group?: 'child' | 'teen' | 'adult' | 'senior'
   image_url?: string
   household_id: string
+  joined_at?: string
   created_at?: string
   updated_at?: string
 }
 
+export interface NutritionalPreferences {
+  fat?: number
+  carbs?: number
+  protein?: number
+  calories?: number
+  food_likes?: string[]
+  food_dislikes?: string[]
+}
+
 export interface MemberProfile {
-  nutritional_preferences?: Record<string, unknown>
+  id?: string
+  household_member_id?: string
+  nutritional_preferences?: NutritionalPreferences
   dietary_groups?: ('omnivore' | 'vegetarian' | 'vegan' | 'pescatarian' | 'flexitarian')[]
+  allergies?: string[]
   properties?: Record<string, unknown>
+  created_at?: string
+  updated_at?: string
 }
 
 export interface HouseholdMemberWithProfile extends HouseholdMember {

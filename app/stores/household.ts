@@ -204,6 +204,24 @@ export const useHouseholdStore = defineStore('household', {
       }
     },
 
+    async getMemberProfile(memberId: string) {
+      this.loading = true
+      this.error = null
+
+      try {
+        const response = await householdsApi.getMemberProfile(memberId)
+        if (response.success) {
+          return response.result
+        }
+      } catch (err) {
+        console.error('[HouseholdStore] Failed to get member profile:', err)
+        this.error = 'Failed to load profile'
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
+
     async updateMemberProfile(memberId: string, profile: MemberProfile) {
       this.loading = true
       this.error = null

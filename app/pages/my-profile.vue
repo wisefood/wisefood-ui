@@ -747,7 +747,7 @@ import {
   getFoodById,
   type DietaryGroup
 } from '~/utils/foodPreferences'
-import type { MemberProfile } from '~/services/householdsApi'
+import type { MemberProfile, NutritionalPreferences } from '~/services/householdsApi'
 
 definePageMeta({
   middleware: ['auth', 'profile']
@@ -794,20 +794,18 @@ const currentDietaryGroups = computed(() => {
   return memberProfile.value?.dietary_groups || []
 })
 
-// Food preferences from profile properties
+// Food preferences from nutritional_preferences
 const foodLikes = computed(() => {
-  const props = memberProfile.value?.properties as Record<string, unknown> | undefined
-  return (props?.food_likes as string[]) || []
+  return memberProfile.value?.nutritional_preferences?.food_likes || []
 })
 
 const foodDislikes = computed(() => {
-  const props = memberProfile.value?.properties as Record<string, unknown> | undefined
-  return (props?.food_dislikes as string[]) || []
+  return memberProfile.value?.nutritional_preferences?.food_dislikes || []
 })
 
+// Allergies are top-level in profile
 const allergies = computed(() => {
-  const props = memberProfile.value?.properties as Record<string, unknown> | undefined
-  return (props?.allergies as string[]) || []
+  return memberProfile.value?.allergies || []
 })
 
 const memberAvatarConfig = computed(() => {
@@ -875,8 +873,9 @@ const ageGroupLabel = computed(() => {
 })
 
 const memberSince = computed(() => {
-  if (!currentMember.value?.created_at) return 'Unknown'
-  const date = new Date(currentMember.value.created_at)
+  const dateStr = currentMember.value?.joined_at || currentMember.value?.created_at
+  if (!dateStr) return 'Unknown'
+  const date = new Date(dateStr)
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 })
 
@@ -962,7 +961,7 @@ async function loadMemberProfile() {
   if (!currentMember.value?.id) return
 
   try {
-    const response = await householdStore.updateMemberProfile(currentMember.value.id, {})
+    const response = await householdStore.getMemberProfile(currentMember.value.id)
     if (response) {
       memberProfile.value = response as MemberProfile
     }
@@ -970,8 +969,8 @@ async function loadMemberProfile() {
     // Profile might not exist yet
     memberProfile.value = {
       dietary_groups: [],
-      nutritional_preferences: {},
-      properties: {}
+      allergies: [],
+      nutritional_preferences: {}
     }
   }
 }
@@ -1015,14 +1014,10 @@ async function addDiet() {
   isSaving.value = true
   try {
     const newDiets = [...currentDietaryGroups.value, selectedNewDiet.value as DietaryGroup]
-    await householdStore.updateMemberProfile(currentMember.value.id, {
-      ...memberProfile.value,
-      dietary_groups: newDiets
-    })
-    memberProfile.value = {
-      ...memberProfile.value,
-      dietary_groups: newDiets
-    }
+    const payload = buildProfilePayload({ dietary_groups: newDiets })
+    await householdStore.updateMemberProfile(currentMember.value.id, payload)
+
+    memberProfile.value = { ...memberProfile.value, dietary_groups: newDiets }
     selectedNewDiet.value = null
     showAddDiet.value = false
   } catch (err) {
@@ -1038,18 +1033,25 @@ async function removeDiet(diet: string) {
   isSaving.value = true
   try {
     const newDiets = currentDietaryGroups.value.filter(d => d !== diet)
-    await householdStore.updateMemberProfile(currentMember.value.id, {
-      ...memberProfile.value,
-      dietary_groups: newDiets
-    })
-    memberProfile.value = {
-      ...memberProfile.value,
-      dietary_groups: newDiets
-    }
+    const payload = buildProfilePayload({ dietary_groups: newDiets })
+    await householdStore.updateMemberProfile(currentMember.value.id, payload)
+
+    memberProfile.value = { ...memberProfile.value, dietary_groups: newDiets }
   } catch (err) {
     console.error('Failed to remove diet:', err)
   } finally {
     isSaving.value = false
+  }
+}
+
+// Build the full profile payload, preserving properties (internal field) as-is
+function buildProfilePayload(overrides: Partial<MemberProfile>): MemberProfile {
+  return {
+    nutritional_preferences: memberProfile.value?.nutritional_preferences || {},
+    dietary_groups: memberProfile.value?.dietary_groups || [],
+    allergies: memberProfile.value?.allergies || [],
+    properties: memberProfile.value?.properties || {},
+    ...overrides
   }
 }
 
@@ -1058,23 +1060,20 @@ async function saveFoodPreferences() {
 
   isSaving.value = true
   try {
-    const props = (memberProfile.value?.properties || {}) as Record<string, unknown>
+    const nutPrefs: NutritionalPreferences = {
+      ...memberProfile.value?.nutritional_preferences
+    }
 
     if (foodPickerMode.value === 'likes') {
-      props.food_likes = [...foodLikes.value, ...selectedFoods.value]
+      nutPrefs.food_likes = [...foodLikes.value, ...selectedFoods.value]
     } else {
-      props.food_dislikes = [...foodDislikes.value, ...selectedFoods.value]
+      nutPrefs.food_dislikes = [...foodDislikes.value, ...selectedFoods.value]
     }
 
-    await householdStore.updateMemberProfile(currentMember.value.id, {
-      ...memberProfile.value,
-      properties: props
-    })
+    const payload = buildProfilePayload({ nutritional_preferences: nutPrefs })
+    await householdStore.updateMemberProfile(currentMember.value.id, payload)
 
-    memberProfile.value = {
-      ...memberProfile.value,
-      properties: props
-    }
+    memberProfile.value = { ...memberProfile.value, nutritional_preferences: nutPrefs }
 
     selectedFoods.value = []
     showFoodPicker.value = false
@@ -1090,18 +1089,15 @@ async function removeFoodLike(foodId: string) {
 
   isSaving.value = true
   try {
-    const props = (memberProfile.value?.properties || {}) as Record<string, unknown>
-    props.food_likes = foodLikes.value.filter(f => f !== foodId)
-
-    await householdStore.updateMemberProfile(currentMember.value.id, {
-      ...memberProfile.value,
-      properties: props
-    })
-
-    memberProfile.value = {
-      ...memberProfile.value,
-      properties: props
+    const nutPrefs: NutritionalPreferences = {
+      ...memberProfile.value?.nutritional_preferences,
+      food_likes: foodLikes.value.filter(f => f !== foodId)
     }
+
+    const payload = buildProfilePayload({ nutritional_preferences: nutPrefs })
+    await householdStore.updateMemberProfile(currentMember.value.id, payload)
+
+    memberProfile.value = { ...memberProfile.value, nutritional_preferences: nutPrefs }
   } catch (err) {
     console.error('Failed to remove food like:', err)
   } finally {
@@ -1114,18 +1110,15 @@ async function removeFoodDislike(foodId: string) {
 
   isSaving.value = true
   try {
-    const props = (memberProfile.value?.properties || {}) as Record<string, unknown>
-    props.food_dislikes = foodDislikes.value.filter(f => f !== foodId)
-
-    await householdStore.updateMemberProfile(currentMember.value.id, {
-      ...memberProfile.value,
-      properties: props
-    })
-
-    memberProfile.value = {
-      ...memberProfile.value,
-      properties: props
+    const nutPrefs: NutritionalPreferences = {
+      ...memberProfile.value?.nutritional_preferences,
+      food_dislikes: foodDislikes.value.filter(f => f !== foodId)
     }
+
+    const payload = buildProfilePayload({ nutritional_preferences: nutPrefs })
+    await householdStore.updateMemberProfile(currentMember.value.id, payload)
+
+    memberProfile.value = { ...memberProfile.value, nutritional_preferences: nutPrefs }
   } catch (err) {
     console.error('Failed to remove food dislike:', err)
   } finally {
@@ -1138,18 +1131,11 @@ async function addAllergy() {
 
   isSaving.value = true
   try {
-    const props = (memberProfile.value?.properties || {}) as Record<string, unknown>
-    props.allergies = [...allergies.value, selectedNewAllergy.value]
+    const newAllergies = [...allergies.value, selectedNewAllergy.value]
+    const payload = buildProfilePayload({ allergies: newAllergies })
+    await householdStore.updateMemberProfile(currentMember.value.id, payload)
 
-    await householdStore.updateMemberProfile(currentMember.value.id, {
-      ...memberProfile.value,
-      properties: props
-    })
-
-    memberProfile.value = {
-      ...memberProfile.value,
-      properties: props
-    }
+    memberProfile.value = { ...memberProfile.value, allergies: newAllergies }
 
     selectedNewAllergy.value = null
     showAddAllergy.value = false
@@ -1165,18 +1151,11 @@ async function removeAllergy(allergy: string) {
 
   isSaving.value = true
   try {
-    const props = (memberProfile.value?.properties || {}) as Record<string, unknown>
-    props.allergies = allergies.value.filter(a => a !== allergy)
+    const newAllergies = allergies.value.filter(a => a !== allergy)
+    const payload = buildProfilePayload({ allergies: newAllergies })
+    await householdStore.updateMemberProfile(currentMember.value.id, payload)
 
-    await householdStore.updateMemberProfile(currentMember.value.id, {
-      ...memberProfile.value,
-      properties: props
-    })
-
-    memberProfile.value = {
-      ...memberProfile.value,
-      properties: props
-    }
+    memberProfile.value = { ...memberProfile.value, allergies: newAllergies }
   } catch (err) {
     console.error('Failed to remove allergy:', err)
   } finally {
