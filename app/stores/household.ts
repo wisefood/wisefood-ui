@@ -231,7 +231,21 @@ export const useHouseholdStore = defineStore('household', {
         if (response.success) {
           return response.result
         }
-      } catch (err) {
+      } catch (err: unknown) {
+        // If profile doesn't exist yet, create it instead
+        const apiErr = err as { status?: number }
+        if (apiErr.status === 404) {
+          try {
+            const response = await householdsApi.createMemberProfile(memberId, profile)
+            if (response.success) {
+              return response.result
+            }
+          } catch (createErr) {
+            console.error('[HouseholdStore] Failed to create member profile:', createErr)
+            this.error = 'Failed to create profile'
+            throw createErr
+          }
+        }
         console.error('[HouseholdStore] Failed to update member profile:', err)
         this.error = 'Failed to update profile'
         throw err

@@ -146,6 +146,11 @@ class HouseholdsApiService {
     return { success: true, result }
   }
 
+  async createMemberProfile(memberId: string, data: MemberProfile): Promise<ApiResponse<MemberProfile>> {
+    const result = await wisefoodRestApi.post<MemberProfile, MemberProfile>(`/members/${memberId}/profile`, data)
+    return { success: true, result }
+  }
+
   async updateMemberProfile(memberId: string, data: MemberProfile): Promise<ApiResponse<MemberProfile>> {
     const result = await wisefoodRestApi.patch<MemberProfile, MemberProfile>(`/members/${memberId}/profile`, data)
     return { success: true, result }
