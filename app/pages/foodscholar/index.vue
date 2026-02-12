@@ -42,9 +42,9 @@
                 />
               </div>
               <div>
-                <p class="text-base font-semibold text-gray-900 dark:text-white">
-                  FoodScholar QA
-                </p>
+                <h2 class="text-3xl font-serif font-semibold text-gray-900 dark:text-white">
+                  {{ qaHeading }}
+                </h2>
                 <p class="text-xs text-gray-500 dark:text-gray-400">
                   Ask naturally. Get evidence-backed answers.
                 </p>
@@ -91,7 +91,7 @@
                 v-model="chatQuery"
                 :disabled="asking"
                 :placeholder="qaPlaceholder"
-                input-class="w-full h-12 pl-11 pr-16 rounded-2xl border border-white/80 dark:border-zinc-700/80 bg-gradient-to-r from-white/95 via-white/90 to-emerald-50/80 dark:from-zinc-900/95 dark:via-zinc-900/90 dark:to-zinc-800/80 backdrop-blur-md text-[15px] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 shadow-lg shadow-slate-900/5 dark:shadow-black/30 focus:outline-none focus:ring-4 focus:ring-brand-500/15 dark:focus:ring-brand-500/25 focus:border-brand-400/80 dark:focus:border-brand-500/70 transition-all duration-200"
+                input-class="w-full h-12 pl-11 pr-16 rounded-xl bg-transparent text-[15px] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
                 @enter="askScholarQA"
                 @focus="composerFocused = true"
                 @blur="composerFocused = false"
@@ -108,7 +108,7 @@
                     :disabled="asking"
                     class="chat-send-button h-10 w-10 flex items-center justify-center rounded-xl text-white disabled:opacity-50 shadow-md shadow-brand-700/20"
                     :class="[
-                      asking ? 'bg-brand-500/90' : 'bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700',
+                      'bg-brand-500',
                       !asking ? 'chat-send-idle' : ''
                     ]"
                     @click="askScholarQA()"
@@ -284,39 +284,40 @@
           </div>
 
           <div
-            v-if="qaResult && primaryAnswer"
+            v-if="asking"
             class="mt-6 space-y-4"
           >
-            <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400">
-              <p>Generated {{ formatDateTime(qaResult.generated_at) }}</p>
-              <div class="flex items-center gap-2">
-                <span class="px-2 py-1 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300">{{ qaResult.mode || qaMode }}</span>
-                <span
-                  :class="[
-                    'px-2 py-1 rounded-full font-medium',
-                    ragUsedForResponse
-                      ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
-                      : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200'
-                  ]"
-                >
-                  {{ ragUsedForResponse ? 'RAG On' : 'RAG Off' }}
-                </span>
-                <span
-                  :class="[
-                    'px-2 py-1 rounded-full font-medium',
-                    qaResult.cache_hit
-                      ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                      : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
-                  ]"
-                >
-                  {{ qaResult.cache_hit ? 'Cache Hit' : 'Fresh Response' }}
-                </span>
+            <div class="flex justify-end">
+              <div class="chat-flow-bubble chat-flow-bubble-user">
+                <p class="text-[10px] uppercase tracking-widest font-semibold text-brand-200 mb-1">You asked</p>
+                <p class="text-sm leading-relaxed">{{ chatQuery }}</p>
               </div>
             </div>
 
+            <div class="chat-flow-bubble chat-flow-bubble-assistant">
+              <div class="flex items-center justify-between mb-3">
+                <div class="h-4 w-16 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+                <div class="h-3 w-24 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+              </div>
+              <div class="space-y-2.5">
+                <div class="h-3 w-full rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+                <div class="h-3 w-11/12 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+                <div class="h-3 w-4/5 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+                <div class="h-3 w-full rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+                <div class="h-3 w-3/4 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+                <div class="h-3 w-5/6 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+                <div class="h-3 w-2/3 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+              </div>
+            </div>
+          </div>
+
+          <div
+            v-if="qaResult && primaryAnswer"
+            class="mt-6 space-y-4"
+          >
             <div class="flex justify-end">
               <div class="chat-flow-bubble chat-flow-bubble-user">
-                <p class="text-[10px] uppercase tracking-wide text-brand-100/80 mb-1">You asked</p>
+                <p class="text-[10px] uppercase tracking-widest font-semibold text-brand-200 mb-1">You asked</p>
                 <p class="text-sm leading-relaxed">{{ qaResult.question }}</p>
               </div>
             </div>
@@ -350,12 +351,12 @@
                 <div
                   v-if="!selectedPreferredAnswer || selectedPreferredAnswer === 'a'"
                   :class="[
-                    'chat-flow-bubble chat-flow-bubble-assistant transition-all duration-200',
-                    selectedPreferredAnswer
-                      ? 'p-5 rounded-2xl'
+                    'chat-flow-bubble chat-flow-bubble-assistant p-5 rounded-2xl transition-all duration-200',
+                    selectedPreferredAnswer === 'a'
+                      ? 'ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900'
                       : feedbackSubmitting
                         ? 'opacity-70 pointer-events-none'
-                        : 'cursor-pointer hover:ring-2 hover:ring-brand-300 dark:hover:ring-brand-700'
+                        : 'cursor-pointer hover:ring-2 hover:ring-brandp-300 hover:ring-offset-2 hover:ring-offset-white dark:hover:ring-brandp-600 dark:hover:ring-offset-zinc-900'
                   ]"
                   role="button"
                   tabindex="0"
@@ -383,12 +384,12 @@
                 <div
                   v-if="(!selectedPreferredAnswer || selectedPreferredAnswer === 'b') && secondaryAnswer"
                   :class="[
-                    'chat-flow-bubble chat-flow-bubble-assistant transition-all duration-200',
-                    selectedPreferredAnswer
-                      ? 'p-5 rounded-2xl'
+                    'chat-flow-bubble chat-flow-bubble-assistant p-5 rounded-2xl transition-all duration-200',
+                    selectedPreferredAnswer === 'b'
+                      ? 'ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900'
                       : feedbackSubmitting
                         ? 'opacity-70 pointer-events-none'
-                        : 'cursor-pointer hover:ring-2 hover:ring-brand-300 dark:hover:ring-brand-700'
+                        : 'cursor-pointer hover:ring-2 hover:ring-brandp-300 hover:ring-offset-2 hover:ring-offset-white dark:hover:ring-brandp-600 dark:hover:ring-offset-zinc-900'
                   ]"
                   role="button"
                   tabindex="0"
@@ -517,7 +518,7 @@
                   ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/30'
                   : 'bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700'
               ]"
-              @click="selectedCategory = category"
+              @click="selectCategory(category)"
             >
               {{ category }}
             </button>
@@ -683,6 +684,13 @@ interface ExpertiseOption {
 
 const AUTO_MODEL_VALUE = '__auto__'
 
+const qaHeadings = [
+  'What would you like to know?',
+  'Ask anything about food & nutrition',
+  'Your nutrition research companion'
+]
+const qaHeading = qaHeadings[Math.floor(Math.random() * qaHeadings.length)]
+
 const authStore = useAuthStore()
 const householdStore = useHouseholdStore()
 
@@ -795,16 +803,41 @@ const popularTopics = computed<TopicCard[]>(() => {
 })
 
 const filteredArticles = computed(() => {
-  let filtered = [...allArticles.value]
-
-  if (selectedCategory.value !== 'All') {
-    filtered = filtered.filter((article) => {
-      return article.category === selectedCategory.value || article.ai_category === selectedCategory.value
-    })
-  }
-
-  return filtered.slice(0, 8)
+  return allArticles.value.slice(0, 8)
 })
+
+const selectCategory = async (category: string) => {
+  selectedCategory.value = category
+  await loadArticlesForCategory(category)
+}
+
+const loadArticlesForCategory = async (category: string) => {
+  articlesLoading.value = true
+  articlesError.value = null
+
+  try {
+    const fq: string[] = category !== 'All'
+      ? [`(category:"${category}" OR ai_category:"${category}")`]
+      : []
+
+    const response = await articlesApi.searchArticles({
+      q: null,
+      limit: 6,
+      offset: 0,
+      sort: 'score desc',
+      fl: ['urn', 'title', 'authors', 'tags', 'ai_tags', 'abstract', 'description', 'venue', 'publication_year', 'category', 'ai_category'],
+      fq: fq.length ? fq : undefined,
+      fields: []
+    })
+
+    const results = response.result.results || []
+    allArticles.value = results.map(mapArticleToHome)
+  } catch (err: unknown) {
+    articlesError.value = getErrorMessage(err, 'Failed to load articles.')
+  } finally {
+    articlesLoading.value = false
+  }
+}
 
 const primaryAnswer = computed<QaAnswer | null>(() => qaResult.value?.primary_answer || null)
 const secondaryAnswer = computed<QaAnswer | null>(() => qaResult.value?.secondary_answer || null)
@@ -925,6 +958,7 @@ const askScholarQA = async (questionOverride?: string) => {
   }
 
   asking.value = true
+  qaResult.value = null
   qaError.value = null
   selectedPreferredAnswer.value = null
   singleAnswerFeedbackSubmitted.value = false
@@ -966,6 +1000,7 @@ const askScholarQA = async (questionOverride?: string) => {
     qaError.value = getErrorMessage(err, 'Failed to get a QA response from FoodScholar.')
   } finally {
     asking.value = false
+    chatQuery.value = ''
   }
 }
 
@@ -1145,8 +1180,8 @@ const renderMarkdown = (text: string): string => {
   if (!text) return ''
 
   const normalizedText = text
-    .replace(/\]\(\/articles\/(urn:article:[^)]+)\)/g, '](/foodscholar/catalog/$1)')
-    .replace(/\]\(\/foodscholar\/(urn:article:[^)]+)\)/g, '](/foodscholar/catalog/$1)')
+    .replace(/\]\(\/articles\/(urn:article:[^)]+)\)/g, '](/foodscholar/$1)')
+    .replace(/\]\(\/foodscholar\/(urn:article:[^)]+)\)/g, '](/foodscholar/$1)')
 
   const rawHtml = marked(normalizedText, {
     breaks: true,
@@ -1272,6 +1307,7 @@ onUnmounted(() => {
   font-family: 'Cormorant Garamond', Georgia, serif;
 }
 
+
 .scroll-fade-in {
   opacity: 0;
   transform: translateY(40px);
@@ -1289,21 +1325,34 @@ onUnmounted(() => {
   overflow: hidden;
   border-radius: 1rem;
   padding: 0.45rem;
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  background: linear-gradient(140deg, rgba(255, 255, 255, 0.5), rgba(236, 253, 245, 0.28));
-  backdrop-filter: blur(10px);
-  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, background 0.3s ease;
 }
 
 .dark .chat-composer {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: linear-gradient(140deg, rgba(24, 24, 27, 0.55), rgba(15, 23, 42, 0.38));
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(24, 24, 27, 0.6);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .chat-composer.is-focused {
   transform: translateY(-1px);
-  border-color: rgba(59, 130, 246, 0.35);
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(59, 130, 246, 0.08);
+  border-color: var(--color-brandp-300);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 0 0 3px var(--color-brandp-400 / 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.dark .chat-composer.is-focused {
+  border-color: var(--color-brandp-400);
+  background: rgba(24, 24, 27, 0.75);
+  box-shadow:
+    0 0 0 3px var(--color-brandp-400 / 0.18),
+    0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .chat-composer-accent {
@@ -1324,13 +1373,13 @@ onUnmounted(() => {
 .chat-composer-accent-left {
   top: -3.5rem;
   left: -2rem;
-  background: rgba(34, 197, 94, 0.26);
+  background: var(--color-brand-400 / 0.26);
 }
 
 .chat-composer-accent-right {
   bottom: -4rem;
   right: -2.2rem;
-  background: rgba(59, 130, 246, 0.2);
+  background: var(--color-brand-600 / 0.2);
 }
 
 .chat-send-button {
@@ -1363,22 +1412,22 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-:deep(.qa-answer-markdown a[href*="/foodscholar/catalog/"]) {
+:deep(.qa-answer-markdown a[href*="/foodscholar/urn:"]) {
   color: rgb(156 163 175);
   text-decoration: none;
   font-weight: 500;
 }
 
-:deep(.qa-answer-markdown a[href*="/foodscholar/catalog/"]:hover) {
+:deep(.qa-answer-markdown a[href*="/foodscholar/urn:"]:hover) {
   color: rgb(107 114 128);
   text-decoration: underline;
 }
 
-:deep(.dark .qa-answer-markdown a[href*="/foodscholar/catalog/"]) {
+:deep(.dark .qa-answer-markdown a[href*="/foodscholar/urn:"]) {
   color: rgb(161 161 170);
 }
 
-:deep(.dark .qa-answer-markdown a[href*="/foodscholar/catalog/"]:hover) {
+:deep(.dark .qa-answer-markdown a[href*="/foodscholar/urn:"]:hover) {
   color: rgb(212 212 216);
 }
 
