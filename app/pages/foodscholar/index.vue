@@ -434,36 +434,78 @@
 
               <div
                 v-if="singleAnswerFeedbackEnabled"
-                class="mt-4 flex items-center gap-2"
+                class="mt-4"
               >
-                <span class="text-xs text-gray-500 dark:text-gray-400">Was this helpful?</span>
-                <template v-if="!singleAnswerFeedbackSubmitted">
-                  <button
-                    :disabled="feedbackSubmitting"
-                    class="px-3 py-1.5 text-xs rounded-full border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-300 transition-colors disabled:opacity-50"
-                    @click="submitSingleAnswerFeedback(true)"
-                  >
-                    Yes
-                  </button>
-                  <button
-                    :disabled="feedbackSubmitting"
-                    class="px-3 py-1.5 text-xs rounded-full border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-300 transition-colors disabled:opacity-50"
-                    @click="submitSingleAnswerFeedback(false)"
-                  >
-                    No
-                  </button>
-                </template>
-                <template v-else>
-                  <UIcon
-                    name="i-lucide-check"
-                    class="w-4 h-4 text-emerald-600 dark:text-emerald-400"
-                  />
-                  <span
-                    class="text-xs font-medium text-emerald-700 dark:text-emerald-300"
-                  >
-                    Feedback saved
-                  </span>
-                </template>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-gray-500 dark:text-gray-400">Was this helpful?</span>
+                  <template v-if="!singleAnswerFeedbackSubmitted && !showNegativeFeedbackReasons">
+                    <button
+                      :disabled="feedbackSubmitting"
+                      class="px-3 py-1.5 text-xs rounded-full border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-300 transition-colors disabled:opacity-50"
+                      @click="submitSingleAnswerFeedback(true)"
+                    >
+                      Yes
+                    </button>
+                    <button
+                      :disabled="feedbackSubmitting"
+                      class="px-3 py-1.5 text-xs rounded-full border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-300 transition-colors disabled:opacity-50"
+                      @click="submitSingleAnswerFeedback(false)"
+                    >
+                      No
+                    </button>
+                  </template>
+                  <template v-else-if="singleAnswerFeedbackSubmitted">
+                    <UIcon
+                      name="i-lucide-check"
+                      class="w-4 h-4 text-emerald-600 dark:text-emerald-400"
+                    />
+                    <span
+                      class="text-xs font-medium text-emerald-700 dark:text-emerald-300"
+                    >
+                      Feedback saved
+                    </span>
+                  </template>
+                </div>
+
+                <div
+                  v-if="showNegativeFeedbackReasons && !singleAnswerFeedbackSubmitted"
+                  class="mt-3 space-y-3"
+                >
+                  <p class="text-xs text-gray-500 dark:text-gray-400">What went wrong?</p>
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      v-for="reason in negativeFeedbackReasons"
+                      :key="reason"
+                      :disabled="feedbackSubmitting"
+                      :class="[
+                        'px-3 py-1.5 text-xs rounded-full border transition-colors disabled:opacity-50',
+                        selectedNegativeReason === reason
+                          ? 'border-red-500 bg-red-50 text-red-700 dark:border-red-400 dark:bg-red-900/30 dark:text-red-300'
+                          : 'border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-red-400 hover:bg-red-50 hover:text-red-700 dark:hover:border-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-300'
+                      ]"
+                      @click="selectNegativeReason(reason)"
+                    >
+                      {{ reason }}
+                    </button>
+                  </div>
+
+                  <div v-if="selectedNegativeReason">
+                    <textarea
+                      v-model="negativeFeedbackComment"
+                      :disabled="feedbackSubmitting"
+                      rows="2"
+                      placeholder="Add a comment (optional)"
+                      class="w-full px-3 py-2 text-xs rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400 resize-none disabled:opacity-50"
+                    />
+                    <button
+                      :disabled="feedbackSubmitting"
+                      class="mt-2 px-4 py-1.5 text-xs font-medium rounded-full bg-brand-500 text-white hover:bg-brand-600 transition-colors disabled:opacity-50"
+                      @click="submitNegativeFeedback()"
+                    >
+                      Submit feedback
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -729,6 +771,18 @@ const expertiseLevel = ref('intermediate')
 const feedbackSubmitting = ref(false)
 const selectedPreferredAnswer = ref<'a' | 'b' | null>(null)
 const singleAnswerFeedbackSubmitted = ref(false)
+const showNegativeFeedbackReasons = ref(false)
+const selectedNegativeReason = ref<string | null>(null)
+const negativeFeedbackComment = ref('')
+
+const negativeFeedbackReasons = [
+  'Inaccurate or incomplete',
+  'Not what I asked',
+  'Missing or poor quality content',
+  'Too slow or had errors',
+  'Wrong tone or style',
+  'Safety or legal concern'
+]
 
 const quickQuestions = [
   'What is omega-3 and why is it important?',
@@ -976,6 +1030,9 @@ const askScholarQA = async (questionOverride?: string) => {
   qaError.value = null
   selectedPreferredAnswer.value = null
   singleAnswerFeedbackSubmitted.value = false
+  showNegativeFeedbackReasons.value = false
+  selectedNegativeReason.value = null
+  negativeFeedbackComment.value = ''
 
   try {
     const payload: QaAskRequest = {
@@ -1044,18 +1101,55 @@ const submitDualAnswerFeedback = async (preferredAnswer: 'a' | 'b') => {
 const submitSingleAnswerFeedback = async (helpful: boolean) => {
   if (!feedbackRequestId.value || feedbackSubmitting.value) return
 
+  if (!helpful) {
+    showNegativeFeedbackReasons.value = true
+    return
+  }
+
   feedbackSubmitting.value = true
 
   try {
     await foodscholarApi.submitFeedback({
       request_id: feedbackRequestId.value,
       preferred_answer: 'a',
-      helpfulness: helpful ? 'helpful' : 'not_helpful',
+      helpfulness: 'helpful',
       target_answer: 'overall',
-      reason: helpful ? 'User marked single answer as helpful.' : 'User marked single answer as not helpful.'
+      reason: 'User marked single answer as helpful.'
     })
 
     singleAnswerFeedbackSubmitted.value = true
+  } catch (err: unknown) {
+    qaError.value = getErrorMessage(err, 'Failed to submit feedback.')
+  } finally {
+    feedbackSubmitting.value = false
+  }
+}
+
+const selectNegativeReason = (reason: string) => {
+  selectedNegativeReason.value = reason
+}
+
+const submitNegativeFeedback = async () => {
+  if (!feedbackRequestId.value || feedbackSubmitting.value || !selectedNegativeReason.value) return
+
+  feedbackSubmitting.value = true
+
+  const comment = negativeFeedbackComment.value.trim()
+  const reason = comment
+    ? `${selectedNegativeReason.value}: ${comment}`
+    : selectedNegativeReason.value
+
+  try {
+    await foodscholarApi.submitFeedback({
+      request_id: feedbackRequestId.value,
+      preferred_answer: 'a',
+      helpfulness: 'not_helpful',
+      target_answer: 'overall',
+      reason
+    })
+
+    singleAnswerFeedbackSubmitted.value = true
+    showNegativeFeedbackReasons.value = false
   } catch (err: unknown) {
     qaError.value = getErrorMessage(err, 'Failed to submit feedback.')
   } finally {
