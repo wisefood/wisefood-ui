@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
     <!-- Header -->
     <div class="border-b border-gray-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-20">
-      <div class="max-w-7xl mx-auto px-4 py-6">
+      <div class="w-full px-4 sm:px-6 lg:px-8 py-6">
         <NuxtLink
           to="/foodscholar/catalog"
           class="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
@@ -37,7 +37,7 @@
     </div>
 
     <!-- Main Content -->
-    <main v-else-if="article" class="max-w-7xl mx-auto px-4 py-12">
+    <main v-else-if="article" class="w-full px-4 sm:px-6 lg:px-8 py-12">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Article Content (Left 2/3) -->
         <div class="lg:col-span-2 space-y-8">

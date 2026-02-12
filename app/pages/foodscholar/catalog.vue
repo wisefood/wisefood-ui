@@ -581,9 +581,9 @@ interface AnnotatedFacet {
 }
 
 const exampleQueries = [
-  "gut microbiome research",
-  "sustainable protein alternatives",
-  "vitamin D deficiency studies",
+  "what is omega-3",
+  "examples of fermented foods",
+  "foods high in vitamin D",
 ]
 
 // Markdown rendering function with sanitization

@@ -1,6 +1,6 @@
 <template>
     <div class="border-b border-gray-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-10">
-        <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="w-full px-4 sm:px-6 lg:px-8 py-6">
             <!-- Back link row (kept on its own line) -->
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
