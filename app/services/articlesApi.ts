@@ -1,6 +1,47 @@
 import wisefoodApi from './wisefoodApi'
 import type { RequestOptions } from './wisefoodApi'
 
+// Glossary term definition
+export interface GlossaryTerm {
+  term: string
+  definition: string
+  rationale?: string
+}
+
+// Q&A item for different audience levels
+export interface QAItem {
+  question: string
+  answer: string
+  grounding?: string
+}
+
+// Article evaluation metrics
+export interface ArticleEvaluation {
+  safety_sensitivity?: string
+  actionability_score?: number
+  user_value_score?: number
+  verdict?: string[]
+  recommended_user_framing?: string
+}
+
+// Article annotations (AI-generated insights)
+export interface ArticleAnnotations {
+  glosary?: GlossaryTerm[]  // Note: API has typo "glosary"
+  abstract?: string  // Simplified abstract
+  user_qa?: QAItem[]
+  practitioner_qa?: QAItem[]
+  expert_qa?: QAItem[]
+}
+
+// Article extras containing enriched metadata
+export interface ArticleExtras {
+  population_group?: string
+  study_type?: string
+  reader_group?: string
+  evaluation?: ArticleEvaluation
+  annotations?: ArticleAnnotations
+}
+
 export interface Article {
   // Base fields (from BaseSchema)
   id: number // Internal database ID
@@ -35,6 +76,9 @@ export interface Article {
   ai_category?: string | null
   key_takeaways: string[]
   ai_key_takeaways: string[]
+
+  // Extras field with enriched metadata
+  extras?: ArticleExtras
 
   // Optional computed/frontend fields (not from backend schema)
   readTime?: number
