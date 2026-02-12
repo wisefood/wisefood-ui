@@ -29,8 +29,7 @@
 
     <main class="max-w-7xl mx-auto px-4 py-6">
       <section
-        class="mb-12 scroll-fade-in"
-        style="--delay: 0.05s"
+        class="mb-12"
       >
         <div class="w-full">
           <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -376,6 +375,7 @@
                   </div>
                   <div
                     class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none"
+                  @click="handleMarkdownClick"
                     style="--answer-reveal-delay: 40ms"
                     v-html="renderMarkdown(primaryAnswer.answer)"
                   />
@@ -409,6 +409,7 @@
                   </div>
                   <div
                     class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none"
+                  @click="handleMarkdownClick"
                     style="--answer-reveal-delay: 120ms"
                     v-html="renderMarkdown(secondaryAnswer.answer)"
                   />
@@ -427,6 +428,7 @@
               <div
                 class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none"
                 style="--answer-reveal-delay: 40ms"
+                @click="handleMarkdownClick"
                 v-html="renderMarkdown(primaryAnswer.answer)"
               />
 
@@ -489,8 +491,7 @@
 
       <section
         id="popular-articles"
-        class="mb-16 scroll-fade-in"
-        style="--delay: 0.25s"
+        class="mb-16"
       >
         <div class="mb-8">
           <div class="flex items-center justify-between">
@@ -567,8 +568,7 @@
       </section>
 
       <section
-        class="scroll-fade-in bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/20 dark:to-brand-800/20 border border-brand-200 dark:border-brand-800 rounded-3xl p-8 sm:p-12 mb-12"
-        style="--delay: 0.3s"
+        class="bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/20 dark:to-brand-800/20 border border-brand-200 dark:border-brand-800 rounded-3xl p-8 sm:p-12 mb-12"
       >
         <h2 class="text-3xl font-serif font-semibold mb-8 text-gray-900 dark:text-white">
           Popular Topics
@@ -609,6 +609,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import articlesApi, { type Article } from '~/services/articlesApi'
@@ -691,8 +692,21 @@ const qaHeadings = [
 ]
 const qaHeading = qaHeadings[Math.floor(Math.random() * qaHeadings.length)]
 
+const router = useRouter()
 const authStore = useAuthStore()
 const householdStore = useHouseholdStore()
+
+const handleMarkdownClick = (event: MouseEvent) => {
+  const anchor = (event.target as HTMLElement).closest('a')
+  if (!anchor) return
+
+  const href = anchor.getAttribute('href')
+  if (!href || !href.includes('/foodscholar/urn:')) return
+
+  event.preventDefault()
+  event.stopPropagation()
+  router.push(href)
+}
 
 const selectedCategory = ref('All')
 const articlesLoading = ref(false)
