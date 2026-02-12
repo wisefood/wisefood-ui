@@ -808,7 +808,11 @@ const filteredArticles = computed(() => {
 
 const selectCategory = async (category: string) => {
   selectedCategory.value = category
-  await loadArticlesForCategory(category)
+  if (category === 'All') {
+    await loadPopularArticles()
+  } else {
+    await loadArticlesForCategory(category)
+  }
 }
 
 const loadArticlesForCategory = async (category: string) => {
@@ -816,17 +820,13 @@ const loadArticlesForCategory = async (category: string) => {
   articlesError.value = null
 
   try {
-    const fq: string[] = category !== 'All'
-      ? [`(category:"${category}" OR ai_category:"${category}")`]
-      : []
-
     const response = await articlesApi.searchArticles({
       q: null,
-      limit: 6,
+      limit: 24,
       offset: 0,
-      sort: 'score desc',
-      fl: ['urn', 'title', 'authors', 'tags', 'ai_tags', 'abstract', 'description', 'venue', 'publication_year', 'category', 'ai_category'],
-      fq: fq.length ? fq : undefined,
+      sort: 'created_at desc',
+      fl: ['id', 'urn', 'title', 'abstract', 'description', 'content', 'authors', 'tags', 'ai_tags', 'venue', 'publication_year', 'category', 'ai_category'],
+      fq: [`(category:"${category}" OR ai_category:"${category}")`],
       fields: []
     })
 
@@ -846,9 +846,9 @@ const isAdvancedMode = computed(() => qaMode.value === 'advanced')
 const ragUsedForResponse = computed(() => primaryAnswer.value?.rag_used ?? ragEnabled.value)
 const qaPlaceholder = computed(() => {
   if (isAdvancedMode.value) {
-    return 'Ask a detailed research question (advanced controls enabled)'
+    return 'Ask anything about food & nutrition (advanced controls enabled)'
   }
-  return 'Ask a research question (e.g. Is depression affecting sleep duration and quality?)'
+  return 'What would you like to know about food & nutrition?'
 })
 
 const answerALabel = computed(() => qaResult.value?.dual_answer_feedback?.answer_a_label || 'Primary model response')
@@ -1179,9 +1179,10 @@ const mapArticleToHome = (article: Article): HomeArticle => {
 const renderMarkdown = (text: string): string => {
   if (!text) return ''
 
+  const base = useRuntimeConfig().app.baseURL?.replace(/\/$/, '') || ''
   const normalizedText = text
-    .replace(/\]\(\/articles\/(urn:article:[^)]+)\)/g, '](/foodscholar/$1)')
-    .replace(/\]\(\/foodscholar\/(urn:article:[^)]+)\)/g, '](/foodscholar/$1)')
+    .replace(/\]\(\/articles\/(urn:article:[^)]+)\)/g, `](${base}/foodscholar/$1)`)
+    .replace(/\]\(\/foodscholar\/(urn:article:[^)]+)\)/g, `](${base}/foodscholar/$1)`)
 
   const rawHtml = marked(normalizedText, {
     breaks: true,
