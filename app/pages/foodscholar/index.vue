@@ -263,7 +263,10 @@
             </div>
           </div>
 
-          <div class="mt-4 flex flex-wrap gap-2">
+          <div
+            v-if="quickQuestions.length"
+            class="mt-4 flex flex-wrap gap-2"
+          >
             <button
               v-for="quickQ in quickQuestions"
               :key="quickQ"
@@ -784,12 +787,7 @@ const negativeFeedbackReasons = [
   'Safety or legal concern'
 ]
 
-const quickQuestions = [
-  'What is omega-3 and why is it important?',
-  'What are examples of fermented foods?',
-  'How can I reduce food waste at home?',
-  'Which foods are high in vitamin D?'
-]
+const quickQuestions = ref<string[]>([])
 
 const topKOptions: TopKOption[] = [
   { value: 3, label: 'Focused (3)', description: 'Fast answer using the most relevant sources only.', icon: 'i-lucide-zap' },
@@ -1017,6 +1015,16 @@ const loadQaModels = async () => {
   }
 }
 
+const loadQaQuestions = async () => {
+  try {
+    const result = await foodscholarApi.listQuestions()
+    quickQuestions.value = normalizeQuestionList(result)
+  } catch (err) {
+    console.warn('Failed to fetch QA suggested questions', err)
+    quickQuestions.value = []
+  }
+}
+
 const askScholarQA = async (questionOverride?: string) => {
   const question = (questionOverride ?? chatQuery.value).trim()
   if (!question || asking.value) return
@@ -1160,6 +1168,24 @@ const submitNegativeFeedback = async () => {
 const askQuickQuestion = (question: string) => {
   chatQuery.value = question
   askScholarQA(question)
+}
+
+const normalizeQuestionList = (result: { questions?: unknown } | string[] | null | undefined): string[] => {
+  if (Array.isArray(result)) {
+    return result
+      .filter((question): question is string => typeof question === 'string')
+      .map(question => question.trim())
+      .filter(Boolean)
+  }
+
+  const rawQuestions = (result && typeof result === 'object' && Array.isArray(result.questions))
+    ? result.questions
+    : []
+
+  return rawQuestions
+    .filter((question): question is string => typeof question === 'string')
+    .map(question => question.trim())
+    .filter(Boolean)
 }
 
 const normalizeModelList = (result: string[] | Record<string, unknown>): string[] => {
@@ -1398,7 +1424,8 @@ const setupObserver = () => {
 onMounted(async () => {
   await Promise.all([
     loadPopularArticles(),
-    loadQaModels()
+    loadQaModels(),
+    loadQaQuestions()
   ])
 
   setupObserver()
@@ -1415,7 +1442,6 @@ onUnmounted(() => {
 .font-serif {
   font-family: 'Cormorant Garamond', Georgia, serif;
 }
-
 
 .scroll-fade-in {
   opacity: 0;

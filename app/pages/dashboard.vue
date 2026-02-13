@@ -77,44 +77,45 @@
 
       <!-- Today's Spotlight & Meal Schedule -->
       <div class="mb-12 scroll-fade-in grid grid-cols-1 lg:grid-cols-3 gap-6" style="--delay: 0.2s">
-        <!-- Recipe Spotlight Card -->
-        <div class="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 shadow-xl lg:col-span-1">
-          <!-- Image Section -->
-          <div class="relative h-40 bg-gradient-to-br from-brand-100 to-brand-200 dark:from-brand-900/40 dark:to-brand-800/40">
-            <div class="absolute inset-0 flex items-center justify-center">
-              <UIcon name="i-lucide-sparkles" class="w-16 h-16 text-brand-500 opacity-50" />
-            </div>
-            <div class="absolute top-3 left-3">
-              <UBadge color="primary" variant="solid" size="sm">{{ t('dashboard.spotlight.badge') }}</UBadge>
-            </div>
-          </div>
-
+        <!-- FoodScholar Insight Card -->
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800 border border-gray-200 dark:border-zinc-700 shadow-[0_12px_28px_rgba(15,23,42,0.10)] lg:col-span-1">
           <!-- Content Section -->
           <div class="p-5">
-            <h2 class="text-xl font-light text-gray-900 dark:text-white mb-2">
-              {{ spotlight.title }}
-            </h2>
-            <p class="text-sm text-gray-600 dark:text-gray-300 font-light mb-4 leading-relaxed">
-              {{ spotlight.description }}
-            </p>
-            <div class="flex flex-col gap-2">
-              <UButton
-                color="primary"
-                size="sm"
-                trailing-icon="i-lucide-arrow-right"
-                class="cursor-pointer"
-              >
-                {{ t('dashboard.spotlight.exploreRecipe') }}
-              </UButton>
-              <UButton
-                variant="outline"
-                size="sm"
-                leading-icon="i-lucide-bookmark"
-                class="cursor-pointer"
-              >
-                {{ t('dashboard.spotlight.save') }}
-              </UButton>
+            <div class="flex items-center justify-between mb-2">
+              <UBadge color="primary" variant="solid" size="sm">
+                {{ t('dashboard.spotlight.badge') }}
+              </UBadge>
+              <UIcon name="i-lucide-lightbulb" class="w-5 h-5 text-brand-500" />
             </div>
+            <h2 class="text-xl font-light text-gray-900 dark:text-white mb-2">
+              {{ activeInsightTitle }}
+            </h2>
+            <div class="relative h-24 mb-4 overflow-hidden">
+              <Transition name="insight-slide" mode="out-in">
+                <div
+                  :key="`insight-${activeInsightIndex}`"
+                  class="h-full flex flex-col justify-start"
+                >
+                  <p class="text-gray-700 dark:text-gray-200 leading-relaxed insight-text-clamp insight-tip-emphasis">
+                    {{ activeInsight.text }}
+                  </p>
+                </div>
+              </Transition>
+            </div>
+            <div class="flex items-center gap-1.5 mb-3">
+              <span
+                v-for="(_, idx) in insightSlidesForDisplay"
+                :key="`insight-dot-${idx}`"
+                class="h-1.5 rounded-full transition-all duration-300"
+                :class="idx === activeInsightIndex ? 'w-5 bg-brand-500' : 'w-1.5 bg-gray-300 dark:bg-zinc-600'"
+              />
+            </div>
+            <NuxtLink
+              to="/foodscholar"
+              class="text-sm font-medium text-brand-600 dark:text-brand-400 hover:underline"
+            >
+              {{ t('dashboard.insights.learnMore') }} →
+            </NuxtLink>
           </div>
         </div>
 
@@ -220,8 +221,8 @@
               <UIcon name="i-lucide-lightbulb" class="w-6 h-6 text-white" />
             </div>
             <div class="flex-1">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-1">{{ t('dashboard.insights.didYouKnow') }}</h3>
-              <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">{{ discoveries[0].summary }}</p>
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-1">{{ activeInsightTitle }}</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">{{ activeInsight.text }}</p>
               <NuxtLink to="/foodscholar" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
                 {{ t('dashboard.insights.learnMore') }} →
               </NuxtLink>
@@ -256,6 +257,7 @@ import { onMounted, onUnmounted, ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useHouseholdStore } from '@/stores/household'
+import foodscholarApi, { type QaTipsResult } from '~/services/foodscholarApi'
 
 const { t } = useI18n()
 
@@ -292,7 +294,51 @@ const userGreeting = computed(() => {
   return t('dashboard.friend')
 })
 
-const { hero, greeting, encouragement, spotlight, trendingRecipes, rings, sustainability, discoveries } = useDashboardData()
+const { greeting, encouragement, trendingRecipes, rings, sustainability, discoveries } = useDashboardData()
+
+type InsightKind = 'did_you_know' | 'tip'
+
+interface InsightSlide {
+  kind: InsightKind
+  text: string
+}
+
+const insightSlides = ref<InsightSlide[]>([])
+const activeInsightIndex = ref(0)
+const insightRotationMs = 5500
+
+const fallbackInsightSlides = computed<InsightSlide[]>(() => {
+  const fallbackSummary = discoveries[0]?.summary?.trim()
+  if (!fallbackSummary) return []
+
+  return [{
+    kind: 'did_you_know',
+    text: fallbackSummary
+  }]
+})
+
+const insightSlidesForDisplay = computed<InsightSlide[]>(() => {
+  return insightSlides.value.length ? insightSlides.value : fallbackInsightSlides.value
+})
+
+const activeInsight = computed<InsightSlide>(() => {
+  const slides = insightSlidesForDisplay.value
+  if (!slides.length) {
+    return {
+      kind: 'did_you_know',
+      text: ''
+    }
+  }
+
+  const safeIndex = activeInsightIndex.value % slides.length
+  return slides[safeIndex]
+})
+
+const activeInsightTitle = computed(() => {
+  return activeInsight.value.kind === 'tip'
+    ? t('dashboard.insights.tipsOfTheDay')
+    : t('dashboard.insights.didYouKnow')
+})
 
 // Current date and time
 const currentTime = ref(new Date())
@@ -379,8 +425,69 @@ const upcomingMeals = computed(() => {
 
 // Update time every minute
 let timeInterval: NodeJS.Timeout | null = null
+let insightInterval: NodeJS.Timeout | null = null
 
 let observer: IntersectionObserver | null = null
+
+const normalizeTipText = (value: unknown): string[] => {
+  if (!Array.isArray(value)) return []
+
+  return value
+    .filter((item): item is string => typeof item === 'string')
+    .map(item => item.trim())
+    .filter(Boolean)
+}
+
+const normalizeInsightSlides = (result: QaTipsResult | null | undefined): InsightSlide[] => {
+  const didYouKnow = normalizeTipText(result?.did_you_know).map(text => ({
+    kind: 'did_you_know' as const,
+    text
+  }))
+  const tips = normalizeTipText(result?.tips).map(text => ({
+    kind: 'tip' as const,
+    text
+  }))
+
+  const merged: InsightSlide[] = []
+  const maxLength = Math.max(didYouKnow.length, tips.length)
+
+  for (let index = 0; index < maxLength; index += 1) {
+    if (didYouKnow[index]) merged.push(didYouKnow[index])
+    if (tips[index]) merged.push(tips[index])
+  }
+
+  return merged
+}
+
+const restartInsightRotation = () => {
+  if (insightInterval) {
+    clearInterval(insightInterval)
+    insightInterval = null
+  }
+
+  const slideCount = insightSlidesForDisplay.value.length
+  if (slideCount <= 1) return
+
+  insightInterval = setInterval(() => {
+    const currentCount = insightSlidesForDisplay.value.length
+    if (!currentCount) return
+
+    activeInsightIndex.value = (activeInsightIndex.value + 1) % currentCount
+  }, insightRotationMs)
+}
+
+const loadFoodScholarInsights = async () => {
+  try {
+    const response = await foodscholarApi.listTips()
+    insightSlides.value = normalizeInsightSlides(response)
+  } catch (err) {
+    console.warn('Failed to fetch FoodScholar tips', err)
+    insightSlides.value = []
+  } finally {
+    activeInsightIndex.value = 0
+    restartInsightRotation()
+  }
+}
 
 onMounted(() => {
   const observerOptions = {
@@ -406,12 +513,17 @@ onMounted(() => {
   timeInterval = setInterval(() => {
     currentTime.value = new Date()
   }, 60000)
+
+  loadFoodScholarInsights()
 })
 
 onUnmounted(() => {
   observer?.disconnect()
   if (timeInterval) {
     clearInterval(timeInterval)
+  }
+  if (insightInterval) {
+    clearInterval(insightInterval)
   }
 })
 </script>
@@ -433,6 +545,35 @@ onUnmounted(() => {
 .scroll-fade-in.is-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+.insight-slide-enter-active,
+.insight-slide-leave-active {
+  transition: opacity 0.38s ease, transform 0.38s ease;
+}
+
+.insight-slide-enter-from {
+  opacity: 0;
+  transform: translateX(14px);
+}
+
+.insight-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-14px);
+}
+
+.insight-text-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.insight-tip-emphasis {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 html { scroll-behavior: smooth; }

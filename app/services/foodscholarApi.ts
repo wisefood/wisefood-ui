@@ -63,6 +63,19 @@ export interface QaAskResult {
   request_id?: string
 }
 
+export interface QaQuestionsResult {
+  questions: string[]
+  generated_at?: string
+  cache_hit?: boolean
+}
+
+export interface QaTipsResult {
+  did_you_know: string[]
+  tips: string[]
+  generated_at?: string
+  cache_hit?: boolean
+}
+
 export interface QaFeedbackRequest {
   request_id: string
   preferred_answer: 'a' | 'b'
@@ -84,6 +97,14 @@ class FoodScholarApiService {
 
   async listModels(): Promise<string[] | Record<string, unknown>> {
     return wisefoodRestApi.get<string[] | Record<string, unknown>>(`${this.basePath}/models`)
+  }
+
+  async listQuestions(): Promise<QaQuestionsResult> {
+    return wisefoodRestApi.get<QaQuestionsResult>(`${this.basePath}/questions`)
+  }
+
+  async listTips(): Promise<QaTipsResult> {
+    return wisefoodRestApi.get<QaTipsResult>(`${this.basePath}/tips`)
   }
 }
 
