@@ -134,6 +134,144 @@
                 <span class="text-xs text-gray-400 font-light">{{ formatPlanDate(latestMealPlan.created_at) }}</span>
               </div>
 
+              <div class="px-6 py-4 border-b border-gray-100 dark:border-zinc-700/50">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">Apply this plan to members</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Choose members and date</p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <UPopover :content="{ align: 'end', side: 'bottom', sideOffset: 8 }">
+                      <UButton
+                        color="neutral"
+                        variant="outline"
+                        size="sm"
+                        icon="i-lucide-calendar"
+                      >
+                        {{ selectedApplyDate }}
+                      </UButton>
+                      <template #content>
+                        <div class="p-2">
+                          <UCalendar
+                            v-model="selectedApplyDateValue"
+                            :min-value="minApplyDateValue"
+                            :year-controls="true"
+                          />
+                        </div>
+                      </template>
+                    </UPopover>
+                    <UPopover :content="{ align: 'end', side: 'bottom', sideOffset: 8 }">
+                      <UButton
+                        color="neutral"
+                        variant="outline"
+                        size="sm"
+                        icon="i-lucide-users"
+                        trailing-icon="i-lucide-chevron-down"
+                      >
+                        {{ selectedMembersLabel }}
+                      </UButton>
+                      <template #content>
+                        <div class="w-72 p-3">
+                          <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-medium text-gray-900 dark:text-white">Select members</p>
+                            <div class="flex items-center gap-1.5">
+                              <UButton variant="ghost" size="xs" color="neutral" @click="selectOnlyCurrentMember">
+                                Only me
+                              </UButton>
+                              <UButton variant="ghost" size="xs" color="neutral" @click="selectAllMembers">
+                                All
+                              </UButton>
+                            </div>
+                          </div>
+
+                          <div v-if="householdMembers.length === 0" class="text-xs text-gray-500 dark:text-gray-400 py-2">
+                            No household members found.
+                          </div>
+
+                          <div v-else class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                            <div
+                              v-for="member in householdMembers"
+                              :key="member.id"
+                              class="flex items-center gap-3 px-2 py-1.5 rounded-lg transition-colors"
+                              :class="isCurrentMember(member.id)
+                                ? 'bg-brandp-50/70 dark:bg-brandp-900/20'
+                                : 'hover:bg-gray-50 dark:hover:bg-zinc-700/40 cursor-pointer'"
+                              @click="toggleApplyMember(member.id, !isApplyMemberSelected(member.id))"
+                            >
+                              <UCheckbox
+                                :model-value="isApplyMemberSelected(member.id)"
+                                :disabled="isCurrentMember(member.id)"
+                                @click.stop
+                                @update:model-value="(checked) => toggleApplyMember(member.id, checked)"
+                              />
+
+                              <ProfileAvatar
+                                v-if="getMemberAvatar(member)"
+                                :avatar="getMemberAvatar(member)!"
+                                size="sm"
+                                class="w-8 h-8 shrink-0"
+                              />
+                              <div
+                                v-else
+                                class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white text-xs font-semibold flex items-center justify-center shrink-0"
+                              >
+                                {{ memberInitials(member.name) }}
+                              </div>
+
+                              <div class="min-w-0 flex-1">
+                                <p class="text-sm text-gray-900 dark:text-white truncate">{{ member.name }}</p>
+                              </div>
+
+                              <UBadge v-if="isCurrentMember(member.id)" color="primary" variant="subtle" size="xs">
+                                Main
+                              </UBadge>
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+                    </UPopover>
+
+                    <UButton
+                      color="primary"
+                      size="sm"
+                      icon="i-lucide-check"
+                      :loading="applyingMealPlan"
+                      :disabled="!canApplyMealPlan"
+                      @click="applyMealPlanToMembers"
+                    >
+                      Apply
+                    </UButton>
+                    <UButton
+                      color="neutral"
+                      variant="ghost"
+                      size="sm"
+                      icon="i-lucide-undo-2"
+                      :loading="revokingMealPlan"
+                      :disabled="!canRevokeMealPlan"
+                      @click="revokeMealPlanFromMembers"
+                    >
+                      Revoke
+                    </UButton>
+                    <div
+                      v-if="applySuccess"
+                      class="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400"
+                    >
+                      <UIcon name="i-lucide-check" class="w-3.5 h-3.5" />
+                      <span>{{ applySuccess }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <UAlert
+                  v-if="applyError"
+                  class="mt-3"
+                  color="red"
+                  variant="soft"
+                  icon="i-lucide-alert-circle"
+                  :title="applyError"
+                />
+              </div>
+
               <!-- Meals grid -->
               <div
                 class="grid gap-px bg-gray-100 dark:bg-zinc-700/30"
@@ -159,13 +297,6 @@
                   time="19:30"
                   icon="i-lucide-moon"
                   :recipe="latestMealPlan.dinner"
-                />
-                <FoodchatMealScheduleCard
-                  v-if="latestMealPlan.snack"
-                  type="Snack"
-                  time="16:00"
-                  icon="i-lucide-cookie"
-                  :recipe="latestMealPlan.snack"
                 />
               </div>
 
@@ -233,9 +364,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, nextTick, onMounted } from 'vue'
+import { ref, reactive, computed, nextTick, onMounted, watch } from 'vue'
 import { useFoodChat } from '~/composables/useFoodChat'
-import type { MealPlan } from '~/services/foodchatApi'
+import { useHouseholdStore } from '~/stores/household'
+import type { MealPlan, MealRecipe } from '~/services/foodchatApi'
+import { today, getLocalTimeZone, type DateValue } from '@internationalized/date'
+import memberMealPlansApi, {
+  extractSourceMealPlanIdFromMemberMealPlanResponse,
+  extractStoredMealPlanIdFromMemberMealPlanResponse
+} from '~/services/memberMealPlansApi'
+import type { HouseholdMember } from '~/services/householdsApi'
+import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
 
 definePageMeta({
   layout: 'default',
@@ -256,12 +395,52 @@ const {
   clearError
 } = useFoodChat()
 
+const householdStore = useHouseholdStore()
+
 const inputText = ref('')
 const inputRef = ref<HTMLTextAreaElement | null>(null)
 const planVotes = reactive<Record<string, 'up' | 'down' | null>>({})
+const selectedApplyMemberIds = ref<string[]>([])
+const applyingMealPlan = ref(false)
+const revokingMealPlan = ref(false)
+const applyError = ref<string | null>(null)
+const applySuccess = ref<string | null>(null)
+const selectedApplyDateValue = ref<DateValue>(today(getLocalTimeZone()))
+const storedMealPlanIdsBySourceId = ref<Record<string, string>>({})
+const revocablePlanIdByMemberId = ref<Record<string, string>>({})
+const minApplyDateValue = computed(() => today(getLocalTimeZone()))
+const selectedApplyDate = computed(() => selectedApplyDateValue.value.toString())
+const checkingRevokeEligibility = ref(false)
+let revokeEligibilityRequestId = 0
 
 const canSend = computed(() => inputText.value.trim().length > 0 && !sending.value)
 const latestMealPlan = computed(() => mealPlans.value?.[0] ?? null)
+const householdMembers = computed(() => householdStore.householdMembers)
+const currentMemberId = computed(() => householdStore.currentMember?.id ?? null)
+const selectedMembersLabel = computed(() => {
+  const count = selectedApplyMemberIds.value.length
+  if (count === 0) return 'Select members'
+  if (count === 1) return '1 member selected'
+  return `${count} members selected`
+})
+const canApplyMealPlan = computed(() => {
+  return !!latestMealPlan.value
+    && !!currentMemberId.value
+    && !!selectedApplyDateValue.value
+    && selectedApplyMemberIds.value.length > 0
+    && !applyingMealPlan.value
+    && !revokingMealPlan.value
+})
+const canRevokeMealPlan = computed(() => {
+  if (!latestMealPlan.value || !currentMemberId.value || revokingMealPlan.value || applyingMealPlan.value || checkingRevokeEligibility.value) {
+    return false
+  }
+
+  const selectedIds = selectedApplyMemberIds.value
+  if (!selectedIds.length) return false
+
+  return selectedIds.every(memberId => !!revocablePlanIdByMemberId.value[memberId])
+})
 
 const suggestedQuestions = [
   { text: 'Create a balanced meal plan for today', icon: 'i-lucide-calendar-days' },
@@ -278,21 +457,252 @@ const modifyChips = [
   'Suggest a different dinner'
 ]
 
+watch(
+  [currentMemberId, householdMembers],
+  () => {
+    const validMemberIds = new Set(householdMembers.value.map(member => member.id))
+    const next = selectedApplyMemberIds.value.filter(memberId => validMemberIds.has(memberId))
+
+    if (currentMemberId.value && !next.includes(currentMemberId.value)) {
+      next.unshift(currentMemberId.value)
+    }
+
+    selectedApplyMemberIds.value = next
+  },
+  { immediate: true }
+)
+
+watch(
+  () => latestMealPlan.value?.id,
+  () => {
+    applyError.value = null
+    applySuccess.value = null
+  }
+)
+
+watch(
+  [() => latestMealPlan.value?.id, selectedApplyDate, () => selectedApplyMemberIds.value.slice().join(',')],
+  () => {
+    void refreshRevokeEligibility()
+  },
+  { immediate: true }
+)
+
 function mealGridCols(plan: MealPlan): string {
-  const count = [plan.breakfast, plan.lunch, plan.dinner, plan.snack].filter(Boolean).length
+  const count = [plan.breakfast, plan.lunch, plan.dinner].filter(Boolean).length
   if (count <= 1) return 'grid-cols-1'
   if (count === 2) return 'grid-cols-1 sm:grid-cols-2'
-  if (count === 3) return 'grid-cols-1 sm:grid-cols-3'
-  return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+  return 'grid-cols-1 sm:grid-cols-3'
 }
 
 function votePlan(planId: string, vote: 'up' | 'down') {
   planVotes[planId] = planVotes[planId] === vote ? null : vote
 }
 
+function isCurrentMember(memberId: string): boolean {
+  return currentMemberId.value === memberId
+}
+
+function isApplyMemberSelected(memberId: string): boolean {
+  return selectedApplyMemberIds.value.includes(memberId)
+}
+
+function toggleApplyMember(memberId: string, checked: boolean | 'indeterminate') {
+  if (isCurrentMember(memberId) || checked === 'indeterminate') return
+
+  if (checked) {
+    if (!selectedApplyMemberIds.value.includes(memberId)) {
+      selectedApplyMemberIds.value.push(memberId)
+    }
+    return
+  }
+
+  selectedApplyMemberIds.value = selectedApplyMemberIds.value.filter(id => id !== memberId)
+}
+
+function selectOnlyCurrentMember() {
+  if (!currentMemberId.value) {
+    selectedApplyMemberIds.value = []
+    return
+  }
+
+  selectedApplyMemberIds.value = [currentMemberId.value]
+}
+
+function selectAllMembers() {
+  const allIds = householdMembers.value.map(member => member.id)
+  if (currentMemberId.value && !allIds.includes(currentMemberId.value)) {
+    allIds.unshift(currentMemberId.value)
+  }
+  selectedApplyMemberIds.value = allIds
+}
+
+function memberInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return 'U'
+  if (parts.length === 1) return parts[0][0].toUpperCase()
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+}
+
+function getMemberAvatar(member: HouseholdMember): AvatarConfig | null {
+  if (!member.image_url) return null
+  return stringToAvatarConfig(member.image_url)
+}
+
+function cloneRecipe(recipe?: MealRecipe): MealRecipe | undefined {
+  if (!recipe) return undefined
+  return {
+    recipe_id: recipe.recipe_id,
+    title: recipe.title,
+    ingredients: recipe.ingredients,
+    directions: recipe.directions
+  }
+}
+
+function buildMealPlanPayload(mealPlan: MealPlan): MealPlan {
+  return {
+    id: mealPlan.id,
+    created_at: mealPlan.created_at,
+    breakfast: cloneRecipe(mealPlan.breakfast),
+    lunch: cloneRecipe(mealPlan.lunch),
+    dinner: cloneRecipe(mealPlan.dinner),
+    reasoning: mealPlan.reasoning
+  }
+}
+
+async function refreshRevokeEligibility() {
+  const planId = latestMealPlan.value?.id
+  const selectedIds = [...selectedApplyMemberIds.value]
+
+  if (!planId || !selectedIds.length) {
+    revocablePlanIdByMemberId.value = {}
+    checkingRevokeEligibility.value = false
+    return
+  }
+
+  checkingRevokeEligibility.value = true
+  const requestId = ++revokeEligibilityRequestId
+
+  try {
+    const cachedStoredPlanId = storedMealPlanIdsBySourceId.value[planId]
+    const nextRevocableMap: Record<string, string> = {}
+
+    await Promise.all(
+      selectedIds.map(async (memberId) => {
+        try {
+          const response = await memberMealPlansApi.getMealPlan(memberId, selectedApplyDate.value)
+          const storedPlanId = extractStoredMealPlanIdFromMemberMealPlanResponse(response)
+          const sourcePlanId = extractSourceMealPlanIdFromMemberMealPlanResponse(response)
+
+          if (!storedPlanId) return
+
+          const matchesSourcePlan = sourcePlanId === planId
+          const matchesStoredPlan = !!cachedStoredPlanId && storedPlanId === cachedStoredPlanId
+
+          if (matchesSourcePlan || matchesStoredPlan) {
+            nextRevocableMap[memberId] = storedPlanId
+          }
+        } catch {
+          // If member has no plan for this date, simply leave them non-revocable.
+        }
+      })
+    )
+
+    if (requestId !== revokeEligibilityRequestId) return
+
+    const firstStoredId = Object.values(nextRevocableMap)[0]
+    if (firstStoredId && !storedMealPlanIdsBySourceId.value[planId]) {
+      storedMealPlanIdsBySourceId.value[planId] = firstStoredId
+    }
+
+    revocablePlanIdByMemberId.value = nextRevocableMap
+  } finally {
+    if (requestId === revokeEligibilityRequestId) {
+      checkingRevokeEligibility.value = false
+    }
+  }
+}
+
 onMounted(async () => {
   await loadSessions()
+
+  if (!householdMembers.value.length && householdStore.currentHousehold?.id) {
+    await householdStore.fetchMembers()
+  }
 })
+
+async function applyMealPlanToMembers() {
+  if (!latestMealPlan.value || !currentMemberId.value) return
+
+  applyingMealPlan.value = true
+  applyError.value = null
+  applySuccess.value = null
+
+  try {
+    const mealPlanPayload = buildMealPlanPayload(latestMealPlan.value)
+    const selectedMemberIds = new Set(selectedApplyMemberIds.value)
+    selectedMemberIds.add(currentMemberId.value)
+
+    const response = await memberMealPlansApi.storeMealPlan(currentMemberId.value, {
+      date: selectedApplyDate.value,
+      applies_to_member_ids: Array.from(selectedMemberIds),
+      meal_plan: mealPlanPayload,
+      foodchat_response: {
+        help: 'Meal plan stored from FoodChat UI',
+        success: true,
+        result: [mealPlanPayload]
+      }
+    })
+
+    const storedMealPlanId = extractStoredMealPlanIdFromMemberMealPlanResponse(response)
+    if (storedMealPlanId) {
+      storedMealPlanIdsBySourceId.value[latestMealPlan.value.id] = storedMealPlanId
+    }
+
+    applySuccess.value = `Applied • ${selectedApplyDate.value}`
+    await refreshRevokeEligibility()
+  } catch (err: unknown) {
+    const message = (err && typeof err === 'object' && 'message' in err)
+      ? String((err as { message: string }).message)
+      : 'Failed to apply meal plan.'
+    applyError.value = message
+  } finally {
+    applyingMealPlan.value = false
+  }
+}
+
+async function revokeMealPlanFromMembers() {
+  if (!latestMealPlan.value || !currentMemberId.value) return
+
+  revokingMealPlan.value = true
+  applyError.value = null
+  applySuccess.value = null
+
+  try {
+    const selectedIds = [...selectedApplyMemberIds.value]
+    const ineligibleMembers = selectedIds.filter(memberId => !revocablePlanIdByMemberId.value[memberId])
+
+    if (ineligibleMembers.length > 0) {
+      throw new Error('Some selected members do not have this meal plan for the chosen date.')
+    }
+
+    for (const memberId of selectedIds) {
+      const storedPlanId = revocablePlanIdByMemberId.value[memberId]
+      await memberMealPlansApi.revokeMealPlan(memberId, storedPlanId, false)
+    }
+
+    await refreshRevokeEligibility()
+
+    applySuccess.value = 'Revoked'
+  } catch (err: unknown) {
+    const message = (err && typeof err === 'object' && 'message' in err)
+      ? String((err as { message: string }).message)
+      : 'Failed to revoke meal plan.'
+    applyError.value = message
+  } finally {
+    revokingMealPlan.value = false
+  }
+}
 
 async function ensureSessionAndSend(content: string) {
   if (!activeSession.value) {
@@ -316,6 +726,8 @@ async function handleQuickAsk(question: string) {
 }
 
 async function handleStartOver() {
+  applyError.value = null
+  applySuccess.value = null
   await newSession()
 }
 

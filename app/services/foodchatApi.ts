@@ -39,7 +39,6 @@ export interface MealPlan {
   breakfast?: MealRecipe
   lunch?: MealRecipe
   dinner?: MealRecipe
-  snack?: MealRecipe
   reasoning?: string
 }
 

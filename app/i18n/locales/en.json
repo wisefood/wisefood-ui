@@ -40,6 +40,12 @@
       "title": "Today's Schedule",
       "now": "Now",
       "cal": "cal",
+      "planned": "Planned",
+      "notPlanned": "Not planned",
+      "noBreakfast": "No breakfast planned yet",
+      "noLunch": "No lunch planned yet",
+      "noDinner": "No dinner planned yet",
+      "noMembers": "No members",
       "days": {
         "sunday": "Sunday",
         "monday": "Monday",

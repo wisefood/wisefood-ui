@@ -129,135 +129,131 @@
             <UIcon name="i-lucide-calendar-days" class="w-7 h-7 text-brand-500" />
           </div>
 
+          <div v-if="!todayMealPlan" class="mb-4">
+            <NuxtLink
+              to="/foodchat"
+              class="text-sm font-medium text-brand-600 dark:text-brand-400 hover:underline"
+            >
+              Create one in FoodChat →
+            </NuxtLink>
+          </div>
+
           <!-- Upcoming Meals Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <div
-              v-for="meal in upcomingMeals"
-              :key="meal.id"
-              class="flex flex-col gap-2 p-3 rounded-xl transition-all border"
-              :class="meal.isPast ? 'opacity-50 border-transparent' : meal.isNow ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-200 dark:border-brand-800' : 'border-transparent hover:bg-gray-50 dark:hover:bg-zinc-700/50'"
-            >
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <UIcon
-                    :name="meal.icon"
-                    class="w-5 h-5"
-                    :class="meal.isNow ? 'text-brand-500' : 'text-gray-400'"
-                  />
-                  <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ meal.time }}</span>
+            <template v-for="meal in upcomingMeals" :key="meal.id">
+              <NuxtLink
+                v-if="meal.recipeId"
+                :to="`/recipe-wrangler/${meal.recipeId}`"
+                class="group flex flex-col gap-2 p-3 rounded-xl border transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:bg-gray-50 dark:hover:bg-zinc-700/50 focus-visible:outline-none focus-visible:scale-[1.01] focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:ring-offset-1"
+                :class="meal.isNow ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-200 dark:border-brand-800' : 'border-transparent'"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <UIcon
+                      :name="meal.icon"
+                      class="w-5 h-5"
+                      :class="meal.isNow ? 'text-brand-500' : 'text-gray-400'"
+                    />
+                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ meal.time }}</span>
+                  </div>
+                  <UBadge v-if="meal.isNow" color="primary" variant="solid" size="xs">{{ t('dashboard.schedule.now') }}</UBadge>
                 </div>
-                <UBadge v-if="meal.isNow" color="primary" variant="solid" size="xs">{{ t('dashboard.schedule.now') }}</UBadge>
-              </div>
-              <div>
-                <h3 class="font-semibold text-sm text-gray-900 dark:text-white mb-1">{{ meal.name }}</h3>
-                <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{{ meal.description }}</p>
-              </div>
-              <div class="flex items-center gap-2 mt-auto">
-                <UBadge color="gray" variant="subtle" size="xs">{{ meal.calories }} {{ t('dashboard.schedule.cal') }}</UBadge>
-                <UBadge v-if="meal.prepared" color="green" variant="subtle" size="xs">
-                  <UIcon name="i-lucide-check" class="w-3 h-3" />
-                </UBadge>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Your Progress -->
-      <div class="mb-12 scroll-fade-in" style="--delay: 0.3s">
-        <h2 class="text-2xl font-light text-gray-900 dark:text-white mb-6">
-          {{ t('dashboard.progress.title') }} <span class="font-serif italic text-brand-500 text-3xl">{{ t('dashboard.progress.today') }}</span>
-        </h2>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div
-            v-for="ring in rings"
-            :key="ring.id"
-            class="p-6 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700"
-          >
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="font-medium text-gray-900 dark:text-white">{{ ring.label }}</h3>
-              <span class="text-2xl font-light text-brand-500">{{ ring.percent }}%</span>
-            </div>
-            <div class="w-full bg-gray-200 dark:bg-zinc-700 rounded-full h-2 mb-2">
-              <div
-                class="bg-brand-500 h-2 rounded-full transition-all duration-500"
-                :style="{ width: ring.percent + '%' }"
-              ></div>
-            </div>
-            <p class="text-sm text-gray-500 dark:text-gray-400">{{ ring.value }} {{ t('dashboard.progress.ofTarget') }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Feed Section -->
-      <div class="space-y-6">
-        <!-- Trending Recipe -->
-        <div
-          v-for="(recipe, index) in trendingRecipes"
-          :key="recipe.id"
-          class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 hover:shadow-lg transition-all duration-300"
-          :style="{ '--delay': `${0.4 + index * 0.1}s` }"
-        >
-          <div class="flex items-start gap-4">
-            <div class="w-20 h-20 rounded-xl bg-gradient-to-br from-brand-100 to-brand-200 dark:from-brand-900/40 dark:to-brand-800/40 flex items-center justify-center shrink-0">
-              <UIcon name="i-lucide-utensils" class="w-8 h-8 text-brand-500" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-2">
-                <UBadge v-if="recipe.healthy" color="green" variant="subtle" size="xs">{{ t('dashboard.badges.healthy') }}</UBadge>
-                <UBadge v-if="recipe.sustainable" color="blue" variant="subtle" size="xs">{{ t('dashboard.badges.sustainable') }}</UBadge>
-              </div>
-              <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-1">{{ recipe.title }}</h3>
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('dashboard.recipes.recommendedForYou') }}</p>
-            </div>
-            <UButton variant="ghost" icon="i-lucide-chevron-right" class="cursor-pointer shrink-0" />
-          </div>
-        </div>
-
-        <!-- FoodScholar Insight -->
-        <div class="scroll-fade-in p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-800" style="--delay: 0.7s">
-          <div class="flex items-start gap-4">
-            <div class="w-12 h-12 rounded-xl bg-blue-500 flex items-center justify-center shrink-0">
-              <UIcon name="i-lucide-lightbulb" class="w-6 h-6 text-white" />
-            </div>
-            <div class="flex-1">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-1">{{ activeInsightTitle }}</h3>
-              <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">{{ activeInsight.text }}</p>
-              <NuxtLink to="/foodscholar" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">
-                {{ t('dashboard.insights.learnMore') }} →
+                <div>
+                  <h3 class="font-semibold text-sm text-gray-900 dark:text-white mb-1">{{ meal.name }}</h3>
+                  <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{{ meal.description }}</p>
+                </div>
+                <div class="flex items-center gap-2 mt-auto">
+                  <div v-if="meal.members.length" class="flex items-center -space-x-0.5">
+                    <UTooltip
+                      v-for="member in meal.members"
+                      :key="`${meal.id}-${member.id}`"
+                      :text="member.name"
+                    >
+                      <ProfileAvatar
+                        v-if="getMemberAvatar(member)"
+                        :avatar="getMemberAvatar(member)!"
+                        size="xxs"
+                        class="ring-1 ring-white dark:ring-zinc-800"
+                      />
+                      <div
+                        v-else
+                        class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white text-[10px] font-semibold flex items-center justify-center ring-1 ring-white dark:ring-zinc-800"
+                      >
+                        {{ memberInitials(member.name) }}
+                      </div>
+                    </UTooltip>
+                  </div>
+                  <span v-else class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ t('dashboard.schedule.noMembers') }}
+                  </span>
+                </div>
               </NuxtLink>
-            </div>
-          </div>
-        </div>
 
-        <!-- Sustainability Highlight -->
-        <div class="scroll-fade-in p-6 rounded-2xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border border-green-200 dark:border-green-800" style="--delay: 0.8s">
-          <div class="flex items-start gap-4">
-            <div class="w-12 h-12 rounded-xl bg-green-500 flex items-center justify-center shrink-0">
-              <UIcon name="i-lucide-leaf" class="w-6 h-6 text-white" />
-            </div>
-            <div class="flex-1">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-1">{{ t('dashboard.sustainability.title') }}</h3>
-              <p class="text-sm text-gray-600 dark:text-gray-300 mb-1">
-                <strong>{{ sustainability.ingredient }}</strong> - {{ sustainability.note }}
-              </p>
-              <button class="text-sm font-medium text-green-600 dark:text-green-400 hover:underline">
-                {{ sustainability.cta }} →
-              </button>
-            </div>
+              <div
+                v-else
+                class="group flex flex-col gap-2 p-3 rounded-xl border border-transparent transition-all duration-200 cursor-default"
+                :class="meal.isNow ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-200 dark:border-brand-800' : ''"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <UIcon
+                      :name="meal.icon"
+                      class="w-5 h-5"
+                      :class="meal.isNow ? 'text-brand-500' : 'text-gray-400'"
+                    />
+                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ meal.time }}</span>
+                  </div>
+                  <UBadge v-if="meal.isNow" color="primary" variant="solid" size="xs">{{ t('dashboard.schedule.now') }}</UBadge>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-sm text-gray-900 dark:text-white mb-1">{{ meal.name }}</h3>
+                  <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{{ meal.description }}</p>
+                </div>
+                <div class="flex items-center gap-2 mt-auto">
+                  <div v-if="meal.members.length" class="flex items-center -space-x-0.5">
+                    <UTooltip
+                      v-for="member in meal.members"
+                      :key="`${meal.id}-${member.id}`"
+                      :text="member.name"
+                    >
+                      <ProfileAvatar
+                        v-if="getMemberAvatar(member)"
+                        :avatar="getMemberAvatar(member)!"
+                        size="xxs"
+                        class="ring-1 ring-white dark:ring-zinc-800"
+                      />
+                      <div
+                        v-else
+                        class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white text-[10px] font-semibold flex items-center justify-center ring-1 ring-white dark:ring-zinc-800"
+                      >
+                        {{ memberInitials(member.name) }}
+                      </div>
+                    </UTooltip>
+                  </div>
+                  <span v-else class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ t('dashboard.schedule.noMembers') }}
+                  </span>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
       </div>
+
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, computed } from 'vue'
+import { onMounted, onUnmounted, ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useHouseholdStore } from '@/stores/household'
 import foodscholarApi, { type QaTipsResult } from '~/services/foodscholarApi'
+import memberMealPlansApi, { extractMealPlanFromMemberMealPlanResponse } from '~/services/memberMealPlansApi'
+import type { MealPlan, MealRecipe } from '~/services/foodchatApi'
+import type { HouseholdMember } from '~/services/householdsApi'
+import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
 
 const { t } = useI18n()
 
@@ -294,7 +290,7 @@ const userGreeting = computed(() => {
   return t('dashboard.friend')
 })
 
-const { greeting, encouragement, trendingRecipes, rings, sustainability, discoveries } = useDashboardData()
+const { greeting, encouragement, discoveries } = useDashboardData()
 
 type InsightKind = 'did_you_know' | 'tip'
 
@@ -356,6 +352,95 @@ const currentDateTime = computed(() => {
   return `${dayName}, ${monthName} ${date} • ${hours}:${minutes}`
 })
 
+const currentMemberId = computed(() => householdStore.currentMember?.id ?? null)
+const householdMembers = computed(() => householdStore.householdMembers)
+const memberMealPlansById = ref<Record<string, MealPlan | null>>({})
+
+const formatDateForApi = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const mealDescriptionFromRecipe = (recipe: MealRecipe | undefined, fallback: string): string => {
+  if (!recipe) return fallback
+  if (recipe.title?.trim()) return recipe.title.trim()
+  if (recipe.ingredients?.trim()) return recipe.ingredients.trim().split(',').slice(0, 3).join(', ')
+  if (recipe.directions?.trim()) return recipe.directions.trim()
+  return fallback
+}
+
+const memberInitials = (name: string): string => {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return 'U'
+  if (parts.length === 1) return parts[0][0].toUpperCase()
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+}
+
+const getMemberAvatar = (member: HouseholdMember): AvatarConfig | null => {
+  if (!member.image_url) return null
+  return stringToAvatarConfig(member.image_url)
+}
+
+const todayMealPlan = computed<MealPlan | null>(() => {
+  if (!currentMemberId.value) return null
+  return memberMealPlansById.value[currentMemberId.value] ?? null
+})
+
+const membersByMealType = computed<Record<'breakfast' | 'lunch' | 'dinner', HouseholdMember[]>>(() => {
+  const byType: Record<'breakfast' | 'lunch' | 'dinner', HouseholdMember[]> = {
+    breakfast: [],
+    lunch: [],
+    dinner: []
+  }
+
+  for (const member of householdMembers.value) {
+    const plan = memberMealPlansById.value[member.id]
+    if (!plan) continue
+
+    if (plan.breakfast) byType.breakfast.push(member)
+    if (plan.lunch) byType.lunch.push(member)
+    if (plan.dinner) byType.dinner.push(member)
+  }
+
+  return byType
+})
+
+const loadHouseholdMealPlans = async () => {
+  if (!householdMembers.value.length) {
+    memberMealPlansById.value = {}
+    return
+  }
+
+  const targetDate = formatDateForApi(new Date())
+  const entries = await Promise.all(
+    householdMembers.value.map(async (member) => {
+      try {
+        const response = await memberMealPlansApi.getMealPlan(member.id, targetDate)
+        return [member.id, extractMealPlanFromMemberMealPlanResponse(response)] as const
+      } catch {
+        return [member.id, null] as const
+      }
+    })
+  )
+
+  const next: Record<string, MealPlan | null> = {}
+  for (const [memberId, mealPlan] of entries) {
+    next[memberId] = mealPlan
+  }
+
+  memberMealPlansById.value = next
+}
+
+watch(
+  [currentMemberId, () => householdMembers.value.map(member => member.id).join(',')],
+  () => {
+    void loadHouseholdMealPlans()
+  },
+  { immediate: true }
+)
+
 // Meal schedule data
 const upcomingMeals = computed(() => {
   const now = currentTime.value
@@ -365,60 +450,45 @@ const upcomingMeals = computed(() => {
 
   const meals = [
     {
-      id: 1,
+      id: 'breakfast',
+      mealType: 'breakfast' as const,
       name: 'Breakfast',
       time: '08:00',
       timeInMinutes: 8 * 60,
-      description: 'Oatmeal with berries and nuts',
-      calories: 350,
       icon: 'i-lucide-coffee',
-      prepared: true
+      recipe: todayMealPlan.value?.breakfast,
+      fallbackDescription: t('dashboard.schedule.noBreakfast')
     },
     {
-      id: 2,
-      name: 'Morning Snack',
-      time: '10:30',
-      timeInMinutes: 10 * 60 + 30,
-      description: 'Greek yogurt with honey',
-      calories: 150,
-      icon: 'i-lucide-apple',
-      prepared: false
-    },
-    {
-      id: 3,
+      id: 'lunch',
+      mealType: 'lunch' as const,
       name: 'Lunch',
       time: '13:00',
       timeInMinutes: 13 * 60,
-      description: 'Mediterranean Quinoa Bowl',
-      calories: 520,
       icon: 'i-lucide-utensils',
-      prepared: false
+      recipe: todayMealPlan.value?.lunch,
+      fallbackDescription: t('dashboard.schedule.noLunch')
     },
     {
-      id: 4,
-      name: 'Afternoon Snack',
-      time: '16:00',
-      timeInMinutes: 16 * 60,
-      description: 'Hummus with veggie sticks',
-      calories: 180,
-      icon: 'i-lucide-carrot',
-      prepared: false
-    },
-    {
-      id: 5,
+      id: 'dinner',
+      mealType: 'dinner' as const,
       name: 'Dinner',
       time: '19:30',
       timeInMinutes: 19 * 60 + 30,
-      description: 'Grilled salmon with roasted vegetables',
-      calories: 480,
-      icon: 'i-lucide-utensils',
-      prepared: false
+      icon: 'i-lucide-moon',
+      recipe: todayMealPlan.value?.dinner,
+      fallbackDescription: t('dashboard.schedule.noDinner')
     }
   ]
 
   return meals.map(meal => ({
-    ...meal,
-    isPast: currentTimeInMinutes > meal.timeInMinutes + 60,
+    id: meal.id,
+    name: meal.name,
+    time: meal.time,
+    icon: meal.icon,
+    recipeId: meal.recipe?.recipe_id || null,
+    description: mealDescriptionFromRecipe(meal.recipe, meal.fallbackDescription),
+    members: membersByMealType.value[meal.mealType],
     isNow: currentTimeInMinutes >= meal.timeInMinutes && currentTimeInMinutes < meal.timeInMinutes + 60
   }))
 })
@@ -508,6 +578,10 @@ onMounted(() => {
   document.querySelectorAll('.scroll-fade-in').forEach((el) => {
     observer?.observe(el)
   })
+
+  if (!householdMembers.value.length && householdStore.currentHousehold?.id) {
+    void householdStore.fetchMembers()
+  }
 
   // Update current time every minute
   timeInterval = setInterval(() => {
