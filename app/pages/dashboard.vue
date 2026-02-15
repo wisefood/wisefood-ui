@@ -167,7 +167,7 @@
                     >
                       <ProfileAvatar
                         v-if="getMemberAvatar(member)"
-                        :avatar="getMemberAvatar(member)!"
+                        :avatar="getMemberAvatarForDisplay(member)"
                         size="xxs"
                         class="ring-1 ring-white dark:ring-zinc-800"
                       />
@@ -214,7 +214,7 @@
                     >
                       <ProfileAvatar
                         v-if="getMemberAvatar(member)"
-                        :avatar="getMemberAvatar(member)!"
+                        :avatar="getMemberAvatarForDisplay(member)"
                         size="xxs"
                         class="ring-1 ring-white dark:ring-zinc-800"
                       />
@@ -574,6 +574,10 @@ const memberInitials = (name: string): string => {
 const getMemberAvatar = (member: HouseholdMember): AvatarConfig | null => {
   if (!member.image_url) return null
   return stringToAvatarConfig(member.image_url)
+}
+
+const getMemberAvatarForDisplay = (member: HouseholdMember): AvatarConfig => {
+  return getMemberAvatar(member) || stringToAvatarConfig(member.id)
 }
 
 const todayMealPlan = computed<MealPlan | null>(() => {

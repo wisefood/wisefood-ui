@@ -207,7 +207,7 @@
 
                               <ProfileAvatar
                                 v-if="getMemberAvatar(member)"
-                                :avatar="getMemberAvatar(member)!"
+                                :avatar="getMemberAvatarForDisplay(member)"
                                 size="sm"
                                 class="w-8 h-8 shrink-0"
                               />
@@ -547,6 +547,10 @@ function memberInitials(name: string): string {
 function getMemberAvatar(member: HouseholdMember): AvatarConfig | null {
   if (!member.image_url) return null
   return stringToAvatarConfig(member.image_url)
+}
+
+function getMemberAvatarForDisplay(member: HouseholdMember): AvatarConfig {
+  return getMemberAvatar(member) || stringToAvatarConfig(member.id)
 }
 
 function cloneRecipe(recipe?: MealRecipe): MealRecipe | undefined {
