@@ -126,15 +126,11 @@
               <h2 class="text-xl font-light text-gray-900 dark:text-white">{{ t('dashboard.schedule.title') }}</h2>
               <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ currentDateTime }}</p>
             </div>
-            <UIcon name="i-lucide-calendar-days" class="w-7 h-7 text-brand-500" />
-          </div>
-
-          <div v-if="!todayMealPlan" class="mb-4">
             <NuxtLink
               to="/foodchat"
-              class="text-sm font-medium text-brand-600 dark:text-brand-400 hover:underline"
+              class="text-sm font-medium text-brandp-500 dark:text-brandp-400 hover:underline"
             >
-              Create one in FoodChat →
+              {{ todayMealPlan ? 'Refine in FoodChat →' : 'Create one in FoodChat →' }}
             </NuxtLink>
           </div>
 
@@ -240,6 +236,82 @@
         </div>
       </div>
 
+      <div class="mb-12 scroll-fade-in" style="--delay: 0.3s">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-light text-gray-900 dark:text-white">
+            <span class="text-gray-900 dark:text-white">Recommended for </span>
+            <span class="font-serif italic text-brand-500 dark:text-brand-400 text-3xl">you</span>
+          </h2>
+          <NuxtLink
+            to="/recipe-wrangler"
+            class="text-sm font-medium text-brandg-600 dark:text-brandg-400 hover:underline"
+          >
+            Discover recipes in RecipeWrangler →
+          </NuxtLink>
+        </div>
+
+        <div v-if="loadingRecommendedRecipes" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div
+            v-for="i in 4"
+            :key="`rec-skeleton-${i}`"
+            class="rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/50 p-3 animate-pulse"
+          >
+            <div class="flex items-start gap-3">
+              <div class="w-16 h-16 rounded-lg bg-gray-200 dark:bg-zinc-700 shrink-0" />
+              <div class="min-w-0 flex-1 space-y-2">
+                <div class="h-3.5 rounded bg-gray-200 dark:bg-zinc-700 w-5/6" />
+                <div class="h-3.5 rounded bg-gray-200 dark:bg-zinc-700 w-2/3" />
+                <div class="pt-1 flex items-center gap-2">
+                  <div class="h-3 rounded bg-gray-200 dark:bg-zinc-700 w-10" />
+                  <div class="h-3 rounded bg-gray-200 dark:bg-zinc-700 w-14" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-else-if="recommendedRecipes.length" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <NuxtLink
+            v-for="recipe in recommendedRecipes"
+            :key="recipe.recipe_id"
+            :to="`/recipe-wrangler/${recipe.recipe_id}`"
+            class="group rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/50 p-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+          >
+            <div class="flex items-start gap-3">
+              <div class="w-16 h-16 rounded-lg overflow-hidden border border-gray-100 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-700 shrink-0">
+                <img
+                  v-if="recipe.image_url && !failedRecommendedImages[recipe.recipe_id]"
+                  :src="recipe.image_url"
+                  :alt="recipe.title"
+                  class="w-full h-full object-cover"
+                  loading="lazy"
+                  @error="markRecommendedImageFailed(recipe.recipe_id)"
+                >
+                <div
+                  v-else
+                  class="w-full h-full bg-gray-200 dark:bg-zinc-700 flex items-center justify-center"
+                >
+                  <UIcon name="i-lucide-utensils" class="w-5 h-5 text-gray-500 dark:text-zinc-300" />
+                </div>
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 group-hover:text-brandg-600 dark:group-hover:text-brandg-300 transition-colors">
+                  {{ recipe.title }}
+                </h3>
+                <div class="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                  <span v-if="recipe.duration">{{ recipe.duration }}m</span>
+                  <span v-if="recipe.serves">Serves {{ recipe.serves }}</span>
+                </div>
+              </div>
+            </div>
+          </NuxtLink>
+        </div>
+
+        <div v-else class="rounded-xl border border-gray-200 dark:border-zinc-700 bg-white/70 dark:bg-zinc-800/50 p-4 text-sm text-gray-500 dark:text-gray-400">
+          No recommendations yet.
+        </div>
+      </div>
+
     </main>
   </div>
 </template>
@@ -250,6 +322,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useHouseholdStore } from '@/stores/household'
 import foodscholarApi, { type QaTipsResult } from '~/services/foodscholarApi'
+import recipeApi, { type RecipeSearchResult } from '~/services/recipeApi'
 import memberMealPlansApi, { extractMealPlanFromMemberMealPlanResponse } from '~/services/memberMealPlansApi'
 import type { MealPlan, MealRecipe } from '~/services/foodchatApi'
 import type { HouseholdMember } from '~/services/householdsApi'
@@ -336,6 +409,126 @@ const activeInsightTitle = computed(() => {
     : t('dashboard.insights.didYouKnow')
 })
 
+const recommendedRecipes = ref<RecipeSearchResult[]>([])
+const loadingRecommendedRecipes = ref(false)
+const failedRecommendedImages = ref<Record<string, boolean>>({})
+
+const RECOMMENDED_RECIPES_CACHE_KEY = 'dashboard.recommendedRecipes.v1'
+const RECOMMENDED_RECIPES_CACHE_TTL_MS = 12 * 60 * 60 * 1000
+
+interface RecommendedRecipesCachePayload {
+  savedAt: number
+  recipes: RecipeSearchResult[]
+}
+
+const shuffleList = <T,>(items: T[]): T[] => {
+  const copy = [...items]
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1))
+    const current = copy[i]
+    copy[i] = copy[j]
+    copy[j] = current
+  }
+  return copy
+}
+
+const readRecommendedRecipesCache = (): RecipeSearchResult[] | null => {
+  if (!import.meta.client) return null
+
+  try {
+    const raw = localStorage.getItem(RECOMMENDED_RECIPES_CACHE_KEY)
+    if (!raw) return null
+
+    const parsed = JSON.parse(raw) as Partial<RecommendedRecipesCachePayload>
+    if (typeof parsed.savedAt !== 'number' || !Array.isArray(parsed.recipes)) return null
+
+    if ((Date.now() - parsed.savedAt) > RECOMMENDED_RECIPES_CACHE_TTL_MS) {
+      localStorage.removeItem(RECOMMENDED_RECIPES_CACHE_KEY)
+      return null
+    }
+
+    return parsed.recipes
+  } catch {
+    return null
+  }
+}
+
+const writeRecommendedRecipesCache = (recipes: RecipeSearchResult[]) => {
+  if (!import.meta.client) return
+
+  const payload: RecommendedRecipesCachePayload = {
+    savedAt: Date.now(),
+    recipes
+  }
+
+  try {
+    localStorage.setItem(RECOMMENDED_RECIPES_CACHE_KEY, JSON.stringify(payload))
+  } catch {
+    // ignore cache write errors
+  }
+}
+
+const loadRecommendedRecipes = async () => {
+  loadingRecommendedRecipes.value = true
+
+  const queryPool = [
+    'quick balanced meals',
+    'high protein dinner recipes',
+    'family friendly recipes',
+    'easy pasta recipes',
+    'seafood dinner recipes',
+    'healthy chicken recipes',
+    'high protein breakfast recipes',
+    'quick lunch recipes'
+  ]
+
+  try {
+    const cachedRecipes = readRecommendedRecipesCache()
+    if (cachedRecipes?.length) {
+      recommendedRecipes.value = shuffleList(cachedRecipes).slice(0, 4)
+      failedRecommendedImages.value = {}
+      return
+    }
+
+    const selectedQueries = shuffleList(queryPool).slice(0, 4)
+    const groupedResults = await Promise.all(
+      selectedQueries.map(async (question) => {
+        const results = await recipeApi.searchRecipes({ question })
+        const unique = Array.from(new Map(results.map(recipe => [recipe.recipe_id, recipe])).values())
+        return shuffleList(unique).slice(0, 8)
+      })
+    )
+
+    const interleaved: RecipeSearchResult[] = []
+    const maxGroupSize = Math.max(...groupedResults.map(group => group.length), 0)
+
+    for (let index = 0; index < maxGroupSize; index += 1) {
+      for (const group of groupedResults) {
+        const recipe = group[index]
+        if (recipe) interleaved.push(recipe)
+      }
+    }
+
+    const uniqueById = Array.from(new Map(interleaved.map(recipe => [recipe.recipe_id, recipe])).values()).slice(0, 24)
+    writeRecommendedRecipesCache(uniqueById)
+    recommendedRecipes.value = shuffleList(uniqueById).slice(0, 4)
+    failedRecommendedImages.value = {}
+  } catch (err) {
+    console.warn('Failed to fetch recommended recipes', err)
+    recommendedRecipes.value = []
+    failedRecommendedImages.value = {}
+  } finally {
+    loadingRecommendedRecipes.value = false
+  }
+}
+
+const markRecommendedImageFailed = (recipeId: string) => {
+  failedRecommendedImages.value = {
+    ...failedRecommendedImages.value,
+    [recipeId]: true
+  }
+}
+
 // Current date and time
 const currentTime = ref(new Date())
 const currentDateTime = computed(() => {
@@ -393,6 +586,10 @@ const membersByMealType = computed<Record<'breakfast' | 'lunch' | 'dinner', Hous
     breakfast: [],
     lunch: [],
     dinner: []
+  }
+
+  if (!todayMealPlan.value) {
+    return byType
   }
 
   for (const member of householdMembers.value) {
@@ -589,6 +786,7 @@ onMounted(() => {
   }, 60000)
 
   loadFoodScholarInsights()
+  void loadRecommendedRecipes()
 })
 
 onUnmounted(() => {
