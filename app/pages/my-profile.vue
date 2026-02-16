@@ -10,7 +10,7 @@
           icon="i-lucide-arrow-left"
           to="/dashboard"
         >
-          Back to Dashboard
+          {{ t('myProfile.actions.backToDashboard') }}
         </UButton>
       </div>
 
@@ -18,7 +18,7 @@
       <div v-if="loading" class="flex items-center justify-center py-20">
         <div class="text-center">
           <UIcon name="i-lucide-loader-2" class="h-12 w-12 animate-spin mx-auto mb-4 text-brand-500" />
-          <p class="text-gray-600 dark:text-gray-400">Loading profile...</p>
+          <p class="text-gray-600 dark:text-gray-400">{{ t('myProfile.loading') }}</p>
         </div>
       </div>
 
@@ -27,13 +27,13 @@
         <div class="py-8">
           <UIcon name="i-lucide-user-x" class="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            No Profile Selected
+            {{ t('myProfile.emptyState.noProfileSelected') }}
           </h2>
           <p class="text-gray-600 dark:text-gray-400 mb-6">
-            Please select a profile from your household to manage it.
+            {{ t('myProfile.emptyState.selectProfileToManage') }}
           </p>
           <UButton color="primary" to="/profiles">
-            Go to Profiles
+            {{ t('myProfile.actions.goToProfiles') }}
           </UButton>
         </div>
       </UCard>
@@ -76,7 +76,7 @@
         <UCard>
           <template #header>
             <div class="flex items-center justify-between">
-              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Profile Details</h2>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.sections.profileDetails') }}</h2>
               <UButton
                 variant="ghost"
                 color="gray"
@@ -84,22 +84,22 @@
                 size="sm"
                 @click="showEditDetails = true"
               >
-                Edit
+                {{ t('myProfile.actions.edit') }}
               </UButton>
             </div>
           </template>
 
           <div class="space-y-4">
             <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-zinc-800">
-              <span class="text-gray-600 dark:text-gray-400">Name</span>
+              <span class="text-gray-600 dark:text-gray-400">{{ t('myProfile.fields.name') }}</span>
               <span class="font-medium text-gray-900 dark:text-white">{{ currentMember.name }}</span>
             </div>
             <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-zinc-800">
-              <span class="text-gray-600 dark:text-gray-400">Age Group</span>
+              <span class="text-gray-600 dark:text-gray-400">{{ t('myProfile.fields.ageGroup') }}</span>
               <span class="font-medium text-gray-900 dark:text-white">{{ ageGroupLabel }}</span>
             </div>
             <div class="flex items-center justify-between py-2">
-              <span class="text-gray-600 dark:text-gray-400">Member Since</span>
+              <span class="text-gray-600 dark:text-gray-400">{{ t('myProfile.fields.memberSince') }}</span>
               <span class="font-medium text-gray-900 dark:text-white">{{ memberSince }}</span>
             </div>
           </div>
@@ -111,7 +111,7 @@
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <UIcon name="i-lucide-salad" class="w-5 h-5 text-green-500" />
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Dietary Preferences</h2>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.sections.dietaryPreferences') }}</h2>
               </div>
               <UButton
                 variant="ghost"
@@ -120,14 +120,14 @@
                 size="sm"
                 @click="showAddDiet = true"
               >
-                Add
+                {{ t('myProfile.actions.add') }}
               </UButton>
             </div>
           </template>
 
           <div v-if="currentDietaryGroups.length === 0" class="text-center py-6">
             <UIcon name="i-lucide-utensils-crossed" class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-            <p class="text-gray-500 dark:text-gray-400 text-sm">No dietary preferences set</p>
+            <p class="text-gray-500 dark:text-gray-400 text-sm">{{ t('myProfile.emptyState.noDietaryPreferences') }}</p>
             <UButton
               variant="link"
               color="primary"
@@ -135,7 +135,7 @@
               class="mt-2"
               @click="showAddDiet = true"
             >
-              Add your first preference
+              {{ t('myProfile.emptyState.addFirstPreference') }}
             </UButton>
           </div>
 
@@ -171,7 +171,7 @@
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <UIcon name="i-lucide-heart" class="w-5 h-5 text-pink-500" />
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Food Likes</h2>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.sections.foodLikes') }}</h2>
               </div>
               <UButton
                 variant="ghost"
@@ -180,14 +180,14 @@
                 size="sm"
                 @click="openFoodPicker('likes')"
               >
-                Add
+                {{ t('myProfile.actions.add') }}
               </UButton>
             </div>
           </template>
 
           <div v-if="foodLikes.length === 0" class="text-center py-6">
             <UIcon name="i-lucide-heart" class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-            <p class="text-gray-500 dark:text-gray-400 text-sm">No favorite foods added yet</p>
+            <p class="text-gray-500 dark:text-gray-400 text-sm">{{ t('myProfile.emptyState.noFavoriteFoods') }}</p>
             <UButton
               variant="link"
               color="primary"
@@ -195,7 +195,7 @@
               class="mt-2"
               @click="openFoodPicker('likes')"
             >
-              Add foods you love
+              {{ t('myProfile.emptyState.addFoodsYouLove') }}
             </UButton>
           </div>
 
@@ -223,7 +223,7 @@
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <UIcon name="i-lucide-thumbs-down" class="w-5 h-5 text-orange-500" />
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Food Dislikes</h2>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.sections.foodDislikes') }}</h2>
               </div>
               <UButton
                 variant="ghost"
@@ -232,14 +232,14 @@
                 size="sm"
                 @click="openFoodPicker('dislikes')"
               >
-                Add
+                {{ t('myProfile.actions.add') }}
               </UButton>
             </div>
           </template>
 
           <div v-if="foodDislikes.length === 0" class="text-center py-6">
             <UIcon name="i-lucide-thumbs-down" class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-            <p class="text-gray-500 dark:text-gray-400 text-sm">No disliked foods added yet</p>
+            <p class="text-gray-500 dark:text-gray-400 text-sm">{{ t('myProfile.emptyState.noDislikedFoods') }}</p>
             <UButton
               variant="link"
               color="primary"
@@ -247,7 +247,7 @@
               class="mt-2"
               @click="openFoodPicker('dislikes')"
             >
-              Add foods to avoid
+              {{ t('myProfile.emptyState.addFoodsToAvoid') }}
             </UButton>
           </div>
 
@@ -275,7 +275,7 @@
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <UIcon name="i-lucide-alert-circle" class="w-5 h-5 text-red-500" />
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Allergies & Intolerances</h2>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.sections.allergiesAndIntolerances') }}</h2>
               </div>
               <UButton
                 variant="ghost"
@@ -284,14 +284,14 @@
                 size="sm"
                 @click="showAddAllergy = true"
               >
-                Add
+                {{ t('myProfile.actions.add') }}
               </UButton>
             </div>
           </template>
 
           <div v-if="allergies.length === 0" class="text-center py-6">
             <UIcon name="i-lucide-shield-check" class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-            <p class="text-gray-500 dark:text-gray-400 text-sm">No allergies or intolerances recorded</p>
+            <p class="text-gray-500 dark:text-gray-400 text-sm">{{ t('myProfile.emptyState.noAllergies') }}</p>
             <UButton
               variant="link"
               color="primary"
@@ -299,7 +299,7 @@
               class="mt-2"
               @click="showAddAllergy = true"
             >
-              Add allergy or intolerance
+              {{ t('myProfile.emptyState.addAllergyOrIntolerance') }}
             </UButton>
           </div>
 
@@ -330,14 +330,14 @@
           <template #header>
             <div class="flex items-center gap-2">
               <UIcon name="i-lucide-alert-triangle" class="w-5 h-5 text-red-500" />
-              <h2 class="text-lg font-semibold text-red-600 dark:text-red-400">Danger Zone</h2>
+              <h2 class="text-lg font-semibold text-red-600 dark:text-red-400">{{ t('myProfile.sections.dangerZone') }}</h2>
             </div>
           </template>
 
           <div class="flex items-center justify-between">
             <div>
-              <p class="font-medium text-gray-900 dark:text-white">Delete this profile</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Once deleted, this profile cannot be recovered.</p>
+              <p class="font-medium text-gray-900 dark:text-white">{{ t('myProfile.dangerZone.deleteTitle') }}</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('myProfile.dangerZone.deleteDescription') }}</p>
             </div>
             <UButton
               color="red"
@@ -345,7 +345,7 @@
               icon="i-lucide-trash-2"
               @click="showDeleteConfirm = true"
             >
-              Delete Profile
+              {{ t('myProfile.actions.deleteProfile') }}
             </UButton>
           </div>
         </UCard>
@@ -357,7 +357,7 @@
           <UCard>
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Change Avatar</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.modals.changeAvatar') }}</h3>
                 <UButton
                   variant="ghost"
                   color="gray"
@@ -373,10 +373,10 @@
             <template #footer>
               <div class="flex justify-end gap-3">
                 <UButton variant="ghost" color="gray" @click="showAvatarEditor = false">
-                  Cancel
+                  {{ t('myProfile.actions.cancel') }}
                 </UButton>
                 <UButton color="primary" :loading="isSaving" @click="saveAvatar">
-                  Save Avatar
+                  {{ t('myProfile.actions.saveAvatar') }}
                 </UButton>
               </div>
             </template>
@@ -390,7 +390,7 @@
           <UCard>
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Edit Profile Details</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.modals.editProfileDetails') }}</h3>
                 <UButton
                   variant="ghost"
                   color="gray"
@@ -402,20 +402,20 @@
             </template>
 
             <div class="space-y-4">
-              <UFormField label="Name" required>
+              <UFormField :label="t('myProfile.fields.name')" required>
                 <UInput
                   v-model="editName"
-                  placeholder="Profile name"
+                  :placeholder="t('myProfile.fields.profileNamePlaceholder')"
                   size="lg"
                   icon="i-lucide-user"
                 />
               </UFormField>
 
-              <UFormField label="Age Group">
+              <UFormField :label="t('myProfile.fields.ageGroup')">
                 <USelectMenu
                   v-model="editAgeGroup"
                   :items="ageGroupOptions"
-                  placeholder="Select age group"
+                  :placeholder="t('myProfile.fields.selectAgeGroup')"
                   size="lg"
                   value-key="value"
                 />
@@ -425,7 +425,7 @@
             <template #footer>
               <div class="flex justify-end gap-3">
                 <UButton variant="ghost" color="gray" @click="showEditDetails = false">
-                  Cancel
+                  {{ t('myProfile.actions.cancel') }}
                 </UButton>
                 <UButton
                   color="primary"
@@ -433,7 +433,7 @@
                   :disabled="!editName.trim()"
                   @click="saveDetails"
                 >
-                  Save Changes
+                  {{ t('myProfile.actions.saveChanges') }}
                 </UButton>
               </div>
             </template>
@@ -447,7 +447,7 @@
           <UCard>
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Add Dietary Preference</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.modals.addDietaryPreference') }}</h3>
                 <UButton
                   variant="ghost"
                   color="gray"
@@ -490,13 +490,13 @@
             </div>
 
             <p v-if="availableDiets.length === 0" class="text-center py-4 text-gray-500 dark:text-gray-400">
-              You've added all available dietary preferences.
+              {{ t('myProfile.emptyState.allDietaryPreferencesAdded') }}
             </p>
 
             <template #footer>
               <div class="flex justify-end gap-3">
                 <UButton variant="ghost" color="gray" @click="showAddDiet = false">
-                  Cancel
+                  {{ t('myProfile.actions.cancel') }}
                 </UButton>
                 <UButton
                   color="primary"
@@ -504,7 +504,7 @@
                   :disabled="!selectedNewDiet"
                   @click="addDiet"
                 >
-                  Add Preference
+                  {{ t('myProfile.actions.addPreference') }}
                 </UButton>
               </div>
             </template>
@@ -519,7 +519,7 @@
             <template #header>
               <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                  {{ foodPickerMode === 'likes' ? 'Add Foods You Like' : 'Add Foods You Dislike' }}
+                  {{ foodPickerMode === 'likes' ? t('myProfile.foodPicker.addFoodsYouLike') : t('myProfile.foodPicker.addFoodsYouDislike') }}
                 </h3>
                 <UButton
                   variant="ghost"
@@ -535,7 +535,7 @@
             <div class="mb-4">
               <UInput
                 v-model="foodSearch"
-                placeholder="Search foods..."
+                :placeholder="t('myProfile.foodPicker.searchFoodsPlaceholder')"
                 icon="i-lucide-search"
                 size="lg"
               />
@@ -552,7 +552,7 @@
                 @click="selectedFoodCategory = cat.id"
               >
                 <UIcon :name="cat.icon" class="w-4 h-4 mr-1" />
-                {{ cat.name }}
+                {{ getFoodCategoryLabel(cat.id, cat.name) }}
               </UButton>
             </div>
 
@@ -561,7 +561,7 @@
               <div class="flex items-start gap-2">
                 <UIcon name="i-lucide-info" class="w-4 h-4 text-blue-500 mt-0.5" />
                 <p class="text-xs text-blue-700 dark:text-blue-300">
-                  Showing foods compatible with your dietary preferences: {{ currentDietaryGroups.map(d => getDietLabel(d)).join(', ') }}
+                  {{ t('myProfile.foodPicker.compatibilityNotice', { diets: currentDietaryGroups.map(d => getDietLabel(d)).join(', ') }) }}
                 </p>
               </div>
             </div>
@@ -592,7 +592,7 @@
                       ? foodPickerMode === 'likes' ? 'text-pink-500' : 'text-orange-500'
                       : 'text-gray-400'"
                   />
-                  <span class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ food.name }}</span>
+                  <span class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ getFoodName(food.id) }}</span>
                   <UIcon
                     v-if="selectedFoods.includes(food.id)"
                     name="i-lucide-check"
@@ -603,18 +603,18 @@
               </div>
 
               <p v-if="filteredFoods.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
-                No foods found matching your search.
+                {{ t('myProfile.foodPicker.noFoodsFound') }}
               </p>
             </div>
 
             <template #footer>
               <div class="flex items-center justify-between">
                 <span class="text-sm text-gray-500 dark:text-gray-400">
-                  {{ selectedFoods.length }} selected
+                  {{ t('myProfile.foodPicker.selectedCount', { count: selectedFoods.length }) }}
                 </span>
                 <div class="flex gap-3">
                   <UButton variant="ghost" color="gray" @click="showFoodPicker = false">
-                    Cancel
+                    {{ t('myProfile.actions.cancel') }}
                   </UButton>
                   <UButton
                     :color="foodPickerMode === 'likes' ? 'pink' : 'orange'"
@@ -622,7 +622,11 @@
                     :disabled="selectedFoods.length === 0"
                     @click="saveFoodPreferences"
                   >
-                    Add {{ selectedFoods.length }} Food{{ selectedFoods.length !== 1 ? 's' : '' }}
+                    {{
+                      selectedFoods.length === 1
+                        ? t('myProfile.foodPicker.addOneFood')
+                        : t('myProfile.foodPicker.addManyFoods', { count: selectedFoods.length })
+                    }}
                   </UButton>
                 </div>
               </div>
@@ -637,7 +641,7 @@
           <UCard>
             <template #header>
               <div class="flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Add Allergy or Intolerance</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.modals.addAllergyOrIntolerance') }}</h3>
                 <UButton
                   variant="ghost"
                   color="gray"
@@ -669,13 +673,13 @@
             </div>
 
             <p v-if="availableAllergies.length === 0" class="text-center py-4 text-gray-500 dark:text-gray-400">
-              You've added all common allergies.
+              {{ t('myProfile.emptyState.allCommonAllergiesAdded') }}
             </p>
 
             <template #footer>
               <div class="flex justify-end gap-3">
                 <UButton variant="ghost" color="gray" @click="showAddAllergy = false">
-                  Cancel
+                  {{ t('myProfile.actions.cancel') }}
                 </UButton>
                 <UButton
                   color="red"
@@ -683,7 +687,7 @@
                   :disabled="!selectedNewAllergy"
                   @click="addAllergy"
                 >
-                  Add Allergy
+                  {{ t('myProfile.actions.addAllergy') }}
                 </UButton>
               </div>
             </template>
@@ -698,12 +702,12 @@
             <template #header>
               <div class="flex items-center gap-2">
                 <UIcon name="i-lucide-alert-triangle" class="w-5 h-5 text-red-500" />
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Delete Profile</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.modals.deleteProfileTitle') }}</h3>
               </div>
             </template>
 
             <p class="text-gray-600 dark:text-gray-400">
-              Are you sure you want to delete <strong>{{ currentMember?.name }}</strong>? This action cannot be undone.
+              {{ t('myProfile.modals.deleteConfirm', { name: currentMember?.name || '' }) }}
             </p>
 
             <UAlert
@@ -718,14 +722,14 @@
             <template #footer>
               <div class="flex justify-end gap-3">
                 <UButton variant="ghost" color="gray" @click="showDeleteConfirm = false">
-                  Cancel
+                  {{ t('myProfile.actions.cancel') }}
                 </UButton>
                 <UButton
                   color="red"
                   :loading="isDeleting"
                   @click="deleteProfile"
                 >
-                  Delete Profile
+                  {{ t('myProfile.actions.deleteProfile') }}
                 </UButton>
               </div>
             </template>
@@ -738,11 +742,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useHouseholdStore } from '@/stores/household'
 import { stringToAvatarConfig, avatarPresets } from '~/utils/avatarPresets'
 import {
   foodCategories,
-  foodItems,
   getFoodsByCategory,
   getFoodById,
   type DietaryGroup
@@ -753,8 +757,10 @@ definePageMeta({
   middleware: ['auth', 'profile']
 })
 
+const { t, te, locale } = useI18n()
+
 useHead({
-  title: 'My Profile'
+  title: computed(() => t('myProfile.pageTitle'))
 })
 
 const householdStore = useHouseholdStore()
@@ -813,42 +819,67 @@ const memberAvatarConfig = computed(() => {
   return stringToAvatarConfig(currentMember.value.image_url)
 })
 
-const ageGroupOptions = [
-  { label: 'Child (0-12)', value: 'child' },
-  { label: 'Teen (13-19)', value: 'teen' },
-  { label: 'Adult (20-64)', value: 'adult' },
-  { label: 'Senior (65+)', value: 'senior' }
-]
+const ageGroupOptions = computed(() => [
+  { label: t('profileSelection.ageGroups.child'), value: 'child' },
+  { label: t('profileSelection.ageGroups.teen'), value: 'teen' },
+  { label: t('profileSelection.ageGroups.adult'), value: 'adult' },
+  { label: t('profileSelection.ageGroups.senior'), value: 'senior' }
+])
 
-const dietaryOptions = [
-  { value: 'omnivore', label: 'Omnivore', description: 'Eats everything', icon: 'i-lucide-utensils' },
-  { value: 'vegetarian', label: 'Vegetarian', description: 'No meat', icon: 'i-lucide-carrot' },
-  { value: 'vegan', label: 'Vegan', description: 'Plant-based only', icon: 'i-lucide-leaf' },
-  { value: 'pescatarian', label: 'Pescatarian', description: 'Fish & plants', icon: 'i-lucide-fish' },
-  { value: 'flexitarian', label: 'Flexitarian', description: 'Mostly plant-based', icon: 'i-lucide-sprout' }
-]
+const dietaryOptions = computed(() => [
+  {
+    value: 'omnivore',
+    label: t('profileSelection.setupWizard.dietary.omnivore.label'),
+    description: t('profileSelection.setupWizard.dietary.omnivore.description'),
+    icon: 'i-lucide-utensils'
+  },
+  {
+    value: 'vegetarian',
+    label: t('profileSelection.setupWizard.dietary.vegetarian.label'),
+    description: t('profileSelection.setupWizard.dietary.vegetarian.description'),
+    icon: 'i-lucide-carrot'
+  },
+  {
+    value: 'vegan',
+    label: t('profileSelection.setupWizard.dietary.vegan.label'),
+    description: t('profileSelection.setupWizard.dietary.vegan.description'),
+    icon: 'i-lucide-leaf'
+  },
+  {
+    value: 'pescatarian',
+    label: t('profileSelection.setupWizard.dietary.pescatarian.label'),
+    description: t('profileSelection.setupWizard.dietary.pescatarian.description'),
+    icon: 'i-lucide-fish'
+  },
+  {
+    value: 'flexitarian',
+    label: t('profileSelection.setupWizard.dietary.flexitarian.label'),
+    description: t('profileSelection.setupWizard.dietary.flexitarian.description'),
+    icon: 'i-lucide-sprout'
+  }
+])
 
-const allergyOptions = [
-  { value: 'gluten', label: 'Gluten', icon: 'i-lucide-wheat' },
-  { value: 'dairy', label: 'Dairy', icon: 'i-lucide-milk' },
-  { value: 'eggs', label: 'Eggs', icon: 'i-lucide-egg' },
-  { value: 'nuts', label: 'Tree Nuts', icon: 'i-lucide-nut' },
-  { value: 'peanuts', label: 'Peanuts', icon: 'i-lucide-nut' },
-  { value: 'soy', label: 'Soy', icon: 'i-lucide-bean' },
-  { value: 'shellfish', label: 'Shellfish', icon: 'i-lucide-shell' },
-  { value: 'fish', label: 'Fish', icon: 'i-lucide-fish' },
-  { value: 'sesame', label: 'Sesame', icon: 'i-lucide-circle-dot' },
-  { value: 'sulfites', label: 'Sulfites', icon: 'i-lucide-flask-conical' },
-  { value: 'lactose', label: 'Lactose', icon: 'i-lucide-milk' },
-  { value: 'fructose', label: 'Fructose', icon: 'i-lucide-apple' }
-]
+const allergyOptions = computed(() => [
+  { value: 'gluten', label: t('myProfile.allergyOptions.gluten'), icon: 'i-lucide-wheat' },
+  { value: 'dairy', label: t('myProfile.allergyOptions.dairy'), icon: 'i-lucide-milk' },
+  { value: 'eggs', label: t('myProfile.allergyOptions.eggs'), icon: 'i-lucide-egg' },
+  { value: 'nuts', label: t('myProfile.allergyOptions.nuts'), icon: 'i-lucide-nut' },
+  { value: 'peanuts', label: t('myProfile.allergyOptions.peanuts'), icon: 'i-lucide-nut' },
+  { value: 'soy', label: t('myProfile.allergyOptions.soy'), icon: 'i-lucide-bean' },
+  { value: 'shellfish', label: t('myProfile.allergyOptions.shellfish'), icon: 'i-lucide-shell' },
+  { value: 'fish', label: t('myProfile.allergyOptions.fish'), icon: 'i-lucide-fish' },
+  { value: 'sesame', label: t('myProfile.allergyOptions.sesame'), icon: 'i-lucide-circle-dot' },
+  { value: 'sulfites', label: t('myProfile.allergyOptions.sulfites'), icon: 'i-lucide-flask-conical' },
+  { value: 'lactose', label: t('myProfile.allergyOptions.lactose'), icon: 'i-lucide-milk' },
+  { value: 'fructose', label: t('myProfile.allergyOptions.fructose'), icon: 'i-lucide-apple' }
+])
 
 const availableDiets = computed(() => {
-  return dietaryOptions.filter(d => !currentDietaryGroups.value.includes(d.value as DietaryGroup))
+  return dietaryOptions.value.filter(d => !currentDietaryGroups.value.includes(d.value as DietaryGroup))
 })
 
 const availableAllergies = computed(() => {
-  return allergyOptions.filter(a => !allergies.value.includes(a.value))
+  return allergyOptions.value.filter(a => !allergies.value.includes(a.value))
 })
 
 // Filtered foods based on category, search, and dietary compatibility
@@ -860,35 +891,41 @@ const filteredFoods = computed(() => {
 
   if (foodSearch.value) {
     const search = foodSearch.value.toLowerCase()
-    foods = foods.filter(f => f.name.toLowerCase().includes(search))
+    foods = foods.filter(f => getFoodName(f.id).toLowerCase().includes(search))
   }
 
   return foods
 })
 
 const ageGroupLabel = computed(() => {
-  if (!currentMember.value?.age_group) return 'Not specified'
-  const option = ageGroupOptions.find(o => o.value === currentMember.value?.age_group)
+  if (!currentMember.value?.age_group) return t('myProfile.values.notSpecified')
+  const option = ageGroupOptions.value.find(o => o.value === currentMember.value?.age_group)
   return option?.label || currentMember.value.age_group
+})
+
+const dateLocale = computed(() => {
+  if (locale.value === 'hu') return 'hu-HU'
+  if (locale.value === 'sl') return 'sl-SI'
+  return 'en-US'
 })
 
 const memberSince = computed(() => {
   const dateStr = currentMember.value?.joined_at || currentMember.value?.created_at
-  if (!dateStr) return 'Unknown'
+  if (!dateStr) return t('myProfile.values.unknown')
   const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  return date.toLocaleDateString(dateLocale.value, { month: 'long', year: 'numeric' })
 })
 
 function getDietIcon(diet: string): string {
-  return dietaryOptions.find(d => d.value === diet)?.icon || 'i-lucide-utensils'
+  return dietaryOptions.value.find(d => d.value === diet)?.icon || 'i-lucide-utensils'
 }
 
 function getDietLabel(diet: string): string {
-  return dietaryOptions.find(d => d.value === diet)?.label || diet
+  return dietaryOptions.value.find(d => d.value === diet)?.label || diet
 }
 
 function getDietDescription(diet: string): string {
-  return dietaryOptions.find(d => d.value === diet)?.description || ''
+  return dietaryOptions.value.find(d => d.value === diet)?.description || ''
 }
 
 function getFoodIcon(foodId: string): string {
@@ -896,11 +933,18 @@ function getFoodIcon(foodId: string): string {
 }
 
 function getFoodName(foodId: string): string {
-  return getFoodById(foodId)?.name || foodId
+  const fallbackName = getFoodById(foodId)?.name || foodId
+  const key = `myProfile.foodItems.${foodId}`
+  return te(key) ? t(key) : fallbackName
 }
 
 function getAllergyLabel(allergy: string): string {
-  return allergyOptions.find(a => a.value === allergy)?.label || allergy
+  return allergyOptions.value.find(a => a.value === allergy)?.label || allergy
+}
+
+function getFoodCategoryLabel(categoryId: string, fallbackLabel: string): string {
+  const key = `myProfile.foodCategories.${categoryId}`
+  return te(key) ? t(key) : fallbackLabel
 }
 
 function isAlreadySelected(foodId: string): boolean {
@@ -1175,7 +1219,7 @@ async function deleteProfile() {
     navigateTo('/profiles')
   } catch (err) {
     console.error('Failed to delete profile:', err)
-    deleteError.value = 'Failed to delete profile. Please try again.'
+    deleteError.value = t('myProfile.errors.deleteProfileFailed')
   } finally {
     isDeleting.value = false
   }
