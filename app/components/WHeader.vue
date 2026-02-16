@@ -50,7 +50,7 @@
             <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ userDisplayName }}</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">{{ authStore.currentUser?.email }}</p>
             <p v-if="householdStore.currentMember" class="text-xs text-brand-500 mt-1">
-              Using: {{ householdStore.currentMember.name }}
+              {{ t('header.using') }}: {{ householdStore.currentMember.name }}
             </p>
           </div>
         </template>
@@ -73,11 +73,13 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useHouseholdStore } from '@/stores/household'
 import { stringToAvatarConfig } from '~/utils/avatarPresets'
 import type { DropdownMenuItem } from '@nuxt/ui'
 
+const { t } = useI18n()
 const authStore = useAuthStore()
 const householdStore = useHouseholdStore()
 
@@ -100,7 +102,7 @@ const currentMemberName = computed(() => {
   const member = householdStore.currentMember
   if (member) return member.name
   const user = authStore.currentUser
-  return user?.given_name || user?.name || 'User'
+  return user?.given_name || user?.name || t('header.userFallback')
 })
 
 // Member initials for fallback avatar
@@ -139,19 +141,19 @@ const memberInitials = computed(() => {
 // User info display
 const userDisplayName = computed(() => {
   const user = authStore.currentUser
-  return user?.name || user?.email || 'User'
+  return user?.name || user?.email || t('header.userFallback')
 })
 
 // User dropdown menu items
 const userMenuItems = computed<DropdownMenuItem[]>(() => [
   {
-    label: 'My Profile',
+    label: t('header.menu.myProfile'),
     icon: 'i-lucide-user',
     disabled: !householdStore.currentMember,
     onSelect: () => navigateTo('/my-profile')
   },
   {
-    label: 'Switch Profile',
+    label: t('header.menu.switchProfile'),
     icon: 'i-lucide-users',
     onSelect: () => {
       householdStore.clearSelectedMember()
@@ -162,7 +164,7 @@ const userMenuItems = computed<DropdownMenuItem[]>(() => [
     type: 'separator'
   },
   {
-    label: 'Account Settings',
+    label: t('header.menu.accountSettings'),
     icon: 'i-lucide-settings',
     onSelect: () => {
       // Check runtime config injected at container startup first, then fall back to Nuxt config
@@ -181,7 +183,7 @@ const userMenuItems = computed<DropdownMenuItem[]>(() => [
     type: 'separator'
   },
   {
-    label: 'Sign out',
+    label: t('header.menu.signOut'),
     icon: 'i-lucide-log-out',
     onSelect: () => {
       householdStore.reset()

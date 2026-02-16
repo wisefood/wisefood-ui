@@ -6,10 +6,11 @@ const { locale } = useI18n()
 
 const languages = [
   { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'el', name: 'Ελληνικά', flag: '🇬🇷' }
+  { code: 'hu', name: 'Magyar', flag: '🇭🇺' },
+  { code: 'sl', name: 'Slovenščina', flag: '🇸🇮' }
 ]
 
-const currentLanguage = computed(() => 
+const currentLanguage = computed(() =>
   languages.find(l => l.code === locale.value) || languages[0]
 )
 
@@ -39,7 +40,7 @@ onClickOutside(dropdown, () => {
     >
       {{ currentLanguage.flag }} {{ currentLanguage.name }}
     </UButton>
-    
+
     <Transition
       enter-active-class="transition ease-out duration-100"
       enter-from-class="transform opacity-0 scale-95"
@@ -48,7 +49,7 @@ onClickOutside(dropdown, () => {
       leave-from-class="transform opacity-100 scale-100"
       leave-to-class="transform opacity-0 scale-95"
     >
-      <div 
+      <div
         v-if="isOpen"
         class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50 py-1"
       >

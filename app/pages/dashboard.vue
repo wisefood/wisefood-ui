@@ -130,7 +130,7 @@
               to="/foodchat"
               class="text-sm font-medium text-brandp-500 dark:text-brandp-400 hover:underline"
             >
-              {{ todayMealPlan ? 'Refine in FoodChat →' : 'Create one in FoodChat →' }}
+              {{ todayMealPlan ? t('dashboard.schedule.refineInFoodChat') : t('dashboard.schedule.createInFoodChat') }} →
             </NuxtLink>
           </div>
 
@@ -239,14 +239,14 @@
       <div class="mb-12 scroll-fade-in" style="--delay: 0.3s">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-2xl font-light text-gray-900 dark:text-white">
-            <span class="text-gray-900 dark:text-white">Recommended for </span>
-            <span class="font-serif italic text-brand-500 dark:text-brand-400 text-3xl">you</span>
+            <span class="text-gray-900 dark:text-white">{{ t('dashboard.recipes.recommendedPrefix') }} </span>
+            <span class="font-serif italic text-brand-500 dark:text-brand-400 text-3xl">{{ t('dashboard.recipes.recommendedAccent') }}</span>
           </h2>
           <NuxtLink
             to="/recipe-wrangler"
             class="text-sm font-medium text-brandg-600 dark:text-brandg-400 hover:underline"
           >
-            Discover recipes in RecipeWrangler →
+            {{ t('dashboard.recipes.discoverInRecipeWrangler') }} →
           </NuxtLink>
         </div>
 
@@ -299,8 +299,8 @@
                   {{ recipe.title }}
                 </h3>
                 <div class="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                  <span v-if="recipe.duration">{{ recipe.duration }}m</span>
-                  <span v-if="recipe.serves">Serves {{ recipe.serves }}</span>
+                  <span v-if="recipe.duration">{{ recipe.duration }}{{ t('dashboard.recipes.minuteShort') }}</span>
+                  <span v-if="recipe.serves">{{ t('dashboard.recipes.serves', { count: recipe.serves }) }}</span>
                 </div>
               </div>
             </div>
@@ -308,7 +308,7 @@
         </div>
 
         <div v-else class="rounded-xl border border-gray-200 dark:border-zinc-700 bg-white/70 dark:bg-zinc-800/50 p-4 text-sm text-gray-500 dark:text-gray-400">
-          No recommendations yet.
+          {{ t('dashboard.recipes.noRecommendationsYet') }}
         </div>
       </div>
 
@@ -653,7 +653,7 @@ const upcomingMeals = computed(() => {
     {
       id: 'breakfast',
       mealType: 'breakfast' as const,
-      name: 'Breakfast',
+      name: t('dashboard.schedule.meals.breakfast'),
       time: '08:00',
       timeInMinutes: 8 * 60,
       icon: 'i-lucide-coffee',
@@ -663,7 +663,7 @@ const upcomingMeals = computed(() => {
     {
       id: 'lunch',
       mealType: 'lunch' as const,
-      name: 'Lunch',
+      name: t('dashboard.schedule.meals.lunch'),
       time: '13:00',
       timeInMinutes: 13 * 60,
       icon: 'i-lucide-utensils',
@@ -673,7 +673,7 @@ const upcomingMeals = computed(() => {
     {
       id: 'dinner',
       mealType: 'dinner' as const,
-      name: 'Dinner',
+      name: t('dashboard.schedule.meals.dinner'),
       time: '19:30',
       timeInMinutes: 19 * 60 + 30,
       icon: 'i-lucide-moon',

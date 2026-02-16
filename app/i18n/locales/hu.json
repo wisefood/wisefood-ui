@@ -1,0 +1,560 @@
+{
+  "meta": {
+    "title": "WiseFood",
+    "description": "WiseFood - A te végső gasztro társad: Fedezd fel, oszd meg és élvezd a kulináris élményeket!"
+  },
+  "dashboard": {
+    "greeting": {
+      "morning": "Jó reggelt",
+      "afternoon": "Jó napot",
+      "evening": "Jó estét"
+    },
+    "welcome": "Üdvözlünk,",
+    "encouragement": "Itt kezdődik a személyre szabott jólléti utad",
+    "loading": "Irányítópult betöltése...",
+    "notAuthenticated": "Nincs bejelentkezve",
+    "signInPrompt": "Jelentkezz be az irányítópult eléréséhez",
+    "goToLogin": "Ugrás a bejelentkezéshez",
+    "title": "Irányítópult",
+    "seoDescription": "Személyre szabott táplálkozási jólléti áttekintés",
+    "apps": {
+      "foodScholar": {
+        "title": "FoodScholar",
+        "description": "Tanulj és fedezz fel"
+      },
+      "recipeWrangler": {
+        "title": "RecipeWrangler",
+        "description": "Receptek keresése"
+      },
+      "foodChat": {
+        "title": "FoodChat",
+        "description": "Kérdezz bármit"
+      }
+    },
+    "spotlight": {
+      "badge": "Mai fókusz",
+      "exploreRecipe": "Recept megnyitása",
+      "save": "Mentés"
+    },
+    "schedule": {
+      "title": "Mai ütemezés",
+      "now": "Most",
+      "cal": "kcal",
+      "refineInFoodChat": "Finomítás a FoodChatben",
+      "createInFoodChat": "Készíts egyet a FoodChatben",
+      "planned": "Tervezett",
+      "notPlanned": "Nincs tervezve",
+      "noBreakfast": "Nincs még tervezett reggeli",
+      "noLunch": "Nincs még tervezett ebéd",
+      "noDinner": "Nincs még tervezett vacsora",
+      "noMembers": "Nincsenek tagok",
+      "meals": {
+        "breakfast": "Reggeli",
+        "lunch": "Ebéd",
+        "dinner": "Vacsora"
+      },
+      "days": {
+        "sunday": "Vasárnap",
+        "monday": "Hétfő",
+        "tuesday": "Kedd",
+        "wednesday": "Szerda",
+        "thursday": "Csütörtök",
+        "friday": "Péntek",
+        "saturday": "Szombat"
+      },
+      "months": {
+        "jan": "Jan",
+        "feb": "Feb",
+        "mar": "Már",
+        "apr": "Ápr",
+        "may": "Máj",
+        "jun": "Jún",
+        "jul": "Júl",
+        "aug": "Aug",
+        "sep": "Szept",
+        "oct": "Okt",
+        "nov": "Nov",
+        "dec": "Dec"
+      }
+    },
+    "progress": {
+      "title": "Haladásod",
+      "today": "Ma",
+      "ofTarget": "a célból"
+    },
+    "badges": {
+      "healthy": "Egészséges",
+      "sustainable": "Fenntartható"
+    },
+    "recipes": {
+      "recommendedForYou": "Neked ajánlott",
+      "recommendedPrefix": "Neked ajánlott",
+      "recommendedAccent": "receptek",
+      "discoverInRecipeWrangler": "Fedezz fel recepteket a RecipeWranglerben",
+      "minuteShort": "p",
+      "serves": "{count} adag",
+      "noRecommendationsYet": "Még nincsenek ajánlások."
+    },
+    "insights": {
+      "didYouKnow": "Tudtad?",
+      "tipsOfTheDay": "A nap tippjei",
+      "learnMore": "Tudj meg többet a FoodScholarban"
+    },
+    "sustainability": {
+      "title": "Fenntartható választás"
+    },
+    "friend": "Barát"
+  },
+  "nav": {
+    "signIn": "Bejelentkezés",
+    "legal": "Felhasználási feltételek | GDPR"
+  },
+  "header": {
+    "using": "Használatban",
+    "userFallback": "Felhasználó",
+    "menu": {
+      "myProfile": "Saját profil",
+      "switchProfile": "Profilváltás",
+      "accountSettings": "Fiókbeállítások",
+      "signOut": "Kijelentkezés"
+    }
+  },
+  "auth": {
+    "welcome": "Üdv újra",
+    "loginPrompt": "Jelentkezz be a folytatáshoz",
+    "createYourAccount": "Hozd létre a fiókodat",
+    "registerPrompt": "Csatlakozz a WiseFoodhoz a kezdéshez",
+    "signInWithSSO": "Bejelentkezés SSO-val",
+    "createAccount": "Új fiók létrehozása",
+    "checking": "Hitelesítés ellenőrzése...",
+    "redirecting": "Átirányítás...",
+    "or": "vagy",
+    "ssoInfo": "Egyszeri bejelentkezés",
+    "ssoDescription": "Átirányítunk a biztonságos bejelentkezési portálra",
+    "ssoRegistration": "Biztonságos regisztráció",
+    "ssoRegistrationDescription": "Hozd létre fiókodat biztonságos hitelesítési portálunkon.",
+    "secureAuth": "Biztonságos hitelesítés iparági szabványú titkosítással",
+    "singleSignOn": "Egyszeri bejelentkezés az összes WiseFood szolgáltatásba",
+    "needHelp": "Segítségre van szükséged?",
+    "contactSupport": "Kapcsolat az ügyfélszolgálattal",
+    "privacy": "Adatvédelmi irányelvek",
+    "terms": "Szolgáltatási feltételek",
+    "noAccount": "Még nincs fiókod?",
+    "signIn": "Bejelentkezés",
+    "register": "Regisztráció"
+  },
+  "hero": {
+    "eyebrow": "Táplálkozás · Fenntarthatóság · Jóllét",
+    "titleLead": "Megerősített polgárok",
+    "titleAccent": "Egészségesebb közösségek",
+    "description": "Alakítsd át étkezési döntéseidet intelligens, MI-alapú eszközökkel az egészségesebb és fenntarthatóbb életért.",
+    "ctaPrimary": "Kezdés",
+    "ctaSecondary": "Demó megtekintése"
+  },
+  "features": {
+    "heading": "Embereknek",
+    "headingAccent": "tervezve",
+    "subheading": "Fedezd fel az erős funkciókat, amelyek a WiseFoodot a tökéletes táplálkozási társsá teszik.",
+    "items": {
+      "scientific": {
+        "title": "Tudományos tudás",
+        "description": "Korszerű táplálkozási kutatások egyszerűen. Az összetett tanulmányokat világos, gyakorlatias felismerésekké fordítjuk."
+      },
+      "personalized": {
+        "title": "Rád szabva",
+        "description": "Minden ajánlás a profilodhoz igazodik. Étkezési preferenciáid, allergiáid és céljaid formálják a javaslatokat."
+      },
+      "culinary": {
+        "title": "Kulináris inspiráció",
+        "description": "Találj recepteket, amelyek illenek az ízlésedhez és egészségcéljaidhoz. A gyors hétköznapi ételektől a gourmet fogásokig."
+      },
+      "ai": {
+        "title": "MI-alapú betekintések",
+        "description": "Okos algoritmusok folyamatosan elemzik étkezési szokásaidat. Kapj proaktív javaslatokat a jobb napi döntésekhez."
+      },
+      "planning": {
+        "title": "Étkezéstervezés",
+        "description": "A háztartás minden tagjára főzni még sosem volt ilyen egyszerű. Mindenkinek megfelelő étkezési javaslatokat kapsz."
+      },
+      "progress": {
+        "title": "Kövesd a fejlődésed",
+        "description": "Átlátható irányítópultok mutatják az egészségutadat. Ünnepeld a mérföldköveket és maradj motivált."
+      }
+    }
+  },
+  "steps": {
+    "heading": "Egyszerű",
+    "headingAccent": "lépések",
+    "subheading": "Kezdd el percek alatt, és alakítsd át a kapcsolatod az étellel.",
+    "items": {
+      "profile": {
+        "title": "Profil létrehozása",
+        "description": "Add meg étkezési preferenciáidat, egészségcéljaidat és korlátozásaidat. A kezdés csak pár perc."
+      },
+      "recommendations": {
+        "title": "Ajánlások kérése",
+        "description": "MI-nk azonnal elemzi profilodat, és személyre szabott menüterveket, recepteket és táplálkozási útmutatást ad."
+      },
+      "track": {
+        "title": "Kövesd és javítsd",
+        "description": "Naplózd étkezéseidet és figyeld a fejlődésed. Ahogy a rendszer tanul, egyre jobban igazodik hozzád."
+      }
+    }
+  },
+  "cta": {
+    "heading": "Készen állsz átalakítani az",
+    "accent": "étellel való kapcsolatodat?",
+    "description": "Csatlakozz a WiseFood közösségéhez, amely egészségesebb szokásokat épít. Kezdd el ma, és fedezd fel az okosabb táplálkozást.",
+    "primary": "Kezdd el ma"
+  },
+  "recipeWrangler": {
+    "title": "RecipeWrangler",
+    "subtitle": "Fedezz fel személyre szabott recepteket a táplálkozási céljaid és környezeti hatás alapján",
+    "backToDashboard": "Vissza az irányítópultra",
+    "backToRecipes": "Vissza a receptekhez",
+    "compare": "Összehasonlítás",
+    "loadingHint": "Ez akár 60 másodpercig is eltarthat",
+    "pagination": "Lapozás",
+    "previousPage": "Előző oldal",
+    "nextPage": "Következő oldal",
+    "search": {
+      "placeholder": "Kérj recepteket (pl. 'tésztareceptek', 'gyors vegán ételek')...",
+      "button": "Keresés",
+      "searching": "Keresés...",
+      "recentSearches": "Legutóbbi keresések:"
+    },
+    "analyzer": {
+      "title": "MI receptelemző",
+      "description": "Illessz be bármilyen recept URL-t vagy hozzávalólistát az azonnali táplálkozási elemzéshez",
+      "placeholder": "Illeszd be ide a recept URL-t, hozzávalókat vagy receptszöveget...",
+      "analyze": "Recept elemzése",
+      "analyzing": "Elemzés...",
+      "results": "Elemzés eredménye",
+      "calories": "Kalória",
+      "protein": "Fehérje",
+      "carbs": "Szénhidrát",
+      "fat": "Zsír"
+    },
+    "filters": {
+      "title": "Szűrők és preferenciák",
+      "show": "Szűrők megjelenítése",
+      "hide": "Szűrők elrejtése",
+      "excludeAllergens": "Allergének kizárása",
+      "clearAll": "Összes törlése",
+      "quickFilters": "Gyors szűrők",
+      "sortBy": "Rendezés"
+    },
+    "allergens": {
+      "peanuts": "Földimogyoró",
+      "treeNuts": "Csonthéjasok",
+      "dairy": "Tejtermék",
+      "eggs": "Tojás",
+      "soy": "Szója",
+      "wheat": "Búza",
+      "fish": "Hal",
+      "shellfish": "Rákfélék",
+      "gluten": "Glutén",
+      "lactose": "Laktóz"
+    },
+    "quickFilters": {
+      "quick": "Gyors és egyszerű (< 30 perc)",
+      "healthy": "Egészséges és tápláló",
+      "vegetarian": "Vegetáriánus",
+      "vegan": "Vegán",
+      "lowCalorie": "Alacsony kalória"
+    },
+    "sort": {
+      "relevance": "Legrelevánsabb",
+      "duration": "Elkészítési idő",
+      "calories": "Kalória",
+      "nutriScore": "Táplálkozási pontszám"
+    },
+    "results": {
+      "found": "{count} recept találat",
+      "searching": "Keresés...",
+      "error": "Hiba a receptek betöltésekor",
+      "loading": "Receptek betöltése...",
+      "noResults": "Nem található recept",
+      "noResultsMessage": "Próbáld módosítani a keresést, vagy böngéssz a kategóriák között",
+      "tryAgain": "Próbáld újra"
+    },
+    "recipe": {
+      "viewRecipe": "Recept megnyitása",
+      "save": "Mentés",
+      "saved": "Mentve",
+      "servings": "adag | adag",
+      "minutes": "perc",
+      "minuteShort": "p",
+      "nutriScore": "Nutri-Score",
+      "addToComparison": "Hozzáadás összehasonlításhoz",
+      "removeFromComparison": "Eltávolítás összehasonlításból",
+      "addToFavorites": "Hozzáadás a kedvencekhez",
+      "removeFromFavorites": "Eltávolítás a kedvencekből"
+    },
+    "categories": {
+      "title": "Böngészés kategória szerint",
+      "pasta": "Tészta",
+      "salad": "Saláta",
+      "soup": "Leves",
+      "breakfast": "Reggeli",
+      "dessert": "Desszert",
+      "snacks": "Snack",
+      "beverages": "Italok",
+      "quickMeals": "Gyors ételek"
+    },
+    "detail": {
+      "nutritionalInfo": "Tápérték információ",
+      "perServing": "adagonként",
+      "ingredients": "Hozzávalók",
+      "instructions": "Elkészítés",
+      "environmentalImpact": "Környezeti hatás",
+      "sustainabilityMessage": "Ez a recept fenntarthatósági pontszámot kapott az alapanyagok és elkészítés alapján.",
+      "sustainabilityGood": "Jó",
+      "failedToLoad": "A recept betöltése sikertelen",
+      "fiber": "Rost",
+      "sugar": "Cukor",
+      "sodium": "Nátrium",
+      "cholesterol": "Koleszterin"
+    }
+  },
+  "foodChat": {
+    "title": "FoodChat",
+    "welcome": "Üdv a FoodChatben",
+    "description": "MI táplálkozási asszisztensed. Kérdezz étkezéstervezésről, tápanyagokról, étrendi tanácsokról vagy receptekről.",
+    "newChat": "Új FoodChat",
+    "noSessions": "Még nincs beszélgetés",
+    "noSessionsHint": "Indíts új FoodChatet fent",
+    "sendPlaceholder": "Kérdezz táplálkozásról, menütervről, receptekről...",
+    "sendFirst": "Küldj egy üzenetet a kezdéshez",
+    "mealPlan": "Menüterv",
+    "noMealPlan": "Még nincs menüterv",
+    "noMealPlanHint": "Kérd meg az asszisztenst, hogy készítsen menütervet",
+    "ingredients": "Hozzávalók",
+    "directions": "Elkészítés",
+    "backToDashboard": "Irányítópult",
+    "suggested": {
+      "mealPlan": "Tudsz javasolni menütervet testsúlykezeléshez?",
+      "highProtein": "Milyen magas fehérjetartalmú vegetáriánus ételeket ajánlasz?",
+      "gutHealth": "Mely ételek jók a bélrendszer egészségének?",
+      "reduceSugar": "Hogyan csökkenthetem a cukorfogyasztásomat ízvesztés nélkül?"
+    }
+  },
+  "foodScholarHome": {
+    "backToDashboard": "Vissza az irányítópultra",
+    "subtitle": "Oktatási tartalom és táplálkozási betekintések a fenntartható étkezésről",
+    "categories": {
+      "all": "Összes",
+      "uncategorized": "Nincs kategorizálva"
+    },
+    "common": {
+      "yes": "Igen",
+      "no": "Nem",
+      "justNow": "épp most"
+    },
+    "errors": {
+      "failedToLoadArticles": "Nem sikerült betölteni a cikkeket.",
+      "failedToLoadPopularArticles": "Nem sikerült betölteni a népszerű cikkeket.",
+      "failedToGetQaResponse": "Nem sikerült választ kapni a FoodScholar QA-tól.",
+      "failedToSubmitFeedback": "A visszajelzés küldése sikertelen."
+    },
+    "popularArticles": {
+      "title": "Népszerű cikkek",
+      "browseFullCatalog": "Teljes katalógus böngészése",
+      "loading": "Népszerű cikkek betöltése...",
+      "noFilteredResults": "A kiválasztott szűrőknek nincs találata."
+    },
+    "popularTopics": {
+      "title": "Népszerű témák",
+      "topicDescription": "Kutatások és bizonyítékok a következő témában: {topic}.",
+      "emptyState": "A témák akkor jelennek meg, amikor a cikkmetaadatok indexelése elkészül."
+    },
+    "qa": {
+      "tagline": "Kérdezz természetesen. Kapj bizonyítékokra épülő válaszokat.",
+      "headingOptions": {
+        "first": "Mire vagy kíváncsi?",
+        "second": "Kérdezz bármit az ételről és táplálkozásról",
+        "third": "A táplálkozási kutatásod társa"
+      },
+      "mode": {
+        "simple": "Egyszerű",
+        "advanced": "Haladó"
+      },
+      "composer": {
+        "focusedHint": "Remek, most add meg a számodra legfontosabb részletet.",
+        "idleHint": "Nyomj Entert a kérdezéshez. További vezérléshez nyisd meg a Haladó módot.",
+        "enterKey": "Enter"
+      },
+      "advanced": {
+        "title": "Haladó beállítások",
+        "subtitle": "Csak akkor állítsd, ha több kontrollra van szükséged.",
+        "ragOn": "RAG be",
+        "ragOff": "RAG ki",
+        "model": "Modell",
+        "sourceDepth": "Forrásmélység",
+        "explanationStyle": "Magyarázat stílusa",
+        "enableRagToAdjust": "A forrásmélység állításához engedélyezd a RAG-ot."
+      },
+      "model": {
+        "auto": "Automatikus (ajánlott)",
+        "noProviderModels": "Jelenleg nincs elérhető szolgáltatói modell. Automatikus mód lesz használva.",
+        "autoHint": "Hagyd automatikusan, hacsak nincs szükséged konkrét szolgáltatóra.",
+        "system": "Rendszer",
+        "custom": "Egyedi"
+      },
+      "topK": {
+        "focusedLabel": "Fókuszált (3)",
+        "focusedDescription": "Gyors válasz csak a legrelevánsabb forrásokból.",
+        "balancedLabel": "Kiegyensúlyozott (5)",
+        "balancedDescription": "Jó egyensúly a mélység, sebesség és forrásváltozatosság között.",
+        "deepLabel": "Mély (8)",
+        "deepDescription": "Szélesebb bizonyítéklefedés árnyalt vagy tág kérdésekhez.",
+        "comprehensiveLabel": "Átfogó (12)",
+        "comprehensiveDescription": "Maximális kontextus, lassabb és nagyobb lekéréssel."
+      },
+      "expertise": {
+        "beginnerLabel": "Kezdő",
+        "beginnerDescription": "Egyszerű nyelvezet gyakorlati magyarázatokkal.",
+        "intermediateLabel": "Középhaladó",
+        "intermediateDescription": "Kiegyensúlyozott részletesség és terminológia.",
+        "expertLabel": "Szakértő",
+        "expertDescription": "Technikai mélység kutatásközpontú megközelítéssel."
+      },
+      "placeholder": {
+        "default": "Mit szeretnél tudni az ételről és táplálkozásról?",
+        "advanced": "Kérdezz bármit az ételről és táplálkozásról (haladó vezérlés engedélyezve)"
+      },
+      "youAsked": "Te kérdezted",
+      "answer": "Válasz",
+      "answerA": "Válasz A",
+      "answerB": "Válasz B",
+      "answerPrimaryModelResponse": "Elsődleges modellválasz",
+      "answerAlternativeModelResponse": "Alternatív modellválasz",
+      "confidence": "Megbízhatóság",
+      "notAvailable": "n/a",
+      "followUpSuggestions": "További javaslatok",
+      "feedback": {
+        "choosePreferredAnswer": "Kattints egy válaszkártyára az általad preferált válasz kiválasztásához.",
+        "preferenceSaved": "Beállítás mentve",
+        "helpfulQuestion": "Hasznos volt ez?",
+        "saved": "Visszajelzés mentve",
+        "whatWentWrong": "Mi volt a probléma?",
+        "optionalComment": "Megjegyzés hozzáadása (opcionális)",
+        "submit": "Visszajelzés küldése",
+        "reasons": {
+          "inaccurate": "Pontatlan vagy hiányos",
+          "notAsked": "Nem erre kérdeztem",
+          "missingQuality": "Hiányzó vagy gyenge minőségű tartalom",
+          "slowOrErrors": "Túl lassú volt vagy hibázott",
+          "toneStyle": "Nem megfelelő hangnem vagy stílus",
+          "safetyLegal": "Biztonsági vagy jogi aggály"
+        }
+      }
+    }
+  },
+  "profileSelection": {
+    "pageTitle": "Profil kiválasztása - WiseFood",
+    "loading": "Profilok betöltése...",
+    "title": {
+      "prefix": "Ki",
+      "accentEating": "eszik?",
+      "getPrefix": "Kezdjük",
+      "accentStarted": "el"
+    },
+    "subtitle": {
+      "withProfiles": "Válaszd ki a profilod személyre szabott ajánlásokhoz",
+      "createFirstProfile": "Hozd létre az első profilodat",
+      "setupHousehold": "Állítsd be a háztartásodat a személyre szabott ajánlásokhoz"
+    },
+    "actions": {
+      "addProfile": "Profil hozzáadása",
+      "manageProfiles": "Profilok kezelése",
+      "done": "Kész",
+      "cancel": "Mégse",
+      "createProfile": "Profil létrehozása",
+      "delete": "Törlés"
+    },
+    "modal": {
+      "addNewProfile": "Új profil hozzáadása",
+      "deleteTitle": "Profil törlése?",
+      "deletePromptPrefix": "Biztosan törölni szeretnéd ezt a profilt:",
+      "deletePromptSuffix": "Ez a művelet nem vonható vissza."
+    },
+    "fields": {
+      "profileName": "Profil neve",
+      "profileNamePlaceholder": "pl. János, Anya, Apa",
+      "ageGroupOptional": "Korosztály (opcionális)",
+      "selectAgeGroup": "Korosztály kiválasztása"
+    },
+    "ageGroups": {
+      "child": "Gyermek (0-12)",
+      "teen": "Tini (13-19)",
+      "adult": "Felnőtt (20-64)",
+      "senior": "Idős (65+)"
+    },
+    "errors": {
+      "createProfileFailed": "A profil létrehozása sikertelen. Próbáld újra.",
+      "deleteProfileFailed": "A profil törlése sikertelen. Próbáld újra."
+    },
+    "avatarSelector": {
+      "chooseAvatar": "Válassz avatart ehhez a profilhoz"
+    },
+    "setupWizard": {
+      "actions": {
+        "skipForNow": "Kihagyás most",
+        "back": "Vissza",
+        "continue": "Folytatás",
+        "completeSetup": "Beállítás befejezése"
+      },
+      "step1": {
+        "titlePrefix": "Üdvözlünk a",
+        "subtitle": "Állítsuk be a háztartásodat, hogy személyre szabjuk az élményt",
+        "householdNameLabel": "Háztartás neve",
+        "householdNamePlaceholder": "pl. A Kovács család",
+        "countryOptionalLabel": "Ország (opcionális)",
+        "countryPlaceholder": "Válaszd ki az országot",
+        "countrySearchPlaceholder": "Ország keresése...",
+        "countryHint": "Segít regionális recepteket és étrendi irányelveket ajánlani"
+      },
+      "step2": {
+        "titlePrefix": "Hozd létre a",
+        "titleAccent": "profilodat",
+        "subtitle": "Add hozzá magad a háztartás első tagjaként",
+        "profileNameLabel": "Profil neve",
+        "profileNamePlaceholder": "pl. János, Anya, Apa",
+        "ageGroupOptionalLabel": "Korosztály (opcionális)",
+        "selectAgeGroupPlaceholder": "Korosztály kiválasztása"
+      },
+      "step3": {
+        "titlePrefix": "Étrendi",
+        "titleAccent": "preferenciák",
+        "subtitle": "Ez segít személyre szabni a receptajánlásokat (opcionális)"
+      },
+      "dietary": {
+        "omnivore": {
+          "label": "Mindenevő",
+          "description": "Mindent eszik"
+        },
+        "vegetarian": {
+          "label": "Vegetáriánus",
+          "description": "Nem eszik húst"
+        },
+        "vegan": {
+          "label": "Vegán",
+          "description": "Csak növényi alapú"
+        },
+        "pescatarian": {
+          "label": "Peszkatáriánus",
+          "description": "Hal és növények"
+        },
+        "flexitarian": {
+          "label": "Flexitáriánus",
+          "description": "Főleg növényi alapú"
+        }
+      },
+      "errors": {
+        "createHouseholdFailed": "A háztartás létrehozása sikertelen",
+        "genericSubmitFailed": "Valami hiba történt. Próbáld újra."
+      }
+    }
+  }
+}

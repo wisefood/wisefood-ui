@@ -40,12 +40,19 @@
       "title": "Today's Schedule",
       "now": "Now",
       "cal": "cal",
+      "refineInFoodChat": "Refine in FoodChat",
+      "createInFoodChat": "Create one in FoodChat",
       "planned": "Planned",
       "notPlanned": "Not planned",
       "noBreakfast": "No breakfast planned yet",
       "noLunch": "No lunch planned yet",
       "noDinner": "No dinner planned yet",
       "noMembers": "No members",
+      "meals": {
+        "breakfast": "Breakfast",
+        "lunch": "Lunch",
+        "dinner": "Dinner"
+      },
       "days": {
         "sunday": "Sunday",
         "monday": "Monday",
@@ -80,7 +87,13 @@
       "sustainable": "Sustainable"
     },
     "recipes": {
-      "recommendedForYou": "Recommended for you"
+      "recommendedForYou": "Recommended for you",
+      "recommendedPrefix": "Recommended for",
+      "recommendedAccent": "you",
+      "discoverInRecipeWrangler": "Discover recipes in RecipeWrangler",
+      "minuteShort": "m",
+      "serves": "Serves {count}",
+      "noRecommendationsYet": "No recommendations yet."
     },
     "insights": {
       "didYouKnow": "Did you know?",
@@ -95,6 +108,16 @@
   "nav": {
     "signIn": "Sign In",
     "legal": "Terms & Conditions | GDPR"
+  },
+  "header": {
+    "using": "Using",
+    "userFallback": "User",
+    "menu": {
+      "myProfile": "My Profile",
+      "switchProfile": "Switch Profile",
+      "accountSettings": "Account Settings",
+      "signOut": "Sign out"
+    }
   },
   "auth": {
     "welcome": "Welcome back",
@@ -189,6 +212,11 @@
     "subtitle": "Discover personalized recipes tailored to your nutritional goals and environmental impact",
     "backToDashboard": "Back to Dashboard",
     "backToRecipes": "Back to Recipes",
+    "compare": "Compare",
+    "loadingHint": "This may take up to 60 seconds",
+    "pagination": "Pagination",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
     "search": {
       "placeholder": "Ask for recipes (e.g., 'pasta recipes', 'quick vegan meals')...",
       "button": "Search",
@@ -256,7 +284,12 @@
       "saved": "Saved",
       "servings": "serving | servings",
       "minutes": "minutes",
-      "nutriScore": "Nutri-Score"
+      "minuteShort": "min",
+      "nutriScore": "Nutri-Score",
+      "addToComparison": "Add to comparison",
+      "removeFromComparison": "Remove from comparison",
+      "addToFavorites": "Add to favorites",
+      "removeFromFavorites": "Remove from favorites"
     },
     "categories": {
       "title": "Browse by Category",
@@ -304,6 +337,224 @@
       "highProtein": "What are some high-protein vegetarian meal ideas?",
       "gutHealth": "What foods are good for gut health?",
       "reduceSugar": "How can I reduce my sugar intake without sacrificing taste?"
+    }
+  },
+  "foodScholarHome": {
+    "backToDashboard": "Back to Dashboard",
+    "subtitle": "Educational content and nutritional insights about sustainable eating",
+    "categories": {
+      "all": "All",
+      "uncategorized": "Uncategorized"
+    },
+    "common": {
+      "yes": "Yes",
+      "no": "No",
+      "justNow": "just now"
+    },
+    "errors": {
+      "failedToLoadArticles": "Failed to load articles.",
+      "failedToLoadPopularArticles": "Failed to load popular articles.",
+      "failedToGetQaResponse": "Failed to get a QA response from FoodScholar.",
+      "failedToSubmitFeedback": "Failed to submit feedback."
+    },
+    "popularArticles": {
+      "title": "Popular Articles",
+      "browseFullCatalog": "Browse full catalog",
+      "loading": "Loading popular articles...",
+      "noFilteredResults": "No articles match the selected filters."
+    },
+    "popularTopics": {
+      "title": "Popular Topics",
+      "topicDescription": "Explore research and evidence around {topic}.",
+      "emptyState": "Topics will appear as article metadata is indexed."
+    },
+    "qa": {
+      "tagline": "Ask naturally. Get evidence-backed answers.",
+      "headingOptions": {
+        "first": "What would you like to know?",
+        "second": "Ask anything about food & nutrition",
+        "third": "Your nutrition research companion"
+      },
+      "mode": {
+        "simple": "Simple",
+        "advanced": "Advanced"
+      },
+      "composer": {
+        "focusedHint": "Nice, now add the detail you care about most.",
+        "idleHint": "Press Enter to ask. Open Advanced for extra control.",
+        "enterKey": "Enter"
+      },
+      "advanced": {
+        "title": "Advanced settings",
+        "subtitle": "Tune behavior only if you need more control.",
+        "ragOn": "RAG On",
+        "ragOff": "RAG Off",
+        "model": "Model",
+        "sourceDepth": "Source Depth",
+        "explanationStyle": "Explanation Style",
+        "enableRagToAdjust": "Enable RAG to adjust source depth."
+      },
+      "model": {
+        "auto": "Auto (recommended)",
+        "noProviderModels": "No provider models available right now. Auto will be used.",
+        "autoHint": "Leave on Auto unless you need a specific provider.",
+        "system": "System",
+        "custom": "Custom"
+      },
+      "topK": {
+        "focusedLabel": "Focused (3)",
+        "focusedDescription": "Fast answer using the most relevant sources only.",
+        "balancedLabel": "Balanced (5)",
+        "balancedDescription": "Good balance of depth, speed, and citation variety.",
+        "deepLabel": "Deep (8)",
+        "deepDescription": "More evidence coverage for nuanced or broad questions.",
+        "comprehensiveLabel": "Comprehensive (12)",
+        "comprehensiveDescription": "Maximum context with slower, heavier retrieval."
+      },
+      "expertise": {
+        "beginnerLabel": "Beginner",
+        "beginnerDescription": "Simple language with practical explanations.",
+        "intermediateLabel": "Intermediate",
+        "intermediateDescription": "Balanced detail and terminology.",
+        "expertLabel": "Expert",
+        "expertDescription": "Technical depth with research-oriented framing."
+      },
+      "placeholder": {
+        "default": "What would you like to know about food & nutrition?",
+        "advanced": "Ask anything about food & nutrition (advanced controls enabled)"
+      },
+      "youAsked": "You asked",
+      "answer": "Answer",
+      "answerA": "Answer A",
+      "answerB": "Answer B",
+      "answerPrimaryModelResponse": "Primary model response",
+      "answerAlternativeModelResponse": "Alternative model response",
+      "confidence": "Confidence",
+      "notAvailable": "n/a",
+      "followUpSuggestions": "Follow-up suggestions",
+      "feedback": {
+        "choosePreferredAnswer": "Click an answer card to choose your preferred response.",
+        "preferenceSaved": "Preference saved",
+        "helpfulQuestion": "Was this helpful?",
+        "saved": "Feedback saved",
+        "whatWentWrong": "What went wrong?",
+        "optionalComment": "Add a comment (optional)",
+        "submit": "Submit feedback",
+        "reasons": {
+          "inaccurate": "Inaccurate or incomplete",
+          "notAsked": "Not what I asked",
+          "missingQuality": "Missing or poor quality content",
+          "slowOrErrors": "Too slow or had errors",
+          "toneStyle": "Wrong tone or style",
+          "safetyLegal": "Safety or legal concern"
+        }
+      }
+    }
+  },
+  "profileSelection": {
+    "pageTitle": "Select Profile - WiseFood",
+    "loading": "Loading profiles...",
+    "title": {
+      "prefix": "Who's",
+      "accentEating": "eating?",
+      "getPrefix": "Get",
+      "accentStarted": "started"
+    },
+    "subtitle": {
+      "withProfiles": "Select your profile to get personalized recommendations",
+      "createFirstProfile": "Create your first profile",
+      "setupHousehold": "Set up your household to get personalized recommendations"
+    },
+    "actions": {
+      "addProfile": "Add Profile",
+      "manageProfiles": "Manage Profiles",
+      "done": "Done",
+      "cancel": "Cancel",
+      "createProfile": "Create Profile",
+      "delete": "Delete"
+    },
+    "modal": {
+      "addNewProfile": "Add New Profile",
+      "deleteTitle": "Delete Profile?",
+      "deletePromptPrefix": "Are you sure you want to delete",
+      "deletePromptSuffix": "This action cannot be undone."
+    },
+    "fields": {
+      "profileName": "Profile Name",
+      "profileNamePlaceholder": "e.g., John, Mom, Dad",
+      "ageGroupOptional": "Age Group (optional)",
+      "selectAgeGroup": "Select age group"
+    },
+    "ageGroups": {
+      "child": "Child (0-12)",
+      "teen": "Teen (13-19)",
+      "adult": "Adult (20-64)",
+      "senior": "Senior (65+)"
+    },
+    "errors": {
+      "createProfileFailed": "Failed to create profile. Please try again.",
+      "deleteProfileFailed": "Failed to delete profile. Please try again."
+    },
+    "avatarSelector": {
+      "chooseAvatar": "Choose an avatar for this profile"
+    },
+    "setupWizard": {
+      "actions": {
+        "skipForNow": "Skip for now",
+        "back": "Back",
+        "continue": "Continue",
+        "completeSetup": "Complete Setup"
+      },
+      "step1": {
+        "titlePrefix": "Welcome to",
+        "subtitle": "Let's set up your household to personalize your experience",
+        "householdNameLabel": "Household Name",
+        "householdNamePlaceholder": "e.g., The Smith Family",
+        "countryOptionalLabel": "Country (optional)",
+        "countryPlaceholder": "Select your country",
+        "countrySearchPlaceholder": "Search countries...",
+        "countryHint": "Helps us suggest regional recipes and dietary guidelines"
+      },
+      "step2": {
+        "titlePrefix": "Create Your",
+        "titleAccent": "Profile",
+        "subtitle": "Add yourself as the first member of your household",
+        "profileNameLabel": "Profile Name",
+        "profileNamePlaceholder": "e.g., John, Mom, Dad",
+        "ageGroupOptionalLabel": "Age Group (optional)",
+        "selectAgeGroupPlaceholder": "Select age group"
+      },
+      "step3": {
+        "titlePrefix": "Dietary",
+        "titleAccent": "Preferences",
+        "subtitle": "This helps us personalize recipe suggestions (optional)"
+      },
+      "dietary": {
+        "omnivore": {
+          "label": "Omnivore",
+          "description": "Eats everything"
+        },
+        "vegetarian": {
+          "label": "Vegetarian",
+          "description": "No meat"
+        },
+        "vegan": {
+          "label": "Vegan",
+          "description": "Plant-based only"
+        },
+        "pescatarian": {
+          "label": "Pescatarian",
+          "description": "Fish and plants"
+        },
+        "flexitarian": {
+          "label": "Flexitarian",
+          "description": "Mostly plant-based"
+        }
+      },
+      "errors": {
+        "createHouseholdFailed": "Failed to create household",
+        "genericSubmitFailed": "Something went wrong. Please try again."
+      }
     }
   }
 }

@@ -12,7 +12,7 @@
                 name="i-lucide-arrow-left"
                 class="w-5 h-5"
               />
-              <span class="text-sm font-medium">Back to Dashboard</span>
+              <span class="text-sm font-medium">{{ t('foodScholarHome.backToDashboard') }}</span>
             </NuxtLink>
           </div>
         </div>
@@ -21,7 +21,7 @@
             <span class="font-serif italic text-brand-500 text-4xl sm:text-5xl">FoodScholar</span>
           </h1>
           <p class="mt-2 text-gray-600 dark:text-gray-300 font-light">
-            Educational content and nutritional insights about sustainable eating
+            {{ t('foodScholarHome.subtitle') }}
           </p>
         </div>
       </div>
@@ -45,7 +45,7 @@
                   {{ qaHeading }}
                 </h2>
                 <p class="text-xs text-gray-500 dark:text-gray-400">
-                  Ask naturally. Get evidence-backed answers.
+                  {{ t('foodScholarHome.qa.tagline') }}
                 </p>
               </div>
             </div>
@@ -61,7 +61,7 @@
                 ]"
                 @click="qaMode = 'simple'"
               >
-                Simple
+                {{ t('foodScholarHome.qa.mode.simple') }}
               </button>
               <button
                 type="button"
@@ -73,7 +73,7 @@
                 ]"
                 @click="qaMode = 'advanced'"
               >
-                Advanced
+                {{ t('foodScholarHome.qa.mode.advanced') }}
               </button>
             </div>
           </div>
@@ -129,10 +129,10 @@
 
             <div class="mt-2 px-1 flex items-center justify-between">
               <p class="text-[11px] text-gray-500 dark:text-gray-400 transition-colors">
-                {{ composerFocused ? 'Nice, now add the detail you care about most.' : 'Press Enter to ask. Open Advanced for extra control.' }}
+                {{ composerFocused ? t('foodScholarHome.qa.composer.focusedHint') : t('foodScholarHome.qa.composer.idleHint') }}
               </p>
               <span class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                Enter
+                {{ t('foodScholarHome.qa.composer.enterKey') }}
               </span>
             </div>
           </div>
@@ -143,8 +143,8 @@
           >
             <div class="flex items-start justify-between gap-3 mb-4">
               <div>
-                <p class="text-sm font-semibold text-gray-900 dark:text-white">Advanced settings</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Tune behavior only if you need more control.</p>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.advanced.title') }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.advanced.subtitle') }}</p>
               </div>
               <div class="inline-flex items-center rounded-full border border-gray-200 dark:border-zinc-600 bg-white dark:bg-zinc-900 p-1 shadow-sm">
                 <button
@@ -157,7 +157,7 @@
                   ]"
                   @click="ragEnabled = true"
                 >
-                  RAG On
+                  {{ t('foodScholarHome.qa.advanced.ragOn') }}
                 </button>
                 <button
                   type="button"
@@ -169,14 +169,14 @@
                   ]"
                   @click="ragEnabled = false"
                 >
-                  RAG Off
+                  {{ t('foodScholarHome.qa.advanced.ragOff') }}
                 </button>
               </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="space-y-2">
-                <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">Model</label>
+                <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.model') }}</label>
                 <USelectMenu
                   v-model="selectedModelValue"
                   :items="modelOptions"
@@ -186,7 +186,7 @@
                   value-key="value"
                   label-key="label"
                   :search-input="false"
-                  placeholder="Auto (recommended)"
+                  :placeholder="t('foodScholarHome.qa.model.auto')"
                   :portal="false"
                   :disabled="modelsLoading || asking"
                 >
@@ -201,18 +201,18 @@
                   v-if="!modelsLoading && modelOptions.length <= 1"
                   class="mt-2 text-[11px] text-amber-700 dark:text-amber-300"
                 >
-                  No provider models available right now. Auto will be used.
+                  {{ t('foodScholarHome.qa.model.noProviderModels') }}
                 </p>
                 <p
                   v-else
                   class="mt-2 text-[11px] text-gray-500 dark:text-gray-400"
                 >
-                  Leave on Auto unless you need a specific provider.
+                  {{ t('foodScholarHome.qa.model.autoHint') }}
                 </p>
               </div>
 
               <div class="space-y-2">
-                <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">Source Depth</label>
+                <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.sourceDepth') }}</label>
                 <USelectMenu
                   v-model="selectedTopKValue"
                   :items="topKOptions"
@@ -233,12 +233,12 @@
                   </template>
                 </USelectMenu>
                 <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
-                  {{ ragEnabled ? selectedTopKOption.description : 'Enable RAG to adjust source depth.' }}
+                  {{ ragEnabled ? selectedTopKOption.description : t('foodScholarHome.qa.advanced.enableRagToAdjust') }}
                 </p>
               </div>
 
               <div class="space-y-2">
-                <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">Explanation Style</label>
+                <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.explanationStyle') }}</label>
                 <USelectMenu
                   v-model="selectedExpertiseValue"
                   :items="expertiseOptions"
@@ -291,7 +291,7 @@
           >
             <div class="flex justify-end">
               <div class="chat-flow-bubble chat-flow-bubble-user">
-                <p class="text-[10px] uppercase tracking-widest font-semibold text-brand-200 mb-1">You asked</p>
+                <p class="text-[10px] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
                 <p class="text-sm leading-relaxed">{{ chatQuery }}</p>
               </div>
             </div>
@@ -319,7 +319,7 @@
           >
             <div class="flex justify-end">
               <div class="chat-flow-bubble chat-flow-bubble-user">
-                <p class="text-[10px] uppercase tracking-widest font-semibold text-brand-200 mb-1">You asked</p>
+                <p class="text-[10px] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
                 <p class="text-sm leading-relaxed">{{ qaResult.question }}</p>
               </div>
             </div>
@@ -332,7 +332,7 @@
                 v-if="!selectedPreferredAnswer"
                 class="text-xs text-gray-500 dark:text-gray-400"
               >
-                Click an answer card to choose your preferred response.
+                {{ t('foodScholarHome.qa.feedback.choosePreferredAnswer') }}
               </p>
               <div
                 v-else
@@ -342,7 +342,7 @@
                   name="i-lucide-check"
                   class="w-4 h-4"
                 />
-                Preference saved
+                {{ t('foodScholarHome.qa.feedback.preferenceSaved') }}
               </div>
               <div
                 :class="[
@@ -368,7 +368,7 @@
                   @keydown.space.prevent="submitDualAnswerFeedback('a')"
                 >
                   <div class="flex items-center justify-between gap-2 mb-3">
-                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPreferredAnswer ? 'Answer' : 'Answer A' }}</h4>
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPreferredAnswer ? t('foodScholarHome.qa.answer') : t('foodScholarHome.qa.answerA') }}</h4>
                     <span
                       v-if="!selectedPreferredAnswer"
                       class="text-xs text-gray-500 dark:text-gray-400"
@@ -402,7 +402,7 @@
                   @keydown.space.prevent="submitDualAnswerFeedback('b')"
                 >
                   <div class="flex items-center justify-between gap-2 mb-3">
-                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPreferredAnswer ? 'Answer' : 'Answer B' }}</h4>
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPreferredAnswer ? t('foodScholarHome.qa.answer') : t('foodScholarHome.qa.answerB') }}</h4>
                     <span
                       v-if="!selectedPreferredAnswer"
                       class="text-xs text-gray-500 dark:text-gray-400"
@@ -425,8 +425,8 @@
               class="chat-flow-bubble chat-flow-bubble-assistant"
             >
               <div class="flex items-center justify-between mb-3">
-                <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Answer</h4>
-                <span class="text-xs text-gray-500 dark:text-gray-400">Confidence: {{ primaryAnswer.confidence || 'n/a' }}</span>
+                <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.answer') }}</h4>
+                <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.confidence') }}: {{ primaryAnswer.confidence || t('foodScholarHome.qa.notAvailable') }}</span>
               </div>
               <div
                 class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none"
@@ -440,21 +440,21 @@
                 class="mt-4"
               >
                 <div class="flex items-center gap-2">
-                  <span class="text-xs text-gray-500 dark:text-gray-400">Was this helpful?</span>
+                  <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.feedback.helpfulQuestion') }}</span>
                   <template v-if="!singleAnswerFeedbackSubmitted && !showNegativeFeedbackReasons">
                     <button
                       :disabled="feedbackSubmitting"
                       class="px-3 py-1.5 text-xs rounded-full border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-300 transition-colors disabled:opacity-50"
                       @click="submitSingleAnswerFeedback(true)"
                     >
-                      Yes
+                      {{ t('foodScholarHome.common.yes') }}
                     </button>
                     <button
                       :disabled="feedbackSubmitting"
                       class="px-3 py-1.5 text-xs rounded-full border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-300 transition-colors disabled:opacity-50"
                       @click="submitSingleAnswerFeedback(false)"
                     >
-                      No
+                      {{ t('foodScholarHome.common.no') }}
                     </button>
                   </template>
                   <template v-else-if="singleAnswerFeedbackSubmitted">
@@ -465,7 +465,7 @@
                     <span
                       class="text-xs font-medium text-emerald-700 dark:text-emerald-300"
                     >
-                      Feedback saved
+                      {{ t('foodScholarHome.qa.feedback.saved') }}
                     </span>
                   </template>
                 </div>
@@ -474,7 +474,7 @@
                   v-if="showNegativeFeedbackReasons && !singleAnswerFeedbackSubmitted"
                   class="mt-3 space-y-3"
                 >
-                  <p class="text-xs text-gray-500 dark:text-gray-400">What went wrong?</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.feedback.whatWentWrong') }}</p>
                   <div class="flex flex-wrap gap-2">
                     <button
                       v-for="reason in negativeFeedbackReasons"
@@ -497,7 +497,7 @@
                       v-model="negativeFeedbackComment"
                       :disabled="feedbackSubmitting"
                       rows="2"
-                      placeholder="Add a comment (optional)"
+                      :placeholder="t('foodScholarHome.qa.feedback.optionalComment')"
                       class="w-full px-3 py-2 text-xs rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400 resize-none disabled:opacity-50"
                     />
                     <button
@@ -505,7 +505,7 @@
                       class="mt-2 px-4 py-1.5 text-xs font-medium rounded-full bg-brand-500 text-white hover:bg-brand-600 transition-colors disabled:opacity-50"
                       @click="submitNegativeFeedback()"
                     >
-                      Submit feedback
+                      {{ t('foodScholarHome.qa.feedback.submit') }}
                     </button>
                   </div>
                 </div>
@@ -516,7 +516,7 @@
               v-if="qaResult.follow_up_suggestions?.length"
               class="chat-flow-bubble chat-flow-bubble-muted"
             >
-              <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Follow-up suggestions</h4>
+              <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">{{ t('foodScholarHome.qa.followUpSuggestions') }}</h4>
               <div class="flex flex-wrap gap-2">
                 <button
                   v-for="suggestion in qaResult.follow_up_suggestions"
@@ -541,13 +541,13 @@
         <div class="mb-8">
           <div class="flex items-center justify-between">
             <h2 class="text-3xl font-serif font-semibold text-gray-900 dark:text-white">
-              Popular Articles
+              {{ t('foodScholarHome.popularArticles.title') }}
             </h2>
             <NuxtLink
               to="/foodscholar/catalog"
               class="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-300 dark:border-zinc-600 bg-transparent hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-700 dark:text-gray-300 font-medium transition-colors"
             >
-              <span>Browse full catalog</span>
+              <span>{{ t('foodScholarHome.popularArticles.browseFullCatalog') }}</span>
               <UIcon
                 name="i-lucide-arrow-right"
                 class="w-4 h-4"
@@ -577,7 +577,7 @@
         >
           <div class="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p class="text-sm text-gray-600 dark:text-gray-400">
-            Loading popular articles...
+            {{ t('foodScholarHome.popularArticles.loading') }}
           </p>
         </div>
 
@@ -607,7 +607,7 @@
           class="text-center py-12 border border-gray-200 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900/40"
         >
           <p class="text-gray-600 dark:text-gray-400">
-            No articles match the selected filters.
+            {{ t('foodScholarHome.popularArticles.noFilteredResults') }}
           </p>
         </div>
       </section>
@@ -616,7 +616,7 @@
         class="bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/20 dark:to-brand-800/20 border border-brand-200 dark:border-brand-800 rounded-3xl p-8 sm:p-12 mb-12"
       >
         <h2 class="text-3xl font-serif font-semibold mb-8 text-gray-900 dark:text-white">
-          Popular Topics
+          {{ t('foodScholarHome.popularTopics.title') }}
         </h2>
         <div
           v-if="popularTopics.length"
@@ -645,7 +645,7 @@
           v-else
           class="text-sm text-gray-600 dark:text-gray-300"
         >
-          Topics will appear as article metadata is indexed.
+          {{ t('foodScholarHome.popularTopics.emptyState') }}
         </p>
       </section>
     </main>
@@ -655,6 +655,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import articlesApi, { type Article } from '~/services/articlesApi'
@@ -667,16 +668,18 @@ import { useAuthStore } from '~/stores/auth'
 import { useHouseholdStore } from '~/stores/household'
 import { calculateReadTime, getExcerpt } from '~/utils/articleHelpers'
 
+const { t, locale } = useI18n()
+
 definePageMeta({
   middleware: ['auth', 'profile']
 })
 
 useHead({
-  title: 'FoodScholar'
+  title: computed(() => t('dashboard.apps.foodScholar.title'))
 })
 
 useSeoMeta({
-  description: 'Educational content and nutritional insights about sustainable eating'
+  description: computed(() => t('foodScholarHome.subtitle'))
 })
 
 interface HomeArticle {
@@ -729,13 +732,15 @@ interface ExpertiseOption {
 }
 
 const AUTO_MODEL_VALUE = '__auto__'
-
-const qaHeadings = [
-  'What would you like to know?',
-  'Ask anything about food & nutrition',
-  'Your nutrition research companion'
-]
-const qaHeading = qaHeadings[Math.floor(Math.random() * qaHeadings.length)]
+const CATEGORY_ALL = 'All'
+const CATEGORY_UNCATEGORIZED = 'Uncategorized'
+const qaHeadingIndex = Math.floor(Math.random() * 3)
+const qaHeadings = computed(() => [
+  t('foodScholarHome.qa.headingOptions.first'),
+  t('foodScholarHome.qa.headingOptions.second'),
+  t('foodScholarHome.qa.headingOptions.third')
+])
+const qaHeading = computed(() => qaHeadings.value[qaHeadingIndex] || qaHeadings.value[0])
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -753,7 +758,7 @@ const handleMarkdownClick = (event: MouseEvent) => {
   router.push(href)
 }
 
-const selectedCategory = ref('All')
+const selectedCategory = ref(CATEGORY_ALL)
 const articlesLoading = ref(false)
 const articlesError = ref<string | null>(null)
 const allArticles = ref<HomeArticle[]>([])
@@ -778,44 +783,44 @@ const showNegativeFeedbackReasons = ref(false)
 const selectedNegativeReason = ref<string | null>(null)
 const negativeFeedbackComment = ref('')
 
-const negativeFeedbackReasons = [
-  'Inaccurate or incomplete',
-  'Not what I asked',
-  'Missing or poor quality content',
-  'Too slow or had errors',
-  'Wrong tone or style',
-  'Safety or legal concern'
-]
+const negativeFeedbackReasons = computed(() => [
+  t('foodScholarHome.qa.feedback.reasons.inaccurate'),
+  t('foodScholarHome.qa.feedback.reasons.notAsked'),
+  t('foodScholarHome.qa.feedback.reasons.missingQuality'),
+  t('foodScholarHome.qa.feedback.reasons.slowOrErrors'),
+  t('foodScholarHome.qa.feedback.reasons.toneStyle'),
+  t('foodScholarHome.qa.feedback.reasons.safetyLegal')
+])
 
 const quickQuestions = ref<string[]>([])
 
-const topKOptions: TopKOption[] = [
-  { value: 3, label: 'Focused (3)', description: 'Fast answer using the most relevant sources only.', icon: 'i-lucide-zap' },
-  { value: 5, label: 'Balanced (5)', description: 'Good balance of depth, speed, and citation variety.', icon: 'i-lucide-scale' },
-  { value: 8, label: 'Deep (8)', description: 'More evidence coverage for nuanced or broad questions.', icon: 'i-lucide-layers' },
-  { value: 12, label: 'Comprehensive (12)', description: 'Maximum context with slower, heavier retrieval.', icon: 'i-lucide-book-open' }
-]
+const topKOptions = computed<TopKOption[]>(() => [
+  { value: 3, label: t('foodScholarHome.qa.topK.focusedLabel'), description: t('foodScholarHome.qa.topK.focusedDescription'), icon: 'i-lucide-zap' },
+  { value: 5, label: t('foodScholarHome.qa.topK.balancedLabel'), description: t('foodScholarHome.qa.topK.balancedDescription'), icon: 'i-lucide-scale' },
+  { value: 8, label: t('foodScholarHome.qa.topK.deepLabel'), description: t('foodScholarHome.qa.topK.deepDescription'), icon: 'i-lucide-layers' },
+  { value: 12, label: t('foodScholarHome.qa.topK.comprehensiveLabel'), description: t('foodScholarHome.qa.topK.comprehensiveDescription'), icon: 'i-lucide-book-open' }
+])
 
-const expertiseOptions: ExpertiseOption[] = [
+const expertiseOptions = computed<ExpertiseOption[]>(() => [
   {
     value: 'beginner',
-    label: 'Beginner',
-    description: 'Simple language with practical explanations.',
+    label: t('foodScholarHome.qa.expertise.beginnerLabel'),
+    description: t('foodScholarHome.qa.expertise.beginnerDescription'),
     icon: 'i-lucide-smile'
   },
   {
     value: 'intermediate',
-    label: 'Intermediate',
-    description: 'Balanced detail and terminology.',
+    label: t('foodScholarHome.qa.expertise.intermediateLabel'),
+    description: t('foodScholarHome.qa.expertise.intermediateDescription'),
     icon: 'i-lucide-graduation-cap'
   },
   {
     value: 'expert',
-    label: 'Expert',
-    description: 'Technical depth with research-oriented framing.',
+    label: t('foodScholarHome.qa.expertise.expertLabel'),
+    description: t('foodScholarHome.qa.expertise.expertDescription'),
     icon: 'i-lucide-flask-conical'
   }
-]
+])
 
 const categories = computed(() => {
   const humanCategories = (facets.value.category || []).map(item => item.value)
@@ -824,10 +829,10 @@ const categories = computed(() => {
 
   if (!merged.length) {
     const fallback = [...new Set(allArticles.value.map(article => article.category).filter(Boolean))]
-    return ['All', ...fallback]
+    return [CATEGORY_ALL, ...fallback]
   }
 
-  return ['All', ...merged]
+  return [CATEGORY_ALL, ...merged]
 })
 
 const tagFacets = computed((): AnnotatedFacet[] => {
@@ -862,7 +867,7 @@ const popularTopics = computed<TopicCard[]>(() => {
   const iconSet = ['i-lucide-flask-conical', 'i-lucide-leaf', 'i-lucide-heart', 'i-lucide-apple', 'i-lucide-scale']
   return tagFacets.value.slice(0, 6).map((tag, index) => ({
     title: toTitleCase(tag.value),
-    description: `Explore research and evidence around ${tag.value}.`,
+    description: t('foodScholarHome.popularTopics.topicDescription', { topic: tag.value }),
     icon: iconSet[index % iconSet.length],
     query: tag.value
   }))
@@ -874,7 +879,7 @@ const filteredArticles = computed(() => {
 
 const selectCategory = async (category: string) => {
   selectedCategory.value = category
-  if (category === 'All') {
+  if (category === CATEGORY_ALL) {
     await loadPopularArticles()
   } else {
     await loadArticlesForCategory(category)
@@ -899,7 +904,7 @@ const loadArticlesForCategory = async (category: string) => {
     const results = response.result.results || []
     allArticles.value = results.map(mapArticleToHome)
   } catch (err: unknown) {
-    articlesError.value = getErrorMessage(err, 'Failed to load articles.')
+    articlesError.value = getErrorMessage(err, t('foodScholarHome.errors.failedToLoadArticles'))
   } finally {
     articlesLoading.value = false
   }
@@ -912,13 +917,13 @@ const isAdvancedMode = computed(() => qaMode.value === 'advanced')
 const ragUsedForResponse = computed(() => primaryAnswer.value?.rag_used ?? ragEnabled.value)
 const qaPlaceholder = computed(() => {
   if (isAdvancedMode.value) {
-    return 'Ask anything about food & nutrition (advanced controls enabled)'
+    return t('foodScholarHome.qa.placeholder.advanced')
   }
-  return 'What would you like to know about food & nutrition?'
+  return t('foodScholarHome.qa.placeholder.default')
 })
 
-const answerALabel = computed(() => qaResult.value?.dual_answer_feedback?.answer_a_label || 'Primary model response')
-const answerBLabel = computed(() => qaResult.value?.dual_answer_feedback?.answer_b_label || 'Alternative model response')
+const answerALabel = computed(() => qaResult.value?.dual_answer_feedback?.answer_a_label || t('foodScholarHome.qa.answerPrimaryModelResponse'))
+const answerBLabel = computed(() => qaResult.value?.dual_answer_feedback?.answer_b_label || t('foodScholarHome.qa.answerAlternativeModelResponse'))
 
 const feedbackRequestId = computed(() => {
   return qaResult.value?.dual_answer_feedback?.request_id || qaResult.value?.request_id || ''
@@ -931,8 +936,8 @@ const singleAnswerFeedbackEnabled = computed(() => {
 const modelOptions = ref<ModelOption[]>([
   {
     value: AUTO_MODEL_VALUE,
-    label: 'Auto (recommended)',
-    provider: 'System',
+    label: t('foodScholarHome.qa.model.auto'),
+    provider: t('foodScholarHome.qa.model.system'),
     icon: 'i-lucide-sparkles'
   }
 ])
@@ -942,11 +947,11 @@ const selectedModelOption = computed<ModelOption>(() => {
 })
 
 const selectedTopKOption = computed<TopKOption>(() => {
-  return topKOptions.find(option => option.value === Number(topK.value)) || topKOptions[1]
+  return topKOptions.value.find(option => option.value === Number(topK.value)) || topKOptions.value[1]
 })
 
 const selectedExpertiseOption = computed<ExpertiseOption>(() => {
-  return expertiseOptions.find(option => option.value === expertiseLevel.value) || expertiseOptions[1]
+  return expertiseOptions.value.find(option => option.value === expertiseLevel.value) || expertiseOptions.value[1]
 })
 
 const selectedModelValue = computed<string>({
@@ -960,18 +965,18 @@ const selectedTopKValue = computed<number>({
   get: () => selectedTopKOption.value.value,
   set: (value) => {
     const parsed = Number(value)
-    topK.value = topKOptions.some(option => option.value === parsed)
+    topK.value = topKOptions.value.some(option => option.value === parsed)
       ? parsed
-      : topKOptions[1].value
+      : topKOptions.value[1].value
   }
 })
 
 const selectedExpertiseValue = computed<string>({
   get: () => selectedExpertiseOption.value.value,
   set: (value) => {
-    expertiseLevel.value = expertiseOptions.some(option => option.value === value)
+    expertiseLevel.value = expertiseOptions.value.some(option => option.value === value)
       ? value
-      : expertiseOptions[1].value
+      : expertiseOptions.value[1].value
   }
 })
 
@@ -994,7 +999,7 @@ const loadPopularArticles = async () => {
     allArticles.value = results.map(mapArticleToHome)
     facets.value = (response.result.facets || {}) as Record<string, Array<{ value: string, count: number }>>
   } catch (err: unknown) {
-    articlesError.value = getErrorMessage(err, 'Failed to load popular articles.')
+    articlesError.value = getErrorMessage(err, t('foodScholarHome.errors.failedToLoadPopularArticles'))
   } finally {
     articlesLoading.value = false
   }
@@ -1076,7 +1081,7 @@ const askScholarQA = async (questionOverride?: string) => {
 
     qaResult.value = await foodscholarApi.askQuestion(payload)
   } catch (err: unknown) {
-    qaError.value = getErrorMessage(err, 'Failed to get a QA response from FoodScholar.')
+    qaError.value = getErrorMessage(err, t('foodScholarHome.errors.failedToGetQaResponse'))
   } finally {
     asking.value = false
     chatQuery.value = ''
@@ -1100,7 +1105,7 @@ const submitDualAnswerFeedback = async (preferredAnswer: 'a' | 'b') => {
     })
   } catch (err: unknown) {
     selectedPreferredAnswer.value = previousSelection
-    qaError.value = getErrorMessage(err, 'Failed to submit feedback.')
+    qaError.value = getErrorMessage(err, t('foodScholarHome.errors.failedToSubmitFeedback'))
   } finally {
     feedbackSubmitting.value = false
   }
@@ -1127,7 +1132,7 @@ const submitSingleAnswerFeedback = async (helpful: boolean) => {
 
     singleAnswerFeedbackSubmitted.value = true
   } catch (err: unknown) {
-    qaError.value = getErrorMessage(err, 'Failed to submit feedback.')
+    qaError.value = getErrorMessage(err, t('foodScholarHome.errors.failedToSubmitFeedback'))
   } finally {
     feedbackSubmitting.value = false
   }
@@ -1159,7 +1164,7 @@ const submitNegativeFeedback = async () => {
     singleAnswerFeedbackSubmitted.value = true
     showNegativeFeedbackReasons.value = false
   } catch (err: unknown) {
-    qaError.value = getErrorMessage(err, 'Failed to submit feedback.')
+    qaError.value = getErrorMessage(err, t('foodScholarHome.errors.failedToSubmitFeedback'))
   } finally {
     feedbackSubmitting.value = false
   }
@@ -1248,7 +1253,7 @@ const providerLabel = (provider: string): string => {
     groq: 'Groq',
     deepseek: 'DeepSeek',
     ollama: 'Ollama',
-    unknown: 'Custom'
+    unknown: t('foodScholarHome.qa.model.custom')
   }
 
   return labels[provider] || labels.unknown
@@ -1298,7 +1303,7 @@ const mapArticleToHome = (article: Article): HomeArticle => {
     id: article.id,
     urn: article.urn,
     title: article.title,
-    category: article.category || article.ai_category || 'Uncategorized',
+    category: article.category || article.ai_category || CATEGORY_UNCATEGORIZED,
     ai_category: article.ai_category,
     excerpt: getExcerpt(article, 220),
     readTime: calculateReadTime(article.abstract || article.description || article.content || ''),
@@ -1327,12 +1332,12 @@ const renderMarkdown = (text: string): string => {
 }
 
 const formatDateTime = (dateTime?: string): string => {
-  if (!dateTime) return 'just now'
+  if (!dateTime) return t('foodScholarHome.common.justNow')
 
   const parsed = new Date(dateTime)
-  if (Number.isNaN(parsed.getTime())) return 'just now'
+  if (Number.isNaN(parsed.getTime())) return t('foodScholarHome.common.justNow')
 
-  return parsed.toLocaleString('en-US', {
+  return parsed.toLocaleString(locale.value, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -1367,7 +1372,7 @@ const getErrorMessage = (err: unknown, fallback: string): string => {
 
 watch(categories, (newCategories) => {
   if (newCategories.length > 0 && !newCategories.includes(selectedCategory.value)) {
-    selectedCategory.value = 'All'
+    selectedCategory.value = CATEGORY_ALL
   }
 })
 
@@ -1386,8 +1391,8 @@ watch(qaModels, (models) => {
   modelOptions.value = [
     {
       value: AUTO_MODEL_VALUE,
-      label: 'Auto (recommended)',
-      provider: 'System',
+      label: t('foodScholarHome.qa.model.auto'),
+      provider: t('foodScholarHome.qa.model.system'),
       icon: 'i-lucide-sparkles'
     },
     ...mappedOptions

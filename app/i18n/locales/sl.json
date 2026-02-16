@@ -1,0 +1,560 @@
+{
+  "meta": {
+    "title": "WiseFood",
+    "description": "WiseFood - Tvoj najboljši kulinarični spremljevalec: odkrij, deli in uživaj v kulinaričnih doživetjih!"
+  },
+  "dashboard": {
+    "greeting": {
+      "morning": "Dobro jutro",
+      "afternoon": "Dober dan",
+      "evening": "Dober večer"
+    },
+    "welcome": "Dobrodošli,",
+    "encouragement": "Tvoja osebna pot do dobrega počutja se začne tukaj",
+    "loading": "Nalaganje nadzorne plošče...",
+    "notAuthenticated": "Niste prijavljeni",
+    "signInPrompt": "Za dostop do nadzorne plošče se prijavite",
+    "goToLogin": "Pojdi na prijavo",
+    "title": "Nadzorna plošča",
+    "seoDescription": "Tvoj osebni prehranski pregled",
+    "apps": {
+      "foodScholar": {
+        "title": "FoodScholar",
+        "description": "Uči se in odkrivaj"
+      },
+      "recipeWrangler": {
+        "title": "RecipeWrangler",
+        "description": "Poišči recepte"
+      },
+      "foodChat": {
+        "title": "FoodChat",
+        "description": "Vprašaj karkoli"
+      }
+    },
+    "spotlight": {
+      "badge": "Današnji fokus",
+      "exploreRecipe": "Razišči recept",
+      "save": "Shrani"
+    },
+    "schedule": {
+      "title": "Današnji urnik",
+      "now": "Zdaj",
+      "cal": "kcal",
+      "refineInFoodChat": "Dodelaj v FoodChat",
+      "createInFoodChat": "Ustvari v FoodChat",
+      "planned": "Načrtovano",
+      "notPlanned": "Ni načrtovano",
+      "noBreakfast": "Zajtrk še ni načrtovan",
+      "noLunch": "Kosilo še ni načrtovano",
+      "noDinner": "Večerja še ni načrtovana",
+      "noMembers": "Ni članov",
+      "meals": {
+        "breakfast": "Zajtrk",
+        "lunch": "Kosilo",
+        "dinner": "Večerja"
+      },
+      "days": {
+        "sunday": "Nedelja",
+        "monday": "Ponedeljek",
+        "tuesday": "Torek",
+        "wednesday": "Sreda",
+        "thursday": "Četrtek",
+        "friday": "Petek",
+        "saturday": "Sobota"
+      },
+      "months": {
+        "jan": "Jan",
+        "feb": "Feb",
+        "mar": "Mar",
+        "apr": "Apr",
+        "may": "Maj",
+        "jun": "Jun",
+        "jul": "Jul",
+        "aug": "Avg",
+        "sep": "Sep",
+        "oct": "Okt",
+        "nov": "Nov",
+        "dec": "Dec"
+      }
+    },
+    "progress": {
+      "title": "Tvoj napredek",
+      "today": "Danes",
+      "ofTarget": "cilja"
+    },
+    "badges": {
+      "healthy": "Zdravo",
+      "sustainable": "Trajnostno"
+    },
+    "recipes": {
+      "recommendedForYou": "Priporočeno zate",
+      "recommendedPrefix": "Priporočeno za",
+      "recommendedAccent": "tebe",
+      "discoverInRecipeWrangler": "Odkrij recepte v RecipeWrangler",
+      "minuteShort": "min",
+      "serves": "Porcij: {count}",
+      "noRecommendationsYet": "Priporočil še ni."
+    },
+    "insights": {
+      "didYouKnow": "Ali ste vedeli?",
+      "tipsOfTheDay": "Nasveti dneva",
+      "learnMore": "Izvedi več v FoodScholar"
+    },
+    "sustainability": {
+      "title": "Trajnostna izbira"
+    },
+    "friend": "Prijatelj"
+  },
+  "nav": {
+    "signIn": "Prijava",
+    "legal": "Pogoji uporabe | GDPR"
+  },
+  "header": {
+    "using": "Uporablja",
+    "userFallback": "Uporabnik",
+    "menu": {
+      "myProfile": "Moj profil",
+      "switchProfile": "Zamenjaj profil",
+      "accountSettings": "Nastavitve računa",
+      "signOut": "Odjava"
+    }
+  },
+  "auth": {
+    "welcome": "Dobrodošli nazaj",
+    "loginPrompt": "Prijavite se za nadaljevanje",
+    "createYourAccount": "Ustvari svoj račun",
+    "registerPrompt": "Pridruži se WiseFood za začetek",
+    "signInWithSSO": "Prijava z enotno prijavo",
+    "createAccount": "Ustvari nov račun",
+    "checking": "Preverjanje prijave...",
+    "redirecting": "Preusmerjanje...",
+    "or": "ali",
+    "ssoInfo": "Enotna prijava",
+    "ssoDescription": "Preusmerjeni boste na naš varen prijavni portal",
+    "ssoRegistration": "Varna registracija",
+    "ssoRegistrationDescription": "Ustvari svoj račun prek našega varnega avtentikacijskega portala.",
+    "secureAuth": "Varna avtentikacija s šifriranjem po industrijskih standardih",
+    "singleSignOn": "Enotna prijava za vse storitve WiseFood",
+    "needHelp": "Potrebujete pomoč?",
+    "contactSupport": "Kontaktiraj podporo",
+    "privacy": "Politika zasebnosti",
+    "terms": "Pogoji storitve",
+    "noAccount": "Nimate računa?",
+    "signIn": "Prijava",
+    "register": "Registracija"
+  },
+  "hero": {
+    "eyebrow": "Prehrana · Trajnost · Dobro počutje",
+    "titleLead": "Opolnomočeni državljani",
+    "titleAccent": "Bolj zdrave skupnosti",
+    "description": "Preoblikuj svoje prehranske izbire s pametnimi orodji na osnovi umetne inteligence za bolj zdravo in trajnostno življenje.",
+    "ctaPrimary": "Začni",
+    "ctaSecondary": "Poglej predstavitev"
+  },
+  "features": {
+    "heading": "Zgrajeno za",
+    "headingAccent": "ljudi",
+    "subheading": "Odkrij zmogljive funkcije, zaradi katerih je WiseFood popoln prehranski spremljevalec.",
+    "items": {
+      "scientific": {
+        "title": "Znanstveno znanje",
+        "description": "Dostop do najsodobnejših prehranskih raziskav na preprost način. Zapletene študije prevedemo v jasne, uporabne vpoglede."
+      },
+      "personalized": {
+        "title": "Prilagojeno tebi",
+        "description": "Vsako priporočilo se prilagodi tvojemu profilu. Tvoje prehranske preference, alergije in cilji oblikujejo vse predloge."
+      },
+      "culinary": {
+        "title": "Kulinarični navdih",
+        "description": "Odkrij recepte, ki ustrezajo tvojemu okusu in zdravstvenim ciljem. Od hitrih obrokov med tednom do gurmanskih jedi."
+      },
+      "ai": {
+        "title": "Vpogledi z umetno inteligenco",
+        "description": "Pametni algoritmi neprestano analizirajo tvoje prehranske navade. Prejmi proaktivne predloge za boljše dnevne izbire."
+      },
+      "planning": {
+        "title": "Načrtovanje obrokov",
+        "description": "Kuhanje za vse člane gospodinjstva še nikoli ni bilo lažje. Prejmi predloge obrokov, ki zadovoljijo vse."
+      },
+      "progress": {
+        "title": "Spremljaj svoj napredek",
+        "description": "Lepi nadzorni prikazi jasno pokažejo tvojo zdravstveno pot. Praznuj mejnike in ostani motiviran."
+      }
+    }
+  },
+  "steps": {
+    "heading": "Preprosti",
+    "headingAccent": "koraki",
+    "subheading": "Začni v nekaj minutah in preoblikuj svoj odnos do hrane.",
+    "items": {
+      "profile": {
+        "title": "Ustvari svoj profil",
+        "description": "Deli svoje prehranske preference, zdravstvene cilje in morebitne omejitve. Začetek traja le nekaj minut."
+      },
+      "recommendations": {
+        "title": "Pridobi priporočila",
+        "description": "Naša umetna inteligenca takoj analizira tvoj profil in pripravi personalizirane načrte obrokov, recepte in prehranske smernice."
+      },
+      "track": {
+        "title": "Spremljaj in izboljšuj",
+        "description": "Beleži svoje obroke in spremljaj napredek skozi čas. Opazuj, kako se sistem uči in prilagaja tebi."
+      }
+    }
+  },
+  "cta": {
+    "heading": "Si pripravljen preoblikovati svoj",
+    "accent": "odnos do hrane?",
+    "description": "Pridruži se skupnosti uporabnikov, ki z WiseFood gradijo bolj zdrave navade. Začni danes in odkrij pametnejši način prehranjevanja.",
+    "primary": "Začni danes"
+  },
+  "recipeWrangler": {
+    "title": "RecipeWrangler",
+    "subtitle": "Odkrij personalizirane recepte glede na tvoje prehranske cilje in vpliv na okolje",
+    "backToDashboard": "Nazaj na nadzorno ploščo",
+    "backToRecipes": "Nazaj na recepte",
+    "compare": "Primerjaj",
+    "loadingHint": "To lahko traja do 60 sekund",
+    "pagination": "Stranjenje",
+    "previousPage": "Prejšnja stran",
+    "nextPage": "Naslednja stran",
+    "search": {
+      "placeholder": "Vprašaj za recepte (npr. 'testenine', 'hitri veganski obroki')...",
+      "button": "Išči",
+      "searching": "Iskanje...",
+      "recentSearches": "Nedavna iskanja:"
+    },
+    "analyzer": {
+      "title": "AI analizator receptov",
+      "description": "Prilepi URL recepta ali seznam sestavin za takojšnjo prehransko analizo",
+      "placeholder": "Sem prilepi URL recepta, sestavine ali besedilo recepta...",
+      "analyze": "Analiziraj recept",
+      "analyzing": "Analiziranje...",
+      "results": "Rezultati analize",
+      "calories": "Kalorije",
+      "protein": "Beljakovine",
+      "carbs": "Ogljikovi hidrati",
+      "fat": "Maščobe"
+    },
+    "filters": {
+      "title": "Filtri in preference",
+      "show": "Prikaži filtre",
+      "hide": "Skrij filtre",
+      "excludeAllergens": "Izključi alergene",
+      "clearAll": "Počisti vse",
+      "quickFilters": "Hitri filtri",
+      "sortBy": "Razvrsti po"
+    },
+    "allergens": {
+      "peanuts": "Arašidi",
+      "treeNuts": "Oreščki",
+      "dairy": "Mlečni izdelki",
+      "eggs": "Jajca",
+      "soy": "Soja",
+      "wheat": "Pšenica",
+      "fish": "Ribe",
+      "shellfish": "Školjke",
+      "gluten": "Gluten",
+      "lactose": "Laktoza"
+    },
+    "quickFilters": {
+      "quick": "Hitro in enostavno (< 30 min)",
+      "healthy": "Zdravo in hranljivo",
+      "vegetarian": "Vegetarijansko",
+      "vegan": "Vegansko",
+      "lowCalorie": "Nizkokalorično"
+    },
+    "sort": {
+      "relevance": "Najbolj relevantno",
+      "duration": "Čas kuhanja",
+      "calories": "Kalorije",
+      "nutriScore": "Prehranski rezultat"
+    },
+    "results": {
+      "found": "Najdenih receptov: {count}",
+      "searching": "Iskanje...",
+      "error": "Napaka pri nalaganju receptov",
+      "loading": "Nalaganje receptov...",
+      "noResults": "Ni najdenih receptov",
+      "noResultsMessage": "Poskusi prilagoditi iskanje ali pobrskaj po spodnjih kategorijah",
+      "tryAgain": "Poskusi znova"
+    },
+    "recipe": {
+      "viewRecipe": "Prikaži recept",
+      "save": "Shrani",
+      "saved": "Shranjeno",
+      "servings": "porcija | porcije",
+      "minutes": "minute",
+      "minuteShort": "min",
+      "nutriScore": "Nutri-Score",
+      "addToComparison": "Dodaj v primerjavo",
+      "removeFromComparison": "Odstrani iz primerjave",
+      "addToFavorites": "Dodaj med priljubljene",
+      "removeFromFavorites": "Odstrani iz priljubljenih"
+    },
+    "categories": {
+      "title": "Brskaj po kategorijah",
+      "pasta": "Testenine",
+      "salad": "Solata",
+      "soup": "Juha",
+      "breakfast": "Zajtrk",
+      "dessert": "Sladica",
+      "snacks": "Prigrizki",
+      "beverages": "Pijače",
+      "quickMeals": "Hitri obroki"
+    },
+    "detail": {
+      "nutritionalInfo": "Prehranske informacije",
+      "perServing": "na porcijo",
+      "ingredients": "Sestavine",
+      "instructions": "Navodila",
+      "environmentalImpact": "Vpliv na okolje",
+      "sustainabilityMessage": "Ta recept ima trajnostni rezultat glede na izvor sestavin in način priprave.",
+      "sustainabilityGood": "Dobro",
+      "failedToLoad": "Nalaganje recepta ni uspelo",
+      "fiber": "Vlaknine",
+      "sugar": "Sladkor",
+      "sodium": "Natrij",
+      "cholesterol": "Holesterol"
+    }
+  },
+  "foodChat": {
+    "title": "FoodChat",
+    "welcome": "Dobrodošli v FoodChat",
+    "description": "Tvoj AI prehranski pomočnik. Vprašaj o načrtovanju obrokov, hranilnih vrednostih, prehranskih nasvetih ali receptih.",
+    "newChat": "Nov FoodChat",
+    "noSessions": "Še ni pogovorov",
+    "noSessionsHint": "Začni nov FoodChat zgoraj",
+    "sendPlaceholder": "Vprašaj o prehrani, jedilnikih, receptih...",
+    "sendFirst": "Pošlji sporočilo za začetek",
+    "mealPlan": "Jedilnik",
+    "noMealPlan": "Jedilnik še ni ustvarjen",
+    "noMealPlanHint": "Prosi pomočnika, da pripravi jedilnik",
+    "ingredients": "Sestavine",
+    "directions": "Navodila",
+    "backToDashboard": "Nadzorna plošča",
+    "suggested": {
+      "mealPlan": "Lahko predlagaš jedilnik za uravnavanje telesne teže?",
+      "highProtein": "Katere vegetarijanske ideje imajo veliko beljakovin?",
+      "gutHealth": "Katera živila so dobra za zdravje črevesja?",
+      "reduceSugar": "Kako lahko zmanjšam vnos sladkorja brez izgube okusa?"
+    }
+  },
+  "foodScholarHome": {
+    "backToDashboard": "Nazaj na nadzorno ploščo",
+    "subtitle": "Izobraževalne vsebine in prehranski vpogledi o trajnostnem prehranjevanju",
+    "categories": {
+      "all": "Vse",
+      "uncategorized": "Nekategorizirano"
+    },
+    "common": {
+      "yes": "Da",
+      "no": "Ne",
+      "justNow": "pravkar"
+    },
+    "errors": {
+      "failedToLoadArticles": "Nalaganje člankov ni uspelo.",
+      "failedToLoadPopularArticles": "Nalaganje priljubljenih člankov ni uspelo.",
+      "failedToGetQaResponse": "Pridobivanje odgovora FoodScholar QA ni uspelo.",
+      "failedToSubmitFeedback": "Pošiljanje povratne informacije ni uspelo."
+    },
+    "popularArticles": {
+      "title": "Priljubljeni članki",
+      "browseFullCatalog": "Prebrskaj celoten katalog",
+      "loading": "Nalaganje priljubljenih člankov...",
+      "noFilteredResults": "Noben članek ne ustreza izbranim filtrom."
+    },
+    "popularTopics": {
+      "title": "Priljubljene teme",
+      "topicDescription": "Razišči raziskave in dokaze o temi: {topic}.",
+      "emptyState": "Teme se bodo prikazale, ko bodo metapodatki člankov indeksirani."
+    },
+    "qa": {
+      "tagline": "Sprašuj naravno. Dobi odgovore, podprte z dokazi.",
+      "headingOptions": {
+        "first": "Kaj bi rad izvedel?",
+        "second": "Vprašaj karkoli o hrani in prehrani",
+        "third": "Tvoj spremljevalec pri prehranskih raziskavah"
+      },
+      "mode": {
+        "simple": "Preprosto",
+        "advanced": "Napredno"
+      },
+      "composer": {
+        "focusedHint": "Odlično, zdaj dodaj podrobnost, ki ti je najpomembnejša.",
+        "idleHint": "Pritisni Enter za vprašanje. Za dodatni nadzor odpri Napredno.",
+        "enterKey": "Enter"
+      },
+      "advanced": {
+        "title": "Napredne nastavitve",
+        "subtitle": "Prilagajaj le, če potrebuješ več nadzora.",
+        "ragOn": "RAG vklopljen",
+        "ragOff": "RAG izklopljen",
+        "model": "Model",
+        "sourceDepth": "Globina virov",
+        "explanationStyle": "Slog razlage",
+        "enableRagToAdjust": "Za prilagoditev globine virov omogoči RAG."
+      },
+      "model": {
+        "auto": "Samodejno (priporočeno)",
+        "noProviderModels": "Modeli ponudnikov trenutno niso na voljo. Uporabljeno bo samodejno.",
+        "autoHint": "Pusti na samodejno, razen če potrebuješ določenega ponudnika.",
+        "system": "Sistem",
+        "custom": "Po meri"
+      },
+      "topK": {
+        "focusedLabel": "Osredotočeno (3)",
+        "focusedDescription": "Hiter odgovor z le najbolj relevantnimi viri.",
+        "balancedLabel": "Uravnoteženo (5)",
+        "balancedDescription": "Dobro ravnovesje med globino, hitrostjo in raznolikostjo citatov.",
+        "deepLabel": "Poglobljeno (8)",
+        "deepDescription": "Širša pokritost dokazov za natančna ali širša vprašanja.",
+        "comprehensiveLabel": "Celovito (12)",
+        "comprehensiveDescription": "Največ konteksta z počasnejšim in obsežnejšim pridobivanjem."
+      },
+      "expertise": {
+        "beginnerLabel": "Začetnik",
+        "beginnerDescription": "Preprost jezik s praktičnimi razlagami.",
+        "intermediateLabel": "Srednje",
+        "intermediateDescription": "Uravnotežena raven podrobnosti in terminologije.",
+        "expertLabel": "Strokovno",
+        "expertDescription": "Tehnična globina z raziskovalno usmerjenim pristopom."
+      },
+      "placeholder": {
+        "default": "Kaj želiš vedeti o hrani in prehrani?",
+        "advanced": "Vprašaj karkoli o hrani in prehrani (napredni nadzor omogočen)"
+      },
+      "youAsked": "Vprašal si",
+      "answer": "Odgovor",
+      "answerA": "Odgovor A",
+      "answerB": "Odgovor B",
+      "answerPrimaryModelResponse": "Primarni odgovor modela",
+      "answerAlternativeModelResponse": "Alternativni odgovor modela",
+      "confidence": "Zanesljivost",
+      "notAvailable": "n/a",
+      "followUpSuggestions": "Predlogi za nadaljevanje",
+      "feedback": {
+        "choosePreferredAnswer": "Klikni kartico odgovora, da izbereš želeni odgovor.",
+        "preferenceSaved": "Nastavitev shranjena",
+        "helpfulQuestion": "Je bilo to koristno?",
+        "saved": "Povratna informacija shranjena",
+        "whatWentWrong": "Kaj je šlo narobe?",
+        "optionalComment": "Dodaj komentar (neobvezno)",
+        "submit": "Pošlji povratno informacijo",
+        "reasons": {
+          "inaccurate": "Netočno ali nepopolno",
+          "notAsked": "Ni odgovorilo na moje vprašanje",
+          "missingQuality": "Manjkajoča ali slaba kakovost vsebine",
+          "slowOrErrors": "Prepočasno ali z napakami",
+          "toneStyle": "Napačen ton ali slog",
+          "safetyLegal": "Varnostni ali pravni pomislek"
+        }
+      }
+    }
+  },
+  "profileSelection": {
+    "pageTitle": "Izbira profila - WiseFood",
+    "loading": "Nalaganje profilov...",
+    "title": {
+      "prefix": "Kdo",
+      "accentEating": "je?",
+      "getPrefix": "Začni",
+      "accentStarted": "zdaj"
+    },
+    "subtitle": {
+      "withProfiles": "Izberi svoj profil za prilagojena priporočila",
+      "createFirstProfile": "Ustvari svoj prvi profil",
+      "setupHousehold": "Nastavi svoje gospodinjstvo za prilagojena priporočila"
+    },
+    "actions": {
+      "addProfile": "Dodaj profil",
+      "manageProfiles": "Upravljaj profile",
+      "done": "Končano",
+      "cancel": "Prekliči",
+      "createProfile": "Ustvari profil",
+      "delete": "Izbriši"
+    },
+    "modal": {
+      "addNewProfile": "Dodaj nov profil",
+      "deleteTitle": "Izbris profila?",
+      "deletePromptPrefix": "Ali res želiš izbrisati profil",
+      "deletePromptSuffix": "Tega dejanja ni mogoče razveljaviti."
+    },
+    "fields": {
+      "profileName": "Ime profila",
+      "profileNamePlaceholder": "npr. Janez, Mama, Oče",
+      "ageGroupOptional": "Starostna skupina (neobvezno)",
+      "selectAgeGroup": "Izberi starostno skupino"
+    },
+    "ageGroups": {
+      "child": "Otrok (0-12)",
+      "teen": "Najstnik (13-19)",
+      "adult": "Odrasel (20-64)",
+      "senior": "Starejši (65+)"
+    },
+    "errors": {
+      "createProfileFailed": "Ustvarjanje profila ni uspelo. Poskusi znova.",
+      "deleteProfileFailed": "Brisanje profila ni uspelo. Poskusi znova."
+    },
+    "avatarSelector": {
+      "chooseAvatar": "Izberi avatar za ta profil"
+    },
+    "setupWizard": {
+      "actions": {
+        "skipForNow": "Preskoči za zdaj",
+        "back": "Nazaj",
+        "continue": "Nadaljuj",
+        "completeSetup": "Zaključi nastavitev"
+      },
+      "step1": {
+        "titlePrefix": "Dobrodošli v",
+        "subtitle": "Nastavimo tvoje gospodinjstvo za prilagojeno izkušnjo",
+        "householdNameLabel": "Ime gospodinjstva",
+        "householdNamePlaceholder": "npr. Družina Novak",
+        "countryOptionalLabel": "Država (neobvezno)",
+        "countryPlaceholder": "Izberi državo",
+        "countrySearchPlaceholder": "Išči države...",
+        "countryHint": "Pomaga nam predlagati regionalne recepte in prehranske smernice"
+      },
+      "step2": {
+        "titlePrefix": "Ustvari svoj",
+        "titleAccent": "profil",
+        "subtitle": "Dodaj se kot prvega člana gospodinjstva",
+        "profileNameLabel": "Ime profila",
+        "profileNamePlaceholder": "npr. Janez, Mama, Oče",
+        "ageGroupOptionalLabel": "Starostna skupina (neobvezno)",
+        "selectAgeGroupPlaceholder": "Izberi starostno skupino"
+      },
+      "step3": {
+        "titlePrefix": "Prehranske",
+        "titleAccent": "nastavitve",
+        "subtitle": "To nam pomaga prilagoditi predloge receptov (neobvezno)"
+      },
+      "dietary": {
+        "omnivore": {
+          "label": "Vsejed",
+          "description": "Je vse"
+        },
+        "vegetarian": {
+          "label": "Vegetarijanec",
+          "description": "Brez mesa"
+        },
+        "vegan": {
+          "label": "Vegan",
+          "description": "Samo rastlinsko"
+        },
+        "pescatarian": {
+          "label": "Peskatarijanec",
+          "description": "Ribe in rastline"
+        },
+        "flexitarian": {
+          "label": "Fleksitarijanec",
+          "description": "Večinoma rastlinsko"
+        }
+      },
+      "errors": {
+        "createHouseholdFailed": "Ustvarjanje gospodinjstva ni uspelo",
+        "genericSubmitFailed": "Nekaj je šlo narobe. Poskusi znova."
+      }
+    }
+  }
+}

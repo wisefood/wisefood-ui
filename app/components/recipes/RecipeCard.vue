@@ -27,7 +27,7 @@
       <button
         class="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg hover:scale-110 transition-all duration-200 z-10 flex items-center justify-center"
         @click="toggleCompare"
-        :aria-label="isInCompare ? 'Remove from comparison' : 'Add to comparison'"
+        :aria-label="isInCompare ? t('recipeWrangler.recipe.removeFromComparison') : t('recipeWrangler.recipe.addToComparison')"
         :disabled="!isInCompare && recipeStore.compareCount >= 4"
       >
         <UIcon
@@ -45,7 +45,7 @@
       <button
         class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg hover:scale-110 transition-all duration-200 z-10 flex items-center justify-center"
         @click="toggleFavorite"
-        :aria-label="isFavorite ? 'Remove from favorites' : 'Add to favorites'"
+        :aria-label="isFavorite ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
       >
         <UIcon
           :name="isFavorite ? 'i-lucide-heart' : 'i-lucide-heart'"
@@ -65,7 +65,7 @@
       >
         <UIcon name="i-lucide-clock" class="w-4 h-4 text-brandg-600 dark:text-brandg-400" />
         <span class="text-sm font-medium text-gray-700 dark:text-gray-200">
-          {{ recipe.duration }} min
+          {{ recipe.duration }} {{ t('recipeWrangler.recipe.minuteShort') }}
         </span>
       </div>
 
@@ -107,13 +107,13 @@
       <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
         <div v-if="recipe.serves" class="flex items-center gap-1">
           <UIcon name="i-lucide-users" class="w-4 h-4" />
-          <span>{{ recipe.serves }} {{ recipe.serves === 1 ? 'serving' : 'servings' }}</span>
+          <span>{{ recipe.serves }} {{ t('recipeWrangler.recipe.servings', recipe.serves) }}</span>
         </div>
       </div>
 
       <!-- View Recipe Link -->
       <div class="mt-4 flex items-center text-sm font-medium text-brandg-600 dark:text-brandg-400 group-hover:gap-2 gap-1 transition-all">
-        <span>View Recipe</span>
+        <span>{{ t('recipeWrangler.recipe.viewRecipe') }}</span>
         <UIcon
           name="i-lucide-arrow-right"
           class="w-4 h-4 transition-transform group-hover:translate-x-1"
@@ -130,6 +130,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRecipeStore } from '~/stores/recipe'
 import type { RecipeSearchResult } from '~/services/recipeApi'
 
@@ -141,10 +142,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-
-const emit = defineEmits<{
-  click: [recipeId: string]
-}>()
+const { t } = useI18n()
 
 // ============================================================================
 // Store

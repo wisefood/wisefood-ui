@@ -15,7 +15,7 @@
     <div v-if="loading" class="flex-1 flex items-center justify-center">
       <div class="text-center">
         <UIcon name="i-lucide-loader-2" class="h-12 w-12 animate-spin mx-auto mb-4 text-brand-500" />
-        <p class="text-gray-400">Loading profiles...</p>
+        <p class="text-gray-400">{{ t('profileSelection.loading') }}</p>
       </div>
     </div>
 
@@ -24,18 +24,18 @@
       <!-- Header changes based on whether user has profiles -->
       <template v-if="members.length > 0">
         <h1 class="text-3xl sm:text-4xl font-light text-white text-center mb-2">
-          Who's <span class="font-serif text-4xl sm:text-5xl italic text-brand-400">eating?</span>
+          {{ t('profileSelection.title.prefix') }} <span class="font-serif text-4xl sm:text-5xl italic text-brand-400">{{ t('profileSelection.title.accentEating') }}</span>
         </h1>
         <p class="text-gray-400 text-center mb-12">
-          Select your profile to get personalized recommendations
+          {{ t('profileSelection.subtitle.withProfiles') }}
         </p>
       </template>
       <template v-else>
         <h1 class="text-3xl sm:text-4xl font-light text-white text-center mb-2">
-          Get <span class="font-serif italic text-brand-400">started</span>
+          {{ t('profileSelection.title.getPrefix') }} <span class="font-serif italic text-brand-400">{{ t('profileSelection.title.accentStarted') }}</span>
         </h1>
         <p class="text-gray-400 text-center mb-12">
-          {{ householdStore.hasHousehold ? 'Create your first profile' : 'Set up your household to get personalized recommendations' }}
+          {{ householdStore.hasHousehold ? t('profileSelection.subtitle.createFirstProfile') : t('profileSelection.subtitle.setupHousehold') }}
         </p>
       </template>
 
@@ -105,7 +105,7 @@
             <UIcon name="i-lucide-plus" class="w-14 h-14 text-gray-500 group-hover:text-gray-300 transition-colors" />
           </div>
           <span class="text-gray-500 group-hover:text-gray-300 font-medium transition-colors text-lg">
-            Add Profile
+            {{ t('profileSelection.actions.addProfile') }}
           </span>
         </button>
       </div>
@@ -117,7 +117,7 @@
         class="mt-12 px-6 py-2 border border-gray-600 text-gray-400 hover:text-white hover:border-white rounded-md transition-all duration-200"
         @click="toggleManageMode"
       >
-        {{ isManaging ? 'Done' : 'Manage Profiles' }}
+        {{ isManaging ? t('profileSelection.actions.done') : t('profileSelection.actions.manageProfiles') }}
       </button>
     </div>
 
@@ -127,7 +127,7 @@
         <UCard :ui="{ body: { padding: 'sm:p-6 p-4' }, rounded: 'rounded-2xl' }">
           <template #header>
             <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Add New Profile</h3>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('profileSelection.modal.addNewProfile') }}</h3>
               <UButton
                 variant="ghost"
                 icon="i-lucide-x"
@@ -139,21 +139,21 @@
           </template>
 
           <div class="space-y-5">
-            <UFormField label="Profile Name" required>
+            <UFormField :label="t('profileSelection.fields.profileName')" required>
               <UInput
                 v-model="newMemberName"
-                placeholder="e.g., John, Mom, Dad"
+                :placeholder="t('profileSelection.fields.profileNamePlaceholder')"
                 size="lg"
                 icon="i-lucide-user"
                 :disabled="isAddingMember"
               />
             </UFormField>
 
-            <UFormField label="Age Group (optional)">
+            <UFormField :label="t('profileSelection.fields.ageGroupOptional')">
               <USelectMenu
                 v-model="newMemberAgeGroup"
                 :items="ageGroupOptions"
-                placeholder="Select age group"
+                :placeholder="t('profileSelection.fields.selectAgeGroup')"
                 size="lg"
                 value-key="value"
                 :disabled="isAddingMember"
@@ -179,7 +179,7 @@
                 :disabled="isAddingMember"
                 @click="showAddMember = false"
               >
-                Cancel
+                {{ t('profileSelection.actions.cancel') }}
               </UButton>
               <UButton
                 color="primary"
@@ -187,7 +187,7 @@
                 :disabled="!newMemberName.trim()"
                 @click="addMember"
               >
-                Create Profile
+                {{ t('profileSelection.actions.createProfile') }}
               </UButton>
             </div>
           </template>
@@ -204,10 +204,10 @@
               <UIcon name="i-lucide-alert-triangle" class="w-8 h-8 text-red-600 dark:text-red-400" />
             </div>
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Delete Profile?
+              {{ t('profileSelection.modal.deleteTitle') }}
             </h3>
             <p class="text-gray-600 dark:text-gray-400 mb-6">
-              Are you sure you want to delete <span class="font-medium text-gray-900 dark:text-white">{{ memberToDelete?.name }}</span>? This action cannot be undone.
+              {{ t('profileSelection.modal.deletePromptPrefix') }} <span class="font-medium text-gray-900 dark:text-white">{{ memberToDelete?.name }}</span>? {{ t('profileSelection.modal.deletePromptSuffix') }}
             </p>
 
             <UAlert
@@ -227,7 +227,7 @@
                 :disabled="isDeleting"
                 @click="cancelDelete"
               >
-                Cancel
+                {{ t('profileSelection.actions.cancel') }}
               </UButton>
               <UButton
                 color="red"
@@ -235,7 +235,7 @@
                 :loading="isDeleting"
                 @click="deleteMember"
               >
-                Delete
+                {{ t('profileSelection.actions.delete') }}
               </UButton>
             </div>
           </div>
@@ -253,6 +253,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { useHouseholdStore } from '~/stores/household'
 import { useAuthStore } from '~/stores/auth'
 import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
@@ -263,8 +264,10 @@ definePageMeta({
   layout: false  // Use a blank layout for Netflix-style full page
 })
 
+const { t } = useI18n()
+
 useHead({
-  title: 'Select Profile - WiseFood'
+  title: computed(() => t('profileSelection.pageTitle'))
 })
 
 const router = useRouter()
@@ -289,12 +292,12 @@ const newMemberName = ref('')
 const newMemberAgeGroup = ref<string | undefined>(undefined)
 const newMemberAvatarIndex = ref(0)
 
-const ageGroupOptions = [
-  { label: 'Child (0-12)', value: 'child' },
-  { label: 'Teen (13-19)', value: 'teen' },
-  { label: 'Adult (20-64)', value: 'adult' },
-  { label: 'Senior (65+)', value: 'senior' }
-]
+const ageGroupOptions = computed(() => [
+  { label: t('profileSelection.ageGroups.child'), value: 'child' },
+  { label: t('profileSelection.ageGroups.teen'), value: 'teen' },
+  { label: t('profileSelection.ageGroups.adult'), value: 'adult' },
+  { label: t('profileSelection.ageGroups.senior'), value: 'senior' }
+])
 
 const members = computed(() => householdStore.householdMembers)
 
@@ -398,7 +401,7 @@ async function addMember() {
     showAddMember.value = false
   } catch (err) {
     console.error('[ProfilesPage] Failed to add member:', err)
-    addMemberError.value = 'Failed to create profile. Please try again.'
+    addMemberError.value = t('profileSelection.errors.createProfileFailed')
   } finally {
     isAddingMember.value = false
   }
@@ -446,7 +449,7 @@ async function deleteMember() {
     }
   } catch (err) {
     console.error('[ProfilesPage] Failed to delete member:', err)
-    deleteError.value = 'Failed to delete profile. Please try again.'
+    deleteError.value = t('profileSelection.errors.deleteProfileFailed')
   } finally {
     isDeleting.value = false
   }

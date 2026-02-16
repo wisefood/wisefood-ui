@@ -3,13 +3,15 @@ import type { App } from "vue";
 
 // Import translation files
 import en from "./locales/en.json";
-import el from "./locales/el.json";
+import hu from "./locales/hu.json";
+import sl from "./locales/sl.json";
 
-export type SupportedLanguages = "en" | "el";
+export type SupportedLanguages = "en" | "hu" | "sl";
 
 const messages = {
   en,
-  el,
+  hu,
+  sl,
 };
 
 const LOCALE_STORAGE_KEY = "wisefood-locale";
@@ -18,7 +20,7 @@ const LOCALE_STORAGE_KEY = "wisefood-locale";
 function getSavedLocale(): SupportedLanguages {
   try {
     const saved = localStorage.getItem(LOCALE_STORAGE_KEY);
-    if (saved && (saved === "en" || saved === "el")) {
+    if (saved && (saved === "en" || saved === "hu" || saved === "sl")) {
       return saved as SupportedLanguages;
     }
   } catch (error) {
