@@ -242,7 +242,32 @@
       "excludeAllergens": "Allergének kizárása",
       "clearAll": "Összes törlése",
       "quickFilters": "Gyors szűrők",
-      "sortBy": "Rendezés"
+      "sortBy": "Rendezés",
+      "allergens": {
+        "peanuts": "Mogyoró",
+        "treeNuts": "Diófélék",
+        "dairy": "Tejtermék",
+        "eggs": "Tojás",
+        "soy": "Szója",
+        "wheat": "Búza",
+        "fish": "Hal",
+        "shellfish": "Rákfélék",
+        "gluten": "Glutén",
+        "lactose": "Laktóz"
+      },
+      "quickOptions": {
+        "quickEasy": "Gyors és egyszerű (< 30 perc)",
+        "healthy": "Egészséges és tápláló",
+        "vegetarian": "Vegetáriánus",
+        "vegan": "Vegán",
+        "lowCalorie": "Alacsony kalória"
+      },
+      "sortOptions": {
+        "mostRelevant": "Legrelevánsabb",
+        "cookingTime": "Elkészítési idő",
+        "calories": "Kalória",
+        "nutritionScore": "Táplálkozási pontszám"
+      }
     },
     "allergens": {
       "peanuts": "Földimogyoró",
@@ -314,7 +339,69 @@
       "fiber": "Rost",
       "sugar": "Cukor",
       "sodium": "Nátrium",
-      "cholesterol": "Koleszterin"
+      "cholesterol": "Koleszterin",
+      "gridView": "Rács nézet",
+      "chartView": "Diagram nézet",
+      "usdaSource": "Az USDA Élelmiszer-összetételi táblázat alapján",
+      "calories": "Kalória",
+      "protein": "Fehérje",
+      "carbs": "Szénhidrát",
+      "fat": "Zsír",
+      "nutritionalQuality": "Táplálkozási minőség",
+      "nutriScoreDescriptions": {
+        "A": "Kiváló táplálkozási minőség",
+        "B": "Jó táplálkozási minőség",
+        "C": "Átlagos táplálkozási minőség",
+        "D": "Gyenge táplálkozási minőség",
+        "E": "Alacsony táplálkozási minőség",
+        "unknown": "Ismeretlen"
+      },
+      "nutriScoreTooltips": {
+        "A": "A fokozat: Rostban, fehérjében, vitaminokban és ásványi anyagokban gazdag. Kiváló mindennapi étkezéshez.",
+        "B": "B fokozat: Tápláló választás, jó egyensúllyal a hasznos tápanyagok között.",
+        "C": "C fokozat: Kiegyensúlyozott választás, amely jól illeszkedik a változatos étrendbe.",
+        "D": "D fokozat: Alkalmanként fogyasztható, kiegyensúlyozott, változatos étrend részeként.",
+        "E": "E fokozat: Leginkább alkalmi finomságként ajánlott, kiegyensúlyozott életmód mellett.",
+        "unknown": "Ismeretlen értékelés"
+      },
+      "nutrientChart": {
+        "reset": "Visszaállítás",
+        "minSelectionWarning": "A diagram megjelenítéséhez válassz legalább 3 tápanyagot"
+      }
+    },
+    "comparePage": {
+      "pageTitle": "Receptek összehasonlítása - RecipeWrangler",
+      "clearAll": "Összes törlése",
+      "notAvailable": "N/A",
+      "empty": {
+        "title": "Nincs összehasonlítható recept",
+        "subtitle": "Válassz recepteket a keresési találatok közül a tápértékek és összetevők összehasonlításához",
+        "browseRecipes": "Receptek böngészése"
+      },
+      "table": {
+        "feature": "Jellemző",
+        "duration": "Időtartam",
+        "servings": "Adagok"
+      }
+    },
+    "cookingAnimation": {
+      "deliciousRecipes": "finom recepteket",
+      "actions": {
+        "stirring": "keverjük",
+        "frying": "sütjük",
+        "chopping": "aprítjuk",
+        "boiling": "forraljuk",
+        "sauteing": "pirítjuk",
+        "simmering": "lassan főzzük"
+      },
+      "descriptions": {
+        "stirring": "Finoman összehangoljuk az ízeket",
+        "frying": "Aranybarna tökéletességet készítünk",
+        "chopping": "Friss alapanyagokat készítünk elő",
+        "boiling": "Kiemeljük a finom ízeket",
+        "sauteing": "A hővel és az időzítéssel játszunk",
+        "simmering": "Türelmesen mélyítjük az ízeket"
+      }
     }
   },
   "foodChat": {
@@ -750,6 +837,103 @@
       "smoothies": "Turmixok",
       "wine": "Bor",
       "beer": "Sör"
+    }
+  },
+  "foodChatHome": {
+    "pageTitle": "FoodChat - WiseFood",
+    "backToDashboard": "Vissza az irányítópultra",
+    "subtitle": "Írd le, mit ennél, és azonnal kapsz személyre szabott menütervet",
+    "input": {
+      "generate": "Generálás",
+      "placeholderInitial": "Írd le az ideális étkezéseidet — pl. magas fehérje, mediterrán stílus...",
+      "placeholderModify": "Módosítsd a menütervet — pl. cseréld az ebédet valami könnyebbre..."
+    },
+    "welcomeTitle": {
+      "prefix": "Mit",
+      "accent": "főzzünk",
+      "suffix": "ma?"
+    },
+    "welcomeSubtitle": "Válassz egy javaslatot, vagy írd be a saját kérésed fent.",
+    "mealPlanTitle": {
+      "prefix": "A",
+      "accent": "menüterved"
+    },
+    "startFresh": "Újrakezdés",
+    "planHeader": {
+      "dailyPlan": "Napi terv"
+    },
+    "apply": {
+      "title": "Alkalmazd ezt a tervet a tagokra",
+      "subtitle": "Válassz tagokat és dátumot",
+      "selectMembers": "Tagok kiválasztása",
+      "onlyMe": "Csak én",
+      "all": "Összes",
+      "noHouseholdMembers": "Nem találhatók háztartástagok.",
+      "main": "Fő",
+      "buttons": {
+        "apply": "Alkalmazás",
+        "revoke": "Visszavonás"
+      },
+      "success": {
+        "applied": "Alkalmazva • {date}",
+        "revoked": "Visszavonva"
+      },
+      "membersLabel": {
+        "selectMembers": "Tagok kiválasztása",
+        "singleSelected": "1 tag kiválasztva",
+        "multipleSelected": "{count} tag kiválasztva"
+      }
+    },
+    "tooltips": {
+      "planWorksWell": "Ez a terv jól működik",
+      "needsImprovement": "Fejlesztés szükséges"
+    },
+    "disclaimer": "A válaszok tájékoztató jellegűek. Orvosi tanácsért fordulj dietetikushoz.",
+    "meals": {
+      "breakfast": "Reggeli",
+      "lunch": "Ebéd",
+      "dinner": "Vacsora"
+    },
+    "errors": {
+      "failedToApply": "A menüterv alkalmazása sikertelen.",
+      "failedToRevoke": "A menüterv visszavonása sikertelen.",
+      "someMembersNoPlan": "Néhány kiválasztott tagnál nincs ez a menüterv a választott dátumon."
+    },
+    "suggestedQuestions": {
+      "balancedPlan": "Készíts kiegyensúlyozott menütervet mára",
+      "highProtein": "Magas fehérjetartalmú vegetáriánus ötletek",
+      "mediterranean": "Mediterrán étrend mára",
+      "lowSugar": "Alacsony cukortartalmú desszert alternatívák"
+    },
+    "modifyChips": {
+      "lowerCalorie": "Legyen alacsonyabb kalóriás",
+      "moreProtein": "Adj hozzá több fehérjét",
+      "lighterLunch": "Cseréld az ebédet valami könnyebbre",
+      "vegetarian": "Legyen vegetáriánus",
+      "differentDinner": "Javasolj másik vacsorát"
+    },
+    "mealCard": {
+      "viewRecipe": "Recept megnyitása",
+      "loadingNutrition": "Tápérték betöltése..."
+    },
+    "cookingAnimation": {
+      "yourMealPlan": "a menütervedet",
+      "actions": {
+        "stirring": "keverjük",
+        "frying": "sütjük",
+        "chopping": "aprítjuk",
+        "boiling": "forraljuk",
+        "sauteing": "pirítjuk",
+        "simmering": "lassan főzzük"
+      },
+      "descriptions": {
+        "stirring": "Az ízeket hangoljuk a tökéletes tervedhez",
+        "frying": "Aranybarna ételötleteket készítünk",
+        "chopping": "Friss alapanyag-kombinációkat készítünk elő",
+        "boiling": "A legjobb tápérték-egyensúlyt hozzuk ki",
+        "sauteing": "A kalóriákkal és makrókkal játszunk",
+        "simmering": "Türelmesen építjük a napi menüdet"
+      }
     }
   }
 }

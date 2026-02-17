@@ -9,7 +9,7 @@
             class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-brandg-600 dark:hover:text-brandg-400 transition-colors"
           >
             <UIcon name="i-lucide-arrow-left" class="w-5 h-5" />
-            <span class="text-sm font-medium">Back to Recipes</span>
+            <span class="text-sm font-medium">{{ t('recipeWrangler.backToRecipes') }}</span>
           </NuxtLink>
 
           <button
@@ -18,15 +18,15 @@
             class="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-sm font-medium"
           >
             <UIcon name="i-lucide-x" class="w-4 h-4" />
-            Clear All
+            {{ t('recipeWrangler.comparePage.clearAll') }}
           </button>
         </div>
-       <div class="mt-3 sm:mt-4">
+        <div class="mt-3 sm:mt-4">
           <h1 class="text-2xl sm:text-3xl md:text-4xl font-light text-zinc-900 dark:text-white tracking-tight">
             <span class="font-serif italic text-brandg-500 dark:text-brandg-400 text-3xl sm:text-4xl md:text-5xl">RecipeWrangler</span>
           </h1>
           <p class="mt-2 text-sm sm:text-base text-zinc-600 dark:text-zinc-300 font-light">
-            Discover personalized recipes tailored to your nutritional goals
+            {{ t('recipeWrangler.subtitle') }}
           </p>
         </div>
       </div>
@@ -38,17 +38,17 @@
       <div v-if="compareRecipes.length === 0" class="text-center py-16">
         <UIcon name="i-lucide-git-compare" class="w-20 h-20 text-zinc-300 dark:text-zinc-700 mx-auto mb-6" />
         <h2 class="text-2xl font-semibold text-zinc-900 dark:text-white mb-3">
-          No Recipes to Compare
+          {{ t('recipeWrangler.comparePage.empty.title') }}
         </h2>
         <p class="text-zinc-600 dark:text-zinc-400 mb-8 max-w-md mx-auto">
-          Select recipes from the search results to compare their nutritional values and ingredients
+          {{ t('recipeWrangler.comparePage.empty.subtitle') }}
         </p>
         <NuxtLink
           to="/recipe-wrangler"
           class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-brandg-600 text-white hover:bg-brandg-700 transition-colors font-medium"
         >
           <UIcon name="i-lucide-search" class="w-5 h-5" />
-          Browse Recipes
+          {{ t('recipeWrangler.comparePage.empty.browseRecipes') }}
         </NuxtLink>
       </div>
 
@@ -59,7 +59,7 @@
           <thead>
             <tr class="border-b border-zinc-200 dark:border-zinc-700">
               <th class="text-left p-4 sm:p-6 bg-zinc-50 dark:bg-zinc-900 font-semibold text-zinc-700 dark:text-zinc-300 sticky left-0 z-20">
-                <span class="text-sm uppercase tracking-wide">Feature</span>
+                <span class="text-sm uppercase tracking-wide">{{ t('recipeWrangler.comparePage.table.feature') }}</span>
               </th>
               <th
                 v-for="recipe in compareRecipes"
@@ -103,7 +103,7 @@
                     :to="`/recipe-wrangler/${recipe.recipe_id}`"
                     class="inline-flex items-center gap-2 text-sm font-medium text-brandg-600 dark:text-brandg-400 hover:text-brandg-700 dark:hover:text-brandg-300 transition-colors"
                   >
-                    <span>View Recipe</span>
+                    <span>{{ t('recipeWrangler.recipe.viewRecipe') }}</span>
                     <UIcon name="i-lucide-arrow-right" class="w-4 h-4" />
                   </NuxtLink>
                 </div>
@@ -117,7 +117,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-white dark:bg-zinc-800 z-10 border-r border-zinc-200 dark:border-zinc-700 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-award" class="w-5 h-5 text-brandg-600 dark:text-brandg-400" />
-                  <span>Nutri-Score</span>
+                  <span>{{ t('recipeWrangler.recipe.nutriScore') }}</span>
                 </div>
               </td>
               <td
@@ -143,7 +143,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-zinc-50 dark:bg-zinc-900 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-clock" class="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
-                  <span>Duration</span>
+                  <span>{{ t('recipeWrangler.comparePage.table.duration') }}</span>
                 </div>
               </td>
               <td
@@ -152,7 +152,7 @@
                 class="p-4 sm:p-6 text-center"
               >
                 <span class="text-lg font-semibold text-zinc-900 dark:text-white">
-                  {{ recipe.duration || 'N/A' }}<span v-if="recipe.duration" class="text-sm text-zinc-500"> min</span>
+                  {{ recipe.duration || t('recipeWrangler.comparePage.notAvailable') }}<span v-if="recipe.duration" class="text-sm text-zinc-500"> {{ t('recipeWrangler.recipe.minuteShort') }}</span>
                 </span>
               </td>
             </tr>
@@ -162,7 +162,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-white dark:bg-zinc-800 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-users" class="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
-                  <span>Servings</span>
+                  <span>{{ t('recipeWrangler.comparePage.table.servings') }}</span>
                 </div>
               </td>
               <td
@@ -171,7 +171,7 @@
                 class="p-4 sm:p-6 text-center"
               >
                 <span class="text-lg font-semibold text-zinc-900 dark:text-white">
-                  {{ recipe.serves || 'N/A' }}
+                  {{ recipe.serves || t('recipeWrangler.comparePage.notAvailable') }}
                 </span>
               </td>
             </tr>
@@ -181,7 +181,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-zinc-50 dark:bg-zinc-900 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-flame" class="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                  <span>Calories</span>
+                  <span>{{ t('recipeWrangler.detail.calories') }}</span>
                 </div>
               </td>
               <td
@@ -210,7 +210,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-white dark:bg-zinc-800 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-dumbbell" class="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  <span>Protein</span>
+                  <span>{{ t('recipeWrangler.detail.protein') }}</span>
                 </div>
               </td>
               <td
@@ -239,7 +239,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-zinc-50 dark:bg-zinc-900 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-wheat" class="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                  <span>Carbs</span>
+                  <span>{{ t('recipeWrangler.detail.carbs') }}</span>
                 </div>
               </td>
               <td
@@ -268,7 +268,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-white dark:bg-zinc-800 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-droplet" class="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                  <span>Fat</span>
+                  <span>{{ t('recipeWrangler.detail.fat') }}</span>
                 </div>
               </td>
               <td
@@ -297,7 +297,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-zinc-50 dark:bg-zinc-900 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-leaf" class="w-5 h-5 text-green-600 dark:text-green-400" />
-                  <span>Fiber</span>
+                  <span>{{ t('recipeWrangler.detail.fiber') }}</span>
                 </div>
               </td>
               <td
@@ -326,7 +326,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-white dark:bg-zinc-800 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-candy" class="w-5 h-5 text-pink-600 dark:text-pink-400" />
-                  <span>Sugar</span>
+                  <span>{{ t('recipeWrangler.detail.sugar') }}</span>
                 </div>
               </td>
               <td
@@ -345,7 +345,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-zinc-50 dark:bg-zinc-900 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-salt" class="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
-                  <span>Sodium</span>
+                  <span>{{ t('recipeWrangler.detail.sodium') }}</span>
                 </div>
               </td>
               <td
@@ -367,6 +367,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRecipeStore } from '~/stores/recipe'
 import recipeApi from '~/services/recipeApi'
 import type { Recipe } from '~/services/recipeApi'
@@ -374,9 +375,10 @@ import type { Recipe } from '~/services/recipeApi'
 definePageMeta({
   middleware: ['auth', 'profile']
 })
+const { t } = useI18n()
 
 useHead({
-  title: 'Compare Recipes - RecipeWrangler'
+  title: computed(() => t('recipeWrangler.comparePage.pageTitle'))
 })
 
 // ============================================================================
@@ -426,11 +428,11 @@ const getNutriScoreGrade = (score: number): string => {
 
 const getNutriScoreColorBg = (grade: string): string => {
   const colors = {
-    'A': 'bg-[#038141]',
-    'B': 'bg-[#85BB2F]',
-    'C': 'bg-[#FECB02]',
-    'D': 'bg-[#EE8100]',
-    'E': 'bg-[#E63E11]'
+    A: 'bg-[#038141]',
+    B: 'bg-[#85BB2F]',
+    C: 'bg-[#FECB02]',
+    D: 'bg-[#EE8100]',
+    E: 'bg-[#E63E11]'
   }
   return colors[grade as keyof typeof colors] || 'bg-zinc-400'
 }

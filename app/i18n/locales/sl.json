@@ -242,7 +242,32 @@
       "excludeAllergens": "Izključi alergene",
       "clearAll": "Počisti vse",
       "quickFilters": "Hitri filtri",
-      "sortBy": "Razvrsti po"
+      "sortBy": "Razvrsti po",
+      "allergens": {
+        "peanuts": "Arašidi",
+        "treeNuts": "Oreščki",
+        "dairy": "Mlečni izdelki",
+        "eggs": "Jajca",
+        "soy": "Soja",
+        "wheat": "Pšenica",
+        "fish": "Ribe",
+        "shellfish": "Lupinarji",
+        "gluten": "Gluten",
+        "lactose": "Laktoza"
+      },
+      "quickOptions": {
+        "quickEasy": "Hitro in enostavno (< 30 min)",
+        "healthy": "Zdravo in hranljivo",
+        "vegetarian": "Vegetarijansko",
+        "vegan": "Vegansko",
+        "lowCalorie": "Nizkokalorično"
+      },
+      "sortOptions": {
+        "mostRelevant": "Najbolj relevantno",
+        "cookingTime": "Čas priprave",
+        "calories": "Kalorije",
+        "nutritionScore": "Prehranski rezultat"
+      }
     },
     "allergens": {
       "peanuts": "Arašidi",
@@ -314,7 +339,69 @@
       "fiber": "Vlaknine",
       "sugar": "Sladkor",
       "sodium": "Natrij",
-      "cholesterol": "Holesterol"
+      "cholesterol": "Holesterol",
+      "gridView": "Mrežni pogled",
+      "chartView": "Grafični pogled",
+      "usdaSource": "Na podlagi USDA tabele sestave živil",
+      "calories": "Kalorije",
+      "protein": "Beljakovine",
+      "carbs": "Ogljikovi hidrati",
+      "fat": "Maščobe",
+      "nutritionalQuality": "Prehranska kakovost",
+      "nutriScoreDescriptions": {
+        "A": "Odlična prehranska kakovost",
+        "B": "Dobra prehranska kakovost",
+        "C": "Povprečna prehranska kakovost",
+        "D": "Slaba prehranska kakovost",
+        "E": "Nizka prehranska kakovost",
+        "unknown": "Neznano"
+      },
+      "nutriScoreTooltips": {
+        "A": "Ocena A: Bogato z vlakninami, beljakovinami, vitamini in minerali. Odlično za vsakodnevne obroke.",
+        "B": "Ocena B: Hranljiva izbira z dobrim ravnovesjem koristnih hranil.",
+        "C": "Ocena C: Uravnotežena izbira, ki se dobro poda v raznoliko prehrano.",
+        "D": "Ocena D: Primerno občasno kot del raznolike in uravnotežene prehrane.",
+        "E": "Ocena E: Najbolje občasno kot priboljšek v uravnoteženem življenjskem slogu.",
+        "unknown": "Neznana ocena"
+      },
+      "nutrientChart": {
+        "reset": "Ponastavi",
+        "minSelectionWarning": "Za prikaz grafa izberi vsaj 3 hranila"
+      }
+    },
+    "comparePage": {
+      "pageTitle": "Primerjava receptov - RecipeWrangler",
+      "clearAll": "Počisti vse",
+      "notAvailable": "N/A",
+      "empty": {
+        "title": "Ni receptov za primerjavo",
+        "subtitle": "Izberi recepte iz rezultatov iskanja za primerjavo hranilnih vrednosti in sestavin",
+        "browseRecipes": "Brskaj po receptih"
+      },
+      "table": {
+        "feature": "Lastnost",
+        "duration": "Trajanje",
+        "servings": "Porcije"
+      }
+    },
+    "cookingAnimation": {
+      "deliciousRecipes": "okusne recepte",
+      "actions": {
+        "stirring": "mešamo",
+        "frying": "cvremo",
+        "chopping": "sekljamo",
+        "boiling": "kuhamo",
+        "sauteing": "pražimo",
+        "simmering": "počasi kuhamo"
+      },
+      "descriptions": {
+        "stirring": "Nežno mešamo okuse",
+        "frying": "Ustvarjamo zlato popolnost",
+        "chopping": "Pripravljamo sveže sestavine",
+        "boiling": "Izvabljamo nežne okuse",
+        "sauteing": "Ples s toploto in časom",
+        "simmering": "Potrpežljivo razvijamo globino okusa"
+      }
     }
   },
   "foodChat": {
@@ -750,6 +837,103 @@
       "smoothies": "Smutiji",
       "wine": "Vino",
       "beer": "Pivo"
+    }
+  },
+  "foodChatHome": {
+    "pageTitle": "FoodChat - WiseFood",
+    "backToDashboard": "Nazaj na nadzorno ploščo",
+    "subtitle": "Opiši, kaj bi jedel, in takoj dobi prilagojen jedilnik",
+    "input": {
+      "generate": "Generiraj",
+      "placeholderInitial": "Opiši svoje idealne obroke — npr. visoko beljakovinsko, mediteranski slog...",
+      "placeholderModify": "Prilagodi svoj jedilnik — npr. zamenjaj kosilo za nekaj lažjega..."
+    },
+    "welcomeTitle": {
+      "prefix": "Kaj bomo",
+      "accent": "kuhali",
+      "suffix": "danes?"
+    },
+    "welcomeSubtitle": "Izberi predlog ali zgoraj vpiši svojo zahtevo.",
+    "mealPlanTitle": {
+      "prefix": "Tvoj",
+      "accent": "jedilnik"
+    },
+    "startFresh": "Začni znova",
+    "planHeader": {
+      "dailyPlan": "Dnevni plan"
+    },
+    "apply": {
+      "title": "Uporabi ta načrt za člane",
+      "subtitle": "Izberi člane in datum",
+      "selectMembers": "Izberi člane",
+      "onlyMe": "Samo jaz",
+      "all": "Vsi",
+      "noHouseholdMembers": "Ni najdenih članov gospodinjstva.",
+      "main": "Glavni",
+      "buttons": {
+        "apply": "Uporabi",
+        "revoke": "Prekliči"
+      },
+      "success": {
+        "applied": "Uporabljeno • {date}",
+        "revoked": "Preklicano"
+      },
+      "membersLabel": {
+        "selectMembers": "Izberi člane",
+        "singleSelected": "Izbran 1 član",
+        "multipleSelected": "Izbranih članov: {count}"
+      }
+    },
+    "tooltips": {
+      "planWorksWell": "Ta načrt deluje dobro",
+      "needsImprovement": "Potrebne so izboljšave"
+    },
+    "disclaimer": "Odgovori so informativni. Za medicinski nasvet se posvetuj s prehranskim strokovnjakom.",
+    "meals": {
+      "breakfast": "Zajtrk",
+      "lunch": "Kosilo",
+      "dinner": "Večerja"
+    },
+    "errors": {
+      "failedToApply": "Uporaba jedilnika ni uspela.",
+      "failedToRevoke": "Preklic jedilnika ni uspel.",
+      "someMembersNoPlan": "Nekateri izbrani člani nimajo tega jedilnika za izbrani datum."
+    },
+    "suggestedQuestions": {
+      "balancedPlan": "Ustvari uravnotežen jedilnik za danes",
+      "highProtein": "Ideje za vegetarijanske obroke z veliko beljakovin",
+      "mediterranean": "Mediteranska prehrana za danes",
+      "lowSugar": "Alternative sladic z manj sladkorja"
+    },
+    "modifyChips": {
+      "lowerCalorie": "Naj bo manj kalorično",
+      "moreProtein": "Dodaj več beljakovin",
+      "lighterLunch": "Zamenjaj kosilo za nekaj lažjega",
+      "vegetarian": "Naj bo vegetarijansko",
+      "differentDinner": "Predlagaj drugačno večerjo"
+    },
+    "mealCard": {
+      "viewRecipe": "Prikaži recept",
+      "loadingNutrition": "Nalaganje hranilnih vrednosti..."
+    },
+    "cookingAnimation": {
+      "yourMealPlan": "tvoj jedilnik",
+      "actions": {
+        "stirring": "mešamo",
+        "frying": "cvremo",
+        "chopping": "sekljamo",
+        "boiling": "kuhamo",
+        "sauteing": "pražimo",
+        "simmering": "počasi kuhamo"
+      },
+      "descriptions": {
+        "stirring": "Mešamo okuse za tvoj popoln načrt",
+        "frying": "Ustvarjamo zlato obarvane ideje obrokov",
+        "chopping": "Pripravljamo sveže kombinacije sestavin",
+        "boiling": "Iščemo najboljše prehransko ravnovesje",
+        "sauteing": "Usklajujemo kalorije in makre",
+        "simmering": "Potrpežljivo gradimo tvoj dnevni meni"
+      }
     }
   }
 }

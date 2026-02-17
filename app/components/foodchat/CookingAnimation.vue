@@ -110,9 +110,9 @@
     <div class="text-center space-y-3">
       <h3 class="text-xl sm:text-2xl font-light tracking-wide text-stone-600 dark:text-stone-300 flex items-center justify-center gap-2">
         <Transition name="fade-verb" mode="out-in">
-          <span :key="currentAction" class="action-verb capitalize font-medium text-stone-500 dark:text-stone-400">{{ currentAction }}</span>
+          <span :key="currentAction" class="action-verb font-medium text-stone-500 dark:text-stone-400">{{ displayCurrentAction }}</span>
         </Transition>
-        <span class="cooking-text text-2xl sm:text-3xl font-serif italic">your meal plan</span>
+        <span class="cooking-text text-2xl sm:text-3xl font-serif italic">{{ t('foodChatHome.cookingAnimation.yourMealPlan') }}</span>
         <span class="dots text-stone-400 dark:text-stone-500">
           <span class="dot">.</span>
           <span class="dot">.</span>
@@ -142,23 +142,26 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const cookingActions = ['stirring', 'frying', 'chopping', 'boiling', 'sauteing', 'simmering'] as const
 type CookingAction = typeof cookingActions[number]
 
+const { t } = useI18n()
 const currentActionIndex = ref(0)
 const currentAction = computed(() => cookingActions[currentActionIndex.value])
+const displayCurrentAction = computed(() => t(`foodChatHome.cookingAnimation.actions.${currentAction.value}`))
 
-const actionDescriptions: Record<CookingAction, string> = {
-  stirring: 'Blending flavors for your perfect plan',
-  frying: 'Crafting golden meal ideas',
-  chopping: 'Preparing fresh ingredient combos',
-  boiling: 'Coaxing out the best nutritional balance',
-  sauteing: 'Dancing with calories and macros',
-  simmering: 'Patiently building your daily menu'
+const actionDescriptionKeys: Record<CookingAction, string> = {
+  stirring: 'foodChatHome.cookingAnimation.descriptions.stirring',
+  frying: 'foodChatHome.cookingAnimation.descriptions.frying',
+  chopping: 'foodChatHome.cookingAnimation.descriptions.chopping',
+  boiling: 'foodChatHome.cookingAnimation.descriptions.boiling',
+  sauteing: 'foodChatHome.cookingAnimation.descriptions.sauteing',
+  simmering: 'foodChatHome.cookingAnimation.descriptions.simmering'
 }
 
-const actionDescription = computed(() => actionDescriptions[currentAction.value])
+const actionDescription = computed(() => t(actionDescriptionKeys[currentAction.value]))
 
 const flyingIngredients = [
   { type: 'carrot', x: -45, y: -5 },

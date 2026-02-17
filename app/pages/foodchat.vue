@@ -9,7 +9,7 @@
             class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
           >
             <UIcon name="i-lucide-arrow-left" class="w-5 h-5" />
-            <span class="text-sm font-medium hidden sm:inline">Back to Dashboard</span>
+            <span class="text-sm font-medium hidden sm:inline">{{ t('foodChatHome.backToDashboard') }}</span>
           </NuxtLink>
         </div>
         <div class="mt-3 sm:mt-4">
@@ -17,7 +17,7 @@
             <span class="font-serif italic text-brandp-500 dark:text-brandp-400 text-3xl sm:text-4xl md:text-5xl">FoodChat</span>
           </h1>
           <p class="mt-2 text-sm sm:text-base text-zinc-600 dark:text-zinc-300 font-light">
-            Describe what you'd like to eat and get a personalised meal plan instantly
+            {{ t('foodChatHome.subtitle') }}
           </p>
         </div>
       </div>
@@ -37,7 +37,7 @@
             v-model="inputText"
             rows="1"
             :disabled="sending"
-            :placeholder="hasMealPlans ? 'Modify your meal plan — e.g. swap lunch for something lighter...' : 'Describe your ideal meals — e.g. high-protein, Mediterranean style...'"
+            :placeholder="hasMealPlans ? t('foodChatHome.input.placeholderModify') : t('foodChatHome.input.placeholderInitial')"
             class="flex-1 resize-none overflow-hidden bg-transparent border-b-2 border-zinc-200 dark:border-zinc-700 px-2 py-3.5 text-base text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-brandp-500 dark:focus:border-brandp-400 disabled:opacity-40 max-h-28 font-light transition-colors"
             @input="autoResize"
             @keydown="handleKeydown"
@@ -50,7 +50,7 @@
               ? 'bg-brandp-500 text-white shadow-md shadow-brandp-500/20 hover:bg-brandp-600 hover:shadow-lg'
               : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400'"
           >
-            Generate
+            {{ t('foodChatHome.input.generate') }}
             <UIcon name="i-lucide-arrow-up" class="w-4 h-4" />
           </button>
         </form>
@@ -60,11 +60,11 @@
           <div v-if="hasMealPlans && !sending" class="flex flex-wrap gap-2 mt-4">
             <button
               v-for="chip in modifyChips"
-              :key="chip"
+              :key="chip.text"
               class="px-3.5 py-1.5 rounded-full text-xs font-light border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 bg-white/60 dark:bg-zinc-800/40 hover:border-brandp-300 dark:hover:border-brandp-700 hover:text-brandp-600 dark:hover:text-brandp-400 transition-all"
-              @click="handleQuickAsk(chip)"
+              @click="handleQuickAsk(chip.text)"
             >
-              {{ chip }}
+              {{ chip.text }}
             </button>
           </div>
         </Transition>
@@ -75,10 +75,10 @@
         <div v-if="!hasMealPlans && !sending" class="mb-16">
           <div class="text-center mb-10">
             <h2 class="text-2xl sm:text-3xl font-light text-gray-900 dark:text-white mb-3">
-              What shall we <span class="font-serif italic text-brandp-500 text-3xl sm:text-4xl">cook</span> today?
+              {{ t('foodChatHome.welcomeTitle.prefix') }} <span class="font-serif italic text-brandp-500 text-3xl sm:text-4xl">{{ t('foodChatHome.welcomeTitle.accent') }}</span> {{ t('foodChatHome.welcomeTitle.suffix') }}
             </h2>
             <p class="text-sm sm:text-base text-gray-500 dark:text-gray-400 font-light">
-              Pick a suggestion or type your own request above.
+              {{ t('foodChatHome.welcomeSubtitle') }}
             </p>
           </div>
 
@@ -109,14 +109,14 @@
         <div v-if="hasMealPlans && !sending" class="mb-16">
           <div class="flex items-center justify-between mb-8">
             <h2 class="text-2xl sm:text-3xl font-light text-gray-900 dark:text-white">
-              Your <span class="font-serif italic text-brandp-500 text-3xl sm:text-4xl">meal plan</span>
+              {{ t('foodChatHome.mealPlanTitle.prefix') }} <span class="font-serif italic text-brandp-500 text-3xl sm:text-4xl">{{ t('foodChatHome.mealPlanTitle.accent') }}</span>
             </h2>
             <button
               class="text-xs text-gray-400 hover:text-brandp-500 dark:hover:text-brandp-400 font-light transition-colors"
               @click="handleStartOver"
             >
               <UIcon name="i-lucide-refresh-cw" class="w-3.5 h-3.5 inline mr-1" />
-              Start fresh
+              {{ t('foodChatHome.startFresh') }}
             </button>
           </div>
 
@@ -129,7 +129,7 @@
               <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-zinc-700/50 bg-gradient-to-r from-brandp-50/60 to-earth-1/40 dark:from-brandp-950/20 dark:to-zinc-800/20">
                 <div class="flex items-center gap-2.5">
                   <UIcon name="i-lucide-calendar-days" class="w-5 h-5 text-brandp-500" />
-                  <span class="text-sm font-medium text-gray-900 dark:text-white">Daily Plan</span>
+                  <span class="text-sm font-medium text-gray-900 dark:text-white">{{ t('foodChatHome.planHeader.dailyPlan') }}</span>
                 </div>
                 <span class="text-xs text-gray-400 font-light">{{ formatPlanDate(latestMealPlan.created_at) }}</span>
               </div>
@@ -137,8 +137,8 @@
               <div class="px-6 py-4 border-b border-gray-100 dark:border-zinc-700/50">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p class="text-sm font-medium text-gray-900 dark:text-white">Apply this plan to members</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Choose members and date</p>
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ t('foodChatHome.apply.title') }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodChatHome.apply.subtitle') }}</p>
                   </div>
                   <div class="flex items-center gap-2">
                     <UPopover :content="{ align: 'end', side: 'bottom', sideOffset: 8 }">
@@ -173,19 +173,19 @@
                       <template #content>
                         <div class="w-72 p-3">
                           <div class="flex items-center justify-between mb-2">
-                            <p class="text-xs font-medium text-gray-900 dark:text-white">Select members</p>
+                            <p class="text-xs font-medium text-gray-900 dark:text-white">{{ t('foodChatHome.apply.selectMembers') }}</p>
                             <div class="flex items-center gap-1.5">
                               <UButton variant="ghost" size="xs" color="neutral" @click="selectOnlyCurrentMember">
-                                Only me
+                                {{ t('foodChatHome.apply.onlyMe') }}
                               </UButton>
                               <UButton variant="ghost" size="xs" color="neutral" @click="selectAllMembers">
-                                All
+                                {{ t('foodChatHome.apply.all') }}
                               </UButton>
                             </div>
                           </div>
 
                           <div v-if="householdMembers.length === 0" class="text-xs text-gray-500 dark:text-gray-400 py-2">
-                            No household members found.
+                            {{ t('foodChatHome.apply.noHouseholdMembers') }}
                           </div>
 
                           <div v-else class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
@@ -223,7 +223,7 @@
                               </div>
 
                               <UBadge v-if="isCurrentMember(member.id)" color="primary" variant="subtle" size="xs">
-                                Main
+                                {{ t('foodChatHome.apply.main') }}
                               </UBadge>
                             </div>
                           </div>
@@ -239,7 +239,7 @@
                       :disabled="!canApplyMealPlan"
                       @click="applyMealPlanToMembers"
                     >
-                      Apply
+                      {{ t('foodChatHome.apply.buttons.apply') }}
                     </UButton>
                     <UButton
                       color="neutral"
@@ -250,7 +250,7 @@
                       :disabled="!canRevokeMealPlan"
                       @click="revokeMealPlanFromMembers"
                     >
-                      Revoke
+                      {{ t('foodChatHome.apply.buttons.revoke') }}
                     </UButton>
                     <div
                       v-if="applySuccess"
@@ -279,21 +279,21 @@
               >
                 <FoodchatMealScheduleCard
                   v-if="latestMealPlan.breakfast"
-                  type="Breakfast"
+                  :type="t('foodChatHome.meals.breakfast')"
                   time="08:00"
                   icon="i-lucide-coffee"
                   :recipe="latestMealPlan.breakfast"
                 />
                 <FoodchatMealScheduleCard
                   v-if="latestMealPlan.lunch"
-                  type="Lunch"
+                  :type="t('foodChatHome.meals.lunch')"
                   time="13:00"
                   icon="i-lucide-utensils"
                   :recipe="latestMealPlan.lunch"
                 />
                 <FoodchatMealScheduleCard
                   v-if="latestMealPlan.dinner"
-                  type="Dinner"
+                  :type="t('foodChatHome.meals.dinner')"
                   time="19:30"
                   icon="i-lucide-moon"
                   :recipe="latestMealPlan.dinner"
@@ -309,7 +309,7 @@
                 <div v-else class="flex-1" />
 
                 <div class="flex items-center gap-1 shrink-0">
-                  <UTooltip text="This plan works well">
+                  <UTooltip :text="t('foodChatHome.tooltips.planWorksWell')">
                     <UButton
                       variant="ghost"
                       color="neutral"
@@ -319,7 +319,7 @@
                       @click="votePlan(latestMealPlan.id, 'up')"
                     />
                   </UTooltip>
-                  <UTooltip text="Needs improvement">
+                  <UTooltip :text="t('foodChatHome.tooltips.needsImprovement')">
                     <UButton
                       variant="ghost"
                       color="neutral"
@@ -339,7 +339,7 @@
       <!-- Disclaimer -->
       <div class="text-center mt-8">
         <p class="text-[10px] text-gray-400 dark:text-gray-500 font-light">
-          Responses are informational. Consult a nutritionist for medical advice.
+          {{ t('foodChatHome.disclaimer') }}
         </p>
       </div>
 
@@ -365,6 +365,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, nextTick, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useFoodChat } from '~/composables/useFoodChat'
 import { useHouseholdStore } from '~/stores/household'
 import type { MealPlan, MealRecipe } from '~/services/foodchatApi'
@@ -381,7 +382,11 @@ definePageMeta({
   middleware: ['auth', 'profile']
 })
 
-useHead({ title: 'FoodChat' })
+const { t, locale } = useI18n()
+
+useHead({
+  title: computed(() => t('foodChatHome.pageTitle'))
+})
 
 const {
   activeSession,
@@ -419,9 +424,14 @@ const householdMembers = computed(() => householdStore.householdMembers)
 const currentMemberId = computed(() => householdStore.currentMember?.id ?? null)
 const selectedMembersLabel = computed(() => {
   const count = selectedApplyMemberIds.value.length
-  if (count === 0) return 'Select members'
-  if (count === 1) return '1 member selected'
-  return `${count} members selected`
+  if (count === 0) return t('foodChatHome.apply.membersLabel.selectMembers')
+  if (count === 1) return t('foodChatHome.apply.membersLabel.singleSelected')
+  return t('foodChatHome.apply.membersLabel.multipleSelected', { count })
+})
+const activeDateLocale = computed(() => {
+  if (locale.value === 'hu') return 'hu-HU'
+  if (locale.value === 'sl') return 'sl-SI'
+  return 'en-US'
 })
 const canApplyMealPlan = computed(() => {
   return !!latestMealPlan.value
@@ -442,20 +452,20 @@ const canRevokeMealPlan = computed(() => {
   return selectedIds.every(memberId => !!revocablePlanIdByMemberId.value[memberId])
 })
 
-const suggestedQuestions = [
-  { text: 'Create a balanced meal plan for today', icon: 'i-lucide-calendar-days' },
-  { text: 'High-protein vegetarian ideas', icon: 'i-lucide-leaf' },
-  { text: 'Mediterranean diet for today', icon: 'i-lucide-heart-pulse' },
-  { text: 'Low-sugar dessert alternatives', icon: 'i-lucide-cherry' }
-]
+const suggestedQuestions = computed(() => [
+  { text: t('foodChatHome.suggestedQuestions.balancedPlan'), icon: 'i-lucide-calendar-days' },
+  { text: t('foodChatHome.suggestedQuestions.highProtein'), icon: 'i-lucide-leaf' },
+  { text: t('foodChatHome.suggestedQuestions.mediterranean'), icon: 'i-lucide-heart-pulse' },
+  { text: t('foodChatHome.suggestedQuestions.lowSugar'), icon: 'i-lucide-cherry' }
+])
 
-const modifyChips = [
-  'Make it lower calorie',
-  'Add more protein',
-  'Swap lunch for something lighter',
-  'Make it vegetarian',
-  'Suggest a different dinner'
-]
+const modifyChips = computed(() => [
+  { text: t('foodChatHome.modifyChips.lowerCalorie') },
+  { text: t('foodChatHome.modifyChips.moreProtein') },
+  { text: t('foodChatHome.modifyChips.lighterLunch') },
+  { text: t('foodChatHome.modifyChips.vegetarian') },
+  { text: t('foodChatHome.modifyChips.differentDinner') }
+])
 
 watch(
   [currentMemberId, householdMembers],
@@ -663,12 +673,12 @@ async function applyMealPlanToMembers() {
       storedMealPlanIdsBySourceId.value[latestMealPlan.value.id] = storedMealPlanId
     }
 
-    applySuccess.value = `Applied • ${selectedApplyDate.value}`
+    applySuccess.value = t('foodChatHome.apply.success.applied', { date: selectedApplyDate.value })
     await refreshRevokeEligibility()
   } catch (err: unknown) {
     const message = (err && typeof err === 'object' && 'message' in err)
       ? String((err as { message: string }).message)
-      : 'Failed to apply meal plan.'
+      : t('foodChatHome.errors.failedToApply')
     applyError.value = message
   } finally {
     applyingMealPlan.value = false
@@ -687,7 +697,7 @@ async function revokeMealPlanFromMembers() {
     const ineligibleMembers = selectedIds.filter(memberId => !revocablePlanIdByMemberId.value[memberId])
 
     if (ineligibleMembers.length > 0) {
-      throw new Error('Some selected members do not have this meal plan for the chosen date.')
+      throw new Error(t('foodChatHome.errors.someMembersNoPlan'))
     }
 
     for (const memberId of selectedIds) {
@@ -697,11 +707,11 @@ async function revokeMealPlanFromMembers() {
 
     await refreshRevokeEligibility()
 
-    applySuccess.value = 'Revoked'
+    applySuccess.value = t('foodChatHome.apply.success.revoked')
   } catch (err: unknown) {
     const message = (err && typeof err === 'object' && 'message' in err)
       ? String((err as { message: string }).message)
-      : 'Failed to revoke meal plan.'
+      : t('foodChatHome.errors.failedToRevoke')
     applyError.value = message
   } finally {
     revokingMealPlan.value = false
@@ -750,7 +760,12 @@ function autoResize(e: Event) {
 
 function formatPlanDate(dateStr: string): string {
   const date = new Date(dateStr)
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return date.toLocaleDateString(activeDateLocale.value, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
 }
 </script>
 

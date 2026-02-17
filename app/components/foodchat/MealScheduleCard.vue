@@ -47,7 +47,7 @@
         class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-brandp-600 dark:text-brandp-400 hover:text-brandp-700 dark:hover:text-brandp-300 transition-colors"
       >
         <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
-        View recipe
+        {{ t('foodChatHome.mealCard.viewRecipe') }}
       </NuxtLink>
     </div>
   </div>
@@ -55,6 +55,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { MealRecipe } from '~/services/foodchatApi'
 import type { Recipe } from '~/services/recipeApi'
 import recipeApi from '~/services/recipeApi'
@@ -65,6 +66,7 @@ const props = defineProps<{
   icon: string
   recipe: MealRecipe
 }>()
+const { t } = useI18n()
 
 const nutritionData = ref<Recipe | null>(null)
 const nutritionLoading = ref(false)
@@ -95,7 +97,7 @@ const ringCircumference = 2 * Math.PI * ringRadius
 const ringOffset = computed(() => ringCircumference - (kcalPercent.value / 100) * ringCircumference)
 
 const nutritionTooltip = computed(() => {
-  if (!nutritionData.value) return 'Loading nutrition...'
+  if (!nutritionData.value) return t('foodChatHome.mealCard.loadingNutrition')
   const d = nutritionData.value
   return `${Math.round(d.total_kcal_per_serving)} kcal · P ${Math.round(d.total_protein_g_per_serving)}g · C ${Math.round(d.total_carbs_g_per_serving)}g · F ${Math.round(d.total_fat_g_per_serving)}g`
 })

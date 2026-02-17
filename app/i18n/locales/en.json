@@ -242,7 +242,32 @@
       "excludeAllergens": "Exclude Allergens",
       "clearAll": "Clear all",
       "quickFilters": "Quick Filters",
-      "sortBy": "Sort By"
+      "sortBy": "Sort By",
+      "allergens": {
+        "peanuts": "Peanuts",
+        "treeNuts": "Tree Nuts",
+        "dairy": "Dairy",
+        "eggs": "Eggs",
+        "soy": "Soy",
+        "wheat": "Wheat",
+        "fish": "Fish",
+        "shellfish": "Shellfish",
+        "gluten": "Gluten",
+        "lactose": "Lactose"
+      },
+      "quickOptions": {
+        "quickEasy": "Quick and Easy (< 30 min)",
+        "healthy": "Healthy and Nutritious",
+        "vegetarian": "Vegetarian",
+        "vegan": "Vegan",
+        "lowCalorie": "Low Calorie"
+      },
+      "sortOptions": {
+        "mostRelevant": "Most Relevant",
+        "cookingTime": "Cooking Time",
+        "calories": "Calories",
+        "nutritionScore": "Nutrition Score"
+      }
     },
     "allergens": {
       "peanuts": "Peanuts",
@@ -314,7 +339,69 @@
       "fiber": "Fiber",
       "sugar": "Sugar",
       "sodium": "Sodium",
-      "cholesterol": "Cholesterol"
+      "cholesterol": "Cholesterol",
+      "gridView": "Grid View",
+      "chartView": "Chart View",
+      "usdaSource": "Based on the USDA Food Composition Table",
+      "calories": "Calories",
+      "protein": "Protein",
+      "carbs": "Carbs",
+      "fat": "Fat",
+      "nutritionalQuality": "Nutritional Quality",
+      "nutriScoreDescriptions": {
+        "A": "Excellent nutritional quality",
+        "B": "Good nutritional quality",
+        "C": "Average nutritional quality",
+        "D": "Poor nutritional quality",
+        "E": "Low nutritional quality",
+        "unknown": "Unknown"
+      },
+      "nutriScoreTooltips": {
+        "A": "Grade A: Rich in fiber, protein, vitamins, and minerals. Great for everyday meals.",
+        "B": "Grade B: A nutritious option with a good balance of beneficial nutrients.",
+        "C": "Grade C: A balanced choice that fits well into a varied diet.",
+        "D": "Grade D: Can be enjoyed occasionally as part of a diverse, balanced diet.",
+        "E": "Grade E: Best enjoyed as an occasional treat within a balanced lifestyle.",
+        "unknown": "Unknown grade"
+      },
+      "nutrientChart": {
+        "reset": "Reset",
+        "minSelectionWarning": "Select at least 3 nutrients to display the chart"
+      }
+    },
+    "comparePage": {
+      "pageTitle": "Compare Recipes - RecipeWrangler",
+      "clearAll": "Clear All",
+      "notAvailable": "N/A",
+      "empty": {
+        "title": "No Recipes to Compare",
+        "subtitle": "Select recipes from the search results to compare their nutritional values and ingredients",
+        "browseRecipes": "Browse Recipes"
+      },
+      "table": {
+        "feature": "Feature",
+        "duration": "Duration",
+        "servings": "Servings"
+      }
+    },
+    "cookingAnimation": {
+      "deliciousRecipes": "delicious recipes",
+      "actions": {
+        "stirring": "stirring",
+        "frying": "frying",
+        "chopping": "chopping",
+        "boiling": "boiling",
+        "sauteing": "sauteing",
+        "simmering": "simmering"
+      },
+      "descriptions": {
+        "stirring": "Gently blending flavors together",
+        "frying": "Crafting golden perfection",
+        "chopping": "Preparing fresh ingredients",
+        "boiling": "Coaxing out delicate flavors",
+        "sauteing": "Dancing with heat and timing",
+        "simmering": "Patiently developing depth"
+      }
     }
   },
   "foodChat": {
@@ -750,6 +837,103 @@
       "smoothies": "Smoothies",
       "wine": "Wine",
       "beer": "Beer"
+    }
+  },
+  "foodChatHome": {
+    "pageTitle": "FoodChat - WiseFood",
+    "backToDashboard": "Back to Dashboard",
+    "subtitle": "Describe what you'd like to eat and get a personalised meal plan instantly",
+    "input": {
+      "generate": "Generate",
+      "placeholderInitial": "Describe your ideal meals — e.g. high-protein, Mediterranean style...",
+      "placeholderModify": "Modify your meal plan — e.g. swap lunch for something lighter..."
+    },
+    "welcomeTitle": {
+      "prefix": "What shall we",
+      "accent": "cook",
+      "suffix": "today?"
+    },
+    "welcomeSubtitle": "Pick a suggestion or type your own request above.",
+    "mealPlanTitle": {
+      "prefix": "Your",
+      "accent": "meal plan"
+    },
+    "startFresh": "Start fresh",
+    "planHeader": {
+      "dailyPlan": "Daily Plan"
+    },
+    "apply": {
+      "title": "Apply this plan to members",
+      "subtitle": "Choose members and date",
+      "selectMembers": "Select members",
+      "onlyMe": "Only me",
+      "all": "All",
+      "noHouseholdMembers": "No household members found.",
+      "main": "Main",
+      "buttons": {
+        "apply": "Apply",
+        "revoke": "Revoke"
+      },
+      "success": {
+        "applied": "Applied • {date}",
+        "revoked": "Revoked"
+      },
+      "membersLabel": {
+        "selectMembers": "Select members",
+        "singleSelected": "1 member selected",
+        "multipleSelected": "{count} members selected"
+      }
+    },
+    "tooltips": {
+      "planWorksWell": "This plan works well",
+      "needsImprovement": "Needs improvement"
+    },
+    "disclaimer": "Responses are informational. Consult a nutritionist for medical advice.",
+    "meals": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner"
+    },
+    "errors": {
+      "failedToApply": "Failed to apply meal plan.",
+      "failedToRevoke": "Failed to revoke meal plan.",
+      "someMembersNoPlan": "Some selected members do not have this meal plan for the chosen date."
+    },
+    "suggestedQuestions": {
+      "balancedPlan": "Create a balanced meal plan for today",
+      "highProtein": "High-protein vegetarian ideas",
+      "mediterranean": "Mediterranean diet for today",
+      "lowSugar": "Low-sugar dessert alternatives"
+    },
+    "modifyChips": {
+      "lowerCalorie": "Make it lower calorie",
+      "moreProtein": "Add more protein",
+      "lighterLunch": "Swap lunch for something lighter",
+      "vegetarian": "Make it vegetarian",
+      "differentDinner": "Suggest a different dinner"
+    },
+    "mealCard": {
+      "viewRecipe": "View recipe",
+      "loadingNutrition": "Loading nutrition..."
+    },
+    "cookingAnimation": {
+      "yourMealPlan": "your meal plan",
+      "actions": {
+        "stirring": "stirring",
+        "frying": "frying",
+        "chopping": "chopping",
+        "boiling": "boiling",
+        "sauteing": "sauteing",
+        "simmering": "simmering"
+      },
+      "descriptions": {
+        "stirring": "Blending flavors for your perfect plan",
+        "frying": "Crafting golden meal ideas",
+        "chopping": "Preparing fresh ingredient combos",
+        "boiling": "Coaxing out the best nutritional balance",
+        "sauteing": "Dancing with calories and macros",
+        "simmering": "Patiently building your daily menu"
+      }
     }
   }
 }

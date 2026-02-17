@@ -5,9 +5,9 @@ import { onClickOutside } from '@vueuse/core'
 const { locale } = useI18n()
 
 const languages = [
-  { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'hu', name: 'Magyar', flag: '🇭🇺' },
-  { code: 'sl', name: 'Slovenščina', flag: '🇸🇮' }
+  { code: 'en', name: 'English', flagSrc: '/flags/gb.svg' },
+  { code: 'hu', name: 'Magyar', flagSrc: '/flags/hu.svg' },
+  { code: 'sl', name: 'Slovenščina', flagSrc: '/flags/si.svg' }
 ]
 
 const currentLanguage = computed(() =>
@@ -38,7 +38,12 @@ onClickOutside(dropdown, () => {
       trailing-icon="i-heroicons-chevron-down-20-solid"
       @click="isOpen = !isOpen"
     >
-      {{ currentLanguage.flag }} {{ currentLanguage.name }}
+      <img
+        :src="currentLanguage.flagSrc"
+        :alt="currentLanguage.code.toUpperCase()"
+        class="h-4 w-6 rounded-[2px] object-cover shadow-sm"
+      >
+      <span>{{ currentLanguage.name }}</span>
     </UButton>
 
     <Transition
@@ -60,7 +65,11 @@ onClickOutside(dropdown, () => {
           class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
           :class="{ 'bg-primary-50 dark:bg-primary-900': locale === lang.code }"
         >
-          <span>{{ lang.flag }}</span>
+          <img
+            :src="lang.flagSrc"
+            :alt="lang.code.toUpperCase()"
+            class="h-4 w-6 rounded-[2px] object-cover shadow-sm"
+          >
           <span>{{ lang.name }}</span>
         </button>
       </div>

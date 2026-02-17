@@ -9,7 +9,7 @@
             class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-brandg-600 dark:hover:text-brandg-400 transition-colors"
           >
             <UIcon name="i-lucide-arrow-left" class="w-5 h-5" />
-            <span class="text-sm font-medium">Back to Recipes</span>
+            <span class="text-sm font-medium">{{ t('recipeWrangler.backToRecipes') }}</span>
           </NuxtLink>
           <button
             v-if="recipe"
@@ -24,7 +24,7 @@
               ]"
             />
             <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200">
-              {{ isFavorite ? 'Saved' : 'Save' }}
+              {{ isFavorite ? t('recipeWrangler.recipe.saved') : t('recipeWrangler.recipe.save') }}
             </span>
           </button>
         </div>
@@ -33,7 +33,7 @@
             <span class="font-serif italic text-brandg-500 dark:text-brandg-400 text-3xl sm:text-4xl md:text-5xl">RecipeWrangler</span>
           </h1>
           <p class="mt-2 text-sm sm:text-base text-zinc-600 dark:text-zinc-300 font-light">
-            Discover personalized recipes tailored to your nutritional goals
+            {{ t('recipeWrangler.subtitle') }}
           </p>
         </div>
       </div>
@@ -55,10 +55,10 @@
     <!-- Error State -->
     <div v-else-if="error" class="max-w-5xl mx-auto px-4 sm:px-6 py-12 text-center">
       <UIcon name="i-lucide-alert-circle" class="w-16 h-16 text-red-500 mx-auto mb-4" />
-      <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Failed to load recipe</h2>
+      <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">{{ t('recipeWrangler.detail.failedToLoad') }}</h2>
       <p class="text-zinc-600 dark:text-zinc-400 mb-6">{{ error }}</p>
       <UButton @click="loadRecipe" color="primary">
-        Try Again
+        {{ t('recipeWrangler.results.tryAgain') }}
       </UButton>
     </div>
 
@@ -86,11 +86,11 @@
             <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-white/90">
               <div v-if="recipe.duration" class="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
                 <UIcon name="i-lucide-clock" class="w-4 h-4" />
-                <span class="text-xs sm:text-sm font-medium">{{ recipe.duration }} min</span>
+                <span class="text-xs sm:text-sm font-medium">{{ recipe.duration }} {{ t('recipeWrangler.recipe.minuteShort') }}</span>
               </div>
               <div v-if="recipe.serves" class="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
                 <UIcon name="i-lucide-users" class="w-4 h-4" />
-                <span class="text-xs sm:text-sm font-medium">{{ recipe.serves }} {{ recipe.serves === 1 ? 'serving' : 'servings' }}</span>
+                <span class="text-xs sm:text-sm font-medium">{{ recipe.serves }} {{ t('recipeWrangler.recipe.servings', recipe.serves) }}</span>
               </div>
             </div>
           </div>
@@ -103,15 +103,15 @@
           <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-zinc-600 dark:text-zinc-400">
             <div v-if="recipe.duration" class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full">
               <UIcon name="i-lucide-clock" class="w-4 h-4 text-brandg-600 dark:text-brandg-400" />
-              <span class="text-xs sm:text-sm font-medium">{{ recipe.duration }} min</span>
+              <span class="text-xs sm:text-sm font-medium">{{ recipe.duration }} {{ t('recipeWrangler.recipe.minuteShort') }}</span>
             </div>
             <div v-if="recipe.serves" class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full">
               <UIcon name="i-lucide-users" class="w-4 h-4 text-brandg-600 dark:text-brandg-400" />
-              <span class="text-xs sm:text-sm font-medium">{{ recipe.serves }} {{ recipe.serves === 1 ? 'serving' : 'servings' }}</span>
+              <span class="text-xs sm:text-sm font-medium">{{ recipe.serves }} {{ t('recipeWrangler.recipe.servings', recipe.serves) }}</span>
             </div>
             <div class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full">
               <UIcon name="i-lucide-award" class="w-4 h-4 text-brandg-600 dark:text-brandg-400" />
-              <span class="text-xs sm:text-sm font-medium">Nutri-Score {{ getNutriScoreGrade(recipe.nutri_score) }}</span>
+              <span class="text-xs sm:text-sm font-medium">{{ t('recipeWrangler.recipe.nutriScore') }} {{ getNutriScoreGrade(recipe.nutri_score) }}</span>
             </div>
           </div>
         </div>
@@ -126,7 +126,7 @@
             <div class="flex items-center justify-between mb-3">
               <h2 class="text-3xl font-serif font-semibold text-zinc-900 dark:text-white flex items-center gap-3">
                 <UIcon name="i-lucide-activity" class="w-7 h-7 text-brandg-600 dark:text-brandg-400" />
-                Nutritional Information
+                {{ t('recipeWrangler.detail.nutritionalInfo') }}
               </h2>
               <button
                 @click="toggleNutrientView"
@@ -137,11 +137,11 @@
                   class="w-5 h-5 text-brandg-600 dark:text-brandg-400 group-hover:scale-110 transition-transform"
                 />
                 <span class="text-sm font-medium text-brandg-700 dark:text-brandg-300">
-                  {{ showRadarChart ? 'Grid View' : 'Chart View' }}
+                  {{ showRadarChart ? t('recipeWrangler.detail.gridView') : t('recipeWrangler.detail.chartView') }}
                 </span>
               </button>
             </div>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-8">Per serving · <span class="italic">Based on the USDA Food Composition Table</span></p>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-8">{{ t('recipeWrangler.detail.perServing') }} · <span class="italic">{{ t('recipeWrangler.detail.usdaSource') }}</span></p>
 
             <!-- Animated Container for View Switching -->
             <div class="relative overflow-hidden">
@@ -159,7 +159,7 @@
                     <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border border-orange-200 dark:border-orange-800 hover:shadow-md transition-shadow">
                       <div class="flex items-center gap-2 mb-3">
                         <UIcon name="i-lucide-flame" class="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                        <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">Calories</p>
+                        <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.calories') }}</p>
                       </div>
                       <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
                         {{ Math.round(recipe.total_kcal_per_serving) }}
@@ -169,7 +169,7 @@
                     <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-800 hover:shadow-md transition-shadow">
                       <div class="flex items-center gap-2 mb-3">
                         <UIcon name="i-lucide-dumbbell" class="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                        <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">Protein</p>
+                        <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.protein') }}</p>
                       </div>
                       <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
                         {{ recipe.total_protein_g_per_serving.toFixed(1) }}<span class="text-xl text-zinc-500">g</span>
@@ -179,7 +179,7 @@
                     <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-800 hover:shadow-md transition-shadow">
                       <div class="flex items-center gap-2 mb-3">
                         <UIcon name="i-lucide-wheat" class="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                        <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">Carbs</p>
+                        <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.carbs') }}</p>
                       </div>
                       <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
                         {{ recipe.total_carbs_g_per_serving.toFixed(1) }}<span class="text-xl text-zinc-500">g</span>
@@ -189,7 +189,7 @@
                     <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 border border-yellow-200 dark:border-yellow-800 hover:shadow-md transition-shadow">
                       <div class="flex items-center gap-2 mb-3">
                         <UIcon name="i-lucide-droplet" class="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-                        <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">Fat</p>
+                        <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.fat') }}</p>
                       </div>
                       <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
                         {{ recipe.total_fat_g_per_serving.toFixed(1) }}<span class="text-xl text-zinc-500">g</span>
@@ -200,25 +200,25 @@
                   <!-- Additional Nutrition -->
                   <div class="pt-8 border-t border-zinc-200 dark:border-zinc-700 grid grid-cols-2 sm:grid-cols-4 gap-6">
                     <div class="text-center sm:text-left">
-                      <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">Fiber</p>
+                      <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">{{ t('recipeWrangler.detail.fiber') }}</p>
                       <p class="text-2xl font-bold text-zinc-900 dark:text-white">
                         {{ recipe.total_fiber_g_per_serving.toFixed(1) }}<span class="text-base text-zinc-500">g</span>
                       </p>
                     </div>
                     <div class="text-center sm:text-left">
-                      <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">Sugar</p>
+                      <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">{{ t('recipeWrangler.detail.sugar') }}</p>
                       <p class="text-2xl font-bold text-zinc-900 dark:text-white">
                         {{ recipe.total_sugar_g_per_serving.toFixed(1) }}<span class="text-base text-zinc-500">g</span>
                       </p>
                     </div>
                     <div class="text-center sm:text-left">
-                      <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">Sodium</p>
+                      <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">{{ t('recipeWrangler.detail.sodium') }}</p>
                       <p class="text-2xl font-bold text-zinc-900 dark:text-white">
                         {{ recipe.total_sodium_mg_per_serving.toFixed(0) }}<span class="text-base text-zinc-500">mg</span>
                       </p>
                     </div>
                     <div class="text-center sm:text-left">
-                      <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">Cholesterol</p>
+                      <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">{{ t('recipeWrangler.detail.cholesterol') }}</p>
                       <p class="text-2xl font-bold text-zinc-900 dark:text-white">
                         {{ recipe.total_cholesterol_mg_per_serving.toFixed(0) }}<span class="text-base text-zinc-500">mg</span>
                       </p>
@@ -256,7 +256,7 @@
           <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 sm:p-10 border border-zinc-200 dark:border-zinc-700 shadow-lg">
             <h2 class="text-3xl font-serif font-semibold text-zinc-900 dark:text-white mb-8 flex items-center gap-3">
               <UIcon name="i-lucide-chef-hat" class="w-7 h-7 text-brandg-600 dark:text-brandg-400" />
-              Instructions
+              {{ t('recipeWrangler.detail.instructions') }}
             </h2>
 
             <ol class="space-y-6">
@@ -302,12 +302,12 @@
           <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 border border-zinc-200 dark:border-zinc-700 shadow-lg relative">
             <h3 class="text-xl font-semibold text-zinc-900 dark:text-white mb-6 flex items-center gap-3">
               <UIcon name="i-lucide-award" class="w-6 h-6 text-brandg-600 dark:text-brandg-400" />
-              Nutri-Score
+              {{ t('recipeWrangler.recipe.nutriScore') }}
             </h3>
 
             <!-- Nutri-Score Label (Official Design) -->
             <div class="flex flex-col items-center">
-              <p class="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3">Nutritional Quality</p>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3">{{ t('recipeWrangler.detail.nutritionalQuality') }}</p>
               <div class="flex gap-1 relative">
                 <UTooltip
                   v-for="(grade, idx) in ['A', 'B', 'C', 'D', 'E']"
@@ -354,16 +354,16 @@
           <section class="bg-gradient-to-br from-brandg-50 to-brandg-100 dark:from-brandg-900/20 dark:to-brandg-800/20 rounded-3xl p-8 border border-brandg-200 dark:border-brandg-800 shadow-lg relative">
             <h3 class="text-xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
               <UIcon name="i-lucide-leaf" class="w-6 h-6 text-brandg-600 dark:text-brandg-400" />
-              Environmental Impact
+              {{ t('recipeWrangler.detail.environmentalImpact') }}
             </h3>
             <p class="text-sm text-zinc-600 dark:text-zinc-300 mb-6">
-              Sustainability score based on ingredient sourcing and preparation methods.
+              {{ t('recipeWrangler.detail.sustainabilityMessage') }}
             </p>
             <div class="flex items-center gap-3">
               <div class="flex-1 h-3 bg-brandg-200 dark:bg-brandg-900/50 rounded-full overflow-hidden">
                 <div class="h-full bg-gradient-to-r from-brandg-500 to-brandg-600 dark:from-brandg-600 dark:to-brandg-700 rounded-full" style="width: 75%"></div>
               </div>
-              <span class="text-base font-bold text-brandg-700 dark:text-brandg-400">Good</span>
+              <span class="text-base font-bold text-brandg-700 dark:text-brandg-400">{{ t('recipeWrangler.detail.sustainabilityGood') }}</span>
             </div>
           </section>
 
@@ -371,7 +371,7 @@
           <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 border border-zinc-200 dark:border-zinc-700 shadow-lg sticky top-24 z-0">
             <h2 class="text-2xl font-serif font-semibold text-zinc-900 dark:text-white mb-6 flex items-center gap-3">
               <UIcon name="i-lucide-shopping-basket" class="w-6 h-6 text-brandg-600 dark:text-brandg-400" />
-              Ingredients
+              {{ t('recipeWrangler.detail.ingredients') }}
             </h2>
 
             <ul class="space-y-4">
@@ -422,14 +422,15 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { useRecipes } from '~/composables/useRecipes'
 import { useRecipeStore } from '~/stores/recipe'
-import type { Recipe } from '~/services/recipeApi'
 
 definePageMeta({
   middleware: ['auth', 'profile']
 })
+const { t } = useI18n()
 
 // ============================================================================
 // Route & Stores
@@ -452,6 +453,13 @@ const recipeId = computed(() => route.params.id as string)
 const recipe = computed(() => currentRecipe.value)
 const isFavorite = computed(() => recipe.value ? recipeStore.isFavorite(recipe.value.recipe_id) : false)
 
+useHead({
+  title: computed(() => {
+    if (!recipe.value) return t('recipeWrangler.title')
+    return `${recipe.value.title} - ${t('recipeWrangler.title')}`
+  })
+})
+
 // ============================================================================
 // Methods
 // ============================================================================
@@ -465,11 +473,6 @@ const loadRecipe = async () => {
     if (recipe.value) {
       recipeStore.addToRecentlyViewed(recipe.value.recipe_id)
       recipeStore.cacheRecipe(recipe.value)
-
-      // Set page title
-      useHead({
-        title: `${recipe.value.title} - RecipeWrangler`
-      })
     }
   } catch (err) {
     console.error('Failed to load recipe:', err)
@@ -504,46 +507,46 @@ const getNutriScoreGrade = (score: number): string => {
 
 const getNutriScoreColorBg = (grade: string): string => {
   const colors = {
-    'A': 'bg-[#038141]',  // Dark green (official Nutri-Score color)
-    'B': 'bg-[#85BB2F]',  // Light green
-    'C': 'bg-[#FECB02]',  // Yellow
-    'D': 'bg-[#EE8100]',  // Orange
-    'E': 'bg-[#E63E11]'   // Red
+    A: 'bg-[#038141]', // Dark green (official Nutri-Score color)
+    B: 'bg-[#85BB2F]', // Light green
+    C: 'bg-[#FECB02]', // Yellow
+    D: 'bg-[#EE8100]', // Orange
+    E: 'bg-[#E63E11]' // Red
   }
   return colors[grade as keyof typeof colors] || 'bg-zinc-400'
 }
 
 const getNutriScoreArrowColor = (grade: string): string => {
   const colors = {
-    'A': 'border-t-[#038141]',
-    'B': 'border-t-[#85BB2F]',
-    'C': 'border-t-[#FECB02]',
-    'D': 'border-t-[#EE8100]',
-    'E': 'border-t-[#E63E11]'
+    A: 'border-t-[#038141]',
+    B: 'border-t-[#85BB2F]',
+    C: 'border-t-[#FECB02]',
+    D: 'border-t-[#EE8100]',
+    E: 'border-t-[#E63E11]'
   }
   return colors[grade as keyof typeof colors] || 'border-t-zinc-400'
 }
 
 const getNutriScoreDescription = (grade: string): string => {
-  const descriptions = {
-    'A': 'Excellent nutritional quality',
-    'B': 'Good nutritional quality',
-    'C': 'Average nutritional quality',
-    'D': 'Poor nutritional quality',
-    'E': 'Low nutritional quality'
+  const descriptions: Record<string, string> = {
+    A: t('recipeWrangler.detail.nutriScoreDescriptions.A'),
+    B: t('recipeWrangler.detail.nutriScoreDescriptions.B'),
+    C: t('recipeWrangler.detail.nutriScoreDescriptions.C'),
+    D: t('recipeWrangler.detail.nutriScoreDescriptions.D'),
+    E: t('recipeWrangler.detail.nutriScoreDescriptions.E')
   }
-  return descriptions[grade as keyof typeof descriptions] || 'Unknown'
+  return descriptions[grade] || t('recipeWrangler.detail.nutriScoreDescriptions.unknown')
 }
 
 const getNutriScoreTooltip = (grade: string): string => {
-  const tooltips = {
-    'A': 'Grade A: Rich in fiber, protein, vitamins, and minerals. Great for everyday meals.',
-    'B': 'Grade B: A nutritious option with a good balance of beneficial nutrients.',
-    'C': 'Grade C: A balanced choice that fits well into a varied diet.',
-    'D': 'Grade D: Can be enjoyed occasionally as part of a diverse, balanced diet.',
-    'E': 'Grade E: Best enjoyed as an occasional treat within a balanced lifestyle.'
+  const tooltips: Record<string, string> = {
+    A: t('recipeWrangler.detail.nutriScoreTooltips.A'),
+    B: t('recipeWrangler.detail.nutriScoreTooltips.B'),
+    C: t('recipeWrangler.detail.nutriScoreTooltips.C'),
+    D: t('recipeWrangler.detail.nutriScoreTooltips.D'),
+    E: t('recipeWrangler.detail.nutriScoreTooltips.E')
   }
-  return tooltips[grade as keyof typeof tooltips] || 'Unknown grade'
+  return tooltips[grade] || t('recipeWrangler.detail.nutriScoreTooltips.unknown')
 }
 
 const handleImageError = (event: Event) => {
