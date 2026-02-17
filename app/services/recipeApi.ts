@@ -71,6 +71,8 @@ export interface RecipeSearchResponse {
   }
 }
 
+type RecipeSearchPayload = { results?: RecipeSearchResult[] } | RecipeSearchResult[]
+
 export interface ApiError {
   message: string
   status?: number
@@ -112,14 +114,22 @@ class RecipeApiService {
   async searchRecipes(params: RecipeSearchParams): Promise<RecipeSearchResult[]> {
     try {
       // Use extended timeout for search (AI processing can be slow)
-      const data = await this.fetchWithTimeout<{ results: RecipeSearchResult[] }>(
+      const data = await this.fetchWithTimeout<RecipeSearchPayload>(
         `${this.basePath}/recipes/search`,
         'POST',
         params,
         SEARCH_TIMEOUT
       )
-      // Extract the results array from the response
-      return data.results || []
+
+      if (Array.isArray(data)) {
+        return data
+      }
+
+      if (data && Array.isArray(data.results)) {
+        return data.results
+      }
+
+      return []
     } catch (error) {
       throw this.handleError(error, 'Failed to search recipes')
     }

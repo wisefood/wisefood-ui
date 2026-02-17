@@ -5,9 +5,9 @@ import { onClickOutside } from '@vueuse/core'
 const { locale } = useI18n()
 
 const languages = [
-  { code: 'en', name: 'English', flagSrc: '/flags/gb.svg' },
-  { code: 'hu', name: 'Magyar', flagSrc: '/flags/hu.svg' },
-  { code: 'sl', name: 'Slovenščina', flagSrc: '/flags/si.svg' }
+  { code: 'en', name: 'English', flagSrc: '/app/flags/gb.svg' },
+  { code: 'hu', name: 'Magyar', flagSrc: '/app/flags/hu.svg' },
+  { code: 'sl', name: 'Slovenščina', flagSrc: '/app/flags/si.svg' }
 ]
 
 const currentLanguage = computed(() =>
@@ -56,7 +56,7 @@ onClickOutside(dropdown, () => {
     >
       <div
         v-if="isOpen"
-        class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50 py-1"
+        class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-[130] py-1"
       >
         <button
           v-for="lang in languages"

@@ -14,11 +14,11 @@ useHead({
     { name: 'viewport', content: 'width=device-width, initial-scale=1' }
   ],
   link: [
-    { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-    { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-    { rel: 'icon', type: 'image/png', sizes: '96x96', href: '/favicon-96x96.png' },
-    { rel: 'apple-touch-icon', sizes: '96x96', href: '/favicon-96x96.png' },
-    { rel: 'manifest', href: '/manifest.json' }
+    { rel: 'icon', type: 'image/x-icon', href: '/app/favicon.ico' },
+    { rel: 'icon', type: 'image/svg+xml', href: '/app/favicon.svg' },
+    { rel: 'icon', type: 'image/png', sizes: '96x96', href: '/app/favicon-96x96.png' },
+    { rel: 'apple-touch-icon', sizes: '96x96', href: '/app/favicon-96x96.png' },
+    { rel: 'manifest', href: '/app/manifest.json' }
   ],
   htmlAttrs: {
     lang: computed(() => locale.value)

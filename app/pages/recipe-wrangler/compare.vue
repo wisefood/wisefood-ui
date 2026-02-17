@@ -70,10 +70,11 @@
                   <!-- Recipe Image with Title Overlay -->
                   <div class="relative h-[240px] rounded-xl overflow-hidden bg-gradient-to-br from-brandg-100 to-brandg-200 dark:from-brandg-900/40 dark:to-brandg-800/40 shadow-md">
                     <img
-                      v-if="recipe.image_url"
+                      v-if="shouldShowRecipeImage(recipe)"
                       :src="recipe.image_url"
                       :alt="recipe.title"
                       class="w-full h-full object-cover"
+                      @error="markImageFailed(recipe.recipe_id)"
                     />
                     <div v-else class="w-full h-full flex items-center justify-center">
                       <UIcon name="i-lucide-utensils" class="w-12 h-12 text-brandg-300 dark:text-brandg-700" />
@@ -192,13 +193,13 @@
                 <div class="space-y-2">
                   <div class="text-center">
                     <span class="text-lg font-bold text-zinc-900 dark:text-white">
-                      {{ Math.round(recipe.total_kcal_per_serving) }}
+                      {{ formatMetric(recipe.total_kcal_per_serving, 0) }}
                     </span>
                   </div>
                   <div class="h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-orange-500"
-                      :style="{ width: `${Math.min((recipe.total_kcal_per_serving / maxCalories) * 100, 100)}%` }"
+                      :style="{ width: `${toBarPercent(recipe.total_kcal_per_serving, maxCalories)}%` }"
                     ></div>
                   </div>
                 </div>
@@ -221,13 +222,13 @@
                 <div class="space-y-2">
                   <div class="text-center">
                     <span class="text-lg font-bold text-zinc-900 dark:text-white">
-                      {{ recipe.total_protein_g_per_serving.toFixed(1) }}<span class="text-sm text-zinc-500">g</span>
+                      {{ formatMetric(recipe.total_protein_g_per_serving, 1) }}<span v-if="hasNumber(recipe.total_protein_g_per_serving)" class="text-sm text-zinc-500">g</span>
                     </span>
                   </div>
                   <div class="h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-blue-500"
-                      :style="{ width: `${Math.min((recipe.total_protein_g_per_serving / maxProtein) * 100, 100)}%` }"
+                      :style="{ width: `${toBarPercent(recipe.total_protein_g_per_serving, maxProtein)}%` }"
                     ></div>
                   </div>
                 </div>
@@ -250,13 +251,13 @@
                 <div class="space-y-2">
                   <div class="text-center">
                     <span class="text-lg font-bold text-zinc-900 dark:text-white">
-                      {{ recipe.total_carbs_g_per_serving.toFixed(1) }}<span class="text-sm text-zinc-500">g</span>
+                      {{ formatMetric(recipe.total_carbs_g_per_serving, 1) }}<span v-if="hasNumber(recipe.total_carbs_g_per_serving)" class="text-sm text-zinc-500">g</span>
                     </span>
                   </div>
                   <div class="h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-purple-500"
-                      :style="{ width: `${Math.min((recipe.total_carbs_g_per_serving / maxCarbs) * 100, 100)}%` }"
+                      :style="{ width: `${toBarPercent(recipe.total_carbs_g_per_serving, maxCarbs)}%` }"
                     ></div>
                   </div>
                 </div>
@@ -279,13 +280,13 @@
                 <div class="space-y-2">
                   <div class="text-center">
                     <span class="text-lg font-bold text-zinc-900 dark:text-white">
-                      {{ recipe.total_fat_g_per_serving.toFixed(1) }}<span class="text-sm text-zinc-500">g</span>
+                      {{ formatMetric(recipe.total_fat_g_per_serving, 1) }}<span v-if="hasNumber(recipe.total_fat_g_per_serving)" class="text-sm text-zinc-500">g</span>
                     </span>
                   </div>
                   <div class="h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-yellow-500"
-                      :style="{ width: `${Math.min((recipe.total_fat_g_per_serving / maxFat) * 100, 100)}%` }"
+                      :style="{ width: `${toBarPercent(recipe.total_fat_g_per_serving, maxFat)}%` }"
                     ></div>
                   </div>
                 </div>
@@ -308,13 +309,13 @@
                 <div class="space-y-2">
                   <div class="text-center">
                     <span class="text-lg font-bold text-zinc-900 dark:text-white">
-                      {{ recipe.total_fiber_g_per_serving.toFixed(1) }}<span class="text-sm text-zinc-500">g</span>
+                      {{ formatMetric(recipe.total_fiber_g_per_serving, 1) }}<span v-if="hasNumber(recipe.total_fiber_g_per_serving)" class="text-sm text-zinc-500">g</span>
                     </span>
                   </div>
                   <div class="h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-green-500"
-                      :style="{ width: `${Math.min((recipe.total_fiber_g_per_serving / maxFiber) * 100, 100)}%` }"
+                      :style="{ width: `${toBarPercent(recipe.total_fiber_g_per_serving, maxFiber)}%` }"
                     ></div>
                   </div>
                 </div>
@@ -335,7 +336,7 @@
                 class="p-4 sm:p-6 text-center"
               >
                 <span class="text-lg font-bold text-zinc-900 dark:text-white">
-                  {{ recipe.total_sugar_g_per_serving.toFixed(1) }}<span class="text-sm text-zinc-500">g</span>
+                  {{ formatMetric(recipe.total_sugar_g_per_serving, 1) }}<span v-if="hasNumber(recipe.total_sugar_g_per_serving)" class="text-sm text-zinc-500">g</span>
                 </span>
               </td>
             </tr>
@@ -354,7 +355,7 @@
                 class="p-4 sm:p-6 text-center"
               >
                 <span class="text-lg font-bold text-zinc-900 dark:text-white">
-                  {{ recipe.total_sodium_mg_per_serving.toFixed(0) }}<span class="text-sm text-zinc-500">mg</span>
+                  {{ formatMetric(recipe.total_sodium_mg_per_serving, 0) }}<span v-if="hasNumber(recipe.total_sodium_mg_per_serving)" class="text-sm text-zinc-500">mg</span>
                 </span>
               </td>
             </tr>
@@ -391,28 +392,58 @@ const recipeStore = useRecipeStore()
 // ============================================================================
 const compareRecipes = ref<Recipe[]>([])
 const loading = ref(false)
+const failedRecipeImages = ref<Record<string, boolean>>({})
 
 // ============================================================================
 // Computed
 // ============================================================================
+const coerceNumber = (value: unknown): number => {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0
+}
+
+const hasNumber = (value: unknown): value is number => {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+const formatMetric = (value: unknown, digits: number): string => {
+  if (!hasNumber(value)) return t('recipeWrangler.comparePage.notAvailable')
+  return value.toFixed(digits)
+}
+
+const toBarPercent = (value: unknown, maxValue: number): number => {
+  if (!hasNumber(value) || maxValue <= 0) return 0
+  return Math.min((value / maxValue) * 100, 100)
+}
+
+const shouldShowRecipeImage = (recipe: Recipe): boolean => {
+  return !!recipe.image_url && !failedRecipeImages.value[recipe.recipe_id]
+}
+
+const markImageFailed = (recipeId: string) => {
+  failedRecipeImages.value = {
+    ...failedRecipeImages.value,
+    [recipeId]: true
+  }
+}
+
 const maxCalories = computed(() =>
-  Math.max(...compareRecipes.value.map(r => r.total_kcal_per_serving), 1)
+  Math.max(...compareRecipes.value.map(r => coerceNumber(r.total_kcal_per_serving)), 1)
 )
 
 const maxProtein = computed(() =>
-  Math.max(...compareRecipes.value.map(r => r.total_protein_g_per_serving), 1)
+  Math.max(...compareRecipes.value.map(r => coerceNumber(r.total_protein_g_per_serving)), 1)
 )
 
 const maxCarbs = computed(() =>
-  Math.max(...compareRecipes.value.map(r => r.total_carbs_g_per_serving), 1)
+  Math.max(...compareRecipes.value.map(r => coerceNumber(r.total_carbs_g_per_serving)), 1)
 )
 
 const maxFat = computed(() =>
-  Math.max(...compareRecipes.value.map(r => r.total_fat_g_per_serving), 1)
+  Math.max(...compareRecipes.value.map(r => coerceNumber(r.total_fat_g_per_serving)), 1)
 )
 
 const maxFiber = computed(() =>
-  Math.max(...compareRecipes.value.map(r => r.total_fiber_g_per_serving), 1)
+  Math.max(...compareRecipes.value.map(r => coerceNumber(r.total_fiber_g_per_serving)), 1)
 )
 
 // ============================================================================
@@ -445,6 +476,7 @@ const loadRecipes = async () => {
       recipeIds.map(id => recipeApi.getRecipe(id))
     )
     compareRecipes.value = recipes
+    failedRecipeImages.value = {}
   } catch (err) {
     console.error('Failed to load comparison recipes:', err)
   } finally {

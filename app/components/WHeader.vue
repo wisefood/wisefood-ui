@@ -1,5 +1,5 @@
 <template>
-  <UHeader>
+  <UHeader class="z-[120]">
     <template #left>
       <AppLogo class="w-auto h-10 shrink-0" height="10" />
     </template>
