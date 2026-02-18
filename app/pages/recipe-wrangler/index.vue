@@ -39,7 +39,7 @@
             />
             <button
               @click="performSearch"
-              :disabled="!searchQuery.trim() || loading"
+              :disabled="loading"
               class="absolute right-2 top-1/2 -translate-y-1/2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-brandg-500 hover:bg-brandg-600 disabled:bg-zinc-300 dark:disabled:bg-zinc-700 text-white text-sm font-medium transition-colors disabled:cursor-not-allowed"
             >
               <UIcon v-if="loading" name="i-lucide-loader-2" class="w-4 h-4 animate-spin" />
@@ -201,7 +201,7 @@
         >
           <RecipesRecipeCard
             v-for="(recipe, index) in paginatedRecipes"
-            :key="recipe.recipe_id"
+            :key="recipe.recipe_id || index"
             :recipe="recipe"
           />
         </div>
@@ -289,6 +289,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRecipes } from '~/composables/useRecipes'
 import { useRecipeStore } from '~/stores/recipe'
+import type { RecipeParamSearchParams } from '~/services/recipeApi'
 
 const { t } = useI18n()
 
@@ -307,7 +308,7 @@ useSeoMeta({
 // ============================================================================
 // Composables & Stores
 // ============================================================================
-const { recipes, loading, error, searchRecipes, fetchRecipesByCategory, clearError } = useRecipes()
+const { recipes, loading, error, searchRecipes, searchRecipesByParams, fetchRecipesByCategory, clearError } = useRecipes()
 const recipeStore = useRecipeStore()
 
 // ============================================================================
@@ -318,6 +319,73 @@ const showFilters = ref(false)
 const initialLoadComplete = ref(false)
 const currentPage = ref(1)
 const itemsPerPage = 10
+const paramSearchLimit = 20
+
+const allergenAliasToBackend: Record<string, string> = {
+  peanut: 'peanut',
+  peanuts: 'peanut',
+  'tree nut': 'tree_nut',
+  'tree nuts': 'tree_nut',
+  tree_nut: 'tree_nut',
+  dairy: 'milk',
+  milk: 'milk',
+  lactose: 'milk',
+  egg: 'egg',
+  eggs: 'egg',
+  soy: 'soy',
+  wheat: 'wheat',
+  gluten: 'wheat',
+  fish: 'fish',
+  shellfish: 'crustacean_shellfish',
+  crustacean_shellfish: 'crustacean_shellfish',
+  sesame: 'sesame'
+}
+
+const backendTagMatchers: Array<{ pattern: RegExp; tag: string }> = [
+  { pattern: /\bvegetarian\b/, tag: 'vegetarian' },
+  { pattern: /\bvegan\b/, tag: 'vegan' },
+  { pattern: /\bgluten[ -]?free\b/, tag: 'gluten-free' },
+  { pattern: /\bdairy[ -]?free\b/, tag: 'dairy_free' },
+  { pattern: /\bnut[ -]?free\b/, tag: 'nut_free' },
+  { pattern: /\blow[ -]?carb\b/, tag: 'low-carb' },
+  { pattern: /\blow[ -]?fat\b/, tag: 'low-fat' },
+  { pattern: /\bhigh[ -]?protein\b/, tag: 'high-protein' },
+  { pattern: /\bbreakfast\b/, tag: 'breakfast' },
+  { pattern: /\b(beverage|beverages|drink|drinks)\b/, tag: 'beverages' },
+  { pattern: /\b(snack|snacks)\b/, tag: 'snacks' },
+  { pattern: /\b(dessert|desserts)\b/, tag: 'desserts' },
+  { pattern: /\b(main dish|main-dish|main course)\b/, tag: 'main-dish' },
+  { pattern: /\b(5 ingredients or less|five ingredients or less|few ingredients)\b/, tag: '5_ingredients_or_less' },
+  { pattern: /\b(30 minutes or less|30 minute meals?|half hour meals?)\b/, tag: '30_minutes_or_less' },
+  { pattern: /\blow[ -]?calorie\b/, tag: 'low-fat' },
+  { pattern: /\bhealthy\b/, tag: 'low-fat' }
+]
+
+const quickFilterConfigs: Record<string, { query: string; params: RecipeParamSearchParams }> = {
+  quick: {
+    query: 'quick recipes under 30 minutes',
+    params: {
+      diet_tags: ['30_minutes_or_less'],
+      max_duration_minutes: 30
+    }
+  },
+  healthy: {
+    query: 'healthy nutritious recipes',
+    params: { diet_tags: ['low-fat'] }
+  },
+  vegetarian: {
+    query: 'vegetarian recipes',
+    params: { diet_tags: ['vegetarian'] }
+  },
+  vegan: {
+    query: 'vegan recipes',
+    params: { diet_tags: ['vegan'] }
+  },
+  'low-calorie': {
+    query: 'low calorie recipes',
+    params: { diet_tags: ['low-fat'] }
+  }
+}
 
 // ============================================================================
 // Categories
@@ -349,6 +417,110 @@ const paginatedRecipes = computed(() => {
   return recipes.value.slice(start, end)
 })
 
+const uniqueStrings = (values: string[]): string[] => {
+  return Array.from(
+    new Set(
+      values
+        .map(value => value.trim())
+        .filter(value => value.length > 0)
+    )
+  )
+}
+
+const escapeRegExp = (value: string): string => {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+const normalizeBackendAllergen = (allergen: string): string => {
+  const normalized = allergen.trim().toLowerCase()
+  return allergenAliasToBackend[normalized] || normalized.replace(/\s+/g, '_')
+}
+
+const toBackendAllergenList = (allergens: string[]): string[] => {
+  return uniqueStrings(allergens.map(allergen => normalizeBackendAllergen(allergen)))
+}
+
+const hasParamFilters = (params: RecipeParamSearchParams): boolean => {
+  return Boolean(
+    (params.include_ingredients && params.include_ingredients.length > 0) ||
+    (params.exclude_ingredients && params.exclude_ingredients.length > 0) ||
+    (params.exclude_allergens && params.exclude_allergens.length > 0) ||
+    (params.diet_tags && params.diet_tags.length > 0) ||
+    params.max_duration_minutes
+  )
+}
+
+const parseParametricSearchQuery = (query: string): RecipeParamSearchParams | null => {
+  const normalized = query.toLowerCase().trim()
+  if (!normalized) return null
+
+  const params: RecipeParamSearchParams = {}
+  const dietTags: string[] = []
+  const excludeAllergens: string[] = []
+
+  const durationMatch = normalized.match(/\b(?:under|less than|max(?:imum)?|within)\s+(\d{1,3})\s*(?:min|mins|minute|minutes)\b/)
+  if (durationMatch) {
+    const maxDuration = Number(durationMatch[1])
+    params.max_duration_minutes = maxDuration
+    if (maxDuration <= 30) {
+      dietTags.push('30_minutes_or_less')
+    }
+  } else if (/\bquick\b/.test(normalized)) {
+    params.max_duration_minutes = 30
+    dietTags.push('30_minutes_or_less')
+  }
+
+  backendTagMatchers.forEach(({ pattern, tag }) => {
+    if (pattern.test(normalized)) {
+      dietTags.push(tag)
+    }
+  })
+
+  const exclusionContext = /\b(without|exclude|excluding|free from|no)\b/.test(normalized)
+  if (exclusionContext) {
+    Object.keys(allergenAliasToBackend).forEach(allergenAlias => {
+      const allergenRegex = new RegExp(`\\b${escapeRegExp(allergenAlias)}\\b`)
+      if (allergenRegex.test(normalized)) {
+        excludeAllergens.push(allergenAlias)
+      }
+    })
+  }
+
+  if (dietTags.length > 0) {
+    params.diet_tags = uniqueStrings(dietTags)
+  }
+
+  if (excludeAllergens.length > 0) {
+    params.exclude_allergens = toBackendAllergenList(excludeAllergens)
+  }
+
+  if (!hasParamFilters(params)) {
+    return null
+  }
+
+  const isQuestionLike = /\?|^\s*(what|how|why|which|who)\b/.test(normalized)
+  if (isQuestionLike) {
+    return null
+  }
+
+  return params
+}
+
+const buildParamSearchWithAllergens = (
+  params: RecipeParamSearchParams = {}
+): RecipeParamSearchParams => {
+  const mergedAllergens = toBackendAllergenList([
+    ...(params.exclude_allergens || []),
+    ...recipeStore.excludedAllergens
+  ])
+
+  return {
+    ...params,
+    exclude_allergens: mergedAllergens.length > 0 ? mergedAllergens : undefined,
+    limit: paramSearchLimit
+  }
+}
+
 // ============================================================================
 // Methods
 // ============================================================================
@@ -357,19 +529,28 @@ const paginatedRecipes = computed(() => {
  * Search recipes with natural language query
  */
 const performSearch = async () => {
-  if (!searchQuery.value || searchQuery.value.trim() === '') return
-
   try {
     clearError()
     resetPagination()
-    const excludeAllergens = recipeStore.excludedAllergens
+    const trimmedQuery = searchQuery.value.trim()
 
-    await searchRecipes({
-      question: searchQuery.value,
-      exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined
-    })
+    if (!trimmedQuery) {
+      await searchRecipesByParams(buildParamSearchWithAllergens())
+      return
+    }
 
-    recipeStore.addSearchQuery(searchQuery.value)
+    const parametricQuery = parseParametricSearchQuery(trimmedQuery)
+    if (parametricQuery) {
+      await searchRecipesByParams(buildParamSearchWithAllergens(parametricQuery))
+    } else {
+      const backendAllergens = toBackendAllergenList(recipeStore.excludedAllergens)
+      await searchRecipes({
+        question: trimmedQuery,
+        exclude_allergens: backendAllergens.length > 0 ? backendAllergens : undefined
+      })
+    }
+
+    recipeStore.addSearchQuery(trimmedQuery)
   } catch (err) {
     console.error('Search failed:', err)
   }
@@ -408,11 +589,11 @@ const browseCategory = async (category: { name: string; query: string }) => {
     clearError()
     resetPagination()
     searchQuery.value = category.query
-    const excludeAllergens = recipeStore.excludedAllergens
+    const backendAllergens = toBackendAllergenList(recipeStore.excludedAllergens)
 
     await fetchRecipesByCategory(
       category.query,
-      excludeAllergens.length > 0 ? excludeAllergens : undefined
+      backendAllergens.length > 0 ? backendAllergens : undefined
     )
   } catch (err) {
     console.error('Failed to load category:', err)
@@ -422,12 +603,10 @@ const browseCategory = async (category: { name: string; query: string }) => {
 /**
  * Handle filter changes
  */
-const handleFilterChange = () => {
+const handleFilterChange = async () => {
   // Re-run the last search with updated allergen filters
   resetPagination()
-  if (searchQuery.value) {
-    performSearch()
-  }
+  await performSearch()
 }
 
 /**
@@ -437,34 +616,12 @@ const handleQuickFilter = async (filterType: string) => {
   try {
     clearError()
     resetPagination()
-    const excludeAllergens = recipeStore.excludedAllergens
+    const config = quickFilterConfigs[filterType]
+    if (!config) return
 
-    let query = ''
-    switch (filterType) {
-      case 'quick':
-        query = 'quick recipes under 30 minutes'
-        break
-      case 'healthy':
-        query = 'healthy nutritious recipes'
-        break
-      case 'vegetarian':
-        query = 'vegetarian recipes'
-        break
-      case 'vegan':
-        query = 'vegan recipes'
-        break
-      case 'low-calorie':
-        query = 'low calorie recipes'
-        break
-      default:
-        return
-    }
-
-    searchQuery.value = query
-    await searchRecipes({
-      question: query,
-      exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined
-    })
+    searchQuery.value = config.query
+    await searchRecipesByParams(buildParamSearchWithAllergens(config.params))
+    recipeStore.addSearchQuery(config.query)
   } catch (err) {
     console.error('Quick filter failed:', err)
   }
@@ -484,9 +641,9 @@ onMounted(async () => {
   // Initialize store
   recipeStore.initialize()
 
-  // Load initial recipes (pasta as default)
+  // Load initial recipes using deterministic parametric search
   try {
-    await fetchRecipesByCategory('pasta', recipeStore.excludedAllergens)
+    await performSearch()
     initialLoadComplete.value = true
   } catch (err) {
     console.error('Failed to load initial recipes:', err)

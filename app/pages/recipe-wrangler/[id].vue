@@ -67,11 +67,12 @@
       <!-- Hero Section with Image -->
       <div class="mb-8 sm:mb-10">
         <!-- Image -->
-        <div v-if="recipe.image_url" class="relative aspect-[16/7] sm:aspect-[16/6] rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-xl mb-6">
+        <div v-if="recipeImageUrl" class="relative aspect-[16/7] sm:aspect-[16/6] rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-xl mb-6">
           <img
-            :src="recipe.image_url"
+            :src="recipeImageUrl"
             :alt="recipe.title"
             class="w-full h-full object-cover"
+            referrerpolicy="no-referrer"
             @error="handleImageError"
           />
           <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
@@ -161,9 +162,9 @@
                         <UIcon name="i-lucide-flame" class="w-6 h-6 text-orange-600 dark:text-orange-400" />
                         <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.calories') }}</p>
                       </div>
-                      <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
-                        {{ Math.round(recipe.total_kcal_per_serving) }}
-                      </p>
+	                      <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
+	                        {{ formatRounded(recipe.total_kcal_per_serving) }}
+	                      </p>
                     </div>
 
                     <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-800 hover:shadow-md transition-shadow">
@@ -171,9 +172,9 @@
                         <UIcon name="i-lucide-dumbbell" class="w-6 h-6 text-blue-600 dark:text-blue-400" />
                         <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.protein') }}</p>
                       </div>
-                      <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
-                        {{ recipe.total_protein_g_per_serving.toFixed(1) }}<span class="text-xl text-zinc-500">g</span>
-                      </p>
+	                      <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
+	                        {{ formatFixed(recipe.total_protein_g_per_serving, 1) }}<span class="text-xl text-zinc-500">g</span>
+	                      </p>
                     </div>
 
                     <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-800 hover:shadow-md transition-shadow">
@@ -181,9 +182,9 @@
                         <UIcon name="i-lucide-wheat" class="w-6 h-6 text-purple-600 dark:text-purple-400" />
                         <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.carbs') }}</p>
                       </div>
-                      <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
-                        {{ recipe.total_carbs_g_per_serving.toFixed(1) }}<span class="text-xl text-zinc-500">g</span>
-                      </p>
+	                      <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
+	                        {{ formatFixed(recipe.total_carbs_g_per_serving, 1) }}<span class="text-xl text-zinc-500">g</span>
+	                      </p>
                     </div>
 
                     <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 border border-yellow-200 dark:border-yellow-800 hover:shadow-md transition-shadow">
@@ -191,9 +192,9 @@
                         <UIcon name="i-lucide-droplet" class="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
                         <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.fat') }}</p>
                       </div>
-                      <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
-                        {{ recipe.total_fat_g_per_serving.toFixed(1) }}<span class="text-xl text-zinc-500">g</span>
-                      </p>
+	                      <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
+	                        {{ formatFixed(recipe.total_fat_g_per_serving, 1) }}<span class="text-xl text-zinc-500">g</span>
+	                      </p>
                     </div>
                   </div>
 
@@ -201,27 +202,27 @@
                   <div class="pt-8 border-t border-zinc-200 dark:border-zinc-700 grid grid-cols-2 sm:grid-cols-4 gap-6">
                     <div class="text-center sm:text-left">
                       <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">{{ t('recipeWrangler.detail.fiber') }}</p>
-                      <p class="text-2xl font-bold text-zinc-900 dark:text-white">
-                        {{ recipe.total_fiber_g_per_serving.toFixed(1) }}<span class="text-base text-zinc-500">g</span>
-                      </p>
+	                      <p class="text-2xl font-bold text-zinc-900 dark:text-white">
+	                        {{ formatFixed(recipe.total_fiber_g_per_serving, 1) }}<span class="text-base text-zinc-500">g</span>
+	                      </p>
                     </div>
                     <div class="text-center sm:text-left">
                       <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">{{ t('recipeWrangler.detail.sugar') }}</p>
-                      <p class="text-2xl font-bold text-zinc-900 dark:text-white">
-                        {{ recipe.total_sugar_g_per_serving.toFixed(1) }}<span class="text-base text-zinc-500">g</span>
-                      </p>
+	                      <p class="text-2xl font-bold text-zinc-900 dark:text-white">
+	                        {{ formatFixed(recipe.total_sugar_g_per_serving, 1) }}<span class="text-base text-zinc-500">g</span>
+	                      </p>
                     </div>
                     <div class="text-center sm:text-left">
                       <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">{{ t('recipeWrangler.detail.sodium') }}</p>
-                      <p class="text-2xl font-bold text-zinc-900 dark:text-white">
-                        {{ recipe.total_sodium_mg_per_serving.toFixed(0) }}<span class="text-base text-zinc-500">mg</span>
-                      </p>
+	                      <p class="text-2xl font-bold text-zinc-900 dark:text-white">
+	                        {{ formatFixed(recipe.total_sodium_mg_per_serving, 0) }}<span class="text-base text-zinc-500">mg</span>
+	                      </p>
                     </div>
                     <div class="text-center sm:text-left">
                       <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wide">{{ t('recipeWrangler.detail.cholesterol') }}</p>
-                      <p class="text-2xl font-bold text-zinc-900 dark:text-white">
-                        {{ recipe.total_cholesterol_mg_per_serving.toFixed(0) }}<span class="text-base text-zinc-500">mg</span>
-                      </p>
+	                      <p class="text-2xl font-bold text-zinc-900 dark:text-white">
+	                        {{ formatFixed(recipe.total_cholesterol_mg_per_serving, 0) }}<span class="text-base text-zinc-500">mg</span>
+	                      </p>
                     </div>
                   </div>
                 </div>
@@ -237,16 +238,16 @@
                 leave-to-class="opacity-0 scale-95"
               >
                 <div v-if="showRadarChart" class="py-4">
-                  <NutrientRadarChart
-                    :calories="recipe.total_kcal_per_serving"
-                    :protein="recipe.total_protein_g_per_serving"
-                    :carbs="recipe.total_carbs_g_per_serving"
-                    :fat="recipe.total_fat_g_per_serving"
-                    :fiber="recipe.total_fiber_g_per_serving"
-                    :sugar="recipe.total_sugar_g_per_serving"
-                    :sodium="recipe.total_sodium_mg_per_serving"
-                    :cholesterol="recipe.total_cholesterol_mg_per_serving"
-                  />
+	                  <NutrientRadarChart
+	                    :calories="coerceNumber(recipe.total_kcal_per_serving)"
+	                    :protein="coerceNumber(recipe.total_protein_g_per_serving)"
+	                    :carbs="coerceNumber(recipe.total_carbs_g_per_serving)"
+	                    :fat="coerceNumber(recipe.total_fat_g_per_serving)"
+	                    :fiber="coerceNumber(recipe.total_fiber_g_per_serving)"
+	                    :sugar="coerceNumber(recipe.total_sugar_g_per_serving)"
+	                    :sodium="coerceNumber(recipe.total_sodium_mg_per_serving)"
+	                    :cholesterol="coerceNumber(recipe.total_cholesterol_mg_per_serving)"
+	                  />
                 </div>
               </Transition>
             </div>
@@ -497,7 +498,34 @@ const toggleNutrientView = () => {
   showRadarChart.value = !showRadarChart.value
 }
 
-const getNutriScoreGrade = (score: number): string => {
+const hasNumber = (value: unknown): value is number => {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+const coerceNumber = (value: unknown): number => {
+  return hasNumber(value) ? value : 0
+}
+
+const formatFixed = (value: unknown, digits: number): string => {
+  if (!hasNumber(value)) return '—'
+  return value.toFixed(digits)
+}
+
+const formatRounded = (value: unknown): string => {
+  if (!hasNumber(value)) return '—'
+  return String(Math.round(value))
+}
+
+const normalizeImageUrl = (url?: string | null): string | null => {
+  if (!url) return null
+  if (url.startsWith('http://')) return `https://${url.slice('http://'.length)}`
+  return url
+}
+
+const recipeImageUrl = computed(() => normalizeImageUrl(recipe.value?.image_url))
+
+const getNutriScoreGrade = (score: unknown): string => {
+  if (!hasNumber(score)) return '—'
   if (score <= 0) return 'A'
   if (score <= 2) return 'B'
   if (score <= 10) return 'C'

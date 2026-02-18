@@ -163,17 +163,35 @@ interface NutrientData {
   displayValue: string
 }
 
+type MaybeNumber = number | null | undefined
+
 const props = defineProps<{
-  calories: number
-  protein: number
-  carbs: number
-  fat: number
-  fiber: number
-  sugar: number
-  sodium: number
-  cholesterol: number
+  calories: MaybeNumber
+  protein: MaybeNumber
+  carbs: MaybeNumber
+  fat: MaybeNumber
+  fiber: MaybeNumber
+  sugar: MaybeNumber
+  sodium: MaybeNumber
+  cholesterol: MaybeNumber
 }>()
 const { t } = useI18n()
+
+const hasNumber = (value: unknown): value is number => {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+const safeNumber = (value: MaybeNumber): number => {
+  return hasNumber(value) ? value : 0
+}
+
+const fmtFixed = (value: MaybeNumber, digits: number, unit: string): string => {
+  return hasNumber(value) ? `${value.toFixed(digits)}${unit}` : `—${unit}`
+}
+
+const fmtRounded = (value: MaybeNumber, unit: string): string => {
+  return hasNumber(value) ? `${Math.round(value)} ${unit}` : `— ${unit}`
+}
 
 // Zoom state - using viewBox manipulation for centered zoom
 const zoomLevel = ref(1)
@@ -218,14 +236,14 @@ const toggleNutrient = (key: string) => {
 
 // Define all nutrients with their max values for normalization
 const allNutrients = computed<NutrientData[]>(() => [
-  { key: 'calories', label: t('recipeWrangler.detail.calories'), value: props.calories, max: 800, displayValue: `${Math.round(props.calories)} kcal` },
-  { key: 'protein', label: t('recipeWrangler.detail.protein'), value: props.protein, max: 50, displayValue: `${props.protein.toFixed(1)}g` },
-  { key: 'carbs', label: t('recipeWrangler.detail.carbs'), value: props.carbs, max: 100, displayValue: `${props.carbs.toFixed(1)}g` },
-  { key: 'fat', label: t('recipeWrangler.detail.fat'), value: props.fat, max: 50, displayValue: `${props.fat.toFixed(1)}g` },
-  { key: 'fiber', label: t('recipeWrangler.detail.fiber'), value: props.fiber, max: 30, displayValue: `${props.fiber.toFixed(1)}g` },
-  { key: 'sugar', label: t('recipeWrangler.detail.sugar'), value: props.sugar, max: 50, displayValue: `${props.sugar.toFixed(1)}g` },
-  { key: 'sodium', label: t('recipeWrangler.detail.sodium'), value: props.sodium, max: 2000, displayValue: `${props.sodium.toFixed(0)}mg` },
-  { key: 'cholesterol', label: t('recipeWrangler.detail.cholesterol'), value: props.cholesterol, max: 300, displayValue: `${props.cholesterol.toFixed(0)}mg` }
+  { key: 'calories', label: t('recipeWrangler.detail.calories'), value: safeNumber(props.calories), max: 800, displayValue: fmtRounded(props.calories, 'kcal') },
+  { key: 'protein', label: t('recipeWrangler.detail.protein'), value: safeNumber(props.protein), max: 50, displayValue: fmtFixed(props.protein, 1, 'g') },
+  { key: 'carbs', label: t('recipeWrangler.detail.carbs'), value: safeNumber(props.carbs), max: 100, displayValue: fmtFixed(props.carbs, 1, 'g') },
+  { key: 'fat', label: t('recipeWrangler.detail.fat'), value: safeNumber(props.fat), max: 50, displayValue: fmtFixed(props.fat, 1, 'g') },
+  { key: 'fiber', label: t('recipeWrangler.detail.fiber'), value: safeNumber(props.fiber), max: 30, displayValue: fmtFixed(props.fiber, 1, 'g') },
+  { key: 'sugar', label: t('recipeWrangler.detail.sugar'), value: safeNumber(props.sugar), max: 50, displayValue: fmtFixed(props.sugar, 1, 'g') },
+  { key: 'sodium', label: t('recipeWrangler.detail.sodium'), value: safeNumber(props.sodium), max: 2000, displayValue: fmtFixed(props.sodium, 0, 'mg') },
+  { key: 'cholesterol', label: t('recipeWrangler.detail.cholesterol'), value: safeNumber(props.cholesterol), max: 300, displayValue: fmtFixed(props.cholesterol, 0, 'mg') }
 ])
 
 // Filtered visible nutrients

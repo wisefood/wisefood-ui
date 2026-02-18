@@ -240,7 +240,7 @@
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-2xl font-light text-gray-900 dark:text-white">
             <span class="text-gray-900 dark:text-white">{{ t('dashboard.recipes.recommendedPrefix') }} </span>
-            <span class="font-serif italic text-brand-500 dark:text-brand-400 text-3xl">{{ t('dashboard.recipes.recommendedAccent') }}</span>
+            <span class="font-serif italic text-brand-500 dark:text-brand-400 text-3xl"> {{ t('dashboard.recipes.recommendedAccent') }}</span>
           </h2>
           <NuxtLink
             to="/recipe-wrangler"

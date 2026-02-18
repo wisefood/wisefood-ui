@@ -71,9 +71,10 @@
                   <div class="relative h-[240px] rounded-xl overflow-hidden bg-gradient-to-br from-brandg-100 to-brandg-200 dark:from-brandg-900/40 dark:to-brandg-800/40 shadow-md">
                     <img
                       v-if="shouldShowRecipeImage(recipe)"
-                      :src="recipe.image_url"
+                      :src="normalizeImageUrl(recipe.image_url)"
                       :alt="recipe.title"
                       class="w-full h-full object-cover"
+                      referrerpolicy="no-referrer"
                       @error="markImageFailed(recipe.recipe_id)"
                     />
                     <div v-else class="w-full h-full flex items-center justify-center">
@@ -415,8 +416,14 @@ const toBarPercent = (value: unknown, maxValue: number): number => {
   return Math.min((value / maxValue) * 100, 100)
 }
 
+const normalizeImageUrl = (url?: string | null): string | null => {
+  if (!url) return null
+  if (url.startsWith('http://')) return `https://${url.slice('http://'.length)}`
+  return url
+}
+
 const shouldShowRecipeImage = (recipe: Recipe): boolean => {
-  return !!recipe.image_url && !failedRecipeImages.value[recipe.recipe_id]
+  return !!normalizeImageUrl(recipe.image_url) && !failedRecipeImages.value[recipe.recipe_id]
 }
 
 const markImageFailed = (recipeId: string) => {

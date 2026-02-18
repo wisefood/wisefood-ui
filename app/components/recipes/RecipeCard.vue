@@ -6,11 +6,12 @@
     <!-- Image Container -->
     <div class="relative aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700">
       <img
-        v-if="recipe.image_url"
-        :src="recipe.image_url"
+        v-if="imageUrl && !imageFailed"
+        :src="imageUrl"
         :alt="recipe.title"
         class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         loading="lazy"
+        referrerpolicy="no-referrer"
         @error="handleImageError"
       />
       <div
@@ -129,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRecipeStore } from '~/stores/recipe'
 import type { RecipeSearchResult } from '~/services/recipeApi'
@@ -154,6 +155,17 @@ const recipeStore = useRecipeStore()
 // ============================================================================
 const isFavorite = computed(() => recipeStore.isFavorite(props.recipe.recipe_id))
 const isInCompare = computed(() => recipeStore.isInCompareList(props.recipe.recipe_id))
+const imageUrl = computed(() => {
+  const url = props.recipe.image_url
+  if (typeof url !== 'string' || url.length === 0) return null
+  if (url.startsWith('http://')) return `https://${url.slice('http://'.length)}`
+  return url
+})
+const imageFailed = ref(false)
+
+watch(imageUrl, () => {
+  imageFailed.value = false
+})
 
 // ============================================================================
 // Methods
@@ -189,9 +201,8 @@ const toggleFavorite = (event: Event) => {
   recipeStore.toggleFavorite(props.recipe.recipe_id)
 }
 
-const handleImageError = (event: Event) => {
-  const target = event.target as HTMLImageElement
-  target.style.display = 'none'
+const handleImageError = (_event: Event) => {
+  imageFailed.value = true
 }
 </script>
 

@@ -58,6 +58,15 @@ export interface RecipeSearchParams {
   exclude_allergens?: string[]
 }
 
+export interface RecipeParamSearchParams {
+  include_ingredients?: string[]
+  exclude_ingredients?: string[]
+  exclude_allergens?: string[]
+  diet_tags?: string[]
+  max_duration_minutes?: number
+  limit?: number
+}
+
 export interface RecipeResponse {
   help: string
   success: boolean
@@ -86,6 +95,7 @@ export interface ApiError {
 
 class RecipeApiService {
   private readonly basePath = '/recipewrangler'
+  private readonly defaultParamSearchLimit = 20
 
   /**
    * Get a specific recipe by ID
@@ -122,17 +132,32 @@ class RecipeApiService {
         SEARCH_TIMEOUT
       )
 
-      if (Array.isArray(data)) {
-        return data
-      }
-
-      if (data && Array.isArray(data.results)) {
-        return data.results
-      }
-
-      return []
+      return this.normalizeSearchResults(data)
     } catch (error) {
       throw this.handleError(error, 'Failed to search recipes')
+    }
+  }
+
+  /**
+   * Search recipes using deterministic parameter filters
+   */
+  async searchRecipesByParams(params: RecipeParamSearchParams): Promise<RecipeSearchResult[]> {
+    try {
+      const requestBody: RecipeParamSearchParams = {
+        ...params,
+        limit: params.limit ?? this.defaultParamSearchLimit
+      }
+
+      const data = await this.fetchWithTimeout<RecipeSearchPayload>(
+        `${this.basePath}/recipes/param_search`,
+        'POST',
+        requestBody,
+        SEARCH_TIMEOUT
+      )
+
+      return this.normalizeSearchResults(data)
+    } catch (error) {
+      throw this.handleError(error, 'Failed to search recipes with filters')
     }
   }
 
@@ -179,6 +204,18 @@ class RecipeApiService {
       question: `quick recipes under ${maxDuration} minutes`,
       exclude_allergens: excludeAllergens
     })
+  }
+
+  private normalizeSearchResults(data: RecipeSearchPayload): RecipeSearchResult[] {
+    if (Array.isArray(data)) {
+      return data
+    }
+
+    if (data && Array.isArray(data.results)) {
+      return data.results
+    }
+
+    return []
   }
 
   /**

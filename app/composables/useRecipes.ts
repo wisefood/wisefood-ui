@@ -4,6 +4,7 @@ import type {
   Recipe,
   RecipeSearchResult,
   RecipeSearchParams,
+  RecipeParamSearchParams,
   ApiError
 } from '~/services/recipeApi'
 
@@ -35,6 +36,69 @@ export function useRecipes() {
   // Methods
   // ============================================================================
 
+  const hydrateImageUrls = async (results: RecipeSearchResult[], maxToHydrate: number = 20) => {
+    if (!import.meta.client) return
+
+    const missing = results.filter(r => !r.image_url).slice(0, maxToHydrate)
+    if (missing.length === 0) return
+
+    const { useRecipeStore } = await import('~/stores/recipe')
+    const recipeStore = useRecipeStore()
+
+    // Limit concurrency to avoid spamming the backend.
+    const maxConcurrent = Math.min(4, missing.length)
+    let nextIndex = 0
+
+    const worker = async () => {
+      while (true) {
+        const index = nextIndex
+        nextIndex += 1
+        if (index >= missing.length) return
+
+        const recipeStub = missing[index]
+        try {
+          const cached = recipeStore.getCachedRecipe(recipeStub.recipe_id)
+          if (cached?.image_url) {
+            recipeStub.image_url = cached.image_url
+            continue
+          }
+
+          const full = await recipeApi.getRecipe(recipeStub.recipe_id)
+          recipeStore.cacheRecipe(full)
+          if (full.image_url) {
+            recipeStub.image_url = full.image_url
+          }
+        } catch {
+          // Best-effort only: leave placeholder if a given image can't be hydrated.
+        }
+      }
+    }
+
+    await Promise.all(Array.from({ length: maxConcurrent }, () => worker()))
+
+    // Ensure the UI updates even if nested mutation doesn't trigger for some reason.
+    recipes.value = [...recipes.value]
+  }
+
+  const normalizeList = (values?: string[]): string[] => {
+    if (!values || values.length === 0) return []
+    return values
+      .map(value => value.trim())
+      .filter(value => value.length > 0)
+      .sort()
+  }
+
+  const buildParamSearchCacheKey = (params: RecipeParamSearchParams): string => {
+    return JSON.stringify({
+      include_ingredients: normalizeList(params.include_ingredients),
+      exclude_ingredients: normalizeList(params.exclude_ingredients),
+      exclude_allergens: normalizeList(params.exclude_allergens),
+      diet_tags: normalizeList(params.diet_tags),
+      max_duration_minutes: params.max_duration_minutes,
+      limit: params.limit ?? 20
+    })
+  }
+
   /**
    * Search for recipes using natural language query
    */
@@ -64,6 +128,7 @@ export function useRecipes() {
       const results = await recipeApi.searchRecipes(params)
       recipes.value = results
       totalResults.value = results.length
+      void hydrateImageUrls(results)
 
       // Cache the results
       if (import.meta.client) {
@@ -80,6 +145,53 @@ export function useRecipes() {
     } catch (err) {
       const apiError = err as ApiError
       error.value = apiError.message || 'Failed to search recipes'
+      recipes.value = []
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Search recipes using deterministic parameter filters
+   */
+  const searchRecipesByParams = async (params: RecipeParamSearchParams, useCache = true) => {
+    error.value = null
+    lastSearchQuery.value = ''
+
+    const normalizedAllergens = normalizeList(params.exclude_allergens)
+    const cacheKey = `param:${buildParamSearchCacheKey(params)}`
+
+    if (useCache && import.meta.client) {
+      const { useRecipeStore } = await import('~/stores/recipe')
+      const recipeStore = useRecipeStore()
+      const cachedResults = recipeStore.getCachedSearch(cacheKey, normalizedAllergens)
+
+      if (cachedResults) {
+        recipes.value = cachedResults
+        totalResults.value = cachedResults.length
+        return cachedResults
+      }
+    }
+
+    loading.value = true
+
+    try {
+      const results = await recipeApi.searchRecipesByParams(params)
+      recipes.value = results
+      totalResults.value = results.length
+      void hydrateImageUrls(results, params.limit ?? 20)
+
+      if (import.meta.client) {
+        const { useRecipeStore } = await import('~/stores/recipe')
+        const recipeStore = useRecipeStore()
+        recipeStore.cacheSearchResults(cacheKey, normalizedAllergens, results)
+      }
+
+      return results
+    } catch (err) {
+      const apiError = err as ApiError
+      error.value = apiError.message || 'Failed to search recipes with filters'
       recipes.value = []
       throw err
     } finally {
@@ -139,6 +251,7 @@ export function useRecipes() {
       const results = await recipeApi.getRecipesByCategory(category, excludeAllergens)
       recipes.value = results
       totalResults.value = results.length
+      void hydrateImageUrls(results)
 
       // Cache the results
       if (import.meta.client) {
@@ -174,6 +287,7 @@ export function useRecipes() {
       const results = await recipeApi.getRecipesByIngredient(ingredient, excludeAllergens)
       recipes.value = results
       totalResults.value = results.length
+      void hydrateImageUrls(results)
       return results
     } catch (err) {
       const apiError = err as ApiError
@@ -201,6 +315,7 @@ export function useRecipes() {
       const results = await recipeApi.getQuickRecipes(maxDuration, excludeAllergens)
       recipes.value = results
       totalResults.value = results.length
+      void hydrateImageUrls(results)
       return results
     } catch (err) {
       const apiError = err as ApiError
@@ -253,6 +368,7 @@ export function useRecipes() {
 
     // Methods
     searchRecipes,
+    searchRecipesByParams,
     fetchRecipe,
     fetchRecipesByCategory,
     fetchRecipesByIngredient,
