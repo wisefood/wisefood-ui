@@ -1,4 +1,5 @@
 import { useAuthStore } from '~/stores/auth'
+import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 
 // ============================================================================
 // Timeout Configuration
@@ -205,8 +206,7 @@ class FoodChatApiService {
     data?: unknown,
     timeoutMs: number = DEFAULT_TIMEOUT
   ): Promise<T> {
-    const config = useRuntimeConfig()
-    const baseUrl = (config.public.wisefoodRestApiUrl as string) || 'https://wisefood.gr/rest/api/v1'
+    const baseUrl = getWisefoodRestApiUrl()
     const url = `${baseUrl}${endpoint}`
 
     const authStore = useAuthStore()

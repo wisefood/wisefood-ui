@@ -520,6 +520,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useArticles } from '~/composables/useArticles'
 import { useAuthStore } from '~/stores/auth'
 import type { Article } from '~/services/articlesApi'
+import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 
@@ -863,7 +864,8 @@ const fetchSearchSummary = async (query: string, results: Article[]) => {
       language: 'en'
     }
 
-    const response = await fetch('https://wisefood.gr/rest/api/v1/foodscholar/search/summarize', {
+    const baseUrl = getWisefoodRestApiUrl()
+    const response = await fetch(`${baseUrl}/foodscholar/search/summarize`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

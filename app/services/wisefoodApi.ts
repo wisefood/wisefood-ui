@@ -1,4 +1,5 @@
 import { useAuthStore } from '~/stores/auth'
+import { getWisefoodApiUrl } from '~/utils/runtimeConfig'
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>
@@ -12,9 +13,7 @@ interface ApiError {
 
 class WiseFoodApiService {
   private getBaseUrl(): string {
-    // Get base URL from runtime config or use default
-    const config = useRuntimeConfig()
-    return (config.public.wisefoodApiUrl as string) || 'https://wisefood.gr/dc/api'
+    return getWisefoodApiUrl()
   }
 
   /**
