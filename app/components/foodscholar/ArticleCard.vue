@@ -4,12 +4,11 @@
     :class="[{ 'scroll-fade-in': props.fade !== false }, 'group flex flex-col p-6 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full']"
     :style="{ '--delay': `${props.index * 0.1}s` }"
   >
-    <!-- Header: Category and Read Time -->
+    <!-- Header: Category -->
     <div class="flex items-start justify-between mb-3">
       <span class="text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
         {{ props.article.ai_category }}
       </span>
-      <span class="text-xs text-gray-500 dark:text-gray-400">{{ props.article.readTime }} min read</span>
     </div>
 
     <!-- Title -->
@@ -61,13 +60,12 @@
 import { computed } from 'vue'
 
 interface Article {
-  id: number
+  id: string | number
   urn: string
   title: string
   category: string
   ai_category?: string | null
   excerpt: string
-  readTime: number
   authors?: string[]
   tags?: string[]
   ai_tags?: string[]

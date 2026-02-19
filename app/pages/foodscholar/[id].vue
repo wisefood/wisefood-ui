@@ -46,25 +46,36 @@
             <!-- Badges Row -->
             <div class="flex flex-wrap items-center gap-3 mb-4">
               <UBadge color="primary" variant="subtle">{{ displayCategory }}</UBadge>
-              <UBadge v-if="article.extras?.study_type" variant="outline" class="text-gray-600 dark:text-gray-400">
+              <UTooltip v-if="displayTopic" :text="topicsTooltip">
+                <UBadge variant="outline" class="text-gray-600 dark:text-gray-400 cursor-help">
+                  <UIcon name="i-lucide-layers" class="w-3 h-3 mr-1" />
+                  {{ displayTopic }}
+                </UBadge>
+              </UTooltip>
+              <UBadge v-if="displayStudyType" variant="outline" class="text-gray-600 dark:text-gray-400">
                 <UIcon name="i-lucide-flask-conical" class="w-3 h-3 mr-1" />
-                {{ article.extras.study_type }}
+                {{ displayStudyType }}
               </UBadge>
-              <UBadge v-if="article.extras?.reader_group" variant="outline" class="text-gray-600 dark:text-gray-400">
-                <UIcon name="i-lucide-users" class="w-3 h-3 mr-1" />
-                {{ article.extras.reader_group }}
-              </UBadge>
-              <span class="text-sm text-gray-500 dark:text-gray-400">{{ readTime }} min read</span>
             </div>
 
             <h1 class="text-4xl sm:text-5xl font-light text-gray-900 dark:text-white tracking-tight mb-4">
               {{ article.title }}
             </h1>
 
-            <!-- Population Group -->
-            <div v-if="article.extras?.population_group" class="flex items-center gap-2 mb-4 text-sm text-gray-600 dark:text-gray-400">
-              <UIcon name="i-lucide-target" class="w-4 h-4 text-brand-500" />
-              <span><strong>Population:</strong> {{ article.extras.population_group }}</span>
+            <!-- Audience / Confidence -->
+            <div class="flex flex-wrap items-center gap-4 mb-4 text-sm text-gray-600 dark:text-gray-400">
+              <div v-if="displayPopulationGroup" class="flex items-center gap-2">
+                <UIcon name="i-lucide-target" class="w-4 h-4 text-brand-500" />
+                <span><strong>Population:</strong> {{ displayPopulationGroup }}</span>
+              </div>
+              <div v-if="displayReaderGroup" class="flex items-center gap-2">
+                <UIcon name="i-lucide-users" class="w-4 h-4 text-brand-500" />
+                <span><strong>Reader group:</strong> {{ displayReaderGroup }}</span>
+              </div>
+              <UBadge v-if="annotationConfidenceLabel" color="primary" variant="subtle" class="text-xs">
+                <UIcon name="i-lucide-badge-check" class="w-3 h-3 mr-1" />
+                Confidence {{ annotationConfidenceLabel }}
+              </UBadge>
             </div>
 
             <!-- Publication Info -->
@@ -86,6 +97,17 @@
                 >
                   <UIcon name="i-lucide-external-link" class="w-4 h-4" />
                   <span>DOI</span>
+                </a>
+              </div>
+              <div v-if="semanticScholarUrl" class="flex items-center gap-2">
+                <a
+                  :href="semanticScholarUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 text-brand-600 dark:text-brand-400 hover:underline"
+                >
+                  <UIcon name="i-lucide-external-link" class="w-4 h-4" />
+                  <span>Semantic Scholar</span>
                 </a>
               </div>
             </div>
@@ -282,6 +304,60 @@
         <!-- Sidebar (Right 1/3) -->
         <aside class="lg:col-span-1">
           <div class="sticky top-24 space-y-6">
+            <!-- Metrics -->
+            <div v-if="hasCitationInfo || hasAccessInfo" class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.05s">
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <UIcon name="i-lucide-bar-chart-3" class="w-5 h-5" />
+                Citations & Access
+              </h3>
+
+              <div v-if="hasCitationInfo" class="flex items-center gap-4 mb-5">
+                <RingMetric
+                  v-if="article.citation_count !== null && article.citation_count !== undefined"
+                  label="Citations"
+                  :value="article.citation_count"
+                  tooltip="Total times this paper is cited by other works (Semantic Scholar)."
+                  color-class="text-brand-500"
+                  :size="60"
+                />
+                <div class="flex-1 min-w-0 space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                  <div v-if="article.influential_citation_count !== null && article.influential_citation_count !== undefined" class="flex items-center justify-between gap-3">
+                    <UTooltip text="Subset of citations that Semantic Scholar marks as influential.">
+                      <span class="inline-flex items-center gap-2 cursor-help">
+                        <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                        Influential
+                      </span>
+                    </UTooltip>
+                    <span class="font-medium tabular-nums">{{ formatNumber(article.influential_citation_count) }}</span>
+                  </div>
+                  <div v-if="article.reference_count !== null && article.reference_count !== undefined" class="flex items-center justify-between gap-3">
+                    <UTooltip text="Number of references cited within this paper.">
+                      <span class="inline-flex items-center gap-2 cursor-help">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        References
+                      </span>
+                    </UTooltip>
+                    <span class="font-medium tabular-nums">{{ formatNumber(article.reference_count) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="hasAccessInfo" class="flex flex-wrap items-center gap-2">
+                <UBadge
+                  v-if="article.open_access !== null && article.open_access !== undefined"
+                  :color="article.open_access ? 'success' : 'neutral'"
+                  variant="subtle"
+                >
+                  <UIcon :name="article.open_access ? 'i-lucide-unlock' : 'i-lucide-lock'" class="w-3 h-3 mr-1" />
+                  {{ article.open_access ? 'Open Access' : 'Not Open Access' }}
+                </UBadge>
+                <UBadge v-if="meaningfulString(article.license)" variant="outline" class="text-gray-600 dark:text-gray-300">
+                  <UIcon name="i-lucide-scale" class="w-3 h-3 mr-1" />
+                  {{ article.license }}
+                </UBadge>
+              </div>
+            </div>
+
             <!-- Tags -->
             <div v-if="displayTags.length > 0" class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.1s">
               <h3 class="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
@@ -298,6 +374,30 @@
                   {{ tag }}
                 </span>
               </div>
+            </div>
+
+            <!-- Keywords -->
+            <div v-if="displayKeywords.length > 0" class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.15s">
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <UIcon name="i-lucide-key" class="w-5 h-5" />
+                Keywords
+              </h3>
+              <div class="flex flex-wrap gap-2">
+                <span
+                  v-for="kw in displayKeywords"
+                  :key="kw"
+                  class="text-xs bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full"
+                >
+                  {{ kw }}
+                </span>
+              </div>
+              <button
+                v-if="allKeywords.length > keywordLimit"
+                class="mt-3 text-xs font-medium text-brand-600 dark:text-brand-400 hover:underline"
+                @click="showAllKeywords = !showAllKeywords"
+              >
+                {{ showAllKeywords ? 'Show less' : `Show all (${allKeywords.length})` }}
+              </button>
             </div>
 
             <!-- Glossary -->
@@ -318,18 +418,21 @@
             <div class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.3s">
               <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Article Info</h3>
               <div class="space-y-3 text-sm text-gray-600 dark:text-gray-400">
-                <div v-if="article.language" class="flex items-center gap-2">
-                  <UIcon name="i-lucide-globe" class="w-4 h-4" />
-                  <span>Language: {{ article.language.toUpperCase() }}</span>
+                <div v-for="item in visibleInfoItems" :key="item.label" class="flex items-start gap-2">
+                  <UIcon :name="item.icon" class="w-4 h-4 mt-0.5 shrink-0" />
+                  <div class="min-w-0">
+                    <span class="text-gray-500 dark:text-gray-500">{{ item.label }}:</span>
+                    <span class="ml-1 break-words">{{ item.value }}</span>
+                  </div>
                 </div>
-                <div v-if="article.region" class="flex items-center gap-2">
-                  <UIcon name="i-lucide-map-pin" class="w-4 h-4" />
-                  <span>Region: {{ article.region }}</span>
-                </div>
-                <div v-if="article.external_id" class="flex items-center gap-2">
-                  <UIcon name="i-lucide-database" class="w-4 h-4" />
-                  <span class="font-mono text-xs">{{ article.external_id }}</span>
-                </div>
+
+                <button
+                  v-if="hiddenInfoCount > 0"
+                  class="pt-1 text-xs font-medium text-brand-600 dark:text-brand-400 hover:underline"
+                  @click="showMoreInfo = !showMoreInfo"
+                >
+                  {{ showMoreInfo ? 'Hide details' : `Show more (${hiddenInfoCount})` }}
+                </button>
               </div>
             </div>
 
@@ -368,7 +471,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useArticles } from '~/composables/useArticles'
-import { calculateReadTime, formatDoiUrl } from '~/utils/articleHelpers'
+import { formatDoiUrl } from '~/utils/articleHelpers'
 import type { GlossaryTerm, QAItem } from '~/services/articlesApi'
 
 definePageMeta({
@@ -385,6 +488,40 @@ const isSimplified = ref(false)
 const isSimplifying = ref(false)
 const activeQATab = ref<'user' | 'practitioner' | 'expert'>('user')
 const copied = ref(false)
+const showMoreInfo = ref(false)
+const showAllKeywords = ref(false)
+
+const keywordLimit = 12
+const infoPrimaryLimit = 5
+
+type InfoItem = { label: string, value: string, icon: string }
+
+function isPlaceholderString(value: string): boolean {
+  const normalized = value.trim().toLowerCase()
+  return normalized === 'not stated' || normalized === 'none' || normalized === 'n/a' || normalized === 'unknown'
+}
+
+function meaningfulString(value: unknown): value is string {
+  if (typeof value !== 'string') return false
+  if (!value.trim()) return false
+  return !isPlaceholderString(value)
+}
+
+function cleanStringList(list: unknown): string[] {
+  if (!Array.isArray(list)) return []
+  const cleaned = list
+    .filter((x): x is string => typeof x === 'string')
+    .map(s => s.trim())
+    .filter(s => s.length > 0 && !isPlaceholderString(s))
+  return [...new Set(cleaned)]
+}
+
+function pickFirstMeaningful(...candidates: Array<unknown>): string | null {
+  for (const c of candidates) {
+    if (meaningfulString(c)) return c.trim()
+  }
+  return null
+}
 
 // Computed properties
 const displayCategory = computed(() => {
@@ -392,9 +529,39 @@ const displayCategory = computed(() => {
   return article.value.category || article.value.ai_category || 'Uncategorized'
 })
 
-const readTime = computed(() => {
-  if (!article.value?.content) return 1
-  return calculateReadTime(article.value.content)
+const displayTopic = computed(() => {
+  const topics = cleanStringList(article.value?.topics)
+  return topics[0] || ''
+})
+
+const topicsTooltip = computed(() => {
+  const topics = cleanStringList(article.value?.topics)
+  return `Topics: ${topics.join(', ')}`
+})
+
+const displayStudyType = computed(() => {
+  return pickFirstMeaningful(article.value?.study_type, article.value?.extras?.study_type) || ''
+})
+
+const displayReaderGroup = computed(() => {
+  return pickFirstMeaningful(article.value?.reader_group, article.value?.extras?.reader_group) || ''
+})
+
+const displayPopulationGroup = computed(() => {
+  return pickFirstMeaningful(article.value?.population_group, article.value?.extras?.population_group) || ''
+})
+
+const annotationConfidenceLabel = computed(() => {
+  const v = article.value?.annotation_confidence
+  if (typeof v !== 'number' || !Number.isFinite(v)) return ''
+  const pct = v <= 1 ? Math.round(v * 100) : Math.round(v)
+  if (pct <= 0) return ''
+  return `${pct}%`
+})
+
+const semanticScholarUrl = computed(() => {
+  const url = article.value?.url
+  return meaningfulString(url) ? url : ''
 })
 
 const displayTakeaways = computed(() => {
@@ -417,6 +584,81 @@ const displayTags = computed(() => {
 const glossaryTerms = computed<GlossaryTerm[]>(() => {
   return article.value?.extras?.annotations?.glosary || []
 })
+
+// Keywords
+const allKeywords = computed(() => cleanStringList(article.value?.keywords))
+const displayKeywords = computed(() => {
+  if (showAllKeywords.value) return allKeywords.value
+  return allKeywords.value.slice(0, keywordLimit)
+})
+
+// Metrics & access info
+const hasCitationInfo = computed(() => {
+  const a = article.value
+  if (!a) return false
+  return [a.citation_count, a.influential_citation_count, a.reference_count].some(v => v !== null && v !== undefined)
+})
+
+const hasAccessInfo = computed(() => {
+  const a = article.value
+  if (!a) return false
+  return (a.open_access !== null && a.open_access !== undefined) || meaningfulString(a.license)
+})
+
+function formatNumber(value: number): string {
+  return new Intl.NumberFormat().format(value)
+}
+
+// Sidebar info items (hide placeholders like "Not stated")
+const allInfoItems = computed<InfoItem[]>(() => {
+  const a = article.value
+  if (!a) return []
+
+  const items: InfoItem[] = []
+  const push = (label: string, icon: string, value: unknown) => {
+    if (typeof value === 'string') {
+      if (!meaningfulString(value)) return
+      items.push({ label, icon, value: value.trim() })
+      return
+    }
+    if (typeof value === 'number') {
+      if (!Number.isFinite(value)) return
+      items.push({ label, icon, value: new Intl.NumberFormat().format(value) })
+      return
+    }
+    if (Array.isArray(value)) {
+      const cleaned = cleanStringList(value)
+      if (cleaned.length === 0) return
+      items.push({ label, icon, value: cleaned.join(', ') })
+      return
+    }
+  }
+
+  if (meaningfulString(a.language)) push('Language', 'i-lucide-globe', a.language.toUpperCase())
+  push('Region', 'i-lucide-map-pin', a.region)
+  push('Age group', 'i-lucide-baby', a.age_group)
+
+  const geoCountry = pickFirstMeaningful(a.geographic_context?.country_or_region)
+  const geoIncome = pickFirstMeaningful(a.geographic_context?.income_setting)
+  const geo = [geoCountry, geoIncome].filter(Boolean).join(' · ')
+  if (geo) push('Geographic context', 'i-lucide-map', geo)
+
+  push('Biological model', 'i-lucide-dna', a.biological_model)
+
+  const hardExclusions = cleanStringList(a.hard_exclusion_flags).filter(v => v.toLowerCase() !== 'none')
+  if (hardExclusions.length > 0) push('Exclusion flags', 'i-lucide-shield-alert', hardExclusions)
+
+  push('External ID', 'i-lucide-database', a.external_id)
+
+  return items
+})
+
+const visibleInfoItems = computed(() => {
+  if (showMoreInfo.value) return allInfoItems.value
+  return allInfoItems.value.slice(0, infoPrimaryLimit)
+})
+
+const hiddenInfoCount = computed(() => Math.max(0, allInfoItems.value.length - infoPrimaryLimit))
 
 // Simplified abstract
 const hasSimplifiedAbstract = computed(() => {

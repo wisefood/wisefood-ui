@@ -666,7 +666,7 @@ import foodscholarApi, {
 } from '~/services/foodscholarApi'
 import { useAuthStore } from '~/stores/auth'
 import { useHouseholdStore } from '~/stores/household'
-import { calculateReadTime, getExcerpt } from '~/utils/articleHelpers'
+import { getExcerpt } from '~/utils/articleHelpers'
 
 const { t, locale } = useI18n()
 
@@ -683,13 +683,12 @@ useSeoMeta({
 })
 
 interface HomeArticle {
-  id: number
+  id: string | number
   urn: string
   title: string
   category: string
   ai_category?: string | null
   excerpt: string
-  readTime: number
   authors?: string[]
   tags?: string[]
   ai_tags?: string[]
@@ -1306,7 +1305,6 @@ const mapArticleToHome = (article: Article): HomeArticle => {
     category: article.category || article.ai_category || CATEGORY_UNCATEGORIZED,
     ai_category: article.ai_category,
     excerpt: getExcerpt(article, 220),
-    readTime: calculateReadTime(article.abstract || article.description || article.content || ''),
     authors: article.authors || [],
     tags: article.tags || [],
     ai_tags: article.ai_tags || [],

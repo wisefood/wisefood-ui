@@ -28,6 +28,7 @@ export interface ArticleEvaluation {
 export interface ArticleAnnotations {
   glosary?: GlossaryTerm[]  // Note: API has typo "glosary"
   abstract?: string  // Simplified abstract
+  original_abstract?: string
   user_qa?: QAItem[]
   practitioner_qa?: QAItem[]
   expert_qa?: QAItem[]
@@ -35,16 +36,30 @@ export interface ArticleAnnotations {
 
 // Article extras containing enriched metadata
 export interface ArticleExtras {
+  // Legacy (some environments still return these inside extras)
   population_group?: string
   study_type?: string
   reader_group?: string
+
   evaluation?: ArticleEvaluation
   annotations?: ArticleAnnotations
+  enriched_at?: string
+  enhance_agent?: string
+  enhance_fields?: {
+    ai_tags?: string[]
+    ai_category?: string
+    ai_key_takeaways?: string[]
+  }
+}
+
+export interface GeographicContext {
+  country_or_region?: string | null
+  income_setting?: string | null
 }
 
 export interface Article {
   // Base fields (from BaseSchema)
-  id: number // Internal database ID
+  id: string | number // Backend id may be UUID string
   urn: string // URN identifier (used in API paths)
   title: string
   created_at: string
@@ -52,9 +67,16 @@ export interface Article {
 
   // System / embedding
   embedded_at?: string | null
-  type: 'article'
+  type?: string | string[] | null
 
   // Bibliographic & content
+  status?: string | null
+  creator?: string | null
+  url?: string | null
+  license?: string | null
+  open_access?: boolean | null
+  version?: string | null
+
   organization_urn?: string | null
   abstract?: string | null
   description?: string | null
@@ -64,12 +86,25 @@ export interface Article {
   publication_year?: string | null // ISO date string (YYYY-01-01)
   external_id?: string | null
   doi?: string | null
+  citation_count?: number | null
+  reference_count?: number | null
+  influential_citation_count?: number | null
+  keywords?: string[] | null
 
   // Human-authoritative classification
   tags: string[]
   category?: string | null
   region?: string | null
   language?: string | null
+  reader_group?: string | null
+  age_group?: string | null
+  population_group?: string | null
+  geographic_context?: GeographicContext | null
+  biological_model?: string | null
+  topics?: string[] | null
+  study_type?: string | null
+  hard_exclusion_flags?: string[] | null
+  annotation_confidence?: number | null
 
   // AI-derived classification (read-only)
   ai_tags: string[]

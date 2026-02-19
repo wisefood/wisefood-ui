@@ -626,7 +626,6 @@ const displayArticles = computed(() => {
     category: article.category || article.ai_category || 'Uncategorized',
     ai_category: article.ai_category,
     excerpt: article.abstract || article.description || '',
-    readTime: calculateReadTime(article.content || ''),
     authors: article.authors || [],
     tags: article.tags || [],
     ai_tags: article.ai_tags || [],
@@ -634,15 +633,6 @@ const displayArticles = computed(() => {
     publication_year: article.publication_year,
   }))
 })
-
-// Helper to calculate read time
-const calculateReadTime = (content: string | undefined): number => {
-  if (!content) return 1
-  const wordsPerMinute = 225
-  const wordCount = content.trim().split(/\s+/).length
-  const minutes = Math.ceil(wordCount / wordsPerMinute)
-  return Math.max(1, minutes)
-}
 
 // Computed facets for UI - merged Category (category + ai_category)
 const categoryFacets = computed((): AnnotatedFacet[] => {
