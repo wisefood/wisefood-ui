@@ -599,6 +599,7 @@
             :key="article.urn"
             :article="article"
             :index="index"
+            :fade="false"
           />
         </div>
 
@@ -745,16 +746,42 @@ const router = useRouter()
 const authStore = useAuthStore()
 const householdStore = useHouseholdStore()
 
+const getCitationForUrn = (articleUrn: string) => {
+  const citations = [
+    ...(primaryAnswer.value?.citations || []),
+    ...(secondaryAnswer.value?.citations || [])
+  ]
+  return citations.find(c => c.article_urn === articleUrn && (c.quote || c.section)) || null
+}
+
 const handleMarkdownClick = (event: MouseEvent) => {
   const anchor = (event.target as HTMLElement).closest('a')
   if (!anchor) return
 
   const href = anchor.getAttribute('href')
-  if (!href || !href.includes('/foodscholar/urn:')) return
+  if (!href) return
+
+  const url = new URL(href, window.location.origin)
+  const pathname = url.pathname
+  const match = pathname.match(/\/(foodscholar|articles)\/(urn:article:[^/?#]+)/)
+  if (!match) return
+
+  const targetUrn = match[2]
+  const targetPath = `/foodscholar/${targetUrn}`
+  const citation = getCitationForUrn(targetUrn)
 
   event.preventDefault()
   event.stopPropagation()
-  router.push(href)
+
+  const query = Object.fromEntries(url.searchParams.entries()) as Record<string, string>
+  if (!('section' in query) && citation?.section) query.section = String(citation.section)
+  if (!('hl' in query) && citation?.quote) query.hl = String(citation.quote)
+
+  router.push({
+    path: targetPath,
+    query,
+    hash: url.hash
+  })
 }
 
 const selectedCategory = ref(CATEGORY_ALL)
@@ -1550,22 +1577,22 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-:deep(.qa-answer-markdown a[href*="/foodscholar/urn:"]) {
+:deep(.qa-answer-markdown a[href*="/foodscholar/urn:"], .qa-answer-markdown a[href*="/articles/urn:"]) {
   color: rgb(156 163 175);
   text-decoration: none;
   font-weight: 500;
 }
 
-:deep(.qa-answer-markdown a[href*="/foodscholar/urn:"]:hover) {
+:deep(.qa-answer-markdown a[href*="/foodscholar/urn:"]:hover, .qa-answer-markdown a[href*="/articles/urn:"]:hover) {
   color: rgb(107 114 128);
   text-decoration: underline;
 }
 
-:deep(.dark .qa-answer-markdown a[href*="/foodscholar/urn:"]) {
+:deep(.dark .qa-answer-markdown a[href*="/foodscholar/urn:"], .dark .qa-answer-markdown a[href*="/articles/urn:"]) {
   color: rgb(161 161 170);
 }
 
-:deep(.dark .qa-answer-markdown a[href*="/foodscholar/urn:"]:hover) {
+:deep(.dark .qa-answer-markdown a[href*="/foodscholar/urn:"]:hover, .dark .qa-answer-markdown a[href*="/articles/urn:"]:hover) {
   color: rgb(212 212 216);
 }
 

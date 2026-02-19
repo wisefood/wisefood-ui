@@ -116,12 +116,20 @@
             <div v-if="article.authors && article.authors.length > 0" class="mb-6">
               <div class="flex flex-wrap gap-2">
                 <span
-                  v-for="(author, index) in article.authors"
+                  v-for="(author, index) in visibleAuthors"
                   :key="index"
                   class="px-3 py-1 text-sm rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300"
                 >
                   {{ author }}
                 </span>
+                <button
+                  v-if="hiddenAuthorsCount > 0"
+                  type="button"
+                  class="px-3 py-1 text-sm rounded-full bg-gray-200/70 hover:bg-gray-200 dark:bg-zinc-700/60 dark:hover:bg-zinc-700 text-gray-700 dark:text-gray-200 transition-colors"
+                  @click="showAllAuthors = !showAllAuthors"
+                >
+                  {{ showAllAuthors ? 'Show less' : `+ ${hiddenAuthorsCount} more` }}
+                </button>
               </div>
             </div>
           </div>
@@ -154,6 +162,7 @@
 
             <!-- Abstract Text with Glossary Tooltips -->
             <div
+              ref="abstractContainerEl"
               class="text-gray-700 dark:text-gray-300 leading-relaxed transition-opacity duration-300"
               :class="{ 'opacity-50': isSimplifying }"
             >
@@ -468,7 +477,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useArticles } from '~/composables/useArticles'
 import { formatDoiUrl } from '~/utils/articleHelpers'
@@ -490,9 +499,12 @@ const activeQATab = ref<'user' | 'practitioner' | 'expert'>('user')
 const copied = ref(false)
 const showMoreInfo = ref(false)
 const showAllKeywords = ref(false)
+const showAllAuthors = ref(false)
+const abstractContainerEl = ref<HTMLElement | null>(null)
 
 const keywordLimit = 12
 const infoPrimaryLimit = 5
+const authorLimit = 10
 
 type InfoItem = { label: string, value: string, icon: string }
 
@@ -562,6 +574,33 @@ const annotationConfidenceLabel = computed(() => {
 const semanticScholarUrl = computed(() => {
   const url = article.value?.url
   return meaningfulString(url) ? url : ''
+})
+
+const highlightText = computed(() => {
+  const raw = route.query.hl
+  const value = Array.isArray(raw) ? raw[0] : raw
+  return typeof value === 'string' ? value.trim() : ''
+})
+
+const shouldHighlightAbstract = computed(() => {
+  const raw = route.query.section
+  const value = Array.isArray(raw) ? raw[0] : raw
+  if (!value) return true
+  return String(value).toLowerCase() === 'abstract'
+})
+
+const allAuthors = computed(() => {
+  return Array.isArray(article.value?.authors) ? article.value!.authors : []
+})
+
+const hiddenAuthorsCount = computed(() => {
+  const extra = allAuthors.value.length - authorLimit
+  return Math.max(0, extra)
+})
+
+const visibleAuthors = computed(() => {
+  if (showAllAuthors.value) return allAuthors.value
+  return allAuthors.value.slice(0, authorLimit)
 })
 
 const displayTakeaways = computed(() => {
@@ -672,13 +711,28 @@ const simplifiedAbstract = computed(() => {
 // Abstract with tooltip-enabled glossary terms
 const abstractWithTooltips = computed(() => {
   const abstractText = article.value?.abstract || article.value?.description || ''
-  if (!abstractText || glossaryTerms.value.length === 0) return abstractText
+  if (!abstractText) return ''
 
-  let result = abstractText
+  let result = escapeHtml(abstractText)
+
+  if (shouldHighlightAbstract.value && highlightText.value) {
+    const escapedQuote = escapeHtml(highlightText.value)
+    const pattern = escapeRegex(escapedQuote).replace(/\s+/g, '\\s+')
+    const regex = new RegExp(pattern, 'i')
+    result = replaceOutsideTags(result, regex, '<mark class="highlight-term">$&</mark>')
+  }
+
+  if (glossaryTerms.value.length === 0) return result
+
   for (const term of glossaryTerms.value) {
     const regex = new RegExp(`\\b(${escapeRegex(term.term)})\\b`, 'gi')
-    result = result.replace(regex, `<span class="glossary-term" data-tooltip="${escapeHtml(term.definition)}">$1</span>`)
+    result = replaceOutsideTags(
+      result,
+      regex,
+      `<span class="glossary-term" data-tooltip="${escapeHtml(term.definition)}">$1</span>`
+    )
   }
+
   return result
 })
 
@@ -714,7 +768,23 @@ function escapeRegex(str: string): string {
 }
 
 function escapeHtml(str: string): string {
-  return str.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/'/g, '&#39;')
+}
+
+function replaceOutsideTags(
+  html: string,
+  regex: RegExp,
+  replacer: string | ((substring: string, ...args: any[]) => string)
+): string {
+  const parts = html.split(/(<[^>]+>)/g)
+  return parts
+    .map(part => part.startsWith('<') ? part : part.replace(regex, replacer as any))
+    .join('')
 }
 
 function getSafetyColor(sensitivity: string): string {
@@ -752,6 +822,10 @@ let observer: IntersectionObserver | null = null
 onMounted(async () => {
   await fetchArticle(urn.value)
 
+  if (highlightText.value) {
+    isSimplified.value = false
+  }
+
   // Set initial Q&A tab
   if (availableQATabs.value.length > 0) {
     activeQATab.value = availableQATabs.value[0].key
@@ -778,6 +852,25 @@ onMounted(async () => {
       observer?.observe(el)
     })
   }, 200)
+
+  if (highlightText.value) {
+    setTimeout(() => {
+      const container = abstractContainerEl.value
+      const target = container?.querySelector('.highlight-term') as HTMLElement | null
+      if (!target) return
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 300)
+  }
+})
+
+watch(() => highlightText.value, async (value) => {
+  if (!value) return
+  isSimplified.value = false
+  await nextTick()
+  const container = abstractContainerEl.value
+  const target = container?.querySelector('.highlight-term') as HTMLElement | null
+  if (!target) return
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' })
 })
 
 onUnmounted(() => {
@@ -831,6 +924,14 @@ onUnmounted(() => {
 :deep(.glossary-term:hover::after) {
   opacity: 1;
   visibility: visible;
+}
+
+/* Highlighted citation passage */
+:deep(.highlight-term) {
+  background: rgba(250, 204, 21, 0.35);
+  color: inherit;
+  padding: 0.05em 0.15em;
+  border-radius: 0.25rem;
 }
 
 /* Sparkle animation */
