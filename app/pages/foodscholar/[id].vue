@@ -8,7 +8,7 @@
           class="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
         >
           <UIcon name="i-lucide-arrow-left" class="w-5 h-5" />
-          <span class="text-sm font-medium">Back to Articles</span>
+          <span class="text-sm font-medium">{{ t('foodScholarArticle.backToCatalog') }}</span>
         </NuxtLink>
       </div>
     </div>
@@ -17,7 +17,7 @@
     <div v-if="loading" class="flex justify-center items-center py-24">
       <div class="text-center">
         <div class="w-16 h-16 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p class="text-gray-600 dark:text-gray-400">Loading article...</p>
+        <p class="text-gray-600 dark:text-gray-400">{{ t('foodScholarArticle.loading') }}</p>
       </div>
     </div>
 
@@ -29,7 +29,7 @@
             <UIcon name="i-lucide-alert-circle" class="w-5 h-5 text-red-600 dark:text-red-400" />
           </div>
           <div class="flex-1">
-            <h3 class="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">Failed to load article</h3>
+            <h3 class="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">{{ t('foodScholarArticle.errors.failedToLoad') }}</h3>
             <p class="text-red-700 dark:text-red-300">{{ error }}</p>
           </div>
         </div>
@@ -66,15 +66,15 @@
             <div class="flex flex-wrap items-center gap-4 mb-4 text-sm text-gray-600 dark:text-gray-400">
               <div v-if="displayPopulationGroup" class="flex items-center gap-2">
                 <UIcon name="i-lucide-target" class="w-4 h-4 text-brand-500" />
-                <span><strong>Population:</strong> {{ displayPopulationGroup }}</span>
+                <span><strong>{{ t('foodScholarArticle.labels.population') }}:</strong> {{ displayPopulationGroup }}</span>
               </div>
               <div v-if="displayReaderGroup" class="flex items-center gap-2">
                 <UIcon name="i-lucide-users" class="w-4 h-4 text-brand-500" />
-                <span><strong>Reader group:</strong> {{ displayReaderGroup }}</span>
+                <span><strong>{{ t('foodScholarArticle.labels.readerGroup') }}:</strong> {{ displayReaderGroup }}</span>
               </div>
               <UBadge v-if="annotationConfidenceLabel" color="primary" variant="subtle" class="text-xs">
                 <UIcon name="i-lucide-badge-check" class="w-3 h-3 mr-1" />
-                Confidence {{ annotationConfidenceLabel }}
+                {{ t('foodScholarArticle.labels.confidence', { value: annotationConfidenceLabel }) }}
               </UBadge>
             </div>
 
@@ -128,7 +128,7 @@
                   class="px-3 py-1 text-sm rounded-full bg-gray-200/70 hover:bg-gray-200 dark:bg-zinc-700/60 dark:hover:bg-zinc-700 text-gray-700 dark:text-gray-200 transition-colors"
                   @click="showAllAuthors = !showAllAuthors"
                 >
-                  {{ showAllAuthors ? 'Show less' : `+ ${hiddenAuthorsCount} more` }}
+                  {{ showAllAuthors ? t('foodScholarArticle.common.showLess') : t('foodScholarArticle.authors.showMore', { count: hiddenAuthorsCount }) }}
                 </button>
               </div>
             </div>
@@ -139,7 +139,7 @@
             <div class="flex items-center justify-between mb-4">
               <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <UIcon name="i-lucide-file-text" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
-                Abstract
+                {{ t('foodScholarArticle.sections.abstract') }}
               </h2>
               <!-- Magic Simplify Button -->
               <button
@@ -156,7 +156,7 @@
                   name="i-lucide-sparkles"
                   :class="['w-4 h-4 transition-transform duration-500', { 'animate-sparkle': isSimplifying }]"
                 />
-                {{ isSimplified ? 'Show Original' : 'Simplify' }}
+                {{ isSimplified ? t('foodScholarArticle.actions.showOriginal') : t('foodScholarArticle.actions.simplify') }}
               </button>
             </div>
 
@@ -177,8 +177,8 @@
           <div v-if="displayTakeaways.length > 0" class="scroll-fade-in p-6 rounded-2xl bg-brand-50 dark:bg-brand-900/20 border border-brand-200 dark:border-brand-800" style="--delay: 0.2s">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <UIcon name="i-lucide-lightbulb" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
-              Key Takeaways
-              <span v-if="!article.key_takeaways || article.key_takeaways.length === 0" class="text-xs font-normal text-gray-500 dark:text-gray-400">(AI Generated)</span>
+              {{ t('foodScholarArticle.sections.keyTakeaways') }}
+              <span v-if="!article.key_takeaways || article.key_takeaways.length === 0" class="text-xs font-normal text-gray-500 dark:text-gray-400">({{ t('foodScholarArticle.aiGenerated') }})</span>
             </h2>
             <ul class="space-y-3">
               <li
@@ -196,13 +196,13 @@
           <div v-if="article.extras?.evaluation" class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700" style="--delay: 0.3s">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <UIcon name="i-lucide-gauge" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
-              Study Evaluation
+              {{ t('foodScholarArticle.sections.studyEvaluation') }}
             </h2>
 
             <!-- Scores -->
             <div class="grid grid-cols-2 gap-4 mb-6">
               <div v-if="article.extras.evaluation.actionability_score" class="p-4 rounded-xl bg-gray-50 dark:bg-zinc-700/50">
-                <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">Actionability</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('foodScholarArticle.evaluation.actionability') }}</div>
                 <div class="flex items-center gap-2">
                   <div class="flex gap-1">
                     <div
@@ -222,7 +222,7 @@
                 </div>
               </div>
               <div v-if="article.extras.evaluation.user_value_score" class="p-4 rounded-xl bg-gray-50 dark:bg-zinc-700/50">
-                <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">User Value</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('foodScholarArticle.evaluation.userValue') }}</div>
                 <div class="flex items-center gap-2">
                   <div class="flex gap-1">
                     <div
@@ -270,7 +270,7 @@
           <div v-if="hasQASections" class="scroll-fade-in space-y-4" style="--delay: 0.4s">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <UIcon name="i-lucide-message-circle-question" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
-              Questions & Answers
+              {{ t('foodScholarArticle.sections.qa') }}
             </h2>
 
             <!-- Q&A Tabs -->
@@ -317,33 +317,33 @@
             <div v-if="hasCitationInfo || hasAccessInfo" class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.05s">
               <h3 class="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <UIcon name="i-lucide-bar-chart-3" class="w-5 h-5" />
-                Citations & Access
+                {{ t('foodScholarArticle.metrics.title') }}
               </h3>
 
               <div v-if="hasCitationInfo" class="flex items-center gap-4 mb-5">
                 <RingMetric
                   v-if="article.citation_count !== null && article.citation_count !== undefined"
-                  label="Citations"
+                  :label="t('foodScholarArticle.metrics.citations')"
                   :value="article.citation_count"
-                  tooltip="Total times this paper is cited by other works (Semantic Scholar)."
+                  :tooltip="t('foodScholarArticle.metrics.citationsTooltip')"
                   color-class="text-brand-500"
                   :size="60"
                 />
                 <div class="flex-1 min-w-0 space-y-2 text-sm text-gray-600 dark:text-gray-300">
                   <div v-if="article.influential_citation_count !== null && article.influential_citation_count !== undefined" class="flex items-center justify-between gap-3">
-                    <UTooltip text="Subset of citations that Semantic Scholar marks as influential.">
+                    <UTooltip :text="t('foodScholarArticle.metrics.influentialTooltip')">
                       <span class="inline-flex items-center gap-2 cursor-help">
                         <span class="w-2 h-2 rounded-full bg-purple-500"></span>
-                        Influential
+                        {{ t('foodScholarArticle.metrics.influential') }}
                       </span>
                     </UTooltip>
                     <span class="font-medium tabular-nums">{{ formatNumber(article.influential_citation_count) }}</span>
                   </div>
                   <div v-if="article.reference_count !== null && article.reference_count !== undefined" class="flex items-center justify-between gap-3">
-                    <UTooltip text="Number of references cited within this paper.">
+                    <UTooltip :text="t('foodScholarArticle.metrics.referencesTooltip')">
                       <span class="inline-flex items-center gap-2 cursor-help">
                         <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        References
+                        {{ t('foodScholarArticle.metrics.references') }}
                       </span>
                     </UTooltip>
                     <span class="font-medium tabular-nums">{{ formatNumber(article.reference_count) }}</span>
@@ -358,7 +358,7 @@
                   variant="subtle"
                 >
                   <UIcon :name="article.open_access ? 'i-lucide-unlock' : 'i-lucide-lock'" class="w-3 h-3 mr-1" />
-                  {{ article.open_access ? 'Open Access' : 'Not Open Access' }}
+                  {{ article.open_access ? t('foodScholarArticle.access.open') : t('foodScholarArticle.access.closed') }}
                 </UBadge>
                 <UBadge v-if="meaningfulString(article.license)" variant="outline" class="text-gray-600 dark:text-gray-300">
                   <UIcon name="i-lucide-scale" class="w-3 h-3 mr-1" />
@@ -371,8 +371,8 @@
             <div v-if="displayTags.length > 0" class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.1s">
               <h3 class="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <UIcon name="i-lucide-tags" class="w-5 h-5" />
-                Tags
-                <span v-if="!article.tags || article.tags.length === 0" class="text-xs font-normal text-gray-500 dark:text-gray-400">(AI)</span>
+                {{ t('foodScholarArticle.sections.tags') }}
+                <span v-if="!article.tags || article.tags.length === 0" class="text-xs font-normal text-gray-500 dark:text-gray-400">({{ t('foodScholarArticle.ai') }})</span>
               </h3>
               <div class="flex flex-wrap gap-2">
                 <span
@@ -389,7 +389,7 @@
             <div v-if="displayKeywords.length > 0" class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.15s">
               <h3 class="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <UIcon name="i-lucide-key" class="w-5 h-5" />
-                Keywords
+                {{ t('foodScholarArticle.sections.keywords') }}
               </h3>
               <div class="flex flex-wrap gap-2">
                 <span
@@ -405,7 +405,7 @@
                 class="mt-3 text-xs font-medium text-brand-600 dark:text-brand-400 hover:underline"
                 @click="showAllKeywords = !showAllKeywords"
               >
-                {{ showAllKeywords ? 'Show less' : `Show all (${allKeywords.length})` }}
+                {{ showAllKeywords ? t('foodScholarArticle.common.showLess') : t('foodScholarArticle.keywords.showAll', { count: allKeywords.length }) }}
               </button>
             </div>
 
@@ -413,7 +413,7 @@
             <div v-if="glossaryTerms.length > 0" class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.2s">
               <h3 class="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <UIcon name="i-lucide-book-a" class="w-5 h-5" />
-                Glossary
+                {{ t('foodScholarArticle.sections.glossary') }}
               </h3>
               <div class="space-y-3">
                 <div v-for="term in glossaryTerms" :key="term.term" class="text-sm">
@@ -425,7 +425,7 @@
 
             <!-- Article Info -->
             <div class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.3s">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Article Info</h3>
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-4">{{ t('foodScholarArticle.sections.articleInfo') }}</h3>
               <div class="space-y-3 text-sm text-gray-600 dark:text-gray-400">
                 <div v-for="item in visibleInfoItems" :key="item.label" class="flex items-start gap-2">
                   <UIcon :name="item.icon" class="w-4 h-4 mt-0.5 shrink-0" />
@@ -440,20 +440,20 @@
                   class="pt-1 text-xs font-medium text-brand-600 dark:text-brand-400 hover:underline"
                   @click="showMoreInfo = !showMoreInfo"
                 >
-                  {{ showMoreInfo ? 'Hide details' : `Show more (${hiddenInfoCount})` }}
+                  {{ showMoreInfo ? t('foodScholarArticle.actions.hideDetails') : t('foodScholarArticle.actions.showMore', { count: hiddenInfoCount }) }}
                 </button>
               </div>
             </div>
 
             <!-- Share -->
             <div class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.4s">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Share Article</h3>
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-4">{{ t('foodScholarArticle.sections.share') }}</h3>
               <div class="flex gap-2">
                 <UButton variant="outline" size="sm" icon="i-lucide-link" class="flex-1 cursor-pointer" @click="copyLink">
-                  {{ copied ? 'Copied!' : 'Copy Link' }}
+                  {{ copied ? t('foodScholarArticle.actions.copied') : t('foodScholarArticle.actions.copyLink') }}
                 </UButton>
                 <UButton variant="outline" size="sm" icon="i-lucide-bookmark" class="cursor-pointer">
-                  Save
+                  {{ t('foodScholarArticle.actions.save') }}
                 </UButton>
               </div>
             </div>
@@ -466,10 +466,10 @@
     <div v-else class="flex items-center justify-center py-20">
       <div class="text-center">
         <UIcon name="i-lucide-file-question" class="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Article Not Found</h2>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">The article you're looking for doesn't exist.</p>
+        <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">{{ t('foodScholarArticle.notFound.title') }}</h2>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">{{ t('foodScholarArticle.notFound.subtitle') }}</p>
         <UButton to="/foodscholar/catalog" color="primary">
-          Back to Articles
+          {{ t('foodScholarArticle.backToCatalog') }}
         </UButton>
       </div>
     </div>
@@ -479,6 +479,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useArticles } from '~/composables/useArticles'
 import { formatDoiUrl } from '~/utils/articleHelpers'
 import type { GlossaryTerm, QAItem } from '~/services/articlesApi'
@@ -486,6 +487,8 @@ import type { GlossaryTerm, QAItem } from '~/services/articlesApi'
 definePageMeta({
   middleware: 'auth'
 })
+
+const { t } = useI18n()
 
 const route = useRoute()
 const urn = computed(() => route.params.id as string)
@@ -538,7 +541,7 @@ function pickFirstMeaningful(...candidates: Array<unknown>): string | null {
 // Computed properties
 const displayCategory = computed(() => {
   if (!article.value) return ''
-  return article.value.category || article.value.ai_category || 'Uncategorized'
+  return article.value.category || article.value.ai_category || t('foodScholarHome.categories.uncategorized')
 })
 
 const displayTopic = computed(() => {
@@ -548,7 +551,7 @@ const displayTopic = computed(() => {
 
 const topicsTooltip = computed(() => {
   const topics = cleanStringList(article.value?.topics)
-  return `Topics: ${topics.join(', ')}`
+  return t('foodScholarArticle.topicsTooltip', { topics: topics.join(', ') })
 })
 
 const displayStudyType = computed(() => {
@@ -673,21 +676,21 @@ const allInfoItems = computed<InfoItem[]>(() => {
     }
   }
 
-  if (meaningfulString(a.language)) push('Language', 'i-lucide-globe', a.language.toUpperCase())
-  push('Region', 'i-lucide-map-pin', a.region)
-  push('Age group', 'i-lucide-baby', a.age_group)
+  if (meaningfulString(a.language)) push(t('foodScholarArticle.info.language'), 'i-lucide-globe', a.language.toUpperCase())
+  push(t('foodScholarArticle.info.region'), 'i-lucide-map-pin', a.region)
+  push(t('foodScholarArticle.info.ageGroup'), 'i-lucide-baby', a.age_group)
 
   const geoCountry = pickFirstMeaningful(a.geographic_context?.country_or_region)
   const geoIncome = pickFirstMeaningful(a.geographic_context?.income_setting)
   const geo = [geoCountry, geoIncome].filter(Boolean).join(' · ')
-  if (geo) push('Geographic context', 'i-lucide-map', geo)
+  if (geo) push(t('foodScholarArticle.info.geographicContext'), 'i-lucide-map', geo)
 
-  push('Biological model', 'i-lucide-dna', a.biological_model)
+  push(t('foodScholarArticle.info.biologicalModel'), 'i-lucide-dna', a.biological_model)
 
   const hardExclusions = cleanStringList(a.hard_exclusion_flags).filter(v => v.toLowerCase() !== 'none')
-  if (hardExclusions.length > 0) push('Exclusion flags', 'i-lucide-shield-alert', hardExclusions)
+  if (hardExclusions.length > 0) push(t('foodScholarArticle.info.exclusionFlags'), 'i-lucide-shield-alert', hardExclusions)
 
-  push('External ID', 'i-lucide-database', a.external_id)
+  push(t('foodScholarArticle.info.externalId'), 'i-lucide-database', a.external_id)
 
   return items
 })
@@ -745,9 +748,9 @@ const hasQASections = computed(() => {
 const availableQATabs = computed(() => {
   const tabs: { key: 'user' | 'practitioner' | 'expert', label: string }[] = []
   const annotations = article.value?.extras?.annotations
-  if (annotations?.user_qa?.length) tabs.push({ key: 'user', label: 'For You' })
-  if (annotations?.practitioner_qa?.length) tabs.push({ key: 'practitioner', label: 'For Practitioners' })
-  if (annotations?.expert_qa?.length) tabs.push({ key: 'expert', label: 'For Experts' })
+  if (annotations?.user_qa?.length) tabs.push({ key: 'user', label: t('foodScholarArticle.qaTabs.forYou') })
+  if (annotations?.practitioner_qa?.length) tabs.push({ key: 'practitioner', label: t('foodScholarArticle.qaTabs.forPractitioners') })
+  if (annotations?.expert_qa?.length) tabs.push({ key: 'expert', label: t('foodScholarArticle.qaTabs.forExperts') })
   return tabs
 })
 
@@ -809,11 +812,13 @@ async function copyLink() {
 
 // Set page metadata
 useHead({
-  title: computed(() => article.value ? `${article.value.title} - FoodScholar` : 'Article - FoodScholar')
+  title: computed(() => article.value
+    ? t('foodScholarArticle.meta.title', { title: article.value.title })
+    : t('foodScholarArticle.meta.fallbackTitle'))
 })
 
 useSeoMeta({
-  description: computed(() => article.value?.abstract || article.value?.description || 'Learn about nutrition and sustainable eating')
+  description: computed(() => article.value?.abstract || article.value?.description || t('foodScholarArticle.meta.fallbackDescription'))
 })
 
 // Intersection Observer for animations

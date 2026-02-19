@@ -644,6 +644,162 @@
       }
     }
   },
+  "foodScholarCatalog": {
+    "meta": {
+      "title": "Cikk-katalógus - FoodScholar",
+      "description": "Haladó keresés és szűrés a táplálkozástudományi szakirodalomban"
+    },
+    "header": {
+      "backToFoodScholar": "Vissza a FoodScholarhoz",
+      "brandLead": "Oktatási tartalom és táplálkozási betekintések a fenntartható étkezésről",
+      "sectionTitle": "Cikk-katalógus",
+      "sectionSubtitle": "Haladó keresés és szűrés a táplálkozástudományi szakirodalomban"
+    },
+    "loading": "Cikkek betöltése...",
+    "ai": "MI",
+    "errors": {
+      "failedToLoad": "Nem sikerült betölteni a cikkeket"
+    },
+    "actions": {
+      "tryAgain": "Próbáld újra",
+      "resetAllFilters": "Összes szűrő törlése",
+      "resetFilters": "Szűrők törlése"
+    },
+    "filters": {
+      "show": "Szűrők megjelenítése",
+      "hide": "Szűrők elrejtése",
+      "category": "Kategória",
+      "venue": "Folyóirat",
+      "publicationYear": "Megjelenés éve",
+      "tags": "Címkék",
+      "showLess": "Kevesebb",
+      "showMore": "{count} további"
+    },
+    "search": {
+      "title": "Természetes nyelvű keresés",
+      "subtitle": "Keresés természetes nyelven",
+      "placeholder": "Próbáld: \"cikkek a bélrendszer egészségéről és probiotikumokról\" vagy \"fenntartható fehérjeforrások\""
+    },
+    "examples": {
+      "omega3": "mi az omega-3",
+      "fermentedFoods": "fermentált ételek példái",
+      "vitaminD": "D-vitaminban gazdag ételek"
+    },
+    "summary": {
+      "loading": "MI-összefoglaló készítése...",
+      "errorTitle": "Nem sikerült összefoglalót készíteni",
+      "defaultError": "Nem sikerült összefoglalót készíteni",
+      "title": "MI-összefoglaló",
+      "articlesBadge": "{count} cikk",
+      "clickToReadMore": "Kattints a továbbiakért",
+      "relatedTopics": "Kapcsolódó témák",
+      "viewArticle": "Cikk megnyitása"
+    },
+    "sort": {
+      "label": "Rendezés:",
+      "options": {
+        "relevance": "Relevancia",
+        "mostRecent": "Legfrissebb",
+        "pubYearNewest": "Megjelenés éve (újabb)",
+        "pubYearOldest": "Megjelenés éve (régebbi)",
+        "titleAsc": "Cím (A–Z)"
+      }
+    },
+    "activeFilters": "Aktív szűrők:",
+    "empty": {
+      "title": "Nincs találat",
+      "subtitle": "Próbáld módosítani a szűrőket vagy a keresést"
+    },
+    "card": {
+      "readArticle": "Cikk elolvasása",
+      "unknownAuthor": "Ismeretlen szerző",
+      "and": "és"
+    }
+  },
+  "foodScholarArticle": {
+    "meta": {
+      "title": "{title} - FoodScholar",
+      "fallbackTitle": "Cikk - FoodScholar",
+      "fallbackDescription": "Ismerj meg többet a táplálkozásról és a fenntartható étkezésről"
+    },
+    "backToCatalog": "Vissza a cikkekhez",
+    "loading": "Cikk betöltése...",
+    "errors": {
+      "failedToLoad": "Nem sikerült betölteni a cikket"
+    },
+    "labels": {
+      "population": "Populáció",
+      "readerGroup": "Olvasói csoport",
+      "confidence": "Bizalom {value}"
+    },
+    "topicsTooltip": "Témák: {topics}",
+    "ai": "MI",
+    "aiGenerated": "MI által generált",
+    "common": {
+      "showLess": "Kevesebb"
+    },
+    "authors": {
+      "showMore": "+ {count} további"
+    },
+    "sections": {
+      "abstract": "Összefoglaló",
+      "keyTakeaways": "Fő tanulságok",
+      "studyEvaluation": "Tanulmány értékelése",
+      "qa": "Kérdések és válaszok",
+      "tags": "Címkék",
+      "keywords": "Kulcsszavak",
+      "glossary": "Fogalomtár",
+      "articleInfo": "Cikk adatai",
+      "share": "Cikk megosztása"
+    },
+    "actions": {
+      "simplify": "Egyszerűsítés",
+      "showOriginal": "Eredeti megjelenítése",
+      "hideDetails": "Részletek elrejtése",
+      "showMore": "Továbbiak ({count})",
+      "copyLink": "Link másolása",
+      "copied": "Másolva!",
+      "save": "Mentés"
+    },
+    "evaluation": {
+      "actionability": "Gyakorlati hasznosság",
+      "userValue": "Felhasználói érték"
+    },
+    "qaTabs": {
+      "forYou": "Neked",
+      "forPractitioners": "Szakembereknek",
+      "forExperts": "Szakértőknek"
+    },
+    "metrics": {
+      "title": "Idézetek és hozzáférés",
+      "citations": "Idézetek",
+      "citationsTooltip": "Hányszor idézik ezt a tanulmányt más munkák (Semantic Scholar).",
+      "influential": "Befolyásos",
+      "influentialTooltip": "Az idézetek azon része, amelyet a Semantic Scholar befolyásosnak jelöl.",
+      "references": "Hivatkozások",
+      "referencesTooltip": "A tanulmányban hivatkozott források száma."
+    },
+    "access": {
+      "open": "Nyílt hozzáférés",
+      "closed": "Nem nyílt hozzáférés"
+    },
+    "keywords": {
+      "showAll": "Összes megjelenítése ({count})"
+    },
+    "info": {
+      "language": "Nyelv",
+      "region": "Régió",
+      "ageGroup": "Korosztály",
+      "geographicContext": "Földrajzi kontextus",
+      "biologicalModel": "Biológiai modell",
+      "exclusionFlags": "Kizárási jelzések",
+      "externalId": "Külső azonosító"
+    },
+    "notFound": {
+      "title": "A cikk nem található",
+      "subtitle": "A keresett cikk nem létezik."
+    }
+  },
   "myProfile": {
     "pageTitle": "Profilom - WiseFood",
     "loading": "Profil betöltése...",

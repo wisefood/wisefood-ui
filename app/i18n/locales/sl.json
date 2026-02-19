@@ -644,6 +644,162 @@
       }
     }
   },
+  "foodScholarCatalog": {
+    "meta": {
+      "title": "Katalog člankov - FoodScholar",
+      "description": "Napredno iskanje in filtriranje znanstvene literature o prehrani"
+    },
+    "header": {
+      "backToFoodScholar": "Nazaj na FoodScholar",
+      "brandLead": "Izobraževalne vsebine in prehranski vpogledi o trajnostnem prehranjevanju",
+      "sectionTitle": "Katalog člankov",
+      "sectionSubtitle": "Napredno iskanje in filtriranje znanstvene literature o prehrani"
+    },
+    "loading": "Nalaganje člankov...",
+    "ai": "AI",
+    "errors": {
+      "failedToLoad": "Nalaganje člankov ni uspelo"
+    },
+    "actions": {
+      "tryAgain": "Poskusi znova",
+      "resetAllFilters": "Ponastavi vse filtre",
+      "resetFilters": "Ponastavi filtre"
+    },
+    "filters": {
+      "show": "Prikaži filtre",
+      "hide": "Skrij filtre",
+      "category": "Kategorija",
+      "venue": "Revija",
+      "publicationYear": "Leto objave",
+      "tags": "Oznake",
+      "showLess": "Prikaži manj",
+      "showMore": "Prikaži še {count}"
+    },
+    "search": {
+      "title": "Iskanje v naravnem jeziku",
+      "subtitle": "Išči članke v naravnem jeziku",
+      "placeholder": "Poskusi \"članki o zdravju črevesja in probiotikih\" ali \"trajnostni viri beljakovin\""
+    },
+    "examples": {
+      "omega3": "kaj je omega-3",
+      "fermentedFoods": "primeri fermentiranih živil",
+      "vitaminD": "živila z veliko vitamina D"
+    },
+    "summary": {
+      "loading": "Ustvarjanje AI povzetka...",
+      "errorTitle": "Ustvarjanje povzetka ni uspelo",
+      "defaultError": "Ustvarjanje povzetka ni uspelo",
+      "title": "AI povzetek",
+      "articlesBadge": "{count} člankov",
+      "clickToReadMore": "Klikni za več",
+      "relatedTopics": "Sorodne teme za raziskovanje",
+      "viewArticle": "Oglej si članek"
+    },
+    "sort": {
+      "label": "Razvrsti po:",
+      "options": {
+        "relevance": "Relevantnost",
+        "mostRecent": "Najnovejše",
+        "pubYearNewest": "Leto objave (novejše)",
+        "pubYearOldest": "Leto objave (starejše)",
+        "titleAsc": "Naslov (A–Z)"
+      }
+    },
+    "activeFilters": "Aktivni filtri:",
+    "empty": {
+      "title": "Ni najdenih člankov",
+      "subtitle": "Poskusi prilagoditi filtre ali iskalno poizvedbo"
+    },
+    "card": {
+      "readArticle": "Preberi članek",
+      "unknownAuthor": "Neznani avtor",
+      "and": "in"
+    }
+  },
+  "foodScholarArticle": {
+    "meta": {
+      "title": "{title} - FoodScholar",
+      "fallbackTitle": "Članek - FoodScholar",
+      "fallbackDescription": "Spoznaj prehrano in trajnostno prehranjevanje"
+    },
+    "backToCatalog": "Nazaj na članke",
+    "loading": "Nalaganje članka...",
+    "errors": {
+      "failedToLoad": "Nalaganje članka ni uspelo"
+    },
+    "labels": {
+      "population": "Populacija",
+      "readerGroup": "Skupina bralcev",
+      "confidence": "Zaupanje {value}"
+    },
+    "topicsTooltip": "Teme: {topics}",
+    "ai": "AI",
+    "aiGenerated": "Ustvarjeno z AI",
+    "common": {
+      "showLess": "Prikaži manj"
+    },
+    "authors": {
+      "showMore": "+ {count} več"
+    },
+    "sections": {
+      "abstract": "Povzetek",
+      "keyTakeaways": "Ključne ugotovitve",
+      "studyEvaluation": "Ocena študije",
+      "qa": "Vprašanja in odgovori",
+      "tags": "Oznake",
+      "keywords": "Ključne besede",
+      "glossary": "Pojmovnik",
+      "articleInfo": "Informacije o članku",
+      "share": "Deli članek"
+    },
+    "actions": {
+      "simplify": "Poenostavi",
+      "showOriginal": "Prikaži izvirnik",
+      "hideDetails": "Skrij podrobnosti",
+      "showMore": "Prikaži več ({count})",
+      "copyLink": "Kopiraj povezavo",
+      "copied": "Kopirano!",
+      "save": "Shrani"
+    },
+    "evaluation": {
+      "actionability": "Uporabnost",
+      "userValue": "Vrednost za uporabnika"
+    },
+    "qaTabs": {
+      "forYou": "Zate",
+      "forPractitioners": "Za strokovnjake",
+      "forExperts": "Za eksperte"
+    },
+    "metrics": {
+      "title": "Citati in dostop",
+      "citations": "Citati",
+      "citationsTooltip": "Skupno število citatov (Semantic Scholar).",
+      "influential": "Vplivni",
+      "influentialTooltip": "Podmnožica citatov, ki jih Semantic Scholar označi kot vplivne.",
+      "references": "Reference",
+      "referencesTooltip": "Število referenc, navedenih v članku."
+    },
+    "access": {
+      "open": "Odprt dostop",
+      "closed": "Ni odprtega dostopa"
+    },
+    "keywords": {
+      "showAll": "Prikaži vse ({count})"
+    },
+    "info": {
+      "language": "Jezik",
+      "region": "Regija",
+      "ageGroup": "Starostna skupina",
+      "geographicContext": "Geografski kontekst",
+      "biologicalModel": "Biološki model",
+      "exclusionFlags": "Oznake izključitve",
+      "externalId": "Zunanji ID"
+    },
+    "notFound": {
+      "title": "Članek ni najden",
+      "subtitle": "Članek, ki ga iščeš, ne obstaja."
+    }
+  },
   "myProfile": {
     "pageTitle": "Moj profil - WiseFood",
     "loading": "Nalaganje profila...",

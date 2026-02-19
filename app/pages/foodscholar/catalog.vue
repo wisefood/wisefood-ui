@@ -4,12 +4,12 @@
     <FoodscholarMicroHeader
       :show-back="true"
       back-to="/foodscholar"
-      back-label="Back to FoodScholar"
+      :back-label="t('foodScholarCatalog.header.backToFoodScholar')"
       back-icon="i-lucide-arrow-left"
       brand-title="FoodScholar"
-      brand-lead="Educational content and nutritional insights about sustainable eating"
-      section-title="Article Catalog"
-      section-subtitle="Advanced search and filtering for nutrition science literature"
+      :brand-lead="t('foodScholarCatalog.header.brandLead')"
+      :section-title="t('foodScholarCatalog.header.sectionTitle')"
+      :section-subtitle="t('foodScholarCatalog.header.sectionSubtitle')"
     />
 
     <!-- Main Content -->
@@ -18,7 +18,7 @@
       <div v-if="loading && (!articles || articles.length === 0)" class="flex justify-center items-center py-24">
         <div class="text-center">
           <div class="w-16 h-16 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p class="text-gray-600 dark:text-gray-400">Loading articles...</p>
+          <p class="text-gray-600 dark:text-gray-400">{{ t('foodScholarCatalog.loading') }}</p>
         </div>
       </div>
 
@@ -30,13 +30,13 @@
               <UIcon name="i-lucide-alert-circle" class="w-5 h-5 text-red-600 dark:text-red-400" />
             </div>
             <div class="flex-1">
-              <h3 class="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">Failed to load articles</h3>
+              <h3 class="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">{{ t('foodScholarCatalog.errors.failedToLoad') }}</h3>
               <p class="text-red-700 dark:text-red-300 mb-4">{{ error }}</p>
               <button
                 @click="loadArticles"
                 class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
               >
-                Try Again
+                {{ t('foodScholarCatalog.actions.tryAgain') }}
               </button>
             </div>
           </div>
@@ -64,7 +64,7 @@
               <div v-if="categoryFacets.length > 0">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <UIcon name="i-lucide-folder" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
-                  Category
+                  {{ t('foodScholarCatalog.filters.category') }}
                 </h3>
                 <div>
                   <div :class="['space-y-3', showAllCategories && categoryFacets.length > initialFilterCount ? 'max-h-80 overflow-y-auto pr-2' : '']">
@@ -92,7 +92,7 @@
                     @click="showAllCategories = !showAllCategories"
                     class="text-sm text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium transition-colors flex items-center gap-1 mt-3"
                   >
-                    {{ showAllCategories ? 'Show Less' : `Show ${categoryFacets.length - initialFilterCount} More` }}
+                    {{ showAllCategories ? t('foodScholarCatalog.filters.showLess') : t('foodScholarCatalog.filters.showMore', { count: categoryFacets.length - initialFilterCount }) }}
                     <UIcon :name="showAllCategories ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-4 h-4" />
                   </button>
                 </div>
@@ -102,7 +102,7 @@
               <div v-if="venueFacets.length > 0">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <UIcon name="i-lucide-book-open" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
-                  Venue
+                  {{ t('foodScholarCatalog.filters.venue') }}
                 </h3>
                 <div>
                   <div :class="['space-y-3', showAllVenues && venueFacets.length > initialFilterCount ? 'max-h-80 overflow-y-auto pr-2' : '']">
@@ -130,7 +130,7 @@
                     @click="showAllVenues = !showAllVenues"
                     class="text-sm text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium transition-colors flex items-center gap-1 mt-3"
                   >
-                    {{ showAllVenues ? 'Show Less' : `Show ${venueFacets.length - initialFilterCount} More` }}
+                    {{ showAllVenues ? t('foodScholarCatalog.filters.showLess') : t('foodScholarCatalog.filters.showMore', { count: venueFacets.length - initialFilterCount }) }}
                     <UIcon :name="showAllVenues ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-4 h-4" />
                   </button>
                 </div>
@@ -140,7 +140,7 @@
               <div v-if="yearFacets.length > 0">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <UIcon name="i-lucide-calendar" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
-                  Publication Year
+                  {{ t('foodScholarCatalog.filters.publicationYear') }}
                 </h3>
                 <div>
                   <div :class="['space-y-3', showAllYears && yearFacets.length > initialFilterCount ? 'max-h-80 overflow-y-auto pr-2' : '']">
@@ -168,7 +168,7 @@
                     @click="showAllYears = !showAllYears"
                     class="text-sm text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium transition-colors flex items-center gap-1 mt-3"
                   >
-                    {{ showAllYears ? 'Show Less' : `Show ${yearFacets.length - initialFilterCount} More` }}
+                    {{ showAllYears ? t('foodScholarCatalog.filters.showLess') : t('foodScholarCatalog.filters.showMore', { count: yearFacets.length - initialFilterCount }) }}
                     <UIcon :name="showAllYears ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-4 h-4" />
                   </button>
                 </div>
@@ -178,7 +178,7 @@
               <div v-if="tagFacets.length > 0">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <UIcon name="i-lucide-tags" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
-                  Tags
+                  {{ t('foodScholarCatalog.filters.tags') }}
                 </h3>
                 <div>
                   <div :class="['space-y-3', showAllTags && tagFacets.length > initialFilterCount ? 'max-h-80 overflow-y-auto pr-2' : '']">
@@ -206,7 +206,7 @@
                     @click="showAllTags = !showAllTags"
                     class="text-sm text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 font-medium transition-colors flex items-center gap-1 mt-3"
                   >
-                    {{ showAllTags ? 'Show Less' : `Show ${tagFacets.length - initialFilterCount} More` }}
+                    {{ showAllTags ? t('foodScholarCatalog.filters.showLess') : t('foodScholarCatalog.filters.showMore', { count: tagFacets.length - initialFilterCount }) }}
                     <UIcon :name="showAllTags ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-4 h-4" />
                   </button>
                 </div>
@@ -218,7 +218,7 @@
                 @click="resetFilters"
                 class="w-full px-4 py-3 text-base font-medium text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition-colors shadow-sm"
               >
-                Reset All Filters
+                {{ t('foodScholarCatalog.actions.resetAllFilters') }}
               </button>
             </div>
           </div>
@@ -233,7 +233,7 @@
             class="mb-4 px-4 py-2 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
           >
             <UIcon :name="showFilters ? 'i-lucide-panel-left-close' : 'i-lucide-panel-left-open'" class="w-4 h-4" />
-            {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+            {{ showFilters ? t('foodScholarCatalog.filters.hide') : t('foodScholarCatalog.filters.show') }}
           </button>
 
           <!-- Natural Language Search -->
@@ -243,15 +243,15 @@
                 <UIcon name="i-lucide-search" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
               </div>
               <div>
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Natural Language Search</h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Search articles using natural language</p>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('foodScholarCatalog.search.title') }}</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('foodScholarCatalog.search.subtitle') }}</p>
               </div>
             </div>
             <div>
               <FoodscholarNLInput
                 v-model="nlQuery"
                 @enter="performNLSearch"
-                placeholder='Try "articles about gut health and probiotics" or "sustainable protein sources"'
+                :placeholder="t('foodScholarCatalog.search.placeholder')"
               >
                 <template #right>
                   <button
@@ -285,7 +285,7 @@
             <div v-if="summaryLoading" class="p-6">
               <div class="flex items-center gap-3">
                 <div class="w-5 h-5 border-2 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Generating AI summary...</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ t('foodScholarCatalog.summary.loading') }}</p>
               </div>
             </div>
 
@@ -294,7 +294,7 @@
               <div class="flex items-start gap-3">
                 <UIcon name="i-lucide-alert-circle" class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
                 <div>
-                  <p class="text-sm font-medium text-red-900 dark:text-red-100">Failed to generate summary</p>
+                  <p class="text-sm font-medium text-red-900 dark:text-red-100">{{ t('foodScholarCatalog.summary.errorTitle') }}</p>
                   <p class="text-sm text-red-700 dark:text-red-300 mt-1">{{ summaryError }}</p>
                 </div>
               </div>
@@ -312,9 +312,9 @@
                 </div>
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-2 mb-2">
-                    <h3 class="text-base font-semibold text-gray-900 dark:text-white">AI Summary</h3>
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ t('foodScholarCatalog.summary.title') }}</h3>
                     <span class="text-xs px-2 py-0.5 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300">
-                      {{ searchSummary.total_articles_analyzed }} articles
+                      {{ t('foodScholarCatalog.summary.articlesBadge', { count: searchSummary.total_articles_analyzed }) }}
                     </span>
                   </div>
                   <div
@@ -322,7 +322,7 @@
                     v-html="renderMarkdown(searchSummary.summary)"
                   ></div>
                   <div v-if="!summaryExpanded && searchSummary.summary.length > 200" class="mt-2">
-                    <span class="text-sm text-brand-600 dark:text-brand-400 font-medium">Click to read more</span>
+                    <span class="text-sm text-brand-600 dark:text-brand-400 font-medium">{{ t('foodScholarCatalog.summary.clickToReadMore') }}</span>
                   </div>
                 </div>
                 <UIcon
@@ -395,7 +395,7 @@
                 <div v-if="searchSummary.follow_up_suggestions && searchSummary.follow_up_suggestions.length > 0">
                   <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                     <UIcon name="i-lucide-lightbulb" class="w-4 h-4 text-brand-600 dark:text-brand-400" />
-                    Related Topics to Explore
+                    {{ t('foodScholarCatalog.summary.relatedTopics') }}
                   </h4>
                   <div class="flex flex-wrap gap-2">
                     <button
@@ -415,23 +415,23 @@
           <!-- Sorting Options -->
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
-              <label class="text-sm text-gray-600 dark:text-gray-400">Sort by:</label>
+              <label class="text-sm text-gray-600 dark:text-gray-400">{{ t('foodScholarCatalog.sort.label') }}</label>
               <select
                 v-model="sortBy"
                 class="px-3 py-2 rounded-lg border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
-                <option value="score desc">Relevance</option>
-                <option value="created_at desc">Most Recent</option>
-                <option value="publication_year desc">Publication Year (Newest)</option>
-                <option value="publication_year asc">Publication Year (Oldest)</option>
-                <option value="title asc">Title (A-Z)</option>
+                <option value="score desc">{{ t('foodScholarCatalog.sort.options.relevance') }}</option>
+                <option value="created_at desc">{{ t('foodScholarCatalog.sort.options.mostRecent') }}</option>
+                <option value="publication_year desc">{{ t('foodScholarCatalog.sort.options.pubYearNewest') }}</option>
+                <option value="publication_year asc">{{ t('foodScholarCatalog.sort.options.pubYearOldest') }}</option>
+                <option value="title asc">{{ t('foodScholarCatalog.sort.options.titleAsc') }}</option>
               </select>
             </div>
           </div>
 
           <!-- Active Filters Display -->
           <div v-if="hasActiveFilters" class="mb-4 flex flex-wrap gap-2">
-            <span class="text-xs text-gray-600 dark:text-gray-400 self-center">Active filters:</span>
+            <span class="text-xs text-gray-600 dark:text-gray-400 self-center">{{ t('foodScholarCatalog.activeFilters') }}</span>
             <button
               v-for="category in selectedCategories"
               :key="`cat-${category}`"
@@ -500,13 +500,13 @@
             <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center mx-auto mb-4">
               <UIcon name="i-lucide-search-x" class="w-8 h-8 text-gray-400" />
             </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">No articles found</h3>
-            <p class="text-gray-600 dark:text-gray-400 mb-4">Try adjusting your filters or search query</p>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">{{ t('foodScholarCatalog.empty.title') }}</h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">{{ t('foodScholarCatalog.empty.subtitle') }}</p>
             <button
               @click="resetFilters"
               class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition-colors"
             >
-              Reset Filters
+              {{ t('foodScholarCatalog.actions.resetFilters') }}
             </button>
           </div>
         </main>
@@ -517,6 +517,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useArticles } from '~/composables/useArticles'
 import { useAuthStore } from '~/stores/auth'
 import type { Article } from '~/services/articlesApi'
@@ -524,16 +525,18 @@ import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 
+const { t } = useI18n()
+
 definePageMeta({
   middleware: ['auth', 'profile']
 })
 
 useHead({
-  title: 'Article Catalog - FoodScholar'
+  title: computed(() => t('foodScholarCatalog.meta.title'))
 })
 
 useSeoMeta({
-  description: 'Advanced search and filtering for nutrition science literature'
+  description: computed(() => t('foodScholarCatalog.meta.description'))
 })
 
 // Composable
@@ -581,21 +584,23 @@ interface AnnotatedFacet {
   label?: string // Optional label for display (e.g., "Clinical Nutrition (AI)")
 }
 
-const exampleQueries = [
-  "what is omega-3",
-  "examples of fermented foods",
-  "foods high in vitamin D",
-]
+const exampleQueries = computed(() => ([
+  t('foodScholarCatalog.examples.omega3'),
+  t('foodScholarCatalog.examples.fermentedFoods'),
+  t('foodScholarCatalog.examples.vitaminD'),
+]))
 
 // Markdown rendering function with sanitization
 const renderMarkdown = (text: string): string => {
   if (!text) return ''
 
+  const viewArticleLabel = t('foodScholarCatalog.summary.viewArticle')
+
   // Pre-process: Convert URN references to clickable links
   // Matches patterns like: (urn:article:some-article-id) or *text* (urn:article:some-article-id)
   let processedText = text.replace(
     /\(urn:article:([a-zA-Z0-9\-]+)\)/g,
-    '([View article](/foodscholar/$1))'
+    `([${viewArticleLabel}](/foodscholar/$1))`
   )
 
   // Also handle inline URN references without parentheses
@@ -623,7 +628,7 @@ const displayArticles = computed(() => {
     ...article,
     id: article.id,
     urn: article.urn,
-    category: article.category || article.ai_category || 'Uncategorized',
+    category: article.category || article.ai_category || t('foodScholarHome.categories.uncategorized'),
     ai_category: article.ai_category,
     excerpt: article.abstract || article.description || '',
     authors: article.authors || [],
@@ -647,7 +652,7 @@ const categoryFacets = computed((): AnnotatedFacet[] => {
     value: f.value,
     count: f.count,
     field: 'ai_category',
-    label: `${f.value} (AI)`
+    label: `${f.value} (${t('foodScholarCatalog.ai')})`
   }))
 
   // Merge and deduplicate by value, prioritizing human-reviewed
@@ -692,7 +697,7 @@ const tagFacets = computed((): AnnotatedFacet[] => {
     value: f.value,
     count: f.count,
     field: 'ai_tags',
-    label: `${f.value} (AI)`
+    label: `${f.value} (${t('foodScholarCatalog.ai')})`
   }))
 
   // Merge and deduplicate by value, prioritizing human-reviewed
@@ -873,7 +878,7 @@ const fetchSearchSummary = async (query: string, results: Article[]) => {
     summaryExpanded.value = false // Start collapsed
   } catch (err: any) {
     console.error('Error fetching search summary:', err)
-    summaryError.value = err.message || 'Failed to generate summary'
+    summaryError.value = err.message || t('foodScholarCatalog.summary.defaultError')
     searchSummary.value = null
   } finally {
     summaryLoading.value = false

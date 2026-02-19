@@ -644,6 +644,162 @@
       }
     }
   },
+  "foodScholarCatalog": {
+    "meta": {
+      "title": "Article Catalog - FoodScholar",
+      "description": "Advanced search and filtering for nutrition science literature"
+    },
+    "header": {
+      "backToFoodScholar": "Back to FoodScholar",
+      "brandLead": "Educational content and nutritional insights about sustainable eating",
+      "sectionTitle": "Article Catalog",
+      "sectionSubtitle": "Advanced search and filtering for nutrition science literature"
+    },
+    "loading": "Loading articles...",
+    "ai": "AI",
+    "errors": {
+      "failedToLoad": "Failed to load articles"
+    },
+    "actions": {
+      "tryAgain": "Try Again",
+      "resetAllFilters": "Reset All Filters",
+      "resetFilters": "Reset Filters"
+    },
+    "filters": {
+      "show": "Show Filters",
+      "hide": "Hide Filters",
+      "category": "Category",
+      "venue": "Venue",
+      "publicationYear": "Publication Year",
+      "tags": "Tags",
+      "showLess": "Show Less",
+      "showMore": "Show {count} More"
+    },
+    "search": {
+      "title": "Natural Language Search",
+      "subtitle": "Search articles using natural language",
+      "placeholder": "Try \"articles about gut health and probiotics\" or \"sustainable protein sources\""
+    },
+    "examples": {
+      "omega3": "what is omega-3",
+      "fermentedFoods": "examples of fermented foods",
+      "vitaminD": "foods high in vitamin D"
+    },
+    "summary": {
+      "loading": "Generating AI summary...",
+      "errorTitle": "Failed to generate summary",
+      "defaultError": "Failed to generate summary",
+      "title": "AI Summary",
+      "articlesBadge": "{count} articles",
+      "clickToReadMore": "Click to read more",
+      "relatedTopics": "Related Topics to Explore",
+      "viewArticle": "View article"
+    },
+    "sort": {
+      "label": "Sort by:",
+      "options": {
+        "relevance": "Relevance",
+        "mostRecent": "Most Recent",
+        "pubYearNewest": "Publication Year (Newest)",
+        "pubYearOldest": "Publication Year (Oldest)",
+        "titleAsc": "Title (A-Z)"
+      }
+    },
+    "activeFilters": "Active filters:",
+    "empty": {
+      "title": "No articles found",
+      "subtitle": "Try adjusting your filters or search query"
+    },
+    "card": {
+      "readArticle": "Read Article",
+      "unknownAuthor": "Unknown Author",
+      "and": "and"
+    }
+  },
+  "foodScholarArticle": {
+    "meta": {
+      "title": "{title} - FoodScholar",
+      "fallbackTitle": "Article - FoodScholar",
+      "fallbackDescription": "Learn about nutrition and sustainable eating"
+    },
+    "backToCatalog": "Back to Articles",
+    "loading": "Loading article...",
+    "errors": {
+      "failedToLoad": "Failed to load article"
+    },
+    "labels": {
+      "population": "Population",
+      "readerGroup": "Reader group",
+      "confidence": "Confidence {value}"
+    },
+    "topicsTooltip": "Topics: {topics}",
+    "ai": "AI",
+    "aiGenerated": "AI Generated",
+    "common": {
+      "showLess": "Show less"
+    },
+    "authors": {
+      "showMore": "+ {count} more"
+    },
+    "sections": {
+      "abstract": "Abstract",
+      "keyTakeaways": "Key Takeaways",
+      "studyEvaluation": "Study Evaluation",
+      "qa": "Questions & Answers",
+      "tags": "Tags",
+      "keywords": "Keywords",
+      "glossary": "Glossary",
+      "articleInfo": "Article Info",
+      "share": "Share Article"
+    },
+    "actions": {
+      "simplify": "Simplify",
+      "showOriginal": "Show Original",
+      "hideDetails": "Hide details",
+      "showMore": "Show more ({count})",
+      "copyLink": "Copy Link",
+      "copied": "Copied!",
+      "save": "Save"
+    },
+    "evaluation": {
+      "actionability": "Actionability",
+      "userValue": "User Value"
+    },
+    "qaTabs": {
+      "forYou": "For You",
+      "forPractitioners": "For Practitioners",
+      "forExperts": "For Experts"
+    },
+    "metrics": {
+      "title": "Citations & Access",
+      "citations": "Citations",
+      "citationsTooltip": "Total times this paper is cited by other works (Semantic Scholar).",
+      "influential": "Influential",
+      "influentialTooltip": "Subset of citations that Semantic Scholar marks as influential.",
+      "references": "References",
+      "referencesTooltip": "Number of references cited within this paper."
+    },
+    "access": {
+      "open": "Open Access",
+      "closed": "Not Open Access"
+    },
+    "keywords": {
+      "showAll": "Show all ({count})"
+    },
+    "info": {
+      "language": "Language",
+      "region": "Region",
+      "ageGroup": "Age group",
+      "geographicContext": "Geographic context",
+      "biologicalModel": "Biological model",
+      "exclusionFlags": "Exclusion flags",
+      "externalId": "External ID"
+    },
+    "notFound": {
+      "title": "Article Not Found",
+      "subtitle": "The article you're looking for doesn't exist."
+    }
+  },
   "myProfile": {
     "pageTitle": "My Profile - WiseFood",
     "loading": "Loading profile...",

@@ -50,7 +50,7 @@
 
     <!-- Footer: Read Article Link -->
     <div class="flex items-center gap-2 text-brand-600 dark:text-brand-400 font-medium text-sm mt-auto">
-      Read Article
+      {{ t('foodScholarCatalog.card.readArticle') }}
       <UIcon name="i-lucide-arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
     </div>
   </NuxtLink>
@@ -58,6 +58,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 interface Article {
   id: string | number
@@ -84,9 +87,9 @@ const props = withDefaults(defineProps<Props>(), { index: 0, fade: true })
 
 // Format authors for display
 const formatAuthors = (authors: string[]): string => {
-  if (!authors || authors.length === 0) return 'Unknown Author'
+  if (!authors || authors.length === 0) return t('foodScholarCatalog.card.unknownAuthor')
   if (authors.length === 1) return authors[0]
-  if (authors.length === 2) return `${authors[0]} and ${authors[1]}`
+  if (authors.length === 2) return `${authors[0]} ${t('foodScholarCatalog.card.and')} ${authors[1]}`
   return `${authors[0]} et al.`
 }
 
