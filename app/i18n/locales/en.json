@@ -668,10 +668,29 @@
     "filters": {
       "show": "Show Filters",
       "hide": "Hide Filters",
+      "title": "Filters",
+      "close": "Close",
       "category": "Category",
+      "topics": "Topic",
+      "studyType": "Study Type",
       "venue": "Venue",
       "publicationYear": "Publication Year",
+      "ageGroup": "Age Group",
+      "countryOrRegion": "Country / Region",
+      "incomeSetting": "Income Setting",
       "tags": "Tags",
+      "citationCount": "Citation Count",
+      "searchFacetPlaceholder": "Filter…",
+      "selectPlaceholder": "Select…",
+      "selectedCount": "{count} selected",
+      "any": "Any",
+      "min": "Min",
+      "max": "Max",
+      "apply": "Apply",
+      "clear": "Clear",
+      "citationCountApplied": "Applied: {range}",
+      "citationCountInvalidNumber": "Enter a valid number.",
+      "citationCountInvalidRange": "Min cannot be greater than max.",
       "showLess": "Show Less",
       "showMore": "Show {count} More"
     },
@@ -705,6 +724,7 @@
         "titleAsc": "Title (A-Z)"
       }
     },
+    "resultsCount": "{count} results",
     "activeFilters": "Active filters:",
     "empty": {
       "title": "No articles found",

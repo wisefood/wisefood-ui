@@ -668,10 +668,29 @@
     "filters": {
       "show": "Szűrők megjelenítése",
       "hide": "Szűrők elrejtése",
+      "title": "Szűrők",
+      "close": "Bezárás",
       "category": "Kategória",
+      "topics": "Téma",
+      "studyType": "Tanulmány típusa",
       "venue": "Folyóirat",
       "publicationYear": "Megjelenés éve",
+      "ageGroup": "Korcsoport",
+      "countryOrRegion": "Ország / régió",
+      "incomeSetting": "Jövedelmi környezet",
       "tags": "Címkék",
+      "citationCount": "Hivatkozások száma",
+      "searchFacetPlaceholder": "Szűrés…",
+      "selectPlaceholder": "Válassz…",
+      "selectedCount": "{count} kiválasztva",
+      "any": "Bármennyi",
+      "min": "Min",
+      "max": "Max",
+      "apply": "Alkalmaz",
+      "clear": "Törlés",
+      "citationCountApplied": "Alkalmazva: {range}",
+      "citationCountInvalidNumber": "Adj meg egy érvényes számot.",
+      "citationCountInvalidRange": "A minimum nem lehet nagyobb a maximumnál.",
       "showLess": "Kevesebb",
       "showMore": "{count} további"
     },
@@ -705,6 +724,7 @@
         "titleAsc": "Cím (A–Z)"
       }
     },
+    "resultsCount": "{count} találat",
     "activeFilters": "Aktív szűrők:",
     "empty": {
       "title": "Nincs találat",

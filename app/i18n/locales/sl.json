@@ -668,10 +668,29 @@
     "filters": {
       "show": "Prikaži filtre",
       "hide": "Skrij filtre",
+      "title": "Filtri",
+      "close": "Zapri",
       "category": "Kategorija",
+      "topics": "Tema",
+      "studyType": "Tip študije",
       "venue": "Revija",
       "publicationYear": "Leto objave",
+      "ageGroup": "Starostna skupina",
+      "countryOrRegion": "Država / regija",
+      "incomeSetting": "Dohodkovno okolje",
       "tags": "Oznake",
+      "citationCount": "Število citatov",
+      "searchFacetPlaceholder": "Filtriraj…",
+      "selectPlaceholder": "Izberi…",
+      "selectedCount": "{count} izbranih",
+      "any": "Karkoli",
+      "min": "Min",
+      "max": "Max",
+      "apply": "Uporabi",
+      "clear": "Počisti",
+      "citationCountApplied": "Uporabljeno: {range}",
+      "citationCountInvalidNumber": "Vnesi veljavno številko.",
+      "citationCountInvalidRange": "Min ne sme biti večji od max.",
       "showLess": "Prikaži manj",
       "showMore": "Prikaži še {count}"
     },
@@ -705,6 +724,7 @@
         "titleAsc": "Naslov (A–Z)"
       }
     },
+    "resultsCount": "{count} rezultatov",
     "activeFilters": "Aktivni filtri:",
     "empty": {
       "title": "Ni najdenih člankov",

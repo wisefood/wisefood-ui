@@ -1,23 +1,23 @@
 <template>
   <NuxtLink
     :to="`/foodscholar/${props.article.urn}`"
-    :class="[{ 'scroll-fade-in': props.fade !== false }, 'group flex flex-col p-6 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full']"
+    :class="[{ 'scroll-fade-in': props.fade !== false }, 'group flex flex-col p-5 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer h-full']"
     :style="{ '--delay': `${props.index * 0.1}s` }"
   >
     <!-- Header: Category -->
-    <div class="flex items-start justify-between mb-3">
+    <div class="flex items-start justify-between mb-2">
       <span class="text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
         {{ props.article.ai_category }}
       </span>
     </div>
 
     <!-- Title -->
-    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2">
       {{ props.article.title }}
     </h3>
 
     <!-- Authors and Publication Info -->
-    <div class="flex flex-wrap items-center gap-2 mb-3 text-xs text-gray-600 dark:text-gray-400">
+    <div class="flex flex-wrap items-center gap-2 mb-2.5 text-xs text-gray-600 dark:text-gray-400">
       <div v-if="props.article.authors && props.article.authors.length > 0" class="flex items-center gap-1">
         <UIcon name="i-lucide-user" class="w-3.5 h-3.5" />
         <span class="truncate max-w-[200px]">{{ formatAuthors(props.article.authors) }}</span>
@@ -33,12 +33,12 @@
     </div>
 
     <!-- Abstract/Excerpt with truncation -->
-    <p class="text-gray-600 dark:text-gray-300 font-light leading-relaxed mb-4 line-clamp-3 grow">
+    <p class="text-gray-600 dark:text-gray-300 font-light leading-relaxed mb-3 line-clamp-2 grow">
       {{ props.article.excerpt }}
     </p>
 
     <!-- Tags -->
-    <div v-if="displayTags.length > 0" class="flex flex-wrap gap-1.5 mb-4">
+    <div v-if="displayTags.length > 0" class="flex flex-wrap gap-1.5 mb-3">
       <span
         v-for="tag in displayTags"
         :key="tag"
@@ -103,6 +103,6 @@ const displayTags = computed(() => {
 
   // Remove duplicates and limit to 5 tags
   const uniqueTags = [...new Set(allTags)]
-  return uniqueTags.slice(0, 5)
+  return uniqueTags.slice(0, 4)
 })
 </script>
