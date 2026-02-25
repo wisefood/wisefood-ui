@@ -124,7 +124,6 @@
           <div class="flex items-center justify-between mb-4">
             <div>
               <h2 class="text-xl font-light text-gray-900 dark:text-white">{{ t('dashboard.schedule.title') }}</h2>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ currentDateTime }}</p>
             </div>
             <NuxtLink
               to="/foodchat"
@@ -150,7 +149,6 @@
                       class="w-5 h-5"
                       :class="meal.isNow ? 'text-brand-500' : 'text-gray-400'"
                     />
-                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ meal.time }}</span>
                   </div>
                   <UBadge v-if="meal.isNow" color="primary" variant="solid" size="xs">{{ t('dashboard.schedule.now') }}</UBadge>
                 </div>
@@ -197,7 +195,6 @@
                       class="w-5 h-5"
                       :class="meal.isNow ? 'text-brand-500' : 'text-gray-400'"
                     />
-                    <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ meal.time }}</span>
                   </div>
                   <UBadge v-if="meal.isNow" color="primary" variant="solid" size="xs">{{ t('dashboard.schedule.now') }}</UBadge>
                 </div>
@@ -239,8 +236,8 @@
       <div class="mb-12 scroll-fade-in" style="--delay: 0.3s">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-2xl font-light text-gray-900 dark:text-white">
-            <span class="text-gray-900 dark:text-white">{{ t('dashboard.recipes.recommendedPrefix') }} </span>
-            <span class="font-serif italic text-brand-500 dark:text-brand-400 text-3xl"> {{ t('dashboard.recipes.recommendedAccent') }}</span>
+            <span class="text-gray-900 dark:text-white">{{ t('dashboard.recipes.recommendedPrefix') }}</span>
+            <span class="font-serif italic text-brand-500 dark:text-brand-400 text-3xl">&nbsp;{{ t('dashboard.recipes.recommendedAccent') }}</span>
           </h2>
           <NuxtLink
             to="/recipe-wrangler"
@@ -529,21 +526,8 @@ const markRecommendedImageFailed = (recipeId: string) => {
   }
 }
 
-// Current date and time
+// Current time (used for "Now" highlight, but not displayed)
 const currentTime = ref(new Date())
-const currentDateTime = computed(() => {
-  const now = currentTime.value
-  const dayKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
-  const monthKeys = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
-
-  const dayName = t(`dashboard.schedule.days.${dayKeys[now.getDay()]}`)
-  const monthName = t(`dashboard.schedule.months.${monthKeys[now.getMonth()]}`)
-  const date = now.getDate()
-  const hours = now.getHours().toString().padStart(2, '0')
-  const minutes = now.getMinutes().toString().padStart(2, '0')
-
-  return `${dayName}, ${monthName} ${date} • ${hours}:${minutes}`
-})
 
 const currentMemberId = computed(() => householdStore.currentMember?.id ?? null)
 const householdMembers = computed(() => householdStore.householdMembers)
@@ -694,7 +678,6 @@ const upcomingMeals = computed(() => {
   }))
 })
 
-// Update time every minute
 let timeInterval: NodeJS.Timeout | null = null
 let insightInterval: NodeJS.Timeout | null = null
 
@@ -784,7 +767,6 @@ onMounted(() => {
     void householdStore.fetchMembers()
   }
 
-  // Update current time every minute
   timeInterval = setInterval(() => {
     currentTime.value = new Date()
   }, 60000)

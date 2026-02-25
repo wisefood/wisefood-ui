@@ -37,7 +37,7 @@
       "save": "Save"
     },
     "schedule": {
-      "title": "Today's Schedule",
+      "title": "Recent Meal Plans",
       "now": "Now",
       "cal": "cal",
       "refineInFoodChat": "Refine in FoodChat",
@@ -87,9 +87,9 @@
       "sustainable": "Sustainable"
     },
     "recipes": {
-      "recommendedForYou": "Recommended for you",
-      "recommendedPrefix": "Recommended for",
-      "recommendedAccent": "you",
+      "recommendedForYou": "Recipes you might like",
+      "recommendedPrefix": "Recipes you might",
+      "recommendedAccent": "like",
       "discoverInRecipeWrangler": "Discover recipes in RecipeWrangler",
       "minuteShort": "m",
       "serves": "Serves {count}",
@@ -474,8 +474,8 @@
       "advanced": {
         "title": "Advanced settings",
         "subtitle": "Tune behavior only if you need more control.",
-        "ragOn": "RAG On",
-        "ragOff": "RAG Off",
+        "ragOn": "Include Articles",
+        "ragOff": "Ask the Model Only",
         "model": "Model",
         "sourceDepth": "Source Depth",
         "explanationStyle": "Explanation Style",

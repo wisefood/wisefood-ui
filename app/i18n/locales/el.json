@@ -40,12 +40,19 @@
       "title": "Σημερινό Πρόγραμμα",
       "now": "Τώρα",
       "cal": "θερμ",
+      "refineInFoodChat": "Βελτίωσε στο FoodChat",
+      "createInFoodChat": "Δημιούργησε στο FoodChat",
       "planned": "Προγραμματισμένο",
       "notPlanned": "Χωρίς πλάνο",
       "noBreakfast": "Δεν υπάρχει πρωινό για σήμερα",
       "noLunch": "Δεν υπάρχει μεσημεριανό για σήμερα",
       "noDinner": "Δεν υπάρχει βραδινό για σήμερα",
       "noMembers": "Χωρίς μέλη",
+      "meals": {
+        "breakfast": "Πρωινό",
+        "lunch": "Μεσημεριανό",
+        "dinner": "Βραδινό"
+      },
       "days": {
         "sunday": "Κυριακή",
         "monday": "Δευτέρα",

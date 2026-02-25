@@ -87,9 +87,9 @@
       "sustainable": "Fenntartható"
     },
     "recipes": {
-      "recommendedForYou": "Neked ajánlott",
-      "recommendedPrefix": "Neked ajánlott",
-      "recommendedAccent": "receptek",
+      "recommendedForYou": "Receptek, amik neked tetszhetnek",
+      "recommendedPrefix": "Receptek, amik neked",
+      "recommendedAccent": "tetszhetnek",
       "discoverInRecipeWrangler": "Fedezz fel recepteket a RecipeWranglerben",
       "minuteShort": "p",
       "serves": "{count} adag",

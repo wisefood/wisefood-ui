@@ -87,9 +87,9 @@
       "sustainable": "Trajnostno"
     },
     "recipes": {
-      "recommendedForYou": "Priporočeno zate",
-      "recommendedPrefix": "Priporočeno za",
-      "recommendedAccent": "tebe",
+      "recommendedForYou": "Recepti, ki bi ti bili všeč",
+      "recommendedPrefix": "Recepti, ki bi ti bili",
+      "recommendedAccent": "všeč",
       "discoverInRecipeWrangler": "Odkrij recepte v RecipeWrangler",
       "minuteShort": "min",
       "serves": "Porcij: {count}",
