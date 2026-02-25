@@ -10,6 +10,12 @@
         {{ props.article.ai_category }}
       </span>
     </div>
+    <div v-if="primaryTopic" class="mb-2">
+      <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+        <UIcon name="i-lucide-compass" class="w-3 h-3" />
+        {{ primaryTopic }}
+      </span>
+    </div>
 
     <!-- Title -->
     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2">
@@ -72,6 +78,7 @@ interface Article {
   authors?: string[]
   tags?: string[]
   ai_tags?: string[]
+  topics?: string[]
   venue?: string | null
   publication_year?: string | null
 }
@@ -104,5 +111,10 @@ const displayTags = computed(() => {
   // Remove duplicates and limit to 5 tags
   const uniqueTags = [...new Set(allTags)]
   return uniqueTags.slice(0, 4)
+})
+
+const primaryTopic = computed(() => {
+  const topics = props.article.topics || []
+  return topics.find(topic => typeof topic === 'string' && topic.trim()) || ''
 })
 </script>

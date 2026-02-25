@@ -774,6 +774,7 @@ const displayArticles = computed(() => {
     authors: article.authors || [],
     tags: article.tags || [],
     ai_tags: article.ai_tags || [],
+    topics: article.topics || [],
     venue: article.venue,
     publication_year: article.publication_year,
   }))
@@ -1362,7 +1363,7 @@ const loadArticles = async () => {
       limit: itemsPerPage,
       offset: (page.value - 1) * itemsPerPage,
       sort: sortBy.value,
-      fl: ['urn', 'title', 'authors', 'tags', 'ai_tags', 'abstract', 'description', 'venue', 'publication_year', 'category', 'ai_category'],
+      fl: ['urn', 'title', 'authors', 'tags', 'ai_tags', 'topics', 'abstract', 'description', 'venue', 'publication_year', 'category', 'ai_category'],
       fq: fq.length > 0 ? fq : null,
       fields: [], // Don't request facets here since we get them separately
     })

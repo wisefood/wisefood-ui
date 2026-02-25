@@ -556,17 +556,17 @@
           </div>
           <div class="mt-4 flex flex-wrap gap-2">
             <button
-              v-for="category in categories"
-              :key="category"
+              v-for="topic in popularArticleTopics"
+              :key="topic"
               :class="[
                 'px-6 py-2 rounded-full font-medium transition-all duration-300',
-                selectedCategory === category
+                selectedPopularTopic === topic
                   ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/30'
                   : 'bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700'
               ]"
-              @click="selectCategory(category)"
+              @click="selectPopularTopic(topic)"
             >
-              {{ category }}
+              {{ topic }}
             </button>
           </div>
         </div>
@@ -693,6 +693,7 @@ interface HomeArticle {
   authors?: string[]
   tags?: string[]
   ai_tags?: string[]
+  topics?: string[]
   venue?: string | null
   publication_year?: string | null
 }
@@ -784,7 +785,7 @@ const handleMarkdownClick = (event: MouseEvent) => {
   })
 }
 
-const selectedCategory = ref(CATEGORY_ALL)
+const selectedPopularTopic = ref(CATEGORY_ALL)
 const articlesLoading = ref(false)
 const articlesError = ref<string | null>(null)
 const allArticles = ref<HomeArticle[]>([])
@@ -848,17 +849,37 @@ const expertiseOptions = computed<ExpertiseOption[]>(() => [
   }
 ])
 
-const categories = computed(() => {
-  const humanCategories = (facets.value.category || []).map(item => item.value)
-  const aiCategories = (facets.value.ai_category || []).map(item => item.value)
-  const merged = [...new Set([...humanCategories, ...aiCategories])].filter(Boolean)
+const popularArticleTopics = computed(() => {
+  const topics = (facets.value.topics || [])
+    .filter(item => item?.value)
+    .sort((a, b) => Number(b.count || 0) - Number(a.count || 0))
+    .slice(0, 10)
+    .map(item => item.value)
 
-  if (!merged.length) {
-    const fallback = [...new Set(allArticles.value.map(article => article.category).filter(Boolean))]
-    return [CATEGORY_ALL, ...fallback]
+  if (!topics.length) {
+    const topicCounts = new Map<string, number>()
+
+    allArticles.value.forEach((article) => {
+      ;(article.topics || []).forEach((topic) => {
+        if (!topic) return
+        topicCounts.set(topic, (topicCounts.get(topic) || 0) + 1)
+      })
+    })
+
+    const fallback = Array.from(topicCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([topic]) => topic)
+
+    if (!fallback.length) {
+      const tagFallback = popularTopics.value.slice(0, 10).map(topic => topic.query).filter(Boolean)
+      return [CATEGORY_ALL, ...new Set(tagFallback)]
+    }
+
+    return [CATEGORY_ALL, ...new Set(fallback)]
   }
 
-  return [CATEGORY_ALL, ...merged]
+  return [CATEGORY_ALL, ...topics]
 })
 
 const tagFacets = computed((): AnnotatedFacet[] => {
@@ -903,16 +924,16 @@ const filteredArticles = computed(() => {
   return allArticles.value.slice(0, 8)
 })
 
-const selectCategory = async (category: string) => {
-  selectedCategory.value = category
-  if (category === CATEGORY_ALL) {
+const selectPopularTopic = async (topic: string) => {
+  selectedPopularTopic.value = topic
+  if (topic === CATEGORY_ALL) {
     await loadPopularArticles()
   } else {
-    await loadArticlesForCategory(category)
+    await loadArticlesForTopic(topic)
   }
 }
 
-const loadArticlesForCategory = async (category: string) => {
+const loadArticlesForTopic = async (topic: string) => {
   articlesLoading.value = true
   articlesError.value = null
 
@@ -922,8 +943,8 @@ const loadArticlesForCategory = async (category: string) => {
       limit: 24,
       offset: 0,
       sort: 'created_at desc',
-      fl: ['id', 'urn', 'title', 'abstract', 'description', 'content', 'authors', 'tags', 'ai_tags', 'venue', 'publication_year', 'category', 'ai_category'],
-      fq: [`(category:"${category}" OR ai_category:"${category}")`],
+      fl: ['id', 'urn', 'title', 'abstract', 'description', 'content', 'authors', 'tags', 'ai_tags', 'topics', 'venue', 'publication_year', 'category', 'ai_category'],
+      fq: [`topics:"${topic}"`],
       fields: []
     })
 
@@ -1016,8 +1037,9 @@ const loadPopularArticles = async () => {
       limit: 24,
       offset: 0,
       sort: 'created_at desc',
-      fl: ['id', 'urn', 'title', 'abstract', 'description', 'content', 'authors', 'tags', 'ai_tags', 'venue', 'publication_year', 'category', 'ai_category'],
-      fields: ['category', 'ai_category', 'tags', 'ai_tags']
+      fl: ['id', 'urn', 'title', 'abstract', 'description', 'content', 'authors', 'tags', 'ai_tags', 'topics', 'venue', 'publication_year', 'category', 'ai_category'],
+      fields: ['category', 'ai_category', 'tags', 'ai_tags', 'topics'],
+      facet_limit: 50
     })
 
     const results = response.result.results || []
@@ -1335,6 +1357,7 @@ const mapArticleToHome = (article: Article): HomeArticle => {
     authors: article.authors || [],
     tags: article.tags || [],
     ai_tags: article.ai_tags || [],
+    topics: article.topics || [],
     venue: article.venue,
     publication_year: article.publication_year
   }
@@ -1395,9 +1418,9 @@ const getErrorMessage = (err: unknown, fallback: string): string => {
   return fallback
 }
 
-watch(categories, (newCategories) => {
-  if (newCategories.length > 0 && !newCategories.includes(selectedCategory.value)) {
-    selectedCategory.value = CATEGORY_ALL
+watch(popularArticleTopics, (newTopics) => {
+  if (newTopics.length > 0 && !newTopics.includes(selectedPopularTopic.value)) {
+    selectedPopularTopic.value = CATEGORY_ALL
   }
 })
 
