@@ -90,13 +90,20 @@
             <h2 class="text-xl font-light text-gray-900 dark:text-white mb-2">
               {{ activeInsightTitle }}
             </h2>
-            <div class="relative h-24 mb-4 overflow-hidden">
+            <div class="relative h-28 mb-4 overflow-hidden">
               <Transition name="insight-slide" mode="out-in">
                 <div
                   :key="`insight-${activeInsightIndex}`"
                   class="h-full flex flex-col justify-start"
                 >
-                  <p class="text-gray-700 dark:text-gray-200 leading-relaxed insight-text-clamp insight-tip-emphasis">
+                  <NuxtLink
+                    v-if="activeInsightArticleTarget"
+                    :to="activeInsightArticleTarget"
+                    class="text-gray-700 dark:text-gray-200 leading-relaxed insight-text-clamp insight-tip-emphasis hover:underline underline-offset-4"
+                  >
+                    {{ activeInsight.text }}
+                  </NuxtLink>
+                  <p v-else class="text-gray-700 dark:text-gray-200 leading-relaxed insight-text-clamp insight-tip-emphasis">
                     {{ activeInsight.text }}
                   </p>
                 </div>
@@ -139,7 +146,7 @@
               <NuxtLink
                 v-if="meal.recipeId"
                 :to="`/recipe-wrangler/${meal.recipeId}`"
-                class="group flex flex-col gap-2 p-3 rounded-xl border transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:bg-gray-50 dark:hover:bg-zinc-700/50 focus-visible:outline-none focus-visible:scale-[1.01] focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:ring-offset-1"
+                class="group h-full flex flex-col justify-center gap-2 p-3 rounded-xl border transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:bg-gray-50 dark:hover:bg-zinc-700/50 focus-visible:outline-none focus-visible:scale-[1.01] focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:ring-offset-1"
                 :class="meal.isNow ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-200 dark:border-brand-800' : 'border-transparent'"
               >
                 <div class="flex items-center justify-between">
@@ -156,7 +163,7 @@
                   <h3 class="font-semibold text-sm text-gray-900 dark:text-white mb-1">{{ meal.name }}</h3>
                   <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{{ meal.description }}</p>
                 </div>
-                <div class="flex items-center gap-2 mt-auto">
+                <div class="flex items-center gap-2 pt-1">
                   <div v-if="meal.members.length" class="flex items-center -space-x-0.5">
                     <UTooltip
                       v-for="member in meal.members"
@@ -185,7 +192,7 @@
 
               <div
                 v-else
-                class="group flex flex-col gap-2 p-3 rounded-xl border border-transparent transition-all duration-200 cursor-default"
+                class="group h-full flex flex-col justify-center gap-2 p-3 rounded-xl border border-transparent transition-all duration-200 cursor-default"
                 :class="meal.isNow ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-200 dark:border-brand-800' : ''"
               >
                 <div class="flex items-center justify-between">
@@ -202,7 +209,7 @@
                   <h3 class="font-semibold text-sm text-gray-900 dark:text-white mb-1">{{ meal.name }}</h3>
                   <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{{ meal.description }}</p>
                 </div>
-                <div class="flex items-center gap-2 mt-auto">
+                <div class="flex items-center gap-2 pt-1">
                   <div v-if="meal.members.length" class="flex items-center -space-x-0.5">
                     <UTooltip
                       v-for="member in meal.members"
@@ -367,6 +374,8 @@ type InsightKind = 'did_you_know' | 'tip'
 interface InsightSlide {
   kind: InsightKind
   text: string
+  evidenceUrn?: string | null
+  evidencePassage?: string | null
 }
 
 const insightSlides = ref<InsightSlide[]>([])
@@ -404,6 +413,16 @@ const activeInsightTitle = computed(() => {
   return activeInsight.value.kind === 'tip'
     ? t('dashboard.insights.tipsOfTheDay')
     : t('dashboard.insights.didYouKnow')
+})
+
+const activeInsightArticleTarget = computed(() => {
+  const urn = activeInsight.value.evidenceUrn
+  if (!urn) return null
+
+  const passage = activeInsight.value.evidencePassage?.trim() || ''
+  return passage
+    ? { path: `/foodscholar/${urn}`, query: { section: 'abstract', hl: passage } }
+    : { path: `/foodscholar/${urn}` }
 })
 
 const recommendedRecipes = ref<RecipeSearchResult[]>([])
@@ -692,15 +711,47 @@ const normalizeTipText = (value: unknown): string[] => {
     .filter(Boolean)
 }
 
+const normalizeTipDetails = (value: unknown): Array<{ text: string, evidenceUrn: string | null, evidencePassage: string | null }> => {
+  if (!Array.isArray(value)) return []
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null
+      const record = item as Record<string, unknown>
+      const maybeText = record.text
+      const evidence = record.evidence
+      const maybeUrn = evidence && typeof evidence === 'object' ? (evidence as Record<string, unknown>).urn : null
+      const maybePassage = evidence && typeof evidence === 'object' ? (evidence as Record<string, unknown>).passage : null
+
+      const text = typeof maybeText === 'string' ? maybeText.trim() : ''
+      if (!text) return null
+
+      const evidenceUrn = typeof maybeUrn === 'string' && maybeUrn.trim() ? maybeUrn.trim() : null
+      const evidencePassage = typeof maybePassage === 'string' && maybePassage.trim() ? maybePassage.trim() : null
+      return { text, evidenceUrn, evidencePassage }
+    })
+    .filter((item): item is { text: string, evidenceUrn: string | null, evidencePassage: string | null } => Boolean(item))
+}
+
 const normalizeInsightSlides = (result: QaTipsResult | null | undefined): InsightSlide[] => {
-  const didYouKnow = normalizeTipText(result?.did_you_know).map(text => ({
-    kind: 'did_you_know' as const,
-    text
-  }))
-  const tips = normalizeTipText(result?.tips).map(text => ({
-    kind: 'tip' as const,
-    text
-  }))
+  const didYouKnowDetails = normalizeTipDetails(result?.did_you_know_detail)
+  const tipsDetails = normalizeTipDetails(result?.tips_detail)
+
+  const didYouKnow = (didYouKnowDetails.length ? didYouKnowDetails : normalizeTipText(result?.did_you_know).map(text => ({ text, evidenceUrn: null, evidencePassage: null })))
+    .map(({ text, evidenceUrn, evidencePassage }) => ({
+      kind: 'did_you_know' as const,
+      text,
+      evidenceUrn,
+      evidencePassage
+    }))
+
+  const tips = (tipsDetails.length ? tipsDetails : normalizeTipText(result?.tips).map(text => ({ text, evidenceUrn: null, evidencePassage: null })))
+    .map(({ text, evidenceUrn, evidencePassage }) => ({
+      kind: 'tip' as const,
+      text,
+      evidenceUrn,
+      evidencePassage
+    }))
 
   const merged: InsightSlide[] = []
   const maxLength = Math.max(didYouKnow.length, tips.length)
@@ -822,7 +873,7 @@ onUnmounted(() => {
 
 .insight-text-clamp {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

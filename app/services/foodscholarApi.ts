@@ -72,6 +72,24 @@ export interface QaQuestionsResult {
 export interface QaTipsResult {
   did_you_know: string[]
   tips: string[]
+  did_you_know_detail?: Array<{
+    text: string
+    evidence?: {
+      urn: string
+      passage?: string
+      title?: string
+      publication_year?: string
+    }
+  }>
+  tips_detail?: Array<{
+    text: string
+    evidence?: {
+      urn: string
+      passage?: string
+      title?: string
+      publication_year?: string
+    }
+  }>
   generated_at?: string
   cache_hit?: boolean
 }
