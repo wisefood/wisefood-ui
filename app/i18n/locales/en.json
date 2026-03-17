@@ -110,6 +110,7 @@
     "legal": "Terms & Conditions | GDPR"
   },
   "header": {
+    "console": "Console",
     "using": "Using",
     "userFallback": "User",
     "menu": {

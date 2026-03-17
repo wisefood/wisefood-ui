@@ -45,6 +45,8 @@ export default defineNuxtConfig({
     '/': { prerender: true },
     '/profiles': { ssr: false },
     '/dashboard': { ssr: false },
+    '/console': { ssr: false },
+    '/console/**': { ssr: false },
     '/foodscholar/**': { ssr: false },
     '/recipe-wrangler/**': { ssr: false },
     '/foodchat/**': { ssr: false },

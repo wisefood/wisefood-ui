@@ -1,12 +1,28 @@
 <template>
   <UHeader class="z-[120]">
     <template #left>
-      <AppLogo class="w-auto h-10 shrink-0" height="10" />
+      <AppLogo
+        class="w-auto h-10 shrink-0"
+        height="10"
+      />
     </template>
     <template #right>
       <UColorModeButton />
 
       <LocaleSelector />
+
+      <UButton
+        v-if="authStore.initialized && authStore.isLoggedIn && authStore.canAccessConsole"
+        :to="isConsoleRoute ? '/dashboard' : '/console'"
+        color="primary"
+        variant="outline"
+        size="sm"
+        :icon="isConsoleRoute ? 'i-lucide-layout-dashboard' : 'i-lucide-panel-top'"
+        class="shrink-0"
+        :class="isConsoleRoute ? 'ring-1 ring-brand-500/30 bg-brand-50/80 dark:bg-brand-900/20' : ''"
+      >
+        {{ isConsoleRoute ? t('dashboard.title') : t('header.console') }}
+      </UButton>
 
       <!-- User Avatar Dropdown when logged in -->
       <UDropdownMenu
@@ -43,13 +59,23 @@
           <span class="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300 max-w-24 truncate">
             {{ currentMemberName }}
           </span>
-          <UIcon name="i-lucide-chevron-down" class="w-4 h-4 text-gray-400" />
+          <UIcon
+            name="i-lucide-chevron-down"
+            class="w-4 h-4 text-gray-400"
+          />
         </button>
         <template #header>
           <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-700">
-            <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ userDisplayName }}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">{{ authStore.currentUser?.email }}</p>
-            <p v-if="householdStore.currentMember" class="text-xs text-brand-500 mt-1">
+            <p class="text-sm font-semibold text-gray-900 dark:text-white">
+              {{ userDisplayName }}
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              {{ authStore.currentUser?.email }}
+            </p>
+            <p
+              v-if="householdStore.currentMember"
+              class="text-xs text-brand-500 mt-1"
+            >
               {{ t('header.using') }}: {{ householdStore.currentMember.name }}
             </p>
           </div>
@@ -79,9 +105,17 @@ import { useHouseholdStore } from '@/stores/household'
 import { stringToAvatarConfig } from '~/utils/avatarPresets'
 import type { DropdownMenuItem } from '@nuxt/ui'
 
+type RuntimeConfigWindow = Window & {
+  __RUNTIME_CONFIG__?: {
+    keycloakUrl?: string
+    keycloakRealm?: string
+  }
+}
+
 const { t } = useI18n()
 const authStore = useAuthStore()
 const householdStore = useHouseholdStore()
+const route = useRoute()
 
 // Initialize household store when auth is ready
 onMounted(async () => {
@@ -120,11 +154,17 @@ const memberInitials = computed(() => {
   }
 
   if (user.name) {
-    const names = user.name.split(' ')
-    if (names.length >= 2) {
-      return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
+    const names = user.name.split(' ').filter(Boolean)
+    const firstInitial = names[0]?.[0]
+    const lastInitial = names[names.length - 1]?.[0]
+
+    if (firstInitial && lastInitial && names.length >= 2) {
+      return `${firstInitial}${lastInitial}`.toUpperCase()
     }
-    return user.name[0].toUpperCase()
+
+    if (firstInitial) {
+      return firstInitial.toUpperCase()
+    }
   }
 
   if (user.username) {
@@ -132,7 +172,10 @@ const memberInitials = computed(() => {
   }
 
   if (user.email) {
-    return user.email[0].toUpperCase()
+    const emailInitial = user.email[0]
+    if (emailInitial) {
+      return emailInitial.toUpperCase()
+    }
   }
 
   return 'U'
@@ -143,6 +186,8 @@ const userDisplayName = computed(() => {
   const user = authStore.currentUser
   return user?.name || user?.email || t('header.userFallback')
 })
+
+const isConsoleRoute = computed(() => route.path.startsWith('/console'))
 
 // User dropdown menu items
 const userMenuItems = computed<DropdownMenuItem[]>(() => [
@@ -168,7 +213,7 @@ const userMenuItems = computed<DropdownMenuItem[]>(() => [
     icon: 'i-lucide-settings',
     onSelect: () => {
       // Check runtime config injected at container startup first, then fall back to Nuxt config
-      const runtimeConfig = (window as any).__RUNTIME_CONFIG__
+      const runtimeConfig = (window as RuntimeConfigWindow).__RUNTIME_CONFIG__
       const nuxtConfig = useRuntimeConfig()
       const keycloakUrl = runtimeConfig?.keycloakUrl || nuxtConfig.public.keycloakUrl
       const keycloakRealm = runtimeConfig?.keycloakRealm || nuxtConfig.public.keycloakRealm

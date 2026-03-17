@@ -103,7 +103,18 @@
     "signIn": "Σύνδεση",
     "legal": "Όροι χρήσης | GDPR"
   },
-   "auth": {
+  "header": {
+    "console": "Κονσόλα",
+    "using": "Χρήση",
+    "userFallback": "Χρήστης",
+    "menu": {
+      "myProfile": "Το προφίλ μου",
+      "switchProfile": "Αλλαγή προφίλ",
+      "accountSettings": "Ρυθμίσεις λογαριασμού",
+      "signOut": "Αποσύνδεση"
+    }
+  },
+  "auth": {
     "welcome": "Καλώς ήρθατε ξανά",
     "loginPrompt": "Συνδεθείτε στον λογαριασμό σας για να συνεχίσετε",
     "createYourAccount": "Δημιουργήστε τον λογαριασμό σας",

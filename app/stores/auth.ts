@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import KeycloakAuthService from '~/services/keycloak'
+import { canAccessConsole, includesAnyRole, includesRole } from '~/utils/authRoles'
 
 const isDebugEnabled = (): boolean => {
   if (typeof window === 'undefined') return false
@@ -44,7 +45,10 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     currentUser: (state) => state.user,
     isLoggedIn: (state) => state.isAuthenticated,
-    hasRole: (state) => (role: string) => state.user?.roles.includes(role) ?? false,
+    roleList: (state) => state.user?.roles ?? [],
+    hasRole: (state) => (role: string) => includesRole(state.user?.roles, role),
+    hasAnyRole: (state) => (roles: string[]) => includesAnyRole(state.user?.roles, roles),
+    canAccessConsole: (state) => canAccessConsole(state.user?.roles),
   },
 
   actions: {

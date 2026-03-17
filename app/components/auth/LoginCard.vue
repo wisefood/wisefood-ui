@@ -13,11 +13,9 @@
 
     <!-- Main Card -->
     <UCard 
-      class="shadow-xl"
+      class="rounded-2xl ring-1 ring-gray-200 shadow-xl dark:ring-gray-800"
       :ui="{
-        body: { padding: 'sm:p-8 p-6' },
-        ring: 'ring-1 ring-gray-200 dark:ring-gray-800',
-        rounded: 'rounded-2xl'
+        body: 'sm:p-8 p-6'
       }"
     >
       <!-- Header -->
@@ -68,7 +66,7 @@
         <!-- Info Banner -->
         <UAlert
           icon="i-lucide-info"
-          color="blue"
+          color="info"
           variant="soft"
           :title="t('auth.ssoInfo') || 'Single Sign-On'"
           :description="t('auth.ssoDescription') || 'You will be redirected to our secure authentication portal powered by Keycloak.'"
@@ -88,7 +86,7 @@
 
         <!-- Register Button -->
         <UButton 
-          color="gray"
+          color="neutral"
           variant="outline"
           size="xl"
           block
@@ -149,10 +147,25 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 
 const isChecking = ref(true)
 const isLoggingIn = ref(false)
 const isRegistering = ref(false)
+
+const redirectTarget = computed(() => {
+  const redirect = route.query.redirect
+
+  if (typeof redirect !== 'string') {
+    return '/profiles'
+  }
+
+  if (!redirect.startsWith('/') || redirect.startsWith('//')) {
+    return '/profiles'
+  }
+
+  return redirect
+})
 
 // Check authentication status on mount
 onMounted(async () => {
@@ -161,8 +174,8 @@ onMounted(async () => {
   }
   
   if (authStore.isAuthenticated) {
-    console.log('[LoginCard] User already authenticated, redirecting to profiles')
-    await router.push('/profiles')
+    console.log('[LoginCard] User already authenticated, redirecting to target:', redirectTarget.value)
+    await router.push(redirectTarget.value)
     return
   }
   
@@ -171,12 +184,12 @@ onMounted(async () => {
 
 const handleLogin = () => {
   isLoggingIn.value = true
-  authStore.login('/profiles')
+  authStore.login(redirectTarget.value)
 }
 
 const handleRegister = () => {
   isRegistering.value = true
-  KeycloakAuthService.register('/profiles')
+  KeycloakAuthService.register(redirectTarget.value)
 }
 </script>
 
