@@ -209,6 +209,18 @@
                     Fit
                   </UButton>
                   <UButton
+                    v-if="totalPdfPages > 1"
+                    color="neutral"
+                    :variant="facingPagesEnabled ? 'soft' : 'outline'"
+                    size="sm"
+                    icon="i-lucide-book-open"
+                    class="hidden lg:inline-flex"
+                    :disabled="!canUseFacingPages"
+                    @click="toggleFacingPages"
+                  >
+                    Facing pages
+                  </UButton>
+                  <UButton
                     color="neutral"
                     variant="outline"
                     size="sm"
@@ -221,7 +233,7 @@
                     variant="outline"
                     class="min-w-24 justify-center"
                   >
-                    Page {{ currentPage }} / {{ totalPdfPages || 1 }}
+                    {{ pdfPageBadgeLabel }}
                   </UBadge>
                   <UButton
                     color="neutral"
@@ -253,7 +265,7 @@
                 <div
                   v-else
                   ref="pdfViewportEl"
-                  class="relative flex min-h-[36rem] max-h-[72vh] items-start justify-center overflow-auto rounded-2xl border border-gray-200/80 bg-white dark:border-white/10 dark:bg-zinc-950"
+                  class="relative min-h-[36rem] max-h-[72vh] overflow-auto rounded-2xl border border-gray-200/80 bg-white dark:border-white/10 dark:bg-zinc-950"
                   :class="pdfCanPan ? 'cursor-grab active:cursor-grabbing' : ''"
                   @mousedown="beginPdfPan"
                   @mousemove="movePdfPan"
@@ -298,11 +310,37 @@
                     </div>
                   </div>
 
-                  <canvas
+                  <div
                     v-else
-                    ref="pdfCanvasEl"
-                    class="block bg-white"
-                  />
+                    class="flex w-max min-w-full items-start justify-center gap-4 p-4"
+                  >
+                    <div
+                      v-for="panel in visiblePdfPanels"
+                      :key="panel.key"
+                      class="shrink-0 space-y-2"
+                    >
+                      <div class="flex items-center justify-between gap-2 px-1">
+                        <div class="flex items-center gap-2">
+                          <UBadge
+                            :color="panel.kind === 'active' ? 'primary' : 'neutral'"
+                            :variant="panel.kind === 'active' ? 'soft' : 'outline'"
+                          >
+                            {{ panel.kind === 'active' ? 'Active page' : 'Context only' }}
+                          </UBadge>
+                          <span class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                            Page {{ panel.page }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div class="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm dark:border-white/10">
+                        <canvas
+                          :ref="element => setPdfCanvasEl(panel.key, element)"
+                          class="block bg-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </UCard>
@@ -323,7 +361,7 @@
                     </p>
                   </div>
                   <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Page {{ currentPage }} of {{ totalPdfPages || 1 }}
+                    Page {{ currentPage }} of {{ totalPdfPages || 1 }}<span v-if="secondaryPdfPage"> · Context page {{ secondaryPdfPage }}</span>
                   </p>
                 </div>
 
@@ -896,6 +934,11 @@ type PdfJsModule = typeof import('pdfjs-dist/legacy/build/pdf.mjs')
 type PdfWorkerModule = {
   default: new () => Worker
 }
+type PdfPanelKey = 'primary' | 'secondary'
+type PdfRenderTask = {
+  promise: Promise<void>
+  cancel?: () => void
+}
 type PdfDocumentLike = {
   numPages: number
   getPage: (pageNumber: number) => Promise<{
@@ -915,7 +958,7 @@ let pdfModulePromise: Promise<PdfJsModule> | null = null
 let pdfWorkerPromise: Promise<PdfWorkerModule> | null = null
 let pdfWorkerInstance: Worker | null = null
 let activePdfDocument: PdfDocumentLike | null = null
-let activePdfRenderTask: { promise: Promise<void>, cancel?: () => void } | null = null
+let activePdfRenderTasks: PdfRenderTask[] = []
 let pdfLoadToken = 0
 let pdfRenderToken = 0
 let pageGuidelineLoadToken = 0
@@ -965,9 +1008,14 @@ const pdfZoom = ref(1)
 const pdfLoading = ref(false)
 const pdfRendering = ref(false)
 const pdfError = ref<string | null>(null)
+const facingPagesEnabled = ref(false)
+const isDesktopPdfViewport = ref(false)
 
-const pdfCanvasEl = ref<HTMLCanvasElement | null>(null)
 const pdfViewportEl = ref<HTMLElement | null>(null)
+const pdfCanvasEls = reactive<Record<PdfPanelKey, HTMLCanvasElement | null>>({
+  primary: null,
+  secondary: null
+})
 
 const guidelineEditorOpen = ref(false)
 const guidelineEditorMode = ref<GuidelineEditorMode>('create')
@@ -1124,7 +1172,41 @@ const canCreateGuideline = computed(() =>
 
 const pdfCanPan = computed(() => pdfZoom.value > 1.02 && !pdfLoading.value && !pdfError.value)
 
+const canUseFacingPages = computed(() =>
+  isDesktopPdfViewport.value && totalPdfPages.value > 1
+)
+
+const secondaryPdfPage = computed(() =>
+  facingPagesEnabled.value && canUseFacingPages.value && currentPage.value < totalPdfPages.value
+    ? currentPage.value + 1
+    : null
+)
+
+const visiblePdfPanels = computed(() => {
+  const panels: Array<{ key: PdfPanelKey, kind: 'active' | 'context', page: number }> = [{
+    key: 'primary',
+    kind: 'active',
+    page: currentPage.value
+  }]
+
+  if (secondaryPdfPage.value) {
+    panels.push({
+      key: 'secondary',
+      kind: 'context',
+      page: secondaryPdfPage.value
+    })
+  }
+
+  return panels
+})
+
 const pdfZoomLabel = computed(() => `${Math.round(pdfZoom.value * 100)}%`)
+
+const pdfPageBadgeLabel = computed(() =>
+  secondaryPdfPage.value
+    ? `Pages ${currentPage.value}-${secondaryPdfPage.value} / ${totalPdfPages.value || 1}`
+    : `Page ${currentPage.value} / ${totalPdfPages.value || 1}`
+)
 
 const guidelineTableOffset = computed(() => (guidelineTablePage.value - 1) * guidelinePageSize)
 
@@ -1266,8 +1348,12 @@ function clampPage(page: number) {
   return Math.min(Math.max(page, 1), totalPdfPages.value)
 }
 
-function clearPdfCanvas() {
-  const canvas = pdfCanvasEl.value
+function setPdfCanvasEl(panelKey: PdfPanelKey, element: Element | null) {
+  pdfCanvasEls[panelKey] = element instanceof HTMLCanvasElement ? element : null
+}
+
+function clearPdfCanvas(panelKey: PdfPanelKey) {
+  const canvas = pdfCanvasEls[panelKey]
   if (!canvas) {
     return
   }
@@ -1281,25 +1367,38 @@ function clearPdfCanvas() {
   canvas.height = 0
 }
 
-async function destroyActivePdfDocument() {
-  pdfRenderToken += 1
+function clearAllPdfCanvases() {
+  clearPdfCanvas('primary')
+  clearPdfCanvas('secondary')
+}
 
-  if (activePdfRenderTask?.cancel) {
+function cancelActivePdfRenderTasks() {
+  activePdfRenderTasks.forEach(renderTask => {
+    if (!renderTask.cancel) {
+      return
+    }
+
     try {
-      activePdfRenderTask.cancel()
+      renderTask.cancel()
     } catch {
       // no-op
     }
-  }
+  })
 
-  activePdfRenderTask = null
+  activePdfRenderTasks = []
+}
+
+async function destroyActivePdfDocument() {
+  pdfRenderToken += 1
+
+  cancelActivePdfRenderTasks()
 
   if (activePdfDocument?.destroy) {
     await activePdfDocument.destroy()
   }
 
   activePdfDocument = null
-  clearPdfCanvas()
+  clearAllPdfCanvases()
 }
 
 async function getArtifactPdfBytes(artifactId: string) {
@@ -1322,59 +1421,71 @@ async function getArtifactPdfBytes(artifactId: string) {
   return data
 }
 
-async function renderCurrentPage() {
-  if (!import.meta.client || !activePdfDocument || !pdfCanvasEl.value || !pdfViewportEl.value) {
+async function renderVisiblePdfPages() {
+  if (!import.meta.client || !activePdfDocument || !pdfViewportEl.value) {
     return
   }
+
+  await nextTick()
 
   const renderToken = ++pdfRenderToken
   pdfRendering.value = true
   pdfError.value = null
 
-  if (activePdfRenderTask?.cancel) {
-    try {
-      activePdfRenderTask.cancel()
-    } catch {
-      // no-op
-    }
-  }
+  cancelActivePdfRenderTasks()
 
   try {
-    const page = await activePdfDocument.getPage(clampPage(currentPage.value))
-    if (renderToken !== pdfRenderToken || !pdfCanvasEl.value || !pdfViewportEl.value) {
-      return
-    }
-
+    const panels = visiblePdfPanels.value
     const viewportContainerWidth = Math.max(pdfViewportEl.value.clientWidth - 32, 320)
-    const baseViewport = page.getViewport({ scale: 1 })
-    const scale = (viewportContainerWidth / baseViewport.width) * pdfZoom.value
-    const viewport = page.getViewport({ scale })
+    const interPageGap = panels.length > 1 ? 16 : 0
+    const perPageWidth = panels.length > 1
+      ? Math.max((viewportContainerWidth - interPageGap) / 2, 240)
+      : viewportContainerWidth
     const devicePixelRatio = window.devicePixelRatio || 1
 
-    const canvas = pdfCanvasEl.value
-    const context = canvas.getContext('2d')
-
-    if (!context) {
-      throw new Error('Canvas rendering context unavailable')
+    if (!panels.some(panel => panel.key === 'secondary')) {
+      clearPdfCanvas('secondary')
     }
 
-    canvas.width = Math.floor(viewport.width * devicePixelRatio)
-    canvas.height = Math.floor(viewport.height * devicePixelRatio)
-    canvas.style.width = `${Math.floor(viewport.width)}px`
-    canvas.style.height = `${Math.floor(viewport.height)}px`
+    for (const panel of panels) {
+      const canvas = pdfCanvasEls[panel.key]
+      if (!canvas) {
+        continue
+      }
 
-    context.setTransform(1, 0, 0, 1, 0, 0)
-    context.clearRect(0, 0, canvas.width, canvas.height)
+      const page = await activePdfDocument.getPage(clampPage(panel.page))
+      if (renderToken !== pdfRenderToken) {
+        return
+      }
 
-    activePdfRenderTask = page.render({
-      canvasContext: context,
-      viewport,
-      transform: devicePixelRatio === 1
-        ? undefined
-        : [devicePixelRatio, 0, 0, devicePixelRatio, 0, 0]
-    })
+      const baseViewport = page.getViewport({ scale: 1 })
+      const scale = (perPageWidth / baseViewport.width) * pdfZoom.value
+      const viewport = page.getViewport({ scale })
+      const context = canvas.getContext('2d')
 
-    await activePdfRenderTask.promise
+      if (!context) {
+        throw new Error('Canvas rendering context unavailable')
+      }
+
+      canvas.width = Math.floor(viewport.width * devicePixelRatio)
+      canvas.height = Math.floor(viewport.height * devicePixelRatio)
+      canvas.style.width = `${Math.floor(viewport.width)}px`
+      canvas.style.height = `${Math.floor(viewport.height)}px`
+
+      context.setTransform(1, 0, 0, 1, 0, 0)
+      context.clearRect(0, 0, canvas.width, canvas.height)
+
+      const renderTask = page.render({
+        canvasContext: context,
+        viewport,
+        transform: devicePixelRatio === 1
+          ? undefined
+          : [devicePixelRatio, 0, 0, devicePixelRatio, 0, 0]
+      })
+
+      activePdfRenderTasks = [...activePdfRenderTasks, renderTask]
+      await renderTask.promise
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
 
@@ -1385,6 +1496,7 @@ async function renderCurrentPage() {
   } finally {
     if (renderToken === pdfRenderToken) {
       pdfRendering.value = false
+      activePdfRenderTasks = []
     }
   }
 }
@@ -1403,6 +1515,18 @@ function zoomOutPdf() {
 
 function resetPdfZoom() {
   pdfZoom.value = 1
+}
+
+function toggleFacingPages() {
+  if (!canUseFacingPages.value) {
+    return
+  }
+
+  facingPagesEnabled.value = !facingPagesEnabled.value
+
+  if (activePdfDocument && import.meta.client) {
+    void renderVisiblePdfPages()
+  }
 }
 
 function beginPdfPan(event: MouseEvent) {
@@ -1466,13 +1590,12 @@ async function loadSelectedPdf(forceReload = false) {
     totalPdfPages.value = document.numPages
     currentPage.value = clampPage(currentPage.value)
 
-    await nextTick()
-    await renderCurrentPage()
+    await renderVisiblePdfPages()
   } catch (error) {
     console.error('[ConsoleGuidelineReview] Failed to load PDF:', error)
     pdfError.value = 'The selected PDF could not be opened.'
     totalPdfPages.value = 0
-    clearPdfCanvas()
+    clearAllPdfCanvases()
   } finally {
     if (loadToken === pdfLoadToken) {
       pdfLoading.value = false
@@ -1490,8 +1613,21 @@ function schedulePdfRender() {
   }
 
   resizeTimer = setTimeout(() => {
-    void renderCurrentPage()
+    void renderVisiblePdfPages()
   }, 120)
+}
+
+function syncPdfViewportMode() {
+  if (!import.meta.client) {
+    return
+  }
+
+  isDesktopPdfViewport.value = window.innerWidth >= 1024
+}
+
+function handlePdfViewportResize() {
+  syncPdfViewportMode()
+  schedulePdfRender()
 }
 
 function normalizeNullable(value: string) {
@@ -2150,7 +2286,8 @@ onMounted(() => {
     return
   }
 
-  window.addEventListener('resize', schedulePdfRender)
+  syncPdfViewportMode()
+  window.addEventListener('resize', handlePdfViewportResize)
 
   if (selectedArtifactId.value) {
     void loadSelectedPdf()
@@ -2212,7 +2349,7 @@ watch(currentPage, (page) => {
   }
 
   if (activePdfDocument) {
-    void renderCurrentPage()
+    void renderVisiblePdfPages()
   }
 })
 
@@ -2235,13 +2372,13 @@ watch(guidelineDeleteOpen, isOpen => {
 
 watch(pdfZoom, () => {
   if (activePdfDocument && import.meta.client) {
-    void renderCurrentPage()
+    void renderVisiblePdfPages()
   }
 })
 
 onBeforeUnmount(() => {
   if (import.meta.client) {
-    window.removeEventListener('resize', schedulePdfRender)
+    window.removeEventListener('resize', handlePdfViewportResize)
   }
 
   if (resizeTimer) {
