@@ -79,12 +79,12 @@
               v-if="selectedGuide"
               color="primary"
               variant="soft"
-              icon="i-lucide-badge-check"
-              :disabled="!canPublishGuide"
+              :icon="guidePublicationButtonIcon"
+              :disabled="!canToggleGuidePublication"
               :loading="publishPending"
-              @click="publishGuide"
+              @click="toggleGuidePublication"
             >
-              {{ publishButtonLabel }}
+              {{ guidePublicationButtonLabel }}
             </UButton>
 
             <p
@@ -857,7 +857,17 @@ const canPublishGuide = computed(() =>
   )
 )
 
-const publishButtonLabel = computed(() => isGuidePublished.value ? 'Published' : 'Publish Guide')
+const canToggleGuidePublication = computed(() =>
+  Boolean(selectedGuide.value) && (isGuidePublished.value || canPublishGuide.value)
+)
+
+const guidePublicationButtonLabel = computed(() =>
+  isGuidePublished.value ? 'Unpublish Guide' : 'Publish Guide'
+)
+
+const guidePublicationButtonIcon = computed(() =>
+  isGuidePublished.value ? 'i-lucide-undo-2' : 'i-lucide-badge-check'
+)
 
 const publishReadinessLabel = computed(() => {
   if (!guideGuidelines.value.length) {
@@ -865,7 +875,7 @@ const publishReadinessLabel = computed(() => {
   }
 
   if (isGuidePublished.value) {
-    return 'Guide is already active and verified.'
+    return 'Guide is active and verified. Unpublish it to move the record back to draft for changes.'
   }
 
   if (canPublishGuide.value) {
@@ -1180,30 +1190,42 @@ async function saveGuide() {
   }
 }
 
-async function publishGuide() {
-  if (!selectedGuide.value || !canPublishGuide.value) {
+async function toggleGuidePublication() {
+  if (!selectedGuide.value || !canToggleGuidePublication.value) {
     return
   }
 
+  const wasPublished = isGuidePublished.value
   publishPending.value = true
 
   try {
-    const updatedGuide = await catalogApi.updateGuide(selectedGuide.value.urn, {
-      status: 'active' as CatalogStatus,
-      review_status: 'verified' as CatalogReviewStatus
-    })
+    const updatedGuide = await catalogApi.updateGuide(
+      selectedGuide.value.urn,
+      wasPublished
+        ? {
+            status: 'draft' as CatalogStatus
+          }
+        : {
+            status: 'active' as CatalogStatus,
+            review_status: 'verified' as CatalogReviewStatus
+          }
+    )
 
     mergeGuide(updatedGuide)
     toast.add({
-      title: 'Guide published',
-      description: 'The guide is now active and verified.',
+      title: wasPublished ? 'Guide unpublished' : 'Guide published',
+      description: wasPublished
+        ? 'The guide was moved back to draft so it can be revised.'
+        : 'The guide is now active and verified.',
       color: 'success'
     })
   } catch (error) {
-    console.error('[ConsoleGuideDetail] Failed to publish guide:', error)
+    console.error('[ConsoleGuideDetail] Failed to toggle guide publication:', error)
     toast.add({
-      title: 'Guide publish failed',
-      description: 'The guide could not be published right now.',
+      title: wasPublished ? 'Guide unpublish failed' : 'Guide publish failed',
+      description: wasPublished
+        ? 'The guide could not be moved back to draft right now.'
+        : 'The guide could not be published right now.',
       color: 'error'
     })
   } finally {

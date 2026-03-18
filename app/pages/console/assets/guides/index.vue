@@ -164,7 +164,17 @@
             </template>
 
             <template #actions-cell="{ row }">
-              <div class="flex justify-end">
+              <div class="flex justify-end gap-2">
+                <UButton
+                  color="error"
+                  variant="ghost"
+                  size="sm"
+                  icon="i-lucide-trash-2"
+                  :loading="deletePending && guidePendingDeletion?.urn === row.original.urn"
+                  @click.stop="promptDeleteGuide(row.original)"
+                >
+                  Delete
+                </UButton>
                 <UButton
                   color="neutral"
                   variant="ghost"
@@ -214,6 +224,63 @@
         </UCard>
       </UPageBody>
     </UPage>
+
+    <UModal
+      v-model:open="deleteModalOpen"
+      :ui="{ width: 'max-w-md' }"
+    >
+      <template #content>
+        <UCard :ui="{ body: { padding: 'sm:p-6 p-4' }, rounded: 'rounded-2xl' }">
+          <div class="space-y-5">
+            <div class="text-center">
+              <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                <UIcon
+                  name="i-lucide-alert-triangle"
+                  class="h-8 w-8 text-red-600 dark:text-red-400"
+                />
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                Delete guide?
+              </h3>
+              <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                This will permanently remove
+                <span class="font-medium text-gray-900 dark:text-white">{{ guidePendingDeletion?.title || 'this guide' }}</span>
+                from the system.
+              </p>
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                URN: {{ guidePendingDeletion?.urn || 'Unknown' }}
+              </p>
+            </div>
+
+            <UAlert
+              v-if="deleteError"
+              color="error"
+              variant="soft"
+              icon="i-lucide-alert-circle"
+              :title="deleteError"
+            />
+
+            <div class="flex justify-end gap-3">
+              <UButton
+                color="neutral"
+                variant="ghost"
+                :disabled="deletePending"
+                @click="cancelDeleteGuide"
+              >
+                Cancel
+              </UButton>
+              <UButton
+                color="error"
+                :loading="deletePending"
+                @click="confirmDeleteGuide"
+              >
+                Delete guide
+              </UButton>
+            </div>
+          </div>
+        </UCard>
+      </template>
+    </UModal>
   </div>
 </template>
 
@@ -258,12 +325,17 @@ const guideFieldList = [
 
 const route = useRoute()
 const router = useRouter()
+const toast = useToast()
 
 const guides = ref<CatalogGuide[]>([])
 const totalGuides = ref(0)
 const guideFacets = ref<Record<string, CatalogFacetBucket[]>>({})
 const guidesLoading = ref(false)
 const guidesError = ref<string | null>(null)
+const deleteModalOpen = ref(false)
+const guidePendingDeletion = ref<CatalogGuide | null>(null)
+const deletePending = ref(false)
+const deleteError = ref<string | null>(null)
 const page = ref(1)
 let suppressPageWatcher = false
 let suppressFilterWatcher = false
@@ -527,6 +599,49 @@ async function openGuide(guide: CatalogGuide) {
   })
 }
 
+function promptDeleteGuide(guide: CatalogGuide) {
+  guidePendingDeletion.value = guide
+  deleteError.value = null
+  deleteModalOpen.value = true
+}
+
+function cancelDeleteGuide() {
+  if (deletePending.value) {
+    return
+  }
+
+  deleteModalOpen.value = false
+  guidePendingDeletion.value = null
+  deleteError.value = null
+}
+
+async function confirmDeleteGuide() {
+  if (!guidePendingDeletion.value) {
+    return
+  }
+
+  const guideToDelete = guidePendingDeletion.value
+  deletePending.value = true
+  deleteError.value = null
+
+  try {
+    await catalogApi.deleteGuide(guideToDelete.urn)
+    deleteModalOpen.value = false
+    guidePendingDeletion.value = null
+    await loadGuides()
+    toast.add({
+      title: 'Guide deleted',
+      description: 'The dietary guide was removed successfully.',
+      color: 'success'
+    })
+  } catch (error) {
+    console.error('[ConsoleGuidesIndex] Failed to delete guide:', error)
+    deleteError.value = 'The guide could not be deleted right now.'
+  } finally {
+    deletePending.value = false
+  }
+}
+
 function handleGuideRowSelect(_event: Event, row: { original: CatalogGuide }) {
   void openGuide(row.original)
 }
@@ -594,6 +709,15 @@ watch(page, (nextPage, previousPage) => {
 
   syncRouteQuery()
   void loadGuides()
+})
+
+watch(deleteModalOpen, isOpen => {
+  if (isOpen || deletePending.value) {
+    return
+  }
+
+  guidePendingDeletion.value = null
+  deleteError.value = null
 })
 
 watch([

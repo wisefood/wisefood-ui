@@ -672,6 +672,10 @@ class CatalogApiService {
     return normalizeGuide(unwrapEntity(payload, ['guide', 'item', 'result', 'data']))
   }
 
+  async deleteGuide(urn: string): Promise<void> {
+    await wisefoodApi.delete<undefined>(`${this.basePath}/guides/${encodeURIComponent(urn)}`)
+  }
+
   async fetchGuidelines(params: CatalogCollectionParams = {}): Promise<CatalogGuideline[]> {
     const payload = await wisefoodApi.get<unknown>(`${this.basePath}/guidelines/fetch`, {
       params: {

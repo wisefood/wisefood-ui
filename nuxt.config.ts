@@ -33,7 +33,7 @@ export default defineNuxtConfig({
     }
   },
   routeRules: {
-    '/': { prerender: true },
+    '/': { ssr: false },
     '/profiles': { ssr: false },
     '/dashboard': { ssr: false },
     '/console': { ssr: false },
@@ -45,8 +45,14 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2025-01-15',
   vite: {
+    resolve: {
+      dedupe: ['vue', '@vueuse/core', '@vueuse/shared']
+    },
     define: {
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: true
+    },
+    optimizeDeps: {
+      force: true
     }
   },
   debug: false,

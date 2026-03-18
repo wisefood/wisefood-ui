@@ -75,6 +75,7 @@
             </UButton>
 
             <UButton
+              v-if="!isGuideActive"
               color="neutral"
               variant="outline"
               icon="i-lucide-plus"
@@ -85,14 +86,38 @@
             </UButton>
 
             <UButton
+              v-if="!isGuideActive && selectedGuidelineCount"
               color="primary"
               variant="soft"
+              icon="i-lucide-check-check"
+              :disabled="!selectedGuidelinesNeedApproval"
+              :loading="bulkApprovePending"
+              @click="approveSelectedGuidelines"
+            >
+              Approve Selected
+            </UButton>
+
+            <UButton
+              v-if="!isGuideActive && selectedGuidelineCount"
+              color="error"
+              variant="soft"
+              icon="i-lucide-trash-2"
+              :disabled="guidelineDeletePending"
+              @click="promptSelectedGuidelinesDelete"
+            >
+              Discard Selected
+            </UButton>
+
+            <UButton
+              v-if="!isGuideActive"
+              color="primary"
+              :variant="allPageGuidelinesApproved ? 'outline' : 'soft'"
               icon="i-lucide-badge-check"
-              :disabled="!pageGuidelinesTotal"
+              :disabled="!pageGuidelinesTotal || allPageGuidelinesApproved"
               :loading="bulkApprovePending"
               @click="approveCurrentPage"
             >
-              Approve Page
+              {{ pageApprovalButtonLabel }}
             </UButton>
           </div>
         </section>
@@ -304,6 +329,13 @@
 
                 <div class="flex items-center gap-2">
                   <UBadge
+                    v-if="!isGuideActive && selectedGuidelineCount"
+                    color="primary"
+                    variant="soft"
+                  >
+                    {{ selectedGuidelineCount }} selected
+                  </UBadge>
+                  <UBadge
                     color="neutral"
                     variant="outline"
                   >
@@ -321,6 +353,22 @@
                   sticky="header"
                   class="min-h-[36rem]"
                 >
+                  <template #select-cell="{ row }">
+                    <div
+                      v-if="!isGuideActive"
+                      class="flex justify-center py-1"
+                    >
+                      <input
+                        :checked="isGuidelineSelected(row.original.id)"
+                        :disabled="bulkApprovePending || guidelineDeletePending || !canBulkActOnGuideline(row.original)"
+                        type="checkbox"
+                        class="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/20 dark:bg-zinc-900"
+                        @click.stop
+                        @change="toggleGuidelineSelection(row.original.id, ($event.target as HTMLInputElement).checked)"
+                      >
+                    </div>
+                  </template>
+
                   <template #rule_text-cell="{ row }">
                     <div class="w-[22rem] max-w-[22rem] min-w-[22rem] py-1">
                       <div class="flex items-start gap-3">
@@ -342,21 +390,25 @@
                   </template>
 
                   <template #actions-cell="{ row }">
-                    <div class="flex justify-end gap-2">
+                    <div
+                      v-if="!isGuideActive"
+                      class="flex justify-end gap-2"
+                    >
                       <UButton
-                        color="success"
+                        :color="isGuidelineApproved(row.original) ? 'neutral' : 'success'"
                         variant="soft"
                         size="sm"
-                        :disabled="isGuidelineApproved(row.original)"
+                        :disabled="bulkApprovePending || guidelineDeletePending"
                         :loading="approvingGuidelineId === row.original.id"
-                        @click="approveGuideline(row.original)"
+                        @click="toggleGuidelineApproval(row.original)"
                       >
-                        Approve
+                        {{ isGuidelineApproved(row.original) ? 'Disapprove' : 'Approve' }}
                       </UButton>
                       <UButton
                         color="neutral"
                         variant="ghost"
                         size="sm"
+                        :disabled="bulkApprovePending || guidelineDeletePending"
                         @click="openEditGuidelineModal(row.original)"
                       >
                         Edit
@@ -365,6 +417,7 @@
                         color="error"
                         variant="ghost"
                         size="sm"
+                        :disabled="bulkApprovePending || guidelineDeletePending"
                         @click="promptGuidelineDelete(row.original)"
                       >
                         Discard
@@ -387,6 +440,7 @@
                         variant="outline"
                         size="sm"
                         icon="i-lucide-plus"
+                        v-if="!isGuideActive"
                         :disabled="!canCreateGuideline"
                         @click="openCreateGuidelineModal"
                       >
@@ -742,10 +796,10 @@
             <div class="flex items-start justify-between gap-3">
               <div>
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                  Discard Guideline
+                  {{ guidelineDeleteDialogTitle }}
                 </h3>
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                  This removes the guideline from the guide.
+                  {{ guidelineDeleteDialogDescription }}
                 </p>
               </div>
 
@@ -758,9 +812,18 @@
             </div>
           </template>
 
-          <p class="text-sm leading-6 text-gray-600 dark:text-gray-300">
-            {{ guidelineDeleteTarget?.rule_text || 'Selected guideline' }}
-          </p>
+          <div class="space-y-3">
+            <p class="text-sm leading-6 text-gray-600 dark:text-gray-300">
+              {{ guidelineDeleteDialogBody }}
+            </p>
+
+            <div
+              v-if="guidelinesPendingDeletion.length > 1"
+              class="rounded-xl border border-gray-200/80 bg-gray-50/70 px-4 py-3 text-sm text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300"
+            >
+              {{ guidelinesPendingDeletion.length }} guidelines are selected for discard.
+            </div>
+          </div>
 
           <template #footer>
             <div class="flex justify-end gap-3">
@@ -775,9 +838,9 @@
               <UButton
                 color="error"
                 :loading="guidelineDeletePending"
-                @click="deleteGuideline"
+                @click="deleteGuidelines"
               >
-                Discard Guideline
+                {{ guidelineDeleteConfirmLabel }}
               </UButton>
             </div>
           </template>
@@ -830,6 +893,9 @@ definePageMeta({
 })
 
 type PdfJsModule = typeof import('pdfjs-dist/legacy/build/pdf.mjs')
+type PdfWorkerModule = {
+  default: new () => Worker
+}
 type PdfDocumentLike = {
   numPages: number
   getPage: (pageNumber: number) => Promise<{
@@ -846,6 +912,8 @@ type PdfDocumentLike = {
 type GuidelineEditorMode = 'create' | 'edit'
 
 let pdfModulePromise: Promise<PdfJsModule> | null = null
+let pdfWorkerPromise: Promise<PdfWorkerModule> | null = null
+let pdfWorkerInstance: Worker | null = null
 let activePdfDocument: PdfDocumentLike | null = null
 let activePdfRenderTask: { promise: Promise<void>, cancel?: () => void } | null = null
 let pdfLoadToken = 0
@@ -859,11 +927,14 @@ async function getPdfModule() {
   }
 
   if (!pdfModulePromise) {
+    pdfWorkerPromise ||= import('pdfjs-dist/legacy/build/pdf.worker.min.mjs?worker')
+
     pdfModulePromise = Promise.all([
       import('pdfjs-dist/legacy/build/pdf.mjs'),
-      import('pdfjs-dist/legacy/build/pdf.worker.min.mjs?url')
-    ]).then(([module, worker]) => {
-      module.GlobalWorkerOptions.workerSrc ||= worker.default
+      pdfWorkerPromise
+    ]).then(([module, workerModule]) => {
+      pdfWorkerInstance ||= new workerModule.default()
+      module.GlobalWorkerOptions.workerPort ||= pdfWorkerInstance
       return module
     })
   }
@@ -883,8 +954,9 @@ const detailLoading = ref(false)
 const detailError = ref<string | null>(null)
 const pageGuidelinesLoading = ref(false)
 const guidelineTablePage = ref(1)
-const guidelinePageSize = 5
+const guidelinePageSize = 4
 const pageGuidelinesTotal = ref(0)
+const selectedGuidelineIds = ref<string[]>([])
 
 const selectedArtifactId = ref('')
 const currentPage = ref(1)
@@ -905,7 +977,7 @@ const guidelineSavePending = ref(false)
 
 const guidelineDeleteOpen = ref(false)
 const guidelineDeletePending = ref(false)
-const guidelineDeleteTargetId = ref('')
+const guidelineDeleteTargetIds = ref<string[]>([])
 const approvingGuidelineId = ref('')
 
 const bulkApprovePending = ref(false)
@@ -944,10 +1016,18 @@ const guidelineForm = reactive({
 
 const pdfByteCache = reactive<Record<string, Uint8Array>>({})
 
-const guidelineColumns = [
-  { accessorKey: 'rule_text', header: 'Guideline text' },
-  { id: 'actions', header: '', enableSorting: false }
-]
+const guidelineColumns = computed(() => {
+  const columns = [
+    { accessorKey: 'rule_text', header: 'Guideline text' }
+  ]
+
+  if (!isGuideActive.value) {
+    columns.unshift({ id: 'select', header: '', enableSorting: false })
+    columns.push({ id: 'actions', header: '', enableSorting: false })
+  }
+
+  return columns
+})
 
 const guidelineTableMeta = computed(() => ({
   class: {
@@ -1022,8 +1102,8 @@ const guideMetadataItems = computed(() => {
   ]
 })
 
-const guidelineDeleteTarget = computed(() =>
-  guideGuidelines.value.find(guideline => guideline.id === guidelineDeleteTargetId.value) || null
+const guidelinesPendingDeletion = computed(() =>
+  guideGuidelines.value.filter(guideline => guidelineDeleteTargetIds.value.includes(guideline.id))
 )
 
 const editingGuideline = computed(() =>
@@ -1034,8 +1114,12 @@ const nextGuidelineSequence = computed(() =>
   guideGuidelines.value.reduce((maxSequence, guideline) => Math.max(maxSequence, guideline.sequence_no || 0), 0) + 1
 )
 
+const isGuideActive = computed(() =>
+  selectedGuide.value?.status === 'active'
+)
+
 const canCreateGuideline = computed(() =>
-  Boolean(selectedGuide.value && selectedPdfArtifact.value && totalPdfPages.value >= 1)
+  Boolean(selectedGuide.value && selectedPdfArtifact.value && totalPdfPages.value >= 1 && !isGuideActive.value)
 )
 
 const pdfCanPan = computed(() => pdfZoom.value > 1.02 && !pdfLoading.value && !pdfError.value)
@@ -1053,6 +1137,54 @@ const guidelinePaginationSummary = computed(() => {
   const end = Math.min(guidelineTableOffset.value + pageGuidelines.value.length, pageGuidelinesTotal.value)
   return `Showing ${start}-${end} of ${pageGuidelinesTotal.value}`
 })
+
+const selectedGuidelines = computed(() =>
+  pageGuidelines.value.filter(guideline => selectedGuidelineIds.value.includes(guideline.id) && canBulkActOnGuideline(guideline))
+)
+
+const selectedGuidelineCount = computed(() => selectedGuidelines.value.length)
+
+const currentPdfPageGuidelines = computed(() =>
+  guideGuidelines.value.filter(guideline => guideline.page_no === currentPage.value)
+)
+
+const selectedGuidelinesNeedApproval = computed(() =>
+  selectedGuidelines.value.some(guideline => !isGuidelineApproved(guideline))
+)
+
+const allPageGuidelinesApproved = computed(() =>
+  Boolean(currentPdfPageGuidelines.value.length) && currentPdfPageGuidelines.value.every(isGuidelineApproved)
+)
+
+const pageApprovalButtonLabel = computed(() =>
+  allPageGuidelinesApproved.value ? 'Page Active' : 'Approve Page'
+)
+
+const guidelineDeleteDialogTitle = computed(() =>
+  guidelinesPendingDeletion.value.length > 1 ? 'Discard Selected Guidelines' : 'Discard Guideline'
+)
+
+const guidelineDeleteDialogDescription = computed(() =>
+  guidelinesPendingDeletion.value.length > 1
+    ? 'This removes the selected guidelines from the guide.'
+    : 'This removes the guideline from the guide.'
+)
+
+const guidelineDeleteDialogBody = computed(() => {
+  if (!guidelinesPendingDeletion.value.length) {
+    return 'Selected guideline'
+  }
+
+  if (guidelinesPendingDeletion.value.length === 1) {
+    return guidelinesPendingDeletion.value[0]?.rule_text || 'Selected guideline'
+  }
+
+  return 'These guidelines will be removed from the guide and from the current review list.'
+})
+
+const guidelineDeleteConfirmLabel = computed(() =>
+  guidelinesPendingDeletion.value.length > 1 ? 'Discard Selected' : 'Discard Guideline'
+)
 
 const pdfStatusLabel = computed(() => {
   if (!selectedPdfArtifact.value) {
@@ -1092,6 +1224,10 @@ function hasPdfSuffix(value: string | null | undefined) {
 
 function isGuidelineApproved(guideline: CatalogGuideline) {
   return guideline.status === 'active' && guideline.review_status === 'verified'
+}
+
+function canBulkActOnGuideline(guideline: CatalogGuideline) {
+  return !isGuideActive.value && !isGuidelineApproved(guideline)
 }
 
 function guidelineStatusDotClass(guideline: CatalogGuideline) {
@@ -1449,6 +1585,30 @@ function mergeGuideline(updatedGuideline: CatalogGuideline) {
 function removeGuideline(guidelineId: string) {
   guideGuidelines.value = guideGuidelines.value.filter(guideline => guideline.id !== guidelineId)
   pageGuidelines.value = pageGuidelines.value.filter(guideline => guideline.id !== guidelineId)
+  selectedGuidelineIds.value = selectedGuidelineIds.value.filter(id => id !== guidelineId)
+}
+
+function isGuidelineSelected(guidelineId: string) {
+  return selectedGuidelineIds.value.includes(guidelineId)
+}
+
+function toggleGuidelineSelection(guidelineId: string, checked: boolean | 'indeterminate') {
+  if (isGuideActive.value) {
+    return
+  }
+
+  if (checked === 'indeterminate') {
+    return
+  }
+
+  if (checked) {
+    if (!selectedGuidelineIds.value.includes(guidelineId)) {
+      selectedGuidelineIds.value = [...selectedGuidelineIds.value, guidelineId]
+    }
+    return
+  }
+
+  selectedGuidelineIds.value = selectedGuidelineIds.value.filter(id => id !== guidelineId)
 }
 
 async function loadPageGuidelines() {
@@ -1456,6 +1616,7 @@ async function loadPageGuidelines() {
   if (!guide) {
     pageGuidelines.value = []
     pageGuidelinesTotal.value = 0
+    selectedGuidelineIds.value = []
     return
   }
 
@@ -1483,6 +1644,9 @@ async function loadPageGuidelines() {
     }
 
     pageGuidelines.value = [...response.guidelines].sort((left, right) => (left.sequence_no || 0) - (right.sequence_no || 0))
+    selectedGuidelineIds.value = selectedGuidelineIds.value.filter(id =>
+      pageGuidelines.value.some(guideline => guideline.id === id && canBulkActOnGuideline(guideline))
+    )
   } catch (error) {
     if (loadToken !== pageGuidelineLoadToken) {
       return
@@ -1491,6 +1655,7 @@ async function loadPageGuidelines() {
     console.error('[ConsoleGuidelineReview] Failed to load page guidelines:', error)
     pageGuidelines.value = []
     pageGuidelinesTotal.value = 0
+    selectedGuidelineIds.value = []
   } finally {
     if (loadToken === pageGuidelineLoadToken) {
       pageGuidelinesLoading.value = false
@@ -1506,6 +1671,7 @@ async function loadGuideDetail(urn: string) {
     pageGuidelines.value = []
     guideArtifacts.value = []
     pageGuidelinesTotal.value = 0
+    selectedGuidelineIds.value = []
     return
   }
 
@@ -1521,6 +1687,8 @@ async function loadGuideDetail(urn: string) {
     selectedGuide.value = guide
     guideArtifacts.value = guide.artifacts
     guideGuidelines.value = [...guidelines].sort((left, right) => (left.sequence_no || 0) - (right.sequence_no || 0))
+    selectedGuidelineIds.value = []
+    guidelineDeleteTargetIds.value = []
 
     if (!reviewArtifacts.value.some(artifact => artifact.id === selectedArtifactId.value)) {
       selectedArtifactId.value = reviewArtifacts.value[0]?.id || ''
@@ -1537,6 +1705,7 @@ async function loadGuideDetail(urn: string) {
     pageGuidelines.value = []
     guideArtifacts.value = []
     pageGuidelinesTotal.value = 0
+    selectedGuidelineIds.value = []
     selectedArtifactId.value = ''
     currentPage.value = 1
     guidelineTablePage.value = 1
@@ -1562,7 +1731,7 @@ function goToNextPage() {
 }
 
 function openCreateGuidelineModal() {
-  if (!canCreateGuideline.value) {
+  if (!canCreateGuideline.value || isGuideActive.value) {
     return
   }
 
@@ -1574,6 +1743,10 @@ function openCreateGuidelineModal() {
 }
 
 function openEditGuidelineModal(guideline: CatalogGuideline) {
+  if (isGuideActive.value) {
+    return
+  }
+
   guidelineEditorMode.value = 'edit'
   guidelineEditorTab.value = 'basic'
   editingGuidelineId.value = guideline.id
@@ -1582,7 +1755,20 @@ function openEditGuidelineModal(guideline: CatalogGuideline) {
 }
 
 function promptGuidelineDelete(guideline: CatalogGuideline) {
-  guidelineDeleteTargetId.value = guideline.id
+  if (isGuideActive.value) {
+    return
+  }
+
+  guidelineDeleteTargetIds.value = [guideline.id]
+  guidelineDeleteOpen.value = true
+}
+
+function promptSelectedGuidelinesDelete() {
+  if (isGuideActive.value || !selectedGuidelines.value.length) {
+    return
+  }
+
+  guidelineDeleteTargetIds.value = selectedGuidelines.value.map(guideline => guideline.id)
   guidelineDeleteOpen.value = true
 }
 
@@ -1696,29 +1882,69 @@ async function saveGuideline() {
   }
 }
 
-async function deleteGuideline() {
-  const target = guidelineDeleteTarget.value
-  if (!target) {
+async function deleteGuidelines() {
+  if (isGuideActive.value) {
+    return
+  }
+
+  const guidelineIds = [...guidelineDeleteTargetIds.value]
+  if (!guidelineIds.length) {
     return
   }
 
   guidelineDeletePending.value = true
 
   try {
-    await catalogApi.deleteGuideline(target.id)
-    removeGuideline(target.id)
-    await loadPageGuidelines()
-    guidelineDeleteOpen.value = false
-    toast.add({
-      title: 'Guideline discarded',
-      description: 'The guideline was removed from the guide.',
-      color: 'success'
+    const results = await Promise.allSettled(
+      guidelineIds.map(guidelineId => catalogApi.deleteGuideline(guidelineId))
+    )
+
+    let discardedCount = 0
+    let failedCount = 0
+
+    results.forEach((result, index) => {
+      const guidelineId = guidelineIds[index]
+      if (!guidelineId) {
+        return
+      }
+
+      if (result.status === 'fulfilled') {
+        removeGuideline(guidelineId)
+        discardedCount += 1
+      } else {
+        failedCount += 1
+      }
     })
+
+    await loadPageGuidelines()
+
+    if (discardedCount) {
+      toast.add({
+        title: discardedCount === 1 ? 'Guideline discarded' : 'Guidelines discarded',
+        description: discardedCount === 1
+          ? 'The guideline was removed from the guide.'
+          : `${discardedCount} guidelines were removed from the guide.`,
+        color: 'success'
+      })
+    }
+
+    if (failedCount) {
+      toast.add({
+        title: 'Discard failed',
+        description: `${failedCount} guideline${failedCount === 1 ? '' : 's'} could not be deleted.`,
+        color: 'error'
+      })
+    }
+
+    if (!failedCount) {
+      guidelineDeleteOpen.value = false
+      guidelineDeleteTargetIds.value = []
+    }
   } catch (error) {
-    console.error('[ConsoleGuidelineReview] Failed to delete guideline:', error)
+    console.error('[ConsoleGuidelineReview] Failed to delete guideline selection:', error)
     toast.add({
       title: 'Delete failed',
-      description: 'The guideline could not be deleted.',
+      description: 'The selected guidelines could not be deleted.',
       color: 'error'
     })
   } finally {
@@ -1726,31 +1952,40 @@ async function deleteGuideline() {
   }
 }
 
-async function approveGuideline(guideline: CatalogGuideline) {
-  if (isGuidelineApproved(guideline) || approvingGuidelineId.value) {
+async function toggleGuidelineApproval(guideline: CatalogGuideline) {
+  if (isGuideActive.value) {
     return
   }
 
+  if (approvingGuidelineId.value) {
+    return
+  }
+
+  const wasApproved = isGuidelineApproved(guideline)
   approvingGuidelineId.value = guideline.id
 
   try {
     const updatedGuideline = await catalogApi.updateGuideline(guideline.id, {
-      status: 'active',
-      review_status: 'verified'
+      status: wasApproved ? 'draft' : 'active',
+      review_status: wasApproved ? 'unreviewed' : 'verified'
     })
 
     mergeGuideline(updatedGuideline)
     await loadPageGuidelines()
     toast.add({
-      title: 'Guideline approved',
-      description: 'The guideline is now active and verified.',
+      title: wasApproved ? 'Guideline disapproved' : 'Guideline approved',
+      description: wasApproved
+        ? 'The guideline was moved back to draft and is no longer verified.'
+        : 'The guideline is now active and verified.',
       color: 'success'
     })
   } catch (error) {
-    console.error('[ConsoleGuidelineReview] Failed to approve guideline:', error)
+    console.error('[ConsoleGuidelineReview] Failed to toggle guideline approval:', error)
     toast.add({
-      title: 'Approval failed',
-      description: 'The guideline could not be approved.',
+      title: wasApproved ? 'Disapprove failed' : 'Approval failed',
+      description: wasApproved
+        ? 'The guideline could not be moved back to draft.'
+        : 'The guideline could not be approved.',
       color: 'error'
     })
   } finally {
@@ -1760,7 +1995,7 @@ async function approveGuideline(guideline: CatalogGuideline) {
 
 async function approveCurrentPage() {
   const guide = selectedGuide.value
-  if (!guide || !pageGuidelinesTotal.value) {
+  if (!guide || !pageGuidelinesTotal.value || isGuideActive.value) {
     return
   }
 
@@ -1837,6 +2072,75 @@ async function approveCurrentPage() {
   }
 }
 
+async function approveSelectedGuidelines() {
+  if (isGuideActive.value) {
+    return
+  }
+
+  const guidelinesToApprove = selectedGuidelines.value.filter(guideline => !isGuidelineApproved(guideline))
+
+  if (!guidelinesToApprove.length) {
+    toast.add({
+      title: 'Nothing to approve',
+      description: 'The selected guidelines are already active and verified.',
+      color: 'success'
+    })
+    return
+  }
+
+  bulkApprovePending.value = true
+
+  try {
+    const results = await Promise.allSettled(
+      guidelinesToApprove.map(guideline =>
+        catalogApi.updateGuideline(guideline.id, {
+          status: 'active',
+          review_status: 'verified'
+        })
+      )
+    )
+
+    let updatedCount = 0
+    let failedCount = 0
+
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        mergeGuideline(result.value)
+        updatedCount += 1
+      } else {
+        failedCount += 1
+      }
+    }
+
+    if (updatedCount) {
+      toast.add({
+        title: 'Selected guidelines approved',
+        description: `Approved ${updatedCount} guideline${updatedCount === 1 ? '' : 's'}.`,
+        color: 'success'
+      })
+    }
+
+    if (failedCount) {
+      toast.add({
+        title: 'Some approvals failed',
+        description: `${failedCount} guideline${failedCount === 1 ? '' : 's'} could not be updated.`,
+        color: 'error'
+      })
+    }
+
+    await loadPageGuidelines()
+  } catch (error) {
+    console.error('[ConsoleGuidelineReview] Failed to approve selected guidelines:', error)
+    toast.add({
+      title: 'Approval failed',
+      description: 'The selected guidelines could not be approved.',
+      color: 'error'
+    })
+  } finally {
+    bulkApprovePending.value = false
+  }
+}
+
 function reloadSelectedPdf() {
   void loadSelectedPdf(true)
 }
@@ -1878,6 +2182,7 @@ watch(selectedArtifactId, () => {
   const shouldReloadImmediately = currentPage.value === 1
   currentPage.value = 1
   guidelineTablePage.value = 1
+  selectedGuidelineIds.value = []
   pdfZoom.value = 1
   if (shouldReloadImmediately) {
     void loadPageGuidelines()
@@ -1902,6 +2207,7 @@ watch(currentPage, (page) => {
   if (guidelineTablePage.value !== 1) {
     guidelineTablePage.value = 1
   } else {
+    selectedGuidelineIds.value = []
     void loadPageGuidelines()
   }
 
@@ -1915,7 +2221,16 @@ watch(guidelineTablePage, (page, previousPage) => {
     return
   }
 
+  selectedGuidelineIds.value = []
   void loadPageGuidelines()
+})
+
+watch(guidelineDeleteOpen, isOpen => {
+  if (isOpen || guidelineDeletePending.value) {
+    return
+  }
+
+  guidelineDeleteTargetIds.value = []
 })
 
 watch(pdfZoom, () => {
@@ -1931,6 +2246,13 @@ onBeforeUnmount(() => {
 
   if (resizeTimer) {
     clearTimeout(resizeTimer)
+  }
+
+  if (pdfWorkerInstance) {
+    pdfWorkerInstance.terminate()
+    pdfWorkerInstance = null
+    pdfWorkerPromise = null
+    pdfModulePromise = null
   }
 
   void destroyActivePdfDocument()
