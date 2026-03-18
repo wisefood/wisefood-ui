@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url'
+
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
@@ -46,6 +48,16 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-01-15',
   vite: {
     resolve: {
+      alias: [
+        {
+          find: /^@vueuse\/core$/,
+          replacement: fileURLToPath(new URL('./shims/vueuse-core.ts', import.meta.url))
+        },
+        {
+          find: '#vueuse-core-original',
+          replacement: fileURLToPath(new URL('./node_modules/.pnpm/@vueuse+core@13.9.0_vue@3.5.23_typescript@5.9.3_/node_modules/@vueuse/core/index.mjs', import.meta.url))
+        }
+      ],
       dedupe: ['vue', '@vueuse/core', '@vueuse/shared']
     },
     define: {

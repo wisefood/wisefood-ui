@@ -175,6 +175,98 @@
                 </p>
               </div>
             </div>
+
+            <div class="mt-4 rounded-xl border border-gray-200/80 bg-gray-50/70 px-4 py-4 dark:border-white/10 dark:bg-white/5">
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                      Latest PDF Extraction
+                    </p>
+
+                    <UBadge
+                      :color="guidelineExtractionStatusColor"
+                      variant="soft"
+                    >
+                      {{ guidelineExtractionStatusLabel }}
+                    </UBadge>
+                  </div>
+
+                  <p class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+                    {{ guidelineExtractionArtifactLabel }}
+                  </p>
+                  <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                    {{ guidelineExtractionSummary }}
+                  </p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                  <UButton
+                    v-if="canOpenGuidelineImport"
+                    color="primary"
+                    variant="soft"
+                    size="sm"
+                    icon="i-lucide-file-input"
+                    @click="openGuidelineImportModal"
+                  >
+                    Import Guidelines
+                  </UButton>
+
+                  <UButton
+                    v-if="guidelineExtractionArtifact"
+                    color="neutral"
+                    variant="ghost"
+                    size="sm"
+                    icon="i-lucide-refresh-cw"
+                    :loading="guidelineExtractionLoading"
+                    @click="refreshGuidelineExtractionStatus"
+                  >
+                    Refresh
+                  </UButton>
+                </div>
+              </div>
+
+              <div
+                v-if="guidelineExtractionArtifact"
+                class="mt-4 grid gap-3 sm:grid-cols-3"
+              >
+                <div class="rounded-xl border border-gray-200/70 bg-white/80 px-3 py-3 dark:border-white/10 dark:bg-black/10">
+                  <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                    Progress
+                  </p>
+                  <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                    {{ guidelineExtractionProgressLabel }}
+                  </p>
+                </div>
+
+                <div class="rounded-xl border border-gray-200/70 bg-white/80 px-3 py-3 dark:border-white/10 dark:bg-black/10">
+                  <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                    Extracted
+                  </p>
+                  <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                    {{ guidelineExtractionResultLabel }}
+                  </p>
+                </div>
+
+                <div class="rounded-xl border border-gray-200/70 bg-white/80 px-3 py-3 dark:border-white/10 dark:bg-black/10">
+                  <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                    Completed
+                  </p>
+                  <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                    {{ guidelineExtractionCompletedLabel }}
+                  </p>
+                </div>
+              </div>
+
+              <UAlert
+                v-if="guidelineExtractionError"
+                class="mt-4"
+                color="error"
+                variant="soft"
+                icon="i-lucide-alert-circle"
+                :title="guidelineExtractionError"
+              />
+            </div>
           </UCard>
 
           <UCard
@@ -699,11 +791,186 @@
         </UCard>
       </template>
     </UModal>
+
+    <UModal
+      v-model:open="guidelineImportDialogOpen"
+      :ui="{ content: 'w-[calc(100vw-2rem)] max-w-4xl sm:max-w-4xl' }"
+    >
+      <template #content>
+        <UCard
+          class="flex w-full max-h-[calc(100vh-2.5rem)] flex-col"
+          :ui="{ body: 'min-h-0 flex-1 overflow-y-auto p-4 sm:p-5', footer: 'p-4 sm:p-5' }"
+        >
+          <template #header>
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                  Import Extracted Guidelines
+                </h3>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                  Review the latest FoodScholar extraction for this guide and import only the new guidelines.
+                </p>
+              </div>
+
+              <UButton
+                color="neutral"
+                variant="ghost"
+                icon="i-lucide-x"
+                :disabled="guidelineImportBusy"
+                @click="closeGuidelineImportModal"
+              />
+            </div>
+          </template>
+
+          <div class="space-y-5">
+            <UAlert
+              v-if="guidelineExtractionError"
+              color="error"
+              variant="soft"
+              icon="i-lucide-alert-circle"
+              :title="guidelineExtractionError"
+            />
+
+            <UAlert
+              v-else-if="guidelineImportNotice"
+              color="neutral"
+              variant="soft"
+              icon="i-lucide-info"
+              :title="guidelineImportNotice"
+            />
+
+            <div
+              v-if="guidelineImportActiveDataset"
+              class="grid gap-3 sm:grid-cols-2"
+            >
+              <div class="rounded-xl border border-gray-200/80 bg-gray-50/70 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                  {{ guidelineImportResult ? 'Created' : 'Can Be Imported' }}
+                </p>
+                <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
+                  {{ guidelineImportExecutableCount }}
+                </p>
+              </div>
+
+              <div class="rounded-xl border border-gray-200/80 bg-gray-50/70 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                  Skipped
+                </p>
+                <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
+                  {{ guidelineImportSkippedCount }}
+                </p>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-gray-200/80 bg-gray-50/80 p-5 dark:border-white/10 dark:bg-white/5">
+              <div
+                v-if="guidelineImportPreviewLoading"
+                class="rounded-xl border border-dashed border-gray-300/80 bg-white/80 p-4 text-sm text-gray-600 dark:border-white/15 dark:bg-black/10 dark:text-gray-300"
+              >
+                Building a dry-run import preview from the completed extraction result.
+              </div>
+
+              <UAlert
+                v-else-if="guidelineImportPreviewError"
+                color="error"
+                variant="soft"
+                icon="i-lucide-alert-circle"
+                :title="guidelineImportPreviewError"
+              />
+
+              <template v-else-if="guidelineImportActiveDataset">
+                <UTable
+                  :data="guidelineImportTableRows"
+                  :columns="guidelineImportTableColumns"
+                  sticky="header"
+                  class="min-h-[12rem]"
+                >
+                  <template #rule_text-cell="{ row }">
+                    <div class="w-[32rem] max-w-[32rem] py-0.5">
+                      <p class="whitespace-normal break-words text-sm font-medium leading-6 text-gray-900 dark:text-white">
+                        {{ row.original.rule_text }}
+                      </p>
+                    </div>
+                  </template>
+
+                  <template #page_no-cell="{ row }">
+                    <span class="text-sm text-gray-600 dark:text-gray-300">
+                      {{ row.original.page_no }}
+                    </span>
+                  </template>
+
+                  <template #status-cell="{ row }">
+                    <UBadge
+                      :color="guidelineImportStatusColor(row.original.status)"
+                      variant="soft"
+                    >
+                      {{ guidelineImportStatusLabel(row.original.status) }}
+                    </UBadge>
+                  </template>
+
+                  <template #empty>
+                    <div class="flex h-40 flex-col items-center justify-center px-6 text-center">
+                      <UIcon
+                        name="i-lucide-list-x"
+                        class="h-8 w-8 text-gray-400"
+                      />
+                      <p class="mt-4 text-sm font-medium text-gray-900 dark:text-white">
+                        No guideline import items are available.
+                      </p>
+                    </div>
+                  </template>
+                </UTable>
+              </template>
+            </div>
+
+            <UAlert
+              v-if="guidelineImportError"
+              color="error"
+              variant="soft"
+              icon="i-lucide-alert-circle"
+              :title="guidelineImportError"
+            />
+          </div>
+
+          <template #footer>
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p
+                v-if="guidelineImportPreview && !guidelineImportResult"
+                class="text-xs text-gray-500 dark:text-gray-400"
+              >
+                {{ guidelineImportExecutableCount }} guideline{{ guidelineImportExecutableCount === 1 ? '' : 's' }} ready to import
+              </p>
+
+              <div class="flex justify-end gap-3">
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  :disabled="guidelineImportBusy"
+                  @click="closeGuidelineImportModal"
+                >
+                  {{ guidelineImportResult ? 'Done' : 'Close' }}
+                </UButton>
+
+                <UButton
+                  v-if="guidelineImportPreview && !guidelineImportResult"
+                  color="primary"
+                  :loading="guidelineImportPending"
+                  :disabled="guidelineImportExecutableCount === 0"
+                  @click="confirmGuidelineImport"
+                >
+                  Import Guidelines
+                </UButton>
+              </div>
+            </div>
+          </template>
+        </UCard>
+      </template>
+    </UModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import type {
   ArtifactUpdatePayload,
   CatalogApplicabilityStatus,
@@ -716,6 +983,10 @@ import type {
   GuideUpdatePayload
 } from '~/services/catalogApi'
 import catalogApi from '~/services/catalogApi'
+import foodscholarGuidelinesApi, {
+  type FoodScholarGuidelineExtractionStatus,
+  type FoodScholarGuidelineImportResult
+} from '~/services/foodscholarGuidelinesApi'
 import { fetchCatalogArtifactDownloadResponse, getArtifactPresignedUrl, hasS3Backing } from '~/services/objectStorageApi'
 import {
   buildGuideReviewRoutePath,
@@ -740,6 +1011,17 @@ const detailError = ref<string | null>(null)
 
 const guideGuidelines = ref<CatalogGuideline[]>([])
 const guideArtifacts = ref<CatalogArtifact[]>([])
+const guidelineExtractionStatus = ref<FoodScholarGuidelineExtractionStatus | null>(null)
+const guidelineExtractionLoading = ref(false)
+const guidelineExtractionError = ref<string | null>(null)
+const guidelineImportModalOpen = ref(false)
+const guidelineImportPreview = ref<FoodScholarGuidelineImportResult | null>(null)
+const guidelineImportPreviewLoading = ref(false)
+const guidelineImportPreviewError = ref<string | null>(null)
+const guidelineImportPending = ref(false)
+const guidelineImportError = ref<string | null>(null)
+const guidelineImportResult = ref<FoodScholarGuidelineImportResult | null>(null)
+let guidelineExtractionPollTimeout: ReturnType<typeof setTimeout> | null = null
 
 const guideEditorOpen = ref(false)
 const artifactEditorOpen = ref(false)
@@ -758,6 +1040,18 @@ const guideEditorTabs = [
   { label: 'Content', value: 'content', slot: 'content' }
 ]
 
+const guidelineImportDialogOpen = computed({
+  get: () => guidelineImportModalOpen.value,
+  set: (nextOpen: boolean) => {
+    if (nextOpen) {
+      guidelineImportModalOpen.value = true
+      return
+    }
+
+    closeGuidelineImportModal()
+  }
+})
+
 const guideForm = reactive({
   title: '',
   short_title: '',
@@ -766,7 +1060,7 @@ const guideForm = reactive({
   url: '',
   region: '',
   language: '',
-  publication_year: '',
+  publication_year: '' as string | number,
   publication_date: '',
   topic: '',
   audience: '',
@@ -796,6 +1090,12 @@ const artifactColumns = [
   { id: 'actions', header: '', enableSorting: false }
 ]
 
+const guidelineImportTableColumns = [
+  { accessorKey: 'rule_text', header: 'Guideline' },
+  { accessorKey: 'page_no', header: 'Page' },
+  { accessorKey: 'status', header: 'Status' }
+]
+
 const resolvedGuideUrn = computed(() => resolveGuideRouteParam(route.params.urn))
 
 const guideLibraryQuery = computed(() => {
@@ -811,6 +1111,17 @@ const guideLibraryRoute = computed(() => ({
 const guideReviewRoute = computed(() => buildGuideReviewRoutePath(resolvedGuideUrn.value))
 
 const pageTitle = computed(() => selectedGuide.value?.short_title || selectedGuide.value?.title || 'Guide Workspace')
+
+const guidelineExtractionArtifact = computed(() => selectLatestPdfArtifact(guideArtifacts.value))
+const defaultGuidelineImportActionType = 'eat'
+
+const guidelineExtractionArtifactLabel = computed(() => {
+  if (!guideArtifacts.value.length) {
+    return 'No artifacts attached'
+  }
+
+  return guidelineExtractionArtifact.value?.title || 'No PDF artifact available'
+})
 
 const breadcrumbItems = computed(() => [
   {
@@ -844,8 +1155,165 @@ const pendingGuidelineCount = computed(() =>
   Math.max(guideGuidelines.value.length - readyGuidelineCount.value, 0)
 )
 
+const guidelineExtractionStatusValue = computed(() =>
+  (guidelineExtractionStatus.value?.status || '').toLowerCase()
+)
+
+const guidelineExtractionStatusLabel = computed(() => {
+  if (!guideArtifacts.value.length) {
+    return 'Unavailable'
+  }
+
+  if (!guidelineExtractionArtifact.value) {
+    return 'No PDF'
+  }
+
+  switch (guidelineExtractionStatusValue.value) {
+    case 'queued':
+    case 'enqueued':
+    case 'pending':
+      return 'Queued'
+    case 'running':
+      return 'Running'
+    case 'succeeded':
+      return 'Succeeded'
+    case 'failed':
+      return 'Failed'
+    case 'not_found':
+      return 'Not Started'
+    default:
+      return guidelineExtractionLoading.value ? 'Checking' : 'Unknown'
+  }
+})
+
+const guidelineExtractionStatusColor = computed(() => {
+  switch (guidelineExtractionStatusValue.value) {
+    case 'queued':
+    case 'enqueued':
+    case 'pending':
+    case 'running':
+      return 'warning'
+    case 'succeeded':
+      return 'success'
+    case 'failed':
+      return 'error'
+    case 'not_found':
+      return 'neutral'
+    default:
+      return 'neutral'
+  }
+})
+
+const guidelineExtractionSummary = computed(() => {
+  if (!guideArtifacts.value.length) {
+    return 'Attach a source PDF artifact to make FoodScholar extraction available for this guide.'
+  }
+
+  if (!guidelineExtractionArtifact.value) {
+    return 'Artifacts exist, but none of them look like a PDF source artifact yet.'
+  }
+
+  if (guidelineExtractionError.value) {
+    return 'The latest extraction status could not be loaded.'
+  }
+
+  if (guidelineExtractionLoading.value && !guidelineExtractionStatus.value) {
+    return `Checking extraction status for ${guidelineExtractionArtifact.value.title}.`
+  }
+
+  switch (guidelineExtractionStatusValue.value) {
+    case 'queued':
+    case 'enqueued':
+    case 'pending':
+      return `Extraction is queued for ${guidelineExtractionArtifact.value.title}.`
+    case 'running':
+      return `FoodScholar is processing ${guidelineExtractionArtifact.value.title} right now.`
+    case 'succeeded': {
+      const uniqueCount = guidelineExtractionStatus.value?.result?.total_unique_guidelines
+      return `FoodScholar extracted ${uniqueCount ?? 0} unique guidelines from ${guidelineExtractionArtifact.value.title}.`
+    }
+    case 'failed':
+      return guidelineExtractionStatus.value?.error || `The latest extraction task failed for ${guidelineExtractionArtifact.value.title}.`
+    case 'not_found':
+      return `No extraction task has been started yet for ${guidelineExtractionArtifact.value.title}.`
+    default:
+      return `Extraction status is not available yet for ${guidelineExtractionArtifact.value.title}.`
+  }
+})
+
+const guidelineExtractionProgressLabel = computed(() => {
+  const currentPage = guidelineExtractionStatus.value?.current_page
+  const totalPages = guidelineExtractionStatus.value?.total_pages || guidelineExtractionStatus.value?.result?.total_pages
+
+  if (typeof currentPage === 'number' && typeof totalPages === 'number' && totalPages > 0) {
+    return `${currentPage}/${totalPages} pages`
+  }
+
+  if (guidelineExtractionStatusValue.value === 'succeeded') {
+    const processedPages = guidelineExtractionStatus.value?.result?.total_processed_pages
+    const resultPages = guidelineExtractionStatus.value?.result?.total_pages
+
+    if (typeof processedPages === 'number' && typeof resultPages === 'number' && resultPages > 0) {
+      return `${processedPages}/${resultPages} pages`
+    }
+  }
+
+  if (!guidelineExtractionArtifact.value) {
+    return 'Unavailable'
+  }
+
+  return guidelineExtractionStatusValue.value === 'not_found' ? 'Not started' : 'Pending'
+})
+
+const guidelineExtractionResultLabel = computed(() => {
+  if (guidelineExtractionStatusValue.value === 'succeeded') {
+    const uniqueCount = guidelineExtractionStatus.value?.result?.total_unique_guidelines
+    const totalCount = guidelineExtractionStatus.value?.result?.total_guidelines
+
+    if (typeof uniqueCount === 'number' && typeof totalCount === 'number') {
+      return `${uniqueCount} unique / ${totalCount} total`
+    }
+
+    if (typeof uniqueCount === 'number') {
+      return `${uniqueCount} unique`
+    }
+  }
+
+  if (guidelineExtractionStatusValue.value === 'failed') {
+    return 'No result'
+  }
+
+  if (!guidelineExtractionArtifact.value) {
+    return 'Unavailable'
+  }
+
+  return guidelineExtractionStatusValue.value === 'not_found' ? 'Not started' : 'Pending'
+})
+
+const guidelineExtractionCompletedLabel = computed(() => {
+  const completedAt = guidelineExtractionStatus.value?.completed_at || guidelineExtractionStatus.value?.result?.extracted_at
+
+  if (completedAt) {
+    return formatDate(completedAt)
+  }
+
+  if (!guidelineExtractionArtifact.value) {
+    return 'Unavailable'
+  }
+
+  return guidelineExtractionStatusValue.value === 'not_found' ? 'Not started' : 'Pending'
+})
+
 const isGuidePublished = computed(() =>
   selectedGuide.value?.status === 'active' && selectedGuide.value?.review_status === 'verified'
+)
+
+const canOpenGuidelineImport = computed(() =>
+  Boolean(selectedGuide.value && guidelineExtractionArtifact.value) && !isGuidePublished.value
+)
+
+const canPreviewGuidelineImport = computed(() =>
+  guidelineExtractionStatusValue.value === 'succeeded' && Boolean(selectedGuide.value && guidelineExtractionArtifact.value)
 )
 
 const canPublishGuide = computed(() =>
@@ -885,6 +1353,53 @@ const publishReadinessLabel = computed(() => {
   return `${readyGuidelineCount.value}/${guideGuidelines.value.length} guidelines are active and verified.`
 })
 
+const guidelineImportNotice = computed(() => {
+  if (!guidelineExtractionArtifact.value) {
+    return null
+  }
+
+  if (guidelineExtractionError.value) {
+    return null
+  }
+
+  switch (guidelineExtractionStatusValue.value) {
+    case 'queued':
+    case 'enqueued':
+    case 'pending':
+      return 'The extraction job is queued. Import preview will unlock after FoodScholar finishes processing the PDF.'
+    case 'running':
+      return 'FoodScholar is still processing the PDF. Leave this modal open or refresh later to build the import preview once extraction succeeds.'
+    case 'failed':
+      return guidelineExtractionStatus.value?.error || 'The latest extraction failed, so there is nothing to import yet.'
+    case 'not_found':
+      return 'No extraction task has been started for this PDF yet.'
+    default:
+      return null
+  }
+})
+
+const guidelineImportActiveDataset = computed(() => {
+  return guidelineImportResult.value || guidelineImportPreview.value
+})
+
+const guidelineImportExecutableCount = computed(() => {
+  const items = guidelineImportActiveDataset.value?.items || []
+  const targetStatus = guidelineImportResult.value ? 'created' : 'would_create'
+  return items.filter(item => item.status === targetStatus).length || 0
+})
+
+const guidelineImportSkippedCount = computed(() => {
+  const items = guidelineImportActiveDataset.value?.items || []
+  const targetStatus = guidelineImportResult.value ? 'created' : 'would_create'
+  return items.filter(item => item.status !== targetStatus).length || 0
+})
+
+const guidelineImportTableRows = computed(() => {
+  return guidelineImportActiveDataset.value?.items || []
+})
+
+const guidelineImportBusy = computed(() => guidelineImportPreviewLoading.value || guidelineImportPending.value)
+
 const guideMetadataItems = computed(() => {
   const guide = selectedGuide.value
   if (!guide) {
@@ -917,12 +1432,291 @@ function normalizeNullable(value: string) {
   return normalized.length ? normalized : null
 }
 
-function normalizeNumber(value: string) {
-  if (!value.trim()) {
+function extractErrorDetail(value: unknown): string | null {
+  if (typeof value === 'string' && value.trim()) {
+    return value
+  }
+
+  if (Array.isArray(value)) {
+    const messages = value
+      .map((item) => {
+        if (typeof item === 'string') {
+          return item
+        }
+
+        if (item && typeof item === 'object') {
+          const message = 'msg' in item && typeof item.msg === 'string' ? item.msg : null
+          const detail = 'detail' in item ? extractErrorDetail(item.detail) : null
+          return message || detail
+        }
+
+        return null
+      })
+      .filter((item): item is string => Boolean(item))
+
+    return messages.length ? messages.join(' ') : null
+  }
+
+  if (typeof value === 'object' && value !== null && 'detail' in value) {
+    return extractErrorDetail((value as { detail?: unknown }).detail)
+  }
+
+  return null
+}
+
+function resolveErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message
+  }
+
+  if (error && typeof error === 'object') {
+    const message = 'message' in error && typeof error.message === 'string' ? error.message : null
+    const detail = 'data' in error ? extractErrorDetail(error.data) : null
+
+    if (detail) {
+      return detail
+    }
+
+    if (message && message.trim()) {
+      return message
+    }
+  }
+
+  return fallback
+}
+
+function guidelineImportStatusColor(status: string | null | undefined) {
+  switch ((status || '').toLowerCase()) {
+    case 'would_create':
+    case 'created':
+      return 'success'
+    case 'skipped_existing':
+      return 'neutral'
+    default:
+      return 'warning'
+  }
+}
+
+function guidelineImportStatusLabel(status: string | null | undefined) {
+  if ((status || '').toLowerCase() === 'would_create') {
+    return 'Can Be Imported'
+  }
+
+  return formatEnumLabel(status || '')
+}
+
+function selectLatestPdfArtifact(artifacts: CatalogArtifact[]) {
+  const pdfArtifacts = artifacts.filter((artifact) => {
+    const fileType = artifact.file_type.toLowerCase()
+    const title = artifact.title.toLowerCase()
+    return fileType.includes('pdf') || title.endsWith('.pdf')
+  })
+
+  if (!pdfArtifacts.length) {
     return null
   }
 
-  const parsed = Number(value)
+  return pdfArtifacts
+    .slice()
+    .sort((left, right) => artifactTimestamp(right) - artifactTimestamp(left))[0] || null
+}
+
+function artifactTimestamp(artifact: CatalogArtifact) {
+  const rawValue = artifact.updated_at || artifact.created_at || ''
+  const parsedValue = Date.parse(rawValue)
+  return Number.isNaN(parsedValue) ? 0 : parsedValue
+}
+
+function clearGuidelineExtractionPoll() {
+  if (guidelineExtractionPollTimeout) {
+    clearTimeout(guidelineExtractionPollTimeout)
+    guidelineExtractionPollTimeout = null
+  }
+}
+
+function resetGuidelineImportState() {
+  guidelineImportPreview.value = null
+  guidelineImportPreviewLoading.value = false
+  guidelineImportPreviewError.value = null
+  guidelineImportPending.value = false
+  guidelineImportError.value = null
+  guidelineImportResult.value = null
+}
+
+function shouldPollGuidelineExtraction(status: string | null | undefined) {
+  return ['queued', 'enqueued', 'pending', 'running'].includes((status || '').toLowerCase())
+}
+
+function scheduleGuidelineExtractionPoll(artifactId: string) {
+  clearGuidelineExtractionPoll()
+  guidelineExtractionPollTimeout = setTimeout(() => {
+    void loadGuidelineExtractionStatus(artifactId)
+  }, 4000)
+}
+
+async function loadGuidelineExtractionStatus(artifactId: string) {
+  clearGuidelineExtractionPoll()
+
+  if (!artifactId) {
+    guidelineExtractionStatus.value = null
+    guidelineExtractionError.value = null
+    return
+  }
+
+  guidelineExtractionLoading.value = true
+  guidelineExtractionError.value = null
+
+  try {
+    const response = await foodscholarGuidelinesApi.getExtractionStatus(artifactId)
+
+    if (typeof response === 'string') {
+      guidelineExtractionStatus.value = null
+      guidelineExtractionError.value = response
+      return
+    }
+
+    guidelineExtractionStatus.value = response
+
+    if (shouldPollGuidelineExtraction(response.status)) {
+      scheduleGuidelineExtractionPoll(artifactId)
+    }
+  } catch (error) {
+    console.error('[ConsoleGuideDetail] Failed to load extraction status:', error)
+    guidelineExtractionError.value = 'The extraction status could not be loaded right now.'
+  } finally {
+    guidelineExtractionLoading.value = false
+  }
+}
+
+async function refreshGuidelineExtractionStatus() {
+  await loadGuidelineExtractionStatus(guidelineExtractionArtifact.value?.id || '')
+}
+
+async function loadGuidelineImportPreview(force = false) {
+  if (!selectedGuide.value || !guidelineExtractionArtifact.value) {
+    guidelineImportPreviewError.value = 'A guide and source PDF are required before importing guidelines.'
+    return
+  }
+
+  if (!canPreviewGuidelineImport.value) {
+    return
+  }
+
+  if (guidelineImportPreviewLoading.value || (!force && guidelineImportPreview.value)) {
+    return
+  }
+
+  guidelineImportPreviewLoading.value = true
+  guidelineImportPreviewError.value = null
+  guidelineImportError.value = null
+  guidelineImportResult.value = null
+
+  try {
+    const response = await foodscholarGuidelinesApi.importGuidelines(guidelineExtractionArtifact.value.id, {
+      guide_id: selectedGuide.value.urn,
+      dry_run: true,
+      dedupe_against_guide: true,
+      action_type: defaultGuidelineImportActionType,
+      existing_scan_limit: 500
+    })
+
+    if (typeof response === 'string') {
+      guidelineImportPreviewError.value = response
+      return
+    }
+
+    guidelineImportPreview.value = response
+  } catch (error) {
+    console.error('[ConsoleGuideDetail] Failed to build dry-run import preview:', error)
+    guidelineImportPreviewError.value = resolveErrorMessage(error, 'The dry-run import preview could not be loaded right now.')
+  } finally {
+    guidelineImportPreviewLoading.value = false
+  }
+}
+
+function openGuidelineImportModal() {
+  if (!canOpenGuidelineImport.value) {
+    return
+  }
+
+  resetGuidelineImportState()
+  guidelineImportModalOpen.value = true
+
+  if (canPreviewGuidelineImport.value) {
+    void loadGuidelineImportPreview()
+  }
+}
+
+function closeGuidelineImportModal() {
+  if (guidelineImportBusy.value) {
+    return
+  }
+
+  guidelineImportModalOpen.value = false
+  resetGuidelineImportState()
+}
+
+async function confirmGuidelineImport() {
+  if (isGuidePublished.value) {
+    guidelineImportError.value = 'Unpublish the guide before importing new guidelines.'
+    return
+  }
+
+  if (!selectedGuide.value || !guidelineExtractionArtifact.value) {
+    guidelineImportError.value = 'The guide and source PDF must exist before importing guidelines.'
+    return
+  }
+
+  if (!guidelineImportPreview.value) {
+    guidelineImportError.value = 'Wait for the dry-run preview before importing guidelines.'
+    return
+  }
+
+  if (guidelineImportExecutableCount.value === 0) {
+    guidelineImportError.value = 'There are no new guidelines to import from this extraction result.'
+    return
+  }
+
+  guidelineImportPending.value = true
+  guidelineImportError.value = null
+
+  try {
+    const response = await foodscholarGuidelinesApi.importGuidelines(guidelineExtractionArtifact.value.id, {
+      guide_id: selectedGuide.value.urn,
+      dry_run: false,
+      dedupe_against_guide: true,
+      action_type: defaultGuidelineImportActionType,
+      existing_scan_limit: 500
+    })
+
+    if (typeof response === 'string') {
+      guidelineImportError.value = response
+      return
+    }
+
+    guidelineImportResult.value = response
+    await refreshGuide()
+    toast.add({
+      title: 'Guidelines imported',
+      description: `${response.total_created} guideline${response.total_created === 1 ? '' : 's'} created for the guide.`,
+      color: 'success'
+    })
+  } catch (error) {
+    console.error('[ConsoleGuideDetail] Failed to import extracted guidelines:', error)
+    guidelineImportError.value = resolveErrorMessage(error, 'The extracted guidelines could not be imported right now.')
+  } finally {
+    guidelineImportPending.value = false
+  }
+}
+
+function normalizeNumber(value: string | number) {
+  const normalized = typeof value === 'number' ? String(value) : value.trim()
+
+  if (!normalized) {
+    return null
+  }
+
+  const parsed = Number(normalized)
   return Number.isFinite(parsed) ? parsed : null
 }
 
@@ -1120,6 +1914,7 @@ async function loadGuideDetail(urn: string) {
 
 async function refreshGuide() {
   await loadGuideDetail(resolvedGuideUrn.value)
+  await refreshGuidelineExtractionStatus()
 }
 
 function openGuideEditor() {
@@ -1281,5 +2076,49 @@ watch(
   }
 )
 
+watch(
+  () => guidelineExtractionArtifact.value?.id || '',
+  (artifactId, previousArtifactId) => {
+    if (artifactId !== previousArtifactId) {
+      resetGuidelineImportState()
+      guidelineImportModalOpen.value = false
+    }
+
+    if (artifactId === previousArtifactId && artifactId) {
+      return
+    }
+
+    if (!artifactId) {
+      clearGuidelineExtractionPoll()
+      guidelineExtractionStatus.value = null
+      guidelineExtractionError.value = null
+      guidelineExtractionLoading.value = false
+      return
+    }
+
+    void loadGuidelineExtractionStatus(artifactId)
+  },
+  { immediate: true }
+)
+
+watch(
+  [() => guidelineImportModalOpen.value, guidelineExtractionStatusValue],
+  ([isOpen, extractionStatus]) => {
+    if (
+      isOpen
+      && extractionStatus === 'succeeded'
+      && !guidelineImportPreview.value
+      && !guidelineImportPreviewLoading.value
+      && !guidelineImportResult.value
+    ) {
+      void loadGuidelineImportPreview()
+    }
+  }
+)
+
 void loadGuideDetail(resolvedGuideUrn.value)
+
+onBeforeUnmount(() => {
+  clearGuidelineExtractionPoll()
+})
 </script>

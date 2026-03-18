@@ -155,6 +155,41 @@ export interface GuideUpdatePayload {
   publication_date?: string | null
 }
 
+export interface GuideCreatePayload {
+  urn: string
+  title: string
+  description: string
+  tags?: string[] | null
+  status?: CatalogStatus | null
+  url: string
+  license: string
+  region?: string | null
+  organization_urn?: string | null
+  publication_date?: string | null
+  content: string
+  topic?: string | null
+  audience?: string | null
+  language?: string | null
+  short_title?: string | null
+  issuing_authority?: string | null
+  responsible_ministry?: string | null
+  document_type?: string | null
+  legal_status?: string | null
+  target_audiences?: string[] | null
+  graphical_model?: string | null
+  evidence_basis?: string | null
+  notes?: string | null
+  review_status?: CatalogReviewStatus | null
+  visibility?: CatalogVisibility | null
+  applicability_status?: CatalogApplicabilityStatus | null
+  applicability_start_date?: string | null
+  applicability_end_date?: string | null
+  publication_year?: number | null
+  revision?: CatalogGuideRevision | null
+  identifiers?: CatalogGuideIdentifier[] | null
+  artifacts?: CatalogArtifact[] | null
+}
+
 export interface GuidelineUpdatePayload {
   title?: string | null
   rule_text?: string | null
@@ -664,6 +699,11 @@ class CatalogApiService {
 
   async getGuide(urn: string): Promise<CatalogGuide> {
     const payload = await wisefoodApi.get<unknown>(`${this.basePath}/guides/${encodeURIComponent(urn)}`)
+    return normalizeGuide(unwrapEntity(payload, ['guide', 'item', 'result', 'data']))
+  }
+
+  async createGuide(data: GuideCreatePayload): Promise<CatalogGuide> {
+    const payload = await wisefoodApi.post<unknown, GuideCreatePayload>(`${this.basePath}/guides`, data)
     return normalizeGuide(unwrapEntity(payload, ['guide', 'item', 'result', 'data']))
   }
 

@@ -26,16 +26,39 @@ http {
         # Critical for Web Crypto API
         add_header Permissions-Policy "crypto=*" always;
 
-        # Serve ES module worker chunks with a JavaScript MIME type.
-        location ~* ^/(assets|_nuxt|_fonts)/.*\.mjs$ {
+        location = /app {
+            return 302 /app/;
+        }
+
+        location = /runtime-config.js {
+            try_files /runtime-config.js =404;
+
+            add_header Cache-Control "no-cache, no-store, must-revalidate";
+            add_header Pragma "no-cache";
+            add_header Expires "0";
+        }
+
+        location = /app/runtime-config.js {
+            try_files /runtime-config.js =404;
+
+            add_header Cache-Control "no-cache, no-store, must-revalidate";
+            add_header Pragma "no-cache";
+            add_header Expires "0";
+        }
+
+        # Serve ES module worker chunks with a JavaScript MIME type from both / and /app.
+        location ~* ^/(app/)?[^?]*\.mjs$ {
+            rewrite ^/app(/.*)$ $1 break;
             default_type application/javascript;
             try_files $uri =404;
             expires 1y;
             add_header Cache-Control "public, immutable";
         }
 
-        # Handle static assets first (including _nuxt and _fonts directories)
-        location ~* ^/(assets|_nuxt|_fonts)/.*\.(js|css|png|jpg|woff|jpeg|gif|ico|svg|woff2|ttf|eot)$ {
+        # Serve JS, font, image, JSON, and manifest files from both / and /app.
+        location ~* ^/(app/)?[^?]*\.(js|css|png|jpg|woff|jpeg|gif|ico|svg|woff2|ttf|eot|json|webmanifest|txt)$ {
+            rewrite ^/app(/.*)$ $1 break;
+
             try_files $uri =404;
             expires 1y;
             add_header Cache-Control "public, immutable";
@@ -44,6 +67,15 @@ http {
             add_header Access-Control-Allow-Origin "*" always;
             add_header Access-Control-Allow-Methods "GET, OPTIONS" always;
             add_header Access-Control-Allow-Headers "Range" always;
+        }
+
+        location /app/ {
+            rewrite ^/app(/.*)$ $1 break;
+            try_files $uri $uri/ /index.html;
+
+            add_header Cache-Control "no-cache, no-store, must-revalidate";
+            add_header Pragma "no-cache";
+            add_header Expires "0";
         }
 
         # Handle Vue Router history mode - serve index.html for all non-file routes

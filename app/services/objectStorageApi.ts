@@ -5,6 +5,14 @@ import { getWisefoodApiUrl } from '~/utils/runtimeConfig'
 
 type UnknownRecord = Record<string, unknown>
 
+export interface ArtifactUploadPayload {
+  parentUrn: string
+  file: File
+  title?: string | null
+  description?: string | null
+  language?: string | null
+}
+
 interface PresignedArtifactUrlOptions {
   disposition?: 'inline' | 'attachment'
   expiresInSeconds?: number
@@ -22,6 +30,92 @@ function asRecord(value: unknown): UnknownRecord | null {
 
 function asString(value: unknown) {
   return typeof value === 'string' ? value : null
+}
+
+function asNumber(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+function unwrapArtifactEntity(value: unknown): unknown {
+  let current = value
+  let changed = true
+
+  while (changed) {
+    changed = false
+    const record = asRecord(current)
+
+    if (!record) {
+      return current
+    }
+
+    for (const key of ['artifact', 'item', 'result', 'data']) {
+      if (record[key] !== undefined) {
+        current = record[key]
+        changed = true
+        break
+      }
+    }
+  }
+
+  return current
+}
+
+function normalizeArtifact(value: unknown): CatalogArtifact {
+  const record = asRecord(value) || {}
+
+  return {
+    id: asString(record['id']) || '',
+    parent_urn: asString(record['parent_urn']) || '',
+    title: asString(record['title']) || 'Untitled artifact',
+    description: asString(record['description']),
+    creator: asString(record['creator']),
+    created_at: asString(record['created_at']),
+    updated_at: asString(record['updated_at']),
+    file_url: asString(record['file_url']) || '',
+    file_s3_url: asString(record['file_s3_url']),
+    file_type: asString(record['file_type']) || 'application/octet-stream',
+    file_size: asNumber(record['file_size']),
+    language: asString(record['language'])
+  }
+}
+
+async function parseApiError(response: Response) {
+  try {
+    const payload = await response.json()
+    const detail = asRecord(payload)?.['detail']
+
+    if (typeof detail === 'string' && detail.trim()) {
+      return detail
+    }
+
+    if (Array.isArray(detail)) {
+      const messages = detail
+        .map(item => {
+          const record = asRecord(item)
+          return typeof record?.['msg'] === 'string' ? record['msg'] : null
+        })
+        .filter((item): item is string => Boolean(item))
+
+      if (messages.length) {
+        return messages.join(' ')
+      }
+    }
+
+    return `API request failed with status ${response.status}`
+  } catch {
+    const payload = await response.text()
+    return payload.trim() || `API request failed with status ${response.status}`
+  }
+}
+
+async function parseJsonPayload(response: Response) {
+  const contentType = response.headers.get('content-type')
+
+  if (!contentType || !contentType.includes('application/json')) {
+    return null
+  }
+
+  return response.json()
 }
 
 function extractPresignedUrl(payload: unknown) {
@@ -109,4 +203,55 @@ export async function fetchCatalogArtifactDownloadResponse(artifactId: string) {
   }
 
   return response
+}
+
+async function uploadArtifactRequest(formData: FormData, token: string) {
+  return fetch(`${getWisefoodApiUrl()}/v1/artifacts/upload`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: formData
+  })
+}
+
+export async function uploadCatalogArtifact(payload: ArtifactUploadPayload): Promise<CatalogArtifact> {
+  const authStore = useAuthStore()
+  let token = await ensureAccessToken()
+  const formData = new FormData()
+
+  formData.append('file', payload.file)
+  formData.append('parent_urn', payload.parentUrn)
+
+  if (payload.title?.trim()) {
+    formData.append('title', payload.title.trim())
+  }
+
+  if (payload.description?.trim()) {
+    formData.append('description', payload.description.trim())
+  }
+
+  if (payload.language?.trim()) {
+    formData.append('language', payload.language.trim())
+  }
+
+  let response = await uploadArtifactRequest(formData, token)
+
+  if (response.status === 401) {
+    const refreshed = await authStore.refreshToken()
+    token = refreshed ? authStore.getToken() || '' : ''
+
+    if (!token) {
+      throw new Error('Authentication expired')
+    }
+
+    response = await uploadArtifactRequest(formData, token)
+  }
+
+  if (!response.ok) {
+    throw new Error(await parseApiError(response))
+  }
+
+  const json = await parseJsonPayload(response)
+  return normalizeArtifact(unwrapArtifactEntity(json))
 }
