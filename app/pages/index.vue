@@ -1,6 +1,8 @@
 <template>
-  <!-- Show nothing while checking auth to prevent flash -->
-  <div v-if="isCheckingAuth" class="min-h-screen"></div>
+  <!-- Show lightweight loading state while checking auth -->
+  <div v-if="isCheckingAuth" class="min-h-screen flex items-center justify-center">
+    <p class="text-sm text-gray-500 dark:text-gray-400">Loading WiseFood...</p>
+  </div>
 
   <div v-else>
     <div class="relative pt-48 pb-12 xl:pt-60 sm:pb-16 lg:pb-32 xl:pb-48 2xl:pb-56 overflow-hidden">
@@ -208,6 +210,7 @@ const steps = [
 
 // Auth check state - hide content until we know auth status
 const isCheckingAuth = ref(true)
+const AUTH_CHECK_TIMEOUT_MS = 8000
 
 // Typing effect
 const typingElement = ref<HTMLElement | null>(null)
@@ -238,29 +241,49 @@ const runTypingEffect = (text: string) => {
   typingTimeout = setTimeout(type, 200)
 }
 
+const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, fallbackValue: T): Promise<T> => {
+  return await Promise.race([
+    promise,
+    new Promise<T>(resolve => setTimeout(() => resolve(fallbackValue), timeoutMs))
+  ])
+}
+
 onMounted(async () => {
-  // Check auth and redirect authenticated users
-  // Initialize auth if needed
-  if (!auth.initialized) {
-    await auth.initialize()
+  // Check auth and redirect authenticated users.
+  // Use timeout guards to avoid a permanently blank page if auth stalls.
+  let shouldRenderLanding = true
+
+  try {
+    const isAuthenticated = await withTimeout(
+      auth.initialize(),
+      AUTH_CHECK_TIMEOUT_MS,
+      false
+    )
+
+    if (isAuthenticated) {
+      if (!householdStore.initialized) {
+        await withTimeout(
+          householdStore.initialize(),
+          AUTH_CHECK_TIMEOUT_MS,
+          undefined
+        )
+      }
+
+      if (householdStore.currentMember) {
+        await router.push('/dashboard')
+      } else {
+        await router.push('/profiles')
+      }
+
+      shouldRenderLanding = false
+      return
+    }
+  } catch (error) {
+    console.error('[Homepage] Auth bootstrap failed, rendering landing page:', error)
   }
 
-  if (auth.isAuthenticated) {
-    // Initialize household to check for selected member
-    if (!householdStore.initialized) {
-      await householdStore.initialize()
-    }
-
-    if (householdStore.currentMember) {
-      router.push('/dashboard')
-      return
-    } else {
-      router.push('/profiles')
-      return
-    }
-  }
-
-  // Not authenticated - show the landing page
+  // Not authenticated or auth check timed out - show the landing page
+  if (!shouldRenderLanding) return
   isCheckingAuth.value = false
 
   runTypingEffect(typingText.value)

@@ -33,6 +33,15 @@ interface AuthState {
   initPromise: Promise<boolean> | null
 }
 
+const AUTH_INIT_TIMEOUT_MS = 8000
+
+const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, fallbackValue: T): Promise<T> => {
+  return await Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallbackValue), timeoutMs))
+  ])
+}
+
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
     isAuthenticated: false,
@@ -69,7 +78,11 @@ export const useAuthStore = defineStore('auth', {
       // Create and store the initialization promise
       this.initPromise = (async () => {
         try {
-          const authenticated = await KeycloakAuthService.init()
+          const authenticated = await withTimeout(
+            KeycloakAuthService.init(),
+            AUTH_INIT_TIMEOUT_MS,
+            false
+          )
           if (authenticated) {
             this.isAuthenticated = true
             this.user = KeycloakAuthService.getUserInfo() ?? { roles: [] }
