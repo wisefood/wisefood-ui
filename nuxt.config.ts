@@ -35,7 +35,8 @@ export default defineNuxtConfig({
       keycloakRealm: process.env.VITE_KEYCLOAK_REALM,
       keycloakClientId: process.env.VITE_KEYCLOAK_CLIENT_ID,
       wisefoodApiUrl: process.env.VITE_WISEFOOD_API_URL,  // Articles API: https://wisefood.gr/dc/api
-      wisefoodRestApiUrl: process.env.VITE_WISEFOOD_REST_API_URL  // REST API: https://wisefood.gr/rest/api/v1
+      wisefoodRestApiUrl: process.env.VITE_WISEFOOD_REST_API_URL,  // REST API: https://wisefood.gr/rest/api/v1
+      recipeWranglerApiUrl: process.env.VITE_RECIPE_WRANGLER_API_URL // Local default: http://127.0.0.1:8001/api/v1
     }
   },  
 

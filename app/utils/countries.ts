@@ -1,4 +1,4 @@
-// EU Member States with ISO codes and flag emojis
+// Supported countries with ISO codes and flag emojis
 export interface Country {
   code: string
   name: string
@@ -6,7 +6,7 @@ export interface Country {
   label: string // For USelectMenu display
 }
 
-// 27 EU Member States (as of 2024)
+// Countries available in UI selector
 export const countries: Country[] = [
   { code: 'AT', name: 'Austria', flag: '🇦🇹', label: '🇦🇹 Austria' },
   { code: 'BE', name: 'Belgium', flag: '🇧🇪', label: '🇧🇪 Belgium' },
@@ -34,7 +34,8 @@ export const countries: Country[] = [
   { code: 'SK', name: 'Slovakia', flag: '🇸🇰', label: '🇸🇰 Slovakia' },
   { code: 'SI', name: 'Slovenia', flag: '🇸🇮', label: '🇸🇮 Slovenia' },
   { code: 'ES', name: 'Spain', flag: '🇪🇸', label: '🇪🇸 Spain' },
-  { code: 'SE', name: 'Sweden', flag: '🇸🇪', label: '🇸🇪 Sweden' }
+  { code: 'SE', name: 'Sweden', flag: '🇸🇪', label: '🇸🇪 Sweden' },
+  { code: 'US', name: 'United States', flag: '🇺🇸', label: '🇺🇸 United States' }
 ]
 
 // Get country by ISO code

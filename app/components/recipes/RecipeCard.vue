@@ -1,12 +1,12 @@
 <template>
   <NuxtLink
-    :to="`/recipe-wrangler/${recipe.recipe_id}`"
+    :to="effectiveRecipeId ? `/recipe-wrangler/${encodeURIComponent(effectiveRecipeId)}` : '/recipe-wrangler'"
     class="recipe-card group relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer block"
   >
     <!-- Image Container -->
     <div class="relative aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700">
       <img
-        v-if="recipe.image_url"
+        v-if="recipe.image_url && !imageLoadFailed"
         :src="recipe.image_url"
         :alt="recipe.title"
         class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -111,6 +111,12 @@
         </div>
       </div>
 
+      <div v-if="recipe.source" class="mt-2">
+        <span class="inline-flex items-center rounded-full bg-zinc-100 dark:bg-zinc-700 px-2.5 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">
+          Source: {{ recipe.source }}
+        </span>
+      </div>
+
       <!-- View Recipe Link -->
       <div class="mt-4 flex items-center text-sm font-medium text-brandg-600 dark:text-brandg-400 group-hover:gap-2 gap-1 transition-all">
         <span>View Recipe</span>
@@ -129,7 +135,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRecipeStore } from '~/stores/recipe'
 import type { RecipeSearchResult } from '~/services/recipeApi'
 
@@ -150,12 +156,14 @@ const emit = defineEmits<{
 // Store
 // ============================================================================
 const recipeStore = useRecipeStore()
+const imageLoadFailed = ref(false)
 
 // ============================================================================
 // Computed
 // ============================================================================
-const isFavorite = computed(() => recipeStore.isFavorite(props.recipe.recipe_id))
-const isInCompare = computed(() => recipeStore.isInCompareList(props.recipe.recipe_id))
+const effectiveRecipeId = computed(() => props.recipe.recipe_id || props.recipe.id || '')
+const isFavorite = computed(() => effectiveRecipeId.value ? recipeStore.isFavorite(effectiveRecipeId.value) : false)
+const isInCompare = computed(() => effectiveRecipeId.value ? recipeStore.isInCompareList(effectiveRecipeId.value) : false)
 
 // ============================================================================
 // Methods
@@ -163,7 +171,8 @@ const isInCompare = computed(() => recipeStore.isInCompareList(props.recipe.reci
 const toggleCompare = (event: Event) => {
   event.preventDefault()
   event.stopPropagation()
-  recipeStore.toggleCompare(props.recipe.recipe_id)
+  if (!effectiveRecipeId.value) return
+  recipeStore.toggleCompare(effectiveRecipeId.value)
 }
 
 const getNutriScoreGrade = (score: number): string => {
@@ -188,12 +197,13 @@ const getNutriScoreColorBg = (grade: string): string => {
 const toggleFavorite = (event: Event) => {
   event.preventDefault()
   event.stopPropagation()
-  recipeStore.toggleFavorite(props.recipe.recipe_id)
+  if (!effectiveRecipeId.value) return
+  recipeStore.toggleFavorite(effectiveRecipeId.value)
 }
 
 const handleImageError = (event: Event) => {
-  const target = event.target as HTMLImageElement
-  target.style.display = 'none'
+  event.preventDefault()
+  imageLoadFailed.value = true
 }
 </script>
 

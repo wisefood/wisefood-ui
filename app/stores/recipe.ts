@@ -350,6 +350,7 @@ export const useRecipeStore = defineStore('recipe', {
           this.compareList.push(recipeId)
         }
       }
+      this.persistCompareList()
     },
 
     /**
@@ -358,6 +359,7 @@ export const useRecipeStore = defineStore('recipe', {
     addToCompare(recipeId: string) {
       if (!this.compareList.includes(recipeId) && this.compareList.length < 4) {
         this.compareList.push(recipeId)
+        this.persistCompareList()
       }
     },
 
@@ -368,6 +370,7 @@ export const useRecipeStore = defineStore('recipe', {
       const index = this.compareList.indexOf(recipeId)
       if (index > -1) {
         this.compareList.splice(index, 1)
+        this.persistCompareList()
       }
     },
 
@@ -376,6 +379,7 @@ export const useRecipeStore = defineStore('recipe', {
      */
     clearCompareList() {
       this.compareList = []
+      this.persistCompareList()
     },
 
     /**
@@ -389,6 +393,7 @@ export const useRecipeStore = defineStore('recipe', {
         this.loadAllergens()
         this.loadViewMode()
         this.loadSortBy()
+        this.loadCompareList()
       }
     },
 
@@ -402,6 +407,7 @@ export const useRecipeStore = defineStore('recipe', {
       this.excludedAllergens = []
       this.viewMode = 'grid'
       this.sortBy = 'relevance'
+      this.compareList = []
       this.recipesCache.clear()
       this.lastSearchResults = []
 
@@ -412,6 +418,7 @@ export const useRecipeStore = defineStore('recipe', {
         localStorage.removeItem('recipe-allergens')
         localStorage.removeItem('recipe-view-mode')
         localStorage.removeItem('recipe-sort-by')
+        localStorage.removeItem('recipe-compare-list')
       }
     },
 
@@ -521,6 +528,35 @@ export const useRecipeStore = defineStore('recipe', {
         const stored = localStorage.getItem('recipe-sort-by')
         if (stored === 'relevance' || stored === 'duration' || stored === 'calories' || stored === 'nutri_score') {
           this.sortBy = stored
+        }
+      }
+    },
+
+    persistCompareList() {
+      if (import.meta.client) {
+        localStorage.setItem('recipe-compare-list', JSON.stringify(this.compareList))
+      }
+    },
+
+    loadCompareList() {
+      if (import.meta.client) {
+        const stored = localStorage.getItem('recipe-compare-list')
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored)
+            if (Array.isArray(parsed)) {
+              const normalized = parsed
+                .map(item => String(item || '').trim())
+                .filter(item => item.length > 0)
+                .slice(0, 4)
+              // Do not clobber an in-memory selection with an empty persisted list.
+              if (normalized.length > 0 || this.compareList.length === 0) {
+                this.compareList = normalized
+              }
+            }
+          } catch (e) {
+            console.error('Failed to load compare list:', e)
+          }
         }
       }
     },
