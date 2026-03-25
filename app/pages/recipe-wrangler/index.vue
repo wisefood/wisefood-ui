@@ -25,19 +25,58 @@
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
-      <!-- Search Bar -->
-      <section class="mb-8 sm:mb-12">
+      <!-- Mode Tabs -->
+      <section class="mb-6 sm:mb-8">
         <div class="max-w-2xl mx-auto">
-          <div class="relative">
+          <div class="p-1 rounded-xl sm:rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white/80 dark:bg-zinc-900/70 backdrop-blur-sm">
+            <div class="grid grid-cols-2 gap-1">
+              <button
+                type="button"
+                @click="activeTab = 'search'"
+                :class="[
+                  'inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold transition-colors',
+                  activeTab === 'search'
+                    ? 'bg-brandg-500 text-white'
+                    : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                ]"
+              >
+                <UIcon name="i-lucide-search" class="w-4 h-4" />
+                <span>Recipe Search</span>
+              </button>
+              <button
+                type="button"
+                @click="activeTab = 'analyze'"
+                :class="[
+                  'inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold transition-colors',
+                  activeTab === 'analyze'
+                    ? 'bg-brandg-500 text-white'
+                    : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                ]"
+              >
+                <UIcon name="i-lucide-flask-conical" class="w-4 h-4" />
+                <span>Analyze Recipe</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Search Bar -->
+      <section v-if="activeTab === 'search'" class="mb-8 sm:mb-12">
+        <div class="max-w-2xl mx-auto">
+          <div ref="searchBoxRef" class="relative">
             <UIcon name="i-lucide-search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-zinc-400" />
             <input
               v-model="searchQuery"
               type="text"
               :placeholder="t('recipeWrangler.search.placeholder')"
               class="w-full pl-11 sm:pl-12 pr-12 sm:pr-16 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-brandg-500 text-sm sm:text-base"
-              @keypress="handleSearchKeypress"
+              @input="handleSearchInput"
+              @focus="handleSearchInput"
+              @keydown.enter.prevent="performSearch"
             />
             <button
+              type="button"
               @click="performSearch"
               :disabled="loading"
               class="absolute right-2 top-1/2 -translate-y-1/2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-brandg-500 hover:bg-brandg-600 disabled:bg-zinc-300 dark:disabled:bg-zinc-700 text-white text-sm font-medium transition-colors disabled:cursor-not-allowed"
@@ -45,6 +84,26 @@
               <UIcon v-if="loading" name="i-lucide-loader-2" class="w-4 h-4 animate-spin" />
               <UIcon v-else name="i-lucide-search" class="w-4 h-4" />
             </button>
+
+            <div
+              v-if="showAutocomplete && (autocompleteSuggestions.length > 0 || autocompleteLoading)"
+              class="absolute left-0 right-0 mt-2 z-20 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-lg overflow-hidden"
+            >
+              <div v-if="autocompleteLoading" class="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-400">
+                Loading suggestions...
+              </div>
+              <template v-else>
+                <button
+                  v-for="suggestion in autocompleteSuggestions"
+                  :key="suggestion"
+                  type="button"
+                  @mousedown.prevent="selectSuggestion(suggestion)"
+                  class="w-full text-left px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                >
+                  {{ suggestion }}
+                </button>
+              </template>
+            </div>
           </div>
 
           <!-- Recent Searches -->
@@ -53,6 +112,7 @@
             <button
               v-for="query in recipeStore.recentSearches.slice(0, 5)"
               :key="query"
+              type="button"
               @click="searchQuery = query; performSearch()"
               class="px-3 py-1 rounded-full text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-green-100 dark:hover:bg-green-900/30 hover:text-brandg-600 dark:hover:text-brandg-400 transition-colors"
             >
@@ -62,8 +122,174 @@
         </div>
       </section>
 
+      <!-- Recipe Analyzer -->
+      <section v-if="activeTab === 'analyze'" class="mb-8 sm:mb-12">
+        <div class="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white/80 dark:bg-zinc-900/70 p-5 sm:p-6">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h2 class="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white">
+                AI Recipe Analyzer
+              </h2>
+              <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
+                Paste recipe text to see nutrient totals and detailed ingredient-level calculation matches.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <textarea
+              v-model="analysisInput"
+              rows="5"
+              placeholder="Garlic Butter Shrimp&#10;Ingredients: 200g shrimp, 2 tbsp butter..."
+              class="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brandg-500"
+            />
+          </div>
+
+          <div class="mt-4 flex items-center gap-3">
+            <button
+              type="button"
+              @click="runRecipeAnalysis"
+              :disabled="analysisLoading || !analysisInput.trim()"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brandg-500 hover:bg-brandg-600 disabled:bg-zinc-300 dark:disabled:bg-zinc-700 text-white text-sm font-medium transition-colors disabled:cursor-not-allowed"
+            >
+              <UIcon v-if="analysisLoading" name="i-lucide-loader-2" class="w-4 h-4 animate-spin" />
+              <UIcon v-else name="i-lucide-flask-conical" class="w-4 h-4" />
+              <span>{{ analysisLoading ? 'Analyzing...' : 'Analyze Recipe' }}</span>
+            </button>
+
+            <button
+              v-if="analysisResult"
+              type="button"
+              @click="showCalculationDetails = !showCalculationDetails"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-sm font-medium transition-colors"
+            >
+              <UIcon name="i-lucide-calculator" class="w-4 h-4" />
+              <span>{{ showCalculationDetails ? 'Hide Calculation Details' : 'Show Calculation Details' }}</span>
+            </button>
+          </div>
+
+          <p v-if="analysisError" class="mt-4 text-sm text-red-600 dark:text-red-400">
+            {{ analysisError }}
+          </p>
+
+          <div v-if="analysisResult" class="mt-6">
+            <h3 class="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white mb-3">
+              Analysis Results: {{ analysisResult.title }}
+            </h3>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-3 bg-zinc-50 dark:bg-zinc-800/50">
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">Calories / serving</p>
+                <p class="text-xl font-semibold text-zinc-900 dark:text-white">{{ analyzedCalories }}</p>
+              </div>
+              <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-3 bg-zinc-50 dark:bg-zinc-800/50">
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">Protein / serving</p>
+                <p class="text-xl font-semibold text-zinc-900 dark:text-white">{{ analyzedProtein }} g</p>
+              </div>
+              <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-3 bg-zinc-50 dark:bg-zinc-800/50">
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">Carbs / serving</p>
+                <p class="text-xl font-semibold text-zinc-900 dark:text-white">{{ analyzedCarbs }} g</p>
+              </div>
+              <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-3 bg-zinc-50 dark:bg-zinc-800/50">
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">Fat / serving</p>
+                <p class="text-xl font-semibold text-zinc-900 dark:text-white">{{ analyzedFat }} g</p>
+              </div>
+            </div>
+            <div class="mt-3 rounded-xl border border-zinc-200 dark:border-zinc-700 p-3 bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-between">
+              <div>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">Nutri-Score</p>
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">Calculated from analyzed nutrition totals.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-zinc-500 dark:text-zinc-400">Color:</span>
+                <span :class="nutriScoreBadgeClass">{{ nutriScoreGrade }}</span>
+              </div>
+            </div>
+
+            <div
+              v-if="showCalculationDetails"
+              class="mt-5 rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 bg-white dark:bg-zinc-900"
+            >
+              <div class="flex flex-wrap items-center gap-4 mb-4">
+                <h4 class="text-lg font-semibold text-zinc-900 dark:text-white">Calculation Details</h4>
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
+                  Weight matched: {{ matchedWeightCount }} | Unmatched: {{ unmatchedWeightCount }}
+                </p>
+                <p class="text-sm text-zinc-600 dark:text-zinc-300">
+                  Sources:
+                  <a
+                    :href="nutritionSourceUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-brandg-600 dark:text-brandg-400 underline"
+                  >
+                    {{ nutritionSourceLabel }}
+                  </a>
+                  and Sustainable FooDB.
+                  Nutri-Score method:
+                  <a
+                    href="https://nutriscore.blog/2022/12/25/spreadsheet-to-calculate-the-updated-version-of-the-nutri-score/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-brandg-600 dark:text-brandg-400 underline"
+                  >
+                    reference spreadsheet
+                  </a>
+                </p>
+              </div>
+
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                <div
+                  v-for="(item, idx) in analysisIngredientRows"
+                  :key="`${item.ingredient || item.name || 'ingredient'}-${idx}`"
+                  class="rounded-lg border border-zinc-200 dark:border-zinc-700 p-3 bg-zinc-50 dark:bg-zinc-800/40"
+                >
+                  <p class="text-base font-semibold text-zinc-900 dark:text-white">
+                    {{ item.ingredient || item.name || 'Unknown ingredient' }}
+                  </p>
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300 mt-1">
+                    Matched nutrition ingredient: {{ item.matched_nutritional_ingredient || 'N/A' }}
+                  </p>
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
+                    Matched sustainability ingredient: {{ item.matched_sustainability_ingredient || 'N/A' }}
+                  </p>
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
+                    Weight used: {{ formatNumber(item.weight_g) }} g
+                  </p>
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
+                    Per 100g: Calories {{ formatNumber(item.energy_kcal_per_100g) }} kcal | Protein {{ formatNumber(item.protein_per_100g) }} g | Carbohydrates {{ formatNumber(item.carbs_per_100g) }} g | Fat {{ formatNumber(item.fat_per_100g) }} g
+                  </p>
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
+                    Distance: {{ formatNumber(item.distance) }} | CO2 contrib: {{ formatNumber(item.contribution) }}
+                  </p>
+                </div>
+              </div>
+
+              <div v-if="analysisWeightDetails.length" class="mt-4">
+                <h5 class="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-2">
+                  Weight Parsing Trace
+                </h5>
+                <div class="space-y-2">
+                  <div
+                    v-for="(row, idx) in analysisWeightDetails"
+                    :key="`${row.name || 'weight'}-${idx}`"
+                    class="text-sm text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded-md p-2 bg-zinc-50 dark:bg-zinc-800/40"
+                  >
+                    <span class="font-semibold">{{ row.name || 'Unknown' }}</span>
+                    · raw: {{ row.measurement_raw || 'N/A' }}
+                    · parsed quantity: {{ row.parsed_quantity || 'N/A' }} {{ row.parsed_unit || '' }}
+                    · match: {{ row.match_type || 'N/A' }}
+                    · grams: {{ formatNumber(row.weight_grams) }}
+                    <span v-if="row.error"> · error: {{ row.error }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Filters Sidebar Toggle -->
-      <section class="mb-6 sm:mb-8">
+      <section v-if="activeTab === 'search'" class="mb-6 sm:mb-8">
         <div class="flex items-center justify-between">
           <h2 class="text-base sm:text-lg font-semibold text-zinc-900 dark:text-white">
             {{ t('recipeWrangler.filters.title') }}
@@ -92,17 +318,26 @@
       </section>
 
       <!-- Recipe Grid -->
-      <section class="mb-12 sm:mb-16">
+      <section v-if="activeTab === 'search'" class="mb-12 sm:mb-16">
         <div class="flex items-center justify-between mb-6 sm:mb-8">
           <div class="flex items-center gap-3">
             <h2 class="text-2xl sm:text-3xl font-serif font-semibold text-zinc-900 dark:text-white">
-              <span v-if="loading">{{ t('recipeWrangler.results.searching') }}</span>
-              <span v-else-if="error">{{ t('recipeWrangler.results.error') }}</span>
-              <span v-else-if="!initialLoadComplete">{{ t('recipeWrangler.results.loading') }}</span>
-              <span v-else>{{ t('recipeWrangler.results.found', recipesCount) }}</span>
+              <span v-if="!hasSearchAttempted">Search recipes to get started</span>
+              <span v-else-if="loading">Searching...</span>
+              <span v-else-if="error">Error loading recipes</span>
+              <span v-else-if="!hasUserTriggeredSearch">Suggested recipes</span>
+              <span v-else>{{ recipesCount }} Recipe{{ recipesCount !== 1 ? 's' : '' }} Found</span>
             </h2>
           </div>
           <div class="flex items-center gap-2">
+            <button
+              v-if="recipeStore.compareCount > 0"
+              @click="clearCompareSelection"
+              class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-sm"
+            >
+              <UIcon name="i-lucide-x" class="w-4 h-4" />
+              <span>Clear Compare</span>
+            </button>
             <button
               v-if="recipeStore.compareCount >= 2"
               @click="navigateToCompare"
@@ -124,7 +359,7 @@
 
         <!-- Error State -->
         <div
-          v-if="error"
+          v-if="hasSearchAttempted && error"
           class="p-6 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-center"
         >
           <UIcon name="i-lucide-alert-circle" class="w-12 h-12 text-red-500 mx-auto mb-3" />
@@ -142,7 +377,7 @@
         </div>
 
         <!-- Loading State -->
-        <div v-else-if="loading" class="space-y-8">
+        <div v-else-if="hasSearchAttempted && loading" class="space-y-8">
           <!-- Cooking Animation - Clean, minimal container -->
           <div class="relative py-12 sm:py-16">
             <!-- SVG Cooking Animation Component -->
@@ -182,7 +417,7 @@
 
         <!-- Empty State -->
         <div
-          v-else-if="!hasRecipes && initialLoadComplete"
+          v-else-if="hasSearchAttempted && !hasRecipes"
           class="text-center py-12"
         >
           <UIcon name="i-lucide-search-x" class="w-16 h-16 text-zinc-400 mx-auto mb-4" />
@@ -196,19 +431,33 @@
 
         <!-- Recipe Cards Grid -->
         <div
-          v-else
+          v-else-if="hasSearchAttempted"
           class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
         >
           <RecipesRecipeCard
             v-for="(recipe, index) in paginatedRecipes"
-            :key="recipe.recipe_id || index"
+            :key="recipe.recipe_id || recipe.id || `recipe-${index}`"
             :recipe="recipe"
           />
         </div>
 
+        <!-- Pre-search State -->
+        <div
+          v-else
+          class="text-center py-12"
+        >
+          <UIcon name="i-lucide-search" class="w-16 h-16 text-zinc-400 mx-auto mb-4" />
+          <h3 class="text-xl font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
+            Start with a query
+          </h3>
+          <p class="text-zinc-500 dark:text-zinc-400 mb-6">
+            Enter a recipe query above to get personalized results.
+          </p>
+        </div>
+
         <!-- Pagination -->
-        <div v-if="hasRecipes && totalPages > 1" class="mt-8 sm:mt-12 flex justify-center">
-          <nav class="flex items-center gap-2" :aria-label="t('recipeWrangler.pagination')">
+        <div v-if="hasSearchAttempted && hasRecipes && totalPages > 1" class="mt-8 sm:mt-12 flex justify-center">
+          <nav class="flex items-center gap-2" aria-label="Pagination">
             <!-- Previous Button -->
             <button
               @click="goToPage(currentPage - 1)"
@@ -263,8 +512,8 @@
       </section>
 
       <!-- Categories Section -->
-      <section class="bg-gradient-to-br from-brandg-50 to-brandg-100 dark:from-brandg-900/20 dark:to-brandg-800/20 border border-brandg-200 dark:border-brandg-800 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12">
-        <h2 class="text-2xl sm:text-3xl font-serif font-semibold mb-6 sm:mb-8 text-zinc-900 dark:text-white">{{ t('recipeWrangler.categories.title') }}</h2>
+      <section v-if="activeTab === 'search'" class="bg-gradient-to-br from-brandg-50 to-brandg-100 dark:from-brandg-900/20 dark:to-brandg-800/20 border border-brandg-200 dark:border-brandg-800 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12">
+        <h2 class="text-2xl sm:text-3xl font-serif font-semibold mb-6 sm:mb-8 text-zinc-900 dark:text-white">Browse by Category</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
           <button
             v-for="category in categories"
@@ -285,16 +534,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRecipes } from '~/composables/useRecipes'
 import { useRecipeStore } from '~/stores/recipe'
-import type { RecipeParamSearchParams } from '~/services/recipeApi'
-
-const { t } = useI18n()
+import { useHouseholdStore } from '~/stores/household'
+import recipeApi from '~/services/recipeApi'
+import type { PipelineTraceWeightDetail, RecipeProfileResult } from '~/services/recipeApi'
 
 definePageMeta({
-  middleware: ['auth', 'profile']
+  middleware: ['auth']
 })
 
 useHead({
@@ -310,82 +558,29 @@ useSeoMeta({
 // ============================================================================
 const { recipes, loading, error, searchRecipes, searchRecipesByParams, fetchRecipesByCategory, clearError } = useRecipes()
 const recipeStore = useRecipeStore()
+const householdStore = useHouseholdStore()
 
 // ============================================================================
 // State
 // ============================================================================
 const searchQuery = ref('')
+const searchBoxRef = ref<HTMLElement | null>(null)
+const autocompleteSuggestions = ref<string[]>([])
+const autocompleteLoading = ref(false)
+const showAutocomplete = ref(false)
 const showFilters = ref(false)
-const initialLoadComplete = ref(false)
 const currentPage = ref(1)
 const itemsPerPage = 10
-const paramSearchLimit = 20
-
-const allergenAliasToBackend: Record<string, string> = {
-  peanut: 'peanut',
-  peanuts: 'peanut',
-  'tree nut': 'tree_nut',
-  'tree nuts': 'tree_nut',
-  tree_nut: 'tree_nut',
-  dairy: 'milk',
-  milk: 'milk',
-  lactose: 'milk',
-  egg: 'egg',
-  eggs: 'egg',
-  soy: 'soy',
-  wheat: 'wheat',
-  gluten: 'wheat',
-  fish: 'fish',
-  shellfish: 'crustacean_shellfish',
-  crustacean_shellfish: 'crustacean_shellfish',
-  sesame: 'sesame'
-}
-
-const backendTagMatchers: Array<{ pattern: RegExp; tag: string }> = [
-  { pattern: /\bvegetarian\b/, tag: 'vegetarian' },
-  { pattern: /\bvegan\b/, tag: 'vegan' },
-  { pattern: /\bgluten[ -]?free\b/, tag: 'gluten-free' },
-  { pattern: /\bdairy[ -]?free\b/, tag: 'dairy_free' },
-  { pattern: /\bnut[ -]?free\b/, tag: 'nut_free' },
-  { pattern: /\blow[ -]?carb\b/, tag: 'low-carb' },
-  { pattern: /\blow[ -]?fat\b/, tag: 'low-fat' },
-  { pattern: /\bhigh[ -]?protein\b/, tag: 'high-protein' },
-  { pattern: /\bbreakfast\b/, tag: 'breakfast' },
-  { pattern: /\b(beverage|beverages|drink|drinks)\b/, tag: 'beverages' },
-  { pattern: /\b(snack|snacks)\b/, tag: 'snacks' },
-  { pattern: /\b(dessert|desserts)\b/, tag: 'desserts' },
-  { pattern: /\b(main dish|main-dish|main course)\b/, tag: 'main-dish' },
-  { pattern: /\b(5 ingredients or less|five ingredients or less|few ingredients)\b/, tag: '5_ingredients_or_less' },
-  { pattern: /\b(30 minutes or less|30 minute meals?|half hour meals?)\b/, tag: '30_minutes_or_less' },
-  { pattern: /\blow[ -]?calorie\b/, tag: 'low-fat' },
-  { pattern: /\bhealthy\b/, tag: 'low-fat' }
-]
-
-const quickFilterConfigs: Record<string, { query: string; params: RecipeParamSearchParams }> = {
-  quick: {
-    query: 'quick recipes under 30 minutes',
-    params: {
-      diet_tags: ['30_minutes_or_less'],
-      max_duration_minutes: 30
-    }
-  },
-  healthy: {
-    query: 'healthy nutritious recipes',
-    params: { diet_tags: ['low-fat'] }
-  },
-  vegetarian: {
-    query: 'vegetarian recipes',
-    params: { diet_tags: ['vegetarian'] }
-  },
-  vegan: {
-    query: 'vegan recipes',
-    params: { diet_tags: ['vegan'] }
-  },
-  'low-calorie': {
-    query: 'low calorie recipes',
-    params: { diet_tags: ['low-fat'] }
-  }
-}
+const activeTab = ref<'search' | 'analyze'>('search')
+const hasSearchAttempted = ref(false)
+const hasUserTriggeredSearch = ref(false)
+const analysisInput = ref('')
+const analysisRegion = ref('IE')
+const analysisLoading = ref(false)
+const analysisError = ref<string | null>(null)
+const analysisResult = ref<RecipeProfileResult | null>(null)
+const showCalculationDetails = ref(false)
+let autocompleteDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
 // ============================================================================
 // Categories
@@ -417,127 +612,192 @@ const paginatedRecipes = computed(() => {
   return recipes.value.slice(start, end)
 })
 
-const uniqueStrings = (values: string[]): string[] => {
-  return Array.from(
-    new Set(
-      values
-        .map(value => value.trim())
-        .filter(value => value.length > 0)
-    )
-  )
+const analysisTotals = computed(() => analysisResult.value?.profiling_totals || {})
+
+const analysisIngredientRows = computed(() => {
+  const fromTrace = analysisResult.value?.pipeline_trace?.profiling?.ingredients
+  if (Array.isArray(fromTrace) && fromTrace.length > 0) {
+    return fromTrace
+  }
+  return analysisResult.value?.ingredients || []
+})
+
+const analysisWeightDetails = computed<PipelineTraceWeightDetail[]>(() => {
+  return analysisResult.value?.pipeline_trace?.weight_calculation?.details || []
+})
+
+const matchedWeightCount = computed(
+  () => analysisResult.value?.pipeline_trace?.weight_calculation?.matched_count || 0
+)
+const unmatchedWeightCount = computed(
+  () => analysisResult.value?.pipeline_trace?.weight_calculation?.unmatched_count || 0
+)
+
+const lookupTotal = (metricParts: string[]): number => {
+  const entries = Object.entries(analysisTotals.value)
+  for (const [key, value] of entries) {
+    if (!metricParts.every((part) => key.includes(part))) continue
+    if (typeof value !== 'number') continue
+    return value
+  }
+  return 0
 }
 
-const escapeRegExp = (value: string): string => {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
+const analyzedCalories = computed(() => formatNumber(lookupTotal(['energy_kcal', 'per_serving'])))
+const analyzedProtein = computed(() => formatNumber(lookupTotal(['protein_g', 'per_serving'])))
+const analyzedCarbs = computed(() => formatNumber(lookupTotal(['carbohydrate_g', 'per_serving'])))
+const analyzedFat = computed(() => formatNumber(lookupTotal(['fat_g', 'per_serving'])))
+const nutriScoreRaw = computed(
+  () => analysisResult.value?.nutri_score?.nutri_score || null
+)
+const nutriScoreGrade = computed(() => {
+  if (!nutriScoreRaw.value) return 'N/A'
+  return String(nutriScoreRaw.value).replace('Nutriscore_', '')
+})
+const nutriScoreColor = computed(
+  () => analysisResult.value?.nutri_score_color || analysisResult.value?.nutri_score?.color || ''
+)
+const analysisNutritionSource = computed(() => String(
+  analysisResult.value?.nutrition_source ||
+  analysisResult.value?.pipeline_trace?.profiling?.source ||
+  analysisResult.value?.source_nutrition ||
+  ''
+).toLowerCase())
+const nutritionSourceUrl = computed(() => {
+  return analysisNutritionSource.value.includes('usda')
+    ? 'https://fdc.nal.usda.gov/'
+    : 'https://irp-cdn.multiscreensite.com/46a7ad27/files/uploaded/Irish-Food-Portion-Sizes-Database.pdf'
+})
+const nutritionSourceLabel = computed(() => {
+  return analysisNutritionSource.value.includes('usda')
+    ? 'USDA FoodData Central'
+    : 'Irish Composition Table'
+})
 
-const normalizeBackendAllergen = (allergen: string): string => {
-  const normalized = allergen.trim().toLowerCase()
-  return allergenAliasToBackend[normalized] || normalized.replace(/\s+/g, '_')
-}
-
-const toBackendAllergenList = (allergens: string[]): string[] => {
-  return uniqueStrings(allergens.map(allergen => normalizeBackendAllergen(allergen)))
-}
-
-const hasParamFilters = (params: RecipeParamSearchParams): boolean => {
-  return Boolean(
-    (params.include_ingredients && params.include_ingredients.length > 0) ||
-    (params.exclude_ingredients && params.exclude_ingredients.length > 0) ||
-    (params.exclude_allergens && params.exclude_allergens.length > 0) ||
-    (params.diet_tags && params.diet_tags.length > 0) ||
-    params.max_duration_minutes
-  )
-}
-
-const parseParametricSearchQuery = (query: string): RecipeParamSearchParams | null => {
-  const normalized = query.toLowerCase().trim()
-  if (!normalized) return null
-
-  const params: RecipeParamSearchParams = {}
-  const dietTags: string[] = []
-  const excludeAllergens: string[] = []
-
-  const durationMatch = normalized.match(/\b(?:under|less than|max(?:imum)?|within)\s+(\d{1,3})\s*(?:min|mins|minute|minutes)\b/)
-  if (durationMatch) {
-    const maxDuration = Number(durationMatch[1])
-    params.max_duration_minutes = maxDuration
-    if (maxDuration <= 30) {
-      dietTags.push('30_minutes_or_less')
-    }
-  } else if (/\bquick\b/.test(normalized)) {
-    params.max_duration_minutes = 30
-    dietTags.push('30_minutes_or_less')
+const nutriScoreBadgeClass = computed(() => {
+  const color = String(nutriScoreColor.value || '').toLowerCase()
+  if (color.includes('dark green')) {
+    return 'px-2 py-1 rounded-full text-xs font-semibold bg-green-800 text-white'
   }
-
-  backendTagMatchers.forEach(({ pattern, tag }) => {
-    if (pattern.test(normalized)) {
-      dietTags.push(tag)
-    }
-  })
-
-  const exclusionContext = /\b(without|exclude|excluding|free from|no)\b/.test(normalized)
-  if (exclusionContext) {
-    Object.keys(allergenAliasToBackend).forEach(allergenAlias => {
-      const allergenRegex = new RegExp(`\\b${escapeRegExp(allergenAlias)}\\b`)
-      if (allergenRegex.test(normalized)) {
-        excludeAllergens.push(allergenAlias)
-      }
-    })
+  if (color.includes('green')) {
+    return 'px-2 py-1 rounded-full text-xs font-semibold bg-green-600 text-white'
   }
-
-  if (dietTags.length > 0) {
-    params.diet_tags = uniqueStrings(dietTags)
+  if (color.includes('yellow')) {
+    return 'px-2 py-1 rounded-full text-xs font-semibold bg-yellow-400 text-zinc-900'
   }
-
-  if (excludeAllergens.length > 0) {
-    params.exclude_allergens = toBackendAllergenList(excludeAllergens)
+  if (color.includes('orange')) {
+    return 'px-2 py-1 rounded-full text-xs font-semibold bg-orange-500 text-white'
   }
-
-  if (!hasParamFilters(params)) {
-    return null
-  }
-
-  const isQuestionLike = /\?|^\s*(what|how|why|which|who)\b/.test(normalized)
-  if (isQuestionLike) {
-    return null
-  }
-
-  return params
-}
-
-const buildParamSearchWithAllergens = (
-  params: RecipeParamSearchParams = {}
-): RecipeParamSearchParams => {
-  const mergedAllergens = toBackendAllergenList([
-    ...(params.exclude_allergens || []),
-    ...recipeStore.excludedAllergens
-  ])
-
-  return {
-    ...params,
-    exclude_allergens: mergedAllergens.length > 0 ? mergedAllergens : undefined,
-    limit: paramSearchLimit
-  }
-}
+  return 'px-2 py-1 rounded-full text-xs font-semibold bg-zinc-300 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100'
+})
 
 // ============================================================================
 // Methods
 // ============================================================================
 
+const clearAutocomplete = () => {
+  autocompleteSuggestions.value = []
+  showAutocomplete.value = false
+}
+
+const fetchAutocompleteSuggestions = async (query: string) => {
+  const normalizedQuery = query.trim()
+  if (normalizedQuery.length < 2) {
+    clearAutocomplete()
+    return
+  }
+
+  autocompleteLoading.value = true
+  try {
+    const suggestions = await recipeApi.autocompleteRecipes(normalizedQuery, 8)
+    if (searchQuery.value.trim() !== normalizedQuery) return
+    autocompleteSuggestions.value = suggestions
+    showAutocomplete.value = suggestions.length > 0
+  } catch {
+    clearAutocomplete()
+  } finally {
+    autocompleteLoading.value = false
+  }
+}
+
+const handleSearchInput = () => {
+  const query = searchQuery.value.trim()
+  if (autocompleteDebounceTimer) {
+    clearTimeout(autocompleteDebounceTimer)
+    autocompleteDebounceTimer = null
+  }
+  if (query.length < 2) {
+    clearAutocomplete()
+    return
+  }
+
+  autocompleteDebounceTimer = setTimeout(() => {
+    void fetchAutocompleteSuggestions(query)
+  }, 220)
+}
+
+const selectSuggestion = (suggestion: string) => {
+  searchQuery.value = suggestion
+  clearAutocomplete()
+  void performSearch()
+}
+
+const handleClickOutsideSearch = (event: MouseEvent) => {
+  const target = event.target as Node | null
+  if (!target) return
+  if (searchBoxRef.value && !searchBoxRef.value.contains(target)) {
+    showAutocomplete.value = false
+  }
+}
+
+/**
+ * Analyze free-form recipe text with the profiling pipeline.
+ */
+const runRecipeAnalysis = async () => {
+  if (activeTab.value !== 'analyze') return
+  if (!analysisInput.value.trim()) return
+  analysisLoading.value = true
+  analysisError.value = null
+  showCalculationDetails.value = false
+
+  try {
+    const result = await recipeApi.analyzeRecipe(analysisInput.value.trim(), analysisRegion.value)
+    analysisResult.value = result
+  } catch (err: unknown) {
+    const e = err as { data?: { detail?: string }; message?: string }
+    const detail = e?.data?.detail || e?.message || 'Failed to analyze recipe'
+    analysisError.value = String(detail)
+    analysisResult.value = null
+  } finally {
+    analysisLoading.value = false
+  }
+}
+
+const formatNumber = (value: unknown): string => {
+  if (value === null || value === undefined) return '0'
+  const n = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(n)) return '0'
+  return n.toFixed(2)
+}
+
 /**
  * Search recipes with natural language query
  */
 const performSearch = async () => {
+  if (!searchQuery.value || searchQuery.value.trim() === '') return
+  clearAutocomplete()
+  hasUserTriggeredSearch.value = true
+  hasSearchAttempted.value = true
+
   try {
     clearError()
     resetPagination()
     const trimmedQuery = searchQuery.value.trim()
 
-    if (!trimmedQuery) {
-      await searchRecipesByParams(buildParamSearchWithAllergens())
-      return
-    }
+    await searchRecipes({
+      question: searchQuery.value,
+      exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined
+    }, false)
 
     const parametricQuery = parseParametricSearchQuery(trimmedQuery)
     if (parametricQuery) {
@@ -553,15 +813,6 @@ const performSearch = async () => {
     recipeStore.addSearchQuery(trimmedQuery)
   } catch (err) {
     console.error('Search failed:', err)
-  }
-}
-
-/**
- * Handle search on Enter key
- */
-const handleSearchKeypress = (event: KeyboardEvent) => {
-  if (event.key === 'Enter') {
-    performSearch()
   }
 }
 
@@ -585,6 +836,8 @@ const goToPage = (page: number) => {
  * Browse recipes by category
  */
 const browseCategory = async (category: { name: string; query: string }) => {
+  hasUserTriggeredSearch.value = true
+  hasSearchAttempted.value = true
   try {
     clearError()
     resetPagination()
@@ -593,7 +846,8 @@ const browseCategory = async (category: { name: string; query: string }) => {
 
     await fetchRecipesByCategory(
       category.query,
-      backendAllergens.length > 0 ? backendAllergens : undefined
+      excludeAllergens.length > 0 ? excludeAllergens : undefined,
+      false
     )
   } catch (err) {
     console.error('Failed to load category:', err)
@@ -613,15 +867,19 @@ const handleFilterChange = async () => {
  * Handle quick filter selection
  */
 const handleQuickFilter = async (filterType: string) => {
+  hasUserTriggeredSearch.value = true
+  hasSearchAttempted.value = true
   try {
     clearError()
     resetPagination()
     const config = quickFilterConfigs[filterType]
     if (!config) return
 
-    searchQuery.value = config.query
-    await searchRecipesByParams(buildParamSearchWithAllergens(config.params))
-    recipeStore.addSearchQuery(config.query)
+    searchQuery.value = query
+    await searchRecipes({
+      question: query,
+      exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined
+    }, false)
   } catch (err) {
     console.error('Quick filter failed:', err)
   }
@@ -631,23 +889,69 @@ const handleQuickFilter = async (filterType: string) => {
  * Navigate to comparison page
  */
 const navigateToCompare = () => {
-  navigateTo('/recipe-wrangler/compare')
+  const ids = recipeStore.compareList
+    .map(id => String(id || '').trim())
+    .filter(Boolean)
+    .slice(0, 4)
+
+  navigateTo({
+    path: '/recipe-wrangler/compare',
+    query: ids.length > 0 ? { ids } : undefined
+  })
+}
+
+const clearCompareSelection = () => {
+  recipeStore.clearCompareList()
 }
 
 // ============================================================================
 // Lifecycle
 // ============================================================================
 onMounted(async () => {
-  // Initialize store
-  recipeStore.initialize()
+  if (import.meta.client) {
+    document.addEventListener('click', handleClickOutsideSearch)
+  }
 
-  // Load initial recipes using deterministic parametric search
+  // Initialize stores
+  recipeStore.initialize()
+  void (async () => {
+    try {
+      await householdStore.initialize()
+      const userRegion = String(householdStore.currentHousehold?.region || '').trim().toUpperCase()
+      if (userRegion) {
+        analysisRegion.value = userRegion
+      }
+    } catch (err) {
+      console.error('Failed to load household region:', err)
+    }
+  })()
+
+  // Load an initial random set of recipes on page open.
+  hasUserTriggeredSearch.value = false
+  hasSearchAttempted.value = true
   try {
-    await performSearch()
-    initialLoadComplete.value = true
+    clearError()
+    resetPagination()
+    const excludeAllergens = recipeStore.excludedAllergens
+    await searchRecipes(
+      {
+        question: '',
+        exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined
+      },
+      false
+    )
   } catch (err) {
-    console.error('Failed to load initial recipes:', err)
-    initialLoadComplete.value = true
+    console.error('Failed to load initial random recipes:', err)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (autocompleteDebounceTimer) {
+    clearTimeout(autocompleteDebounceTimer)
+    autocompleteDebounceTimer = null
+  }
+  if (import.meta.client) {
+    document.removeEventListener('click', handleClickOutsideSearch)
   }
 })
 </script>

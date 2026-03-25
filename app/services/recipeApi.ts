@@ -5,16 +5,8 @@ import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 // Timeout Configuration
 // ============================================================================
 const DEFAULT_TIMEOUT = 30000 // 30 seconds
-const SEARCH_TIMEOUT = 60000  // 60 seconds for search operations (can be slow)
-
-/**
- * Creates a timeout wrapper for fetch requests
- */
-function createTimeoutSignal(timeoutMs: number): AbortSignal {
-  const controller = new AbortController()
-  setTimeout(() => controller.abort(), timeoutMs)
-  return controller.signal
-}
+const SEARCH_TIMEOUT = 60000 // 60 seconds for search operations (can be slow)
+const PROFILE_TIMEOUT = 120000 // 120 seconds for profiling pipeline
 
 // ============================================================================
 // Type Definitions - Based on API Response Schema
@@ -25,10 +17,34 @@ export interface RecipeIngredient {
   measurement: string
 }
 
+export interface RecipeNutrient {
+  nutrient_name?: string
+  nutrient_code?: string
+  amount_per_serving?: number | string | null
+  unit_name?: string | null
+}
+
+export interface RecipeNutritionProfilingDetail {
+  ingredient?: string
+  measurement_raw?: string | null
+  parsed_quantity?: string | null
+  parsed_unit?: string | null
+  weight_g?: number | string | null
+  weight_source?: string | null
+  weight_match?: string | null
+  matched_nutritional_ingredient?: string | null
+  nutrition_source?: string | null
+  nutrition_match_source?: string | null
+  canonical_food_id?: string | null
+  similarity?: number | string | null
+}
+
 export interface Recipe {
   recipe_id: string
   title: string
+  source?: string
   image_url: string | null
+  tags?: string[]
   ingredients: RecipeIngredient[]
   instructions: string[]
   duration: number | null
@@ -41,12 +57,20 @@ export interface Recipe {
   total_sugar_g_per_serving: number
   total_sodium_mg_per_serving: number
   total_cholesterol_mg_per_serving: number
+  total_nutrients?: Record<string, unknown> | null
+  total_nutrients_per_serving?: Record<string, unknown> | null
   nutri_score: number
+  nutri_score_breakdown?: Record<string, unknown> | null
+  nutrients?: RecipeNutrient[]
+  nutrition_profiling_details?: RecipeNutritionProfilingDetail[]
+  nutrition_profiling_debug?: Record<string, unknown>
 }
 
 export interface RecipeSearchResult {
-  recipe_id: string
+  recipe_id?: string
+  id?: string
   title: string
+  source?: string
   image_url: string | null
   duration?: number
   serves?: number
@@ -81,7 +105,9 @@ export interface RecipeSearchResponse {
   }
 }
 
-type RecipeSearchPayload = { results?: RecipeSearchResult[] } | RecipeSearchResult[]
+export interface RecipeAutocompleteResponse {
+  suggestions: string[]
+}
 
 export interface ApiError {
   message: string
@@ -89,13 +115,95 @@ export interface ApiError {
   code?: string
 }
 
+export interface PipelineTraceWeightDetail {
+  name?: string
+  measurement_raw?: string
+  parsed_quantity?: string | null
+  parsed_unit?: string | null
+  quantity_inferred?: boolean
+  unit_inferred?: boolean
+  usda_id?: string | null
+  match_type?: string | null
+  weight_grams?: number | null
+  error?: string | null
+}
+
+export interface PipelineTrace {
+  parser?: Record<string, unknown>
+  weight_calculation?: {
+    weights?: number[]
+    details?: PipelineTraceWeightDetail[]
+    matched_count?: number
+    unmatched_count?: number
+  }
+  profiling?: {
+    source?: string
+    source_key?: string
+    totals?: Record<string, number>
+    ingredients?: Array<Record<string, unknown>>
+  }
+}
+
+export interface RecipeProfileResult {
+  title: string
+  ingredient_names: string[]
+  measurements: string[]
+  weights: number[]
+  ingredients: Array<Record<string, unknown>>
+  profiling_totals: Record<string, number>
+  pipeline_trace?: PipelineTrace
+  nutri_score?: {
+    score?: number
+    nutri_score?: string
+    color?: string
+  }
+  nutri_score_color?: string
+  nutri_score_source?: string
+  serves?: number
+  message?: string
+}
+
 // ============================================================================
 // RecipeWrangler API Service
 // ============================================================================
 
 class RecipeApiService {
-  private readonly basePath = '/recipewrangler'
-  private readonly defaultParamSearchLimit = 20
+  private readonly basePath = '/recipes'
+
+  private async ensureAuthToken(authStore: ReturnType<typeof useAuthStore>): Promise<string> {
+    let token = authStore.getToken()
+    if (token) return token
+
+    // Hot-reload and route timing can leave Pinia state "authenticated"
+    // while Keycloak token is not yet hydrated in memory.
+    const initialized = await authStore.initialize(true)
+    if (initialized) {
+      try {
+        await authStore.refreshToken()
+      } catch {
+        // ignore refresh errors here and validate token below
+      }
+      token = authStore.getToken()
+    }
+
+    if (!token) {
+      throw new Error('No authentication token available')
+    }
+    return token
+  }
+
+  private getRecipeWranglerBaseUrl(): string {
+    // In local dev, use Nuxt proxy so browser only needs port 3000.
+    if (import.meta.client && import.meta.dev) {
+      return '/api/rw'
+    }
+
+    const config = useRuntimeConfig()
+    const runtimeConfig = import.meta.client ? (window as any).__RUNTIME_CONFIG__ : undefined
+    return (runtimeConfig?.recipeWranglerApiUrl as string) ||
+      (config.public.recipeWranglerApiUrl as string) ||
+      'http://127.0.0.1:8001/api/v1'
+  }
 
   /**
    * Get a specific recipe by ID
@@ -104,9 +212,16 @@ class RecipeApiService {
    */
   async getRecipe(recipeId: string): Promise<Recipe> {
     try {
+      const rawId = String(recipeId || '')
+      let normalizedId = rawId
+      try {
+        normalizedId = decodeURIComponent(rawId)
+      } catch {
+        normalizedId = rawId
+      }
       // Use longer timeout for recipe details
       const data = await this.fetchWithTimeout<Recipe>(
-        `${this.basePath}/recipes/${recipeId}`,
+        `${this.basePath}/by-id?recipe_id=${encodeURIComponent(normalizedId)}`,
         'GET',
         undefined,
         DEFAULT_TIMEOUT
@@ -125,8 +240,8 @@ class RecipeApiService {
   async searchRecipes(params: RecipeSearchParams): Promise<RecipeSearchResult[]> {
     try {
       // Use extended timeout for search (AI processing can be slow)
-      const data = await this.fetchWithTimeout<RecipeSearchPayload>(
-        `${this.basePath}/recipes/search`,
+      const data = await this.fetchWithTimeout<{ results: RecipeSearchResult[] }>(
+        `${this.basePath}/search`,
         'POST',
         params,
         SEARCH_TIMEOUT
@@ -139,25 +254,23 @@ class RecipeApiService {
   }
 
   /**
-   * Search recipes using deterministic parameter filters
+   * Fetch recipe title autocomplete suggestions from Elasticsearch.
    */
-  async searchRecipesByParams(params: RecipeParamSearchParams): Promise<RecipeSearchResult[]> {
+  async autocompleteRecipes(query: string, limit: number = 8): Promise<string[]> {
+    const normalizedQuery = query.trim()
+    if (normalizedQuery.length < 2) return []
+
     try {
-      const requestBody: RecipeParamSearchParams = {
-        ...params,
-        limit: params.limit ?? this.defaultParamSearchLimit
-      }
-
-      const data = await this.fetchWithTimeout<RecipeSearchPayload>(
-        `${this.basePath}/recipes/param_search`,
-        'POST',
-        requestBody,
-        SEARCH_TIMEOUT
+      const safeLimit = Math.min(20, Math.max(1, limit))
+      const data = await this.fetchWithTimeout<RecipeAutocompleteResponse>(
+        `${this.basePath}/autocomplete?q=${encodeURIComponent(normalizedQuery)}&limit=${safeLimit}`,
+        'GET',
+        undefined,
+        DEFAULT_TIMEOUT
       )
-
-      return this.normalizeSearchResults(data)
+      return Array.isArray(data?.suggestions) ? data.suggestions : []
     } catch (error) {
-      throw this.handleError(error, 'Failed to search recipes with filters')
+      throw this.handleError(error, 'Failed to fetch autocomplete suggestions')
     }
   }
 
@@ -219,6 +332,29 @@ class RecipeApiService {
   }
 
   /**
+   * Analyze raw recipe text through parsing + profiling chain
+   */
+  async analyzeRecipe(rawRecipe: string, region: string = 'IE'): Promise<RecipeProfileResult> {
+    if (!rawRecipe || !rawRecipe.trim()) {
+      throw new Error('Recipe text is required for analysis')
+    }
+    const normalizedRegion = String(region || 'IE').trim().toUpperCase()
+    const safeRegion = (normalizedRegion === 'IE' || normalizedRegion === 'US')
+      ? normalizedRegion
+      : 'US'
+    try {
+      return await this.fetchWithTimeout<RecipeProfileResult>(
+        `${this.basePath}/profile`,
+        'POST',
+        { raw_recipe: rawRecipe, region: safeRegion },
+        PROFILE_TIMEOUT
+      )
+    } catch (error) {
+      throw this.handleError(error, 'Failed to analyze recipe')
+    }
+  }
+
+  /**
    * Fetch with timeout support
    * @private
    */
@@ -231,28 +367,38 @@ class RecipeApiService {
     const baseUrl = getWisefoodRestApiUrl()
     const url = `${baseUrl}${endpoint}`
 
-    // Get auth token
     const authStore = useAuthStore()
-    const token = authStore.getToken()
-
-    if (!token) {
-      throw new Error('No authentication token available')
-    }
+    let token = await this.ensureAuthToken(authStore)
 
     // Create abort controller for timeout
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
     try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: data ? JSON.stringify(data) : undefined,
-        signal: controller.signal
-      })
+      const doRequest = async (authToken: string) => {
+        return fetch(url, {
+          method,
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: data ? JSON.stringify(data) : undefined,
+          signal: controller.signal
+        })
+      }
+
+      let response = await doRequest(token)
+
+      // Retry once after token refresh to avoid false-empty compare/search failures.
+      if (response.status === 401) {
+        try {
+          await authStore.refreshToken()
+          token = await this.ensureAuthToken(authStore)
+          response = await doRequest(token)
+        } catch {
+          // Let normal error handling below run.
+        }
+      }
 
       clearTimeout(timeoutId)
 
@@ -264,10 +410,9 @@ class RecipeApiService {
           errorData = await response.text()
         }
 
-        // Handle 401 authentication errors
+        // Handle 401 authentication errors (after retry attempt above)
         if (response.status === 401) {
-          const refreshed = await authStore.refreshToken()
-          if (!refreshed && import.meta.client) {
+          if (import.meta.client) {
             await authStore.logout()
           }
           throw new Error('Authentication failed. Please log in again.')

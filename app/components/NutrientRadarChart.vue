@@ -107,41 +107,36 @@
       </svg>
     </div>
 
-    <!-- Horizontal Scrollable Legend -->
-    <div class="relative">
-      <div class="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-600 scrollbar-track-transparent">
-        <div class="flex gap-2 min-w-max px-1">
-          <button
-            v-for="nutrient in allNutrients"
-            :key="nutrient.key"
-            @click="toggleNutrient(nutrient.key)"
+    <!-- Nutrient Toggles -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <button
+        v-for="nutrient in allNutrients"
+        :key="nutrient.key"
+        @click="toggleNutrient(nutrient.key)"
+        :class="[
+          'text-left px-3 py-2 rounded-lg border transition-all',
+          visibleKeys.has(nutrient.key)
+            ? 'bg-brandg-50 dark:bg-brandg-900/30 border-brandg-300 dark:border-brandg-700'
+            : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 opacity-70'
+        ]"
+      >
+        <div class="flex items-center gap-2">
+          <span
             :class="[
-              'flex items-center gap-2 px-3 py-2 rounded-lg border transition-all whitespace-nowrap',
+              'w-2.5 h-2.5 rounded-full transition-colors',
               visibleKeys.has(nutrient.key)
-                ? 'bg-brandg-50 dark:bg-brandg-900/30 border-brandg-300 dark:border-brandg-700'
-                : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 opacity-50'
+                ? 'bg-brandg-500 dark:bg-brandg-400'
+                : 'bg-zinc-300 dark:bg-zinc-600'
             ]"
-          >
-            <span
-              :class="[
-                'w-3 h-3 rounded-full transition-colors',
-                visibleKeys.has(nutrient.key)
-                  ? 'bg-brandg-500 dark:bg-brandg-400'
-                  : 'bg-zinc-300 dark:bg-zinc-600'
-              ]"
-            />
-            <span class="text-xs font-medium text-zinc-700 dark:text-zinc-300">
-              {{ nutrient.label }}
-            </span>
-            <span class="text-[10px] text-zinc-500 dark:text-zinc-400">
-              {{ nutrient.displayValue }}
-            </span>
-          </button>
+          />
+          <span class="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+            {{ nutrient.label }}
+          </span>
         </div>
-      </div>
-      <!-- Scroll indicators -->
-      <div class="absolute left-0 top-0 bottom-2 w-6 bg-gradient-to-r from-white dark:from-zinc-800 to-transparent pointer-events-none" />
-      <div class="absolute right-0 top-0 bottom-2 w-6 bg-gradient-to-l from-white dark:from-zinc-800 to-transparent pointer-events-none" />
+        <div class="text-[11px] mt-1 text-zinc-500 dark:text-zinc-400">
+          {{ nutrient.displayValue }}
+        </div>
+      </button>
     </div>
 
     <!-- Minimum selection warning -->
@@ -173,7 +168,6 @@ const props = defineProps<{
   fiber: MaybeNumber
   sugar: MaybeNumber
   sodium: MaybeNumber
-  cholesterol: MaybeNumber
 }>()
 const { t } = useI18n()
 
@@ -219,7 +213,7 @@ const resetZoom = () => {
 
 // Visible nutrients tracking
 const visibleKeys = ref(new Set([
-  'calories', 'protein', 'carbs', 'fat', 'fiber', 'sugar', 'sodium', 'cholesterol'
+  'calories', 'protein', 'carbs', 'fat', 'fiber', 'sugar', 'sodium'
 ]))
 
 const toggleNutrient = (key: string) => {
@@ -236,14 +230,13 @@ const toggleNutrient = (key: string) => {
 
 // Define all nutrients with their max values for normalization
 const allNutrients = computed<NutrientData[]>(() => [
-  { key: 'calories', label: t('recipeWrangler.detail.calories'), value: safeNumber(props.calories), max: 800, displayValue: fmtRounded(props.calories, 'kcal') },
-  { key: 'protein', label: t('recipeWrangler.detail.protein'), value: safeNumber(props.protein), max: 50, displayValue: fmtFixed(props.protein, 1, 'g') },
-  { key: 'carbs', label: t('recipeWrangler.detail.carbs'), value: safeNumber(props.carbs), max: 100, displayValue: fmtFixed(props.carbs, 1, 'g') },
-  { key: 'fat', label: t('recipeWrangler.detail.fat'), value: safeNumber(props.fat), max: 50, displayValue: fmtFixed(props.fat, 1, 'g') },
-  { key: 'fiber', label: t('recipeWrangler.detail.fiber'), value: safeNumber(props.fiber), max: 30, displayValue: fmtFixed(props.fiber, 1, 'g') },
-  { key: 'sugar', label: t('recipeWrangler.detail.sugar'), value: safeNumber(props.sugar), max: 50, displayValue: fmtFixed(props.sugar, 1, 'g') },
-  { key: 'sodium', label: t('recipeWrangler.detail.sodium'), value: safeNumber(props.sodium), max: 2000, displayValue: fmtFixed(props.sodium, 0, 'mg') },
-  { key: 'cholesterol', label: t('recipeWrangler.detail.cholesterol'), value: safeNumber(props.cholesterol), max: 300, displayValue: fmtFixed(props.cholesterol, 0, 'mg') }
+  { key: 'calories', label: t('recipeWrangler.detail.calories'), value: props.calories, max: 800, displayValue: `${Math.round(props.calories)} kcal` },
+  { key: 'protein', label:  t('recipeWrangler.detail.protein'), value: props.protein, max: 50, displayValue: `${props.protein.toFixed(1)}g` },
+  { key: 'carbs', label: t('recipeWrangler.detail.carbs'), value: props.carbs, max: 100, displayValue: `${props.carbs.toFixed(1)}g` },
+  { key: 'fat', label: t('recipeWrangler.detail.fat'), value: props.fat, max: 50, displayValue: `${props.fat.toFixed(1)}g` },
+  { key: 'fiber', label: t('recipeWrangler.detail.fiber'), value: props.fiber, max: 30, displayValue: `${props.fiber.toFixed(1)}g` },
+  { key: 'sugar', label: t('recipeWrangler.detail.sugar'), value: props.sugar, max: 50, displayValue: `${props.sugar.toFixed(1)}g` },
+  { key: 'sodium', label: t('recipeWrangler.detail.sodium'), value: props.sodium, max: 2000, displayValue: `${props.sodium.toFixed(0)}mg` }
 ])
 
 // Filtered visible nutrients
@@ -263,7 +256,9 @@ const getAngle = (index: number, total: number): number => {
 
 // Get normalized value (0 to 1)
 const getNormalizedValue = (nutrient: NutrientData): number => {
-  return Math.min(nutrient.value / nutrient.max, 1)
+  const linear = Math.max(nutrient.value / nutrient.max, 0)
+  // Gentle nonlinear scaling makes low but valid values easier to read.
+  return Math.min(Math.sqrt(linear), 1)
 }
 
 // Calculate point coordinates for a given nutrient
@@ -320,23 +315,3 @@ const polygonPoints = computed(() => {
   return dataPoints.value.map(p => `${p.x},${p.y}`).join(' ')
 })
 </script>
-
-<style scoped>
-/* Custom scrollbar styles */
-.scrollbar-thin::-webkit-scrollbar {
-  height: 6px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgb(212 212 216);
-  border-radius: 3px;
-}
-
-.dark .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgb(82 82 91);
-}
-</style>

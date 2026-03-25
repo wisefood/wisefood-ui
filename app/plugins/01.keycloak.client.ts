@@ -16,14 +16,19 @@ const log = (...args: unknown[]) => {
   }
 }
 
-export default defineNuxtPlugin(async (nuxtApp) => {
+export default defineNuxtPlugin((nuxtApp) => {
   // Provide keycloak service
   nuxtApp.provide('keycloak', KeycloakAuthService)
 
-  // Initialize auth on app load
-  // This runs once when the app starts (including new tabs)
+  // Initialize auth on app load, but do not block app mount/hydration.
+  // Route middleware/pages handle auth-gated flows explicitly.
   const authStore = useAuthStore()
   log('[KeycloakPlugin] Initializing authentication...')
-  await authStore.initialize()
-  log('[KeycloakPlugin] Authentication initialized')
+  void authStore.initialize()
+    .then(() => {
+      log('[KeycloakPlugin] Authentication initialized')
+    })
+    .catch((error) => {
+      console.error('[KeycloakPlugin] Authentication initialization failed:', error)
+    })
 })

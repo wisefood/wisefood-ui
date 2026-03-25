@@ -102,7 +102,7 @@
 
                   <!-- View Recipe Link -->
                   <NuxtLink
-                    :to="`/recipe-wrangler/${recipe.recipe_id}`"
+                    :to="`/recipe-wrangler/${encodeURIComponent(recipe.recipe_id)}`"
                     class="inline-flex items-center gap-2 text-sm font-medium text-brandg-600 dark:text-brandg-400 hover:text-brandg-700 dark:hover:text-brandg-300 transition-colors"
                   >
                     <span>{{ t('recipeWrangler.recipe.viewRecipe') }}</span>
@@ -387,6 +387,7 @@ useHead({
 // Store
 // ============================================================================
 const recipeStore = useRecipeStore()
+const route = useRoute()
 
 // ============================================================================
 // State
@@ -478,10 +479,34 @@ const getNutriScoreColorBg = (grade: string): string => {
 const loadRecipes = async () => {
   loading.value = true
   try {
-    const recipeIds = recipeStore.compareList
-    const recipes = await Promise.all(
+    const recipeIds = Array.from(
+      new Set(recipeStore.compareList.map(id => String(id || '').trim()).filter(Boolean))
+    )
+
+    if (recipeIds.length === 0) {
+      compareRecipes.value = []
+      return
+    }
+
+    const settled = await Promise.allSettled(
       recipeIds.map(id => recipeApi.getRecipe(id))
     )
+
+    const recipes: Recipe[] = []
+    const failedIds: string[] = []
+
+    settled.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        recipes.push(result.value)
+      } else {
+        failedIds.push(recipeIds[index] || '')
+      }
+    })
+
+    if (failedIds.length > 0) {
+      console.error('Some comparison recipes failed to load:', failedIds)
+    }
+
     compareRecipes.value = recipes
     failedRecipeImages.value = {}
   } catch (err) {
@@ -505,8 +530,32 @@ const clearAll = () => {
 // Lifecycle
 // ============================================================================
 onMounted(() => {
+  recipeStore.initialize()
+
+  const rawIds = route.query.ids
+  const idsFromQuery = (Array.isArray(rawIds) ? rawIds : [rawIds])
+    .flatMap((value) => {
+      if (value === undefined || value === null) return []
+      return String(value).split(',')
+    })
+    .map(id => String(id || '').trim())
+    .filter(Boolean)
+    .slice(0, 4)
+
+  if (idsFromQuery.length > 0) {
+    recipeStore.clearCompareList()
+    idsFromQuery.forEach(id => recipeStore.addToCompare(id))
+  }
+
   loadRecipes()
 })
+
+watch(
+  () => recipeStore.compareList.slice(),
+  () => {
+    void loadRecipes()
+  }
+)
 </script>
 
 <style scoped>
