@@ -192,17 +192,14 @@ class RecipeApiService {
     return token
   }
 
-  private getRecipeWranglerBaseUrl(): string {
-    // In local dev, use Nuxt proxy so browser only needs port 3000.
-    if (import.meta.client && import.meta.dev) {
+  private getRecipeApiBaseUrl(): string {
+    // In local dev, use Nuxt proxy so browser only needs port 3000 and can
+    // still reach a locally running Recipe Wrangler container.
+    if (import.meta.dev) {
       return '/api/rw'
     }
 
-    const config = useRuntimeConfig()
-    const runtimeConfig = import.meta.client ? (window as any).__RUNTIME_CONFIG__ : undefined
-    return (runtimeConfig?.recipeWranglerApiUrl as string) ||
-      (config.public.recipeWranglerApiUrl as string) ||
-      'http://127.0.0.1:8001/api/v1'
+    return getWisefoodRestApiUrl()
   }
 
   /**
@@ -364,7 +361,7 @@ class RecipeApiService {
     data?: unknown,
     timeoutMs: number = DEFAULT_TIMEOUT
   ): Promise<T> {
-    const baseUrl = getWisefoodRestApiUrl()
+    const baseUrl = this.getRecipeApiBaseUrl()
     const url = `${baseUrl}${endpoint}`
 
     const authStore = useAuthStore()
