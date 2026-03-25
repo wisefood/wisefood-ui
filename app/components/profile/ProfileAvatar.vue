@@ -132,7 +132,7 @@ import type { AvatarConfig } from '~/utils/avatarPresets'
 
 interface Props {
   avatar: AvatarConfig
-  size?: 'sm' | 'md' | 'lg' | 'xl'
+  size?: 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   selected?: boolean
 }
 
@@ -143,6 +143,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const sizeClasses = computed(() => {
   switch (props.size) {
+    case 'xxs': return 'w-8 h-8'
+    case 'xs': return 'w-6 h-6'
     case 'sm': return 'w-12 h-12'
     case 'md': return 'w-20 h-20'
     case 'lg': return 'w-28 h-28'

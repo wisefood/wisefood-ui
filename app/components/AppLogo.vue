@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useHouseholdStore } from '~/stores/household'
 
@@ -22,9 +22,19 @@ defineProps({
 
 const authStore = useAuthStore()
 const householdStore = useHouseholdStore()
+const isMounted = ref(false)
+
+onMounted(() => {
+  isMounted.value = true
+})
 
 // Smart routing: go to dashboard if authenticated with profile, otherwise home
 const logoDestination = computed(() => {
+  // Keep SSR and client-hydration output stable.
+  if (!isMounted.value) {
+    return '/'
+  }
+
   if (authStore.isAuthenticated && householdStore.currentMember) {
     return '/dashboard'
   }

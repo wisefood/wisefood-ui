@@ -169,7 +169,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useHouseholdStore } from '@/stores/household'
@@ -306,8 +306,31 @@ onMounted(async () => {
   document.querySelectorAll('.scroll-fade-in').forEach((el) => {
     observer?.observe(el)
   })
-})
+}
 
+onMounted(async () => {
+  // Start animations immediately — they're visible in SSR content
+  await nextTick()
+  runTypingEffect(typingText.value)
+  setupScrollObserver()
+
+  // Check auth and redirect authenticated users
+  if (!auth.initialized) {
+    await auth.initialize()
+  }
+
+  if (auth.isAuthenticated) {
+    if (!householdStore.initialized) {
+      await householdStore.initialize()
+    }
+
+    if (householdStore.currentMember) {
+      router.push('/dashboard')
+    } else {
+      router.push('/profiles')
+    }
+  }
+})
 
 watch(typingText, (newText) => {
   runTypingEffect(newText)

@@ -37,12 +37,22 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
     // after the full SSO check has completed
     if (!isAuthenticated) {
       log('[AuthMiddleware] Not authenticated, redirecting to /login')
-      return navigateTo('/login')
+      return navigateTo({
+        path: '/login',
+        query: {
+          redirect: to.fullPath
+        }
+      })
     }
 
     log('[AuthMiddleware] User authenticated, allowing access to:', to.path)
   } catch (error) {
     console.error('[AuthMiddleware] Error during authentication check:', error)
-    return navigateTo('/login')
+    return navigateTo({
+      path: '/login',
+      query: {
+        redirect: to.fullPath
+      }
+    })
   }
 })

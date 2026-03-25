@@ -37,9 +37,22 @@
       "save": "Save"
     },
     "schedule": {
-      "title": "Today's Schedule",
+      "title": "Recent Meal Plans",
       "now": "Now",
       "cal": "cal",
+      "refineInFoodChat": "Refine in FoodChat",
+      "createInFoodChat": "Create one in FoodChat",
+      "planned": "Planned",
+      "notPlanned": "Not planned",
+      "noBreakfast": "No breakfast planned yet",
+      "noLunch": "No lunch planned yet",
+      "noDinner": "No dinner planned yet",
+      "noMembers": "No members",
+      "meals": {
+        "breakfast": "Breakfast",
+        "lunch": "Lunch",
+        "dinner": "Dinner"
+      },
       "days": {
         "sunday": "Sunday",
         "monday": "Monday",
@@ -74,10 +87,17 @@
       "sustainable": "Sustainable"
     },
     "recipes": {
-      "recommendedForYou": "Recommended for you"
+      "recommendedForYou": "Recipes you might like",
+      "recommendedPrefix": "Recipes you might",
+      "recommendedAccent": "like",
+      "discoverInRecipeWrangler": "Discover recipes in RecipeWrangler",
+      "minuteShort": "m",
+      "serves": "Serves {count}",
+      "noRecommendationsYet": "No recommendations yet."
     },
     "insights": {
       "didYouKnow": "Did you know?",
+      "tipsOfTheDay": "Tips of the day",
       "learnMore": "Learn more in FoodScholar"
     },
     "sustainability": {
@@ -88,6 +108,17 @@
   "nav": {
     "signIn": "Sign In",
     "legal": "Terms & Conditions | GDPR"
+  },
+  "header": {
+    "console": "Console",
+    "using": "Using",
+    "userFallback": "User",
+    "menu": {
+      "myProfile": "My Profile",
+      "switchProfile": "Switch Profile",
+      "accountSettings": "Account Settings",
+      "signOut": "Sign out"
+    }
   },
   "auth": {
     "welcome": "Welcome back",
@@ -182,6 +213,11 @@
     "subtitle": "Discover personalized recipes tailored to your nutritional goals and environmental impact",
     "backToDashboard": "Back to Dashboard",
     "backToRecipes": "Back to Recipes",
+    "compare": "Compare",
+    "loadingHint": "This may take up to 60 seconds",
+    "pagination": "Pagination",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
     "search": {
       "placeholder": "Ask for recipes (e.g., 'pasta recipes', 'quick vegan meals')...",
       "button": "Search",
@@ -207,7 +243,32 @@
       "excludeAllergens": "Exclude Allergens",
       "clearAll": "Clear all",
       "quickFilters": "Quick Filters",
-      "sortBy": "Sort By"
+      "sortBy": "Sort By",
+      "allergens": {
+        "peanuts": "Peanuts",
+        "treeNuts": "Tree Nuts",
+        "dairy": "Dairy",
+        "eggs": "Eggs",
+        "soy": "Soy",
+        "wheat": "Wheat",
+        "fish": "Fish",
+        "shellfish": "Shellfish",
+        "gluten": "Gluten",
+        "lactose": "Lactose"
+      },
+      "quickOptions": {
+        "quickEasy": "Quick and Easy (< 30 min)",
+        "healthy": "Healthy and Nutritious",
+        "vegetarian": "Vegetarian",
+        "vegan": "Vegan",
+        "lowCalorie": "Low Calorie"
+      },
+      "sortOptions": {
+        "mostRelevant": "Most Relevant",
+        "cookingTime": "Cooking Time",
+        "calories": "Calories",
+        "nutritionScore": "Nutrition Score"
+      }
     },
     "allergens": {
       "peanuts": "Peanuts",
@@ -249,7 +310,12 @@
       "saved": "Saved",
       "servings": "serving | servings",
       "minutes": "minutes",
-      "nutriScore": "Nutri-Score"
+      "minuteShort": "min",
+      "nutriScore": "Nutri-Score",
+      "addToComparison": "Add to comparison",
+      "removeFromComparison": "Remove from comparison",
+      "addToFavorites": "Add to favorites",
+      "removeFromFavorites": "Remove from favorites"
     },
     "categories": {
       "title": "Browse by Category",
@@ -274,7 +340,777 @@
       "fiber": "Fiber",
       "sugar": "Sugar",
       "sodium": "Sodium",
-      "cholesterol": "Cholesterol"
+      "cholesterol": "Cholesterol",
+      "gridView": "Grid View",
+      "chartView": "Chart View",
+      "usdaSource": "Based on the USDA Food Composition Table",
+      "calories": "Calories",
+      "protein": "Protein",
+      "carbs": "Carbs",
+      "fat": "Fat",
+      "nutritionalQuality": "Nutritional Quality",
+      "nutriScoreDescriptions": {
+        "A": "Excellent nutritional quality",
+        "B": "Good nutritional quality",
+        "C": "Average nutritional quality",
+        "D": "Poor nutritional quality",
+        "E": "Low nutritional quality",
+        "unknown": "Unknown"
+      },
+      "nutriScoreTooltips": {
+        "A": "Grade A: Rich in fiber, protein, vitamins, and minerals. Great for everyday meals.",
+        "B": "Grade B: A nutritious option with a good balance of beneficial nutrients.",
+        "C": "Grade C: A balanced choice that fits well into a varied diet.",
+        "D": "Grade D: Can be enjoyed occasionally as part of a diverse, balanced diet.",
+        "E": "Grade E: Best enjoyed as an occasional treat within a balanced lifestyle.",
+        "unknown": "Unknown grade"
+      },
+      "nutrientChart": {
+        "reset": "Reset",
+        "minSelectionWarning": "Select at least 3 nutrients to display the chart"
+      }
+    },
+    "comparePage": {
+      "pageTitle": "Compare Recipes - RecipeWrangler",
+      "clearAll": "Clear All",
+      "notAvailable": "N/A",
+      "empty": {
+        "title": "No Recipes to Compare",
+        "subtitle": "Select recipes from the search results to compare their nutritional values and ingredients",
+        "browseRecipes": "Browse Recipes"
+      },
+      "table": {
+        "feature": "Feature",
+        "duration": "Duration",
+        "servings": "Servings"
+      }
+    },
+    "cookingAnimation": {
+      "deliciousRecipes": "delicious recipes",
+      "actions": {
+        "stirring": "stirring",
+        "frying": "frying",
+        "chopping": "chopping",
+        "boiling": "boiling",
+        "sauteing": "sauteing",
+        "simmering": "simmering"
+      },
+      "descriptions": {
+        "stirring": "Gently blending flavors together",
+        "frying": "Crafting golden perfection",
+        "chopping": "Preparing fresh ingredients",
+        "boiling": "Coaxing out delicate flavors",
+        "sauteing": "Dancing with heat and timing",
+        "simmering": "Patiently developing depth"
+      }
+    }
+  },
+  "foodChat": {
+    "title": "FoodChat",
+    "welcome": "Welcome to FoodChat",
+    "description": "Your AI nutrition assistant. Ask about meal planning, nutritional info, dietary advice, or recipe suggestions.",
+    "newChat": "New FoodChat",
+    "noSessions": "No conversations yet",
+    "noSessionsHint": "Start a new FoodChat above",
+    "sendPlaceholder": "Ask about nutrition, meal plans, recipes...",
+    "sendFirst": "Send a message to get started",
+    "mealPlan": "Meal Plan",
+    "noMealPlan": "No meal plan yet",
+    "noMealPlanHint": "Ask the assistant to generate a meal plan",
+    "ingredients": "Ingredients",
+    "directions": "Directions",
+    "backToDashboard": "Dashboard",
+    "suggested": {
+      "mealPlan": "Can you suggest a meal plan for weight management?",
+      "highProtein": "What are some high-protein vegetarian meal ideas?",
+      "gutHealth": "What foods are good for gut health?",
+      "reduceSugar": "How can I reduce my sugar intake without sacrificing taste?"
+    }
+  },
+  "foodScholarHome": {
+    "backToDashboard": "Back to Dashboard",
+    "subtitle": "Educational content and nutritional insights about sustainable eating",
+    "categories": {
+      "all": "All",
+      "uncategorized": "Uncategorized"
+    },
+    "common": {
+      "yes": "Yes",
+      "no": "No",
+      "justNow": "just now"
+    },
+    "errors": {
+      "failedToLoadArticles": "Failed to load articles.",
+      "failedToLoadPopularArticles": "Failed to load popular articles.",
+      "failedToGetQaResponse": "Failed to get a QA response from FoodScholar.",
+      "failedToSubmitFeedback": "Failed to submit feedback."
+    },
+    "popularArticles": {
+      "title": "Popular Articles",
+      "browseFullCatalog": "Browse full catalog",
+      "loading": "Loading popular articles...",
+      "noFilteredResults": "No articles match the selected filters."
+    },
+    "popularTopics": {
+      "title": "Popular Topics",
+      "topicDescription": "Explore research and evidence around {topic}.",
+      "emptyState": "Topics will appear as article metadata is indexed."
+    },
+    "qa": {
+      "tagline": "Ask naturally. Get evidence-backed answers.",
+      "headingOptions": {
+        "first": "What would you like to know?",
+        "second": "Ask anything about food & nutrition",
+        "third": "Your nutrition research companion"
+      },
+      "mode": {
+        "simple": "Simple",
+        "advanced": "Advanced"
+      },
+      "composer": {
+        "focusedHint": "Nice, now add the detail you care about most.",
+        "idleHint": "Press Enter to ask. Open Advanced for extra control.",
+        "enterKey": "Enter"
+      },
+      "advanced": {
+        "title": "Advanced settings",
+        "subtitle": "Tune behavior only if you need more control.",
+        "ragOn": "Include Articles",
+        "ragOff": "Ask the Model Only",
+        "model": "Model",
+        "sourceDepth": "Source Depth",
+        "explanationStyle": "Explanation Style",
+        "enableRagToAdjust": "Enable RAG to adjust source depth."
+      },
+      "model": {
+        "auto": "Auto (recommended)",
+        "noProviderModels": "No provider models available right now. Auto will be used.",
+        "autoHint": "Leave on Auto unless you need a specific provider.",
+        "system": "System",
+        "custom": "Custom"
+      },
+      "topK": {
+        "focusedLabel": "Focused (3)",
+        "focusedDescription": "Fast answer using the most relevant sources only.",
+        "balancedLabel": "Balanced (5)",
+        "balancedDescription": "Good balance of depth, speed, and citation variety.",
+        "deepLabel": "Deep (8)",
+        "deepDescription": "More evidence coverage for nuanced or broad questions.",
+        "comprehensiveLabel": "Comprehensive (12)",
+        "comprehensiveDescription": "Maximum context with slower, heavier retrieval."
+      },
+      "expertise": {
+        "beginnerLabel": "Beginner",
+        "beginnerDescription": "Simple language with practical explanations.",
+        "intermediateLabel": "Intermediate",
+        "intermediateDescription": "Balanced detail and terminology.",
+        "expertLabel": "Expert",
+        "expertDescription": "Technical depth with research-oriented framing."
+      },
+      "placeholder": {
+        "default": "What would you like to know about food & nutrition?",
+        "advanced": "Ask anything about food & nutrition (advanced controls enabled)"
+      },
+      "youAsked": "You asked",
+      "answer": "Answer",
+      "answerA": "Answer A",
+      "answerB": "Answer B",
+      "answerPrimaryModelResponse": "Primary model response",
+      "answerAlternativeModelResponse": "Alternative model response",
+      "confidence": "Confidence",
+      "notAvailable": "n/a",
+      "followUpSuggestions": "Follow-up suggestions",
+      "feedback": {
+        "choosePreferredAnswer": "Click an answer card to choose your preferred response.",
+        "preferenceSaved": "Preference saved",
+        "helpfulQuestion": "Was this helpful?",
+        "saved": "Feedback saved",
+        "whatWentWrong": "What went wrong?",
+        "optionalComment": "Add a comment (optional)",
+        "submit": "Submit feedback",
+        "reasons": {
+          "inaccurate": "Inaccurate or incomplete",
+          "notAsked": "Not what I asked",
+          "missingQuality": "Missing or poor quality content",
+          "slowOrErrors": "Too slow or had errors",
+          "toneStyle": "Wrong tone or style",
+          "safetyLegal": "Safety or legal concern"
+        }
+      }
+    }
+  },
+  "profileSelection": {
+    "pageTitle": "Select Profile - WiseFood",
+    "loading": "Loading profiles...",
+    "title": {
+      "prefix": "Who's",
+      "accentEating": "eating?",
+      "getPrefix": "Get",
+      "accentStarted": "started"
+    },
+    "subtitle": {
+      "withProfiles": "Select your profile to get personalized recommendations",
+      "createFirstProfile": "Create your first profile",
+      "setupHousehold": "Set up your household to get personalized recommendations"
+    },
+    "actions": {
+      "addProfile": "Add Profile",
+      "manageProfiles": "Manage Profiles",
+      "done": "Done",
+      "cancel": "Cancel",
+      "createProfile": "Create Profile",
+      "delete": "Delete"
+    },
+    "modal": {
+      "addNewProfile": "Add New Profile",
+      "deleteTitle": "Delete Profile?",
+      "deletePromptPrefix": "Are you sure you want to delete",
+      "deletePromptSuffix": "This action cannot be undone."
+    },
+    "fields": {
+      "profileName": "Profile Name",
+      "profileNamePlaceholder": "e.g., John, Mom, Dad",
+      "ageGroupOptional": "Age Group (optional)",
+      "selectAgeGroup": "Select age group"
+    },
+    "ageGroups": {
+      "child": "Child (0-12)",
+      "teen": "Teen (13-19)",
+      "adult": "Adult (20-64)",
+      "senior": "Senior (65+)"
+    },
+    "errors": {
+      "createProfileFailed": "Failed to create profile. Please try again.",
+      "deleteProfileFailed": "Failed to delete profile. Please try again."
+    },
+    "avatarSelector": {
+      "chooseAvatar": "Choose an avatar for this profile"
+    },
+    "setupWizard": {
+      "actions": {
+        "skipForNow": "Skip for now",
+        "back": "Back",
+        "continue": "Continue",
+        "completeSetup": "Complete Setup"
+      },
+      "step1": {
+        "titlePrefix": "Welcome to",
+        "subtitle": "Let's set up your household to personalize your experience",
+        "householdNameLabel": "Household Name",
+        "householdNamePlaceholder": "e.g., The Smith Family",
+        "countryOptionalLabel": "Country (optional)",
+        "countryPlaceholder": "Select your country",
+        "countrySearchPlaceholder": "Search countries...",
+        "countryHint": "Helps us suggest regional recipes and dietary guidelines"
+      },
+      "step2": {
+        "titlePrefix": "Create Your",
+        "titleAccent": "Profile",
+        "subtitle": "Add yourself as the first member of your household",
+        "profileNameLabel": "Profile Name",
+        "profileNamePlaceholder": "e.g., John, Mom, Dad",
+        "ageGroupOptionalLabel": "Age Group (optional)",
+        "selectAgeGroupPlaceholder": "Select age group"
+      },
+      "step3": {
+        "titlePrefix": "Dietary",
+        "titleAccent": "Preferences",
+        "subtitle": "This helps us personalize recipe suggestions (optional)"
+      },
+      "dietary": {
+        "omnivore": {
+          "label": "Omnivore",
+          "description": "Eats everything"
+        },
+        "vegetarian": {
+          "label": "Vegetarian",
+          "description": "No meat"
+        },
+        "vegan": {
+          "label": "Vegan",
+          "description": "Plant-based only"
+        },
+        "pescatarian": {
+          "label": "Pescatarian",
+          "description": "Fish and plants"
+        },
+        "flexitarian": {
+          "label": "Flexitarian",
+          "description": "Mostly plant-based"
+        }
+      },
+      "errors": {
+        "createHouseholdFailed": "Failed to create household",
+        "genericSubmitFailed": "Something went wrong. Please try again."
+      }
+    }
+  },
+  "foodScholarCatalog": {
+    "meta": {
+      "title": "Article Catalog - FoodScholar",
+      "description": "Advanced search and filtering for nutrition science literature"
+    },
+    "header": {
+      "backToFoodScholar": "Back to FoodScholar",
+      "brandLead": "Educational content and nutritional insights about sustainable eating",
+      "sectionTitle": "Article Catalog",
+      "sectionSubtitle": "Advanced search and filtering for nutrition science literature"
+    },
+    "loading": "Loading articles...",
+    "ai": "AI",
+    "errors": {
+      "failedToLoad": "Failed to load articles"
+    },
+    "actions": {
+      "tryAgain": "Try Again",
+      "resetAllFilters": "Reset All Filters",
+      "resetFilters": "Reset Filters"
+    },
+    "filters": {
+      "show": "Show Filters",
+      "hide": "Hide Filters",
+      "title": "Filters",
+      "close": "Close",
+      "category": "Category",
+      "topics": "Topic",
+      "studyType": "Study Type",
+      "venue": "Venue",
+      "publicationYear": "Publication Year",
+      "ageGroup": "Age Group",
+      "countryOrRegion": "Country / Region",
+      "incomeSetting": "Income Setting",
+      "tags": "Tags",
+      "citationCount": "Citation Count",
+      "searchFacetPlaceholder": "Filter…",
+      "selectPlaceholder": "Select…",
+      "selectedCount": "{count} selected",
+      "any": "Any",
+      "min": "Min",
+      "max": "Max",
+      "apply": "Apply",
+      "clear": "Clear",
+      "citationCountApplied": "Applied: {range}",
+      "citationCountInvalidNumber": "Enter a valid number.",
+      "citationCountInvalidRange": "Min cannot be greater than max.",
+      "showLess": "Show Less",
+      "showMore": "Show {count} More"
+    },
+    "search": {
+      "title": "Natural Language Search",
+      "subtitle": "Search articles using natural language",
+      "placeholder": "Try \"articles about gut health and probiotics\" or \"sustainable protein sources\""
+    },
+    "examples": {
+      "omega3": "what is omega-3",
+      "fermentedFoods": "examples of fermented foods",
+      "vitaminD": "foods high in vitamin D"
+    },
+    "summary": {
+      "loading": "Generating AI summary...",
+      "errorTitle": "Failed to generate summary",
+      "defaultError": "Failed to generate summary",
+      "title": "AI Summary",
+      "articlesBadge": "{count} articles",
+      "clickToReadMore": "Click to read more",
+      "relatedTopics": "Related Topics to Explore",
+      "viewArticle": "View article"
+    },
+    "sort": {
+      "label": "Sort by:",
+      "options": {
+        "relevance": "Relevance",
+        "mostRecent": "Most Recent",
+        "pubYearNewest": "Publication Year (Newest)",
+        "pubYearOldest": "Publication Year (Oldest)",
+        "titleAsc": "Title (A-Z)"
+      }
+    },
+    "resultsCount": "{count} results",
+    "activeFilters": "Active filters:",
+    "empty": {
+      "title": "No articles found",
+      "subtitle": "Try adjusting your filters or search query"
+    },
+    "card": {
+      "readArticle": "Read Article",
+      "unknownAuthor": "Unknown Author",
+      "and": "and"
+    }
+  },
+  "foodScholarArticle": {
+    "meta": {
+      "title": "{title} - FoodScholar",
+      "fallbackTitle": "Article - FoodScholar",
+      "fallbackDescription": "Learn about nutrition and sustainable eating"
+    },
+    "backToCatalog": "Back to Articles",
+    "loading": "Loading article...",
+    "errors": {
+      "failedToLoad": "Failed to load article"
+    },
+    "labels": {
+      "population": "Population",
+      "readerGroup": "Reader group",
+      "confidence": "Confidence {value}"
+    },
+    "topicsTooltip": "Topics: {topics}",
+    "ai": "AI",
+    "aiGenerated": "AI Generated",
+    "common": {
+      "showLess": "Show less"
+    },
+    "authors": {
+      "showMore": "+ {count} more"
+    },
+    "sections": {
+      "abstract": "Abstract",
+      "keyTakeaways": "Key Takeaways",
+      "studyEvaluation": "Study Evaluation",
+      "qa": "Questions & Answers",
+      "tags": "Tags",
+      "keywords": "Keywords",
+      "glossary": "Glossary",
+      "articleInfo": "Article Info",
+      "share": "Share Article"
+    },
+    "actions": {
+      "simplify": "Simplify",
+      "showOriginal": "Show Original",
+      "hideDetails": "Hide details",
+      "showMore": "Show more ({count})",
+      "copyLink": "Copy Link",
+      "copied": "Copied!",
+      "save": "Save"
+    },
+    "evaluation": {
+      "actionability": "Actionability",
+      "userValue": "User Value"
+    },
+    "qaTabs": {
+      "forYou": "For You",
+      "forPractitioners": "For Practitioners",
+      "forExperts": "For Experts"
+    },
+    "metrics": {
+      "title": "Citations & Access",
+      "citations": "Citations",
+      "citationsTooltip": "Total times this paper is cited by other works (Semantic Scholar).",
+      "influential": "Influential",
+      "influentialTooltip": "Subset of citations that Semantic Scholar marks as influential.",
+      "references": "References",
+      "referencesTooltip": "Number of references cited within this paper."
+    },
+    "access": {
+      "open": "Open Access",
+      "closed": "Not Open Access"
+    },
+    "keywords": {
+      "showAll": "Show all ({count})"
+    },
+    "info": {
+      "language": "Language",
+      "region": "Region",
+      "ageGroup": "Age group",
+      "geographicContext": "Geographic context",
+      "biologicalModel": "Biological model",
+      "exclusionFlags": "Exclusion flags",
+      "externalId": "External ID"
+    },
+    "notFound": {
+      "title": "Article Not Found",
+      "subtitle": "The article you're looking for doesn't exist."
+    }
+  },
+  "myProfile": {
+    "pageTitle": "My Profile - WiseFood",
+    "loading": "Loading profile...",
+    "actions": {
+      "backToDashboard": "Back to Dashboard",
+      "goToProfiles": "Go to Profiles",
+      "edit": "Edit",
+      "add": "Add",
+      "cancel": "Cancel",
+      "saveAvatar": "Save Avatar",
+      "saveChanges": "Save Changes",
+      "addPreference": "Add Preference",
+      "addAllergy": "Add Allergy",
+      "deleteProfile": "Delete Profile"
+    },
+    "sections": {
+      "profileDetails": "Profile Details",
+      "dietaryPreferences": "Dietary Preferences",
+      "foodLikes": "Food Likes",
+      "foodDislikes": "Food Dislikes",
+      "allergiesAndIntolerances": "Allergies & Intolerances",
+      "dangerZone": "Danger Zone"
+    },
+    "fields": {
+      "name": "Name",
+      "ageGroup": "Age Group",
+      "memberSince": "Member Since",
+      "profileNamePlaceholder": "Profile name",
+      "selectAgeGroup": "Select age group"
+    },
+    "values": {
+      "notSpecified": "Not specified",
+      "unknown": "Unknown"
+    },
+    "emptyState": {
+      "noProfileSelected": "No Profile Selected",
+      "selectProfileToManage": "Please select a profile from your household to manage it.",
+      "noDietaryPreferences": "No dietary preferences set",
+      "addFirstPreference": "Add your first preference",
+      "noFavoriteFoods": "No favorite foods added yet",
+      "addFoodsYouLove": "Add foods you love",
+      "noDislikedFoods": "No disliked foods added yet",
+      "addFoodsToAvoid": "Add foods to avoid",
+      "noAllergies": "No allergies or intolerances recorded",
+      "addAllergyOrIntolerance": "Add allergy or intolerance",
+      "allDietaryPreferencesAdded": "You've added all available dietary preferences.",
+      "allCommonAllergiesAdded": "You've added all common allergies."
+    },
+    "dangerZone": {
+      "deleteTitle": "Delete this profile",
+      "deleteDescription": "Once deleted, this profile cannot be recovered."
+    },
+    "modals": {
+      "changeAvatar": "Change Avatar",
+      "editProfileDetails": "Edit Profile Details",
+      "addDietaryPreference": "Add Dietary Preference",
+      "addAllergyOrIntolerance": "Add Allergy or Intolerance",
+      "deleteProfileTitle": "Delete Profile",
+      "deleteConfirm": "Are you sure you want to delete {name}? This action cannot be undone."
+    },
+    "foodPicker": {
+      "addFoodsYouLike": "Add Foods You Like",
+      "addFoodsYouDislike": "Add Foods You Dislike",
+      "searchFoodsPlaceholder": "Search foods...",
+      "compatibilityNotice": "Showing foods compatible with your dietary preferences: {diets}",
+      "noFoodsFound": "No foods found matching your search.",
+      "selectedCount": "{count} selected",
+      "addOneFood": "Add 1 Food",
+      "addManyFoods": "Add {count} Foods"
+    },
+    "foodCategories": {
+      "proteins": "Proteins",
+      "dairy": "Dairy & Eggs",
+      "grains": "Grains & Carbs",
+      "vegetables": "Vegetables",
+      "fruits": "Fruits",
+      "seafood": "Seafood",
+      "nuts": "Nuts & Seeds",
+      "condiments": "Condiments & Sauces",
+      "beverages": "Beverages"
+    },
+    "allergyOptions": {
+      "gluten": "Gluten",
+      "dairy": "Dairy",
+      "eggs": "Eggs",
+      "nuts": "Tree Nuts",
+      "peanuts": "Peanuts",
+      "soy": "Soy",
+      "shellfish": "Shellfish",
+      "fish": "Fish",
+      "sesame": "Sesame",
+      "sulfites": "Sulfites",
+      "lactose": "Lactose",
+      "fructose": "Fructose"
+    },
+    "errors": {
+      "deleteProfileFailed": "Failed to delete profile. Please try again."
+    },
+    "foodItems": {
+      "chicken": "Chicken",
+      "beef": "Beef",
+      "pork": "Pork",
+      "lamb": "Lamb",
+      "turkey": "Turkey",
+      "duck": "Duck",
+      "tofu": "Tofu",
+      "tempeh": "Tempeh",
+      "seitan": "Seitan",
+      "legumes": "Legumes & Beans",
+      "lentils": "Lentils",
+      "chickpeas": "Chickpeas",
+      "milk": "Milk",
+      "cheese": "Cheese",
+      "yogurt": "Yogurt",
+      "butter": "Butter",
+      "eggs": "Eggs",
+      "cream": "Cream",
+      "almond-milk": "Almond Milk",
+      "oat-milk": "Oat Milk",
+      "soy-milk": "Soy Milk",
+      "coconut-yogurt": "Coconut Yogurt",
+      "rice": "Rice",
+      "pasta": "Pasta",
+      "bread": "Bread",
+      "quinoa": "Quinoa",
+      "oats": "Oats",
+      "potatoes": "Potatoes",
+      "sweet-potato": "Sweet Potato",
+      "couscous": "Couscous",
+      "barley": "Barley",
+      "broccoli": "Broccoli",
+      "spinach": "Spinach",
+      "carrots": "Carrots",
+      "tomatoes": "Tomatoes",
+      "onions": "Onions",
+      "garlic": "Garlic",
+      "peppers": "Bell Peppers",
+      "mushrooms": "Mushrooms",
+      "zucchini": "Zucchini",
+      "eggplant": "Eggplant",
+      "cabbage": "Cabbage",
+      "cauliflower": "Cauliflower",
+      "asparagus": "Asparagus",
+      "cucumber": "Cucumber",
+      "lettuce": "Lettuce",
+      "kale": "Kale",
+      "apples": "Apples",
+      "bananas": "Bananas",
+      "oranges": "Oranges",
+      "strawberries": "Strawberries",
+      "blueberries": "Blueberries",
+      "grapes": "Grapes",
+      "mango": "Mango",
+      "pineapple": "Pineapple",
+      "watermelon": "Watermelon",
+      "avocado": "Avocado",
+      "lemon": "Lemon",
+      "peach": "Peach",
+      "salmon": "Salmon",
+      "tuna": "Tuna",
+      "shrimp": "Shrimp",
+      "cod": "Cod",
+      "sardines": "Sardines",
+      "mackerel": "Mackerel",
+      "crab": "Crab",
+      "lobster": "Lobster",
+      "mussels": "Mussels",
+      "squid": "Squid",
+      "almonds": "Almonds",
+      "walnuts": "Walnuts",
+      "cashews": "Cashews",
+      "peanuts": "Peanuts",
+      "pistachios": "Pistachios",
+      "sunflower-seeds": "Sunflower Seeds",
+      "chia-seeds": "Chia Seeds",
+      "flax-seeds": "Flax Seeds",
+      "pumpkin-seeds": "Pumpkin Seeds",
+      "olive-oil": "Olive Oil",
+      "soy-sauce": "Soy Sauce",
+      "vinegar": "Vinegar",
+      "mustard": "Mustard",
+      "ketchup": "Ketchup",
+      "mayonnaise": "Mayonnaise",
+      "hot-sauce": "Hot Sauce",
+      "pesto": "Pesto",
+      "hummus": "Hummus",
+      "tahini": "Tahini",
+      "coffee": "Coffee",
+      "tea": "Tea",
+      "juice": "Fruit Juice",
+      "smoothies": "Smoothies",
+      "wine": "Wine",
+      "beer": "Beer"
+    }
+  },
+  "foodChatHome": {
+    "pageTitle": "FoodChat - WiseFood",
+    "backToDashboard": "Back to Dashboard",
+    "subtitle": "Describe what you'd like to eat and get a personalised meal plan instantly",
+    "input": {
+      "generate": "Generate",
+      "placeholderInitial": "Describe your ideal meals — e.g. high-protein, Mediterranean style...",
+      "placeholderModify": "Modify your meal plan — e.g. swap lunch for something lighter..."
+    },
+    "welcomeTitle": {
+      "prefix": "What shall we",
+      "accent": "cook",
+      "suffix": "today?"
+    },
+    "welcomeSubtitle": "Pick a suggestion or type your own request above.",
+    "mealPlanTitle": {
+      "prefix": "Your",
+      "accent": "meal plan"
+    },
+    "startFresh": "Start fresh",
+    "planHeader": {
+      "dailyPlan": "Daily Plan"
+    },
+    "apply": {
+      "title": "Apply this plan to members",
+      "subtitle": "Choose members and date",
+      "selectMembers": "Select members",
+      "onlyMe": "Only me",
+      "all": "All",
+      "noHouseholdMembers": "No household members found.",
+      "main": "Main",
+      "buttons": {
+        "apply": "Apply",
+        "revoke": "Revoke"
+      },
+      "success": {
+        "applied": "Applied • {date}",
+        "revoked": "Revoked"
+      },
+      "membersLabel": {
+        "selectMembers": "Select members",
+        "singleSelected": "1 member selected",
+        "multipleSelected": "{count} members selected"
+      }
+    },
+    "tooltips": {
+      "planWorksWell": "This plan works well",
+      "needsImprovement": "Needs improvement"
+    },
+    "disclaimer": "Responses are informational. Consult a nutritionist for medical advice.",
+    "meals": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner"
+    },
+    "errors": {
+      "failedToApply": "Failed to apply meal plan.",
+      "failedToRevoke": "Failed to revoke meal plan.",
+      "someMembersNoPlan": "Some selected members do not have this meal plan for the chosen date."
+    },
+    "suggestedQuestions": {
+      "balancedPlan": "Create a balanced meal plan for today",
+      "highProtein": "High-protein vegetarian ideas",
+      "mediterranean": "Mediterranean diet for today",
+      "lowSugar": "Low-sugar dessert alternatives"
+    },
+    "modifyChips": {
+      "lowerCalorie": "Make it lower calorie",
+      "moreProtein": "Add more protein",
+      "lighterLunch": "Swap lunch for something lighter",
+      "vegetarian": "Make it vegetarian",
+      "differentDinner": "Suggest a different dinner"
+    },
+    "mealCard": {
+      "viewRecipe": "View recipe",
+      "loadingNutrition": "Loading nutrition..."
+    },
+    "cookingAnimation": {
+      "yourMealPlan": "your meal plan",
+      "actions": {
+        "stirring": "stirring",
+        "frying": "frying",
+        "chopping": "chopping",
+        "boiling": "boiling",
+        "sauteing": "sauteing",
+        "simmering": "simmering"
+      },
+      "descriptions": {
+        "stirring": "Blending flavors for your perfect plan",
+        "frying": "Crafting golden meal ideas",
+        "chopping": "Preparing fresh ingredient combos",
+        "boiling": "Coaxing out the best nutritional balance",
+        "sauteing": "Dancing with calories and macros",
+        "simmering": "Patiently building your daily menu"
+      }
     }
   }
 }

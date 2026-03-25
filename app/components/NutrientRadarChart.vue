@@ -23,7 +23,7 @@
         @click="resetZoom"
         class="ml-2 px-3 py-1.5 text-xs font-medium rounded-lg bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 text-zinc-600 dark:text-zinc-300 transition-colors"
       >
-        Reset
+        {{ t('recipeWrangler.detail.nutrientChart.reset') }}
       </button>
     </div>
 
@@ -141,13 +141,14 @@
 
     <!-- Minimum selection warning -->
     <p v-if="visibleNutrients.length < 3" class="text-center text-xs text-amber-600 dark:text-amber-400">
-      Select at least 3 nutrients to display the chart
+      {{ t('recipeWrangler.detail.nutrientChart.minSelectionWarning') }}
     </p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 interface NutrientData {
   key: string
@@ -157,15 +158,34 @@ interface NutrientData {
   displayValue: string
 }
 
+type MaybeNumber = number | null | undefined
+
 const props = defineProps<{
-  calories: number
-  protein: number
-  carbs: number
-  fat: number
-  fiber: number
-  sugar: number
-  sodium: number
+  calories: MaybeNumber
+  protein: MaybeNumber
+  carbs: MaybeNumber
+  fat: MaybeNumber
+  fiber: MaybeNumber
+  sugar: MaybeNumber
+  sodium: MaybeNumber
 }>()
+const { t } = useI18n()
+
+const hasNumber = (value: unknown): value is number => {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+const safeNumber = (value: MaybeNumber): number => {
+  return hasNumber(value) ? value : 0
+}
+
+const fmtFixed = (value: MaybeNumber, digits: number, unit: string): string => {
+  return hasNumber(value) ? `${value.toFixed(digits)}${unit}` : `—${unit}`
+}
+
+const fmtRounded = (value: MaybeNumber, unit: string): string => {
+  return hasNumber(value) ? `${Math.round(value)} ${unit}` : `— ${unit}`
+}
 
 // Zoom state - using viewBox manipulation for centered zoom
 const zoomLevel = ref(1)
@@ -210,13 +230,13 @@ const toggleNutrient = (key: string) => {
 
 // Define all nutrients with their max values for normalization
 const allNutrients = computed<NutrientData[]>(() => [
-  { key: 'calories', label: 'Calories', value: props.calories, max: 800, displayValue: `${Math.round(props.calories)} kcal` },
-  { key: 'protein', label: 'Protein', value: props.protein, max: 50, displayValue: `${props.protein.toFixed(1)}g` },
-  { key: 'carbs', label: 'Carbs', value: props.carbs, max: 100, displayValue: `${props.carbs.toFixed(1)}g` },
-  { key: 'fat', label: 'Fat', value: props.fat, max: 50, displayValue: `${props.fat.toFixed(1)}g` },
-  { key: 'fiber', label: 'Fiber', value: props.fiber, max: 30, displayValue: `${props.fiber.toFixed(1)}g` },
-  { key: 'sugar', label: 'Sugar', value: props.sugar, max: 50, displayValue: `${props.sugar.toFixed(1)}g` },
-  { key: 'sodium', label: 'Sodium', value: props.sodium, max: 2000, displayValue: `${props.sodium.toFixed(0)}mg` }
+  { key: 'calories', label: t('recipeWrangler.detail.calories'), value: props.calories, max: 800, displayValue: `${Math.round(props.calories)} kcal` },
+  { key: 'protein', label:  t('recipeWrangler.detail.protein'), value: props.protein, max: 50, displayValue: `${props.protein.toFixed(1)}g` },
+  { key: 'carbs', label: t('recipeWrangler.detail.carbs'), value: props.carbs, max: 100, displayValue: `${props.carbs.toFixed(1)}g` },
+  { key: 'fat', label: t('recipeWrangler.detail.fat'), value: props.fat, max: 50, displayValue: `${props.fat.toFixed(1)}g` },
+  { key: 'fiber', label: t('recipeWrangler.detail.fiber'), value: props.fiber, max: 30, displayValue: `${props.fiber.toFixed(1)}g` },
+  { key: 'sugar', label: t('recipeWrangler.detail.sugar'), value: props.sugar, max: 50, displayValue: `${props.sugar.toFixed(1)}g` },
+  { key: 'sodium', label: t('recipeWrangler.detail.sodium'), value: props.sodium, max: 2000, displayValue: `${props.sodium.toFixed(0)}mg` }
 ])
 
 // Filtered visible nutrients

@@ -1,4 +1,5 @@
 import { useAuthStore } from '~/stores/auth'
+import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 
 // ============================================================================
 // Timeout Configuration
@@ -79,6 +80,15 @@ export interface RecipeSearchResult {
 export interface RecipeSearchParams {
   question: string
   exclude_allergens?: string[]
+}
+
+export interface RecipeParamSearchParams {
+  include_ingredients?: string[]
+  exclude_ingredients?: string[]
+  exclude_allergens?: string[]
+  diet_tags?: string[]
+  max_duration_minutes?: number
+  limit?: number
 }
 
 export interface RecipeResponse {
@@ -236,8 +246,8 @@ class RecipeApiService {
         params,
         SEARCH_TIMEOUT
       )
-      // Extract the results array from the response
-      return data.results || []
+
+      return this.normalizeSearchResults(data)
     } catch (error) {
       throw this.handleError(error, 'Failed to search recipes')
     }
@@ -309,6 +319,18 @@ class RecipeApiService {
     })
   }
 
+  private normalizeSearchResults(data: RecipeSearchPayload): RecipeSearchResult[] {
+    if (Array.isArray(data)) {
+      return data
+    }
+
+    if (data && Array.isArray(data.results)) {
+      return data.results
+    }
+
+    return []
+  }
+
   /**
    * Analyze raw recipe text through parsing + profiling chain
    */
@@ -342,7 +364,7 @@ class RecipeApiService {
     data?: unknown,
     timeoutMs: number = DEFAULT_TIMEOUT
   ): Promise<T> {
-    const baseUrl = this.getRecipeWranglerBaseUrl()
+    const baseUrl = getWisefoodRestApiUrl()
     const url = `${baseUrl}${endpoint}`
 
     const authStore = useAuthStore()

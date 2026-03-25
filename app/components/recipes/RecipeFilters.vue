@@ -5,14 +5,14 @@
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           <UIcon name="i-lucide-shield-alert" class="w-4 h-4 text-amber-500" />
-          Exclude Allergens
+          {{ t('recipeWrangler.filters.excludeAllergens') }}
         </h3>
         <button
           v-if="hasActiveFilters"
           @click="clearAllFilters"
           class="text-xs text-green-600 dark:text-green-400 hover:underline"
         >
-          Clear all
+          {{ t('recipeWrangler.filters.clearAll') }}
         </button>
       </div>
 
@@ -37,7 +37,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
       <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
         <UIcon name="i-lucide-sparkles" class="w-4 h-4 text-brandg-500" />
-        Quick Filters
+        {{ t('recipeWrangler.filters.quickFilters') }}
       </h3>
 
       <div class="space-y-2">
@@ -62,7 +62,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
       <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
         <UIcon name="i-lucide-arrow-up-down" class="w-4 h-4 text-blue-500" />
-        Sort By
+        {{ t('recipeWrangler.filters.sortBy') }}
       </h3>
 
       <div class="space-y-2">
@@ -87,6 +87,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRecipeStore } from '~/stores/recipe'
 
 // ============================================================================
@@ -102,42 +103,44 @@ const emit = defineEmits<{
 // Store
 // ============================================================================
 const recipeStore = useRecipeStore()
+const { t } = useI18n()
 
 // ============================================================================
 // State
 // ============================================================================
 const selectedQuickFilter = ref<string | null>(null)
+type RecipeSortBy = 'relevance' | 'duration' | 'calories' | 'nutri_score'
 
 // ============================================================================
 // Constants
 // ============================================================================
-const commonAllergens = [
-  { value: 'peanuts', label: 'Peanuts' },
-  { value: 'tree nuts', label: 'Tree Nuts' },
-  { value: 'dairy', label: 'Dairy' },
-  { value: 'eggs', label: 'Eggs' },
-  { value: 'soy', label: 'Soy' },
-  { value: 'wheat', label: 'Wheat' },
-  { value: 'fish', label: 'Fish' },
-  { value: 'shellfish', label: 'Shellfish' },
-  { value: 'gluten', label: 'Gluten' },
-  { value: 'lactose', label: 'Lactose' }
-]
+const commonAllergens = computed(() => [
+  { value: 'peanuts', label: t('recipeWrangler.filters.allergens.peanuts') },
+  { value: 'tree nuts', label: t('recipeWrangler.filters.allergens.treeNuts') },
+  { value: 'dairy', label: t('recipeWrangler.filters.allergens.dairy') },
+  { value: 'eggs', label: t('recipeWrangler.filters.allergens.eggs') },
+  { value: 'soy', label: t('recipeWrangler.filters.allergens.soy') },
+  { value: 'wheat', label: t('recipeWrangler.filters.allergens.wheat') },
+  { value: 'fish', label: t('recipeWrangler.filters.allergens.fish') },
+  { value: 'shellfish', label: t('recipeWrangler.filters.allergens.shellfish') },
+  { value: 'gluten', label: t('recipeWrangler.filters.allergens.gluten') },
+  { value: 'lactose', label: t('recipeWrangler.filters.allergens.lactose') }
+])
 
-const quickFilters = [
-  { value: 'quick', label: 'Quick & Easy (< 30 min)', icon: 'i-lucide-zap' },
-  { value: 'healthy', label: 'Healthy & Nutritious', icon: 'i-lucide-leaf' },
-  { value: 'vegetarian', label: 'Vegetarian', icon: 'i-lucide-sprout' },
-  { value: 'vegan', label: 'Vegan', icon: 'i-lucide-carrot' },
-  { value: 'low-calorie', label: 'Low Calorie', icon: 'i-lucide-flame' }
-]
+const quickFilters = computed(() => [
+  { value: 'quick', label: t('recipeWrangler.filters.quickOptions.quickEasy'), icon: 'i-lucide-zap' },
+  { value: 'healthy', label: t('recipeWrangler.filters.quickOptions.healthy'), icon: 'i-lucide-leaf' },
+  { value: 'vegetarian', label: t('recipeWrangler.filters.quickOptions.vegetarian'), icon: 'i-lucide-sprout' },
+  { value: 'vegan', label: t('recipeWrangler.filters.quickOptions.vegan'), icon: 'i-lucide-carrot' },
+  { value: 'low-calorie', label: t('recipeWrangler.filters.quickOptions.lowCalorie'), icon: 'i-lucide-flame' }
+])
 
-const sortOptions = [
-  { value: 'relevance', label: 'Most Relevant', icon: 'i-lucide-star' },
-  { value: 'duration', label: 'Cooking Time', icon: 'i-lucide-clock' },
-  { value: 'calories', label: 'Calories', icon: 'i-lucide-flame' },
-  { value: 'nutri_score', label: 'Nutrition Score', icon: 'i-lucide-award' }
-]
+const sortOptions = computed(() => [
+  { value: 'relevance', label: t('recipeWrangler.filters.sortOptions.mostRelevant'), icon: 'i-lucide-star' },
+  { value: 'duration', label: t('recipeWrangler.filters.sortOptions.cookingTime'), icon: 'i-lucide-clock' },
+  { value: 'calories', label: t('recipeWrangler.filters.sortOptions.calories'), icon: 'i-lucide-flame' },
+  { value: 'nutri_score', label: t('recipeWrangler.filters.sortOptions.nutritionScore'), icon: 'i-lucide-award' }
+])
 
 // ============================================================================
 // Computed
@@ -173,7 +176,7 @@ const applyQuickFilter = (filterType: string) => {
 }
 
 const changeSortBy = (sortByValue: string) => {
-  recipeStore.setSortBy(sortByValue as any)
+  recipeStore.setSortBy(sortByValue as RecipeSortBy)
   emit('sortChange', sortByValue)
 }
 </script>

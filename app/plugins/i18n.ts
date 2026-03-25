@@ -1,38 +1,63 @@
 import { createI18n } from 'vue-i18n'
 import en from '~/i18n/locales/en.json'
-import el from '~/i18n/locales/el.json'
+import hu from '~/i18n/locales/hu.json'
+import sl from '~/i18n/locales/sl.json'
+
+const SUPPORTED_LOCALES = ['en', 'hu', 'sl'] as const
+type SupportedLocale = typeof SUPPORTED_LOCALES[number]
+const LOCALE_STATE_KEY = 'wisefood-locale-state'
+
+const resolveInitialLocale = (candidate: string | undefined): SupportedLocale => {
+  if (!candidate) return 'en'
+
+  const decoded = decodeURIComponent(candidate).trim()
+  if (SUPPORTED_LOCALES.includes(decoded as SupportedLocale)) {
+    return decoded as SupportedLocale
+  }
+  return 'en'
+}
 
 export default defineNuxtPlugin((nuxtApp) => {
-  // Get the initial locale from the request cookie on server
-  let initialLocale = 'en'
-  
+  const localeState = useState<SupportedLocale>(LOCALE_STATE_KEY, () => 'en')
+
   if (import.meta.server) {
-    // Server-side: Read from the incoming request
-    const cookie = useRequestHeaders(['cookie'])?.cookie
-    const match = cookie?.match(/wisefood_locale=([^;]+)/)
-    initialLocale = match ? match[1] : 'en'
-  } else {
-    // Client-side: Read from document.cookie
-    const match = document.cookie.match(/wisefood_locale=([^;]+)/)
-    initialLocale = match ? match[1] : 'en'
+    const cookieLocale = useCookie<string | undefined>('wisefood_locale').value
+    localeState.value = resolveInitialLocale(cookieLocale)
+  } else if (!nuxtApp.isHydrating) {
+    const cookieLocale = useCookie<string | undefined>('wisefood_locale').value
+    localeState.value = resolveInitialLocale(cookieLocale)
   }
 
   const i18n = createI18n({
     legacy: false,
-    locale: initialLocale,
+    locale: localeState.value,
     fallbackLocale: 'en',
     messages: {
-      en,  
-      el,
-    },
+      en,
+      hu,
+      sl
+    }
   })
 
   nuxtApp.vueApp.use(i18n)
 
+  if (import.meta.client) {
+    nuxtApp.hook('app:mounted', () => {
+      const cookieLocale = useCookie<string | undefined>('wisefood_locale').value
+      const resolvedLocale = resolveInitialLocale(cookieLocale)
+
+      if (i18n.global.locale.value !== resolvedLocale) {
+        i18n.global.locale.value = resolvedLocale
+      }
+
+      localeState.value = resolvedLocale
+    })
+  }
+
   return {
     provide: {
       i18n,
-      t: i18n.global.t,
-    },
+      t: i18n.global.t
+    }
   }
 })

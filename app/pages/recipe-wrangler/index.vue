@@ -9,7 +9,7 @@
             class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
           >
             <UIcon name="i-lucide-arrow-left" class="w-5 h-5" />
-            <span class="text-sm font-medium hidden sm:inline">Back to Dashboard</span>
+            <span class="text-sm font-medium hidden sm:inline">{{ t('recipeWrangler.backToDashboard') }}</span>
           </NuxtLink>
         </div>
         <div class="mt-3 sm:mt-4">
@@ -17,7 +17,7 @@
             <span class="font-serif italic text-brandg-500 dark:text-brandg-400 text-3xl sm:text-4xl md:text-5xl">RecipeWrangler</span>
           </h1>
           <p class="mt-2 text-sm sm:text-base text-zinc-600 dark:text-zinc-300 font-light">
-            Discover personalized recipes tailored to your nutritional goals
+            {{ t('recipeWrangler.subtitle') }}
           </p>
         </div>
       </div>
@@ -69,7 +69,7 @@
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Ask for recipes (e.g., 'pasta recipes', 'quick vegan meals')..."
+              :placeholder="t('recipeWrangler.search.placeholder')"
               class="w-full pl-11 sm:pl-12 pr-12 sm:pr-16 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-brandg-500 text-sm sm:text-base"
               @input="handleSearchInput"
               @focus="handleSearchInput"
@@ -78,7 +78,7 @@
             <button
               type="button"
               @click="performSearch"
-              :disabled="!searchQuery.trim() || loading"
+              :disabled="loading"
               class="absolute right-2 top-1/2 -translate-y-1/2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-brandg-500 hover:bg-brandg-600 disabled:bg-zinc-300 dark:disabled:bg-zinc-700 text-white text-sm font-medium transition-colors disabled:cursor-not-allowed"
             >
               <UIcon v-if="loading" name="i-lucide-loader-2" class="w-4 h-4 animate-spin" />
@@ -108,7 +108,7 @@
 
           <!-- Recent Searches -->
           <div v-if="recipeStore.searchHistory.length > 0 && !searchQuery" class="mt-3 flex flex-wrap gap-2">
-            <span class="text-xs text-zinc-500 dark:text-zinc-400 w-full mb-1">Recent searches:</span>
+            <span class="text-xs text-zinc-500 dark:text-zinc-400 w-full mb-1">{{ t('recipeWrangler.search.recentSearches') }}</span>
             <button
               v-for="query in recipeStore.recentSearches.slice(0, 5)"
               :key="query"
@@ -292,14 +292,14 @@
       <section v-if="activeTab === 'search'" class="mb-6 sm:mb-8">
         <div class="flex items-center justify-between">
           <h2 class="text-base sm:text-lg font-semibold text-zinc-900 dark:text-white">
-            Filters & Preferences
+            {{ t('recipeWrangler.filters.title') }}
           </h2>
           <button
             @click="showFilters = !showFilters"
             class="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-sm"
           >
             <UIcon name="i-lucide-sliders" class="w-4 h-4" />
-            <span>{{ showFilters ? 'Hide' : 'Show' }} Filters</span>
+            <span>{{ showFilters ? t('recipeWrangler.filters.hide') : t('recipeWrangler.filters.show') }}</span>
             <UIcon
               :name="showFilters ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
               class="w-4 h-4"
@@ -344,7 +344,7 @@
               class="flex items-center gap-2 px-4 py-2 rounded-lg bg-brandg-600 dark:bg-brandg-500 text-white hover:bg-brandg-700 dark:hover:bg-brandg-600 transition-colors text-sm font-medium shadow-md"
             >
               <UIcon name="i-lucide-git-compare" class="w-4 h-4" />
-              <span>Compare ({{ recipeStore.compareCount }})</span>
+              <span>{{ t('recipeWrangler.compare') }} ({{ recipeStore.compareCount }})</span>
             </button>
             <button
               v-if="recipeStore.favorites.length > 0"
@@ -364,7 +364,7 @@
         >
           <UIcon name="i-lucide-alert-circle" class="w-12 h-12 text-red-500 mx-auto mb-3" />
           <h3 class="text-lg font-semibold text-red-700 dark:text-red-400 mb-2">
-            Failed to load recipes
+            {{ t('recipeWrangler.results.error') }}
           </h3>
           <p class="text-sm text-red-600 dark:text-red-300 mb-4">{{ error }}</p>
           <UButton
@@ -372,7 +372,7 @@
             color="primary"
             variant="outline"
           >
-            Try Again
+            {{ t('recipeWrangler.results.tryAgain') }}
           </UButton>
         </div>
 
@@ -388,7 +388,7 @@
             <!-- Time estimate - subtle -->
             <div class="text-center mt-6">
               <p class="text-xs text-stone-400 dark:text-stone-500 tracking-wide">
-                This may take up to 60 seconds
+                {{ t('recipeWrangler.loadingHint') }}
               </p>
             </div>
           </div>
@@ -422,10 +422,10 @@
         >
           <UIcon name="i-lucide-search-x" class="w-16 h-16 text-zinc-400 mx-auto mb-4" />
           <h3 class="text-xl font-semibold text-zinc-700 dark:text-zinc-300 mb-2">
-            No recipes found
+            {{ t('recipeWrangler.results.noResults') }}
           </h3>
           <p class="text-zinc-500 dark:text-zinc-400 mb-6">
-            Try adjusting your search or browse our categories below
+            {{ t('recipeWrangler.results.noResultsMessage') }}
           </p>
         </div>
 
@@ -463,7 +463,7 @@
               @click="goToPage(currentPage - 1)"
               :disabled="currentPage === 1"
               class="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              aria-label="Previous page"
+              :aria-label="t('recipeWrangler.previousPage')"
             >
               <UIcon name="i-lucide-chevron-left" class="w-5 h-5" />
             </button>
@@ -503,7 +503,7 @@
               @click="goToPage(currentPage + 1)"
               :disabled="currentPage === totalPages"
               class="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              aria-label="Next page"
+              :aria-label="t('recipeWrangler.nextPage')"
             >
               <UIcon name="i-lucide-chevron-right" class="w-5 h-5" />
             </button>
@@ -546,17 +546,17 @@ definePageMeta({
 })
 
 useHead({
-  title: 'RecipeWrangler'
+  title: computed(() => t('recipeWrangler.title'))
 })
 
 useSeoMeta({
-  description: 'Discover personalized recipes tailored to your nutritional goals and environmental impact'
+  description: computed(() => t('recipeWrangler.subtitle'))
 })
 
 // ============================================================================
 // Composables & Stores
 // ============================================================================
-const { recipes, loading, error, searchRecipes, fetchRecipesByCategory, clearError } = useRecipes()
+const { recipes, loading, error, searchRecipes, searchRecipesByParams, fetchRecipesByCategory, clearError } = useRecipes()
 const recipeStore = useRecipeStore()
 const householdStore = useHouseholdStore()
 
@@ -585,16 +585,16 @@ let autocompleteDebounceTimer: ReturnType<typeof setTimeout> | null = null
 // ============================================================================
 // Categories
 // ============================================================================
-const categories = [
-  { name: "Pasta", icon: "i-lucide-soup", query: "pasta" },
-  { name: "Salad", icon: "i-lucide-salad", query: "salad" },
-  { name: "Soup", icon: "i-lucide-soup", query: "soup" },
-  { name: "Breakfast", icon: "i-lucide-sunrise", query: "breakfast" },
-  { name: "Dessert", icon: "i-lucide-cake", query: "dessert" },
-  { name: "Snacks", icon: "i-lucide-cookie", query: "snacks" },
-  { name: "Beverages", icon: "i-lucide-coffee", query: "beverages" },
-  { name: "Quick Meals", icon: "i-lucide-zap", query: "quick recipes" },
-]
+const categories = computed(() => [
+  { name: t('recipeWrangler.categories.pasta'), icon: 'i-lucide-soup', query: 'pasta' },
+  { name: t('recipeWrangler.categories.salad'), icon: 'i-lucide-salad', query: 'salad' },
+  { name: t('recipeWrangler.categories.soup'), icon: 'i-lucide-soup', query: 'soup' },
+  { name: t('recipeWrangler.categories.breakfast'), icon: 'i-lucide-sunrise', query: 'breakfast' },
+  { name: t('recipeWrangler.categories.dessert'), icon: 'i-lucide-cake', query: 'dessert' },
+  { name: t('recipeWrangler.categories.snacks'), icon: 'i-lucide-cookie', query: 'snacks' },
+  { name: t('recipeWrangler.categories.beverages'), icon: 'i-lucide-coffee', query: 'beverages' },
+  { name: t('recipeWrangler.categories.quickMeals'), icon: 'i-lucide-zap', query: 'quick recipes' },
+])
 
 // ============================================================================
 // Computed
@@ -792,14 +792,25 @@ const performSearch = async () => {
   try {
     clearError()
     resetPagination()
-    const excludeAllergens = recipeStore.excludedAllergens
+    const trimmedQuery = searchQuery.value.trim()
 
     await searchRecipes({
       question: searchQuery.value,
       exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined
     }, false)
 
-    recipeStore.addSearchQuery(searchQuery.value)
+    const parametricQuery = parseParametricSearchQuery(trimmedQuery)
+    if (parametricQuery) {
+      await searchRecipesByParams(buildParamSearchWithAllergens(parametricQuery))
+    } else {
+      const backendAllergens = toBackendAllergenList(recipeStore.excludedAllergens)
+      await searchRecipes({
+        question: trimmedQuery,
+        exclude_allergens: backendAllergens.length > 0 ? backendAllergens : undefined
+      })
+    }
+
+    recipeStore.addSearchQuery(trimmedQuery)
   } catch (err) {
     console.error('Search failed:', err)
   }
@@ -831,7 +842,7 @@ const browseCategory = async (category: { name: string; query: string }) => {
     clearError()
     resetPagination()
     searchQuery.value = category.query
-    const excludeAllergens = recipeStore.excludedAllergens
+    const backendAllergens = toBackendAllergenList(recipeStore.excludedAllergens)
 
     await fetchRecipesByCategory(
       category.query,
@@ -846,12 +857,10 @@ const browseCategory = async (category: { name: string; query: string }) => {
 /**
  * Handle filter changes
  */
-const handleFilterChange = () => {
+const handleFilterChange = async () => {
   // Re-run the last search with updated allergen filters
   resetPagination()
-  if (searchQuery.value) {
-    performSearch()
-  }
+  await performSearch()
 }
 
 /**
@@ -863,28 +872,8 @@ const handleQuickFilter = async (filterType: string) => {
   try {
     clearError()
     resetPagination()
-    const excludeAllergens = recipeStore.excludedAllergens
-
-    let query = ''
-    switch (filterType) {
-      case 'quick':
-        query = 'quick recipes under 30 minutes'
-        break
-      case 'healthy':
-        query = 'healthy nutritious recipes'
-        break
-      case 'vegetarian':
-        query = 'vegetarian recipes'
-        break
-      case 'vegan':
-        query = 'vegan recipes'
-        break
-      case 'low-calorie':
-        query = 'low calorie recipes'
-        break
-      default:
-        return
-    }
+    const config = quickFilterConfigs[filterType]
+    if (!config) return
 
     searchQuery.value = query
     await searchRecipes({

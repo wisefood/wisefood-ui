@@ -218,9 +218,9 @@
     <div class="text-center space-y-3">
       <h3 class="text-xl sm:text-2xl font-light tracking-wide text-black-600 dark:text-stone-300 flex items-center justify-center gap-2">
         <Transition name="fade-verb" mode="out-in">
-          <span :key="currentAction" class="action-verb capitalize font-medium text-stone-500 dark:text-stone-400">{{ currentAction }}</span>
+          <span :key="currentAction" class="action-verb font-medium text-stone-500 dark:text-stone-400">{{ displayCurrentAction }}</span>
         </Transition>
-        <span class="cooking-text text-2xl sm:text-3xl font-serif italic text-brandg-500 dark:text-brandg-400">delicious recipes</span>
+        <span class="cooking-text text-2xl sm:text-3xl font-serif italic text-brandg-500 dark:text-brandg-400">{{ t('recipeWrangler.cookingAnimation.deliciousRecipes') }}</span>
         <span class="dots text-stone-400 dark:text-stone-500">
           <span class="dot">.</span>
           <span class="dot">.</span>
@@ -250,24 +250,27 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 // Cooking actions to cycle through
 const cookingActions = ['stirring', 'frying', 'chopping', 'boiling', 'sauteing', 'simmering'] as const
 type CookingAction = typeof cookingActions[number]
 
+const { t } = useI18n()
 const currentActionIndex = ref(0)
 const currentAction = computed(() => cookingActions[currentActionIndex.value])
+const displayCurrentAction = computed(() => t(`recipeWrangler.cookingAnimation.actions.${currentAction.value}`))
 
-const actionDescriptions: Record<CookingAction, string> = {
-  stirring: 'Gently blending flavors together',
-  frying: 'Crafting golden perfection',
-  chopping: 'Preparing fresh ingredients',
-  boiling: 'Coaxing out delicate flavors',
-  sauteing: 'Dancing with heat and timing',
-  simmering: 'Patiently developing depth'
+const actionDescriptionKeys: Record<CookingAction, string> = {
+  stirring: 'recipeWrangler.cookingAnimation.descriptions.stirring',
+  frying: 'recipeWrangler.cookingAnimation.descriptions.frying',
+  chopping: 'recipeWrangler.cookingAnimation.descriptions.chopping',
+  boiling: 'recipeWrangler.cookingAnimation.descriptions.boiling',
+  sauteing: 'recipeWrangler.cookingAnimation.descriptions.sauteing',
+  simmering: 'recipeWrangler.cookingAnimation.descriptions.simmering'
 }
 
-const actionDescription = computed(() => actionDescriptions[currentAction.value])
+const actionDescription = computed(() => t(actionDescriptionKeys[currentAction.value]))
 
 // Flying ingredients
 const flyingIngredients = [

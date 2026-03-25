@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40" viewBox="0 0 60 40" role="img" aria-label="United Kingdom">
+  <rect width="60" height="40" fill="#012169"/>
+  <path d="M0 0L24 16H18L0 4V0ZM60 0V4L42 16H36L60 0ZM0 40V36L18 24H24L0 40ZM60 40L36 24H42L60 36V40Z" fill="#FFFFFF"/>
+  <path d="M0 0L20 13.333H16L0 2.667V0ZM60 0V2.667L44 13.333H40L60 0ZM0 40L20 26.667H16L0 37.333V40ZM60 40V37.333L44 26.667H40L60 40Z" fill="#C8102E"/>
+  <rect x="24" width="12" height="40" fill="#FFFFFF"/>
+  <rect y="14" width="60" height="12" fill="#FFFFFF"/>
+  <rect x="26" width="8" height="40" fill="#C8102E"/>
+  <rect y="16" width="60" height="8" fill="#C8102E"/>
+</svg>

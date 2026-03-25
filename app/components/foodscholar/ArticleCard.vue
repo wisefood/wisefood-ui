@@ -1,24 +1,29 @@
 <template>
   <NuxtLink
     :to="`/foodscholar/${props.article.urn}`"
-    :class="[{ 'scroll-fade-in': props.fade !== false }, 'group flex flex-col p-6 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full']"
+    :class="[{ 'scroll-fade-in': props.fade !== false }, 'group flex flex-col p-5 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer h-full']"
     :style="{ '--delay': `${props.index * 0.1}s` }"
   >
-    <!-- Header: Category and Read Time -->
-    <div class="flex items-start justify-between mb-3">
+    <!-- Header: Category -->
+    <div class="flex items-start justify-between mb-2">
       <span class="text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
         {{ props.article.ai_category }}
       </span>
-      <span class="text-xs text-gray-500 dark:text-gray-400">{{ props.article.readTime }} min read</span>
+    </div>
+    <div v-if="primaryTopic" class="mb-2">
+      <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+        <UIcon name="i-lucide-compass" class="w-3 h-3" />
+        {{ primaryTopic }}
+      </span>
     </div>
 
     <!-- Title -->
-    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2">
       {{ props.article.title }}
     </h3>
 
     <!-- Authors and Publication Info -->
-    <div class="flex flex-wrap items-center gap-2 mb-3 text-xs text-gray-600 dark:text-gray-400">
+    <div class="flex flex-wrap items-center gap-2 mb-2.5 text-xs text-gray-600 dark:text-gray-400">
       <div v-if="props.article.authors && props.article.authors.length > 0" class="flex items-center gap-1">
         <UIcon name="i-lucide-user" class="w-3.5 h-3.5" />
         <span class="truncate max-w-[200px]">{{ formatAuthors(props.article.authors) }}</span>
@@ -34,12 +39,12 @@
     </div>
 
     <!-- Abstract/Excerpt with truncation -->
-    <p class="text-gray-600 dark:text-gray-300 font-light leading-relaxed mb-4 line-clamp-3 grow">
+    <p class="text-gray-600 dark:text-gray-300 font-light leading-relaxed mb-3 line-clamp-2 grow">
       {{ props.article.excerpt }}
     </p>
 
     <!-- Tags -->
-    <div v-if="displayTags.length > 0" class="flex flex-wrap gap-1.5 mb-4">
+    <div v-if="displayTags.length > 0" class="flex flex-wrap gap-1.5 mb-3">
       <span
         v-for="tag in displayTags"
         :key="tag"
@@ -51,7 +56,7 @@
 
     <!-- Footer: Read Article Link -->
     <div class="flex items-center gap-2 text-brand-600 dark:text-brand-400 font-medium text-sm mt-auto">
-      Read Article
+      {{ t('foodScholarCatalog.card.readArticle') }}
       <UIcon name="i-lucide-arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
     </div>
   </NuxtLink>
@@ -59,18 +64,21 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 interface Article {
-  id: number
+  id: string | number
   urn: string
   title: string
   category: string
   ai_category?: string | null
   excerpt: string
-  readTime: number
   authors?: string[]
   tags?: string[]
   ai_tags?: string[]
+  topics?: string[]
   venue?: string | null
   publication_year?: string | null
 }
@@ -86,9 +94,9 @@ const props = withDefaults(defineProps<Props>(), { index: 0, fade: true })
 
 // Format authors for display
 const formatAuthors = (authors: string[]): string => {
-  if (!authors || authors.length === 0) return 'Unknown Author'
+  if (!authors || authors.length === 0) return t('foodScholarCatalog.card.unknownAuthor')
   if (authors.length === 1) return authors[0]
-  if (authors.length === 2) return `${authors[0]} and ${authors[1]}`
+  if (authors.length === 2) return `${authors[0]} ${t('foodScholarCatalog.card.and')} ${authors[1]}`
   return `${authors[0]} et al.`
 }
 
@@ -102,6 +110,11 @@ const displayTags = computed(() => {
 
   // Remove duplicates and limit to 5 tags
   const uniqueTags = [...new Set(allTags)]
-  return uniqueTags.slice(0, 5)
+  return uniqueTags.slice(0, 4)
+})
+
+const primaryTopic = computed(() => {
+  const topics = props.article.topics || []
+  return topics.find(topic => typeof topic === 'string' && topic.trim()) || ''
 })
 </script>

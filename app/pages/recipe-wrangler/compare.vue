@@ -9,7 +9,7 @@
             class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-brandg-600 dark:hover:text-brandg-400 transition-colors"
           >
             <UIcon name="i-lucide-arrow-left" class="w-5 h-5" />
-            <span class="text-sm font-medium">Back to Recipes</span>
+            <span class="text-sm font-medium">{{ t('recipeWrangler.backToRecipes') }}</span>
           </NuxtLink>
 
           <button
@@ -18,15 +18,15 @@
             class="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-sm font-medium"
           >
             <UIcon name="i-lucide-x" class="w-4 h-4" />
-            Clear All
+            {{ t('recipeWrangler.comparePage.clearAll') }}
           </button>
         </div>
-       <div class="mt-3 sm:mt-4">
+        <div class="mt-3 sm:mt-4">
           <h1 class="text-2xl sm:text-3xl md:text-4xl font-light text-zinc-900 dark:text-white tracking-tight">
             <span class="font-serif italic text-brandg-500 dark:text-brandg-400 text-3xl sm:text-4xl md:text-5xl">RecipeWrangler</span>
           </h1>
           <p class="mt-2 text-sm sm:text-base text-zinc-600 dark:text-zinc-300 font-light">
-            Discover personalized recipes tailored to your nutritional goals
+            {{ t('recipeWrangler.subtitle') }}
           </p>
         </div>
       </div>
@@ -38,17 +38,17 @@
       <div v-if="compareRecipes.length === 0" class="text-center py-16">
         <UIcon name="i-lucide-git-compare" class="w-20 h-20 text-zinc-300 dark:text-zinc-700 mx-auto mb-6" />
         <h2 class="text-2xl font-semibold text-zinc-900 dark:text-white mb-3">
-          No Recipes to Compare
+          {{ t('recipeWrangler.comparePage.empty.title') }}
         </h2>
         <p class="text-zinc-600 dark:text-zinc-400 mb-8 max-w-md mx-auto">
-          Select recipes from the search results to compare their nutritional values and ingredients
+          {{ t('recipeWrangler.comparePage.empty.subtitle') }}
         </p>
         <NuxtLink
           to="/recipe-wrangler"
           class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-brandg-600 text-white hover:bg-brandg-700 transition-colors font-medium"
         >
           <UIcon name="i-lucide-search" class="w-5 h-5" />
-          Browse Recipes
+          {{ t('recipeWrangler.comparePage.empty.browseRecipes') }}
         </NuxtLink>
       </div>
 
@@ -59,7 +59,7 @@
           <thead>
             <tr class="border-b border-zinc-200 dark:border-zinc-700">
               <th class="text-left p-4 sm:p-6 bg-zinc-50 dark:bg-zinc-900 font-semibold text-zinc-700 dark:text-zinc-300 sticky left-0 z-20">
-                <span class="text-sm uppercase tracking-wide">Feature</span>
+                <span class="text-sm uppercase tracking-wide">{{ t('recipeWrangler.comparePage.table.feature') }}</span>
               </th>
               <th
                 v-for="recipe in compareRecipes"
@@ -70,10 +70,12 @@
                   <!-- Recipe Image with Title Overlay -->
                   <div class="relative h-[240px] rounded-xl overflow-hidden bg-gradient-to-br from-brandg-100 to-brandg-200 dark:from-brandg-900/40 dark:to-brandg-800/40 shadow-md">
                     <img
-                      v-if="recipe.image_url"
-                      :src="recipe.image_url"
+                      v-if="shouldShowRecipeImage(recipe)"
+                      :src="normalizeImageUrl(recipe.image_url)"
                       :alt="recipe.title"
                       class="w-full h-full object-cover"
+                      referrerpolicy="no-referrer"
+                      @error="markImageFailed(recipe.recipe_id)"
                     />
                     <div v-else class="w-full h-full flex items-center justify-center">
                       <UIcon name="i-lucide-utensils" class="w-12 h-12 text-brandg-300 dark:text-brandg-700" />
@@ -103,7 +105,7 @@
                     :to="`/recipe-wrangler/${encodeURIComponent(recipe.recipe_id)}`"
                     class="inline-flex items-center gap-2 text-sm font-medium text-brandg-600 dark:text-brandg-400 hover:text-brandg-700 dark:hover:text-brandg-300 transition-colors"
                   >
-                    <span>View Recipe</span>
+                    <span>{{ t('recipeWrangler.recipe.viewRecipe') }}</span>
                     <UIcon name="i-lucide-arrow-right" class="w-4 h-4" />
                   </NuxtLink>
                 </div>
@@ -117,7 +119,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-white dark:bg-zinc-800 z-10 border-r border-zinc-200 dark:border-zinc-700 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-award" class="w-5 h-5 text-brandg-600 dark:text-brandg-400" />
-                  <span>Nutri-Score</span>
+                  <span>{{ t('recipeWrangler.recipe.nutriScore') }}</span>
                 </div>
               </td>
               <td
@@ -143,7 +145,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-zinc-50 dark:bg-zinc-900 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-clock" class="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
-                  <span>Duration</span>
+                  <span>{{ t('recipeWrangler.comparePage.table.duration') }}</span>
                 </div>
               </td>
               <td
@@ -152,7 +154,7 @@
                 class="p-4 sm:p-6 text-center"
               >
                 <span class="text-lg font-semibold text-zinc-900 dark:text-white">
-                  {{ recipe.duration || 'N/A' }}<span v-if="recipe.duration" class="text-sm text-zinc-500"> min</span>
+                  {{ recipe.duration || t('recipeWrangler.comparePage.notAvailable') }}<span v-if="recipe.duration" class="text-sm text-zinc-500"> {{ t('recipeWrangler.recipe.minuteShort') }}</span>
                 </span>
               </td>
             </tr>
@@ -162,7 +164,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-white dark:bg-zinc-800 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-users" class="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
-                  <span>Servings</span>
+                  <span>{{ t('recipeWrangler.comparePage.table.servings') }}</span>
                 </div>
               </td>
               <td
@@ -171,7 +173,7 @@
                 class="p-4 sm:p-6 text-center"
               >
                 <span class="text-lg font-semibold text-zinc-900 dark:text-white">
-                  {{ recipe.serves || 'N/A' }}
+                  {{ recipe.serves || t('recipeWrangler.comparePage.notAvailable') }}
                 </span>
               </td>
             </tr>
@@ -181,7 +183,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-zinc-50 dark:bg-zinc-900 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-flame" class="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                  <span>Calories</span>
+                  <span>{{ t('recipeWrangler.detail.calories') }}</span>
                 </div>
               </td>
               <td
@@ -192,13 +194,13 @@
                 <div class="space-y-2">
                   <div class="text-center">
                     <span class="text-lg font-bold text-zinc-900 dark:text-white">
-                      {{ Math.round(recipe.total_kcal_per_serving) }}
+                      {{ formatMetric(recipe.total_kcal_per_serving, 0) }}
                     </span>
                   </div>
                   <div class="h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-orange-500"
-                      :style="{ width: `${Math.min((recipe.total_kcal_per_serving / maxCalories) * 100, 100)}%` }"
+                      :style="{ width: `${toBarPercent(recipe.total_kcal_per_serving, maxCalories)}%` }"
                     ></div>
                   </div>
                 </div>
@@ -210,7 +212,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-white dark:bg-zinc-800 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-dumbbell" class="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  <span>Protein</span>
+                  <span>{{ t('recipeWrangler.detail.protein') }}</span>
                 </div>
               </td>
               <td
@@ -221,13 +223,13 @@
                 <div class="space-y-2">
                   <div class="text-center">
                     <span class="text-lg font-bold text-zinc-900 dark:text-white">
-                      {{ recipe.total_protein_g_per_serving.toFixed(1) }}<span class="text-sm text-zinc-500">g</span>
+                      {{ formatMetric(recipe.total_protein_g_per_serving, 1) }}<span v-if="hasNumber(recipe.total_protein_g_per_serving)" class="text-sm text-zinc-500">g</span>
                     </span>
                   </div>
                   <div class="h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-blue-500"
-                      :style="{ width: `${Math.min((recipe.total_protein_g_per_serving / maxProtein) * 100, 100)}%` }"
+                      :style="{ width: `${toBarPercent(recipe.total_protein_g_per_serving, maxProtein)}%` }"
                     ></div>
                   </div>
                 </div>
@@ -239,7 +241,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-zinc-50 dark:bg-zinc-900 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-wheat" class="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                  <span>Carbs</span>
+                  <span>{{ t('recipeWrangler.detail.carbs') }}</span>
                 </div>
               </td>
               <td
@@ -250,13 +252,13 @@
                 <div class="space-y-2">
                   <div class="text-center">
                     <span class="text-lg font-bold text-zinc-900 dark:text-white">
-                      {{ recipe.total_carbs_g_per_serving.toFixed(1) }}<span class="text-sm text-zinc-500">g</span>
+                      {{ formatMetric(recipe.total_carbs_g_per_serving, 1) }}<span v-if="hasNumber(recipe.total_carbs_g_per_serving)" class="text-sm text-zinc-500">g</span>
                     </span>
                   </div>
                   <div class="h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-purple-500"
-                      :style="{ width: `${Math.min((recipe.total_carbs_g_per_serving / maxCarbs) * 100, 100)}%` }"
+                      :style="{ width: `${toBarPercent(recipe.total_carbs_g_per_serving, maxCarbs)}%` }"
                     ></div>
                   </div>
                 </div>
@@ -268,7 +270,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-white dark:bg-zinc-800 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-droplet" class="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                  <span>Fat</span>
+                  <span>{{ t('recipeWrangler.detail.fat') }}</span>
                 </div>
               </td>
               <td
@@ -279,13 +281,13 @@
                 <div class="space-y-2">
                   <div class="text-center">
                     <span class="text-lg font-bold text-zinc-900 dark:text-white">
-                      {{ recipe.total_fat_g_per_serving.toFixed(1) }}<span class="text-sm text-zinc-500">g</span>
+                      {{ formatMetric(recipe.total_fat_g_per_serving, 1) }}<span v-if="hasNumber(recipe.total_fat_g_per_serving)" class="text-sm text-zinc-500">g</span>
                     </span>
                   </div>
                   <div class="h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-yellow-500"
-                      :style="{ width: `${Math.min((recipe.total_fat_g_per_serving / maxFat) * 100, 100)}%` }"
+                      :style="{ width: `${toBarPercent(recipe.total_fat_g_per_serving, maxFat)}%` }"
                     ></div>
                   </div>
                 </div>
@@ -297,7 +299,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-zinc-50 dark:bg-zinc-900 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-leaf" class="w-5 h-5 text-green-600 dark:text-green-400" />
-                  <span>Fiber</span>
+                  <span>{{ t('recipeWrangler.detail.fiber') }}</span>
                 </div>
               </td>
               <td
@@ -308,13 +310,13 @@
                 <div class="space-y-2">
                   <div class="text-center">
                     <span class="text-lg font-bold text-zinc-900 dark:text-white">
-                      {{ recipe.total_fiber_g_per_serving.toFixed(1) }}<span class="text-sm text-zinc-500">g</span>
+                      {{ formatMetric(recipe.total_fiber_g_per_serving, 1) }}<span v-if="hasNumber(recipe.total_fiber_g_per_serving)" class="text-sm text-zinc-500">g</span>
                     </span>
                   </div>
                   <div class="h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                     <div
                       class="h-full bg-green-500"
-                      :style="{ width: `${Math.min((recipe.total_fiber_g_per_serving / maxFiber) * 100, 100)}%` }"
+                      :style="{ width: `${toBarPercent(recipe.total_fiber_g_per_serving, maxFiber)}%` }"
                     ></div>
                   </div>
                 </div>
@@ -326,7 +328,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-white dark:bg-zinc-800 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-candy" class="w-5 h-5 text-pink-600 dark:text-pink-400" />
-                  <span>Sugar</span>
+                  <span>{{ t('recipeWrangler.detail.sugar') }}</span>
                 </div>
               </td>
               <td
@@ -335,7 +337,7 @@
                 class="p-4 sm:p-6 text-center"
               >
                 <span class="text-lg font-bold text-zinc-900 dark:text-white">
-                  {{ recipe.total_sugar_g_per_serving.toFixed(1) }}<span class="text-sm text-zinc-500">g</span>
+                  {{ formatMetric(recipe.total_sugar_g_per_serving, 1) }}<span v-if="hasNumber(recipe.total_sugar_g_per_serving)" class="text-sm text-zinc-500">g</span>
                 </span>
               </td>
             </tr>
@@ -345,7 +347,7 @@
               <td class="p-4 sm:p-6 font-medium text-zinc-900 dark:text-white sticky left-0 bg-zinc-50 dark:bg-zinc-900 z-10 border-r border-zinc-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2">
                   <UIcon name="i-lucide-salt" class="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
-                  <span>Sodium</span>
+                  <span>{{ t('recipeWrangler.detail.sodium') }}</span>
                 </div>
               </td>
               <td
@@ -354,7 +356,7 @@
                 class="p-4 sm:p-6 text-center"
               >
                 <span class="text-lg font-bold text-zinc-900 dark:text-white">
-                  {{ recipe.total_sodium_mg_per_serving.toFixed(0) }}<span class="text-sm text-zinc-500">mg</span>
+                  {{ formatMetric(recipe.total_sodium_mg_per_serving, 0) }}<span v-if="hasNumber(recipe.total_sodium_mg_per_serving)" class="text-sm text-zinc-500">mg</span>
                 </span>
               </td>
             </tr>
@@ -366,7 +368,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRecipeStore } from '~/stores/recipe'
 import recipeApi from '~/services/recipeApi'
 import type { Recipe } from '~/services/recipeApi'
@@ -374,9 +377,10 @@ import type { Recipe } from '~/services/recipeApi'
 definePageMeta({
   middleware: ['auth', 'profile']
 })
+const { t } = useI18n()
 
 useHead({
-  title: 'Compare Recipes - RecipeWrangler'
+  title: computed(() => t('recipeWrangler.comparePage.pageTitle'))
 })
 
 // ============================================================================
@@ -390,28 +394,64 @@ const route = useRoute()
 // ============================================================================
 const compareRecipes = ref<Recipe[]>([])
 const loading = ref(false)
+const failedRecipeImages = ref<Record<string, boolean>>({})
 
 // ============================================================================
 // Computed
 // ============================================================================
+const coerceNumber = (value: unknown): number => {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0
+}
+
+const hasNumber = (value: unknown): value is number => {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+const formatMetric = (value: unknown, digits: number): string => {
+  if (!hasNumber(value)) return t('recipeWrangler.comparePage.notAvailable')
+  return value.toFixed(digits)
+}
+
+const toBarPercent = (value: unknown, maxValue: number): number => {
+  if (!hasNumber(value) || maxValue <= 0) return 0
+  return Math.min((value / maxValue) * 100, 100)
+}
+
+const normalizeImageUrl = (url?: string | null): string | null => {
+  if (!url) return null
+  if (url.startsWith('http://')) return `https://${url.slice('http://'.length)}`
+  return url
+}
+
+const shouldShowRecipeImage = (recipe: Recipe): boolean => {
+  return !!normalizeImageUrl(recipe.image_url) && !failedRecipeImages.value[recipe.recipe_id]
+}
+
+const markImageFailed = (recipeId: string) => {
+  failedRecipeImages.value = {
+    ...failedRecipeImages.value,
+    [recipeId]: true
+  }
+}
+
 const maxCalories = computed(() =>
-  Math.max(...compareRecipes.value.map(r => r.total_kcal_per_serving), 1)
+  Math.max(...compareRecipes.value.map(r => coerceNumber(r.total_kcal_per_serving)), 1)
 )
 
 const maxProtein = computed(() =>
-  Math.max(...compareRecipes.value.map(r => r.total_protein_g_per_serving), 1)
+  Math.max(...compareRecipes.value.map(r => coerceNumber(r.total_protein_g_per_serving)), 1)
 )
 
 const maxCarbs = computed(() =>
-  Math.max(...compareRecipes.value.map(r => r.total_carbs_g_per_serving), 1)
+  Math.max(...compareRecipes.value.map(r => coerceNumber(r.total_carbs_g_per_serving)), 1)
 )
 
 const maxFat = computed(() =>
-  Math.max(...compareRecipes.value.map(r => r.total_fat_g_per_serving), 1)
+  Math.max(...compareRecipes.value.map(r => coerceNumber(r.total_fat_g_per_serving)), 1)
 )
 
 const maxFiber = computed(() =>
-  Math.max(...compareRecipes.value.map(r => r.total_fiber_g_per_serving), 1)
+  Math.max(...compareRecipes.value.map(r => coerceNumber(r.total_fiber_g_per_serving)), 1)
 )
 
 // ============================================================================
@@ -427,11 +467,11 @@ const getNutriScoreGrade = (score: number): string => {
 
 const getNutriScoreColorBg = (grade: string): string => {
   const colors = {
-    'A': 'bg-[#038141]',
-    'B': 'bg-[#85BB2F]',
-    'C': 'bg-[#FECB02]',
-    'D': 'bg-[#EE8100]',
-    'E': 'bg-[#E63E11]'
+    A: 'bg-[#038141]',
+    B: 'bg-[#85BB2F]',
+    C: 'bg-[#FECB02]',
+    D: 'bg-[#EE8100]',
+    E: 'bg-[#E63E11]'
   }
   return colors[grade as keyof typeof colors] || 'bg-zinc-400'
 }
@@ -468,6 +508,7 @@ const loadRecipes = async () => {
     }
 
     compareRecipes.value = recipes
+    failedRecipeImages.value = {}
   } catch (err) {
     console.error('Failed to load comparison recipes:', err)
   } finally {

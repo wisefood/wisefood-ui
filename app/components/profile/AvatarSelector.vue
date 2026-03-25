@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <p class="text-sm text-gray-600 dark:text-gray-400 text-center">
-      Choose an avatar for this profile
+      {{ t('profileSelection.avatarSelector.chooseAvatar') }}
     </p>
 
     <div class="grid grid-cols-4 sm:grid-cols-6 gap-3 max-h-64 overflow-y-auto p-2">
@@ -28,6 +28,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { avatarPresets, type AvatarConfig } from '~/utils/avatarPresets'
 
 interface Props {
@@ -44,6 +45,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<Emits>()
+const { t } = useI18n()
 
 const selectedIndex = computed({
   get: () => props.modelValue,

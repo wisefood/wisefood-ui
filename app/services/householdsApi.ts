@@ -17,14 +17,29 @@ export interface HouseholdMember {
   age_group?: 'child' | 'teen' | 'adult' | 'senior'
   image_url?: string
   household_id: string
+  joined_at?: string
   created_at?: string
   updated_at?: string
 }
 
+export interface NutritionalPreferences {
+  fat?: number
+  carbs?: number
+  protein?: number
+  calories?: number
+  food_likes?: string[]
+  food_dislikes?: string[]
+}
+
 export interface MemberProfile {
-  nutritional_preferences?: Record<string, unknown>
+  id?: string
+  household_member_id?: string
+  nutritional_preferences?: NutritionalPreferences
   dietary_groups?: ('omnivore' | 'vegetarian' | 'vegan' | 'pescatarian' | 'flexitarian')[]
+  allergies?: string[]
   properties?: Record<string, unknown>
+  created_at?: string
+  updated_at?: string
 }
 
 export interface HouseholdMemberWithProfile extends HouseholdMember {
@@ -128,6 +143,11 @@ class HouseholdsApiService {
   // Member profile operations
   async getMemberProfile(memberId: string): Promise<ApiResponse<MemberProfile>> {
     const result = await wisefoodRestApi.get<MemberProfile>(`/members/${memberId}/profile`)
+    return { success: true, result }
+  }
+
+  async createMemberProfile(memberId: string, data: MemberProfile): Promise<ApiResponse<MemberProfile>> {
+    const result = await wisefoodRestApi.post<MemberProfile, MemberProfile>(`/members/${memberId}/profile`, data)
     return { success: true, result }
   }
 

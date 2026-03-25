@@ -21,8 +21,8 @@ ARG CONTEXT_PATH=/app
 # Set build-time environment variables
 ENV NUXT_APP_BASE_URL=${CONTEXT_PATH}
 
-# Build the application
-RUN pnpm run build
+# Generate a static application for nginx
+RUN pnpm exec nuxt generate
 
 # Production stage with nginx
 FROM nginx:1.25-alpine
@@ -33,8 +33,11 @@ RUN apk add --no-cache gettext
 # Copy nginx configuration
 COPY nginx.conf.template /etc/nginx/nginx.conf
 
+# Remove the default nginx welcome page before copying the app.
+RUN rm -rf /usr/share/nginx/html/*
+
 # Copy built application
-COPY --from=builder /app/.output/public /usr/share/nginx/html
+COPY --from=builder /app/.output/public/ /usr/share/nginx/html/
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /docker-entrypoint.sh

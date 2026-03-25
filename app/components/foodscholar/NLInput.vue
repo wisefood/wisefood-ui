@@ -1,6 +1,6 @@
 <template>
-    <div class="relative">
-        <div v-if="$slots.left" class="absolute left-4 top-0 h-full flex items-center pointer-events-none">
+    <div class="relative group">
+        <div v-if="$slots.left" class="absolute left-4 top-1/2 -translate-y-1/2 flex items-center pointer-events-none z-10">
             <slot name="left" />
         </div>
 
@@ -16,7 +16,7 @@
             v-bind="$attrs"
         />
 
-        <div v-if="$slots.right" class="absolute right-4 top-0 h-full flex items-center">
+        <div v-if="$slots.right" class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center z-10">
             <slot name="right" />
         </div>
     </div>
@@ -31,7 +31,7 @@ const props = defineProps({
     inputClass: {
         type: String,
         default:
-            'w-full pl-10 pr-14 py-4 rounded-2xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500'
+            'w-full h-12 pl-11 pr-14 rounded-2xl border border-gray-200/80 dark:border-zinc-700/80 bg-gradient-to-r from-white to-emerald-50/60 dark:from-zinc-900 dark:to-zinc-800 text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 shadow-sm shadow-slate-900/5 dark:shadow-black/25 focus:outline-none focus:ring-4 focus:ring-brand-500/15 dark:focus:ring-brand-500/25 focus:border-brand-400/70 dark:focus:border-brand-500/70 transition-all duration-200'
     },
     disabled: { type: Boolean, default: false },
     type: { type: String, default: 'text' },
@@ -54,4 +54,3 @@ function onEnter() {
     emit('enter', internalValue.value)
 }
 </script>
-
