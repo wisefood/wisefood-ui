@@ -78,7 +78,7 @@
             <button
               type="button"
               @click="performSearch"
-              :disabled="loading"
+              :disabled="!searchQuery.trim() || loading"
               class="absolute right-2 top-1/2 -translate-y-1/2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-brandg-500 hover:bg-brandg-600 disabled:bg-zinc-300 dark:disabled:bg-zinc-700 text-white text-sm font-medium transition-colors disabled:cursor-not-allowed"
             >
               <UIcon v-if="loading" name="i-lucide-loader-2" class="w-4 h-4 animate-spin" />
@@ -546,7 +546,7 @@ definePageMeta({
 })
 
 useHead({
-  title: computed(() => t('recipeWrangler.title'))
+  title: 'RecipeWrangler'
 })
 
 useSeoMeta({
@@ -556,7 +556,7 @@ useSeoMeta({
 // ============================================================================
 // Composables & Stores
 // ============================================================================
-const { recipes, loading, error, searchRecipes, searchRecipesByParams, fetchRecipesByCategory, clearError } = useRecipes()
+const { recipes, loading, error, searchRecipes, fetchRecipesByCategory, clearError } = useRecipes()
 const recipeStore = useRecipeStore()
 const householdStore = useHouseholdStore()
 
@@ -792,25 +792,14 @@ const performSearch = async () => {
   try {
     clearError()
     resetPagination()
-    const trimmedQuery = searchQuery.value.trim()
+    const excludeAllergens = recipeStore.excludedAllergens
 
     await searchRecipes({
       question: searchQuery.value,
       exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined
     }, false)
 
-    const parametricQuery = parseParametricSearchQuery(trimmedQuery)
-    if (parametricQuery) {
-      await searchRecipesByParams(buildParamSearchWithAllergens(parametricQuery))
-    } else {
-      const backendAllergens = toBackendAllergenList(recipeStore.excludedAllergens)
-      await searchRecipes({
-        question: trimmedQuery,
-        exclude_allergens: backendAllergens.length > 0 ? backendAllergens : undefined
-      })
-    }
-
-    recipeStore.addSearchQuery(trimmedQuery)
+    recipeStore.addSearchQuery(searchQuery.value)
   } catch (err) {
     console.error('Search failed:', err)
   }
@@ -842,7 +831,7 @@ const browseCategory = async (category: { name: string; query: string }) => {
     clearError()
     resetPagination()
     searchQuery.value = category.query
-    const backendAllergens = toBackendAllergenList(recipeStore.excludedAllergens)
+    const excludeAllergens = recipeStore.excludedAllergens
 
     await fetchRecipesByCategory(
       category.query,
@@ -857,10 +846,12 @@ const browseCategory = async (category: { name: string; query: string }) => {
 /**
  * Handle filter changes
  */
-const handleFilterChange = async () => {
+const handleFilterChange = () => {
   // Re-run the last search with updated allergen filters
   resetPagination()
-  await performSearch()
+  if (searchQuery.value) {
+    performSearch()
+  }
 }
 
 /**
@@ -872,8 +863,28 @@ const handleQuickFilter = async (filterType: string) => {
   try {
     clearError()
     resetPagination()
-    const config = quickFilterConfigs[filterType]
-    if (!config) return
+    const excludeAllergens = recipeStore.excludedAllergens
+
+    let query = ''
+    switch (filterType) {
+      case 'quick':
+        query = 'quick recipes under 30 minutes'
+        break
+      case 'healthy':
+        query = 'healthy nutritious recipes'
+        break
+      case 'vegetarian':
+        query = 'vegetarian recipes'
+        break
+      case 'vegan':
+        query = 'vegan recipes'
+        break
+      case 'low-calorie':
+        query = 'low calorie recipes'
+        break
+      default:
+        return
+    }
 
     searchQuery.value = query
     await searchRecipes({
