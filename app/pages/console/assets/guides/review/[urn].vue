@@ -935,6 +935,10 @@ type PdfWorkerModule = {
   default: new () => Worker
 }
 type PdfPanelKey = 'primary' | 'secondary'
+type PdfDocumentLoadingTaskLike = {
+  promise: Promise<PdfDocumentLike>
+  destroy: () => Promise<void>
+}
 type PdfRenderTask = {
   promise: Promise<void>
   cancel?: () => void
@@ -957,12 +961,27 @@ type GuidelineEditorMode = 'create' | 'edit'
 let pdfModulePromise: Promise<PdfJsModule> | null = null
 let pdfWorkerPromise: Promise<PdfWorkerModule> | null = null
 let pdfWorkerInstance: Worker | null = null
+let activePdfLoadingTask: PdfDocumentLoadingTaskLike | null = null
 let activePdfDocument: PdfDocumentLike | null = null
 let activePdfRenderTasks: PdfRenderTask[] = []
+let activePdfDestroyPromise: Promise<void> | null = null
 let pdfLoadToken = 0
 let pdfRenderToken = 0
 let pageGuidelineLoadToken = 0
 let resizeTimer: ReturnType<typeof setTimeout> | null = null
+let pdfLifecycleDisposed = false
+
+function isPdfLifecycleInterruption(error: unknown) {
+  const message = (error instanceof Error ? error.message : String(error)).toLowerCase()
+
+  return message.includes('abort')
+    || message.includes('cancel')
+    || message.includes('page was destroyed')
+    || message.includes('pdf lifecycle disposed')
+    || message.includes('transport destroyed')
+    || message.includes('worker is being destroyed')
+    || message.includes('worker was destroyed')
+}
 
 async function getPdfModule() {
   if (!import.meta.client) {
@@ -976,8 +995,16 @@ async function getPdfModule() {
       import('pdfjs-dist/legacy/build/pdf.mjs'),
       pdfWorkerPromise
     ]).then(([module, workerModule]) => {
+      if (pdfLifecycleDisposed) {
+        throw new Error('PDF lifecycle disposed')
+      }
+
       pdfWorkerInstance ||= new workerModule.default()
-      module.GlobalWorkerOptions.workerPort ||= pdfWorkerInstance
+
+      if (module.GlobalWorkerOptions.workerPort !== pdfWorkerInstance) {
+        module.GlobalWorkerOptions.workerPort = pdfWorkerInstance
+      }
+
       return module
     })
   }
@@ -1389,16 +1416,46 @@ function cancelActivePdfRenderTasks() {
 }
 
 async function destroyActivePdfDocument() {
+  if (activePdfDestroyPromise) {
+    await activePdfDestroyPromise
+    return
+  }
+
   pdfRenderToken += 1
 
   cancelActivePdfRenderTasks()
 
-  if (activePdfDocument?.destroy) {
-    await activePdfDocument.destroy()
-  }
+  const loadingTask = activePdfLoadingTask
+  const document = activePdfDocument
 
+  activePdfLoadingTask = null
   activePdfDocument = null
   clearAllPdfCanvases()
+
+  if (!loadingTask && !document?.destroy) {
+    return
+  }
+
+  let destroyPromise: Promise<void>
+  destroyPromise = (async () => {
+    if (loadingTask) {
+      await loadingTask.destroy()
+      return
+    }
+
+    await document?.destroy?.()
+  })().catch(error => {
+    if (!isPdfLifecycleInterruption(error)) {
+      console.error('[ConsoleGuidelineReview] Failed to destroy PDF:', error)
+    }
+  }).finally(() => {
+    if (activePdfDestroyPromise === destroyPromise) {
+      activePdfDestroyPromise = null
+    }
+  })
+
+  activePdfDestroyPromise = destroyPromise
+  await destroyPromise
 }
 
 async function getArtifactPdfBytes(artifactId: string) {
@@ -1487,9 +1544,7 @@ async function renderVisiblePdfPages() {
       await renderTask.promise
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-
-    if (!message.toLowerCase().includes('cancel')) {
+    if (!isPdfLifecycleInterruption(error)) {
       console.error('[ConsoleGuidelineReview] Failed to render PDF page:', error)
       pdfError.value = 'The PDF page could not be rendered.'
     }
@@ -1560,12 +1615,17 @@ function endPdfPan() {
 async function loadSelectedPdf(forceReload = false) {
   const artifact = selectedPdfArtifact.value
   const loadToken = ++pdfLoadToken
+  let loadingTask: PdfDocumentLoadingTaskLike | null = null
 
   pdfError.value = null
   totalPdfPages.value = 0
   pdfLoading.value = Boolean(artifact)
 
   await destroyActivePdfDocument()
+
+  if (pdfLifecycleDisposed || loadToken !== pdfLoadToken) {
+    return
+  }
 
   if (!artifact) {
     pdfLoading.value = false
@@ -1578,11 +1638,22 @@ async function loadSelectedPdf(forceReload = false) {
     }
 
     const bytes = await getArtifactPdfBytes(artifact.id)
-    const pdfModule = await getPdfModule()
-    const document = await pdfModule.getDocument({ data: bytes }).promise as PdfDocumentLike
+    if (pdfLifecycleDisposed || loadToken !== pdfLoadToken) {
+      return
+    }
 
-    if (loadToken !== pdfLoadToken) {
-      await document.destroy?.()
+    const pdfModule = await getPdfModule()
+    if (pdfLifecycleDisposed || loadToken !== pdfLoadToken) {
+      return
+    }
+
+    loadingTask = pdfModule.getDocument({ data: bytes }) as unknown as PdfDocumentLoadingTaskLike
+    activePdfLoadingTask = loadingTask
+
+    const document = await loadingTask.promise as PdfDocumentLike
+
+    if (pdfLifecycleDisposed || loadToken !== pdfLoadToken) {
+      await loadingTask.destroy()
       return
     }
 
@@ -1592,6 +1663,15 @@ async function loadSelectedPdf(forceReload = false) {
 
     await renderVisiblePdfPages()
   } catch (error) {
+    if (pdfLifecycleDisposed || loadToken !== pdfLoadToken || isPdfLifecycleInterruption(error)) {
+      return
+    }
+
+    if (activePdfLoadingTask === loadingTask) {
+      activePdfLoadingTask = null
+    }
+
+    activePdfDocument = null
     console.error('[ConsoleGuidelineReview] Failed to load PDF:', error)
     pdfError.value = 'The selected PDF could not be opened.'
     totalPdfPages.value = 0
@@ -2377,6 +2457,9 @@ watch(pdfZoom, () => {
 })
 
 onBeforeUnmount(() => {
+  pdfLifecycleDisposed = true
+  pdfLoadToken += 1
+
   if (import.meta.client) {
     window.removeEventListener('resize', handlePdfViewportResize)
   }
@@ -2385,14 +2468,22 @@ onBeforeUnmount(() => {
     clearTimeout(resizeTimer)
   }
 
-  if (pdfWorkerInstance) {
-    pdfWorkerInstance.terminate()
+  const workerToTerminate = pdfWorkerInstance
+  const modulePromise = pdfModulePromise
+
+  void (async () => {
+    await destroyActivePdfDocument()
+
+    const pdfModule = modulePromise ? await modulePromise.catch(() => null) : null
+    if (pdfModule?.GlobalWorkerOptions.workerPort === workerToTerminate) {
+      pdfModule.GlobalWorkerOptions.workerPort = null
+    }
+
+    workerToTerminate?.terminate()
     pdfWorkerInstance = null
     pdfWorkerPromise = null
     pdfModulePromise = null
-  }
-
-  void destroyActivePdfDocument()
+  })()
 })
 
 await loadGuideDetail(resolvedGuideUrn.value)

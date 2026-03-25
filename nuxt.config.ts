@@ -30,7 +30,7 @@ export default defineNuxtConfig({
       keycloakUrl: process.env.VITE_KEYCLOAK_URL,
       keycloakRealm: process.env.VITE_KEYCLOAK_REALM,
       keycloakClientId: process.env.VITE_KEYCLOAK_CLIENT_ID,
-      wisefoodApiUrl: process.env.VITE_WISEFOOD_API_URL, // Articles API: https://wisefood.gr/dc/api
+      wisefoodApiUrl: process.env.VITE_WISEFOOD_API_URL, // Data Catalog API: https://wisefood.gr/dc/api
       wisefoodRestApiUrl: process.env.VITE_WISEFOOD_REST_API_URL // REST API: https://wisefood.gr/rest/api/v1
     }
   },
