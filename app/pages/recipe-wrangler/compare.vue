@@ -129,12 +129,19 @@
               >
                 <div class="flex justify-center">
                   <div
+                    v-if="recipe.nutri_score !== null && recipe.nutri_score !== undefined"
                     :class="[
                       'px-4 py-2 rounded-full text-white font-black text-lg',
                       getNutriScoreColorBg(getNutriScoreGrade(recipe.nutri_score))
                     ]"
                   >
                     {{ getNutriScoreGrade(recipe.nutri_score) }}
+                  </div>
+                  <div
+                    v-else
+                    class="px-4 py-2 rounded-full bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 font-black text-lg"
+                  >
+                    N/A
                   </div>
                 </div>
               </td>

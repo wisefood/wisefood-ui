@@ -120,7 +120,7 @@
             </div>
             <div class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full">
               <UIcon name="i-lucide-award" class="w-4 h-4 text-brandg-600 dark:text-brandg-400" />
-              <span class="text-xs sm:text-sm font-medium">Nutri-Score {{ getNutriScoreGrade(toNumber(recipe.nutri_score)) }}</span>
+              <span class="text-xs sm:text-sm font-medium">Nutri-Score {{ nutriScoreGrade || 'N/A' }}</span>
             </div>
           </div>
         </div>
@@ -478,13 +478,13 @@
             <!-- Nutri-Score Label (Official Design) -->
             <div class="flex flex-col items-center">
               <p class="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3">{{ t('recipeWrangler.detail.nutritionalQuality') }}</p>
-              <div class="flex gap-1 relative">
+              <div v-if="nutriScoreGrade" class="flex gap-1 relative">
                 <UTooltip
                   v-for="(grade, idx) in ['A', 'B', 'C', 'D', 'E']"
                   :key="grade"
                   :class="[
                     'relative flex items-center justify-center font-black text-white transition-all',
-                    getNutriScoreGrade(toNumber(recipe.nutri_score)) === grade
+                    nutriScoreGrade === grade
                       ? 'w-16 h-20 text-3xl z-10'
                       : 'w-12 h-16 text-xl opacity-50',
                     idx === 0 ? 'rounded-l-full' : '',
@@ -493,10 +493,10 @@
                   ]"
                 >
                   <div
-                    v-if="getNutriScoreGrade(toNumber(recipe.nutri_score)) === grade"
+                    v-if="nutriScoreGrade === grade"
                     :class="[
                       'relative flex items-center justify-center font-black text-white transition-all cursor-help',
-                      getNutriScoreGrade(recipe.nutri_score) === grade
+                      nutriScoreGrade === grade
                         ? 'w-16 h-20 text-3xl z-10'
                         : 'w-12 h-16 text-xl opacity-50',
                       idx === 0 ? 'rounded-l-full' : '',
@@ -507,7 +507,7 @@
                     <span class="relative z-10">{{ grade }}</span>
                     <!-- Arrow pointer for active grade -->
                     <div
-                      v-if="getNutriScoreGrade(recipe.nutri_score) === grade"
+                      v-if="nutriScoreGrade === grade"
                       :class="[
                         'absolute -bottom-3 w-0 h-0',
                         'border-l-[12px] border-l-transparent',
@@ -523,10 +523,17 @@
                   </div>
                 </UTooltip>
               </div>
+              <div
+                v-else
+                class="inline-flex items-center justify-center min-w-24 h-16 px-6 rounded-full bg-zinc-100 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-300 font-semibold"
+              >
+                N/A
+              </div>
               <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-6 text-center">
-                {{ getNutriScoreDescription(getNutriScoreGrade(toNumber(recipe.nutri_score))) }}
+                {{ nutriScoreGrade ? getNutriScoreDescription(nutriScoreGrade) : 'Nutri-Score is not available for this recipe yet.' }}
               </p>
               <button
+                v-if="nutriBreakdown"
                 type="button"
                 @click="showNutriScoreDetails = true"
                 class="mt-5 inline-flex items-center gap-2 text-sm font-medium text-brandg-700 dark:text-brandg-300 hover:text-brandg-800 dark:hover:text-brandg-200"
@@ -617,7 +624,7 @@
                 </p>
               </div>
               <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                {{ getNutriScoreGrade(toNumber(recipe?.nutri_score)) }}
+                {{ nutriScoreGrade || 'N/A' }}
               </span>
             </div>
 
@@ -743,6 +750,7 @@ const showProfilingDetails = ref(false)
 const profilingLoading = ref(false)
 const profilingError = ref<string | null>(null)
 const profilingResult = ref<RecipeProfileResult | null>(null)
+const imageLoadFailed = ref(false)
 
 type NutriPointItem = {
   points: number
@@ -775,12 +783,30 @@ const recipeId = computed(() => {
     return raw
   }
 })
+const normalizeRecipeImageUrl = (url?: string | null): string | null => {
+  const normalized = String(url || '').trim()
+  if (!normalized) return null
+  if (normalized.startsWith('http://')) {
+    return `https://${normalized.slice('http://'.length)}`
+  }
+  return normalized
+}
 const recipe = computed(() => currentRecipe.value)
+const recipeImageUrl = computed(() => {
+  const imageUrl = normalizeRecipeImageUrl(recipe.value?.image_url)
+  if (!imageUrl || imageLoadFailed.value) return null
+  return imageUrl
+})
 const isFavorite = computed(() => recipe.value ? recipeStore.isFavorite(recipe.value.recipe_id) : false)
 const nutriBreakdown = computed<NutriBreakdown | null>(() => {
   const raw = recipe.value?.nutri_score_breakdown
   if (!raw || typeof raw !== 'object') return null
   return raw as NutriBreakdown
+})
+const nutriScoreGrade = computed(() => {
+  const score = recipe.value?.nutri_score
+  if (score === null || score === undefined || score === '') return null
+  return getNutriScoreGrade(toNumber(score))
 })
 const formatPer100 = (value: number, unit: string): string => {
   const safe = Number.isFinite(value) ? value : 0
@@ -1062,6 +1088,7 @@ const loadRecipe = async () => {
     checkedInstructions.value = {}
     showAllNutrients.value = false
     showNutriScoreDetails.value = false
+    imageLoadFailed.value = false
 
     await fetchRecipe(recipeId.value)
     if (recipe.value) {
@@ -1259,8 +1286,8 @@ const getNutriScoreTooltip = (grade: string): string => {
 }
 
 const handleImageError = (event: Event) => {
-  const target = event.target as HTMLImageElement
-  target.style.display = 'none'
+  event.preventDefault()
+  imageLoadFailed.value = true
 }
 
 // ============================================================================

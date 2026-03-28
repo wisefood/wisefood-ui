@@ -42,39 +42,41 @@ export interface RecipeNutritionProfilingDetail {
 export interface Recipe {
   recipe_id: string
   title: string
-  source?: string
+  source?: string | null
   image_url: string | null
-  tags?: string[]
+  tags?: Array<string | null> | null
   ingredients: RecipeIngredient[]
   instructions: string[]
   duration: number | null
   serves: number | null
-  total_kcal_per_serving: number
-  total_protein_g_per_serving: number
-  total_carbs_g_per_serving: number
-  total_fat_g_per_serving: number
-  total_fiber_g_per_serving: number
-  total_sugar_g_per_serving: number
-  total_sodium_mg_per_serving: number
-  total_cholesterol_mg_per_serving: number
+  total_kcal_per_serving: number | null
+  total_protein_g_per_serving: number | null
+  total_carbs_g_per_serving: number | null
+  total_fat_g_per_serving: number | null
+  total_fiber_g_per_serving: number | null
+  total_sugar_g_per_serving: number | null
+  total_sodium_mg_per_serving: number | null
+  total_cholesterol_mg_per_serving: number | null
   total_nutrients?: Record<string, unknown> | null
   total_nutrients_per_serving?: Record<string, unknown> | null
-  nutri_score: number
+  nutri_score: number | null
+  nutri_score_raw?: string | null
   nutri_score_breakdown?: Record<string, unknown> | null
-  nutrients?: RecipeNutrient[]
-  nutrition_profiling_details?: RecipeNutritionProfilingDetail[]
-  nutrition_profiling_debug?: Record<string, unknown>
+  nutrition_source?: string | null
+  nutrients?: RecipeNutrient[] | null
+  nutrition_profiling_details?: RecipeNutritionProfilingDetail[] | null
+  nutrition_profiling_debug?: Record<string, unknown> | null
 }
 
 export interface RecipeSearchResult {
   recipe_id?: string
   id?: string
   title: string
-  source?: string
+  source?: string | null
   image_url: string | null
-  duration?: number
-  serves?: number
-  nutri_score?: number
+  duration?: number | null
+  serves?: number | null
+  nutri_score?: number | null
 }
 
 export interface RecipeSearchParams {
@@ -280,12 +282,25 @@ class RecipeApiService {
    */
   async searchRecipes(params: RecipeSearchParams): Promise<RecipeSearchResult[]> {
     try {
+      const normalizedQuestion = String(params.question || '').trim()
+
+      if (normalizedQuestion.length === 0) {
+        const paramSearchParams: RecipeParamSearchParams = {}
+        if (params.exclude_allergens?.length) {
+          paramSearchParams.exclude_allergens = params.exclude_allergens
+        }
+        return await this.searchRecipesByParams(paramSearchParams)
+      }
+
       const transport = this.resolveTransport()
       // Use extended timeout for search (AI processing can be slow)
       const data = await this.fetchWithTimeout<RecipeSearchPayload>(
         `${this.getRecipeBasePath(transport)}/search`,
         'POST',
-        params,
+        {
+          ...params,
+          question: normalizedQuestion
+        },
         SEARCH_TIMEOUT,
         transport
       )

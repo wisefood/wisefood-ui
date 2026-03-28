@@ -6,8 +6,8 @@
     <!-- Image Container -->
     <div class="relative aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700">
       <img
-        v-if="recipe.image_url && !imageLoadFailed"
-        :src="recipe.image_url"
+        v-if="recipeImageUrl"
+        :src="recipeImageUrl"
         :alt="recipe.title"
         class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         loading="lazy"
@@ -72,7 +72,7 @@
 
       <!-- Nutri-Score Badge -->
       <div
-        v-if="recipe.nutri_score !== undefined"
+        v-if="recipe.nutri_score !== undefined && recipe.nutri_score !== null"
         class="absolute bottom-3 right-3 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-lg shadow-lg p-2"
       >
         <div class="flex gap-0.5 items-center">
@@ -161,8 +161,20 @@ const imageLoadFailed = ref(false)
 // Computed
 // ============================================================================
 const effectiveRecipeId = computed(() => props.recipe.recipe_id || props.recipe.id || '')
+const recipeImageUrl = computed(() => {
+  const imageUrl = String(props.recipe.image_url || '').trim()
+  if (!imageUrl || imageLoadFailed.value) return null
+  if (imageUrl.startsWith('http://')) {
+    return `https://${imageUrl.slice('http://'.length)}`
+  }
+  return imageUrl
+})
 const isFavorite = computed(() => effectiveRecipeId.value ? recipeStore.isFavorite(effectiveRecipeId.value) : false)
 const isInCompare = computed(() => effectiveRecipeId.value ? recipeStore.isInCompareList(effectiveRecipeId.value) : false)
+
+watch(() => effectiveRecipeId.value, () => {
+  imageLoadFailed.value = false
+})
 
 // ============================================================================
 // Methods

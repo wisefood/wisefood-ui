@@ -36,6 +36,32 @@ export function useRecipes() {
   // Methods
   // ============================================================================
 
+  const mergeRecipeSummary = (recipeStub: RecipeSearchResult, full: Recipe) => {
+    recipeStub.recipe_id = recipeStub.recipe_id || full.recipe_id
+    recipeStub.id = recipeStub.id || full.recipe_id
+    recipeStub.title = recipeStub.title || full.title
+
+    if (!recipeStub.source && full.source) {
+      recipeStub.source = full.source
+    }
+
+    if (!recipeStub.image_url && full.image_url) {
+      recipeStub.image_url = full.image_url
+    }
+
+    if (recipeStub.duration === undefined && typeof full.duration === 'number') {
+      recipeStub.duration = full.duration
+    }
+
+    if (recipeStub.serves === undefined && typeof full.serves === 'number') {
+      recipeStub.serves = full.serves
+    }
+
+    if (recipeStub.nutri_score === undefined && typeof full.nutri_score === 'number') {
+      recipeStub.nutri_score = full.nutri_score
+    }
+  }
+
   const hydrateImageUrls = async (results: RecipeSearchResult[], maxToHydrate: number = 20) => {
     if (!import.meta.client) return
 
@@ -56,18 +82,21 @@ export function useRecipes() {
         if (index >= missing.length) return
 
         const recipeStub = missing[index]
+        if (!recipeStub) return
+
+        const recipeId = recipeStub.recipe_id || recipeStub.id
+        if (!recipeId) continue
+
         try {
-          const cached = recipeStore.getCachedRecipe(recipeStub.recipe_id)
-          if (cached?.image_url) {
-            recipeStub.image_url = cached.image_url
+          const cached = recipeStore.getCachedRecipe(recipeId)
+          if (cached) {
+            mergeRecipeSummary(recipeStub, cached)
             continue
           }
 
-          const full = await recipeApi.getRecipe(recipeStub.recipe_id)
+          const full = await recipeApi.getRecipe(recipeId)
           recipeStore.cacheRecipe(full)
-          if (full.image_url) {
-            recipeStub.image_url = full.image_url
-          }
+          mergeRecipeSummary(recipeStub, full)
         } catch {
           // Best-effort only: leave placeholder if a given image can't be hydrated.
         }
@@ -104,14 +133,15 @@ export function useRecipes() {
    */
   const searchRecipes = async (params: RecipeSearchParams, useCache = true) => {
     error.value = null
-    lastSearchQuery.value = params.question
+    const normalizedQuestion = String(params.question || '').trim()
+    lastSearchQuery.value = normalizedQuestion
 
     // Check cache first if enabled
     if (useCache && import.meta.client) {
       const { useRecipeStore } = await import('~/stores/recipe')
       const recipeStore = useRecipeStore()
       const cachedResults = recipeStore.getCachedSearch(
-        params.question,
+        normalizedQuestion,
         params.exclude_allergens || []
       )
 
@@ -125,17 +155,20 @@ export function useRecipes() {
     loading.value = true
 
     try {
-      const results = await recipeApi.searchRecipes(params)
+      const results = await recipeApi.searchRecipes({
+        ...params,
+        question: normalizedQuestion
+      })
       recipes.value = results
       totalResults.value = results.length
-      void hydrateImageUrls(results)
+      void hydrateImageUrls(results, normalizedQuestion.length === 0 ? results.length : 20)
 
       // Cache the results
       if (import.meta.client) {
         const { useRecipeStore } = await import('~/stores/recipe')
         const recipeStore = useRecipeStore()
         recipeStore.cacheSearchResults(
-          params.question,
+          normalizedQuestion,
           params.exclude_allergens || [],
           results
         )
