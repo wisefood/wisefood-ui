@@ -1,14 +1,33 @@
 const DEFAULT_WISEFOOD_API_URL = 'https://wisefood.gr/dc/api'
 const DEFAULT_WISEFOOD_REST_API_URL = 'https://wisefood.gr/rest/api/v1'
+const DEFAULT_RECIPE_WRANGLER_MODE = 'auto'
+
+export type RecipeWranglerMode = 'auto' | 'local' | 'rest'
 
 interface RuntimeConfigWindow extends Window {
   __RUNTIME_CONFIG__?: {
     wisefoodApiUrl?: string
     wisefoodRestApiUrl?: string
+    recipeWranglerApiUrl?: string
+    recipeWranglerMode?: string
   }
 }
 
 const normalizeBaseUrl = (url: string): string => url.replace(/\/+$/, '')
+
+const normalizeRecipeWranglerMode = (mode?: string | null): RecipeWranglerMode => {
+  const normalized = String(mode || '').trim().toLowerCase()
+
+  if (['local', 'proxy', 'local-proxy'].includes(normalized)) {
+    return 'local'
+  }
+
+  if (['rest', 'wisefood-rest', 'remote', 'production'].includes(normalized)) {
+    return 'rest'
+  }
+
+  return 'auto'
+}
 
 const getWindowRuntimeConfig = () => {
   if (typeof window === 'undefined') return null
@@ -27,4 +46,11 @@ export const getWisefoodRestApiUrl = (): string => {
   const config = useRuntimeConfig()
   const url = runtimeConfig?.wisefoodRestApiUrl || (config.public.wisefoodRestApiUrl as string) || DEFAULT_WISEFOOD_REST_API_URL
   return normalizeBaseUrl(url)
+}
+
+export const getRecipeWranglerMode = (): RecipeWranglerMode => {
+  const runtimeConfig = getWindowRuntimeConfig()
+  const config = useRuntimeConfig()
+  const mode = runtimeConfig?.recipeWranglerMode || (config.public.recipeWranglerMode as string) || DEFAULT_RECIPE_WRANGLER_MODE
+  return normalizeRecipeWranglerMode(mode)
 }

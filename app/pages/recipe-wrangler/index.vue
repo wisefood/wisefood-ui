@@ -537,9 +537,12 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRecipes } from '~/composables/useRecipes'
 import { useRecipeStore } from '~/stores/recipe'
+import { useI18n } from 'vue-i18n'
 import { useHouseholdStore } from '~/stores/household'
 import recipeApi from '~/services/recipeApi'
 import type { PipelineTraceWeightDetail, RecipeProfileResult } from '~/services/recipeApi'
+
+const { t } = useI18n()
 
 definePageMeta({
   middleware: ['auth']

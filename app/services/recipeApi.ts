@@ -1,5 +1,5 @@
 import { useAuthStore } from '~/stores/auth'
-import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
+import { getRecipeWranglerMode, getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 
 // ============================================================================
 // Timeout Configuration
@@ -115,6 +115,13 @@ export interface ApiError {
   code?: string
 }
 
+interface RecipeRequestErrorLike {
+  name?: string
+  message?: string
+  status?: number
+  code?: string
+}
+
 export interface PipelineTraceWeightDetail {
   name?: string
   measurement_raw?: string
@@ -163,12 +170,16 @@ export interface RecipeProfileResult {
   message?: string
 }
 
+type RecipeSearchPayload = RecipeSearchResult[] | { results?: RecipeSearchResult[] } | null | undefined
+type RecipeApiTransport = 'local-proxy' | 'wisefood-rest'
+
 // ============================================================================
 // RecipeWrangler API Service
 // ============================================================================
 
 class RecipeApiService {
-  private readonly basePath = '/recipes'
+  private readonly localBasePath = '/recipes'
+  private readonly restBasePath = '/recipewrangler/recipes'
 
   private async ensureAuthToken(authStore: ReturnType<typeof useAuthStore>): Promise<string> {
     let token = authStore.getToken()
@@ -192,14 +203,45 @@ class RecipeApiService {
     return token
   }
 
-  private getRecipeApiBaseUrl(): string {
-    // In local dev, use Nuxt proxy so browser only needs port 3000 and can
-    // still reach a locally running Recipe Wrangler container.
+  private resolveTransport(): RecipeApiTransport {
+    const mode = getRecipeWranglerMode()
+
+    if (mode === 'local') {
+      return 'local-proxy'
+    }
+
+    if (mode === 'rest') {
+      return 'wisefood-rest'
+    }
+
+    // Default behavior:
+    // - local dev uses the Nuxt proxy to reach a local Recipe Wrangler instance
+    // - production uses WiseFood REST endpoints
     if (import.meta.dev) {
+      return 'local-proxy'
+    }
+
+    return 'wisefood-rest'
+  }
+
+  private getRecipeApiBaseUrl(transport: RecipeApiTransport): string {
+    if (transport === 'local-proxy') {
       return '/api/rw'
     }
 
     return getWisefoodRestApiUrl()
+  }
+
+  private getRecipeBasePath(transport: RecipeApiTransport): string {
+    return transport === 'local-proxy' ? this.localBasePath : this.restBasePath
+  }
+
+  private getRecipeEndpoint(recipeId: string, transport: RecipeApiTransport): string {
+    if (transport === 'local-proxy') {
+      return `${this.localBasePath}/by-id?recipe_id=${encodeURIComponent(recipeId)}`
+    }
+
+    return `${this.restBasePath}/${encodeURIComponent(recipeId)}`
   }
 
   /**
@@ -216,12 +258,14 @@ class RecipeApiService {
       } catch {
         normalizedId = rawId
       }
+      const transport = this.resolveTransport()
       // Use longer timeout for recipe details
       const data = await this.fetchWithTimeout<Recipe>(
-        `${this.basePath}/by-id?recipe_id=${encodeURIComponent(normalizedId)}`,
+        this.getRecipeEndpoint(normalizedId, transport),
         'GET',
         undefined,
-        DEFAULT_TIMEOUT
+        DEFAULT_TIMEOUT,
+        transport
       )
       return data
     } catch (error) {
@@ -236,17 +280,39 @@ class RecipeApiService {
    */
   async searchRecipes(params: RecipeSearchParams): Promise<RecipeSearchResult[]> {
     try {
+      const transport = this.resolveTransport()
       // Use extended timeout for search (AI processing can be slow)
-      const data = await this.fetchWithTimeout<{ results: RecipeSearchResult[] }>(
-        `${this.basePath}/search`,
+      const data = await this.fetchWithTimeout<RecipeSearchPayload>(
+        `${this.getRecipeBasePath(transport)}/search`,
         'POST',
         params,
-        SEARCH_TIMEOUT
+        SEARCH_TIMEOUT,
+        transport
       )
 
       return this.normalizeSearchResults(data)
     } catch (error) {
       throw this.handleError(error, 'Failed to search recipes')
+    }
+  }
+
+  /**
+   * Search for recipes using deterministic filters
+   */
+  async searchRecipesByParams(params: RecipeParamSearchParams): Promise<RecipeSearchResult[]> {
+    try {
+      const transport = this.resolveTransport()
+      const data = await this.fetchWithTimeout<RecipeSearchPayload>(
+        `${this.getRecipeBasePath(transport)}/param_search`,
+        'POST',
+        params,
+        SEARCH_TIMEOUT,
+        transport
+      )
+
+      return this.normalizeSearchResults(data)
+    } catch (error) {
+      throw this.handleError(error, 'Failed to search recipes with filters')
     }
   }
 
@@ -259,11 +325,13 @@ class RecipeApiService {
 
     try {
       const safeLimit = Math.min(20, Math.max(1, limit))
+      const transport = this.resolveTransport()
       const data = await this.fetchWithTimeout<RecipeAutocompleteResponse>(
-        `${this.basePath}/autocomplete?q=${encodeURIComponent(normalizedQuery)}&limit=${safeLimit}`,
+        `${this.getRecipeBasePath(transport)}/autocomplete?q=${encodeURIComponent(normalizedQuery)}&limit=${safeLimit}`,
         'GET',
         undefined,
-        DEFAULT_TIMEOUT
+        DEFAULT_TIMEOUT,
+        transport
       )
       return Array.isArray(data?.suggestions) ? data.suggestions : []
     } catch (error) {
@@ -340,11 +408,13 @@ class RecipeApiService {
       ? normalizedRegion
       : 'US'
     try {
+      const transport = this.resolveTransport()
       return await this.fetchWithTimeout<RecipeProfileResult>(
-        `${this.basePath}/profile`,
+        `${this.getRecipeBasePath(transport)}/profile`,
         'POST',
         { raw_recipe: rawRecipe, region: safeRegion },
-        PROFILE_TIMEOUT
+        PROFILE_TIMEOUT,
+        transport
       )
     } catch (error) {
       throw this.handleError(error, 'Failed to analyze recipe')
@@ -359,9 +429,10 @@ class RecipeApiService {
     endpoint: string,
     method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     data?: unknown,
-    timeoutMs: number = DEFAULT_TIMEOUT
+    timeoutMs: number = DEFAULT_TIMEOUT,
+    transport: RecipeApiTransport = this.resolveTransport()
   ): Promise<T> {
-    const baseUrl = this.getRecipeApiBaseUrl()
+    const baseUrl = this.getRecipeApiBaseUrl(transport)
     const url = `${baseUrl}${endpoint}`
 
     const authStore = useAuthStore()
@@ -434,12 +505,12 @@ class RecipeApiService {
         return json.result as T
       }
       return json as T
-
-    } catch (error: any) {
+    } catch (error: unknown) {
       clearTimeout(timeoutId)
+      const requestError = error as RecipeRequestErrorLike
 
       // Handle abort/timeout errors
-      if (error.name === 'AbortError') {
+      if (requestError.name === 'AbortError') {
         throw {
           message: `Request timeout after ${timeoutMs / 1000} seconds. The search is taking longer than expected. Please try again or simplify your query.`,
           status: 408,
@@ -454,18 +525,19 @@ class RecipeApiService {
   /**
    * Error handler with consistent error formatting
    */
-  private handleError(error: any, defaultMessage: string): ApiError {
+  private handleError(error: unknown, defaultMessage: string): ApiError {
+    const requestError = error as RecipeRequestErrorLike
     const apiError: ApiError = {
       message: defaultMessage,
-      status: error?.status || 500
+      status: requestError.status || 500
     }
 
-    if (error?.message) {
-      apiError.message = error.message
+    if (requestError.message) {
+      apiError.message = requestError.message
     }
 
-    if (error?.code) {
-      apiError.code = error.code
+    if (requestError.code) {
+      apiError.code = requestError.code
     }
 
     return apiError
