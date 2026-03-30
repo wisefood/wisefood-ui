@@ -30,17 +30,10 @@
               >
                 <UIcon
                   :name="asset.icon"
-                  class="w-5"
+                  class="w-6 h-5"
                   :class="asset.available ? asset.iconClass : 'text-gray-500 dark:text-gray-400'"
                 />
               </div>
-
-              <UBadge
-                :color="asset.available ? 'primary' : 'neutral'"
-                :variant="asset.available ? 'soft' : 'outline'"
-              >
-                {{ asset.available ? 'LIVE' : 'INOP' }}
-              </UBadge>
             </div>
 
             <div class="mt-4">
