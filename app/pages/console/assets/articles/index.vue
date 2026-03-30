@@ -327,146 +327,109 @@
               :title="createError"
             />
 
-            <div class="grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(16rem,0.9fr)]">
-              <div class="space-y-4">
-                <UFormField
-                  label="Article Title"
-                  required
-                >
-                  <UInput
-                    v-model="createForm.title"
-                    placeholder="e.g. Mediterranean diet and cardiovascular outcomes"
-                    class="w-full"
-                  />
-                </UFormField>
+            <div class="space-y-4">
+              <UFormField
+                label="Article Title"
+                required
+              >
+                <UInput
+                  v-model="createForm.title"
+                  placeholder="e.g. Mediterranean diet and cardiovascular outcomes"
+                  class="w-full"
+                />
+              </UFormField>
 
-                <UFormField
-                  label="URN"
-                  required
-                >
-                  <UInput
-                    v-model="createForm.urn"
-                    placeholder="e.g. mediterranean-diet-cardiovascular-outcomes"
-                    class="w-full"
-                    @update:model-value="markCreateUrnAsEdited"
-                  />
-                  <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
-                    Lowercase slug used by the catalog API. It auto-generates from the title until you edit it manually.
-                  </p>
-                </UFormField>
+              <UFormField
+                label="URN"
+                required
+              >
+                <UInput
+                  v-model="createForm.urn"
+                  placeholder="e.g. mediterranean-diet-cardiovascular-outcomes"
+                  class="w-full"
+                  @update:model-value="markCreateUrnAsEdited"
+                />
+                <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                  Lowercase slug used by the catalog API. It auto-generates from the title until you edit it manually.
+                </p>
+              </UFormField>
 
-                <div class="grid gap-4 sm:grid-cols-2">
-                  <UFormField
-                    label="Venue"
-                    required
-                  >
-                    <UInput
-                      v-model="createForm.venue"
-                      placeholder="e.g. The Lancet"
-                      class="w-full"
-                    />
-                  </UFormField>
+              <UFormField
+                label="Venue"
+                required
+              >
+                <UInput
+                  v-model="createForm.venue"
+                  placeholder="e.g. The Lancet"
+                  class="w-full"
+                />
+              </UFormField>
 
-                  <UFormField label="Publication Year">
-                    <UInput
-                      v-model="createForm.publicationYear"
-                      type="number"
-                      placeholder="e.g. 2022"
-                      class="w-full"
-                    />
-                  </UFormField>
-                </div>
+              <UFormField label="Publication Year">
+                <UInput
+                  v-model="createForm.publicationYear"
+                  type="number"
+                  placeholder="e.g. 2022"
+                  class="w-full"
+                />
+              </UFormField>
 
-                <UFormField
-                  label="Authors"
-                  required
-                >
-                  <UTextarea
-                    v-model="createForm.authors"
-                    :rows="4"
-                    placeholder="One author per line, or separate them with commas"
-                    class="w-full"
-                  />
-                </UFormField>
+              <UFormField
+                label="Authors"
+                required
+              >
+                <UTextarea
+                  v-model="createForm.authors"
+                  :rows="4"
+                  placeholder="One author per line, or separate them with commas"
+                  class="w-full"
+                />
+              </UFormField>
 
-                <div class="grid gap-4 sm:grid-cols-2">
-                  <UFormField label="Canonical URL">
-                    <UInput
-                      v-model="createForm.url"
-                      placeholder="https://..."
-                      class="w-full"
-                    />
-                  </UFormField>
+              <UFormField
+                label="Abstract"
+                required
+              >
+                <UTextarea
+                  v-model="createForm.abstract"
+                  :rows="5"
+                  placeholder="Add the article abstract to seed the record"
+                  class="w-full"
+                />
+              </UFormField>
 
-                  <UFormField label="Category">
-                    <UInput
-                      v-model="createForm.category"
-                      placeholder="e.g. Cardiometabolic Health"
-                      class="w-full"
-                    />
-                  </UFormField>
-                </div>
+              <UFormField label="Canonical URL">
+                <UInput
+                  v-model="createForm.url"
+                  placeholder="https://..."
+                  class="w-full"
+                />
+              </UFormField>
 
-                <UFormField label="Tags">
-                  <UInput
-                    v-model="createForm.tags"
-                    placeholder="Comma-separated"
-                    class="w-full"
-                  />
-                </UFormField>
+              <UFormField label="Category">
+                <UInput
+                  v-model="createForm.category"
+                  placeholder="e.g. Cardiometabolic Health"
+                  class="w-full"
+                />
+              </UFormField>
 
-                <UFormField label="Abstract">
-                  <UTextarea
-                    v-model="createForm.abstract"
-                    :rows="4"
-                    placeholder="Optional short summary to seed the record"
-                    class="w-full"
-                  />
-                </UFormField>
+              <UFormField label="Tags">
+                <UInput
+                  v-model="createForm.tags"
+                  placeholder="Comma-separated"
+                  class="w-full"
+                />
+              </UFormField>
 
-                <UFormField
-                  label="Body Text"
-                  required
-                >
-                  <UTextarea
-                    v-model="createForm.content"
-                    :rows="8"
-                    placeholder="Paste the abstract, notes, or source body you want to curate first"
-                    class="w-full"
-                  />
-                </UFormField>
-              </div>
-
-              <div class="space-y-4">
-                <div class="rounded-2xl border border-gray-200/80 bg-gray-50/80 p-5 dark:border-white/10 dark:bg-white/5">
-                  <dl class="space-y-3 text-sm">
-                    <div>
-                      <dt class="text-gray-500 dark:text-gray-400">
-                        Workspace Route
-                      </dt>
-                      <dd class="mt-1 break-all font-medium text-gray-900 dark:text-white">
-                        {{ createWorkspaceRoutePreview }}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt class="text-gray-500 dark:text-gray-400">
-                        Initial Editorial Focus
-                      </dt>
-                      <dd class="mt-1 font-medium text-gray-900 dark:text-white">
-                        Classification, audience, and content curation
-                      </dd>
-                    </div>
-                    <div>
-                      <dt class="text-gray-500 dark:text-gray-400">
-                        Next Step
-                      </dt>
-                      <dd class="mt-1 font-medium text-gray-900 dark:text-white">
-                        You’ll land in the full article workspace right after creation.
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-              </div>
+              <UFormField label="Body Text">
+                <UTextarea
+                  v-model="createForm.content"
+                  :rows="8"
+                  placeholder="Optional source body or notes for the first curation pass"
+                  class="w-full"
+                />
+              </UFormField>
             </div>
           </div>
 
@@ -651,8 +614,6 @@ const paginationSummary = computed(() => {
   const end = Math.min(page.value * pageSize, totalArticles.value)
   return `Showing ${start}-${end} of ${totalArticles.value.toLocaleString()} articles`
 })
-
-const createWorkspaceRoutePreview = computed(() => buildArticleRoutePath(createForm.urn || slugifyArticleUrn(createForm.title)))
 
 function normalizeNullable(value: string) {
   const normalized = value.trim()
@@ -950,7 +911,8 @@ async function createArticleRecord() {
     const title = normalizeNullable(createForm.title)
     const urn = normalizeNullable(createForm.urn)
     const venue = normalizeNullable(createForm.venue)
-    const content = normalizeNullable(createForm.content)
+    const abstract = normalizeNullable(createForm.abstract)
+    const content = normalizeNullable(createForm.content) || abstract
     const authors = parseDelimitedList(createForm.authors)
 
     if (!title) {
@@ -969,8 +931,8 @@ async function createArticleRecord() {
       throw new Error('At least one author is required.')
     }
 
-    if (!content) {
-      throw new Error('Body text is required to bootstrap the article record.')
+    if (!abstract) {
+      throw new Error('Abstract is required to create the article record.')
     }
 
     const payload: CreateArticleRequest = {
@@ -978,8 +940,8 @@ async function createArticleRecord() {
       title,
       venue,
       authors,
-      content,
-      abstract: normalizeNullable(createForm.abstract) || undefined,
+      content: content || abstract,
+      abstract: abstract || undefined,
       url: normalizeNullable(createForm.url) || undefined,
       category: normalizeNullable(createForm.category) || undefined,
       tags: parseDelimitedList(createForm.tags),

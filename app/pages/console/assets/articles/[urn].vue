@@ -7,8 +7,8 @@
       />
 
       <UPageBody class="space-y-6">
-        <section class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-          <div class="min-w-0 space-y-3">
+        <section class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div class="min-w-0 space-y-4">
             <div class="flex flex-wrap items-center gap-2">
               <UBadge
                 :color="articleForm.category.trim() ? 'primary' : 'neutral'"
@@ -26,53 +26,123 @@
               </UBadge>
 
               <UBadge
-                :color="curationPreview.isComplete ? 'success' : 'warning'"
-                variant="soft"
-              >
-                {{ curationPreview.completeCount }}/{{ curationPreview.totalCount }} curated
-              </UBadge>
-
-              <UBadge
-                v-if="selectedArticle?.open_access !== null && selectedArticle?.open_access !== undefined"
-                :color="selectedArticle.open_access ? 'success' : 'neutral'"
+                v-if="articleForm.openAccess !== 'unknown'"
+                :color="articleForm.openAccess === 'true' ? 'success' : 'neutral'"
                 variant="outline"
               >
-                {{ selectedArticle.open_access ? 'Open access' : 'Closed access' }}
+                {{ articleForm.openAccess === 'true' ? 'Open access' : 'Closed access' }}
               </UBadge>
             </div>
 
-            <div class="flex flex-wrap items-start gap-3">
-              <h1 class="min-w-0 text-2xl font-semibold text-gray-900 dark:text-white sm:text-3xl">
-                {{ pageTitle }}
-              </h1>
-            </div>
+            <h1 class="min-w-0 text-2xl font-semibold text-gray-900 dark:text-white sm:text-3xl">
+              {{ pageTitle }}
+            </h1>
 
             <div
-              v-if="selectedArticle"
-              class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500 dark:text-gray-400"
+              v-if="headerAudienceItems.length || annotationConfidenceLabel"
+              class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400"
             >
               <div
-                v-for="item in articleMetadataItems"
+                v-for="item in headerAudienceItems"
                 :key="item.label"
-                class="flex min-w-0 items-center gap-1.5"
+                class="flex items-center gap-2"
               >
                 <UIcon
                   :name="item.icon"
                   class="h-4 w-4 shrink-0 text-brand-500 dark:text-brand-300"
                 />
-                <span class="truncate">{{ item.label }}</span>
+                <span>
+                  <strong>{{ item.label }}:</strong> {{ item.value }}
+                </span>
+              </div>
+
+              <UBadge
+                v-if="annotationConfidenceLabel"
+                color="primary"
+                variant="soft"
+                class="text-xs"
+              >
+                <UIcon
+                  name="i-lucide-badge-check"
+                  class="mr-1 h-3 w-3"
+                />
+                Confidence {{ annotationConfidenceLabel }}
+              </UBadge>
+            </div>
+
+            <div
+              v-if="headerPublicationItems.length"
+              class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400"
+            >
+              <div
+                v-for="item in headerPublicationItems"
+                :key="item.label"
+                class="flex items-center gap-2"
+              >
+                <template v-if="item.href">
+                  <a
+                    :href="item.href"
+                    :target="item.external ? '_blank' : undefined"
+                    :rel="item.external ? 'noopener noreferrer' : undefined"
+                    class="inline-flex items-center gap-1 text-brand-600 hover:underline dark:text-brand-400"
+                  >
+                    <UIcon
+                      :name="item.icon"
+                      class="h-4 w-4 shrink-0"
+                    />
+                    <span>{{ item.label }}</span>
+                  </a>
+                </template>
+                <template v-else>
+                  <UIcon
+                    :name="item.icon"
+                    class="h-4 w-4 shrink-0"
+                  />
+                  <span>{{ item.value }}</span>
+                </template>
               </div>
             </div>
 
-            <p
-              v-if="articleSummaryPreview"
-              class="max-w-4xl text-sm leading-6 text-gray-600 dark:text-gray-300"
+            <div
+              v-if="headerAuthors.length"
+              class="flex flex-wrap gap-2"
             >
-              {{ articleSummaryPreview }}
-            </p>
+              <span
+                v-for="author in headerAuthors"
+                :key="author"
+                class="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700 dark:bg-zinc-800 dark:text-gray-300"
+              >
+                {{ author }}
+              </span>
+            </div>
+
+            <div
+              v-if="headerSystemItems.length"
+              class="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400"
+            >
+              <div
+                v-for="item in headerSystemItems"
+                :key="item.label"
+                class="flex min-w-0 items-center gap-1.5"
+              >
+                <UIcon
+                  :name="item.icon"
+                  class="h-3.5 w-3.5 shrink-0 text-gray-400 dark:text-gray-500"
+                />
+                <span class="font-medium text-gray-600 dark:text-gray-300">
+                  {{ item.label }}:
+                </span>
+                <span class="min-w-0 max-w-[18rem] truncate">
+                  {{ item.value }}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div class="flex flex-wrap items-center justify-end gap-2 xl:max-w-lg">
+          <div
+            ref="mainSaveActionsRef"
+            class="flex flex-wrap items-center justify-end gap-2 xl:max-w-sm"
+          >
             <UButton
               color="neutral"
               variant="outline"
@@ -102,7 +172,19 @@
               Save Changes
             </UButton>
 
-            <p class="basis-full text-right text-xs text-gray-500 dark:text-gray-400">
+            <div class="flex basis-full justify-end">
+              <UBadge
+                :color="saveStatus.color"
+                variant="soft"
+              >
+                {{ saveStatus.label }}
+              </UBadge>
+            </div>
+
+            <p
+              v-if="saveReadinessLabel"
+              class="basis-full text-right text-xs text-gray-500 dark:text-gray-400"
+            >
               {{ saveReadinessLabel }}
             </p>
           </div>
@@ -139,70 +221,312 @@
           >
             <div class="space-y-4">
               <div class="h-8 w-1/3 animate-pulse rounded bg-gray-200 dark:bg-white/10" />
-              <div class="grid gap-4 xl:grid-cols-[minmax(0,1.8fr)_minmax(18rem,0.9fr)]">
-                <div class="h-[34rem] animate-pulse rounded-2xl bg-gray-200 dark:bg-white/10" />
-                <div class="h-[24rem] animate-pulse rounded-2xl bg-gray-200 dark:bg-white/10" />
+              <div class="grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(19rem,0.95fr)]">
+                <div class="h-[38rem] animate-pulse rounded-2xl bg-gray-200 dark:bg-white/10" />
+                <div class="h-[28rem] animate-pulse rounded-2xl bg-gray-200 dark:bg-white/10" />
               </div>
             </div>
           </UCard>
         </template>
 
         <template v-else-if="selectedArticle">
-          <div class="rounded-2xl border border-gray-200/80 bg-gradient-to-r from-white via-white to-brand-50/60 px-5 py-4 shadow-sm dark:border-white/10 dark:from-zinc-900/80 dark:via-zinc-900/80 dark:to-brand-500/10">
-            <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <div class="flex items-center gap-2">
-                  <UIcon
-                    name="i-lucide-file-pen-line"
-                    class="h-4 w-4 text-brand-600 dark:text-brand-300"
-                  />
-                  <p class="text-sm font-semibold text-gray-900 dark:text-white">
-                    Editorial Workspace
-                  </p>
-                </div>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                  Work through the record in-place, compare AI-enriched signals in the side rail, and keep the main article form visible while you curate.
-                </p>
-              </div>
-
-              <UBadge
-                :color="hasUnsavedChanges ? 'warning' : 'success'"
-                variant="soft"
-              >
-                {{ hasUnsavedChanges ? 'Unsaved changes' : 'All changes saved' }}
-              </UBadge>
-            </div>
-          </div>
-
-          <div class="grid gap-6 xl:grid-cols-[minmax(0,1.8fr)_minmax(18rem,0.9fr)]">
+          <div class="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(19rem,0.95fr)]">
             <div class="space-y-6">
               <UCard
                 :ui="{ body: 'p-5 sm:p-6' }"
                 class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
               >
                 <template #header>
-                  <div>
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-                      Editorial Overview
-                    </h2>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Shape how the article reads in the catalog before diving into the denser classification metadata.
-                    </p>
-                  </div>
+                  <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    Article
+                  </h2>
                 </template>
 
-                <div class="space-y-4">
-                  <div class="grid gap-4 sm:grid-cols-2">
-                    <UFormField
-                      label="Title"
-                      required
-                    >
-                      <UInput
-                        v-model="articleForm.title"
+                <div class="space-y-5">
+                  <UFormField
+                    label="Title"
+                    required
+                  >
+                    <UInput
+                      v-model="articleForm.title"
+                      class="w-full"
+                    />
+                  </UFormField>
+
+                  <UFormField label="Authors">
+                    <UTextarea
+                      v-model="articleForm.authors"
+                      :rows="4"
+                      placeholder="One author per line, or separate them with commas"
+                      class="w-full"
+                    />
+                  </UFormField>
+
+                  <UFormField label="Abstract">
+                    <UTextarea
+                      v-model="articleForm.abstract"
+                      :rows="8"
+                      placeholder="Add the curator-approved abstract for the article"
+                      class="w-full"
+                    />
+                  </UFormField>
+                </div>
+              </UCard>
+
+              <UCard
+                :ui="{ body: 'p-5 sm:p-6' }"
+                class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
+              >
+                <template #header>
+                  <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    Curation
+                  </h2>
+                </template>
+
+                <div class="space-y-6">
+                  <section class="space-y-4">
+                    <div class="flex items-center gap-2">
+                      <UIcon
+                        name="i-lucide-compass"
+                        class="h-4 w-4 text-brand-500 dark:text-brand-300"
+                      />
+                      <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
+                        Positioning
+                      </h3>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2">
+                      <UFormField label="Category">
+                        <UInputMenu
+                          v-model="articleForm.category"
+                          :items="categoryOptions"
+                          create-item="always"
+                          leading
+                          leading-icon="i-lucide-layers-3"
+                          placeholder="Select or type and press Enter"
+                          class="w-full"
+                          @create="articleForm.category = String($event).trim()"
+                        />
+                      </UFormField>
+
+                      <UFormField label="Study Type">
+                        <UInputMenu
+                          v-model="articleForm.studyType"
+                          :items="studyTypeOptions"
+                          create-item="always"
+                          leading
+                          leading-icon="i-lucide-flask-conical"
+                          placeholder="Select or type and press Enter"
+                          class="w-full"
+                          @create="articleForm.studyType = String($event).trim()"
+                        />
+                      </UFormField>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-3">
+                      <UFormField label="Reader Group">
+                        <UInputMenu
+                          v-model="articleForm.readerGroup"
+                          :items="readerGroupOptions"
+                          create-item="always"
+                          leading
+                          leading-icon="i-lucide-users"
+                          placeholder="Select or type and press Enter"
+                          class="w-full"
+                          @create="articleForm.readerGroup = String($event).trim()"
+                        />
+                      </UFormField>
+
+                      <UFormField label="Age Group">
+                        <UInputMenu
+                          v-model="articleForm.ageGroup"
+                          :items="ageGroupOptions"
+                          create-item="always"
+                          leading
+                          leading-icon="i-lucide-baby"
+                          placeholder="Select or type and press Enter"
+                          class="w-full"
+                          @create="articleForm.ageGroup = String($event).trim()"
+                        />
+                      </UFormField>
+
+                      <UFormField label="Population Group">
+                        <UInputMenu
+                          v-model="articleForm.populationGroup"
+                          :items="populationGroupOptions"
+                          create-item="always"
+                          leading
+                          leading-icon="i-lucide-users"
+                          placeholder="Select or type and press Enter"
+                          class="w-full"
+                          @create="articleForm.populationGroup = String($event).trim()"
+                        />
+                      </UFormField>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-3">
+                      <UFormField label="Biological Model">
+                        <UInputMenu
+                          v-model="articleForm.biologicalModel"
+                          :items="biologicalModelOptions"
+                          create-item="always"
+                          leading
+                          leading-icon="i-lucide-dna"
+                          placeholder="Select or type and press Enter"
+                          class="w-full"
+                          @create="articleForm.biologicalModel = String($event).trim()"
+                        />
+                      </UFormField>
+
+                      <UFormField label="Region">
+                        <UInputMenu
+                          v-model="articleForm.region"
+                          :items="regionOptions"
+                          create-item="always"
+                          leading
+                          leading-icon="i-lucide-globe"
+                          placeholder="Select or type and press Enter"
+                          class="w-full"
+                          @create="articleForm.region = String($event).trim()"
+                        />
+                      </UFormField>
+
+                      <UFormField label="Language">
+                        <UInputMenu
+                          v-model="articleForm.language"
+                          :items="languageOptions"
+                          value-key="value"
+                          label-key="label"
+                          create-item="always"
+                          leading
+                          leading-icon="i-lucide-languages"
+                          placeholder="Select or type and press Enter"
+                          class="w-full"
+                          @create="articleForm.language = String($event).trim()"
+                        />
+                      </UFormField>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2">
+                      <UFormField label="Country / Region Context">
+                        <UInput
+                          v-model="articleForm.countryOrRegion"
+                          placeholder="e.g. United Kingdom"
+                          class="w-full"
+                        />
+                      </UFormField>
+
+                      <UFormField label="Income Setting">
+                        <UInputMenu
+                          v-model="articleForm.incomeSetting"
+                          :items="incomeSettingOptions"
+                          create-item="always"
+                          leading
+                          leading-icon="i-lucide-briefcase"
+                          placeholder="Select or type and press Enter"
+                          class="w-full"
+                          @create="articleForm.incomeSetting = String($event).trim()"
+                        />
+                      </UFormField>
+                    </div>
+                  </section>
+
+                  <section class="space-y-4 border-t border-gray-200/80 pt-6 dark:border-white/10">
+                    <div class="flex items-center gap-2">
+                      <UIcon
+                        name="i-lucide-tags"
+                        class="h-4 w-4 text-brand-500 dark:text-brand-300"
+                      />
+                      <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
+                        Discoverability
+                      </h3>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2">
+                      <UFormField label="Tags">
+                        <UTextarea
+                          v-model="articleForm.tags"
+                          :rows="4"
+                          placeholder="Comma-separated or one tag per line"
+                          class="w-full"
+                        />
+                      </UFormField>
+
+                      <UFormField label="Topics">
+                        <UTextarea
+                          v-model="articleForm.topics"
+                          :rows="4"
+                          placeholder="Comma-separated or one topic per line"
+                          class="w-full"
+                        />
+                      </UFormField>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2">
+                      <UFormField label="Keywords">
+                        <UTextarea
+                          v-model="articleForm.keywords"
+                          :rows="4"
+                          placeholder="Comma-separated or one keyword per line"
+                          class="w-full"
+                        />
+                      </UFormField>
+
+                      <UFormField label="Exclusion Flags">
+                        <UTextarea
+                          v-model="articleForm.hardExclusionFlags"
+                          :rows="4"
+                          placeholder="Comma-separated or one flag per line"
+                          class="w-full"
+                        />
+                      </UFormField>
+                    </div>
+
+                    <UFormField label="Curator Takeaways">
+                      <UTextarea
+                        v-model="articleForm.keyTakeaways"
+                        :rows="5"
+                        placeholder="Prefer one takeaway per line"
                         class="w-full"
                       />
                     </UFormField>
+                  </section>
+                </div>
+              </UCard>
 
+              <UCard
+                :ui="{ body: 'p-5 sm:p-6' }"
+                class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
+              >
+                <template #header>
+                  <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    Body
+                  </h2>
+                </template>
+
+                <UFormField label="Article Body">
+                  <UTextarea
+                    v-model="articleForm.content"
+                    :rows="24"
+                    class="w-full"
+                  />
+                </UFormField>
+              </UCard>
+            </div>
+
+            <aside class="space-y-6 xl:sticky xl:top-24 xl:self-start">
+              <UCard
+                :ui="{ body: 'p-5 sm:p-6' }"
+                class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
+              >
+                <template #header>
+                  <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                    Publication &amp; Access
+                  </h2>
+                </template>
+
+                <div class="space-y-4">
+                  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
                     <UFormField
                       label="Venue"
                       required
@@ -212,10 +536,44 @@
                         class="w-full"
                       />
                     </UFormField>
+
+                    <UFormField label="Publication Year">
+                      <UInput
+                        v-model="articleForm.publicationYear"
+                        type="text"
+                        placeholder="e.g. 2024"
+                        class="w-full"
+                      />
+                    </UFormField>
                   </div>
 
-                  <div class="grid gap-4 sm:grid-cols-2">
-                    <UFormField label="Canonical URL">
+                  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                    <UFormField label="Article Type">
+                      <UInputMenu
+                        v-model="articleForm.type"
+                        :items="articleTypeOptions"
+                        create-item="always"
+                        leading
+                        leading-icon="i-lucide-file-stack"
+                        placeholder="Select or type and press Enter"
+                        class="w-full"
+                        @create="articleForm.type = String($event).trim()"
+                      />
+                    </UFormField>
+
+                    <UFormField label="Open Access">
+                      <USelectMenu
+                        v-model="articleForm.openAccess"
+                        :items="openAccessOptions"
+                        value-key="value"
+                        label-key="label"
+                        class="w-full"
+                      />
+                    </UFormField>
+                  </div>
+
+                  <div class="grid gap-4">
+                    <UFormField label="Source URL">
                       <UInput
                         v-model="articleForm.url"
                         class="w-full"
@@ -230,254 +588,17 @@
                     </UFormField>
                   </div>
 
-                  <div class="grid gap-4 sm:grid-cols-3">
-                    <UFormField label="Publication Year">
-                      <UInput
-                        v-model="articleForm.publicationYear"
-                        type="number"
-                        placeholder="e.g. 2024"
-                        class="w-full"
-                      />
-                    </UFormField>
-
-                    <UFormField label="Article Type">
-                      <UInput
-                        v-model="articleForm.type"
-                        placeholder="e.g. Review"
-                        class="w-full"
-                      />
-                    </UFormField>
-
-                    <UFormField label="Organization URN">
-                      <UInput
-                        v-model="articleForm.organizationUrn"
-                        placeholder="urn:..."
-                        class="w-full"
-                      />
-                    </UFormField>
-                  </div>
-
-                  <UFormField label="Description">
-                    <UTextarea
-                      v-model="articleForm.description"
-                      :rows="4"
-                      class="w-full"
-                    />
-                    <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
-                      A concise curator-written summary that helps the record scan well in internal and public article views.
-                    </p>
-                  </UFormField>
-
-                  <UFormField label="Abstract">
-                    <UTextarea
-                      v-model="articleForm.abstract"
-                      :rows="6"
-                      class="w-full"
-                    />
-                  </UFormField>
-                </div>
-              </UCard>
-
-              <UCard
-                :ui="{ body: 'p-5 sm:p-6' }"
-                class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
-              >
-                <template #header>
-                  <div>
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-                      Classification & Audience
-                    </h2>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Curate the human-authoritative fields that shape retrieval, downstream prompts, and public presentation.
-                    </p>
-                  </div>
-                </template>
-
-                <div class="space-y-4">
-                  <div class="grid gap-4 sm:grid-cols-2">
-                    <UFormField label="Category">
-                      <UInput
-                        v-model="articleForm.category"
-                        placeholder="e.g. Cardiometabolic Health"
-                        class="w-full"
-                      />
-                    </UFormField>
-
-                    <UFormField label="Study Type">
-                      <UInput
-                        v-model="articleForm.studyType"
-                        placeholder="e.g. Meta-analysis"
-                        class="w-full"
-                      />
-                    </UFormField>
-                  </div>
-
-                  <div class="grid gap-4 sm:grid-cols-2">
-                    <UFormField label="Reader Group">
-                      <UInput
-                        v-model="articleForm.readerGroup"
-                        placeholder="e.g. General public"
-                        class="w-full"
-                      />
-                    </UFormField>
-
-                    <UFormField label="Population Group">
-                      <UInput
-                        v-model="articleForm.populationGroup"
-                        placeholder="e.g. Adults with obesity"
-                        class="w-full"
-                      />
-                    </UFormField>
-                  </div>
-
-                  <div class="grid gap-4 sm:grid-cols-2">
-                    <UFormField label="Age Group">
-                      <UInput
-                        v-model="articleForm.ageGroup"
-                        placeholder="e.g. Adults"
-                        class="w-full"
-                      />
-                    </UFormField>
-
-                    <UFormField label="Biological Model">
-                      <UInput
-                        v-model="articleForm.biologicalModel"
-                        placeholder="e.g. Human"
-                        class="w-full"
-                      />
-                    </UFormField>
-                  </div>
-
-                  <div class="grid gap-4 sm:grid-cols-2">
-                    <UFormField label="Region">
-                      <UInput
-                        v-model="articleForm.region"
-                        placeholder="e.g. Europe"
-                        class="w-full"
-                      />
-                    </UFormField>
-
-                    <UFormField label="Language">
-                      <UInput
-                        v-model="articleForm.language"
-                        placeholder="e.g. en"
-                        class="w-full"
-                      />
-                    </UFormField>
-                  </div>
-
-                  <div class="grid gap-4 sm:grid-cols-2">
-                    <UFormField label="Country / Region Context">
-                      <UInput
-                        v-model="articleForm.countryOrRegion"
-                        placeholder="e.g. United Kingdom"
-                        class="w-full"
-                      />
-                    </UFormField>
-
-                    <UFormField label="Income Setting">
-                      <UInput
-                        v-model="articleForm.incomeSetting"
-                        placeholder="e.g. High income"
-                        class="w-full"
-                      />
-                    </UFormField>
-                  </div>
-
-                  <UFormField label="Authors">
-                    <UTextarea
-                      v-model="articleForm.authors"
-                      :rows="5"
-                      placeholder="One author per line, or separate them with commas"
-                      class="w-full"
-                    />
-                  </UFormField>
-
-                  <div class="grid gap-4 sm:grid-cols-2">
-                    <UFormField label="Tags">
-                      <UTextarea
-                        v-model="articleForm.tags"
-                        :rows="4"
-                        placeholder="Comma-separated or one tag per line"
-                        class="w-full"
-                      />
-                    </UFormField>
-
-                    <UFormField label="Topics">
-                      <UTextarea
-                        v-model="articleForm.topics"
-                        :rows="4"
-                        placeholder="Comma-separated or one topic per line"
-                        class="w-full"
-                      />
-                    </UFormField>
-                  </div>
-
-                  <div class="grid gap-4 sm:grid-cols-2">
-                    <UFormField label="Keywords">
-                      <UTextarea
-                        v-model="articleForm.keywords"
-                        :rows="4"
-                        placeholder="Comma-separated or one keyword per line"
-                        class="w-full"
-                      />
-                    </UFormField>
-
-                    <UFormField label="Hard Exclusion Flags">
-                      <UTextarea
-                        v-model="articleForm.hardExclusionFlags"
-                        :rows="4"
-                        placeholder="Comma-separated or one flag per line"
-                        class="w-full"
-                      />
-                    </UFormField>
-                  </div>
-
-                  <UFormField label="Key Takeaways">
-                    <UTextarea
-                      v-model="articleForm.keyTakeaways"
-                      :rows="5"
-                      placeholder="Prefer one takeaway per line"
-                      class="w-full"
-                    />
-                    <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
-                      These are the authoritative takeaways shown before the AI-generated ones.
-                    </p>
-                  </UFormField>
-                </div>
-              </UCard>
-
-              <UCard
-                :ui="{ body: 'p-5 sm:p-6' }"
-                class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
-              >
-                <template #header>
-                  <div>
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-                      Advanced Metadata
-                    </h2>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Reference metrics, access state, and raw extras are editable here for higher-fidelity curation passes.
-                    </p>
-                  </div>
-                </template>
-
-                <div class="space-y-4">
-                  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <UFormField label="Open Access">
-                      <USelectMenu
-                        v-model="articleForm.openAccess"
-                        :items="openAccessOptions"
-                        value-key="value"
-                        label-key="label"
-                        class="w-full"
-                      />
-                    </UFormField>
-
+                  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
                     <UFormField label="License">
-                      <UInput
+                      <UInputMenu
                         v-model="articleForm.license"
+                        :items="licenseOptions"
+                        create-item="always"
+                        leading
+                        leading-icon="i-lucide-badge-check"
+                        placeholder="Select or type and press Enter"
                         class="w-full"
+                        @create="articleForm.license = String($event).trim()"
                       />
                     </UFormField>
 
@@ -487,20 +608,28 @@
                         class="w-full"
                       />
                     </UFormField>
-
-                    <UFormField label="Annotation Confidence">
-                      <UInput
-                        v-model="articleForm.annotationConfidence"
-                        type="number"
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        class="w-full"
-                      />
-                    </UFormField>
                   </div>
 
-                  <div class="grid gap-4 sm:grid-cols-3">
+                  <UFormField label="Organization URN">
+                    <UInput
+                      v-model="articleForm.organizationUrn"
+                      placeholder="urn:..."
+                      class="w-full"
+                    />
+                  </UFormField>
+
+                  <UFormField label="Annotation Confidence">
+                    <UInput
+                      v-model="articleForm.annotationConfidence"
+                      type="number"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      class="w-full"
+                    />
+                  </UFormField>
+
+                  <div class="grid gap-4 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
                     <UFormField label="Citation Count">
                       <UInput
                         v-model="articleForm.citationCount"
@@ -529,16 +658,40 @@
                     </UFormField>
                   </div>
 
-                  <UFormField label="Extras JSON">
-                    <UTextarea
-                      v-model="articleForm.extrasJson"
-                      :rows="14"
-                      class="w-full font-mono text-xs"
-                    />
-                    <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
-                      Use this for enriched metadata that does not warrant a dedicated control yet, including nested evaluation and annotation payloads.
-                    </p>
-                  </UFormField>
+                  <UCollapsible class="rounded-2xl border border-gray-200/80 bg-gray-50/70 dark:border-white/10 dark:bg-white/5">
+                    <template #default="{ open }">
+                      <button
+                        type="button"
+                        class="flex w-full items-center justify-between gap-4 px-4 py-3 text-left"
+                      >
+                        <div>
+                          <p class="text-sm font-medium text-gray-900 dark:text-white">
+                            Raw extras JSON
+                          </p>
+                          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Only open this when you need to work directly with the underlying payload.
+                          </p>
+                        </div>
+                        <UIcon
+                          name="i-lucide-chevron-down"
+                          class="h-4 w-4 shrink-0 text-gray-500 transition-transform dark:text-gray-400"
+                          :class="open ? 'rotate-180' : ''"
+                        />
+                      </button>
+                    </template>
+
+                    <template #content>
+                      <div class="border-t border-gray-200/80 px-4 pb-4 pt-4 dark:border-white/10">
+                        <UFormField label="Extras JSON">
+                          <UTextarea
+                            v-model="articleForm.extrasJson"
+                            :rows="14"
+                            class="w-full font-mono text-xs"
+                          />
+                        </UFormField>
+                      </div>
+                    </template>
+                  </UCollapsible>
                 </div>
               </UCard>
 
@@ -547,113 +700,9 @@
                 class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
               >
                 <template #header>
-                  <div>
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-                      Full Content
-                    </h2>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Keep the working body visible while you curate the surrounding metadata.
-                    </p>
-                  </div>
-                </template>
-
-                <UFormField label="Article Body">
-                  <UTextarea
-                    v-model="articleForm.content"
-                    :rows="22"
-                    class="w-full"
-                  />
-                </UFormField>
-              </UCard>
-            </div>
-
-            <aside class="space-y-6 xl:sticky xl:top-24 xl:self-start">
-              <UCard
-                :ui="{ body: 'p-5 sm:p-6' }"
-                class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
-              >
-                <template #header>
-                  <div>
-                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">
-                      Record Snapshot
-                    </h2>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Source provenance, timestamps, and quick links.
-                    </p>
-                  </div>
-                </template>
-
-                <div class="space-y-4">
-                  <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                    <div
-                      v-for="item in snapshotStats"
-                      :key="item.label"
-                      class="rounded-xl border border-gray-200/80 bg-gray-50/70 px-4 py-3 dark:border-white/10 dark:bg-white/5"
-                    >
-                      <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
-                        {{ item.label }}
-                      </p>
-                      <p class="mt-1 break-words text-sm font-semibold text-gray-900 dark:text-white">
-                        {{ item.value }}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div class="space-y-2">
-                    <UButton
-                      v-if="publicArticleRoute"
-                      :to="publicArticleRoute"
-                      color="neutral"
-                      variant="outline"
-                      size="sm"
-                      icon="i-lucide-globe"
-                      class="w-full justify-center"
-                    >
-                      Open Public Article
-                    </UButton>
-
-                    <UButton
-                      v-if="selectedArticle.url"
-                      :to="selectedArticle.url"
-                      target="_blank"
-                      color="neutral"
-                      variant="ghost"
-                      size="sm"
-                      icon="i-lucide-external-link"
-                      class="w-full justify-center"
-                    >
-                      Open Source URL
-                    </UButton>
-
-                    <UButton
-                      v-if="doiUrl"
-                      :to="doiUrl"
-                      target="_blank"
-                      color="neutral"
-                      variant="ghost"
-                      size="sm"
-                      icon="i-lucide-link-2"
-                      class="w-full justify-center"
-                    >
-                      Open DOI
-                    </UButton>
-                  </div>
-                </div>
-              </UCard>
-
-              <UCard
-                :ui="{ body: 'p-5 sm:p-6' }"
-                class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
-              >
-                <template #header>
-                  <div>
-                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">
-                      AI Signals
-                    </h2>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Compare the editor-facing fields with the enrichment layer without leaving the page.
-                    </p>
-                  </div>
+                  <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                    Enrichment Signals
+                  </h2>
                 </template>
 
                 <div class="space-y-4">
@@ -706,7 +755,10 @@
                     </ul>
                   </div>
 
-                  <div v-if="evaluationCards.length" class="grid gap-3">
+                  <div
+                    v-if="evaluationCards.length"
+                    class="grid gap-3"
+                  >
                     <div
                       v-for="item in evaluationCards"
                       :key="item.label"
@@ -736,14 +788,9 @@
                 class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
               >
                 <template #header>
-                  <div>
-                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">
-                      Annotation Coverage
-                    </h2>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      A quick read on glossary and QA material attached to this article.
-                    </p>
-                  </div>
+                  <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                    Attached Annotations
+                  </h2>
                 </template>
 
                 <div class="space-y-3 text-sm text-gray-600 dark:text-gray-300">
@@ -773,29 +820,116 @@
             class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
           >
             <template #header>
-              <div class="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <div class="flex items-center gap-2">
-                    <UIcon
-                      name="i-lucide-file-stack"
-                      class="h-4 w-4 text-brand-500 dark:text-brand-300"
-                    />
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-                      Artifacts
-                    </h2>
-                    <UBadge
-                      color="neutral"
-                      variant="outline"
-                    >
-                      {{ articleArtifacts.length }}
-                    </UBadge>
-                  </div>
-                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    Linked files stay visible from the same workspace so curators can review the source material alongside metadata editing.
-                  </p>
-                </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <UIcon
+                  name="i-lucide-file-stack"
+                  class="h-4 w-4 text-brand-500 dark:text-brand-300"
+                />
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                  Artifacts
+                </h2>
+                <UBadge
+                  color="neutral"
+                  variant="outline"
+                >
+                  {{ articleArtifacts.length }}
+                </UBadge>
               </div>
             </template>
+
+            <div class="border-b border-gray-200/80 p-5 sm:p-6 dark:border-white/10">
+              <div class="rounded-2xl border border-dashed border-gray-300/80 bg-white/80 p-5 dark:border-white/15 dark:bg-white/5">
+                <div class="flex flex-col gap-5">
+                  <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                        Upload Article Artifact
+                      </p>
+                      <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                        Attach source files, supplementary material, or datasets directly under this article.
+                      </p>
+                    </div>
+
+                    <label
+                      :class="[
+                        'inline-flex cursor-pointer self-start',
+                        artifactUploadPending ? 'pointer-events-none opacity-60' : ''
+                      ]"
+                    >
+                      <span class="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:border-primary-400 hover:text-primary-700 dark:border-white/15 dark:bg-white/10 dark:text-gray-100 dark:hover:border-primary-400 dark:hover:text-primary-200">
+                        <UIcon
+                          name="i-lucide-file-up"
+                          class="h-4 w-4"
+                        />
+                        Choose File
+                      </span>
+                      <input
+                        :key="artifactUploadFileInputKey"
+                        type="file"
+                        class="hidden"
+                        @change="handleArtifactUploadSelection"
+                      >
+                    </label>
+                  </div>
+
+                  <UAlert
+                    v-if="artifactUploadError"
+                    color="error"
+                    variant="soft"
+                    icon="i-lucide-alert-circle"
+                    :title="artifactUploadError"
+                  />
+
+                  <div class="rounded-xl border border-gray-200/80 bg-gray-50/80 p-4 dark:border-white/10 dark:bg-black/10">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">
+                      {{ artifactUploadSelectedFileLabel }}
+                    </p>
+                    <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                      {{ artifactUploadSelectedFileMeta }}
+                    </p>
+                  </div>
+
+                  <div class="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(16rem,0.9fr)_auto] lg:items-end">
+                    <UFormField
+                      label="Artifact Name"
+                      required
+                    >
+                      <UInput
+                        v-model="artifactUploadForm.title"
+                        placeholder="e.g. Supplementary appendix"
+                        class="w-full"
+                      />
+                    </UFormField>
+
+                    <UFormField
+                      label="File Type"
+                      required
+                    >
+                      <USelectMenu
+                        v-model="artifactUploadForm.file_type"
+                        :items="artifactUploadFileTypeOptions"
+                        value-key="value"
+                        label-key="label"
+                        class="w-full"
+                      />
+                    </UFormField>
+
+                    <div class="flex lg:justify-end">
+                      <UButton
+                        color="primary"
+                        icon="i-lucide-upload"
+                        class="w-full lg:w-auto"
+                        :loading="artifactUploadPending"
+                        :disabled="!canUploadArtifact"
+                        @click="uploadArticleArtifact"
+                      >
+                        Upload Artifact
+                      </UButton>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <UTable
               :data="articleArtifacts"
@@ -866,7 +1000,7 @@
                     No artifacts are linked to this article yet.
                   </p>
                   <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    Once files are attached upstream, this workspace will let you review and edit their metadata in-place.
+                    Upload the first artifact above to attach source material and keep it editable from this workspace.
                   </p>
                 </div>
               </template>
@@ -900,6 +1034,68 @@
         </UCard>
       </UPageBody>
     </UPage>
+
+    <Transition
+      enter-active-class="transform transition duration-200 ease-out"
+      enter-from-class="translate-y-6 opacity-0"
+      enter-to-class="translate-y-0 opacity-100"
+      leave-active-class="transform transition duration-150 ease-in"
+      leave-from-class="translate-y-0 opacity-100"
+      leave-to-class="translate-y-6 opacity-0"
+    >
+      <div
+        v-if="showFloatingSaveBar"
+        class="fixed bottom-4 left-4 right-4 z-40 sm:bottom-6 sm:left-6 sm:right-auto sm:w-[28rem]"
+      >
+        <div class="rounded-2xl border border-gray-200/80 bg-white/95 p-4 shadow-2xl ring-1 ring-black/5 backdrop-blur dark:border-white/10 dark:bg-zinc-900/90 dark:ring-white/10">
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+                  Article changes
+                </p>
+                <p
+                  v-if="saveReadinessLabel"
+                  class="mt-1 text-sm font-medium text-gray-900 dark:text-white"
+                >
+                  {{ saveReadinessLabel }}
+                </p>
+              </div>
+
+              <UBadge
+                :color="saveStatus.color"
+                variant="soft"
+              >
+                {{ saveStatus.label }}
+              </UBadge>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <UButton
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                :disabled="savePending || !hasUnsavedChanges"
+                @click="resetForm"
+              >
+                Reset changes
+              </UButton>
+
+              <UButton
+                color="primary"
+                size="sm"
+                icon="i-lucide-save"
+                :loading="savePending"
+                :disabled="!canSave"
+                @click="saveArticle"
+              >
+                Save Changes
+              </UButton>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
 
     <UModal
       v-model:open="artifactEditorOpen"
@@ -978,16 +1174,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import type { ArtifactUpdatePayload, CatalogArtifact } from '~/services/catalogApi'
 import catalogApi from '~/services/catalogApi'
 import type { Article, UpdateArticleRequest } from '~/services/articlesApi'
 import articlesApi from '~/services/articlesApi'
-import { fetchCatalogArtifactDownloadResponse, getArtifactPresignedUrl, hasS3Backing } from '~/services/objectStorageApi'
+import { fetchCatalogArtifactDownloadResponse, getArtifactPresignedUrl, hasS3Backing, uploadCatalogArtifact } from '~/services/objectStorageApi'
 import { formatDoiUrl } from '~/utils/articleHelpers'
 import {
   formatPublicationYear,
-  getArticleCurationSummary,
   resolveArticleRouteParam
 } from '~/utils/consoleArticles'
 import { formatBytes, formatDate } from '~/utils/consoleGuideCatalog'
@@ -1006,9 +1201,15 @@ const detailError = ref<string | null>(null)
 const savePending = ref(false)
 const saveError = ref<string | null>(null)
 const initialFormSnapshot = ref('')
+const mainSaveActionsRef = ref<HTMLElement | null>(null)
+const isMainSaveVisible = ref(true)
 
 const artifactEditorOpen = ref(false)
 const artifactSavePending = ref(false)
+const artifactUploadPending = ref(false)
+const artifactUploadError = ref<string | null>(null)
+const artifactUploadFile = ref<File | null>(null)
+const artifactUploadFileInputKey = ref(0)
 const downloadingArtifactId = ref('')
 const editingArtifactId = ref('')
 
@@ -1018,9 +1219,13 @@ const artifactForm = reactive({
   file_type: ''
 })
 
+const artifactUploadForm = reactive({
+  title: '',
+  file_type: 'application/pdf'
+})
+
 const articleForm = reactive({
   title: '',
-  description: '',
   abstract: '',
   content: '',
   venue: '',
@@ -1069,11 +1274,145 @@ const openAccessOptions = [
   { label: 'Closed access', value: 'false' }
 ]
 
+const artifactFileTypeOptions = [
+  { label: 'PDF document', value: 'application/pdf' },
+  { label: 'Word document (.docx)', value: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
+  { label: 'Word document (.doc)', value: 'application/msword' },
+  { label: 'Spreadsheet (.xlsx)', value: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' },
+  { label: 'Spreadsheet (.xls)', value: 'application/vnd.ms-excel' },
+  { label: 'CSV dataset', value: 'text/csv' },
+  { label: 'Text document', value: 'text/plain' },
+  { label: 'PNG image', value: 'image/png' },
+  { label: 'JPEG image', value: 'image/jpeg' },
+  { label: 'ZIP archive', value: 'application/zip' },
+  { label: 'Generic binary', value: 'application/octet-stream' }
+]
+
+const articleTypeOptions = [
+  'Review',
+  'Systematic review',
+  'Meta-analysis',
+  'Randomized controlled trial',
+  'Clinical trial',
+  'Cohort study',
+  'Case-control study',
+  'Cross-sectional study',
+  'Guideline',
+  'Consensus statement',
+  'Narrative review',
+  'Umbrella review',
+  'Position paper',
+  'Preprint'
+]
+
+const categoryOptions = [
+  'Cardiometabolic Health',
+  'Gut Health',
+  'Nutrition Science',
+  'Preventive Health',
+  'Public Health',
+  'Food Systems',
+  'Exercise & Performance',
+  'Mental Health',
+  'Women\'s Health',
+  'Chronic Disease'
+]
+
+const studyTypeOptions = [
+  'Systematic review',
+  'Meta-analysis',
+  'Review',
+  'Randomized controlled trial',
+  'Clinical trial',
+  'Cohort study',
+  'Case-control study',
+  'Cross-sectional study',
+  'Guideline',
+  'Qualitative study'
+]
+
+const readerGroupOptions = [
+  'General public',
+  'Practitioners',
+  'Researchers',
+  'Policy makers',
+  'Students'
+]
+
+const ageGroupOptions = [
+  'Prenatal',
+  'Infants',
+  'Children',
+  'Adolescents',
+  'Adults',
+  'Older adults',
+  'Mixed'
+]
+
+const populationGroupOptions = [
+  'General population',
+  'Healthy adults',
+  'Adults with obesity',
+  'Pregnant individuals',
+  'Children',
+  'Athletes',
+  'Patients with chronic disease'
+]
+
+const biologicalModelOptions = [
+  'Human',
+  'Animal',
+  'In vitro',
+  'Computational',
+  'Mixed'
+]
+
+const regionOptions = [
+  'Global',
+  'Europe',
+  'North America',
+  'South America',
+  'Asia',
+  'Africa',
+  'Oceania',
+  'Middle East',
+  'Multinational'
+]
+
+const languageOptions = [
+  { label: 'English (en)', value: 'en' },
+  { label: 'Greek (el)', value: 'el' },
+  { label: 'German (de)', value: 'de' },
+  { label: 'French (fr)', value: 'fr' },
+  { label: 'Spanish (es)', value: 'es' },
+  { label: 'Italian (it)', value: 'it' },
+  { label: 'Portuguese (pt)', value: 'pt' },
+  { label: 'Dutch (nl)', value: 'nl' }
+]
+
+const incomeSettingOptions = [
+  'High income',
+  'Upper-middle income',
+  'Lower-middle income',
+  'Low income',
+  'Mixed'
+]
+
+const licenseOptions = [
+  'CC BY 4.0',
+  'CC BY-SA 4.0',
+  'CC BY-NC 4.0',
+  'CC BY-ND 4.0',
+  'CC0',
+  'All rights reserved'
+]
+
 const resolvedArticleUrn = computed(() => resolveArticleRouteParam(route.params.urn))
 const articleLibraryRoute = '/console/assets/articles'
 
 const pageTitle = computed(() => articleForm.title.trim() || selectedArticle.value?.title || 'Article Workspace')
-const doiUrl = computed(() => formatDoiUrl(selectedArticle.value?.doi))
+const sourceUrl = computed(() => articleForm.url.trim() || selectedArticle.value?.url || '')
+const doiUrl = computed(() => formatDoiUrl(articleForm.doi.trim() || selectedArticle.value?.doi))
 const publicArticleRoute = computed(() =>
   selectedArticle.value ? `/foodscholar/${encodeURIComponent(selectedArticle.value.urn)}` : ''
 )
@@ -1090,46 +1429,104 @@ const categoryPreviewLabel = computed(() => {
   return 'Unclassified'
 })
 
-const articleSummaryPreview = computed(() =>
-  articleForm.description.trim() || articleForm.abstract.trim() || ''
-)
+const headerAuthors = computed(() => parseDelimitedList(articleForm.authors).slice(0, 8))
 
-const curationPreview = computed(() =>
-  getArticleCurationSummary({
-    category: articleForm.category.trim(),
-    tags: parseDelimitedList(articleForm.tags),
-    key_takeaways: parseLineList(articleForm.keyTakeaways),
-    description: articleForm.description.trim(),
-    abstract: articleForm.abstract.trim()
-  })
-)
-
-const articleMetadataItems = computed(() => {
-  const article = selectedArticle.value
-  if (!article) {
-    return []
+const annotationConfidenceLabel = computed(() => {
+  const normalized = articleForm.annotationConfidence.trim()
+  if (!normalized) {
+    return ''
   }
 
-  return [
-    { label: formatPublicationYear(article.publication_year), icon: 'i-lucide-calendar-range' },
-    { label: article.venue || 'No venue', icon: 'i-lucide-book-open' },
-    { label: article.reader_group || 'Reader group not set', icon: 'i-lucide-users' },
-    { label: `${articleArtifacts.value.length} artifacts`, icon: 'i-lucide-file-stack' },
-    { label: `Updated ${formatDate(article.updated_at)}`, icon: 'i-lucide-clock-3' }
-  ]
+  const parsed = Number(normalized)
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return ''
+  }
+
+  const percentage = parsed <= 1 ? Math.round(parsed * 100) : Math.round(parsed)
+  return percentage > 0 ? `${percentage}%` : ''
 })
 
-const snapshotStats = computed(() => {
+const headerAudienceItems = computed(() => {
+  const items: Array<{ label: string, value: string, icon: string }> = []
+
+  if (articleForm.populationGroup.trim()) {
+    items.push({
+      label: 'Population',
+      value: articleForm.populationGroup.trim(),
+      icon: 'i-lucide-target'
+    })
+  }
+
+  if (articleForm.readerGroup.trim()) {
+    items.push({
+      label: 'Reader group',
+      value: articleForm.readerGroup.trim(),
+      icon: 'i-lucide-users'
+    })
+  }
+
+  return items
+})
+
+const headerPublicationItems = computed(() => {
+  const items: Array<{ label: string, value?: string, icon: string, href?: string, external?: boolean }> = []
+
+  if (articleForm.publicationYear.trim()) {
+    items.push({
+      label: 'Publication year',
+      value: articleForm.publicationYear.trim(),
+      icon: 'i-lucide-calendar'
+    })
+  }
+
+  if (articleForm.venue.trim()) {
+    items.push({
+      label: 'Venue',
+      value: articleForm.venue.trim(),
+      icon: 'i-lucide-book-open'
+    })
+  }
+
+  if (doiUrl.value) {
+    items.push({
+      label: 'DOI',
+      href: doiUrl.value,
+      icon: 'i-lucide-external-link',
+      external: true
+    })
+  }
+
+  if (sourceUrl.value) {
+    items.push({
+      label: 'Source URL',
+      href: sourceUrl.value,
+      icon: 'i-lucide-external-link',
+      external: true
+    })
+  }
+
+  if (publicArticleRoute.value) {
+    items.push({
+      label: 'Public page',
+      href: publicArticleRoute.value,
+      icon: 'i-lucide-globe'
+    })
+  }
+
+  return items
+})
+
+const headerSystemItems = computed(() => {
   const article = selectedArticle.value
   if (!article) {
     return []
   }
 
   return [
-    { label: 'URN', value: article.urn },
-    { label: 'Creator', value: article.creator || 'Unknown' },
-    { label: 'Created', value: formatDate(article.created_at) },
-    { label: 'Updated', value: formatDate(article.updated_at) }
+    { label: 'URN', value: article.urn, icon: 'i-lucide-fingerprint' },
+    { label: 'Creator', value: article.creator || 'Unknown', icon: 'i-lucide-user' },
+    { label: 'Created', value: formatDate(article.created_at), icon: 'i-lucide-calendar-range' },
+    { label: 'Updated', value: formatDate(article.updated_at), icon: 'i-lucide-clock-3' }
   ]
 })
 
@@ -1166,9 +1563,6 @@ const annotationSummaryItems = computed(() => {
   }
 
   return [
-    annotations.glosary?.length
-      ? { label: 'Glossary Terms', value: String(annotations.glosary.length), icon: 'i-lucide-book-a' }
-      : null,
     annotations.user_qa?.length
       ? { label: 'User Q&A', value: String(annotations.user_qa.length), icon: 'i-lucide-message-circle-question' }
       : null,
@@ -1198,7 +1592,7 @@ const breadcrumbItems = computed(() => [
     to: articleLibraryRoute
   },
   {
-    label: pageTitle.value,
+    label: truncateBreadcrumbLabel(pageTitle.value),
     icon: 'i-lucide-file-pen-line'
   }
 ])
@@ -1218,23 +1612,76 @@ const extrasJsonValidationError = computed(() => {
 
 const hasUnsavedChanges = computed(() => initialFormSnapshot.value !== serializeFormState())
 const canSave = computed(() => Boolean(selectedArticle.value) && !extrasJsonValidationError.value && !savePending.value)
+const canUploadArtifact = computed(() =>
+  Boolean(
+    selectedArticle.value
+    && artifactUploadFile.value
+    && artifactUploadForm.title.trim()
+    && artifactUploadForm.file_type.trim()
+    && !artifactUploadPending.value
+  )
+)
+const showFloatingSaveBar = computed(() =>
+  Boolean(selectedArticle.value) && !detailLoading.value && !detailError.value && !isMainSaveVisible.value
+)
 
-const saveReadinessLabel = computed(() => {
+const saveStatus = computed(() => {
   if (extrasJsonValidationError.value) {
-    return 'Fix the extras JSON before saving.'
+    return {
+      label: 'Needs attention',
+      color: 'warning' as const
+    }
   }
 
   if (savePending.value) {
-    return 'Saving article changes...'
+    return {
+      label: 'Saving',
+      color: 'primary' as const
+    }
+  }
+
+  if (hasUnsavedChanges.value) {
+    return {
+      label: 'Unsaved changes',
+      color: 'warning' as const
+    }
+  }
+
+  return {
+    label: 'Saved',
+    color: 'success' as const
+  }
+})
+
+const saveReadinessLabel = computed(() => {
+  if (extrasJsonValidationError.value) {
+    return 'Fix the raw extras JSON before saving.'
+  }
+
+  if (savePending.value) {
+    return 'Saving your article changes...'
   }
 
   if (!hasUnsavedChanges.value) {
-    return 'No unsaved changes.'
+    return ''
   }
 
-  return curationPreview.value.isComplete
-    ? 'All core curation fields are filled.'
-    : `Missing ${curationPreview.value.missingLabels.join(', ')}.`
+  return ''
+})
+
+const artifactUploadFileTypeOptions = computed(() => buildArtifactFileTypeOptions(artifactUploadForm.file_type))
+
+const artifactUploadSelectedFileLabel = computed(() =>
+  artifactUploadFile.value?.name || 'No file selected yet'
+)
+
+const artifactUploadSelectedFileMeta = computed(() => {
+  if (!artifactUploadFile.value) {
+    return 'Choose a file, then set the artifact name and type before uploading it under this article.'
+  }
+
+  const selectedMimeType = artifactUploadFile.value.type || artifactUploadForm.file_type
+  return `${formatBytes(artifactUploadFile.value.size)} · ${selectedMimeType || artifactUploadForm.file_type}`
 })
 
 useHead({
@@ -1242,12 +1689,74 @@ useHead({
 })
 
 useSeoMeta({
-  description: computed(() => selectedArticle.value?.description || selectedArticle.value?.abstract || 'Wisefood article workspace for review and curation')
+  description: computed(() => selectedArticle.value?.abstract || selectedArticle.value?.description || 'Wisefood article workspace for review and curation')
 })
+
+let mainSaveActionsObserver: IntersectionObserver | null = null
 
 function normalizeNullable(value: string) {
   const normalized = value.trim()
   return normalized.length ? normalized : null
+}
+
+function buildArtifactTitleFromFilename(filename: string) {
+  return filename.replace(/\.[^.]+$/, '').trim() || filename.trim() || 'Untitled artifact'
+}
+
+function buildArtifactFileTypeOptions(currentValue: string) {
+  const normalizedCurrentValue = currentValue.trim()
+
+  if (!normalizedCurrentValue || artifactFileTypeOptions.some(option => option.value === normalizedCurrentValue)) {
+    return artifactFileTypeOptions
+  }
+
+  return [
+    ...artifactFileTypeOptions,
+    {
+      label: `${normalizedCurrentValue} (detected)`,
+      value: normalizedCurrentValue
+    }
+  ]
+}
+
+function inferArtifactFileType(file: File) {
+  const mimeType = file.type.trim().toLowerCase()
+
+  if (mimeType) {
+    const matchingOption = artifactFileTypeOptions.find(option => option.value === mimeType)
+    if (matchingOption) {
+      return matchingOption.value
+    }
+  }
+
+  const lowerName = file.name.toLowerCase()
+
+  if (lowerName.endsWith('.pdf')) return 'application/pdf'
+  if (lowerName.endsWith('.docx')) return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  if (lowerName.endsWith('.doc')) return 'application/msword'
+  if (lowerName.endsWith('.xlsx')) return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  if (lowerName.endsWith('.xls')) return 'application/vnd.ms-excel'
+  if (lowerName.endsWith('.csv')) return 'text/csv'
+  if (lowerName.endsWith('.txt')) return 'text/plain'
+  if (lowerName.endsWith('.png')) return 'image/png'
+  if (lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')) return 'image/jpeg'
+  if (lowerName.endsWith('.zip')) return 'application/zip'
+
+  return mimeType || 'application/octet-stream'
+}
+
+function truncateBreadcrumbLabel(value: string, max = 38) {
+  const normalized = value.trim()
+
+  if (!normalized) {
+    return 'Article Workspace'
+  }
+
+  if (normalized.length <= max) {
+    return normalized
+  }
+
+  return `${normalized.slice(0, Math.max(0, max - 3)).trimEnd()}...`
 }
 
 function parseDelimitedList(value: string) {
@@ -1343,9 +1852,21 @@ function serializeFormState() {
   return JSON.stringify({ ...articleForm })
 }
 
+function syncArticleArtifacts(nextArtifacts: CatalogArtifact[]) {
+  articleArtifacts.value = nextArtifacts
+
+  if (!selectedArticle.value) {
+    return
+  }
+
+  selectedArticle.value = {
+    ...selectedArticle.value,
+    artifacts: nextArtifacts
+  }
+}
+
 function populateArticleForm(article: Article) {
   articleForm.title = article.title || ''
-  articleForm.description = article.description || ''
   articleForm.abstract = article.abstract || ''
   articleForm.content = article.content || ''
   articleForm.venue = article.venue || ''
@@ -1409,7 +1930,6 @@ function buildArticleUpdatePayload(): UpdateArticleRequest {
 
   return {
     title,
-    description: normalizeNullable(articleForm.description),
     abstract: normalizeNullable(articleForm.abstract),
     content: normalizeNullable(articleForm.content),
     venue,
@@ -1447,6 +1967,39 @@ function buildArticleUpdatePayload(): UpdateArticleRequest {
     influential_citation_count: parseIntegerInput(articleForm.influentialCitationCount),
     extras
   }
+}
+
+function disconnectMainSaveObserver() {
+  if (mainSaveActionsObserver) {
+    mainSaveActionsObserver.disconnect()
+    mainSaveActionsObserver = null
+  }
+}
+
+function observeMainSaveActions() {
+  if (!import.meta.client) {
+    return
+  }
+
+  disconnectMainSaveObserver()
+
+  const element = mainSaveActionsRef.value
+  if (!element) {
+    isMainSaveVisible.value = true
+    return
+  }
+
+  mainSaveActionsObserver = new IntersectionObserver(
+    (entries) => {
+      const [entry] = entries
+      isMainSaveVisible.value = Boolean(entry?.isIntersecting)
+    },
+    {
+      threshold: 0.2
+    }
+  )
+
+  mainSaveActionsObserver.observe(element)
 }
 
 function extractErrorDetail(value: unknown): string | null {
@@ -1509,9 +2062,127 @@ function setArtifactEditorForm(artifact: CatalogArtifact) {
 }
 
 function mergeArtifact(updatedArtifact: CatalogArtifact) {
-  articleArtifacts.value = articleArtifacts.value.map(artifact =>
-    artifact.id === updatedArtifact.id ? updatedArtifact : artifact
+  syncArticleArtifacts(
+    articleArtifacts.value.map(artifact =>
+      artifact.id === updatedArtifact.id ? updatedArtifact : artifact
+    )
   )
+}
+
+function prependArtifact(uploadedArtifact: CatalogArtifact) {
+  syncArticleArtifacts([
+    uploadedArtifact,
+    ...articleArtifacts.value.filter(artifact => artifact.id !== uploadedArtifact.id)
+  ])
+}
+
+function resetArtifactUploadForm() {
+  artifactUploadPending.value = false
+  artifactUploadError.value = null
+  artifactUploadFile.value = null
+  artifactUploadForm.title = ''
+  artifactUploadForm.file_type = 'application/pdf'
+  artifactUploadFileInputKey.value += 1
+}
+
+function validateArtifactUpload() {
+  if (!selectedArticle.value) {
+    return 'Open an article before uploading artifacts.'
+  }
+
+  if (!artifactUploadFile.value) {
+    return 'Choose a file before uploading.'
+  }
+
+  if (!artifactUploadForm.title.trim()) {
+    return 'Artifact name is required.'
+  }
+
+  if (!artifactUploadForm.file_type.trim()) {
+    return 'Artifact type is required.'
+  }
+
+  return null
+}
+
+function handleArtifactUploadSelection(event: Event) {
+  const input = event.target as HTMLInputElement | null
+  const file = input?.files?.[0] || null
+
+  artifactUploadFile.value = file
+  artifactUploadError.value = null
+
+  if (!file) {
+    artifactUploadForm.title = ''
+    artifactUploadForm.file_type = 'application/pdf'
+    return
+  }
+
+  artifactUploadForm.title = buildArtifactTitleFromFilename(file.name)
+  artifactUploadForm.file_type = inferArtifactFileType(file)
+}
+
+async function uploadArticleArtifact() {
+  const validationError = validateArtifactUpload()
+
+  if (validationError) {
+    artifactUploadError.value = validationError
+    return
+  }
+
+  if (!selectedArticle.value || !artifactUploadFile.value) {
+    return
+  }
+
+  artifactUploadPending.value = true
+  artifactUploadError.value = null
+
+  try {
+    const uploadedArtifact = await uploadCatalogArtifact({
+      parentUrn: selectedArticle.value.urn,
+      file: artifactUploadFile.value,
+      title: artifactUploadForm.title.trim(),
+      language: normalizeNullable(articleForm.language) || undefined,
+      fileType: artifactUploadForm.file_type.trim()
+    })
+
+    let finalArtifact = uploadedArtifact
+    const desiredTitle = artifactUploadForm.title.trim()
+    const desiredFileType = artifactUploadForm.file_type.trim()
+
+    if (uploadedArtifact.title !== desiredTitle || uploadedArtifact.file_type !== desiredFileType) {
+      try {
+        finalArtifact = await catalogApi.updateArtifact(uploadedArtifact.id, {
+          title: desiredTitle,
+          file_type: desiredFileType
+        })
+      } catch (metadataError) {
+        prependArtifact(uploadedArtifact)
+        resetArtifactUploadForm()
+        toast.add({
+          title: 'Artifact uploaded with default metadata',
+          description: resolveErrorMessage(
+            metadataError,
+            'The file was attached, but its custom name or type could not be finalized. You can edit it from the table.'
+          ),
+          color: 'warning'
+        })
+        return
+      }
+    }
+
+    prependArtifact(finalArtifact)
+    resetArtifactUploadForm()
+    toast.add({
+      title: 'Artifact uploaded',
+      description: `${finalArtifact.title} was attached to this article.`,
+      color: 'success'
+    })
+  } catch (error) {
+    artifactUploadError.value = resolveErrorMessage(error, 'The artifact could not be uploaded right now.')
+  } finally {
+    artifactUploadPending.value = false
+  }
 }
 
 function buildArtifactFilename(artifact: CatalogArtifact, response: Response) {
@@ -1615,15 +2286,18 @@ async function saveArtifact() {
 async function loadArticle() {
   detailLoading.value = true
   detailError.value = null
+  saveError.value = null
 
   try {
     const article = await articlesApi.getArticle(resolvedArticleUrn.value)
     selectedArticle.value = article
-    articleArtifacts.value = article.artifacts || []
+    syncArticleArtifacts(article.artifacts || [])
+    resetArtifactUploadForm()
     populateArticleForm(article)
   } catch (error) {
     selectedArticle.value = null
     articleArtifacts.value = []
+    resetArtifactUploadForm()
     detailError.value = resolveErrorMessage(error, 'Failed to load article')
   } finally {
     detailLoading.value = false
@@ -1658,7 +2332,7 @@ async function saveArticle() {
       ...updatedArticle,
       artifacts: updatedArticle.artifacts || articleArtifacts.value
     }
-    articleArtifacts.value = selectedArticle.value.artifacts || articleArtifacts.value
+    syncArticleArtifacts(selectedArticle.value.artifacts || articleArtifacts.value)
     populateArticleForm(selectedArticle.value)
 
     toast.add({
@@ -1677,9 +2351,18 @@ onMounted(() => {
   void loadArticle()
 })
 
+onBeforeUnmount(() => {
+  disconnectMainSaveObserver()
+})
+
 watch(resolvedArticleUrn, (nextUrn, previousUrn) => {
   if (nextUrn && nextUrn !== previousUrn) {
     void loadArticle()
   }
 })
+
+watch([selectedArticle, mainSaveActionsRef], async () => {
+  await nextTick()
+  observeMainSaveActions()
+}, { flush: 'post' })
 </script>

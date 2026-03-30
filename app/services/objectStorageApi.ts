@@ -10,6 +10,7 @@ export interface ArtifactUploadPayload {
   file: File
   title?: string | null
   description?: string | null
+  fileType?: string | null
   language?: string | null
 }
 
@@ -215,9 +216,7 @@ async function uploadArtifactRequest(formData: FormData, token: string) {
   })
 }
 
-export async function uploadCatalogArtifact(payload: ArtifactUploadPayload): Promise<CatalogArtifact> {
-  const authStore = useAuthStore()
-  let token = await ensureAccessToken()
+function buildArtifactUploadFormData(payload: ArtifactUploadPayload, includeFileType = true) {
   const formData = new FormData()
 
   formData.append('file', payload.file)
@@ -231,9 +230,21 @@ export async function uploadCatalogArtifact(payload: ArtifactUploadPayload): Pro
     formData.append('description', payload.description.trim())
   }
 
+  if (includeFileType && payload.fileType?.trim()) {
+    formData.append('file_type', payload.fileType.trim())
+  }
+
   if (payload.language?.trim()) {
     formData.append('language', payload.language.trim())
   }
+
+  return formData
+}
+
+export async function uploadCatalogArtifact(payload: ArtifactUploadPayload): Promise<CatalogArtifact> {
+  const authStore = useAuthStore()
+  let token = await ensureAccessToken()
+  const formData = buildArtifactUploadFormData(payload)
 
   let response = await uploadArtifactRequest(formData, token)
 
@@ -246,6 +257,22 @@ export async function uploadCatalogArtifact(payload: ArtifactUploadPayload): Pro
     }
 
     response = await uploadArtifactRequest(formData, token)
+  }
+
+  if (!response.ok && payload.fileType?.trim() && [400, 422].includes(response.status)) {
+    const fallbackFormData = buildArtifactUploadFormData(payload, false)
+    response = await uploadArtifactRequest(fallbackFormData, token)
+
+    if (response.status === 401) {
+      const refreshed = await authStore.refreshToken()
+      token = refreshed ? authStore.getToken() || '' : ''
+
+      if (!token) {
+        throw new Error('Authentication expired')
+      }
+
+      response = await uploadArtifactRequest(fallbackFormData, token)
+    }
   }
 
   if (!response.ok) {

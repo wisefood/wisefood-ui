@@ -61,22 +61,6 @@ export function getDisplayArticleCategory(article: Pick<Article, 'category' | 'a
   return article.category || article.ai_category || 'Unclassified'
 }
 
-export function getArticleCurationSummary(article: Pick<Article, 'category' | 'tags' | 'key_takeaways' | 'description' | 'abstract'>) {
-  const checks = [
-    { label: 'Category', done: Boolean(article.category?.trim()) },
-    { label: 'Tags', done: Array.isArray(article.tags) && article.tags.length > 0 },
-    { label: 'Takeaways', done: Array.isArray(article.key_takeaways) && article.key_takeaways.length > 0 },
-    { label: 'Summary', done: Boolean(article.description?.trim() || article.abstract?.trim()) }
-  ]
-
-  return {
-    completeCount: checks.filter(check => check.done).length,
-    totalCount: checks.length,
-    missingLabels: checks.filter(check => !check.done).map(check => check.label),
-    isComplete: checks.every(check => check.done)
-  }
-}
-
 export function normalizeFacetBuckets(entries: Array<{ value: unknown, count: unknown }> | undefined | null): ConsoleFacetBucket[] {
   return (entries || [])
     .map((entry) => {
