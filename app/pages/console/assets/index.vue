@@ -30,7 +30,7 @@
               >
                 <UIcon
                   :name="asset.icon"
-                  class="h-5 w-5"
+                  class="w-5"
                   :class="asset.available ? asset.iconClass : 'text-gray-500 dark:text-gray-400'"
                 />
               </div>
@@ -110,7 +110,7 @@ const breadcrumbItems = [
 const assetSections = [
   {
     title: 'Dietary Guides',
-    description: 'Manage guide records and work with each guide’s linked guidelines and artifacts from a single workspace.',
+    description: 'Manage guide records and work with each guide’s extracted guidelines and artifacts.',
     summary: '',
     to: '/console/assets/guides',
     icon: 'i-lucide-book-open-check',
@@ -120,18 +120,18 @@ const assetSections = [
   },
   {
     title: 'Scientific Articles',
-    description: 'Research-backed article management will be added here next.',
-    summary: 'Planned workspace',
-    to: '',
+    description: 'Search, curate, and edit scientific article records present in the literature base.',
+    summary: '',
+    to: '/console/assets/articles',
     icon: 'i-lucide-flask-conical',
-    available: false,
+    available: true,
     iconWrapperClass: 'bg-brandg-50 dark:bg-brandg-500/10',
     iconClass: 'text-brandg-600 dark:text-brandg-300'
   },
   {
     title: 'Recipes',
     description: 'Recipe asset operations will be added here in a future iteration.',
-    summary: 'Planned workspace',
+    summary: 'Planned feature',
     to: '',
     icon: 'i-lucide-utensils-crossed',
     available: false,

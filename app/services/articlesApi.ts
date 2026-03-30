@@ -1,5 +1,5 @@
 import wisefoodApi from './wisefoodApi'
-import type { RequestOptions } from './wisefoodApi'
+import type { CatalogArtifact } from './catalogApi'
 
 // Glossary term definition
 export interface GlossaryTerm {
@@ -68,6 +68,11 @@ export interface Article {
   // System / embedding
   embedded_at?: string | null
   type?: string | string[] | null
+  visibility?: string | null
+  review_status?: string | null
+  applicability_status?: string | null
+  applicability_start_date?: string | null
+  applicability_end_date?: string | null
 
   // Bibliographic & content
   status?: string | null
@@ -114,6 +119,7 @@ export interface Article {
 
   // Extras field with enriched metadata
   extras?: ArticleExtras
+  artifacts?: CatalogArtifact[] | null
 
   // Optional computed/frontend fields (not from backend schema)
   readTime?: number
@@ -172,20 +178,40 @@ export interface ArticleSearchParams {
 }
 
 export interface CreateArticleRequest {
+  urn: string
   title: string
   content: string
+  venue: string
+  authors: string[]
   organization_urn?: string
   abstract?: string
   description?: string
-  authors?: string[]
-  venue?: string
   publication_year?: string
+  url?: string
   external_id?: string
   doi?: string
+  keywords?: string[]
+  reader_group?: string
+  age_group?: string
+  population_group?: string
+  geographic_context?: GeographicContext | null
+  biological_model?: string
+  topics?: string[]
+  study_type?: string
+  hard_exclusion_flags?: string[]
+  annotation_confidence?: number | null
+  extras?: ArticleExtras | Record<string, unknown> | null
   tags?: string[]
   category?: string
   region?: string
   language?: string
+  license?: string
+  open_access?: boolean | null
+  citation_count?: number | null
+  reference_count?: number | null
+  influential_citation_count?: number | null
+  type?: string | null
+  key_takeaways?: string[]
 }
 
 export interface UpdateArticleRequest {
@@ -197,12 +223,31 @@ export interface UpdateArticleRequest {
   authors?: string[]
   venue?: string
   publication_year?: string
+  url?: string
   external_id?: string
   doi?: string
+  keywords?: string[]
+  reader_group?: string | null
+  age_group?: string | null
+  population_group?: string | null
+  geographic_context?: GeographicContext | null
+  biological_model?: string | null
+  topics?: string[]
+  study_type?: string | null
+  hard_exclusion_flags?: string[]
+  annotation_confidence?: number | null
+  extras?: ArticleExtras | Record<string, unknown> | null
   tags?: string[]
+  key_takeaways?: string[]
   category?: string
   region?: string
   language?: string
+  license?: string | null
+  open_access?: boolean | null
+  citation_count?: number | null
+  reference_count?: number | null
+  influential_citation_count?: number | null
+  type?: string | null
 }
 
 class ArticlesApiService {
