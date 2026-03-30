@@ -272,75 +272,16 @@
                   @mouseup="endPdfPan"
                   @mouseleave="endPdfPan"
                 >
-                  <div
-                    v-if="pdfLoading || pdfRendering"
-                    class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-zinc-950/70"
-                  >
-                    <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                      <UIcon
-                        name="i-lucide-loader-circle"
-                        class="h-4 w-4 animate-spin"
-                      />
-                      <span>{{ pdfLoading ? 'Loading document' : 'Rendering page' }}</span>
-                    </div>
-                  </div>
-
-                  <div
-                    v-if="pdfError"
-                    class="flex min-h-[32rem] items-center justify-center px-6 text-center"
-                  >
-                    <div>
-                      <UIcon
-                        name="i-lucide-file-warning"
-                        class="mx-auto h-8 w-8 text-gray-400"
-                      />
-                      <p class="mt-4 text-sm font-medium text-gray-900 dark:text-white">
-                        {{ pdfError }}
-                      </p>
-                      <UButton
-                        class="mt-4"
-                        color="neutral"
-                        variant="outline"
-                        size="sm"
-                        icon="i-lucide-refresh-cw"
-                        @click="reloadSelectedPdf"
-                      >
-                        Retry
-                      </UButton>
-                    </div>
-                  </div>
-
-                  <div
-                    v-else
-                    class="flex w-max min-w-full items-start justify-center gap-4 p-4"
-                  >
-                    <div
-                      v-for="panel in visiblePdfPanels"
-                      :key="panel.key"
-                      class="shrink-0 space-y-2"
-                    >
-                      <div class="flex items-center justify-between gap-2 px-1">
-                        <div class="flex items-center gap-2">
-                          <UBadge
-                            :color="panel.kind === 'active' ? 'primary' : 'neutral'"
-                            :variant="panel.kind === 'active' ? 'soft' : 'outline'"
-                          >
-                            {{ panel.kind === 'active' ? 'Active page' : 'Context only' }}
-                          </UBadge>
-                          <span class="text-xs font-medium text-gray-500 dark:text-gray-400">
-                            Page {{ panel.page }}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div class="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm dark:border-white/10">
-                        <canvas
-                          :ref="element => setPdfCanvasEl(panel.key, element)"
-                          class="block bg-white"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <ConsoleGuidesReviewPdfViewport
+                    v-if="selectedPdfArtifact"
+                    :artifact="selectedPdfArtifact"
+                    :current-page="currentPage"
+                    :secondary-page="secondaryPdfPage"
+                    :zoom="pdfZoom"
+                    :reload-token="pdfReloadToken"
+                    @navigate-page="handlePdfNavigatePage"
+                    @status-change="handlePdfViewportStatusChange"
+                  />
                 </div>
               </div>
             </UCard>
@@ -889,7 +830,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import type {
   CatalogApplicabilityStatus,
   CatalogArtifact,
@@ -907,7 +848,6 @@ import type {
   GuidelineUpdatePayload
 } from '~/services/catalogApi'
 import catalogApi from '~/services/catalogApi'
-import { fetchCatalogArtifactDownloadResponse } from '~/services/objectStorageApi'
 import {
   buildGuideRoutePath,
   formatDate,
@@ -930,86 +870,13 @@ definePageMeta({
   layout: 'default'
 })
 
-type PdfJsModule = typeof import('pdfjs-dist/legacy/build/pdf.mjs')
-type PdfWorkerModule = {
-  default: new () => Worker
-}
-type PdfPanelKey = 'primary' | 'secondary'
-type PdfDocumentLoadingTaskLike = {
-  promise: Promise<PdfDocumentLike>
-  destroy: () => Promise<void>
-}
-type PdfRenderTask = {
-  promise: Promise<void>
-  cancel?: () => void
-}
-type PdfDocumentLike = {
-  numPages: number
-  getPage: (pageNumber: number) => Promise<{
-    getViewport: (params: { scale: number }) => { width: number, height: number }
-    render: (params: {
-      canvasContext: CanvasRenderingContext2D
-      viewport: { width: number, height: number }
-      transform?: [number, number, number, number, number, number]
-    }) => { promise: Promise<void>, cancel?: () => void }
-  }>
-  destroy?: () => void | Promise<void>
-}
-
 type GuidelineEditorMode = 'create' | 'edit'
-
-let pdfModulePromise: Promise<PdfJsModule> | null = null
-let pdfWorkerPromise: Promise<PdfWorkerModule> | null = null
-let pdfWorkerInstance: Worker | null = null
-let activePdfLoadingTask: PdfDocumentLoadingTaskLike | null = null
-let activePdfDocument: PdfDocumentLike | null = null
-let activePdfRenderTasks: PdfRenderTask[] = []
-let activePdfDestroyPromise: Promise<void> | null = null
-let pdfLoadToken = 0
-let pdfRenderToken = 0
 let pageGuidelineLoadToken = 0
-let resizeTimer: ReturnType<typeof setTimeout> | null = null
-let pdfLifecycleDisposed = false
-
-function isPdfLifecycleInterruption(error: unknown) {
-  const message = (error instanceof Error ? error.message : String(error)).toLowerCase()
-
-  return message.includes('abort')
-    || message.includes('cancel')
-    || message.includes('page was destroyed')
-    || message.includes('pdf lifecycle disposed')
-    || message.includes('transport destroyed')
-    || message.includes('worker is being destroyed')
-    || message.includes('worker was destroyed')
-}
-
-async function getPdfModule() {
-  if (!import.meta.client) {
-    throw new Error('PDF rendering is only available in the browser')
-  }
-
-  if (!pdfModulePromise) {
-    pdfWorkerPromise ||= import('pdfjs-dist/legacy/build/pdf.worker.min.mjs?worker')
-
-    pdfModulePromise = Promise.all([
-      import('pdfjs-dist/legacy/build/pdf.mjs'),
-      pdfWorkerPromise
-    ]).then(([module, workerModule]) => {
-      if (pdfLifecycleDisposed) {
-        throw new Error('PDF lifecycle disposed')
-      }
-
-      pdfWorkerInstance ||= new workerModule.default()
-
-      if (module.GlobalWorkerOptions.workerPort !== pdfWorkerInstance) {
-        module.GlobalWorkerOptions.workerPort = pdfWorkerInstance
-      }
-
-      return module
-    })
-  }
-
-  return pdfModulePromise
+type PdfViewportStatus = {
+  error: string | null
+  loading: boolean
+  rendering: boolean
+  totalPages: number
 }
 
 const route = useRoute()
@@ -1037,12 +904,9 @@ const pdfRendering = ref(false)
 const pdfError = ref<string | null>(null)
 const facingPagesEnabled = ref(false)
 const isDesktopPdfViewport = ref(false)
+const pdfReloadToken = ref(0)
 
 const pdfViewportEl = ref<HTMLElement | null>(null)
-const pdfCanvasEls = reactive<Record<PdfPanelKey, HTMLCanvasElement | null>>({
-  primary: null,
-  secondary: null
-})
 
 const guidelineEditorOpen = ref(false)
 const guidelineEditorMode = ref<GuidelineEditorMode>('create')
@@ -1088,8 +952,6 @@ const guidelineForm = reactive({
   quantity_period: '',
   quantity_raw_text: ''
 })
-
-const pdfByteCache = reactive<Record<string, Uint8Array>>({})
 
 const guidelineColumns = computed(() => {
   const columns = [
@@ -1145,7 +1007,11 @@ const breadcrumbItems = computed(() => [
 ])
 
 const reviewArtifacts = computed(() =>
-  guideArtifacts.value.filter(artifact => hasPdfSuffix(artifact.file_s3_url))
+  guideArtifacts.value.filter(artifact =>
+    artifact.file_type.toLowerCase().includes('pdf')
+    || hasPdfSuffix(artifact.file_s3_url)
+    || hasPdfSuffix(artifact.file_url)
+  )
 )
 
 const reviewArtifactOptions = computed(() =>
@@ -1197,7 +1063,7 @@ const canCreateGuideline = computed(() =>
   Boolean(selectedGuide.value && selectedPdfArtifact.value && totalPdfPages.value >= 1 && !isGuideActive.value)
 )
 
-const pdfCanPan = computed(() => pdfZoom.value > 1.02 && !pdfLoading.value && !pdfError.value)
+const pdfCanPan = computed(() => pdfZoom.value > 1.02 && !pdfLoading.value && !pdfRendering.value && !pdfError.value)
 
 const canUseFacingPages = computed(() =>
   isDesktopPdfViewport.value && totalPdfPages.value > 1
@@ -1208,24 +1074,6 @@ const secondaryPdfPage = computed(() =>
     ? currentPage.value + 1
     : null
 )
-
-const visiblePdfPanels = computed(() => {
-  const panels: Array<{ key: PdfPanelKey, kind: 'active' | 'context', page: number }> = [{
-    key: 'primary',
-    kind: 'active',
-    page: currentPage.value
-  }]
-
-  if (secondaryPdfPage.value) {
-    panels.push({
-      key: 'secondary',
-      kind: 'context',
-      page: secondaryPdfPage.value
-    })
-  }
-
-  return panels
-})
 
 const pdfZoomLabel = computed(() => `${Math.round(pdfZoom.value * 100)}%`)
 
@@ -1308,6 +1156,10 @@ const pdfStatusLabel = computed(() => {
     return 'Loading document'
   }
 
+  if (pdfRendering.value) {
+    return 'Rendering page'
+  }
+
   if (!totalPdfPages.value) {
     return 'Preparing document'
   }
@@ -1375,187 +1227,6 @@ function clampPage(page: number) {
   return Math.min(Math.max(page, 1), totalPdfPages.value)
 }
 
-function setPdfCanvasEl(panelKey: PdfPanelKey, element: Element | null) {
-  pdfCanvasEls[panelKey] = element instanceof HTMLCanvasElement ? element : null
-}
-
-function clearPdfCanvas(panelKey: PdfPanelKey) {
-  const canvas = pdfCanvasEls[panelKey]
-  if (!canvas) {
-    return
-  }
-
-  const context = canvas.getContext('2d')
-  if (context) {
-    context.clearRect(0, 0, canvas.width, canvas.height)
-  }
-
-  canvas.width = 0
-  canvas.height = 0
-}
-
-function clearAllPdfCanvases() {
-  clearPdfCanvas('primary')
-  clearPdfCanvas('secondary')
-}
-
-function cancelActivePdfRenderTasks() {
-  activePdfRenderTasks.forEach(renderTask => {
-    if (!renderTask.cancel) {
-      return
-    }
-
-    try {
-      renderTask.cancel()
-    } catch {
-      // no-op
-    }
-  })
-
-  activePdfRenderTasks = []
-}
-
-async function destroyActivePdfDocument() {
-  if (activePdfDestroyPromise) {
-    await activePdfDestroyPromise
-    return
-  }
-
-  pdfRenderToken += 1
-
-  cancelActivePdfRenderTasks()
-
-  const loadingTask = activePdfLoadingTask
-  const document = activePdfDocument
-
-  activePdfLoadingTask = null
-  activePdfDocument = null
-  clearAllPdfCanvases()
-
-  if (!loadingTask && !document?.destroy) {
-    return
-  }
-
-  let destroyPromise: Promise<void>
-  destroyPromise = (async () => {
-    if (loadingTask) {
-      await loadingTask.destroy()
-      return
-    }
-
-    await document?.destroy?.()
-  })().catch(error => {
-    if (!isPdfLifecycleInterruption(error)) {
-      console.error('[ConsoleGuidelineReview] Failed to destroy PDF:', error)
-    }
-  }).finally(() => {
-    if (activePdfDestroyPromise === destroyPromise) {
-      activePdfDestroyPromise = null
-    }
-  })
-
-  activePdfDestroyPromise = destroyPromise
-  await destroyPromise
-}
-
-async function getArtifactPdfBytes(artifactId: string) {
-  const cached = pdfByteCache[artifactId]
-  if (cached?.byteLength) {
-    return cached
-  }
-
-  const response = await fetchCatalogArtifactDownloadResponse(artifactId)
-  if (!response.ok) {
-    throw new Error(`PDF fetch failed with status ${response.status}`)
-  }
-
-  const data = new Uint8Array(await response.arrayBuffer())
-  if (!data.byteLength) {
-    throw new Error('The PDF response was empty')
-  }
-
-  pdfByteCache[artifactId] = data
-  return data
-}
-
-async function renderVisiblePdfPages() {
-  if (!import.meta.client || !activePdfDocument || !pdfViewportEl.value) {
-    return
-  }
-
-  await nextTick()
-
-  const renderToken = ++pdfRenderToken
-  pdfRendering.value = true
-  pdfError.value = null
-
-  cancelActivePdfRenderTasks()
-
-  try {
-    const panels = visiblePdfPanels.value
-    const viewportContainerWidth = Math.max(pdfViewportEl.value.clientWidth - 32, 320)
-    const interPageGap = panels.length > 1 ? 16 : 0
-    const perPageWidth = panels.length > 1
-      ? Math.max((viewportContainerWidth - interPageGap) / 2, 240)
-      : viewportContainerWidth
-    const devicePixelRatio = window.devicePixelRatio || 1
-
-    if (!panels.some(panel => panel.key === 'secondary')) {
-      clearPdfCanvas('secondary')
-    }
-
-    for (const panel of panels) {
-      const canvas = pdfCanvasEls[panel.key]
-      if (!canvas) {
-        continue
-      }
-
-      const page = await activePdfDocument.getPage(clampPage(panel.page))
-      if (renderToken !== pdfRenderToken) {
-        return
-      }
-
-      const baseViewport = page.getViewport({ scale: 1 })
-      const scale = (perPageWidth / baseViewport.width) * pdfZoom.value
-      const viewport = page.getViewport({ scale })
-      const context = canvas.getContext('2d')
-
-      if (!context) {
-        throw new Error('Canvas rendering context unavailable')
-      }
-
-      canvas.width = Math.floor(viewport.width * devicePixelRatio)
-      canvas.height = Math.floor(viewport.height * devicePixelRatio)
-      canvas.style.width = `${Math.floor(viewport.width)}px`
-      canvas.style.height = `${Math.floor(viewport.height)}px`
-
-      context.setTransform(1, 0, 0, 1, 0, 0)
-      context.clearRect(0, 0, canvas.width, canvas.height)
-
-      const renderTask = page.render({
-        canvasContext: context,
-        viewport,
-        transform: devicePixelRatio === 1
-          ? undefined
-          : [devicePixelRatio, 0, 0, devicePixelRatio, 0, 0]
-      })
-
-      activePdfRenderTasks = [...activePdfRenderTasks, renderTask]
-      await renderTask.promise
-    }
-  } catch (error) {
-    if (!isPdfLifecycleInterruption(error)) {
-      console.error('[ConsoleGuidelineReview] Failed to render PDF page:', error)
-      pdfError.value = 'The PDF page could not be rendered.'
-    }
-  } finally {
-    if (renderToken === pdfRenderToken) {
-      pdfRendering.value = false
-      activePdfRenderTasks = []
-    }
-  }
-}
-
 function clampPdfZoom(value: number) {
   return Math.min(Math.max(value, 0.75), 2.5)
 }
@@ -1578,10 +1249,6 @@ function toggleFacingPages() {
   }
 
   facingPagesEnabled.value = !facingPagesEnabled.value
-
-  if (activePdfDocument && import.meta.client) {
-    void renderVisiblePdfPages()
-  }
 }
 
 function beginPdfPan(event: MouseEvent) {
@@ -1612,89 +1279,22 @@ function endPdfPan() {
   pdfPanState.active = false
 }
 
-async function loadSelectedPdf(forceReload = false) {
-  const artifact = selectedPdfArtifact.value
-  const loadToken = ++pdfLoadToken
-  let loadingTask: PdfDocumentLoadingTaskLike | null = null
-
+function resetPdfViewerState() {
+  pdfLoading.value = Boolean(selectedPdfArtifact.value)
+  pdfRendering.value = false
   pdfError.value = null
   totalPdfPages.value = 0
-  pdfLoading.value = Boolean(artifact)
-
-  await destroyActivePdfDocument()
-
-  if (pdfLifecycleDisposed || loadToken !== pdfLoadToken) {
-    return
-  }
-
-  if (!artifact) {
-    pdfLoading.value = false
-    return
-  }
-
-  try {
-    if (forceReload) {
-      pdfByteCache[artifact.id] = new Uint8Array()
-    }
-
-    const bytes = await getArtifactPdfBytes(artifact.id)
-    if (pdfLifecycleDisposed || loadToken !== pdfLoadToken) {
-      return
-    }
-
-    const pdfModule = await getPdfModule()
-    if (pdfLifecycleDisposed || loadToken !== pdfLoadToken) {
-      return
-    }
-
-    loadingTask = pdfModule.getDocument({ data: bytes }) as unknown as PdfDocumentLoadingTaskLike
-    activePdfLoadingTask = loadingTask
-
-    const document = await loadingTask.promise as PdfDocumentLike
-
-    if (pdfLifecycleDisposed || loadToken !== pdfLoadToken) {
-      await loadingTask.destroy()
-      return
-    }
-
-    activePdfDocument = document
-    totalPdfPages.value = document.numPages
-    currentPage.value = clampPage(currentPage.value)
-
-    await renderVisiblePdfPages()
-  } catch (error) {
-    if (pdfLifecycleDisposed || loadToken !== pdfLoadToken || isPdfLifecycleInterruption(error)) {
-      return
-    }
-
-    if (activePdfLoadingTask === loadingTask) {
-      activePdfLoadingTask = null
-    }
-
-    activePdfDocument = null
-    console.error('[ConsoleGuidelineReview] Failed to load PDF:', error)
-    pdfError.value = 'The selected PDF could not be opened.'
-    totalPdfPages.value = 0
-    clearAllPdfCanvases()
-  } finally {
-    if (loadToken === pdfLoadToken) {
-      pdfLoading.value = false
-    }
-  }
 }
 
-function schedulePdfRender() {
-  if (!import.meta.client || !activePdfDocument) {
-    return
-  }
+function handlePdfViewportStatusChange(status: PdfViewportStatus) {
+  pdfLoading.value = status.loading
+  pdfRendering.value = status.rendering
+  pdfError.value = status.error
+  totalPdfPages.value = status.totalPages
+}
 
-  if (resizeTimer) {
-    clearTimeout(resizeTimer)
-  }
-
-  resizeTimer = setTimeout(() => {
-    void renderVisiblePdfPages()
-  }, 120)
+function handlePdfNavigatePage(page: number) {
+  currentPage.value = clampPage(page)
 }
 
 function syncPdfViewportMode() {
@@ -1707,7 +1307,6 @@ function syncPdfViewportMode() {
 
 function handlePdfViewportResize() {
   syncPdfViewportMode()
-  schedulePdfRender()
 }
 
 function normalizeNullable(value: string) {
@@ -1932,10 +1531,11 @@ async function loadGuideDetail(urn: string) {
 
 async function refreshReview() {
   await loadGuideDetail(resolvedGuideUrn.value)
-  await Promise.all([
-    loadSelectedPdf(true),
-    loadPageGuidelines()
-  ])
+  await loadPageGuidelines()
+  resetPdfViewerState()
+  if (selectedPdfArtifact.value) {
+    pdfReloadToken.value += 1
+  }
 }
 
 function goToPreviousPage() {
@@ -2357,10 +1957,6 @@ async function approveSelectedGuidelines() {
   }
 }
 
-function reloadSelectedPdf() {
-  void loadSelectedPdf(true)
-}
-
 onMounted(() => {
   if (!import.meta.client) {
     return
@@ -2368,10 +1964,6 @@ onMounted(() => {
 
   syncPdfViewportMode()
   window.addEventListener('resize', handlePdfViewportResize)
-
-  if (selectedArtifactId.value) {
-    void loadSelectedPdf()
-  }
 })
 
 watch(
@@ -2387,10 +1979,6 @@ watch(
     void (async () => {
       await loadGuideDetail(nextUrn)
       await loadPageGuidelines()
-
-      if (import.meta.client && selectedArtifactId.value) {
-        await loadSelectedPdf(true)
-      }
     })()
   }
 )
@@ -2401,12 +1989,9 @@ watch(selectedArtifactId, () => {
   guidelineTablePage.value = 1
   selectedGuidelineIds.value = []
   pdfZoom.value = 1
+  resetPdfViewerState()
   if (shouldReloadImmediately) {
     void loadPageGuidelines()
-  }
-
-  if (import.meta.client) {
-    void loadSelectedPdf()
   }
 })
 
@@ -2427,10 +2012,6 @@ watch(currentPage, (page) => {
     selectedGuidelineIds.value = []
     void loadPageGuidelines()
   }
-
-  if (activePdfDocument) {
-    void renderVisiblePdfPages()
-  }
 })
 
 watch(guidelineTablePage, (page, previousPage) => {
@@ -2450,40 +2031,22 @@ watch(guidelineDeleteOpen, isOpen => {
   guidelineDeleteTargetIds.value = []
 })
 
-watch(pdfZoom, () => {
-  if (activePdfDocument && import.meta.client) {
-    void renderVisiblePdfPages()
+watch(totalPdfPages, (pages) => {
+  if (!pages) {
+    currentPage.value = 1
+    return
+  }
+
+  const nextPage = clampPage(currentPage.value)
+  if (nextPage !== currentPage.value) {
+    currentPage.value = nextPage
   }
 })
 
 onBeforeUnmount(() => {
-  pdfLifecycleDisposed = true
-  pdfLoadToken += 1
-
   if (import.meta.client) {
     window.removeEventListener('resize', handlePdfViewportResize)
   }
-
-  if (resizeTimer) {
-    clearTimeout(resizeTimer)
-  }
-
-  const workerToTerminate = pdfWorkerInstance
-  const modulePromise = pdfModulePromise
-
-  void (async () => {
-    await destroyActivePdfDocument()
-
-    const pdfModule = modulePromise ? await modulePromise.catch(() => null) : null
-    if (pdfModule?.GlobalWorkerOptions.workerPort === workerToTerminate) {
-      pdfModule.GlobalWorkerOptions.workerPort = null
-    }
-
-    workerToTerminate?.terminate()
-    pdfWorkerInstance = null
-    pdfWorkerPromise = null
-    pdfModulePromise = null
-  })()
 })
 
 await loadGuideDetail(resolvedGuideUrn.value)

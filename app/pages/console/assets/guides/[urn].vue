@@ -954,7 +954,6 @@
                 <UButton
                   v-if="guidelineImportPreview && !guidelineImportResult"
                   color="primary"
-                  :loading="guidelineImportPending"
                   :disabled="guidelineImportExecutableCount === 0"
                   @click="confirmGuidelineImport"
                 >
@@ -1018,7 +1017,6 @@ const guidelineImportModalOpen = ref(false)
 const guidelineImportPreview = ref<FoodScholarGuidelineImportResult | null>(null)
 const guidelineImportPreviewLoading = ref(false)
 const guidelineImportPreviewError = ref<string | null>(null)
-const guidelineImportPending = ref(false)
 const guidelineImportError = ref<string | null>(null)
 const guidelineImportResult = ref<FoodScholarGuidelineImportResult | null>(null)
 let guidelineExtractionPollTimeout: ReturnType<typeof setTimeout> | null = null
@@ -1398,7 +1396,7 @@ const guidelineImportTableRows = computed(() => {
   return guidelineImportActiveDataset.value?.items || []
 })
 
-const guidelineImportBusy = computed(() => guidelineImportPreviewLoading.value || guidelineImportPending.value)
+const guidelineImportBusy = computed(() => guidelineImportPreviewLoading.value)
 
 const guideMetadataItems = computed(() => {
   const guide = selectedGuide.value
@@ -1538,7 +1536,6 @@ function resetGuidelineImportState() {
   guidelineImportPreview.value = null
   guidelineImportPreviewLoading.value = false
   guidelineImportPreviewError.value = null
-  guidelineImportPending.value = false
   guidelineImportError.value = null
   guidelineImportResult.value = null
 }
@@ -1677,36 +1674,38 @@ async function confirmGuidelineImport() {
     return
   }
 
-  guidelineImportPending.value = true
   guidelineImportError.value = null
+  const artifactId = guidelineExtractionArtifact.value.id
+  const guideUrn = selectedGuide.value.urn
 
-  try {
-    const response = await foodscholarGuidelinesApi.importGuidelines(guidelineExtractionArtifact.value.id, {
-      guide_id: selectedGuide.value.urn,
-      dry_run: false,
-      dedupe_against_guide: true,
-      action_type: defaultGuidelineImportActionType,
-      existing_scan_limit: 500
-    })
+  void (async () => {
+    try {
+      const response = await foodscholarGuidelinesApi.importGuidelines(artifactId, {
+        guide_id: guideUrn,
+        dry_run: false,
+        dedupe_against_guide: true,
+        action_type: defaultGuidelineImportActionType,
+        existing_scan_limit: 500
+      })
 
-    if (typeof response === 'string') {
-      guidelineImportError.value = response
-      return
+      if (typeof response === 'string') {
+        console.warn('[ConsoleGuideDetail] Guideline import returned a non-success response:', response)
+        return
+      }
+
+      await refreshGuide()
+    } catch (error) {
+      console.error('[ConsoleGuideDetail] Failed to import extracted guidelines:', error)
     }
+  })()
 
-    guidelineImportResult.value = response
-    await refreshGuide()
-    toast.add({
-      title: 'Guidelines imported',
-      description: `${response.total_created} guideline${response.total_created === 1 ? '' : 's'} created for the guide.`,
-      color: 'success'
-    })
-  } catch (error) {
-    console.error('[ConsoleGuideDetail] Failed to import extracted guidelines:', error)
-    guidelineImportError.value = resolveErrorMessage(error, 'The extracted guidelines could not be imported right now.')
-  } finally {
-    guidelineImportPending.value = false
-  }
+  guidelineImportModalOpen.value = false
+  resetGuidelineImportState()
+  toast.add({
+    title: 'Guideline importing started',
+    description: 'It will be completed soon.',
+    color: 'warning'
+  })
 }
 
 function normalizeNumber(value: string | number) {
