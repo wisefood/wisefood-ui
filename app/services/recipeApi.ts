@@ -221,7 +221,7 @@ class RecipeApiService {
       }
       // Use longer timeout for recipe details
       const data = await this.fetchWithTimeout<Recipe>(
-        `${this.basePath}/by-id?recipe_id=${encodeURIComponent(normalizedId)}`,
+        `${this.basePath}/${encodeURIComponent(normalizedId)}`,
         'GET',
         undefined,
         DEFAULT_TIMEOUT
