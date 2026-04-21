@@ -1,27 +1,13 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
     <!-- Header -->
-    <div class="border-b border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-10">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-        <div class="flex items-center justify-between">
-          <NuxtLink
-            to="/dashboard"
-            class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
-          >
-            <UIcon name="i-lucide-arrow-left" class="w-5 h-5" />
-            <span class="text-sm font-medium hidden sm:inline">{{ t('foodChatHome.backToDashboard') }}</span>
-          </NuxtLink>
-        </div>
-        <div class="mt-3 sm:mt-4">
-          <h1 class="text-2xl sm:text-3xl md:text-4xl font-light text-zinc-900 dark:text-white tracking-tight">
-            <span class="font-serif italic text-brandp-500 dark:text-brandp-400 text-3xl sm:text-4xl md:text-5xl">FoodChat</span>
-          </h1>
-          <p class="mt-2 text-sm sm:text-base text-zinc-600 dark:text-zinc-300 font-light">
-            {{ t('foodChatHome.subtitle') }}
-          </p>
-        </div>
-      </div>
-    </div>
+    <AppPageHeader
+      back-to="/dashboard"
+      :back-label="t('foodChatHome.backToDashboard')"
+      brand-title="FoodChat"
+      brand-class="text-brandp-500 dark:text-brandp-400"
+      :subtitle="t('foodChatHome.subtitle')"
+    />
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
 

@@ -1,31 +1,12 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
-    <div class="border-b border-gray-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-10">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-4">
-            <NuxtLink
-              to="/dashboard"
-              class="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
-            >
-              <UIcon
-                name="i-lucide-arrow-left"
-                class="w-5 h-5"
-              />
-              <span class="text-sm font-medium">{{ t('foodScholarHome.backToDashboard') }}</span>
-            </NuxtLink>
-          </div>
-        </div>
-        <div class="mt-4">
-          <h1 class="text-3xl sm:text-4xl font-light text-gray-900 dark:text-white tracking-tight">
-            <span class="font-serif italic text-brand-500 text-4xl sm:text-5xl">FoodScholar</span>
-          </h1>
-          <p class="mt-2 text-gray-600 dark:text-gray-300 font-light">
-            {{ t('foodScholarHome.subtitle') }}
-          </p>
-        </div>
-      </div>
-    </div>
+    <AppPageHeader
+      back-to="/dashboard"
+      :back-label="t('foodScholarHome.backToDashboard')"
+      brand-title="FoodScholar"
+      brand-class="text-brand-500 dark:text-brand-400"
+      :subtitle="t('foodScholarHome.subtitle')"
+    />
 
     <main class="max-w-7xl mx-auto px-4 py-6">
       <section
