@@ -345,17 +345,37 @@
 
             <div class="mt-6">
               <button
+                v-if="!showProfilingDetails || profilingLoading"
                 type="button"
                 @click="toggleNutritionProfilingDetails"
                 :disabled="profilingLoading"
                 class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <UIcon
-                  :name="profilingLoading ? 'i-lucide-loader-2' : 'i-lucide-calculator'"
+                  :name="profilingLoading ? 'i-lucide-loader-2' : 'i-lucide-microscope'"
                   :class="['w-4 h-4', profilingLoading ? 'animate-spin' : '']"
                 />
-                <span>{{ showProfilingDetails ? 'Hide Nutrition Profiling Details' : 'Nutrition Profiling Details' }}</span>
+                <span>{{ profilingLoading ? 'Loading profiling data…' : 'Load ingredient profiling' }}</span>
               </button>
+              <div v-else class="flex items-center gap-3">
+                <div class="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                  <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-brandg-100 dark:bg-brandg-900/40 text-brandg-700 dark:text-brandg-300 border border-brandg-200 dark:border-brandg-700 font-medium">
+                    <span class="w-1.5 h-1.5 rounded-full bg-brandg-500"></span>
+                    {{ matchedWeightCount }} matched
+                  </span>
+                  <span v-if="unmatchedWeightCount > 0" class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700 font-medium">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    {{ unmatchedWeightCount }} unmatched
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  @click="showProfilingDetails = false; profilingResult = null"
+                  class="text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
+                >
+                  Clear
+                </button>
+              </div>
               <p
                 v-if="profilingError"
                 class="mt-2 text-xs text-red-600 dark:text-red-400"
@@ -364,60 +384,6 @@
               </p>
             </div>
 
-            <div
-              v-if="showProfilingDetails && (profilingIngredientRows.length || profilingWeightDetails.length)"
-              class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-700"
-            >
-              <div class="flex flex-wrap items-center gap-4 mb-4">
-                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white">
-                  Nutrition Profiling Calculation Details
-                </h3>
-                <p class="text-xs text-zinc-600 dark:text-zinc-300">
-                  Weight matched: {{ matchedWeightCount }} | Unmatched: {{ unmatchedWeightCount }}
-                </p>
-              </div>
-
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                <div
-                  v-for="(item, idx) in profilingIngredientRows"
-                  :key="`${item.ingredient || item.name || 'ingredient'}-${idx}`"
-                  class="rounded-lg border border-zinc-200 dark:border-zinc-700 p-3 bg-zinc-50 dark:bg-zinc-800/40"
-                >
-                  <p class="text-sm font-semibold text-zinc-900 dark:text-white">
-                    {{ item.ingredient || item.name || 'Unknown ingredient' }}
-                  </p>
-                  <p class="text-xs text-zinc-600 dark:text-zinc-300 mt-1">
-                    Quantity parsed: {{ item.parsed_quantity || profilingWeightDetails[idx]?.parsed_quantity || 'N/A' }}
-                    {{ item.parsed_unit || profilingWeightDetails[idx]?.parsed_unit || '' }}
-                    <span v-if="item.measurement_raw || profilingWeightDetails[idx]?.measurement_raw">
-                      (raw: {{ item.measurement_raw || profilingWeightDetails[idx]?.measurement_raw }})
-                    </span>
-                  </p>
-                  <p class="text-xs text-zinc-600 dark:text-zinc-300">
-                    Weight used: {{ formatNumber(item.weight_g || profilingWeightDetails[idx]?.weight_grams) }} g
-                  </p>
-                  <p class="text-xs text-zinc-600 dark:text-zinc-300">
-                    Weight match type/source:
-                    {{ getWeightSourceLabel(item.weight_source || item.nutrition_match_source || profilingWeightDetails[idx]?.match_type) }}
-                    <span v-if="item.canonical_food_id || profilingWeightDetails[idx]?.usda_id">
-                      (USDA ID: {{ item.canonical_food_id || profilingWeightDetails[idx]?.usda_id }})
-                    </span>
-                  </p>
-                  <p class="text-xs text-zinc-600 dark:text-zinc-300">
-                    Matched nutrition ingredient: {{ item.matched_nutritional_ingredient || item.weight_match || 'N/A' }}
-                  </p>
-                  <p class="text-xs text-zinc-600 dark:text-zinc-300">
-                    Nutrition source: {{ formatNutritionSourceLabel(item.nutrition_source || item.source_nutrition || item.source) }}
-                  </p>
-                  <p
-                    v-if="item.similarity !== null && item.similarity !== undefined"
-                    class="text-xs text-zinc-600 dark:text-zinc-300"
-                  >
-                    Match similarity: {{ formatNumber(item.similarity) }}
-                  </p>
-                </div>
-              </div>
-            </div>
           </section>
 
           <!-- Instructions -->
@@ -566,43 +532,162 @@
               {{ t('recipeWrangler.detail.ingredients') }}
             </h2>
 
-            <ul class="space-y-4">
+            <ul class="space-y-1">
               <li
                 v-for="(ingredient, index) in recipe.ingredients"
                 :key="index"
-                @click="toggleIngredient(index)"
-                class="flex items-start gap-4 group cursor-pointer"
+                class="rounded-xl transition-colors"
+                :class="expandedIngredient === index ? 'bg-zinc-50 dark:bg-zinc-700/30' : ''"
               >
+                <!-- Main ingredient row -->
                 <div
-                  :class="[
-                    'w-6 h-6 rounded-md border-2 border-brandg-500 dark:border-brandg-400 mt-0.5 flex-shrink-0 flex items-center justify-center transition-all',
-                    checkedIngredients[index] ? 'bg-brandg-500 dark:bg-brandg-400' : 'group-hover:bg-brandg-100 dark:group-hover:bg-brandg-900/30'
-                  ]"
+                  class="flex items-start gap-4 group cursor-pointer px-2 py-3"
+                  @click="toggleIngredient(index)"
                 >
-                  <UIcon
-                    v-if="checkedIngredients[index]"
-                    name="i-lucide-check"
-                    class="w-4 h-4 text-white"
-                  />
+                  <div
+                    :class="[
+                      'w-6 h-6 rounded-md border-2 border-brandg-500 dark:border-brandg-400 mt-0.5 flex-shrink-0 flex items-center justify-center transition-all',
+                      checkedIngredients[index] ? 'bg-brandg-500 dark:bg-brandg-400' : 'group-hover:bg-brandg-100 dark:group-hover:bg-brandg-900/30'
+                    ]"
+                  >
+                    <UIcon
+                      v-if="checkedIngredients[index]"
+                      name="i-lucide-check"
+                      class="w-4 h-4 text-white"
+                    />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p :class="[
+                      'font-medium text-base transition-all',
+                      checkedIngredients[index]
+                        ? 'line-through text-zinc-400 dark:text-zinc-600'
+                        : 'text-zinc-900 dark:text-white'
+                    ]">
+                      {{ ingredient.name }}
+                    </p>
+                    <p v-if="ingredient.measurement" :class="[
+                      'text-sm mt-0.5 transition-all',
+                      checkedIngredients[index]
+                        ? 'line-through text-zinc-400 dark:text-zinc-600'
+                        : 'text-zinc-500 dark:text-zinc-400'
+                    ]">
+                      {{ ingredient.measurement }}
+                    </p>
+                    <!-- Profiling summary pill (visible when loaded, not expanded) -->
+                    <div
+                      v-if="showProfilingDetails && profilingIngredientRows[index] && expandedIngredient !== index"
+                      class="mt-1.5 flex items-center gap-1.5 flex-wrap"
+                    >
+                      <span
+                        v-if="profilingIngredientRows[index].weight_g || profilingWeightDetails[index]?.weight_grams"
+                        class="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-brandg-100 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300"
+                      >
+                        <UIcon name="i-lucide-weight" class="w-2.5 h-2.5" />
+                        {{ formatNumber(profilingIngredientRows[index].weight_g || profilingWeightDetails[index]?.weight_grams) }}g
+                      </span>
+                    </div>
+                  </div>
+                  <!-- Expand toggle for profiling (only when data is loaded) -->
+                  <button
+                    v-if="showProfilingDetails && profilingIngredientRows[index]"
+                    type="button"
+                    @click.stop="expandedIngredient = expandedIngredient === index ? null : index"
+                    class="flex-shrink-0 mt-0.5 p-1 rounded-md text-zinc-400 dark:text-zinc-500 hover:text-brandg-600 dark:hover:text-brandg-400 hover:bg-brandg-50 dark:hover:bg-brandg-900/20 transition-colors"
+                  >
+                    <UIcon
+                      :name="expandedIngredient === index ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+                      class="w-3.5 h-3.5"
+                    />
+                  </button>
                 </div>
-                <div class="flex-1">
-                  <p :class="[
-                    'font-medium text-base transition-all',
-                    checkedIngredients[index]
-                      ? 'line-through text-zinc-400 dark:text-zinc-600'
-                      : 'text-zinc-900 dark:text-white'
-                  ]">
-                    {{ ingredient.name }}
-                  </p>
-                  <p v-if="ingredient.measurement" :class="[
-                    'text-sm mt-1 transition-all',
-                    checkedIngredients[index]
-                      ? 'line-through text-zinc-400 dark:text-zinc-600'
-                      : 'text-zinc-500 dark:text-zinc-400'
-                  ]">
-                    {{ ingredient.measurement }}
-                  </p>
-                </div>
+
+                <!-- Profiling detail accordion -->
+                <Transition
+                  enter-active-class="transition-all duration-200 ease-out"
+                  enter-from-class="opacity-0 -translate-y-1"
+                  enter-to-class="opacity-100 translate-y-0"
+                  leave-active-class="transition-all duration-150 ease-in"
+                  leave-from-class="opacity-100 translate-y-0"
+                  leave-to-class="opacity-0 -translate-y-1"
+                >
+                  <div
+                    v-if="showProfilingDetails && expandedIngredient === index && profilingIngredientRows[index]"
+                    class="px-3 pb-3"
+                  >
+                    <div class="rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-3 space-y-2.5">
+                      <!-- Weight row -->
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Weight used</span>
+                        <span class="font-mono text-xs font-semibold text-brandg-700 dark:text-brandg-300">
+                          {{ formatNumber(profilingIngredientRows[index].weight_g || profilingWeightDetails[index]?.weight_grams) }} g
+                        </span>
+                      </div>
+                      <!-- Parsed qty -->
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Parsed qty</span>
+                        <span class="font-mono text-xs text-zinc-700 dark:text-zinc-300">
+                          {{ profilingIngredientRows[index].parsed_quantity || profilingWeightDetails[index]?.parsed_quantity || '—' }}
+                          {{ profilingIngredientRows[index].parsed_unit || profilingWeightDetails[index]?.parsed_unit || '' }}
+                          <span v-if="profilingWeightDetails[index]?.quantity_inferred || profilingWeightDetails[index]?.unit_inferred" class="ml-1 text-amber-500">
+                            <UIcon name="i-lucide-zap" class="w-2.5 h-2.5 inline" />
+                          </span>
+                        </span>
+                      </div>
+                      <!-- Match source -->
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Match source</span>
+                        <span :class="[
+                          'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border',
+                          getMatchSourceStyle(String(profilingIngredientRows[index].weight_source || profilingIngredientRows[index].nutrition_match_source || profilingWeightDetails[index]?.match_type || ''))
+                        ]">
+                          <UIcon :name="getMatchSourceIcon(String(profilingIngredientRows[index].weight_source || profilingIngredientRows[index].nutrition_match_source || profilingWeightDetails[index]?.match_type || ''))" class="w-2.5 h-2.5" />
+                          {{ getWeightSourceLabel(String(profilingIngredientRows[index].weight_source || profilingIngredientRows[index].nutrition_match_source || profilingWeightDetails[index]?.match_type || '')) }}
+                        </span>
+                      </div>
+                      <!-- Matched ingredient -->
+                      <div class="flex items-start justify-between gap-2">
+                        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mt-0.5 shrink-0">Matched to</span>
+                        <span class="text-xs text-zinc-700 dark:text-zinc-300 text-right">
+                          {{ profilingIngredientRows[index].matched_nutritional_ingredient || profilingIngredientRows[index].weight_match || '—' }}
+                        </span>
+                      </div>
+                      <!-- Nutrition source -->
+                      <div class="flex items-start justify-between gap-2">
+                        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mt-0.5 shrink-0">Source</span>
+                        <span class="text-xs text-zinc-600 dark:text-zinc-400 text-right">
+                          {{ formatNutritionSourceLabel(profilingIngredientRows[index].nutrition_source || profilingIngredientRows[index].source_nutrition || profilingIngredientRows[index].source) }}
+                        </span>
+                      </div>
+                      <!-- Similarity -->
+                      <div
+                        v-if="profilingIngredientRows[index].similarity !== null && profilingIngredientRows[index].similarity !== undefined"
+                        class="flex items-center justify-between gap-2"
+                      >
+                        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Similarity</span>
+                        <span :class="[
+                          'font-mono text-xs font-semibold',
+                          Number(profilingIngredientRows[index].similarity) >= 0.85 ? 'text-brandg-600 dark:text-brandg-400' :
+                          Number(profilingIngredientRows[index].similarity) >= 0.6 ? 'text-amber-600 dark:text-amber-400' :
+                          'text-red-600 dark:text-red-400'
+                        ]">
+                          {{ (Number(profilingIngredientRows[index].similarity) * 100).toFixed(0) }}%
+                        </span>
+                      </div>
+                      <!-- USDA ID -->
+                      <div v-if="profilingIngredientRows[index].canonical_food_id || profilingWeightDetails[index]?.usda_id" class="flex items-center justify-between gap-2">
+                        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">USDA ID</span>
+                        <span class="font-mono text-[10px] text-zinc-500 dark:text-zinc-400">
+                          #{{ profilingIngredientRows[index].canonical_food_id || profilingWeightDetails[index]?.usda_id }}
+                        </span>
+                      </div>
+                      <!-- Error -->
+                      <div v-if="profilingWeightDetails[index]?.error" class="pt-1 border-t border-red-200 dark:border-red-800">
+                        <p class="text-[10px] font-semibold uppercase tracking-wider text-red-400 mb-0.5">Error</p>
+                        <p class="text-xs text-red-600 dark:text-red-400">{{ profilingWeightDetails[index]?.error }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </Transition>
               </li>
             </ul>
           </section>
@@ -745,6 +830,7 @@ const showRadarChart = ref(false)
 const showAllNutrients = ref(false)
 const showNutriScoreDetails = ref(false)
 const showProfilingDetails = ref(false)
+const expandedIngredient = ref<number | null>(null)
 const profilingLoading = ref(false)
 const profilingError = ref<string | null>(null)
 const profilingResult = ref<RecipeProfileResult | null>(null)
@@ -1214,6 +1300,28 @@ const getWeightSourceLabel = (matchType?: string | null): string => {
   if (normalized.includes('llm')) return 'AI Generated (LLM Fallback)'
   if (normalized.includes('density')) return 'Density fallback'
   return matchType || 'N/A'
+}
+
+const getMatchSourceIcon = (matchType?: string | null): string => {
+  const normalized = String(matchType || '').toLowerCase()
+  if (normalized.includes('direct') || normalized.includes('portion')) return 'i-lucide-database'
+  if (normalized.includes('embedding')) return 'i-lucide-sparkles'
+  if (normalized.includes('llm')) return 'i-lucide-bot'
+  if (normalized.includes('density')) return 'i-lucide-flask-conical'
+  return 'i-lucide-circle-help'
+}
+
+const getMatchSourceStyle = (matchType?: string | null): string => {
+  const normalized = String(matchType || '').toLowerCase()
+  if (normalized.includes('direct') || normalized.includes('portion'))
+    return 'bg-brandg-50 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300 border-brandg-200 dark:border-brandg-700'
+  if (normalized.includes('embedding'))
+    return 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700'
+  if (normalized.includes('llm'))
+    return 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700'
+  if (normalized.includes('density'))
+    return 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-700'
+  return 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700'
 }
 
 const formatNutritionSourceLabel = (source?: unknown): string => {

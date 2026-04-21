@@ -605,13 +605,14 @@ class RecipeApiService {
    */
   async updateManagedRecipe(recipeId: string, updates: UpdateRecipeRequest): Promise<Recipe> {
     try {
-      return await this.fetchWithTimeout<Recipe>(
+      await this.fetchWithTimeout<unknown>(
         `${this.restBasePath}/${encodeURIComponent(recipeId)}`,
         'PATCH',
         updates,
         DEFAULT_TIMEOUT,
         'wisefood-rest'
       )
+      return await this.getManagedRecipe(recipeId)
     } catch (error) {
       throw this.handleError(error, 'Failed to update recipe')
     }

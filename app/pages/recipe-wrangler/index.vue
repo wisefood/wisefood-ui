@@ -215,79 +215,161 @@
 
             <div
               v-if="showCalculationDetails"
-              class="mt-5 rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 bg-white dark:bg-zinc-900"
+              class="mt-5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 overflow-hidden"
             >
-              <div class="flex flex-wrap items-center gap-4 mb-4">
-                <h4 class="text-lg font-semibold text-zinc-900 dark:text-white">Calculation Details</h4>
-                <p class="text-sm text-zinc-600 dark:text-zinc-300">
-                  Weight matched: {{ matchedWeightCount }} | Unmatched: {{ unmatchedWeightCount }}
-                </p>
-                <p class="text-sm text-zinc-600 dark:text-zinc-300">
-                  Sources:
-                  <a
-                    :href="nutritionSourceUrl"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-brandg-600 dark:text-brandg-400 underline"
-                  >
-                    {{ nutritionSourceLabel }}
-                  </a>
-                  and Sustainable FooDB.
-                  Nutri-Score method:
-                  <a
-                    href="https://nutriscore.blog/2022/12/25/spreadsheet-to-calculate-the-updated-version-of-the-nutri-score/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-brandg-600 dark:text-brandg-400 underline"
-                  >
-                    reference spreadsheet
-                  </a>
-                </p>
-              </div>
-
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                <div
-                  v-for="(item, idx) in analysisIngredientRows"
-                  :key="`${item.ingredient || item.name || 'ingredient'}-${idx}`"
-                  class="rounded-lg border border-zinc-200 dark:border-zinc-700 p-3 bg-zinc-50 dark:bg-zinc-800/40"
-                >
-                  <p class="text-base font-semibold text-zinc-900 dark:text-white">
-                    {{ item.ingredient || item.name || 'Unknown ingredient' }}
-                  </p>
-                  <p class="text-sm text-zinc-600 dark:text-zinc-300 mt-1">
-                    Matched nutrition ingredient: {{ item.matched_nutritional_ingredient || 'N/A' }}
-                  </p>
-                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
-                    Matched sustainability ingredient: {{ item.matched_sustainability_ingredient || 'N/A' }}
-                  </p>
-                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
-                    Weight used: {{ formatNumber(item.weight_g) }} g
-                  </p>
-                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
-                    Per 100g: Calories {{ formatNumber(item.energy_kcal_per_100g) }} kcal | Protein {{ formatNumber(item.protein_per_100g) }} g | Carbohydrates {{ formatNumber(item.carbs_per_100g) }} g | Fat {{ formatNumber(item.fat_per_100g) }} g
-                  </p>
-                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
-                    Distance: {{ formatNumber(item.distance) }} | CO2 contrib: {{ formatNumber(item.contribution) }}
-                  </p>
+              <!-- Panel header -->
+              <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/60">
+                <div class="flex items-center gap-3">
+                  <div class="p-2 rounded-lg bg-brandg-100 dark:bg-brandg-900/40">
+                    <UIcon name="i-lucide-microscope" class="w-4 h-4 text-brandg-600 dark:text-brandg-400" />
+                  </div>
+                  <div>
+                    <h4 class="text-sm font-semibold text-zinc-900 dark:text-white leading-tight">Nutrition Profiling Pipeline</h4>
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                      Source:
+                      <a :href="nutritionSourceUrl" target="_blank" rel="noopener noreferrer" class="text-brandg-600 dark:text-brandg-400 hover:underline">{{ nutritionSourceLabel }}</a>
+                      · Nutri-Score:
+                      <a href="https://nutriscore.blog/2022/12/25/spreadsheet-to-calculate-the-updated-version-of-the-nutri-score/" target="_blank" rel="noopener noreferrer" class="text-brandg-600 dark:text-brandg-400 hover:underline">reference</a>
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brandg-100 dark:bg-brandg-900/40 text-brandg-700 dark:text-brandg-300 border border-brandg-200 dark:border-brandg-700">
+                    <span class="w-1.5 h-1.5 rounded-full bg-brandg-500"></span>
+                    {{ matchedWeightCount }} matched
+                  </span>
+                  <span v-if="unmatchedWeightCount > 0" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    {{ unmatchedWeightCount }} unmatched
+                  </span>
                 </div>
               </div>
 
-              <div v-if="analysisWeightDetails.length" class="mt-4">
-                <h5 class="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400 mb-2">
-                  Weight Parsing Trace
-                </h5>
-                <div class="space-y-2">
-                  <div
-                    v-for="(row, idx) in analysisWeightDetails"
-                    :key="`${row.name || 'weight'}-${idx}`"
-                    class="text-sm text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded-md p-2 bg-zinc-50 dark:bg-zinc-800/40"
-                  >
-                    <span class="font-semibold">{{ row.name || 'Unknown' }}</span>
-                    · raw: {{ row.measurement_raw || 'N/A' }}
-                    · parsed quantity: {{ row.parsed_quantity || 'N/A' }} {{ row.parsed_unit || '' }}
-                    · match: {{ row.match_type || 'N/A' }}
-                    · grams: {{ formatNumber(row.weight_grams) }}
-                    <span v-if="row.error"> · error: {{ row.error }}</span>
+              <!-- Unified table -->
+              <div v-if="analysisIngredientRows.length" class="p-5">
+                <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden shadow-sm">
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full text-xs">
+                      <thead>
+                        <tr class="bg-zinc-50 dark:bg-zinc-900/60 border-b border-zinc-200 dark:border-zinc-700">
+                          <th class="px-4 py-3 text-left font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider whitespace-nowrap w-8"></th>
+                          <th class="px-4 py-3 text-left font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider whitespace-nowrap">#</th>
+                          <th class="px-4 py-3 text-left font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider whitespace-nowrap">Ingredient</th>
+                          <th class="px-4 py-3 text-left font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider whitespace-nowrap">Parsed Qty · Unit</th>
+                          <th class="px-4 py-3 text-right font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider whitespace-nowrap">Weight (g)</th>
+                          <th class="px-4 py-3 text-right font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider whitespace-nowrap">kcal/100g</th>
+                          <th class="px-4 py-3 text-right font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider whitespace-nowrap">Protein/100g</th>
+                          <th class="px-4 py-3 text-right font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider whitespace-nowrap">Carbs/100g</th>
+                          <th class="px-4 py-3 text-right font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider whitespace-nowrap">Fat/100g</th>
+                          <th class="px-4 py-3 text-right font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider whitespace-nowrap">CO₂</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <template v-for="(item, idx) in analysisIngredientRows" :key="`row-${idx}`">
+                          <!-- Primary row -->
+                          <tr
+                            @click="analysisExpandedRow = analysisExpandedRow === idx ? null : idx"
+                            :class="[
+                              'cursor-pointer transition-colors border-t border-zinc-100 dark:border-zinc-800',
+                              analysisWeightDetails[idx]?.error
+                                ? 'bg-red-50/40 dark:bg-red-900/10 hover:bg-red-50/70 dark:hover:bg-red-900/20'
+                                : analysisExpandedRow === idx
+                                  ? 'bg-brandg-50/60 dark:bg-brandg-900/15'
+                                  : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/40'
+                            ]"
+                          >
+                            <td class="pl-3 pr-1 py-3 w-8">
+                              <UIcon
+                                :name="analysisExpandedRow === idx ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
+                                class="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 transition-transform"
+                              />
+                            </td>
+                            <td class="px-4 py-3 text-zinc-400 dark:text-zinc-600 font-mono">{{ idx + 1 }}</td>
+                            <td class="px-4 py-3 font-semibold text-zinc-900 dark:text-white whitespace-nowrap max-w-[200px] truncate" :title="String(item.ingredient || item.name || '')">
+                              {{ item.ingredient || item.name || '—' }}
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                              <span v-if="analysisWeightDetails[idx]?.parsed_quantity" class="inline-flex items-center gap-1">
+                                <span class="font-semibold text-zinc-900 dark:text-white">{{ analysisWeightDetails[idx]?.parsed_quantity }}</span>
+                                <span class="text-zinc-500 dark:text-zinc-400">{{ analysisWeightDetails[idx]?.parsed_unit || '' }}</span>
+                              </span>
+                              <span v-else class="text-zinc-400">—</span>
+                            </td>
+                            <td class="px-4 py-3 text-right font-mono font-semibold whitespace-nowrap">
+                              <span :class="item.weight_g != null ? 'text-brandg-700 dark:text-brandg-300' : 'text-zinc-400'">
+                                {{ item.weight_g != null ? formatNumber(item.weight_g) + ' g' : (analysisWeightDetails[idx]?.weight_grams != null ? formatNumber(analysisWeightDetails[idx]?.weight_grams) + ' g' : '—') }}
+                              </span>
+                            </td>
+                            <td class="px-4 py-3 text-right font-mono text-zinc-700 dark:text-zinc-300">{{ formatNumber(item.energy_kcal_per_100g) }}</td>
+                            <td class="px-4 py-3 text-right font-mono text-zinc-700 dark:text-zinc-300">{{ formatNumber(item.protein_per_100g) }} g</td>
+                            <td class="px-4 py-3 text-right font-mono text-zinc-700 dark:text-zinc-300">{{ formatNumber(item.carbs_per_100g) }} g</td>
+                            <td class="px-4 py-3 text-right font-mono text-zinc-700 dark:text-zinc-300">{{ formatNumber(item.fat_per_100g) }} g</td>
+                            <td class="px-4 py-3 text-right font-mono text-zinc-500 dark:text-zinc-400">{{ formatNumber(item.contribution) }}</td>
+                          </tr>
+                          <!-- Accordion detail row -->
+                          <Transition
+                            enter-active-class="transition-all duration-200 ease-out"
+                            enter-from-class="opacity-0"
+                            enter-to-class="opacity-100"
+                            leave-active-class="transition-all duration-150 ease-in"
+                            leave-from-class="opacity-100"
+                            leave-to-class="opacity-0"
+                          >
+                            <tr v-if="analysisExpandedRow === idx" class="border-t-0">
+                              <td colspan="10" class="px-0 py-0">
+                                <div class="px-6 py-4 bg-zinc-50/80 dark:bg-zinc-800/30 border-b border-zinc-200 dark:border-zinc-700">
+                                  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-3">
+                                    <div>
+                                      <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Raw Measurement</p>
+                                      <p class="font-mono text-zinc-700 dark:text-zinc-300">{{ analysisWeightDetails[idx]?.measurement_raw || '—' }}</p>
+                                    </div>
+                                    <div>
+                                      <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Match Source</p>
+                                      <span v-if="analysisWeightDetails[idx]?.match_type" :class="[
+                                        'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border',
+                                        getMatchSourceStyle(analysisWeightDetails[idx]?.match_type)
+                                      ]">
+                                        <UIcon :name="getMatchSourceIcon(analysisWeightDetails[idx]?.match_type)" class="w-3 h-3" />
+                                        {{ getWeightSourceLabel(analysisWeightDetails[idx]?.match_type) }}
+                                      </span>
+                                      <span v-else class="text-zinc-400">—</span>
+                                    </div>
+                                    <div>
+                                      <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">USDA ID</p>
+                                      <p class="font-mono text-zinc-600 dark:text-zinc-400">{{ analysisWeightDetails[idx]?.usda_id || '—' }}</p>
+                                    </div>
+                                    <div>
+                                      <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Inferred</p>
+                                      <div class="flex items-center gap-2">
+                                        <span v-if="analysisWeightDetails[idx]?.quantity_inferred" class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                                          <UIcon name="i-lucide-zap" class="w-3 h-3" /> Qty
+                                        </span>
+                                        <span v-if="analysisWeightDetails[idx]?.unit_inferred" class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                                          <UIcon name="i-lucide-zap" class="w-3 h-3" /> Unit
+                                        </span>
+                                        <span v-if="!analysisWeightDetails[idx]?.quantity_inferred && !analysisWeightDetails[idx]?.unit_inferred" class="text-zinc-400">—</span>
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Matched Nutrition</p>
+                                      <p class="text-zinc-700 dark:text-zinc-300 truncate" :title="String(item.matched_nutritional_ingredient || '')">{{ item.matched_nutritional_ingredient || '—' }}</p>
+                                    </div>
+                                    <div>
+                                      <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Matched Sustainability</p>
+                                      <p class="text-zinc-700 dark:text-zinc-300 truncate" :title="String(item.matched_sustainability_ingredient || '')">{{ item.matched_sustainability_ingredient || '—' }}</p>
+                                    </div>
+                                    <div v-if="analysisWeightDetails[idx]?.error" class="col-span-2">
+                                      <p class="text-[10px] font-semibold uppercase tracking-wider text-red-400 dark:text-red-500 mb-0.5">Error</p>
+                                      <p class="text-red-600 dark:text-red-400">{{ analysisWeightDetails[idx]?.error }}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          </Transition>
+                        </template>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
@@ -586,6 +668,7 @@ const analysisLoading = ref(false)
 const analysisError = ref<string | null>(null)
 const analysisResult = ref<RecipeProfileResult | null>(null)
 const showCalculationDetails = ref(false)
+const analysisExpandedRow = ref<number | null>(null)
 let autocompleteDebounceTimer: ReturnType<typeof setTimeout> | null = null
 
 // ============================================================================
@@ -864,6 +947,38 @@ const formatNumber = (value: unknown): string => {
   const n = typeof value === 'number' ? value : Number(value)
   if (!Number.isFinite(n)) return '0'
   return n.toFixed(2)
+}
+
+const getWeightSourceLabel = (matchType?: string | null): string => {
+  const normalized = String(matchType || '').toLowerCase()
+  if (!normalized) return 'N/A'
+  if (normalized.includes('direct') || normalized.includes('portion')) return 'USDA portion table'
+  if (normalized.includes('embedding')) return 'USDA embedding match'
+  if (normalized.includes('llm')) return 'AI Generated (LLM)'
+  if (normalized.includes('density')) return 'Density fallback'
+  return matchType || 'N/A'
+}
+
+const getMatchSourceIcon = (matchType?: string | null): string => {
+  const normalized = String(matchType || '').toLowerCase()
+  if (normalized.includes('direct') || normalized.includes('portion')) return 'i-lucide-database'
+  if (normalized.includes('embedding')) return 'i-lucide-sparkles'
+  if (normalized.includes('llm')) return 'i-lucide-bot'
+  if (normalized.includes('density')) return 'i-lucide-flask-conical'
+  return 'i-lucide-circle-help'
+}
+
+const getMatchSourceStyle = (matchType?: string | null): string => {
+  const normalized = String(matchType || '').toLowerCase()
+  if (normalized.includes('direct') || normalized.includes('portion'))
+    return 'bg-brandg-50 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300 border-brandg-200 dark:border-brandg-700'
+  if (normalized.includes('embedding'))
+    return 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700'
+  if (normalized.includes('llm'))
+    return 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700'
+  if (normalized.includes('density'))
+    return 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-700'
+  return 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700'
 }
 
 /**

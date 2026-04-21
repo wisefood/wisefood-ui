@@ -8,7 +8,7 @@
 
       <section class="flex flex-col gap-6 py-4 xl:flex-row xl:items-start xl:justify-between">
         <div class="min-w-0 space-y-3">
-          <h1 class="min-w-0 text-2xl font-semibold text-gray-900 dark:text-white sm:text-3xl">
+          <h1 class="min-w-0 text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
             {{ pageTitle }}
           </h1>
 
@@ -81,6 +81,19 @@
         </div>
 
         <div class="flex shrink-0 items-center gap-2">
+          <UButton
+            v-if="recipe"
+            type="button"
+            :color="expertRecipeInput ? 'primary' : 'neutral'"
+            :variant="expertRecipeInput ? 'solid' : 'outline'"
+            icon="i-lucide-star"
+            size="sm"
+            :loading="expertPatchPending"
+            :disabled="expertPatchPending"
+            @click="toggleExpertRecipe"
+          >
+            {{ expertRecipeInput ? 'Unmark Expert Recipe' : 'Mark as Expert Recipe' }}
+          </UButton>
           <UBadge
             v-if="recipe"
             :color="editorStatus.color"
@@ -203,27 +216,50 @@
                   </div>
 
                   <UFormField label="Allergens">
-                    <UTextarea
-                      v-model="allergensInput"
-                      placeholder="One allergen per line or comma-separated"
-                      :disabled="savePending"
-                      :rows="3"
-                      class="w-full"
-                    />
-                    <template #hint>
-                      <span class="text-xs text-gray-400 dark:text-gray-500">Separate by newline or comma</span>
-                    </template>
-                  </UFormField>
-
-                  <UFormField label="Expert Recipe">
-                    <div class="flex items-center gap-3 pt-1">
-                      <UToggle
-                        v-model="expertRecipeInput"
-                        :disabled="savePending"
-                      />
-                      <span class="text-sm text-gray-600 dark:text-gray-400">
-                        {{ expertRecipeInput ? 'Marked as expert recipe' : 'Standard recipe' }}
-                      </span>
+                    <div class="space-y-2">
+                      <div class="flex gap-2">
+                        <UInput
+                          v-model="allergenDraftInput"
+                          placeholder="Type an allergen and press Enter"
+                          :disabled="savePending"
+                          class="flex-1"
+                          @keydown.enter.prevent="addAllergenFromDraft"
+                        />
+                        <UButton
+                          type="button"
+                          color="neutral"
+                          variant="outline"
+                          icon="i-lucide-plus"
+                          :disabled="savePending || !allergenDraftInput.trim()"
+                          @click="addAllergenFromDraft"
+                        />
+                      </div>
+                      <div
+                        v-if="allergenTokens.length"
+                        class="flex flex-wrap gap-1.5"
+                      >
+                        <span
+                          v-for="(allergen, idx) in allergenTokens"
+                          :key="`allergen-token-${idx}`"
+                          class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:border-amber-700/40 dark:bg-amber-900/20 dark:text-amber-300"
+                        >
+                          {{ allergen }}
+                          <button
+                            type="button"
+                            class="ml-0.5 flex items-center justify-center rounded-full p-0.5 hover:bg-amber-200 dark:hover:bg-amber-800/40"
+                            :disabled="savePending"
+                            @click="removeAllergen(idx)"
+                          >
+                            <UIcon name="i-lucide-x" class="h-3 w-3" />
+                          </button>
+                        </span>
+                      </div>
+                      <p
+                        v-else
+                        class="text-xs text-gray-400 dark:text-gray-500"
+                      >
+                        No allergens added
+                      </p>
                     </div>
                   </UFormField>
                 </div>
@@ -262,6 +298,17 @@
                     variant="soft"
                     icon="i-lucide-alert-circle"
                     :title="saveError"
+                  />
+
+                  <UAlert
+                    v-if="showExpertRecipeReminder"
+                    color="warning"
+                    variant="soft"
+                    icon="i-lucide-star"
+                    title="Not marked as expert recipe"
+                    description="Consider marking this recipe as an expert recipe if it has been professionally curated."
+                    :close-button="{ icon: 'i-lucide-x', color: 'neutral', variant: 'link' }"
+                    @close="dismissExpertRecipeReminder"
                   />
                 </div>
               </UCard>
@@ -396,7 +443,6 @@ import recipeApi from '~/services/recipeApi'
 import {
   formatConsoleRecipeIngredient,
   normalizeRecipeImageUrl,
-  parseConsoleTokenList,
   resolveConsoleRecipeErrorMessage
 } from '~/utils/consoleRecipes'
 
@@ -425,8 +471,12 @@ const ingredientsOpen = ref(false)
 const titleInput = ref('')
 const durationInput = ref<number | null>(null)
 const sourceIdInput = ref('')
-const allergensInput = ref('')
+const allergenTokens = ref<string[]>([])
+const allergenDraftInput = ref('')
 const expertRecipeInput = ref(false)
+const showExpertRecipeReminder = ref(false)
+const expertRecipeReminderDismissed = ref(false)
+const expertPatchPending = ref(false)
 
 const recipeId = computed(() => {
   const raw = String(route.params.id || '')
@@ -530,10 +580,8 @@ const hasUnsavedChanges = computed(() => {
   const originalDuration = recipe.value.duration ?? null
   const currentSourceId = sourceIdInput.value.trim()
   const originalSourceId = String(recipe.value.source_id || '').trim()
-  const currentAllergens = parseConsoleTokenList(allergensInput.value)
+  const currentAllergens = [...allergenTokens.value].sort()
   const originalAllergens = (recipe.value.allergens || []).map(a => String(a || '').trim()).filter(Boolean).sort()
-  const currentExpertRecipe = expertRecipeInput.value
-  const originalExpertRecipe = Boolean(recipe.value.expert_recipe)
 
   return JSON.stringify(currentInstructions) !== JSON.stringify(originalInstructions)
     || currentImageUrl !== originalImageUrl
@@ -541,7 +589,6 @@ const hasUnsavedChanges = computed(() => {
     || currentDuration !== originalDuration
     || currentSourceId !== originalSourceId
     || JSON.stringify(currentAllergens) !== JSON.stringify(originalAllergens)
-    || currentExpertRecipe !== originalExpertRecipe
 })
 
 const editorStatus = computed(() => {
@@ -556,6 +603,47 @@ function sanitizeInstructions(value: string[]) {
     .filter(Boolean)
 }
 
+function addAllergenFromDraft() {
+  const token = allergenDraftInput.value.trim()
+  if (!token) return
+  const normalized = token.toLowerCase()
+  if (!allergenTokens.value.map(a => a.toLowerCase()).includes(normalized)) {
+    allergenTokens.value = [...allergenTokens.value, token]
+  }
+  allergenDraftInput.value = ''
+}
+
+function removeAllergen(index: number) {
+  allergenTokens.value = allergenTokens.value.filter((_, i) => i !== index)
+}
+
+function dismissExpertRecipeReminder() {
+  showExpertRecipeReminder.value = false
+  expertRecipeReminderDismissed.value = true
+}
+
+async function toggleExpertRecipe() {
+  if (!recipe.value) return
+  const next = !expertRecipeInput.value
+  expertPatchPending.value = true
+  try {
+    const updated = await recipeApi.updateManagedRecipe(recipe.value.recipe_id, { expert_recipe: next })
+    recipe.value = updated
+    expertRecipeInput.value = next
+    if (next) {
+      showExpertRecipeReminder.value = false
+    }
+    toast.add({
+      title: next ? 'Marked as expert recipe' : 'Unmarked as expert recipe',
+      color: 'success'
+    })
+  } catch (error) {
+    saveError.value = resolveConsoleRecipeErrorMessage(error, 'Failed to update expert recipe status')
+  } finally {
+    expertPatchPending.value = false
+  }
+}
+
 function resetWorkingCopy() {
   editableInstructions.value = recipe.value?.instructions?.length
     ? [...recipe.value.instructions]
@@ -564,13 +652,14 @@ function resetWorkingCopy() {
   titleInput.value = String(recipe.value?.title || '').trim()
   durationInput.value = recipe.value?.duration ?? null
   sourceIdInput.value = String(recipe.value?.source_id || '').trim()
-  allergensInput.value = (recipe.value?.allergens || [])
+  allergenTokens.value = (recipe.value?.allergens || [])
     .map(a => String(a || '').trim())
     .filter(Boolean)
-    .join('\n')
+  allergenDraftInput.value = ''
   expertRecipeInput.value = Boolean(recipe.value?.expert_recipe)
   saveError.value = null
   imageError.value = null
+  showExpertRecipeReminder.value = false
 }
 
 async function loadRecipe() {
@@ -645,10 +734,8 @@ async function saveRecipeEdits() {
     const originalDuration = recipe.value.duration ?? null
     const nextSourceId = sourceIdInput.value.trim()
     const originalSourceId = String(recipe.value.source_id || '').trim()
-    const nextAllergens = parseConsoleTokenList(allergensInput.value)
+    const nextAllergens = [...allergenTokens.value].sort()
     const originalAllergens = (recipe.value.allergens || []).map(a => String(a || '').trim()).filter(Boolean).sort()
-    const nextExpertRecipe = expertRecipeInput.value
-    const originalExpertRecipe = Boolean(recipe.value.expert_recipe)
 
     if (JSON.stringify(nextInstructions) !== JSON.stringify(originalInstructions)) {
       payload.instructions = nextInstructions
@@ -674,10 +761,6 @@ async function saveRecipeEdits() {
       payload.allergens = nextAllergens
     }
 
-    if (nextExpertRecipe !== originalExpertRecipe) {
-      payload.expert_recipe = nextExpertRecipe
-    }
-
     if (!Object.keys(payload).length) {
       return
     }
@@ -691,6 +774,10 @@ async function saveRecipeEdits() {
       description: `${updatedRecipe.title} was saved successfully.`,
       color: 'success'
     })
+
+    if (!updatedRecipe.expert_recipe && !expertRecipeReminderDismissed.value) {
+      showExpertRecipeReminder.value = true
+    }
   } catch (error) {
     saveError.value = resolveConsoleRecipeErrorMessage(error, 'Failed to update recipe')
   } finally {
