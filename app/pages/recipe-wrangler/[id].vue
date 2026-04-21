@@ -4,7 +4,7 @@
     <RecipesRecipeWranglerHeader :back-to="backLink.to" :back-label="backLink.label" />
 
     <!-- Loading State -->
-    <div v-if="loading" class="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div v-if="loading && !regionReloading" class="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div class="animate-pulse space-y-6">
         <div class="h-8 bg-zinc-200 dark:bg-zinc-700 rounded w-3/4"></div>
         <div class="aspect-video bg-zinc-200 dark:bg-zinc-700 rounded-2xl"></div>
@@ -167,25 +167,51 @@
 
           <!-- Nutrition Information -->
           <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 sm:p-10 border border-zinc-200 dark:border-zinc-700 shadow-lg">
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
               <h2 class="text-3xl font-serif font-semibold text-zinc-900 dark:text-white flex items-center gap-3">
                 <UIcon name="i-lucide-activity" class="w-7 h-7 text-brandg-600 dark:text-brandg-400" />
                 {{ t('recipeWrangler.detail.nutritionalInfo') }}
               </h2>
-              <button
-                @click="toggleNutrientView"
-                class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brandg-50 to-brandg-100 dark:from-brandg-900/30 dark:to-brandg-800/30 border border-brandg-200 dark:border-brandg-700 hover:from-brandg-100 hover:to-brandg-200 dark:hover:from-brandg-900/50 dark:hover:to-brandg-800/50 transition-all group"
-              >
-                <UIcon
-                  :name="showRadarChart ? 'i-lucide-layout-grid' : 'i-lucide-radar'"
-                  class="w-5 h-5 text-brandg-600 dark:text-brandg-400 group-hover:scale-110 transition-transform"
-                />
-                <span class="text-sm font-medium text-brandg-700 dark:text-brandg-300">
-                  {{ showRadarChart ? t('recipeWrangler.detail.gridView') : t('recipeWrangler.detail.chartView') }}
-                </span>
-              </button>
+              <div class="flex items-center gap-2 flex-wrap">
+                <!-- Region switcher -->
+                <div class="flex items-center rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/40 p-1 gap-1">
+                  <button
+                    v-for="region in SUPPORTED_REGIONS"
+                    :key="region"
+                    type="button"
+                    :disabled="regionReloading"
+                    @click="changeRegion(region)"
+                    :class="[
+                      'px-3 py-1 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50',
+                      selectedRegion === region
+                        ? 'bg-brandg-500 text-white'
+                        : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                    ]"
+                  >
+                    {{ region }}
+                  </button>
+                </div>
+                <button
+                  @click="toggleNutrientView"
+                  class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brandg-50 to-brandg-100 dark:from-brandg-900/30 dark:to-brandg-800/30 border border-brandg-200 dark:border-brandg-700 hover:from-brandg-100 hover:to-brandg-200 dark:hover:from-brandg-900/50 dark:hover:to-brandg-800/50 transition-all group"
+                >
+                  <UIcon
+                    :name="showRadarChart ? 'i-lucide-layout-grid' : 'i-lucide-radar'"
+                    class="w-5 h-5 text-brandg-600 dark:text-brandg-400 group-hover:scale-110 transition-transform"
+                  />
+                  <span class="text-sm font-medium text-brandg-700 dark:text-brandg-300">
+                    {{ showRadarChart ? t('recipeWrangler.detail.gridView') : t('recipeWrangler.detail.chartView') }}
+                  </span>
+                </button>
+              </div>
             </div>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-8">{{ t('recipeWrangler.detail.perServing') }} · <span class="italic">{{ t('recipeWrangler.detail.usdaSource') }}</span></p>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-8">{{ t('recipeWrangler.detail.perServing') }} · <span class="italic">{{
+              selectedRegion === 'HU'
+                ? 'Based on the Hungarian Food Composition Table'
+                : selectedRegion === 'IE'
+                  ? 'Based on the Irish Food Composition Table'
+                  : 'Based on the USDA Food Composition Table'
+            }}</span></p>
 
             <!-- Animated Container for View Switching -->
             <div class="relative overflow-hidden">
@@ -712,6 +738,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useRecipes } from '~/composables/useRecipes'
 import { useRecipeStore } from '~/stores/recipe'
+import { useHouseholdStore } from '~/stores/household'
 import recipeApi from '~/services/recipeApi'
 import type {
   PipelineTraceWeightDetail,
@@ -733,6 +760,7 @@ const route = useRoute()
 const router = useRouter()
 const { currentRecipe, loading, error, fetchRecipe } = useRecipes()
 const recipeStore = useRecipeStore()
+const householdStore = useHouseholdStore()
 
 const backLink = computed(() => {
   const prev = router.options.history.state.back as string | undefined
@@ -748,6 +776,18 @@ const backLink = computed(() => {
 // ============================================================================
 // State
 // ============================================================================
+const SUPPORTED_REGIONS = ['IE', 'HU', 'US'] as const
+type SupportedRegion = typeof SUPPORTED_REGIONS[number]
+
+const resolveRegion = (raw: string | null | undefined): SupportedRegion => {
+  const upper = String(raw || '').toUpperCase() as SupportedRegion
+  return SUPPORTED_REGIONS.includes(upper) ? upper : 'US'
+}
+
+const selectedRegion = ref<SupportedRegion>(
+  resolveRegion(householdStore.currentHousehold?.region)
+)
+
 const checkedIngredients = ref<Record<number, boolean>>({})
 const checkedInstructions = ref<Record<number, boolean>>({})
 const showRadarChart = ref(false)
@@ -757,6 +797,7 @@ const showProfilingDetails = ref(false)
 const expandedIngredient = ref<number | null>(null)
 const profilingLoading = ref(false)
 const profilingError = ref<string | null>(null)
+const regionReloading = ref(false)
 const profilingResult = ref<RecipeProfileResult | null>(null)
 const imageLoadFailed = ref(false)
 
@@ -1098,7 +1139,7 @@ const loadRecipe = async () => {
     showNutriScoreDetails.value = false
     imageLoadFailed.value = false
 
-    await fetchRecipe(recipeId.value)
+    await fetchRecipe(recipeId.value, { region: selectedRegion.value })
     if (recipe.value) {
       recipeStore.addToRecentlyViewed(recipe.value.recipe_id)
       recipeStore.cacheRecipe(recipe.value)
@@ -1127,6 +1168,17 @@ const toggleInstruction = (index: number) => {
 
 const toggleNutrientView = () => {
   showRadarChart.value = !showRadarChart.value
+}
+
+const changeRegion = async (region: SupportedRegion) => {
+  if (region === selectedRegion.value) return
+  selectedRegion.value = region
+  regionReloading.value = true
+  try {
+    await loadRecipe()
+  } finally {
+    regionReloading.value = false
+  }
 }
 
 const buildRecipeProfilingInput = (value: Recipe): string => {
@@ -1326,7 +1378,13 @@ const handleImageError = (event: Event) => {
 // ============================================================================
 // Lifecycle
 // ============================================================================
-onMounted(() => {
+onMounted(async () => {
+  try {
+    await householdStore.initialize()
+    selectedRegion.value = resolveRegion(householdStore.currentHousehold?.region)
+  } catch {
+    // fall back to default US
+  }
   loadRecipe()
 })
 </script>

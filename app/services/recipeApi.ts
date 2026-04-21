@@ -77,10 +77,14 @@ export interface RecipeSearchResult {
   id?: string
   title: string
   source?: string | null
+  source_id?: string | null
   image_url: string | null
   duration?: number | null
   serves?: number | null
   nutri_score?: number | null
+  nutri_score_color?: string | null
+  sust_score?: number | null
+  expert_recipe?: boolean | null
 }
 
 export interface RecipeSearchParams {
@@ -354,7 +358,7 @@ class RecipeApiService {
         if (params.exclude_allergens?.length) {
           paramSearchParams.exclude_allergens = params.exclude_allergens
         }
-        return await this.searchRecipesByParams(paramSearchParams)
+        return await this.searchRecipesByParams({ ...paramSearchParams, limit: paramSearchParams.limit ?? 12 })
       }
 
       const transport = this.resolveTransport()

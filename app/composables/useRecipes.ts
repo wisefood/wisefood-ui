@@ -37,79 +37,6 @@ export function useRecipes() {
   // Methods
   // ============================================================================
 
-  const mergeRecipeSummary = (recipeStub: RecipeSearchResult, full: Recipe) => {
-    recipeStub.recipe_id = recipeStub.recipe_id || full.recipe_id
-    recipeStub.id = recipeStub.id || full.recipe_id
-    recipeStub.title = recipeStub.title || full.title
-
-    if (!recipeStub.source && full.source) {
-      recipeStub.source = full.source
-    }
-
-    if (!recipeStub.image_url && full.image_url) {
-      recipeStub.image_url = full.image_url
-    }
-
-    if (recipeStub.duration === undefined && typeof full.duration === 'number') {
-      recipeStub.duration = full.duration
-    }
-
-    if (recipeStub.serves === undefined && typeof full.serves === 'number') {
-      recipeStub.serves = full.serves
-    }
-
-    if (recipeStub.nutri_score === undefined && typeof full.nutri_score === 'number') {
-      recipeStub.nutri_score = full.nutri_score
-    }
-  }
-
-  const hydrateImageUrls = async (results: RecipeSearchResult[], maxToHydrate: number = 20) => {
-    if (!import.meta.client) return
-
-    const missing = results.filter(r => !r.image_url).slice(0, maxToHydrate)
-    if (missing.length === 0) return
-
-    const { useRecipeStore } = await import('~/stores/recipe')
-    const recipeStore = useRecipeStore()
-
-    // Limit concurrency to avoid spamming the backend.
-    const maxConcurrent = Math.min(4, missing.length)
-    let nextIndex = 0
-
-    const worker = async () => {
-      while (true) {
-        const index = nextIndex
-        nextIndex += 1
-        if (index >= missing.length) return
-
-        const recipeStub = missing[index]
-        if (!recipeStub) return
-
-        const recipeId = recipeStub.recipe_id || recipeStub.id
-        if (!recipeId) continue
-
-        try {
-          const cached = recipeStore.getCachedRecipe(recipeId)
-          if (cached) {
-            mergeRecipeSummary(recipeStub, cached)
-            continue
-          }
-
-          const full = await recipeApi.getRecipe(recipeId)
-          recipeStore.cacheRecipe(full)
-          mergeRecipeSummary(recipeStub, full)
-        } catch {
-          // Best-effort only: leave placeholder if a given image can't be hydrated.
-        }
-      }
-    }
-
-    await Promise.all(Array.from({ length: maxConcurrent }, () => worker()))
-
-    // Ensure the UI updates even if nested mutation doesn't trigger for some reason.
-    recipes.value = [...recipes.value]
-  }
-
   const normalizeList = (values?: string[]): string[] => {
     if (!values || values.length === 0) return []
     return values
@@ -125,7 +52,7 @@ export function useRecipes() {
       exclude_allergens: normalizeList(params.exclude_allergens),
       diet_tags: normalizeList(params.diet_tags),
       max_duration_minutes: params.max_duration_minutes,
-      limit: params.limit ?? 20
+      limit: params.limit ?? 12
     })
   }
 
@@ -162,7 +89,6 @@ export function useRecipes() {
       })
       recipes.value = results
       totalResults.value = results.length
-      void hydrateImageUrls(results, normalizedQuestion.length === 0 ? results.length : 20)
 
       // Cache the results
       if (import.meta.client) {
@@ -214,7 +140,6 @@ export function useRecipes() {
       const results = await recipeApi.searchRecipesByParams(params)
       recipes.value = results
       totalResults.value = results.length
-      void hydrateImageUrls(results, params.limit ?? 20)
 
       if (import.meta.client) {
         const { useRecipeStore } = await import('~/stores/recipe')
@@ -285,7 +210,7 @@ export function useRecipes() {
       const results = await recipeApi.getRecipesByCategory(category, excludeAllergens)
       recipes.value = results
       totalResults.value = results.length
-      void hydrateImageUrls(results)
+
 
       // Cache the results
       if (import.meta.client) {
@@ -321,7 +246,7 @@ export function useRecipes() {
       const results = await recipeApi.getRecipesByIngredient(ingredient, excludeAllergens)
       recipes.value = results
       totalResults.value = results.length
-      void hydrateImageUrls(results)
+
       return results
     } catch (err) {
       const apiError = err as ApiError
@@ -349,7 +274,7 @@ export function useRecipes() {
       const results = await recipeApi.getQuickRecipes(maxDuration, excludeAllergens)
       recipes.value = results
       totalResults.value = results.length
-      void hydrateImageUrls(results)
+
       return results
     } catch (err) {
       const apiError = err as ApiError
