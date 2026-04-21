@@ -528,8 +528,15 @@
 
             <!-- Page Numbers -->
             <div class="flex items-center gap-1">
+              <!-- First page + ellipsis -->
+              <template v-if="visiblePages.length && visiblePages[0] > 1">
+                <button @click="goToPage(1)" class="px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">1</button>
+                <span v-if="visiblePages[0] > 2" class="px-2 text-zinc-500">…</span>
+              </template>
+
+              <!-- Sliding window -->
               <button
-                v-for="page in Math.min(totalPages, 5)"
+                v-for="page in visiblePages"
                 :key="page"
                 @click="goToPage(page)"
                 :class="[
@@ -541,19 +548,13 @@
               >
                 {{ page }}
               </button>
-              <span v-if="totalPages > 5" class="px-2 text-zinc-500">...</span>
-              <button
-                v-if="totalPages > 5 && currentPage < totalPages"
-                @click="goToPage(totalPages)"
-                :class="[
-                  'px-4 py-2 rounded-lg border transition-colors',
-                  totalPages === currentPage
-                    ? 'border-brandg-500 bg-brandg-500 text-white'
-                    : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700'
-                ]"
-              >
-                {{ totalPages }}
-              </button>
+
+              <!-- Ellipsis + last page -->
+              <template v-if="visiblePages.length && visiblePages[visiblePages.length - 1] < totalPages">
+                <span v-if="visiblePages[visiblePages.length - 1] < totalPages - 1" class="px-2 text-zinc-500">…</span>
+                <button @click="goToPage(totalPages)" class="px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">{{ totalPages }}</button>
+              </template>
+
               <!-- Fallback when count endpoint hasn't resolved yet -->
               <span
                 v-if="totalPages === 0 && searchMode === 'params'"
@@ -695,6 +696,16 @@ const paginatedRecipes = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
   return recipes.value.slice(start, end)
+})
+
+const visiblePages = computed(() => {
+  if (totalPages.value === 0) return []
+  const window = 2
+  const start = Math.max(1, currentPage.value - window)
+  const end = Math.min(totalPages.value, currentPage.value + window)
+  const pages = []
+  for (let i = start; i <= end; i++) pages.push(i)
+  return pages
 })
 
 const showPagination = computed(() => {

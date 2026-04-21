@@ -1,5 +1,5 @@
 import { useAuthStore } from '~/stores/auth'
-import { getRecipeWranglerMode, getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
+import { getRecipeWranglerMode, getWisefoodApiUrl, getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 
 // ============================================================================
 // Timeout Configuration
@@ -121,7 +121,15 @@ export interface UpdateRecipeRequest {
   expert_recipe?: boolean
   title?: string
   allergens?: string[]
+  tags?: string[]
   duration?: number
+}
+
+export interface RecipeCollectionSuggestion {
+  urn: string
+  title: string
+  source_type?: string | null
+  recipe_count?: number | null
 }
 
 export interface GetRecipeOptions {
@@ -640,6 +648,31 @@ class RecipeApiService {
       return await this.getManagedRecipe(recipeId)
     } catch (error) {
       throw this.handleError(error, 'Failed to update recipe')
+    }
+  }
+
+  /**
+   * Autocomplete recipe collections by title prefix.
+   */
+  async autocompleteCollections(q: string, limit = 15): Promise<RecipeCollectionSuggestion[]> {
+    try {
+      const baseUrl = getWisefoodApiUrl()
+      const url = new URL(`${baseUrl}/v1/rcollections/autocomplete`)
+      url.searchParams.set('q', q)
+      url.searchParams.set('limit', String(limit))
+
+      const authStore = useAuthStore()
+      const token = await this.ensureAuthToken(authStore)
+
+      const response = await fetch(url.toString(), {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      const data = await response.json()
+      return Array.isArray(data) ? data : (data.result ?? data.results ?? [])
+    } catch (error) {
+      throw this.handleError(error, 'Failed to autocomplete collections')
     }
   }
 

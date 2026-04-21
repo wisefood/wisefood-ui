@@ -205,13 +205,43 @@
                       />
                     </UFormField>
 
-                    <UFormField label="Source ID">
-                      <UInput
-                        v-model="sourceIdInput"
-                        placeholder="e.g. src_abc123"
-                        :disabled="savePending"
-                        class="w-full"
-                      />
+                    <UFormField label="Source Collection">
+                      <div ref="sourceBoxRef" class="relative">
+                        <UInput
+                          v-model="sourceInput"
+                          placeholder="Search collections…"
+                          :disabled="savePending"
+                          :loading="collectionLoading"
+                          class="w-full"
+                          @input="handleCollectionInput"
+                          @keydown.down.prevent="handleCollectionArrowDown"
+                          @keydown.up.prevent="handleCollectionArrowUp"
+                          @keydown.enter.prevent="handleCollectionEnter"
+                          @keydown.esc="showCollectionDropdown = false"
+                        />
+                        <div
+                          v-if="showCollectionDropdown"
+                          class="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-white/10 dark:bg-zinc-900"
+                        >
+                          <button
+                            v-for="(col, idx) in collectionSuggestions"
+                            :key="col.id"
+                            type="button"
+                            :class="[
+                              'w-full px-3 py-2 text-left text-sm transition-colors',
+                              activeCollectionIndex === idx
+                                ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-200'
+                                : 'text-gray-800 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-white/5'
+                            ]"
+                            @mousedown.prevent="selectCollection(col)"
+                          >
+                            {{ col.title }}
+                          </button>
+                        </div>
+                        <p v-if="sourceIdValue" class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                          ID: {{ sourceIdValue }}
+                        </p>
+                      </div>
                     </UFormField>
                   </div>
 
@@ -259,6 +289,54 @@
                         class="text-xs text-gray-400 dark:text-gray-500"
                       >
                         No allergens added
+                      </p>
+                    </div>
+                  </UFormField>
+
+                  <UFormField label="Tags">
+                    <div class="space-y-2">
+                      <div class="flex gap-2">
+                        <UInput
+                          v-model="tagDraftInput"
+                          placeholder="Type a tag and press Enter"
+                          :disabled="savePending"
+                          class="flex-1"
+                          @keydown.enter.prevent="addTagFromDraft"
+                        />
+                        <UButton
+                          type="button"
+                          color="neutral"
+                          variant="outline"
+                          icon="i-lucide-plus"
+                          :disabled="savePending || !tagDraftInput.trim()"
+                          @click="addTagFromDraft"
+                        />
+                      </div>
+                      <div
+                        v-if="tagTokens.length"
+                        class="flex flex-wrap gap-1.5"
+                      >
+                        <span
+                          v-for="(tag, idx) in tagTokens"
+                          :key="`tag-token-${idx}`"
+                          class="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:border-blue-700/40 dark:bg-blue-900/20 dark:text-blue-300"
+                        >
+                          {{ tag }}
+                          <button
+                            type="button"
+                            class="ml-0.5 flex items-center justify-center rounded-full p-0.5 hover:bg-blue-200 dark:hover:bg-blue-800/40"
+                            :disabled="savePending"
+                            @click="removeTag(idx)"
+                          >
+                            <UIcon name="i-lucide-x" class="h-3 w-3" />
+                          </button>
+                        </span>
+                      </div>
+                      <p
+                        v-else
+                        class="text-xs text-gray-400 dark:text-gray-500"
+                      >
+                        No tags added
                       </p>
                     </div>
                   </UFormField>
@@ -437,8 +515,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import type { Recipe, UpdateRecipeRequest } from '~/services/recipeApi'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import type { Recipe, RecipeCollectionSuggestion, UpdateRecipeRequest } from '~/services/recipeApi'
 import recipeApi from '~/services/recipeApi'
 import {
   formatConsoleRecipeIngredient,
@@ -473,6 +551,16 @@ const durationInput = ref<number | null>(null)
 const sourceIdInput = ref('')
 const allergenTokens = ref<string[]>([])
 const allergenDraftInput = ref('')
+const tagTokens = ref<string[]>([])
+const tagDraftInput = ref('')
+const sourceInput = ref('')
+const sourceIdValue = ref('')
+const collectionSuggestions = ref<RecipeCollectionSuggestion[]>([])
+const collectionLoading = ref(false)
+const showCollectionDropdown = ref(false)
+const activeCollectionIndex = ref(-1)
+const sourceBoxRef = ref<HTMLElement | null>(null)
+let collectionDebounceTimer: ReturnType<typeof setTimeout> | null = null
 const expertRecipeInput = ref(false)
 const showExpertRecipeReminder = ref(false)
 const expertRecipeReminderDismissed = ref(false)
@@ -578,10 +666,12 @@ const hasUnsavedChanges = computed(() => {
   const originalTitle = String(recipe.value.title || '').trim()
   const currentDuration = durationInput.value ?? null
   const originalDuration = recipe.value.duration ?? null
-  const currentSourceId = sourceIdInput.value.trim()
+  const currentSourceId = sourceIdValue.value.trim()
   const originalSourceId = String(recipe.value.source_id || '').trim()
   const currentAllergens = [...allergenTokens.value].sort()
   const originalAllergens = (recipe.value.allergens || []).map(a => String(a || '').trim()).filter(Boolean).sort()
+  const currentTags = [...tagTokens.value].sort()
+  const originalTags = (recipe.value.tags || []).map(t => String(t || '').trim()).filter(Boolean).sort()
 
   return JSON.stringify(currentInstructions) !== JSON.stringify(originalInstructions)
     || currentImageUrl !== originalImageUrl
@@ -589,6 +679,7 @@ const hasUnsavedChanges = computed(() => {
     || currentDuration !== originalDuration
     || currentSourceId !== originalSourceId
     || JSON.stringify(currentAllergens) !== JSON.stringify(originalAllergens)
+    || JSON.stringify(currentTags) !== JSON.stringify(originalTags)
 })
 
 const editorStatus = computed(() => {
@@ -615,6 +706,80 @@ function addAllergenFromDraft() {
 
 function removeAllergen(index: number) {
   allergenTokens.value = allergenTokens.value.filter((_, i) => i !== index)
+}
+
+function addTagFromDraft() {
+  const token = tagDraftInput.value.trim()
+  if (!token) return
+  const normalized = token.toLowerCase()
+  if (!tagTokens.value.map(t => t.toLowerCase()).includes(normalized)) {
+    tagTokens.value = [...tagTokens.value, token]
+  }
+  tagDraftInput.value = ''
+}
+
+function removeTag(index: number) {
+  tagTokens.value = tagTokens.value.filter((_, i) => i !== index)
+}
+
+async function fetchCollectionSuggestions(q: string) {
+  if (!q.trim()) {
+    collectionSuggestions.value = []
+    showCollectionDropdown.value = false
+    return
+  }
+  collectionLoading.value = true
+  try {
+    const results = await recipeApi.autocompleteCollections(q.trim())
+    collectionSuggestions.value = results
+    showCollectionDropdown.value = results.length > 0
+    activeCollectionIndex.value = -1
+  } catch {
+    collectionSuggestions.value = []
+    showCollectionDropdown.value = false
+  } finally {
+    collectionLoading.value = false
+  }
+}
+
+function handleCollectionInput() {
+  sourceIdValue.value = ''
+  if (collectionDebounceTimer) clearTimeout(collectionDebounceTimer)
+  collectionDebounceTimer = setTimeout(() => {
+    void fetchCollectionSuggestions(sourceInput.value)
+  }, 200)
+}
+
+function selectCollection(suggestion: RecipeCollectionSuggestion) {
+  sourceInput.value = suggestion.title
+  sourceIdValue.value = suggestion.urn
+  collectionSuggestions.value = []
+  showCollectionDropdown.value = false
+  activeCollectionIndex.value = -1
+}
+
+function handleCollectionArrowDown() {
+  if (!showCollectionDropdown.value || !collectionSuggestions.value.length) return
+  activeCollectionIndex.value = activeCollectionIndex.value < collectionSuggestions.value.length - 1
+    ? activeCollectionIndex.value + 1 : 0
+}
+
+function handleCollectionArrowUp() {
+  if (!showCollectionDropdown.value || !collectionSuggestions.value.length) return
+  activeCollectionIndex.value = activeCollectionIndex.value > 0
+    ? activeCollectionIndex.value - 1 : collectionSuggestions.value.length - 1
+}
+
+function handleCollectionEnter() {
+  const idx = activeCollectionIndex.value >= 0 ? activeCollectionIndex.value : 0
+  const suggestion = collectionSuggestions.value[idx]
+  if (suggestion) selectCollection(suggestion)
+}
+
+function handleCollectionClickOutside(event: MouseEvent) {
+  if (sourceBoxRef.value && !sourceBoxRef.value.contains(event.target as Node)) {
+    showCollectionDropdown.value = false
+  }
 }
 
 function dismissExpertRecipeReminder() {
@@ -651,11 +816,16 @@ function resetWorkingCopy() {
   imageUrlInput.value = String(recipe.value?.image_url || '').trim()
   titleInput.value = String(recipe.value?.title || '').trim()
   durationInput.value = recipe.value?.duration ?? null
-  sourceIdInput.value = String(recipe.value?.source_id || '').trim()
+  sourceIdValue.value = String(recipe.value?.source_id || '').trim()
+  sourceInput.value = String(recipe.value?.source || recipe.value?.source_id || '').trim()
   allergenTokens.value = (recipe.value?.allergens || [])
     .map(a => String(a || '').trim())
     .filter(Boolean)
   allergenDraftInput.value = ''
+  tagTokens.value = (recipe.value?.tags || [])
+    .map(t => String(t || '').trim())
+    .filter(Boolean)
+  tagDraftInput.value = ''
   expertRecipeInput.value = Boolean(recipe.value?.expert_recipe)
   saveError.value = null
   imageError.value = null
@@ -732,10 +902,12 @@ async function saveRecipeEdits() {
     const originalTitle = String(recipe.value.title || '').trim()
     const nextDuration = durationInput.value ?? null
     const originalDuration = recipe.value.duration ?? null
-    const nextSourceId = sourceIdInput.value.trim()
+    const nextSourceId = sourceIdValue.value.trim()
     const originalSourceId = String(recipe.value.source_id || '').trim()
     const nextAllergens = [...allergenTokens.value].sort()
     const originalAllergens = (recipe.value.allergens || []).map(a => String(a || '').trim()).filter(Boolean).sort()
+    const nextTags = [...tagTokens.value].sort()
+    const originalTags = (recipe.value.tags || []).map(t => String(t || '').trim()).filter(Boolean).sort()
 
     if (JSON.stringify(nextInstructions) !== JSON.stringify(originalInstructions)) {
       payload.instructions = nextInstructions
@@ -759,6 +931,10 @@ async function saveRecipeEdits() {
 
     if (JSON.stringify(nextAllergens) !== JSON.stringify(originalAllergens)) {
       payload.allergens = nextAllergens
+    }
+
+    if (JSON.stringify(nextTags) !== JSON.stringify(originalTags)) {
+      payload.tags = nextTags
     }
 
     if (!Object.keys(payload).length) {
@@ -788,4 +964,17 @@ async function saveRecipeEdits() {
 watch(recipeId, () => {
   void loadRecipe()
 }, { immediate: true })
+
+onMounted(() => {
+  if (import.meta.client) {
+    document.addEventListener('click', handleCollectionClickOutside)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (collectionDebounceTimer) clearTimeout(collectionDebounceTimer)
+  if (import.meta.client) {
+    document.removeEventListener('click', handleCollectionClickOutside)
+  }
+})
 </script>

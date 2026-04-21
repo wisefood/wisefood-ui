@@ -241,9 +241,16 @@
                   @click="goToPage(currentPage - 1)"
                 />
 
-                <template v-if="totalPages > 0">
+                <template v-if="visiblePages.length">
+                  <!-- First + ellipsis -->
+                  <template v-if="visiblePages[0] > 1">
+                    <UButton color="neutral" variant="outline" size="xs" :disabled="recipesLoading" @click="goToPage(1)">1</UButton>
+                    <span v-if="visiblePages[0] > 2" class="px-1 text-xs text-gray-400">…</span>
+                  </template>
+
+                  <!-- Sliding window -->
                   <UButton
-                    v-for="page in Math.min(totalPages, 5)"
+                    v-for="page in visiblePages"
                     :key="page"
                     :color="page === currentPage ? 'primary' : 'neutral'"
                     :variant="page === currentPage ? 'solid' : 'outline'"
@@ -253,17 +260,12 @@
                   >
                     {{ page }}
                   </UButton>
-                  <span v-if="totalPages > 5" class="px-1 text-xs text-gray-400">...</span>
-                  <UButton
-                    v-if="totalPages > 5 && currentPage < totalPages"
-                    color="neutral"
-                    variant="outline"
-                    size="xs"
-                    :disabled="recipesLoading"
-                    @click="goToPage(totalPages)"
-                  >
-                    {{ totalPages }}
-                  </UButton>
+
+                  <!-- Ellipsis + last -->
+                  <template v-if="visiblePages[visiblePages.length - 1] < totalPages">
+                    <span v-if="visiblePages[visiblePages.length - 1] < totalPages - 1" class="px-1 text-xs text-gray-400">…</span>
+                    <UButton color="neutral" variant="outline" size="xs" :disabled="recipesLoading" @click="goToPage(totalPages)">{{ totalPages }}</UButton>
+                  </template>
                 </template>
                 <span v-else class="px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-200">
                   {{ currentPage }}
@@ -902,6 +904,16 @@ const hasActiveFilters = computed(() => Boolean(filters.q.trim()))
 const totalPages = computed(() => {
   if (isNlSearch.value || totalCount.value === 0) return 0
   return Math.ceil(totalCount.value / itemsPerPage)
+})
+
+const visiblePages = computed(() => {
+  if (totalPages.value === 0) return []
+  const win = 2
+  const start = Math.max(1, currentPage.value - win)
+  const end = Math.min(totalPages.value, currentPage.value + win)
+  const pages = []
+  for (let i = start; i <= end; i++) pages.push(i)
+  return pages
 })
 
 const resultCountLabel = computed(() => {
