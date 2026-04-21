@@ -47,32 +47,33 @@
 
       <!-- Applications Quick Access -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12 scroll-fade-in" style="--delay: 0.1s">
-        <NuxtLink
+        <DashboardAppNavCard
           to="/foodscholar"
-          class="group p-6 rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/20 dark:to-brand-800/20 border border-brand-200 dark:border-brand-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
-        >
-          <UIcon name="i-lucide-graduation-cap" class="w-8 h-8 text-brand-600 dark:text-brand-400 mb-3" />
-          <h3 class="font-semibold text-gray-900 dark:text-white mb-1">{{ t('dashboard.apps.foodScholar.title') }}</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300 font-light">{{ t('dashboard.apps.foodScholar.description') }}</p>
-        </NuxtLink>
-
-        <NuxtLink
+          icon="i-lucide-graduation-cap"
+          icon-class="text-brand-600 dark:text-brand-400"
+          :title="t('dashboard.apps.foodScholar.title')"
+          :description="t('dashboard.apps.foodScholar.description')"
+          glow-color="#d53355"
+          class="bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/20 dark:to-brand-800/20"
+        />
+        <DashboardAppNavCard
           to="/recipe-wrangler"
-          class="group p-6 rounded-2xl bg-gradient-to-br from-brandg-50 to-brandg-200 dark:from-brandg-900/20 dark:to-brandg-800/20 border border-brandg-200 dark:border-brandg-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
-        >
-          <UIcon name="i-lucide-chef-hat" class="w-8 h-8 text-brandg-600 dark:text-brandg-400 mb-3" />
-          <h3 class="font-semibold text-gray-900 dark:text-white mb-1">{{ t('dashboard.apps.recipeWrangler.title') }}</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300 font-light">{{ t('dashboard.apps.recipeWrangler.description') }}</p>
-        </NuxtLink>
-
-        <NuxtLink
+          icon="i-lucide-chef-hat"
+          icon-class="text-brandg-600 dark:text-brandg-400"
+          :title="t('dashboard.apps.recipeWrangler.title')"
+          :description="t('dashboard.apps.recipeWrangler.description')"
+          glow-color="#a6b52b"
+          class="bg-gradient-to-br from-brandg-50 to-brandg-200 dark:from-brandg-900/20 dark:to-brandg-800/20"
+        />
+        <DashboardAppNavCard
           to="/foodchat"
-          class="group p-6 rounded-2xl bg-gradient-to-br from-brandp-50 to-brandp-100 dark:from-brandp-600/20 dark:to-brandp-600/20 border border-brandp-200 dark:border-brandp-500 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
-        >
-          <UIcon name="i-lucide-message-circle" class="w-8 h-8 text-brandp-400 dark:text-brandp-400 mb-3" />
-          <h3 class="font-semibold text-gray-900 dark:text-white mb-1">{{ t('dashboard.apps.foodChat.title') }}</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-300 font-light">{{ t('dashboard.apps.foodChat.description') }}</p>
-        </NuxtLink>
+          icon="i-lucide-message-circle"
+          icon-class="text-brandp-400 dark:text-brandp-400"
+          :title="t('dashboard.apps.foodChat.title')"
+          :description="t('dashboard.apps.foodChat.description')"
+          glow-color="#a35ece"
+          class="bg-gradient-to-br from-brandp-50 to-brandp-100 dark:from-brandp-600/20 dark:to-brandp-600/20"
+        />
       </div>
 
       <!-- Today's Spotlight & Meal Schedule -->

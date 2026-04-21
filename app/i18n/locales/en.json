@@ -20,15 +20,15 @@
     "apps": {
       "foodScholar": {
         "title": "FoodScholar",
-        "description": "Learn & discover"
+        "description": "Ask, Learn & Discover"
       },
       "recipeWrangler": {
         "title": "RecipeWrangler",
-        "description": "Find recipes"
+        "description": "Find & Adapt Recipes"
       },
       "foodChat": {
         "title": "FoodChat",
-        "description": "Ask anything"
+        "description": "Plan personalised meals"
       }
     },
     "spotlight": {
@@ -388,12 +388,12 @@
     "cookingAnimation": {
       "deliciousRecipes": "delicious recipes",
       "actions": {
-        "stirring": "stirring",
-        "frying": "frying",
-        "chopping": "chopping",
-        "boiling": "boiling",
-        "sauteing": "sauteing",
-        "simmering": "simmering"
+        "stirring": "Stirring",
+        "frying": "Frying",
+        "chopping": "Chopping",
+        "boiling": "Boiling",
+        "sauteing": "Sauteing",
+        "simmering": "Simmering"
       },
       "descriptions": {
         "stirring": "Gently blending flavors together",
@@ -445,9 +445,69 @@
       "failedToGetQaResponse": "Failed to get a QA response from FoodScholar.",
       "failedToSubmitFeedback": "Failed to submit feedback."
     },
+    "guidesAtlas": {
+      "badge": "Guides Atlas",
+      "title": "Browse dietary guides by country, source, and rule",
+      "description": "Open the new dietary guides catalog to move through country explorers, guide detail pages, PDF artifacts, and searchable guideline rules.",
+      "cta": "Open guides atlas",
+      "features": {
+        "countries": {
+          "title": "Country explorers",
+          "description": "Start from a country or region and browse the available guide collection."
+        },
+        "guides": {
+          "title": "Guide records",
+          "description": "Compare publishers, years, audiences, metadata, and linked artifacts."
+        },
+        "rules": {
+          "title": "Guideline rules",
+          "description": "Search and filter individual recommendations using the catalog endpoints."
+        }
+      }
+    },
+    "explore": {
+      "badge": "FoodScholar Index",
+      "title": "Two ways to keep reading after the answer.",
+      "description": "Use QA as the front door, then move into either the guidance layer or the journal archive when you want to inspect the source material directly.",
+      "snapshotLabel": "Desk Notes",
+      "snapshotDescription": "A lighter view of what is currently in scope on this page.",
+      "featuredLabel": "On the shelf",
+      "featuredEmpty": "Journal previews will appear here as article metadata loads.",
+      "readFirstLabel": "Read first",
+      "topicLensLabel": "Topic Lens",
+      "topicSignalsLabel": "Signals",
+      "topicLens": {
+        "all": "All topics"
+      },
+      "stats": {
+        "articles": "Articles",
+        "journals": "Journals",
+        "topics": "Topics"
+      },
+      "destinations": {
+        "guides": {
+          "eyebrow": "Reference",
+          "title": "Guides Atlas",
+          "description": "National and institutional dietary guidance, organized so you can compare sources and inspect specific rules."
+        },
+        "journals": {
+          "eyebrow": "Archive",
+          "title": "Journal Catalog",
+          "description": "A path into the research collection when you want to browse by venue, topic, and recent papers."
+        }
+      }
+    },
     "popularArticles": {
-      "title": "Popular Articles",
+      "title": "Browse Research by Journal",
+      "subtitle": "Use a topic lens, skim the journals behind the current collection, and jump into the article catalog when you want a wider search.",
       "browseFullCatalog": "Browse full catalog",
+      "openArticleCatalog": "Open article catalog",
+      "journalLabel": "Journal",
+      "articleCount": "{count} articles",
+      "allTopics": "Across all topics",
+      "topicLens": "Topic lens: {topic}",
+      "openJournalView": "Open journal view",
+      "otherSources": "Other sources",
       "loading": "Loading popular articles...",
       "noFilteredResults": "No articles match the selected filters."
     },
@@ -1096,12 +1156,12 @@
     "cookingAnimation": {
       "yourMealPlan": "your meal plan",
       "actions": {
-        "stirring": "stirring",
-        "frying": "frying",
-        "chopping": "chopping",
-        "boiling": "boiling",
-        "sauteing": "sauteing",
-        "simmering": "simmering"
+        "stirring": "Stirring",
+        "frying": "Frying",
+        "chopping": "Chopping",
+        "boiling": "Boiling",
+        "sauteing": "Sauteing",
+        "simmering": "Simmering"
       },
       "descriptions": {
         "stirring": "Blending flavors for your perfect plan",

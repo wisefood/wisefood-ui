@@ -99,6 +99,7 @@ export interface CatalogGuidelineSourceReference {
 export interface CatalogGuideline {
   id: string
   guide_urn: string
+  guide_title: string | null
   title: string | null
   rule_text: string
   sequence_no: number | null
@@ -116,6 +117,11 @@ export interface CatalogGuideline {
   applicability_status: CatalogApplicabilityStatus | null
   applicability_start_date: string | null
   applicability_end_date: string | null
+  region: string | null
+  publication_year: number | null
+  topic: string | null
+  audience: string | null
+  tags: string[]
   creator: string | null
   created_at: string | null
   updated_at: string | null
@@ -358,7 +364,7 @@ const extractSearchCollection = (value: unknown): unknown[] => {
     return []
   }
 
-  for (const key of ['results', 'guides', 'items', 'docs']) {
+  for (const key of ['results', 'guides', 'guidelines', 'items', 'docs']) {
     if (Array.isArray(record[key])) {
       return record[key] as unknown[]
     }
@@ -369,7 +375,7 @@ const extractSearchCollection = (value: unknown): unknown[] => {
     return []
   }
 
-  for (const key of ['docs', 'results', 'items']) {
+  for (const key of ['docs', 'results', 'guidelines', 'items']) {
     if (Array.isArray(responseRecord[key])) {
       return responseRecord[key] as unknown[]
     }
@@ -627,6 +633,7 @@ const normalizeGuideline = (value: unknown): CatalogGuideline => {
   return {
     id: asString(record['id']) || '',
     guide_urn: asString(record['guide_urn']) || '',
+    guide_title: asString(record['guide_title']) || asString(record['guide_label']) || asString(record['source_guide_title']),
     title: asString(record['title']),
     rule_text: asString(record['rule_text']) || '',
     sequence_no: asNumber(record['sequence_no']),
@@ -646,6 +653,11 @@ const normalizeGuideline = (value: unknown): CatalogGuideline => {
     applicability_status: asString(record['applicability_status']) as CatalogApplicabilityStatus | null,
     applicability_start_date: asString(record['applicability_start_date']),
     applicability_end_date: asString(record['applicability_end_date']),
+    region: asString(record['region']),
+    publication_year: asNumber(record['publication_year']),
+    topic: asString(record['topic']),
+    audience: asString(record['audience']),
+    tags: asStringArray(record['tags']),
     creator: asString(record['creator']),
     created_at: asString(record['created_at']),
     updated_at: asString(record['updated_at'])
@@ -685,7 +697,11 @@ class CatalogApiService {
     })
 
     const directResult = asRecord(asRecord(payload)?.['result'])
-    const directResults = Array.isArray(directResult?.['results']) ? directResult['results'] as unknown[] : null
+    const directResults = Array.isArray(directResult?.['results'])
+      ? directResult['results'] as unknown[]
+      : Array.isArray(directResult?.['guidelines'])
+        ? directResult['guidelines'] as unknown[]
+        : null
     const results = directResults || extractSearchCollection(payload)
     const directTotal = asNumber(directResult?.['total'])
     const directFacets = asRecord(directResult?.['facets'])
@@ -736,6 +752,41 @@ class CatalogApiService {
     })
 
     return extractCollection(payload, ['guidelines', 'items', 'results', 'data']).map(normalizeGuideline)
+  }
+
+  async searchGuidelines(params: CatalogSearchParams = {}): Promise<CatalogGuidelineSearchResult> {
+    const preserveNullable = <T>(value: T | undefined) => value === undefined ? undefined : value
+
+    const payload = await wisefoodApi.post<unknown, CatalogSearchParams>(`${this.basePath}/guidelines/search`, {
+      q: params.q ?? null,
+      limit: params.limit ?? 10,
+      offset: params.offset ?? 0,
+      fl: preserveNullable(params.fl),
+      fq: preserveNullable(params.fq),
+      sort: params.sort ?? 'updated_at desc',
+      fields: preserveNullable(params.fields),
+      facet_limit: params.facet_limit ?? undefined,
+      highlight: params.highlight ?? false,
+      highlight_fields: preserveNullable(params.highlight_fields),
+      highlight_pre_tag: params.highlight_pre_tag ?? undefined,
+      highlight_post_tag: params.highlight_post_tag ?? undefined
+    })
+
+    const directResult = asRecord(asRecord(payload)?.['result'])
+    const directResults = Array.isArray(directResult?.['results'])
+      ? directResult['results'] as unknown[]
+      : Array.isArray(directResult?.['guidelines'])
+        ? directResult['guidelines'] as unknown[]
+        : null
+    const results = directResults || extractSearchCollection(payload)
+    const directTotal = asNumber(directResult?.['total'])
+    const directFacets = asRecord(directResult?.['facets'])
+
+    return {
+      guidelines: results.map(normalizeGuideline),
+      total: directTotal ?? extractSearchTotal(payload, results.length),
+      facets: directFacets ? extractSearchFacets({ result: { facets: directFacets } }) : extractSearchFacets(payload)
+    }
   }
 
   async searchGuidelinesByGuide(guideUrn: string, params: CatalogSearchParams = {}): Promise<CatalogGuidelineSearchResult> {

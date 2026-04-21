@@ -625,6 +625,9 @@ useSeoMeta({
   description: computed(() => t('foodScholarCatalog.meta.description'))
 })
 
+const route = useRoute()
+const router = useRouter()
+
 // Composable
 const {
   articles,
@@ -723,6 +726,115 @@ const FACET_BOOTSTRAP_FL = [
 ]
 const FACET_BOOTSTRAP_SORT = 'created_at desc'
 const FACET_BOOTSTRAP_LIMIT = 6
+
+const parseQueryValues = (value: unknown): string[] => {
+  if (value === null || value === undefined) return []
+
+  const rawValues = Array.isArray(value) ? value : [value]
+
+  return rawValues
+    .flatMap(entry => String(entry).split(','))
+    .map(entry => entry.trim())
+    .filter(Boolean)
+}
+
+const getSingleQueryValue = (value: unknown): string => {
+  return parseQueryValues(value)[0] || ''
+}
+
+const getNumericQueryValue = (value: unknown): number | null => {
+  const raw = getSingleQueryValue(value)
+  if (!raw) return null
+
+  const parsed = Number(raw)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+const normalizeQueryRecord = (query: Record<string, unknown>) => {
+  return Object.entries(query)
+    .filter(([, value]) => value !== undefined && value !== null && !(Array.isArray(value) && value.length === 0) && String(value).trim() !== '')
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, value]) => [
+      key,
+      (Array.isArray(value) ? value : [value])
+        .map(entry => String(entry))
+        .sort((left, right) => left.localeCompare(right))
+    ])
+}
+
+const routeFiltersHydrated = ref(false)
+
+const hydrateStateFromRoute = () => {
+  nlQuery.value = getSingleQueryValue(route.query.q)
+  selectedVenues.value = parseQueryValues(route.query.venue)
+  selectedYears.value = parseQueryValues(route.query.year)
+  selectedTags.value = parseQueryValues(route.query.tag)
+  selectedTopics.value = parseQueryValues(route.query.topic)
+  selectedStudyTypes.value = parseQueryValues(route.query.study_type)
+  selectedAgeGroups.value = parseQueryValues(route.query.age_group)
+  selectedCountries.value = parseQueryValues(route.query.country)
+  selectedIncomeSettings.value = parseQueryValues(route.query.income_setting)
+
+  const yearMin = getNumericQueryValue(route.query.year_min)
+  const yearMax = getNumericQueryValue(route.query.year_max)
+  selectedYearRange.value = yearMin !== null && yearMax !== null
+    ? [Math.min(yearMin, yearMax), Math.max(yearMin, yearMax)]
+    : null
+
+  citationCountMin.value = getSingleQueryValue(route.query.citation_min)
+  citationCountMax.value = getSingleQueryValue(route.query.citation_max)
+
+  const sort = getSingleQueryValue(route.query.sort)
+  sortBy.value = sort || (nlQuery.value ? 'score desc' : 'created_at desc')
+
+  const queryPage = getNumericQueryValue(route.query.page)
+  page.value = queryPage && queryPage > 0 ? queryPage : 1
+}
+
+const buildRouteQueryFromState = () => {
+  const query: Record<string, string | string[]> = {}
+
+  if (nlQuery.value.trim()) query.q = nlQuery.value.trim()
+  if (selectedVenues.value.length) query.venue = [...selectedVenues.value]
+  if (selectedYears.value.length) query.year = [...selectedYears.value]
+  if (selectedTags.value.length) query.tag = [...selectedTags.value]
+  if (selectedTopics.value.length) query.topic = [...selectedTopics.value]
+  if (selectedStudyTypes.value.length) query.study_type = [...selectedStudyTypes.value]
+  if (selectedAgeGroups.value.length) query.age_group = [...selectedAgeGroups.value]
+  if (selectedCountries.value.length) query.country = [...selectedCountries.value]
+  if (selectedIncomeSettings.value.length) query.income_setting = [...selectedIncomeSettings.value]
+
+  if (hasYearRangeFilter.value) {
+    const [yearMin, yearMax] = yearRangeSlider.value
+    query.year_min = String(yearMin)
+    query.year_max = String(yearMax)
+  }
+
+  if (hasCitationCountFilter.value && !citationRangeInvalid.value) {
+    const min = citationRangeState.value.min
+    const max = citationRangeState.value.max
+    if (min !== null) query.citation_min = String(min)
+    if (max !== null) query.citation_max = String(max)
+  }
+
+  if (sortBy.value !== 'created_at desc') query.sort = sortBy.value
+  if (page.value > 1) query.page = String(page.value)
+
+  return query
+}
+
+const syncRouteQuery = async () => {
+  if (!routeFiltersHydrated.value) return
+
+  const nextQuery = buildRouteQueryFromState()
+  const currentQuery = route.query as Record<string, unknown>
+
+  if (JSON.stringify(normalizeQueryRecord(currentQuery)) === JSON.stringify(normalizeQueryRecord(nextQuery))) {
+    return
+  }
+
+  await router.replace({ query: nextQuery })
+}
 
 const exampleQueries = computed(() => ([
   t('foodScholarCatalog.examples.omega3'),
@@ -1240,6 +1352,7 @@ const removeActiveFilterChip = (chip: ActiveFilterChip) => {
     case 'query':
       nlQuery.value = ''
       searchSummary.value = null
+      void syncRouteQuery()
       loadArticles()
       return
   }
@@ -1446,6 +1559,7 @@ const performNLSearch = () => {
   page.value = 1
   searchSummary.value = null // Clear previous summary
   sortBy.value = "score desc" // Switch to relevance sorting for searches
+  void syncRouteQuery()
   loadArticles()
 }
 
@@ -1478,6 +1592,7 @@ const resetFilters = () => {
   sortBy.value = "created_at desc"
   page.value = 1
   searchSummary.value = null // Clear summary when resetting
+  void syncRouteQuery()
   loadArticles()
 }
 
@@ -1496,15 +1611,19 @@ watch([
   citationCountMax,
   sortBy
 ], () => {
+  if (!routeFiltersHydrated.value) return
   page.value = 1
   searchSummary.value = null // Clear summary when filters change
+  void syncRouteQuery()
   loadArticles()
 }, { deep: true })
 
 watch(page, () => {
+  if (!routeFiltersHydrated.value) return
   if (page.value > 1) {
     searchSummary.value = null // Clear summary when navigating away from page 1
   }
+  void syncRouteQuery()
   loadArticles()
   window.scrollTo({ top: 0, behavior: 'smooth' })
   setupObserver()
@@ -1545,6 +1664,8 @@ const setupObserver = () => {
 }
 
 onMounted(async () => {
+  hydrateStateFromRoute()
+  routeFiltersHydrated.value = true
   await loadFacets() // Load all available facets once
   await loadArticles() // Load filtered articles
   setupObserver()

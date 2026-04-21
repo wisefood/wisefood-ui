@@ -20,15 +20,15 @@
     "apps": {
       "foodScholar": {
         "title": "FoodScholar",
-        "description": "Tanulj és fedezz fel"
+        "description": "Kérdezz, tanulj és fedezz fel"
       },
       "recipeWrangler": {
         "title": "RecipeWrangler",
-        "description": "Receptek keresése"
+        "description": "Keress és adaptálj recepteket"
       },
       "foodChat": {
         "title": "FoodChat",
-        "description": "Kérdezz bármit"
+        "description": "Tervezz személyre szabott étkezéseket"
       }
     },
     "spotlight": {
@@ -445,9 +445,69 @@
       "failedToGetQaResponse": "Nem sikerült választ kapni a FoodScholar QA-tól.",
       "failedToSubmitFeedback": "A visszajelzés küldése sikertelen."
     },
+    "guidesAtlas": {
+      "badge": "Guides Atlas",
+      "title": "Browse dietary guides by country, source, and rule",
+      "description": "Open the new dietary guides catalog to move through country explorers, guide detail pages, PDF artifacts, and searchable guideline rules.",
+      "cta": "Open guides atlas",
+      "features": {
+        "countries": {
+          "title": "Country explorers",
+          "description": "Start from a country or region and browse the available guide collection."
+        },
+        "guides": {
+          "title": "Guide records",
+          "description": "Compare publishers, years, audiences, metadata, and linked artifacts."
+        },
+        "rules": {
+          "title": "Guideline rules",
+          "description": "Search and filter individual recommendations using the catalog endpoints."
+        }
+      }
+    },
+    "explore": {
+      "badge": "FoodScholar Index",
+      "title": "Two ways to keep reading after the answer.",
+      "description": "Use QA as the front door, then move into either the guidance layer or the journal archive when you want to inspect the source material directly.",
+      "snapshotLabel": "Desk Notes",
+      "snapshotDescription": "A lighter view of what is currently in scope on this page.",
+      "featuredLabel": "On the shelf",
+      "featuredEmpty": "Journal previews will appear here as article metadata loads.",
+      "readFirstLabel": "Read first",
+      "topicLensLabel": "Topic Lens",
+      "topicSignalsLabel": "Signals",
+      "topicLens": {
+        "all": "All topics"
+      },
+      "stats": {
+        "articles": "Articles",
+        "journals": "Journals",
+        "topics": "Topics"
+      },
+      "destinations": {
+        "guides": {
+          "eyebrow": "Reference",
+          "title": "Guides Atlas",
+          "description": "National and institutional dietary guidance, organized so you can compare sources and inspect specific rules."
+        },
+        "journals": {
+          "eyebrow": "Archive",
+          "title": "Journal Catalog",
+          "description": "A path into the research collection when you want to browse by venue, topic, and recent papers."
+        }
+      }
+    },
     "popularArticles": {
-      "title": "Népszerű cikkek",
+      "title": "Kutatások böngészése folyóiratonként",
+      "subtitle": "Válassz témanézetet, nézd át a kapcsolódó folyóiratokat, majd nyisd meg a cikkkatalógust, ha szélesebb keresést szeretnél.",
       "browseFullCatalog": "Teljes katalógus böngészése",
+      "openArticleCatalog": "Cikkkatalógus megnyitása",
+      "journalLabel": "Folyóirat",
+      "articleCount": "{count} cikk",
+      "allTopics": "Minden témában",
+      "topicLens": "Témanézet: {topic}",
+      "openJournalView": "Folyóirat nézet megnyitása",
+      "otherSources": "Egyéb források",
       "loading": "Népszerű cikkek betöltése...",
       "noFilteredResults": "A kiválasztott szűrőknek nincs találata."
     },

@@ -38,9 +38,69 @@ export const countries: Country[] = [
   { code: 'US', name: 'United States', flag: '🇺🇸', label: '🇺🇸 United States' }
 ]
 
+export const euCountryCodes = [
+  'AT',
+  'BE',
+  'BG',
+  'HR',
+  'CY',
+  'CZ',
+  'DK',
+  'EE',
+  'FI',
+  'FR',
+  'DE',
+  'GR',
+  'HU',
+  'IE',
+  'IT',
+  'LV',
+  'LT',
+  'LU',
+  'MT',
+  'NL',
+  'PL',
+  'PT',
+  'RO',
+  'SK',
+  'SI',
+  'ES',
+  'SE'
+] as const
+
+const countryNameAliases: Record<string, string> = {
+  'czech republic': 'CZ',
+  'the czech republic': 'CZ',
+  'hellenic republic': 'GR',
+  'the netherlands': 'NL'
+}
+
 // Get country by ISO code
 export function getCountryByCode(code: string): Country | undefined {
   return countries.find(c => c.code === code)
+}
+
+function normalizeCountryLookup(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/^the\s+/i, '')
+    .replace(/[().,']/g, '')
+    .replace(/\s+/g, ' ')
+}
+
+export function getCountryByName(name: string): Country | undefined {
+  const normalizedName = normalizeCountryLookup(name)
+  const aliasCode = countryNameAliases[normalizedName]
+
+  if (aliasCode) {
+    return getCountryByCode(aliasCode)
+  }
+
+  return countries.find((country) => {
+    return normalizeCountryLookup(country.name) === normalizedName
+      || normalizeCountryLookup(country.label.replace(country.flag, '').trim()) === normalizedName
+  })
 }
 
 // Search countries by name or code
