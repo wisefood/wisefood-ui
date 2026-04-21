@@ -1,36 +1,18 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
     <!-- Header -->
-    <div class="border-b border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-50">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-        <div class="flex items-center justify-between">
-          <NuxtLink
-            to="/recipe-wrangler"
-            class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-brandg-600 dark:hover:text-brandg-400 transition-colors"
-          >
-            <UIcon name="i-lucide-arrow-left" class="w-5 h-5" />
-            <span class="text-sm font-medium">{{ t('recipeWrangler.backToRecipes') }}</span>
-          </NuxtLink>
-
-          <button
-            v-if="compareRecipes.length > 0"
-            @click="clearAll"
-            class="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-sm font-medium"
-          >
-            <UIcon name="i-lucide-x" class="w-4 h-4" />
-            {{ t('recipeWrangler.comparePage.clearAll') }}
-          </button>
-        </div>
-        <div class="mt-3 sm:mt-4">
-          <h1 class="text-2xl sm:text-3xl md:text-4xl font-light text-zinc-900 dark:text-white tracking-tight">
-            <span class="font-serif italic text-brandg-500 dark:text-brandg-400 text-3xl sm:text-4xl md:text-5xl">RecipeWrangler</span>
-          </h1>
-          <p class="mt-2 text-sm sm:text-base text-zinc-600 dark:text-zinc-300 font-light">
-            {{ t('recipeWrangler.subtitle') }}
-          </p>
-        </div>
-      </div>
-    </div>
+    <RecipesRecipeWranglerHeader back-to="/recipe-wrangler" :back-label="t('recipeWrangler.backToRecipes')">
+      <template #actions>
+        <button
+          v-if="compareRecipes.length > 0"
+          @click="clearAll"
+          class="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-sm font-medium"
+        >
+          <UIcon name="i-lucide-x" class="w-4 h-4" />
+          {{ t('recipeWrangler.comparePage.clearAll') }}
+        </button>
+      </template>
+    </RecipesRecipeWranglerHeader>
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">

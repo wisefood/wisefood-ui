@@ -1,43 +1,7 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
     <!-- Header -->
-    <div class="border-b border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-10">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-        <div class="flex items-center justify-between">
-          <NuxtLink
-            to="/recipe-wrangler"
-            class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-brandg-600 dark:hover:text-brandg-400 transition-colors"
-          >
-            <UIcon name="i-lucide-arrow-left" class="w-5 h-5" />
-            <span class="text-sm font-medium">{{ t('recipeWrangler.backToRecipes') }}</span>
-          </NuxtLink>
-          <button
-            v-if="recipe"
-            @click="toggleFavorite"
-            class="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all"
-          >
-            <UIcon
-              :name="isFavorite ? 'i-lucide-heart' : 'i-lucide-heart'"
-              :class="[
-                'w-5 h-5 transition-colors',
-                isFavorite ? 'text-red-500 fill-red-500' : 'text-zinc-600 dark:text-zinc-300'
-              ]"
-            />
-            <span class="text-sm font-medium text-zinc-700 dark:text-zinc-200">
-              {{ isFavorite ? t('recipeWrangler.recipe.saved') : t('recipeWrangler.recipe.save') }}
-            </span>
-          </button>
-        </div>
-        <div class="mt-3 sm:mt-4">
-          <h1 class="text-2xl sm:text-3xl md:text-4xl font-light text-zinc-900 dark:text-white tracking-tight">
-            <span class="font-serif italic text-brandg-500 dark:text-brandg-400 text-3xl sm:text-4xl md:text-5xl">RecipeWrangler</span>
-          </h1>
-          <p class="mt-2 text-sm sm:text-base text-zinc-600 dark:text-zinc-300 font-light">
-            {{ t('recipeWrangler.subtitle') }}
-          </p>
-        </div>
-      </div>
-    </div>
+    <RecipesRecipeWranglerHeader :back-to="backLink.to" :back-label="backLink.label" />
 
     <!-- Loading State -->
     <div v-if="loading" class="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
@@ -53,7 +17,7 @@
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="max-w-5xl mx-auto px-4 sm:px-6 py-12 text-center">
+    <div v-else-if="error" class="max-w-5xl mx-auto px-4 sm:px-6 py-6 text-center">
       <UIcon name="i-lucide-alert-circle" class="w-16 h-16 text-red-500 mx-auto mb-4" />
       <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">{{ t('recipeWrangler.detail.failedToLoad') }}</h2>
       <p class="text-zinc-600 dark:text-zinc-400 mb-6">{{ error }}</p>
@@ -63,7 +27,7 @@
     </div>
 
     <!-- Recipe Content -->
-    <main v-else-if="recipe" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
+    <main v-else-if="recipe" class="max-w-7xl mx-auto px-1 sm:px-6 lg:px-8 py-4 sm:py-10">
       <!-- Hero Section with Image -->
       <div class="mb-8 sm:mb-10">
         <!-- Image -->
@@ -125,21 +89,81 @@
           </div>
         </div>
 
-        <div v-if="displayRecipeTags.length" class="flex flex-wrap items-center gap-2 mt-2">
-          <span class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Tags</span>
-          <span
-            v-for="(tag, idx) in displayRecipeTags"
-            :key="`tag-${tag.raw}-${idx}`"
-            class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-brandg-100/70 dark:bg-brandg-900/40 text-brandg-800 dark:text-brandg-200 border border-brandg-200 dark:border-brandg-700"
+        <!-- Tags + Nutri-Score strip + Sustainability bar -->
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2 justify-between">
+          <!-- Tags -->
+          <div v-if="displayRecipeTags.length" class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Tags</span>
+            <span
+              v-for="(tag, idx) in displayRecipeTags"
+              :key="`tag-${tag.raw}-${idx}`"
+              class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-brandg-100/70 dark:bg-brandg-900/40 text-brandg-800 dark:text-brandg-200 border border-brandg-200 dark:border-brandg-700"
+            >
+              {{ tag.label }}
+            </span>
+          </div>
+
+          <!-- Divider -->
+          <div v-if="displayRecipeTags.length" class="h-4 w-px bg-zinc-300 dark:bg-zinc-600 hidden sm:block"></div>
+
+          <!-- Nutri-Score mini strip -->
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Nutri-Score</span>
+            <div class="flex gap-0.5">
+              <span
+                v-for="grade in ['A', 'B', 'C', 'D', 'E']"
+                :key="grade"
+                :class="[
+                  'flex items-center justify-center font-black text-white text-xs rounded-sm transition-all select-none',
+                  nutriScoreGrade === grade ? 'w-7 h-7 opacity-100 ring-2 ring-offset-1 ring-zinc-400/50 dark:ring-zinc-500/50' : 'w-5 h-6 opacity-40',
+                  getNutriScoreColorBg(grade)
+                ]"
+              >{{ grade }}</span>
+            </div>
+            <UTooltip v-if="nutriBreakdown" text="How was this score calculated?">
+              <button
+                type="button"
+                @click="showNutriScoreDetails = true"
+                class="flex items-center justify-center w-4 h-4 rounded-full text-zinc-400 dark:text-zinc-500 hover:text-brandg-600 dark:hover:text-brandg-400 transition-colors cursor-pointer"
+              >
+                <UIcon name="i-lucide-circle-help" class="w-4 h-4" />
+              </button>
+            </UTooltip>
+          </div>
+
+          <!-- Divider -->
+          <div class="h-5 w-px bg-zinc-300 dark:bg-zinc-600 hidden sm:block"></div>
+
+          <!-- Sustainability progress bar -->
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-leaf" class="w-3.5 h-3.5 text-brandg-500 dark:text-brandg-400 flex-shrink-0" />
+            <span class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Sustainability</span>
+            <div class="w-24 h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-brandg-400 to-brandg-600 rounded-full" style="width: 75%"></div>
+            </div>
+            <span class="text-xs font-medium text-brandg-600 dark:text-brandg-400">Good</span>
+          </div>
+
+          <!-- Save button -->
+          <button
+            v-if="recipe"
+            @click="toggleFavorite"
+            class="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all"
           >
-            {{ tag.label }}
-          </span>
+            <UIcon
+              name="i-lucide-heart"
+              :class="['w-4 h-4 transition-colors', isFavorite ? 'text-red-500 fill-red-500' : 'text-zinc-500 dark:text-zinc-400']"
+            />
+            <span class="text-xs font-medium text-zinc-600 dark:text-zinc-300">
+              {{ isFavorite ? t('recipeWrangler.recipe.saved') : t('recipeWrangler.recipe.save') }}
+            </span>
+          </button>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
         <!-- Main Content (Left Column) -->
-        <div class="lg:col-span-2 space-y-10 sm:space-y-12">
+        <div class="lg:col-span-3 space-y-6 sm:space-y-8">
 
           <!-- Nutrition Information -->
           <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 sm:p-10 border border-zinc-200 dark:border-zinc-700 shadow-lg">
@@ -345,7 +369,7 @@
 
             <div class="mt-6">
               <button
-                v-if="!showProfilingDetails || profilingLoading"
+                v-if="(!showProfilingDetails || profilingLoading) && profilingDetailRows.length === 0"
                 type="button"
                 @click="toggleNutritionProfilingDetails"
                 :disabled="profilingLoading"
@@ -357,25 +381,6 @@
                 />
                 <span>{{ profilingLoading ? 'Loading profiling data…' : 'Load ingredient profiling' }}</span>
               </button>
-              <div v-else class="flex items-center gap-3">
-                <div class="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-                  <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-brandg-100 dark:bg-brandg-900/40 text-brandg-700 dark:text-brandg-300 border border-brandg-200 dark:border-brandg-700 font-medium">
-                    <span class="w-1.5 h-1.5 rounded-full bg-brandg-500"></span>
-                    {{ matchedWeightCount }} matched
-                  </span>
-                  <span v-if="unmatchedWeightCount > 0" class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700 font-medium">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                    {{ unmatchedWeightCount }} unmatched
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  @click="showProfilingDetails = false; profilingResult = null"
-                  class="text-xs text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
-                >
-                  Clear
-                </button>
-              </div>
               <p
                 v-if="profilingError"
                 class="mt-2 text-xs text-red-600 dark:text-red-400"
@@ -431,104 +436,11 @@
         </div>
 
         <!-- Sidebar (Right Column) -->
-        <div class="space-y-8">
-          <!-- Nutri-Score Display -->
-          <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 border border-zinc-200 dark:border-zinc-700 shadow-lg relative">
-            <h3 class="text-xl font-semibold text-zinc-900 dark:text-white mb-6 flex items-center gap-3">
-              <UIcon name="i-lucide-award" class="w-6 h-6 text-brandg-600 dark:text-brandg-400" />
-              {{ t('recipeWrangler.recipe.nutriScore') }}
-            </h3>
-
-            <!-- Nutri-Score Label (Official Design) -->
-            <div class="flex flex-col items-center">
-              <p class="text-xs text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3">{{ t('recipeWrangler.detail.nutritionalQuality') }}</p>
-              <div v-if="nutriScoreGrade" class="flex gap-1 relative">
-                <UTooltip
-                  v-for="(grade, idx) in ['A', 'B', 'C', 'D', 'E']"
-                  :key="grade"
-                  :class="[
-                    'relative flex items-center justify-center font-black text-white transition-all',
-                    nutriScoreGrade === grade
-                      ? 'w-16 h-20 text-3xl z-10'
-                      : 'w-12 h-16 text-xl opacity-50',
-                    idx === 0 ? 'rounded-l-full' : '',
-                    idx === 4 ? 'rounded-r-full' : '',
-                    getNutriScoreColorBg(grade)
-                  ]"
-                >
-                  <div
-                    v-if="nutriScoreGrade === grade"
-                    :class="[
-                      'relative flex items-center justify-center font-black text-white transition-all cursor-help',
-                      nutriScoreGrade === grade
-                        ? 'w-16 h-20 text-3xl z-10'
-                        : 'w-12 h-16 text-xl opacity-50',
-                      idx === 0 ? 'rounded-l-full' : '',
-                      idx === 4 ? 'rounded-r-full' : '',
-                      getNutriScoreColorBg(grade)
-                    ]"
-                  >
-                    <span class="relative z-10">{{ grade }}</span>
-                    <!-- Arrow pointer for active grade -->
-                    <div
-                      v-if="nutriScoreGrade === grade"
-                      :class="[
-                        'absolute -bottom-3 w-0 h-0',
-                        'border-l-[12px] border-l-transparent',
-                        'border-r-[12px] border-r-transparent',
-                        'border-t-[12px]',
-                        getNutriScoreArrowColor(grade),
-                        // Adjust position for edge grades (A and E)
-                        idx === 0 ? 'left-1/2 translate-x-1' : '',
-                        idx === 4 ? 'right-1/2 -translate-x-1' : '',
-                        idx !== 0 && idx !== 4 ? 'left-1/2 -translate-x-1/2' : ''
-                      ]"
-                    ></div>
-                  </div>
-                </UTooltip>
-              </div>
-              <div
-                v-else
-                class="inline-flex items-center justify-center min-w-24 h-16 px-6 rounded-full bg-zinc-100 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-300 font-semibold"
-              >
-                N/A
-              </div>
-              <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-6 text-center">
-                {{ nutriScoreGrade ? getNutriScoreDescription(nutriScoreGrade) : 'Nutri-Score is not available for this recipe yet.' }}
-              </p>
-              <button
-                v-if="nutriBreakdown"
-                type="button"
-                @click="showNutriScoreDetails = true"
-                class="mt-5 inline-flex items-center gap-2 text-sm font-medium text-brandg-700 dark:text-brandg-300 hover:text-brandg-800 dark:hover:text-brandg-200"
-              >
-                <UIcon name="i-lucide-circle-help" class="w-4 h-4" />
-                <span>How was this score calculated?</span>
-              </button>
-            </div>
-          </section>
-
-          <!-- Environmental Impact -->
-          <section class="bg-gradient-to-br from-brandg-50 to-brandg-100 dark:from-brandg-900/20 dark:to-brandg-800/20 rounded-3xl p-8 border border-brandg-200 dark:border-brandg-800 shadow-lg relative">
-            <h3 class="text-xl font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-3">
-              <UIcon name="i-lucide-leaf" class="w-6 h-6 text-brandg-600 dark:text-brandg-400" />
-              {{ t('recipeWrangler.detail.environmentalImpact') }}
-            </h3>
-            <p class="text-sm text-zinc-600 dark:text-zinc-300 mb-6">
-              {{ t('recipeWrangler.detail.sustainabilityMessage') }}
-            </p>
-            <div class="flex items-center gap-3">
-              <div class="flex-1 h-3 bg-brandg-200 dark:bg-brandg-900/50 rounded-full overflow-hidden">
-                <div class="h-full bg-gradient-to-r from-brandg-500 to-brandg-600 dark:from-brandg-600 dark:to-brandg-700 rounded-full" style="width: 75%"></div>
-              </div>
-              <span class="text-base font-bold text-brandg-700 dark:text-brandg-400">{{ t('recipeWrangler.detail.sustainabilityGood') }}</span>
-            </div>
-          </section>
-
+        <div class="lg:col-span-2 space-y-8">
           <!-- Ingredients -->
           <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 border border-zinc-200 dark:border-zinc-700 shadow-lg sticky top-24 z-0">
-            <h2 class="text-2xl font-serif font-semibold text-zinc-900 dark:text-white mb-6 flex items-center gap-3">
-              <UIcon name="i-lucide-shopping-basket" class="w-6 h-6 text-brandg-600 dark:text-brandg-400" />
+            <h2 class="text-3xl font-serif font-semibold text-zinc-900 dark:text-white mb-8 flex items-center gap-3">
+              <UIcon name="i-lucide-shopping-basket" class="w-7 h-7 text-brandg-600 dark:text-brandg-400" />
               {{ t('recipeWrangler.detail.ingredients') }}
             </h2>
 
@@ -797,7 +709,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useRecipes } from '~/composables/useRecipes'
 import { useRecipeStore } from '~/stores/recipe'
 import recipeApi from '~/services/recipeApi'
@@ -818,8 +730,20 @@ const { t } = useI18n()
 // Route & Stores
 // ============================================================================
 const route = useRoute()
+const router = useRouter()
 const { currentRecipe, loading, error, fetchRecipe } = useRecipes()
 const recipeStore = useRecipeStore()
+
+const backLink = computed(() => {
+  const prev = router.options.history.state.back as string | undefined
+  if (prev && prev.startsWith('/recipe-wrangler/compare')) {
+    return { to: '/recipe-wrangler/compare', label: t('recipeWrangler.backToCompare') }
+  }
+  if (prev && prev === '/dashboard') {
+    return { to: '/dashboard', label: t('recipeWrangler.backToDashboard') }
+  }
+  return { to: '/recipe-wrangler', label: t('recipeWrangler.backToRecipes') }
+})
 
 // ============================================================================
 // State
@@ -1178,6 +1102,9 @@ const loadRecipe = async () => {
     if (recipe.value) {
       recipeStore.addToRecentlyViewed(recipe.value.recipe_id)
       recipeStore.cacheRecipe(recipe.value)
+      if (profilingDetailRows.value.length > 0) {
+        showProfilingDetails.value = true
+      }
     }
   } catch (err) {
     console.error('Failed to load recipe:', err)
