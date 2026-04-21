@@ -1,0 +1,1649 @@
+<template>
+  <div>
+    <UPage class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <UBreadcrumb
+        :items="breadcrumbItems"
+        class="mb-4"
+      />
+
+      <div class="flex flex-col gap-4 py-8 sm:flex-row sm:items-start sm:justify-between">
+        <UPageHeader
+          title="Recipes"
+          :ui="{ root: 'relative py-0 border-b-0' }"
+        />
+
+        <UButton
+          color="primary"
+          icon="i-lucide-plus"
+          class="self-start"
+          @click="openCreateRecipeModal"
+        >
+          Add Recipe
+        </UButton>
+      </div>
+
+      <UPageBody class="space-y-6">
+        <UCard
+          :ui="{ body: 'p-0', header: 'p-5 sm:p-6', footer: 'p-4 sm:px-6 sm:py-4' }"
+          class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
+        >
+          <template #header>
+            <div class="space-y-4">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                      Recipe Library
+                    </h2>
+                    <UBadge
+                      color="neutral"
+                      variant="outline"
+                    >
+                      {{ resultCountLabel }}
+                    </UBadge>
+                  </div>
+                </div>
+
+                <div class="ml-auto flex flex-wrap gap-2">
+                  <UButton
+                    color="neutral"
+                    variant="outline"
+                    size="sm"
+                    icon="i-lucide-refresh-cw"
+                    :loading="recipesLoading"
+                    @click="refreshRecipes"
+                  >
+                    Sync
+                  </UButton>
+                  <UButton
+                    color="neutral"
+                    variant="ghost"
+                    :disabled="recipesLoading || !hasActiveFilters"
+                    @click="resetFilters"
+                  >
+                    Reset
+                  </UButton>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-3 xl:flex-row xl:items-center">
+                <div
+                  ref="searchBoxRef"
+                  class="relative w-full min-w-0"
+                >
+                  <UInput
+                    v-model="filters.q"
+                    leading
+                    leading-icon="i-lucide-search"
+                    placeholder="Search by title, ingredient, cuisine, or a natural-language phrase"
+                    class="w-full"
+                    @update:model-value="handleSearchInput"
+                    @focus="handleSearchFocus"
+                    @keydown.enter.prevent="handleSearchEnter"
+                    @keydown.down.prevent="handleSearchArrowDown"
+                    @keydown.up.prevent="handleSearchArrowUp"
+                    @keydown.esc.prevent="clearAutocomplete"
+                  />
+
+                  <div
+                    v-if="showAutocomplete && (autocompleteSuggestions.length > 0 || autocompleteLoading)"
+                    class="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg dark:border-white/10 dark:bg-zinc-900"
+                  >
+                    <div
+                      v-if="autocompleteLoading"
+                      class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400"
+                    >
+                      Loading suggestions...
+                    </div>
+
+                    <template v-else>
+                      <button
+                        v-for="(suggestion, suggestionIndex) in autocompleteSuggestions"
+                        :key="suggestion.recipe_id || suggestion.title"
+                        type="button"
+                        :class="[
+                          'w-full px-4 py-2.5 text-left text-sm transition-colors',
+                          activeAutocompleteIndex === suggestionIndex
+                            ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-200'
+                            : 'text-gray-800 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-white/5'
+                        ]"
+                        @mousedown.prevent="selectSuggestion(suggestion)"
+                      >
+                        {{ suggestion.title }}
+                      </button>
+                    </template>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-[12rem_auto] xl:flex xl:flex-none">
+                  <USelectMenu
+                    v-model="searchLimit"
+                    :items="searchLimitOptions"
+                    value-key="value"
+                    label-key="label"
+                    leading-icon="i-lucide-list-filter"
+                    class="w-full xl:w-44"
+                  />
+                  <UButton
+                    color="primary"
+                    icon="i-lucide-search"
+                    :loading="recipesLoading"
+                    @click="applyFilters"
+                  >
+                    Search
+                  </UButton>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <UAlert
+            v-if="recipesError"
+            color="error"
+            variant="soft"
+            icon="i-lucide-alert-circle"
+            :title="recipesError"
+            class="mx-5 mt-5 sm:mx-6"
+          />
+
+          <div class="overflow-x-auto">
+            <UTable
+              :data="recipes"
+              :columns="recipeColumns"
+              :loading="recipesLoading"
+              sticky="header"
+              :on-select="handleRecipeRowSelect"
+              class="min-h-[28rem] min-w-[52rem]"
+            >
+              <template #title-cell="{ row }">
+                <div
+                  class="w-[30rem] max-w-[30rem] rounded-lg px-2 py-1.5 transition-colors"
+                  :class="isActiveRecipeRow(row.original)
+                    ? 'bg-brand-50 dark:bg-brand-500/10'
+                    : ''"
+                >
+                  <p class="truncate font-medium text-gray-900 dark:text-white">
+                    {{ row.original.title }}
+                  </p>
+                  <p class="mt-0.5 truncate text-[11px] text-gray-500 dark:text-gray-400">
+                    {{ compactRecipeMeta(row.original) }}
+                  </p>
+                </div>
+              </template>
+
+              <template #duration-cell="{ row }">
+                <span class="text-sm text-gray-700 dark:text-gray-200">
+                  {{ formatDuration(row.original.duration) }}
+                </span>
+              </template>
+
+              <template #serves-cell="{ row }">
+                <span class="text-sm text-gray-700 dark:text-gray-200">
+                  {{ formatServes(row.original.serves) }}
+                </span>
+              </template>
+
+              <template #nutri_score-cell="{ row }">
+                <UBadge
+                  color="neutral"
+                  variant="outline"
+                >
+                  {{ formatNutriScore(row.original.nutri_score) }}
+                </UBadge>
+              </template>
+
+              <template #actions-cell="{ row }">
+                <div class="flex justify-end gap-2">
+                  <UBadge
+                    v-if="isActiveRecipeRow(row.original)"
+                    color="primary"
+                    variant="soft"
+                  >
+                    Selected
+                  </UBadge>
+                  <UButton
+                    :color="isActiveRecipeRow(row.original) ? 'primary' : 'neutral'"
+                    variant="ghost"
+                    size="sm"
+                    trailing-icon="i-lucide-arrow-right"
+                    :disabled="!resolveRecipeIdentifier(row.original)"
+                    @click.stop="openRecipe(row.original)"
+                  >
+                    Open
+                  </UButton>
+                </div>
+              </template>
+
+              <template #empty>
+                <div class="flex flex-col items-center justify-center px-6 py-16 text-center">
+                  <UIcon
+                    name="i-lucide-utensils-crossed"
+                    class="h-8 w-8 text-gray-400"
+                  />
+                  <p class="mt-4 text-sm font-medium text-gray-900 dark:text-white">
+                    No recipes match the current search.
+                  </p>
+                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Try a broader phrase, clear the search field, or create a new recipe from scratch.
+                  </p>
+                </div>
+              </template>
+            </UTable>
+          </div>
+
+          <template #footer>
+            <p class="text-sm text-gray-600 dark:text-gray-300">
+              {{ resultSummary }}
+            </p>
+          </template>
+        </UCard>
+      </UPageBody>
+    </UPage>
+
+    <UModal
+      v-model:open="createModalOpen"
+      :ui="{ content: 'w-[calc(100vw-2rem)] max-w-5xl' }"
+    >
+      <template #content>
+        <UCard
+          class="flex w-full max-h-[calc(100vh-2.5rem)] flex-col"
+          :ui="{ body: 'min-h-0 flex-1 overflow-y-auto p-4 sm:p-5', footer: 'p-4 sm:p-5' }"
+        >
+          <template #header>
+            <div class="flex items-start justify-between gap-4">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                Add Recipe
+              </h3>
+
+              <UButton
+                color="neutral"
+                variant="ghost"
+                icon="i-lucide-x"
+                :disabled="createWizardBusy"
+                @click="closeCreateRecipeModal"
+              />
+            </div>
+          </template>
+
+          <div class="space-y-5">
+            <div class="grid gap-3 lg:grid-cols-3">
+              <div
+                v-for="item in createWizardSteps"
+                :key="item.step"
+                :class="[
+                  'rounded-2xl border p-3.5 transition-colors',
+                  item.step === createWizardStep
+                    ? 'border-primary-300 bg-primary-50/70 dark:border-primary-400/60 dark:bg-primary-500/10'
+                    : item.step < createWizardStep
+                      ? 'border-emerald-200 bg-emerald-50/80 dark:border-emerald-400/40 dark:bg-emerald-500/10'
+                      : 'border-gray-200/80 bg-gray-50/70 dark:border-white/10 dark:bg-white/5'
+                ]"
+              >
+                <div class="flex items-center gap-3">
+                  <div
+                    :class="[
+                      'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold',
+                      item.step === createWizardStep
+                        ? 'bg-primary-600 text-white'
+                        : item.step < createWizardStep
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-gray-200 text-gray-700 dark:bg-white/10 dark:text-gray-200'
+                    ]"
+                  >
+                    <UIcon
+                      v-if="item.step < createWizardStep"
+                      name="i-lucide-check"
+                      class="h-4 w-4"
+                    />
+                    <span v-else>{{ item.step }}</span>
+                  </div>
+
+                  <div>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                      {{ item.title }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <UAlert
+              v-if="createError"
+              color="error"
+              variant="soft"
+              icon="i-lucide-alert-circle"
+              :title="createError"
+            />
+
+            <template v-if="createWizardStep === 1">
+              <div class="space-y-5">
+                <div class="flex flex-wrap gap-2">
+                  <UButton
+                    type="button"
+                    :color="createMode === 'manual' ? 'primary' : 'neutral'"
+                    :variant="createMode === 'manual' ? 'solid' : 'outline'"
+                    icon="i-lucide-pencil-line"
+                    @click="setCreateMode('manual')"
+                  >
+                    Manual Entry
+                  </UButton>
+                  <UButton
+                    type="button"
+                    :color="createMode === 'analyze' ? 'primary' : 'neutral'"
+                    :variant="createMode === 'analyze' ? 'solid' : 'outline'"
+                    icon="i-lucide-flask-conical"
+                    @click="setCreateMode('analyze')"
+                  >
+                    Analyze First
+                  </UButton>
+                </div>
+
+                <UCard
+                  v-if="createMode === 'analyze'"
+                  :ui="{ body: 'p-4 sm:p-5' }"
+                  class="border border-gray-200/70 bg-gray-50/60 shadow-sm dark:border-white/10 dark:bg-white/5"
+                >
+                  <div class="space-y-4">
+                    <UFormField
+                      label="Recipe Text"
+                      required
+                    >
+                      <UTextarea
+                        v-model="createAnalysisInput"
+                        :rows="7"
+                        placeholder="Paste a full recipe with ingredients and instructions"
+                        class="w-full"
+                      />
+                    </UFormField>
+
+                    <div class="flex flex-wrap items-center justify-end gap-3">
+                      <UAlert
+                        v-if="createAnalysisError"
+                        color="error"
+                        variant="soft"
+                        icon="i-lucide-alert-circle"
+                        :title="createAnalysisError"
+                        class="min-w-0 flex-1"
+                      />
+
+                      <UButton
+                        color="primary"
+                        icon="i-lucide-flask-conical"
+                        :loading="createAnalysisLoading"
+                        :disabled="createAnalysisLoading || !createAnalysisInput.trim()"
+                        @click="runCreateRecipeAnalysis"
+                      >
+                        Analyze Recipe
+                      </UButton>
+                    </div>
+
+                    <div
+                      v-if="createAnalysisResult"
+                      class="grid gap-3 sm:grid-cols-3"
+                    >
+                      <div class="rounded-xl border border-gray-200/80 bg-white/90 px-4 py-3 dark:border-white/10 dark:bg-zinc-950/50">
+                        <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                          Title
+                        </p>
+                        <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                          {{ createForm.title || createAnalysisResult.title || 'Untitled recipe' }}
+                        </p>
+                      </div>
+
+                      <div class="rounded-xl border border-gray-200/80 bg-white/90 px-4 py-3 dark:border-white/10 dark:bg-zinc-950/50">
+                        <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                          Ingredients
+                        </p>
+                        <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                          {{ createForm.ingredients.length }}
+                        </p>
+                      </div>
+
+                      <div class="rounded-xl border border-gray-200/80 bg-white/90 px-4 py-3 dark:border-white/10 dark:bg-zinc-950/50">
+                        <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                          Steps
+                        </p>
+                        <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                          {{ createForm.instructions.length }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </UCard>
+
+                <UCard
+                  :ui="{ body: 'p-4 sm:p-5' }"
+                  class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
+                >
+                  <div class="space-y-4">
+                    <div class="flex items-center justify-between gap-3">
+                      <h4 class="text-sm font-semibold text-gray-900 dark:text-white">
+                        Recipe Basics
+                      </h4>
+
+                      <UBadge
+                        v-if="createMode === 'analyze' && createHasFreshAnalysis"
+                        color="success"
+                        variant="soft"
+                      >
+                        Analysis Ready
+                      </UBadge>
+                    </div>
+
+                    <UFormField
+                      label="Recipe Title"
+                      required
+                    >
+                      <UInput
+                        v-model="createForm.title"
+                        placeholder="e.g. Lemon herb roasted salmon"
+                        class="w-full"
+                      />
+                    </UFormField>
+
+                    <div class="grid gap-4 sm:grid-cols-3">
+                      <UFormField
+                        label="Region"
+                        required
+                      >
+                        <UInput
+                          v-model="createForm.region"
+                          placeholder="e.g. US"
+                          class="w-full"
+                        />
+                      </UFormField>
+
+                      <UFormField
+                        label="Duration"
+                        required
+                      >
+                        <UInput
+                          v-model="createForm.duration"
+                          type="number"
+                          min="1"
+                          placeholder="e.g. 35"
+                          class="w-full"
+                        />
+                      </UFormField>
+
+                      <UFormField
+                        label="Serves"
+                        required
+                      >
+                        <UInput
+                          v-model="createForm.serves"
+                          type="number"
+                          min="1"
+                          placeholder="e.g. 4"
+                          class="w-full"
+                        />
+                      </UFormField>
+                    </div>
+                  </div>
+                </UCard>
+              </div>
+            </template>
+
+            <template v-else-if="createWizardStep === 2">
+              <div class="space-y-5">
+                <UCard
+                  :ui="{ body: 'p-4 sm:p-5', header: 'p-4 sm:p-5' }"
+                  class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
+                >
+                  <template #header>
+                    <div class="flex items-center justify-between gap-3">
+                      <h4 class="text-sm font-semibold text-gray-900 dark:text-white">
+                        Ingredients
+                      </h4>
+
+                      <UBadge
+                        color="neutral"
+                        variant="outline"
+                      >
+                        {{ createForm.ingredients.length }}
+                      </UBadge>
+                    </div>
+                  </template>
+
+                  <ConsoleRecipesIngredientListEditor
+                    :model-value="createForm.ingredients"
+                    @update:model-value="value => createForm.ingredients = value"
+                  />
+                </UCard>
+
+                <UCard
+                  :ui="{ body: 'p-4 sm:p-5', header: 'p-4 sm:p-5' }"
+                  class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
+                >
+                  <template #header>
+                    <div class="flex items-center justify-between gap-3">
+                      <h4 class="text-sm font-semibold text-gray-900 dark:text-white">
+                        Instructions
+                      </h4>
+
+                      <UBadge
+                        color="neutral"
+                        variant="outline"
+                      >
+                        {{ createForm.instructions.length }}
+                      </UBadge>
+                    </div>
+                  </template>
+
+                  <ConsoleRecipesInstructionStepsEditor
+                    :model-value="createForm.instructions"
+                    @update:model-value="value => createForm.instructions = value"
+                  />
+                </UCard>
+              </div>
+            </template>
+
+            <template v-else>
+              <div class="space-y-5">
+                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <div class="rounded-xl border border-gray-200/80 bg-gray-50/80 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                    <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                      Recipe
+                    </p>
+                    <p class="mt-1 truncate text-sm font-semibold text-gray-900 dark:text-white">
+                      {{ createForm.title || 'Untitled recipe' }}
+                    </p>
+                  </div>
+
+                  <div class="rounded-xl border border-gray-200/80 bg-gray-50/80 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                    <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                      Ingredients
+                    </p>
+                    <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                      {{ buildCreateIngredients().length }}
+                    </p>
+                  </div>
+
+                  <div class="rounded-xl border border-gray-200/80 bg-gray-50/80 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                    <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                      Steps
+                    </p>
+                    <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                      {{ buildCreateInstructions().length }}
+                    </p>
+                  </div>
+
+                  <div class="rounded-xl border border-gray-200/80 bg-gray-50/80 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                    <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                      Serves / Duration
+                    </p>
+                    <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                      {{ createForm.serves || '—' }} / {{ createForm.duration || '—' }} min
+                    </p>
+                  </div>
+                </div>
+
+                <div class="grid gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+                  <UCard
+                    :ui="{ body: 'p-4 sm:p-5', header: 'p-4 sm:p-5' }"
+                    class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
+                  >
+                    <template #header>
+                      <div class="flex items-start justify-between gap-3">
+                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">
+                          Recipe Image
+                        </h4>
+
+                        <UButton
+                          type="button"
+                          color="neutral"
+                          variant="outline"
+                          size="sm"
+                          icon="i-lucide-upload"
+                          :loading="createImageUploading"
+                          @click="triggerCreateImageUpload"
+                        >
+                          Upload
+                        </UButton>
+                      </div>
+                    </template>
+
+                    <div class="space-y-4">
+                      <input
+                        :key="createImageInputKey"
+                        ref="createImageInput"
+                        type="file"
+                        accept="image/png,image/jpeg"
+                        class="hidden"
+                        @change="handleCreateImageSelection"
+                      >
+
+                      <UFormField label="Image URL">
+                        <UInput
+                          v-model="createForm.imageUrl"
+                          placeholder="https://..."
+                          class="w-full"
+                        />
+                      </UFormField>
+
+                      <UAlert
+                        v-if="createImageError"
+                        color="error"
+                        variant="soft"
+                        icon="i-lucide-alert-circle"
+                        :title="createImageError"
+                      />
+
+                      <div class="overflow-hidden rounded-2xl border border-dashed border-gray-300 bg-white/80 dark:border-white/10 dark:bg-zinc-950/40">
+                        <img
+                          v-if="createPreviewImageUrl"
+                          :src="createPreviewImageUrl"
+                          alt="Recipe preview"
+                          class="aspect-[4/3] w-full object-cover"
+                          referrerpolicy="no-referrer"
+                        >
+                        <div
+                          v-else
+                          class="flex aspect-[4/3] items-center justify-center px-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                        >
+                          No image linked
+                        </div>
+                      </div>
+                    </div>
+                  </UCard>
+
+                  <UCard
+                    :ui="{ body: 'p-4 sm:p-5', header: 'p-4 sm:p-5' }"
+                    class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
+                  >
+                    <template #header>
+                      <h4 class="text-sm font-semibold text-gray-900 dark:text-white">
+                        Tags & Allergens
+                      </h4>
+                    </template>
+
+                    <div class="space-y-5">
+                      <UFormField label="Tags">
+                        <UTextarea
+                          v-model="createForm.tags"
+                          :rows="4"
+                          placeholder="Comma-separated or one tag per line"
+                          class="w-full"
+                        />
+                      </UFormField>
+
+                      <UFormField label="Allergens">
+                        <UTextarea
+                          v-model="createForm.allergens"
+                          :rows="4"
+                          placeholder="Comma-separated or one allergen per line"
+                          class="w-full"
+                        />
+                      </UFormField>
+                    </div>
+                  </UCard>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <template #footer>
+            <div class="flex flex-wrap justify-end gap-3">
+              <UButton
+                color="neutral"
+                variant="ghost"
+                :disabled="createWizardBusy"
+                @click="closeCreateRecipeModal"
+              >
+                Cancel
+              </UButton>
+
+              <UButton
+                v-if="createWizardStep > 1"
+                color="neutral"
+                variant="ghost"
+                :disabled="createWizardBusy"
+                @click="goBackCreateWizard"
+              >
+                Back
+              </UButton>
+
+              <UButton
+                color="primary"
+                :loading="createPrimaryActionLoading"
+                :disabled="createWizardBusy && !createPrimaryActionLoading"
+                @click="handleCreateWizardPrimaryAction"
+              >
+                {{ createPrimaryActionLabel }}
+              </UButton>
+            </div>
+          </template>
+        </UCard>
+      </template>
+    </UModal>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import type {
+  CreateRecipeRequest,
+  RecipeAutocompleteSuggestion,
+  RecipeProfileResult,
+  RecipeSearchResult
+} from '~/services/recipeApi'
+import recipeApi from '~/services/recipeApi'
+import {
+  buildConsoleRecipeRoutePath,
+  normalizeRecipeImageUrl,
+  parseConsoleTokenList,
+  resolveConsoleRecipeErrorMessage,
+  resolveRecipeIdentifier
+} from '~/utils/consoleRecipes'
+
+type EditableIngredient = {
+  name: string
+  measurement: string
+}
+
+type CreateRecipeMode = 'manual' | 'analyze'
+
+definePageMeta({
+  layout: 'default'
+})
+
+useHead({
+  title: 'Recipes'
+})
+
+useSeoMeta({
+  description: 'Wisefood recipe management workspace for internal content operations'
+})
+
+const toast = useToast()
+const router = useRouter()
+
+const recipes = ref<RecipeSearchResult[]>([])
+const recipesLoading = ref(false)
+const recipesError = ref<string | null>(null)
+const searchBoxRef = ref<HTMLElement | null>(null)
+const autocompleteSuggestions = ref<RecipeAutocompleteSuggestion[]>([])
+const autocompleteLoading = ref(false)
+const showAutocomplete = ref(false)
+const activeAutocompleteIndex = ref(-1)
+const activeRecipeResultIndex = ref(-1)
+let autocompleteDebounceTimer: ReturnType<typeof setTimeout> | null = null
+let autocompleteRequestSequence = 0
+
+const filters = reactive({
+  q: ''
+})
+
+const searchLimitOptions = [
+  { label: '25 results', value: 25 },
+  { label: '50 results', value: 50 },
+  { label: '100 results', value: 100 }
+]
+
+const searchLimit = ref(searchLimitOptions[1].value)
+
+const createModalOpen = ref(false)
+const createPending = ref(false)
+const createError = ref<string | null>(null)
+const createImageUploading = ref(false)
+const createImageError = ref<string | null>(null)
+const createImageInput = ref<HTMLInputElement | null>(null)
+const createImageInputKey = ref(0)
+const createWizardStep = ref(1)
+const createMode = ref<CreateRecipeMode>('manual')
+const createAnalysisInput = ref('')
+const createAnalysisLoading = ref(false)
+const createAnalysisError = ref<string | null>(null)
+const createAnalysisResult = ref<RecipeProfileResult | null>(null)
+const createAnalysisSignature = ref('')
+
+const createForm = reactive({
+  title: '',
+  region: 'US',
+  duration: '30',
+  serves: '4',
+  ingredients: [] as EditableIngredient[],
+  instructions: [] as string[],
+  imageUrl: '',
+  tags: '',
+  allergens: ''
+})
+
+const recipeColumns = [
+  { accessorKey: 'title', header: 'Recipe' },
+  { accessorKey: 'duration', header: 'Duration' },
+  { accessorKey: 'serves', header: 'Serves' },
+  { accessorKey: 'nutri_score', header: 'Nutri-Score' },
+  { id: 'actions', header: '', enableSorting: false }
+]
+
+const createWizardSteps = [
+  {
+    step: 1,
+    title: 'Start'
+  },
+  {
+    step: 2,
+    title: 'Structure'
+  },
+  {
+    step: 3,
+    title: 'Finish'
+  }
+]
+
+const breadcrumbItems = [
+  {
+    label: 'Console',
+    icon: 'i-lucide-panel-top',
+    to: '/console'
+  },
+  {
+    label: 'Asset Manager',
+    icon: 'i-lucide-folder-open',
+    to: '/console/assets'
+  },
+  {
+    label: 'Recipes',
+    icon: 'i-lucide-utensils-crossed'
+  }
+]
+
+const hasActiveFilters = computed(() => {
+  return Boolean(filters.q.trim() || searchLimit.value !== searchLimitOptions[1].value)
+})
+
+const resultCountLabel = computed(() => {
+  return recipes.value.length === 1 ? '1 recipe shown' : `${recipes.value.length.toLocaleString()} recipes shown`
+})
+
+const resultSummary = computed(() => {
+  if (recipesLoading.value) {
+    return 'Loading recipes...'
+  }
+
+  if (!recipes.value.length) {
+    return 'No recipes are currently visible in the library view.'
+  }
+
+  const modeLabel = filters.q.trim()
+    ? `for "${filters.q.trim()}"`
+    : 'from the current broad sample'
+
+  return `Showing ${recipes.value.length.toLocaleString()} recipes ${modeLabel}.`
+})
+
+const createPreviewImageUrl = computed(() => normalizeRecipeImageUrl(createForm.imageUrl))
+const createCurrentAnalysisSignature = computed(() => {
+  return `${normalizeRecipeRegion(createForm.region)}::${createAnalysisInput.value.trim()}`
+})
+const createHasFreshAnalysis = computed(() => {
+  return Boolean(createAnalysisResult.value && createAnalysisSignature.value === createCurrentAnalysisSignature.value)
+})
+const createWizardBusy = computed(() => {
+  return createPending.value || createAnalysisLoading.value || createImageUploading.value
+})
+const createPrimaryActionLabel = computed(() => {
+  if (createWizardStep.value === 1) {
+    return createMode.value === 'analyze' && !createHasFreshAnalysis.value
+      ? 'Analyze & Continue'
+      : 'Continue'
+  }
+
+  if (createWizardStep.value === 2) {
+    return 'Review Finish'
+  }
+
+  return 'Create Recipe'
+})
+const createPrimaryActionLoading = computed(() => {
+  if (createWizardStep.value === 1) {
+    return createAnalysisLoading.value
+  }
+
+  if (createWizardStep.value === 3) {
+    return createPending.value
+  }
+
+  return false
+})
+
+function compactRecipeMeta(recipe: RecipeSearchResult) {
+  const source = String(recipe.source || '').trim() || 'RecipeWrangler'
+  const parts = [source]
+
+  if (recipe.duration) {
+    parts.push(`${recipe.duration} min`)
+  }
+
+  if (recipe.serves) {
+    parts.push(`Serves ${recipe.serves}`)
+  }
+
+  return parts.join(' · ')
+}
+
+function formatDuration(value?: number | null) {
+  return value ? `${value} min` : '—'
+}
+
+function formatServes(value?: number | null) {
+  return value ? `${value}` : '—'
+}
+
+function formatNutriScore(value?: number | null) {
+  return value === null || value === undefined ? '—' : String(value)
+}
+
+function resetCreateForm() {
+  createWizardStep.value = 1
+  createMode.value = 'manual'
+  createForm.title = ''
+  createForm.region = 'US'
+  createForm.duration = '30'
+  createForm.serves = '4'
+  createForm.ingredients = [
+    {
+      measurement: '',
+      name: ''
+    }
+  ]
+  createForm.instructions = ['']
+  createForm.imageUrl = ''
+  createForm.tags = ''
+  createForm.allergens = ''
+  createAnalysisInput.value = ''
+  createAnalysisLoading.value = false
+  createAnalysisError.value = null
+  createAnalysisResult.value = null
+  createAnalysisSignature.value = ''
+  createError.value = null
+  createImageError.value = null
+  createImageInputKey.value += 1
+}
+
+function setCreateMode(mode: CreateRecipeMode) {
+  createMode.value = mode
+  createWizardStep.value = 1
+  createError.value = null
+  createAnalysisError.value = null
+}
+
+function normalizeRecipeRegion(value: string) {
+  return String(value || '').trim().toUpperCase() || 'US'
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null
+  }
+
+  return value as Record<string, unknown>
+}
+
+function compactText(value: unknown) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function stripListMarker(value: string) {
+  return value
+    .replace(/^(?:[-*•]\s+|\d+[\).:-]?\s+)/, '')
+    .trim()
+}
+
+function isIngredientsHeading(value: string) {
+  return /^(?:ingredients?|what you need)\s*:?\s*$/i.test(value.trim())
+}
+
+function isInstructionsHeading(value: string) {
+  return /^(?:instructions?|directions?|method|steps?|preparation)\s*:?\s*$/i.test(value.trim())
+}
+
+function isLikelySectionHeading(value: string) {
+  const normalized = value.trim()
+  if (!normalized || isIngredientsHeading(normalized) || isInstructionsHeading(normalized)) {
+    return true
+  }
+
+  return /^[A-Za-z][A-Za-z/& -]{2,40}:$/.test(normalized)
+}
+
+function extractTitleFromRecipeText(rawRecipe: string) {
+  const lines = String(rawRecipe || '')
+    .split(/\r?\n/)
+    .map(line => compactText(line))
+    .filter(Boolean)
+
+  return lines.find(line => !isIngredientsHeading(line) && !isInstructionsHeading(line)) || ''
+}
+
+function extractIngredientRowsFromRecipeText(rawRecipe: string): EditableIngredient[] {
+  const lines = String(rawRecipe || '').split(/\r?\n/)
+  const ingredients: EditableIngredient[] = []
+  let collecting = false
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim()
+    if (!line) {
+      continue
+    }
+
+    if (isIngredientsHeading(line)) {
+      collecting = true
+      continue
+    }
+
+    if (!collecting) {
+      continue
+    }
+
+    if (isInstructionsHeading(line) || isLikelySectionHeading(line)) {
+      break
+    }
+
+    const cleanedLine = stripListMarker(line)
+    if (!cleanedLine) {
+      continue
+    }
+
+    ingredients.push({
+      measurement: '',
+      name: cleanedLine
+    })
+  }
+
+  return ingredients
+}
+
+function extractInstructionStepsFromRecipeText(rawRecipe: string): string[] {
+  const lines = String(rawRecipe || '').split(/\r?\n/)
+  const instructions: string[] = []
+  let collecting = false
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim()
+    if (!line) {
+      continue
+    }
+
+    if (isInstructionsHeading(line)) {
+      collecting = true
+      continue
+    }
+
+    if (!collecting) {
+      continue
+    }
+
+    if (isIngredientsHeading(line) || isLikelySectionHeading(line)) {
+      break
+    }
+
+    const cleanedLine = stripListMarker(line)
+    if (cleanedLine) {
+      instructions.push(cleanedLine)
+    }
+  }
+
+  if (instructions.length > 0) {
+    return instructions
+  }
+
+  return String(rawRecipe || '')
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => /^\d+[\).:-]?\s+/.test(line))
+    .map(stripListMarker)
+    .filter(Boolean)
+}
+
+function extractServesFromRecipeText(rawRecipe: string) {
+  const match = String(rawRecipe || '').match(/\b(?:serves?|yield(?:s)?)\s*[:\-]?\s*(\d{1,2})\b/i)
+  if (!match) {
+    return null
+  }
+
+  const parsed = Number.parseInt(match[1], 10)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+}
+
+function toPositiveWholeNumber(value: unknown) {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    return Math.round(value)
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value.trim(), 10)
+    if (Number.isInteger(parsed) && parsed > 0) {
+      return parsed
+    }
+  }
+
+  return null
+}
+
+function buildCreateIngredientsFromAnalysis(result: RecipeProfileResult, rawRecipe: string) {
+  const ingredientNames = Array.isArray(result.ingredient_names) ? result.ingredient_names : []
+  const measurements = Array.isArray(result.measurements) ? result.measurements : []
+  const ingredientRows: EditableIngredient[] = []
+  const rowCount = Math.max(ingredientNames.length, measurements.length)
+
+  for (let index = 0; index < rowCount; index += 1) {
+    const name = compactText(ingredientNames[index])
+    const measurement = compactText(measurements[index])
+
+    if (!name && !measurement) {
+      continue
+    }
+
+    ingredientRows.push({
+      name,
+      measurement
+    })
+  }
+
+  if (ingredientRows.length > 0) {
+    return ingredientRows
+  }
+
+  if (Array.isArray(result.ingredients)) {
+    const derivedRows = result.ingredients
+      .map((item) => {
+        const record = asRecord(item)
+        if (!record) {
+          return null
+        }
+
+        return {
+          name: compactText(record.ingredient ?? record.name ?? record.food ?? record.matched_nutritional_ingredient),
+          measurement: compactText(record.measurement ?? record.measurement_raw ?? record.quantity)
+        }
+      })
+      .filter((item): item is EditableIngredient => Boolean(item && (item.name || item.measurement)))
+
+    if (derivedRows.length > 0) {
+      return derivedRows
+    }
+  }
+
+  return extractIngredientRowsFromRecipeText(rawRecipe)
+}
+
+function applyCreateAnalysisToDraft(result: RecipeProfileResult) {
+  const rawRecipe = createAnalysisInput.value
+  const analyzedTitle = compactText(result.title) || extractTitleFromRecipeText(rawRecipe)
+  const analyzedIngredients = buildCreateIngredientsFromAnalysis(result, rawRecipe)
+  const analyzedInstructions = Array.isArray(result.instructions)
+    ? result.instructions.map(step => compactText(step)).filter(Boolean)
+    : extractInstructionStepsFromRecipeText(rawRecipe)
+  const analyzedServes = toPositiveWholeNumber(result.serves) || extractServesFromRecipeText(rawRecipe)
+
+  if (analyzedTitle) {
+    createForm.title = analyzedTitle
+  }
+
+  if (analyzedIngredients.length > 0) {
+    createForm.ingredients = analyzedIngredients
+  }
+
+  if (analyzedInstructions.length > 0) {
+    createForm.instructions = analyzedInstructions
+  } else if (!buildCreateInstructions().length) {
+    createForm.instructions = ['']
+  }
+
+  if (analyzedServes) {
+    createForm.serves = String(analyzedServes)
+  }
+}
+
+function clearAutocomplete() {
+  autocompleteRequestSequence += 1
+
+  if (autocompleteDebounceTimer) {
+    clearTimeout(autocompleteDebounceTimer)
+    autocompleteDebounceTimer = null
+  }
+
+  autocompleteSuggestions.value = []
+  autocompleteLoading.value = false
+  showAutocomplete.value = false
+  activeAutocompleteIndex.value = -1
+}
+
+async function fetchAutocompleteSuggestions(query: string) {
+  const normalizedQuery = query.trim()
+  if (normalizedQuery.length < 2) {
+    clearAutocomplete()
+    return
+  }
+
+  const requestSequence = ++autocompleteRequestSequence
+  autocompleteLoading.value = true
+  autocompleteSuggestions.value = []
+  showAutocomplete.value = true
+  activeAutocompleteIndex.value = -1
+
+  try {
+    const suggestions = await recipeApi.autocompleteManagedRecipes(normalizedQuery, 8)
+    if (requestSequence !== autocompleteRequestSequence) {
+      return
+    }
+
+    if (filters.q.trim() !== normalizedQuery) {
+      return
+    }
+
+    autocompleteSuggestions.value = suggestions
+    showAutocomplete.value = suggestions.length > 0
+  } catch {
+    if (requestSequence === autocompleteRequestSequence) {
+      clearAutocomplete()
+    }
+  } finally {
+    if (requestSequence === autocompleteRequestSequence) {
+      autocompleteLoading.value = false
+    }
+  }
+}
+
+function handleSearchInput() {
+  const query = filters.q.trim()
+  activeRecipeResultIndex.value = -1
+
+  if (autocompleteDebounceTimer) {
+    clearTimeout(autocompleteDebounceTimer)
+    autocompleteDebounceTimer = null
+  }
+
+  if (query.length < 2) {
+    clearAutocomplete()
+    return
+  }
+
+  autocompleteDebounceTimer = setTimeout(() => {
+    void fetchAutocompleteSuggestions(query)
+  }, 220)
+}
+
+function handleSearchFocus() {
+  if (autocompleteSuggestions.value.length > 0 && filters.q.trim().length >= 2) {
+    showAutocomplete.value = true
+    return
+  }
+
+  handleSearchInput()
+}
+
+function handleSearchArrowDown() {
+  if (showAutocomplete.value && autocompleteSuggestions.value.length > 0) {
+    activeAutocompleteIndex.value = activeAutocompleteIndex.value < autocompleteSuggestions.value.length - 1
+      ? activeAutocompleteIndex.value + 1
+      : 0
+    return
+  }
+
+  if (recipes.value.length > 0) {
+    activeRecipeResultIndex.value = activeRecipeResultIndex.value < recipes.value.length - 1
+      ? activeRecipeResultIndex.value + 1
+      : 0
+  }
+}
+
+function handleSearchArrowUp() {
+  if (showAutocomplete.value && autocompleteSuggestions.value.length > 0) {
+    activeAutocompleteIndex.value = activeAutocompleteIndex.value > 0
+      ? activeAutocompleteIndex.value - 1
+      : autocompleteSuggestions.value.length - 1
+    return
+  }
+
+  if (recipes.value.length > 0) {
+    activeRecipeResultIndex.value = activeRecipeResultIndex.value > 0
+      ? activeRecipeResultIndex.value - 1
+      : recipes.value.length - 1
+  }
+}
+
+function handleClickOutsideSearch(event: MouseEvent) {
+  const target = event.target as Node | null
+  if (!target) {
+    return
+  }
+
+  if (searchBoxRef.value && !searchBoxRef.value.contains(target)) {
+    showAutocomplete.value = false
+  }
+}
+
+async function loadRecipes() {
+  activeRecipeResultIndex.value = -1
+  recipesLoading.value = true
+  recipesError.value = null
+
+  try {
+    recipes.value = await recipeApi.searchManagedRecipes(filters.q, searchLimit.value)
+  } catch (error) {
+    recipes.value = []
+    recipesError.value = resolveConsoleRecipeErrorMessage(error, 'Failed to load recipes')
+  } finally {
+    recipesLoading.value = false
+  }
+}
+
+function refreshRecipes() {
+  clearAutocomplete()
+  return loadRecipes()
+}
+
+function applyFilters() {
+  clearAutocomplete()
+  return loadRecipes()
+}
+
+function resetFilters() {
+  filters.q = ''
+  searchLimit.value = searchLimitOptions[1].value
+  clearAutocomplete()
+  return loadRecipes()
+}
+
+async function selectSuggestion(suggestion: RecipeAutocompleteSuggestion) {
+  filters.q = suggestion.title
+  clearAutocomplete()
+
+  if (suggestion.recipe_id) {
+    await router.push(buildConsoleRecipeRoutePath(suggestion.recipe_id))
+    return
+  }
+
+  await loadRecipes()
+  const normalizedTitle = suggestion.title.trim().toLowerCase()
+  const exactMatch = recipes.value.find(recipe => recipe.title.trim().toLowerCase() === normalizedTitle)
+  const nextRecipe = exactMatch || recipes.value[0]
+  if (nextRecipe) {
+    await openRecipe(nextRecipe)
+  }
+}
+
+function handleSearchEnter() {
+  if (showAutocomplete.value && autocompleteSuggestions.value.length > 0) {
+    const nextSuggestion = autocompleteSuggestions.value[
+      activeAutocompleteIndex.value >= 0 ? activeAutocompleteIndex.value : 0
+    ]
+
+    if (nextSuggestion) {
+      void selectSuggestion(nextSuggestion)
+      return
+    }
+  }
+
+  const nextRecipe = recipes.value[activeRecipeResultIndex.value]
+  if (nextRecipe) {
+    void openRecipe(nextRecipe)
+    return
+  }
+
+  void applyFilters()
+}
+
+function openRecipe(recipe: RecipeSearchResult) {
+  const recipeId = resolveRecipeIdentifier(recipe)
+  if (!recipeId) {
+    return
+  }
+
+  return router.push(buildConsoleRecipeRoutePath(recipeId))
+}
+
+function isActiveRecipeRow(recipe: RecipeSearchResult) {
+  const activeRecipe = recipes.value[activeRecipeResultIndex.value]
+  return Boolean(activeRecipe && resolveRecipeIdentifier(activeRecipe) === resolveRecipeIdentifier(recipe))
+}
+
+function handleRecipeRowSelect(row: { original: RecipeSearchResult }) {
+  return openRecipe(row.original)
+}
+
+function openCreateRecipeModal() {
+  resetCreateForm()
+  createModalOpen.value = true
+}
+
+function closeCreateRecipeModal() {
+  createModalOpen.value = false
+  createError.value = null
+  createImageError.value = null
+}
+
+function goBackCreateWizard() {
+  if (createWizardStep.value > 1) {
+    createWizardStep.value -= 1
+  }
+}
+
+function triggerCreateImageUpload() {
+  createImageInput.value?.click()
+}
+
+async function runCreateRecipeAnalysis() {
+  const rawRecipe = createAnalysisInput.value.trim()
+  if (!rawRecipe) {
+    createAnalysisError.value = 'Recipe text is required.'
+    return
+  }
+
+  createAnalysisLoading.value = true
+  createAnalysisError.value = null
+
+  try {
+    const region = normalizeRecipeRegion(createForm.region)
+    const result = await recipeApi.analyzeRecipe(rawRecipe, region)
+    createAnalysisResult.value = result
+    createAnalysisSignature.value = createCurrentAnalysisSignature.value
+    applyCreateAnalysisToDraft(result)
+
+    toast.add({
+      title: 'Analysis loaded',
+      description: 'Review the draft and adjust it before creating the recipe.',
+      color: 'success'
+    })
+  } catch (error) {
+    createAnalysisResult.value = null
+    createAnalysisSignature.value = ''
+    createAnalysisError.value = resolveConsoleRecipeErrorMessage(error, 'Failed to analyze recipe')
+  } finally {
+    createAnalysisLoading.value = false
+  }
+}
+
+async function handleCreateImageSelection(event: Event) {
+  const input = event.target as HTMLInputElement | null
+  const file = input?.files?.[0]
+
+  if (!file) {
+    return
+  }
+
+  createImageUploading.value = true
+  createImageError.value = null
+
+  try {
+    const uploadedImage = await recipeApi.uploadManagedRecipeImage(file)
+    createForm.imageUrl = uploadedImage.image_url
+
+    toast.add({
+      title: 'Image uploaded',
+      description: 'The uploaded image is ready to be linked when you create the recipe.',
+      color: 'success'
+    })
+  } catch (error) {
+    createImageError.value = resolveConsoleRecipeErrorMessage(error, 'Failed to upload recipe image')
+  } finally {
+    createImageUploading.value = false
+    createImageInputKey.value += 1
+  }
+}
+
+function buildCreateIngredients() {
+  return createForm.ingredients
+    .map(ingredient => {
+      const measurement = ingredient.measurement.trim()
+      const name = ingredient.name.trim()
+      return [measurement, name].filter(Boolean).join(' ')
+    })
+    .filter(Boolean)
+}
+
+function buildCreateInstructions() {
+  return createForm.instructions
+    .map(step => step.trim())
+    .filter(Boolean)
+}
+
+function parseRequiredPositiveInteger(value: string, label: string) {
+  const parsed = Number.parseInt(value.trim(), 10)
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`${label} must be a positive whole number.`)
+  }
+
+  return parsed
+}
+
+function validateCreateBasics() {
+  const title = createForm.title.trim()
+  const region = normalizeRecipeRegion(createForm.region)
+
+  if (!title) {
+    throw new Error('Recipe title is required.')
+  }
+
+  if (!region) {
+    throw new Error('Region is required.')
+  }
+
+  return {
+    title,
+    region,
+    duration: parseRequiredPositiveInteger(createForm.duration, 'Duration'),
+    serves: parseRequiredPositiveInteger(createForm.serves, 'Serves')
+  }
+}
+
+function validateCreateStructure() {
+  const ingredients = buildCreateIngredients()
+  const instructions = buildCreateInstructions()
+
+  if (!ingredients.length) {
+    throw new Error('Add at least one ingredient before continuing.')
+  }
+
+  if (!instructions.length) {
+    throw new Error('Add at least one instruction before continuing.')
+  }
+
+  return {
+    ingredients,
+    instructions
+  }
+}
+
+function buildCreatePayload(): CreateRecipeRequest {
+  const basics = validateCreateBasics()
+  const structure = validateCreateStructure()
+
+  return {
+    ...basics,
+    ...structure,
+    image_url: createForm.imageUrl.trim() || undefined,
+    tags: parseConsoleTokenList(createForm.tags),
+    allergens: parseConsoleTokenList(createForm.allergens)
+  }
+}
+
+async function ensureCreateAnalysisReady() {
+  if (createMode.value !== 'analyze') {
+    return true
+  }
+
+  if (createHasFreshAnalysis.value) {
+    return true
+  }
+
+  await runCreateRecipeAnalysis()
+  return createHasFreshAnalysis.value
+}
+
+async function handleCreateWizardPrimaryAction() {
+  createError.value = null
+
+  try {
+    if (createWizardStep.value === 1) {
+      const analysisReady = await ensureCreateAnalysisReady()
+      if (!analysisReady) {
+        return
+      }
+
+      validateCreateBasics()
+      createWizardStep.value = 2
+      return
+    }
+
+    if (createWizardStep.value === 2) {
+      validateCreateStructure()
+      createWizardStep.value = 3
+      return
+    }
+
+    await createRecipeRecord()
+  } catch (error) {
+    createError.value = resolveConsoleRecipeErrorMessage(error, 'Failed to prepare recipe')
+  }
+}
+
+async function createRecipeRecord() {
+  createPending.value = true
+  createError.value = null
+
+  try {
+    const payload = buildCreatePayload()
+    const createdRecipe = await recipeApi.createManagedRecipe(payload)
+    const recipeId = resolveRecipeIdentifier(createdRecipe)
+
+    toast.add({
+      title: 'Recipe created',
+      description: `${createdRecipe.title} is ready for editing.`,
+      color: 'success'
+    })
+
+    createModalOpen.value = false
+    await loadRecipes()
+
+    if (recipeId) {
+      await router.push(buildConsoleRecipeRoutePath(recipeId))
+    }
+  } catch (error) {
+    createError.value = resolveConsoleRecipeErrorMessage(error, 'Failed to create recipe')
+  } finally {
+    createPending.value = false
+  }
+}
+
+onMounted(() => {
+  resetCreateForm()
+  if (import.meta.client) {
+    document.addEventListener('click', handleClickOutsideSearch)
+  }
+  void loadRecipes()
+})
+
+onBeforeUnmount(() => {
+  clearAutocomplete()
+
+  if (import.meta.client) {
+    document.removeEventListener('click', handleClickOutsideSearch)
+  }
+})
+</script>

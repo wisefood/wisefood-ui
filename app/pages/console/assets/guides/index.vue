@@ -839,9 +839,9 @@ import foodscholarGuidelinesApi, { type FoodScholarGuidelineExtractionStatus } f
 import { uploadCatalogArtifact } from '~/services/objectStorageApi'
 import {
   buildGuideRoutePath,
-  formatBytes,
-  formatDate,
-  formatEnumLabel,
+  formatConsoleBytes as formatBytes,
+  formatConsoleDate as formatDate,
+  formatConsoleEnumLabel as formatEnumLabel,
   guideReviewFilterOptions,
   guideStatusFilterOptions,
   reviewStatusColor,

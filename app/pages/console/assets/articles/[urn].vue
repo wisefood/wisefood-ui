@@ -1182,10 +1182,13 @@ import articlesApi from '~/services/articlesApi'
 import { fetchCatalogArtifactDownloadResponse, getArtifactPresignedUrl, hasS3Backing, uploadCatalogArtifact } from '~/services/objectStorageApi'
 import { formatDoiUrl } from '~/utils/articleHelpers'
 import {
-  formatPublicationYear,
+  formatConsolePublicationYear as formatPublicationYear,
   resolveArticleRouteParam
 } from '~/utils/consoleArticles'
-import { formatBytes, formatDate } from '~/utils/consoleGuideCatalog'
+import {
+  formatConsoleBytes as formatBytes,
+  formatConsoleDate as formatDate
+} from '~/utils/consoleGuideCatalog'
 
 definePageMeta({
   layout: 'default'

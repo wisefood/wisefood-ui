@@ -43,8 +43,12 @@ export interface Recipe {
   recipe_id: string
   title: string
   source?: string | null
+  source_id?: string | null
+  expert_recipe?: boolean | null
+  region?: string | null
   image_url: string | null
   tags?: Array<string | null> | null
+  allergens?: Array<string | null> | null
   ingredients: RecipeIngredient[]
   instructions: string[]
   duration: number | null
@@ -93,6 +97,39 @@ export interface RecipeParamSearchParams {
   limit?: number
 }
 
+export interface CreateRecipeRequest {
+  title: string
+  ingredients: string[]
+  instructions: string[]
+  duration: number
+  serves: number
+  region: string
+  image_url?: string
+  tags?: string[]
+  allergens?: string[]
+}
+
+export interface UpdateRecipeRequest {
+  instructions?: string[]
+  image_url?: string
+  source_id?: string
+  expert_recipe?: boolean
+  title?: string
+  allergens?: string[]
+  duration?: number
+}
+
+export interface GetRecipeOptions {
+  region?: 'US' | 'IE' | 'HU'
+  slim?: boolean
+}
+
+export interface UploadedRecipeImage {
+  image_id: string | null
+  image_url: string
+  raw_value: string
+}
+
 export interface RecipeResponse {
   help: string
   success: boolean
@@ -108,7 +145,12 @@ export interface RecipeSearchResponse {
 }
 
 export interface RecipeAutocompleteResponse {
-  suggestions: string[]
+  suggestions?: string[] | Record<string, string> | null
+}
+
+export interface RecipeAutocompleteSuggestion {
+  recipe_id: string | null
+  title: string
 }
 
 export interface ApiError {
@@ -159,6 +201,7 @@ export interface RecipeProfileResult {
   measurements: string[]
   weights: number[]
   ingredients: Array<Record<string, unknown>>
+  instructions?: string[]
   profiling_totals: Record<string, number>
   pipeline_trace?: PipelineTrace
   nutri_score?: {
@@ -182,6 +225,8 @@ type RecipeApiTransport = 'local-proxy' | 'wisefood-rest'
 class RecipeApiService {
   private readonly localBasePath = '/recipes'
   private readonly restBasePath = '/recipewrangler/recipes'
+
+  private readonly uploadedImagesBasePath = '/images'
 
   private async ensureAuthToken(authStore: ReturnType<typeof useAuthStore>): Promise<string> {
     let token = authStore.getToken()
@@ -238,38 +283,58 @@ class RecipeApiService {
     return transport === 'local-proxy' ? this.localBasePath : this.restBasePath
   }
 
-  private getRecipeEndpoint(recipeId: string, transport: RecipeApiTransport): string {
+  private getRecipeEndpoint(recipeId: string, transport: RecipeApiTransport, options?: GetRecipeOptions): string {
     if (transport === 'local-proxy') {
       return `${this.localBasePath}/by-id?recipe_id=${encodeURIComponent(recipeId)}`
     }
 
-    return `${this.restBasePath}/${encodeURIComponent(recipeId)}`
+    const params = new URLSearchParams()
+    if (options?.region) params.set('region', options.region)
+    if (options?.slim === true) params.set('slim', 'true')
+    const qs = params.toString()
+    return `${this.restBasePath}/${encodeURIComponent(recipeId)}${qs ? `?${qs}` : ''}`
+  }
+
+  private async getRecipeByTransport(recipeId: string, transport: RecipeApiTransport, options?: GetRecipeOptions): Promise<Recipe> {
+    const rawId = String(recipeId || '')
+    let normalizedId = rawId
+    try {
+      normalizedId = decodeURIComponent(rawId)
+    } catch {
+      normalizedId = rawId
+    }
+
+    return this.fetchWithTimeout<Recipe>(
+      this.getRecipeEndpoint(normalizedId, transport, options),
+      'GET',
+      undefined,
+      DEFAULT_TIMEOUT,
+      transport
+    )
   }
 
   /**
    * Get a specific recipe by ID
    * @param recipeId - The unique recipe identifier
+   * @param options - Optional region selector and slim flag
    * @returns Recipe with full details including nutritional information
    */
-  async getRecipe(recipeId: string): Promise<Recipe> {
+  async getRecipe(recipeId: string, options?: GetRecipeOptions): Promise<Recipe> {
     try {
-      const rawId = String(recipeId || '')
-      let normalizedId = rawId
-      try {
-        normalizedId = decodeURIComponent(rawId)
-      } catch {
-        normalizedId = rawId
-      }
       const transport = this.resolveTransport()
-      // Use longer timeout for recipe details
-      const data = await this.fetchWithTimeout<Recipe>(
-        this.getRecipeEndpoint(normalizedId, transport),
-        'GET',
-        undefined,
-        DEFAULT_TIMEOUT,
-        transport
-      )
-      return data
+      return await this.getRecipeByTransport(recipeId, transport, options)
+    } catch (error) {
+      throw this.handleError(error, 'Failed to fetch recipe')
+    }
+  }
+
+  /**
+   * Get a specific recipe from the WiseFood REST API for internal management flows.
+   * @param options - Optional region selector and slim flag
+   */
+  async getManagedRecipe(recipeId: string, options?: GetRecipeOptions): Promise<Recipe> {
+    try {
+      return await this.getRecipeByTransport(recipeId, 'wisefood-rest', options)
     } catch (error) {
       throw this.handleError(error, 'Failed to fetch recipe')
     }
@@ -332,26 +397,108 @@ class RecipeApiService {
   }
 
   /**
+   * Search recipes against the WiseFood REST API for console management.
+   */
+  async searchManagedRecipes(query: string, limit: number = 50): Promise<RecipeSearchResult[]> {
+    const safeLimit = Math.min(100, Math.max(1, Math.trunc(limit || 50)))
+    const normalizedQuery = String(query || '').trim()
+
+    try {
+      if (!normalizedQuery) {
+        const data = await this.fetchWithTimeout<RecipeSearchPayload>(
+          `${this.getRecipeBasePath('wisefood-rest')}/param_search`,
+          'POST',
+          { limit: safeLimit },
+          SEARCH_TIMEOUT,
+          'wisefood-rest'
+        )
+
+        return this.normalizeSearchResults(data)
+      }
+
+      const data = await this.fetchWithTimeout<RecipeSearchPayload>(
+        `${this.getRecipeBasePath('wisefood-rest')}/search`,
+        'POST',
+        { question: normalizedQuery },
+        SEARCH_TIMEOUT,
+        'wisefood-rest'
+      )
+
+      return this.normalizeSearchResults(data).slice(0, safeLimit)
+    } catch (error) {
+      throw this.handleError(error, 'Failed to search recipes')
+    }
+  }
+
+  /**
    * Fetch recipe title autocomplete suggestions from Elasticsearch.
    */
-  async autocompleteRecipes(query: string, limit: number = 8): Promise<string[]> {
+  async autocompleteRecipes(query: string, limit: number = 8): Promise<RecipeAutocompleteSuggestion[]> {
     const normalizedQuery = query.trim()
     if (normalizedQuery.length < 2) return []
 
     try {
       const safeLimit = Math.min(20, Math.max(1, limit))
       const transport = this.resolveTransport()
-      const data = await this.fetchWithTimeout<RecipeAutocompleteResponse>(
-        `${this.getRecipeBasePath(transport)}/autocomplete?q=${encodeURIComponent(normalizedQuery)}&limit=${safeLimit}`,
-        'GET',
-        undefined,
-        DEFAULT_TIMEOUT,
-        transport
-      )
-      return Array.isArray(data?.suggestions) ? data.suggestions : []
+      return await this.autocompleteRecipesByTransport(normalizedQuery, safeLimit, transport)
     } catch (error) {
       throw this.handleError(error, 'Failed to fetch autocomplete suggestions')
     }
+  }
+
+  /**
+   * Fetch recipe title autocomplete suggestions from the WiseFood REST API.
+   */
+  async autocompleteManagedRecipes(query: string, limit: number = 8): Promise<RecipeAutocompleteSuggestion[]> {
+    const normalizedQuery = query.trim()
+    if (normalizedQuery.length < 2) return []
+
+    try {
+      const safeLimit = Math.min(20, Math.max(1, limit))
+      return await this.autocompleteRecipesByTransport(normalizedQuery, safeLimit, 'wisefood-rest')
+    } catch (error) {
+      throw this.handleError(error, 'Failed to fetch autocomplete suggestions')
+    }
+  }
+
+  private async autocompleteRecipesByTransport(
+    normalizedQuery: string,
+    safeLimit: number,
+    transport: RecipeApiTransport
+  ): Promise<RecipeAutocompleteSuggestion[]> {
+    const data = await this.fetchWithTimeout<RecipeAutocompleteResponse>(
+      `${this.getRecipeBasePath(transport)}/autocomplete?q=${encodeURIComponent(normalizedQuery)}&limit=${safeLimit}`,
+      'GET',
+      undefined,
+      DEFAULT_TIMEOUT,
+      transport
+    )
+
+    return this.normalizeAutocompleteSuggestions(data?.suggestions)
+  }
+
+  private normalizeAutocompleteSuggestions(
+    suggestions: RecipeAutocompleteResponse['suggestions']
+  ): RecipeAutocompleteSuggestion[] {
+    if (Array.isArray(suggestions)) {
+      return suggestions
+        .map(item => ({
+          recipe_id: null,
+          title: String(item || '').trim()
+        }))
+        .filter(item => Boolean(item.title))
+    }
+
+    if (suggestions && typeof suggestions === 'object') {
+      return Object.entries(suggestions)
+        .map(([recipeId, title]) => ({
+          recipe_id: recipeId.trim() || null,
+          title: String(title || '').trim()
+        }))
+        .filter(item => Boolean(item.title))
+    }
+
+    return []
   }
 
   /**
@@ -437,12 +584,233 @@ class RecipeApiService {
   }
 
   /**
+   * Create a new structured recipe through the WiseFood REST API.
+   */
+  async createManagedRecipe(recipe: CreateRecipeRequest): Promise<Recipe> {
+    try {
+      return await this.fetchWithTimeout<Recipe>(
+        `${this.restBasePath}/`,
+        'POST',
+        recipe,
+        DEFAULT_TIMEOUT,
+        'wisefood-rest'
+      )
+    } catch (error) {
+      throw this.handleError(error, 'Failed to create recipe')
+    }
+  }
+
+  /**
+   * Update recipe instructions and/or image URL through the WiseFood REST API.
+   */
+  async updateManagedRecipe(recipeId: string, updates: UpdateRecipeRequest): Promise<Recipe> {
+    try {
+      return await this.fetchWithTimeout<Recipe>(
+        `${this.restBasePath}/${encodeURIComponent(recipeId)}`,
+        'PATCH',
+        updates,
+        DEFAULT_TIMEOUT,
+        'wisefood-rest'
+      )
+    } catch (error) {
+      throw this.handleError(error, 'Failed to update recipe')
+    }
+  }
+
+  /**
+   * Upload a recipe image to the WiseFood REST API and return a recipe-ready image URL.
+   */
+  async uploadManagedRecipeImage(file: File): Promise<UploadedRecipeImage> {
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await this.fetchResponseWithTimeout(
+        this.uploadedImagesBasePath,
+        {
+          method: 'POST',
+          body: formData
+        },
+        DEFAULT_TIMEOUT,
+        'wisefood-rest'
+      )
+
+      const rawPayload = await this.parseUnknownResponse(response)
+      const rawValue = this.extractUploadedImageValue(rawPayload)
+      const imageUrl = this.resolveUploadedImageUrl(rawValue)
+      const imageId = this.extractUploadedImageId(rawValue)
+
+      return {
+        image_id: imageId,
+        image_url: imageUrl,
+        raw_value: rawValue
+      }
+    } catch (error) {
+      throw this.handleError(error, 'Failed to upload recipe image')
+    }
+  }
+
+  private async parseUnknownResponse(response: Response): Promise<unknown> {
+    const contentType = response.headers.get('content-type') || ''
+
+    if (contentType.includes('application/json')) {
+      return response.json()
+    }
+
+    return response.text()
+  }
+
+  private extractUploadedImageValue(payload: unknown): string {
+    if (typeof payload === 'string' && payload.trim()) {
+      return payload.trim()
+    }
+
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      throw new Error('Image upload did not return a usable image reference.')
+    }
+
+    const record = payload as Record<string, unknown>
+
+    for (const key of ['result', 'data']) {
+      if (record[key] !== undefined) {
+        return this.extractUploadedImageValue(record[key])
+      }
+    }
+
+    for (const key of ['image_url', 'url', 'image_id', 'id']) {
+      const candidate = record[key]
+      if (typeof candidate === 'string' && candidate.trim()) {
+        return candidate.trim()
+      }
+    }
+
+    throw new Error('Image upload did not return a usable image reference.')
+  }
+
+  private extractUploadedImageId(value: string): string | null {
+    const normalized = value.trim()
+    if (!normalized || normalized.includes('/')) {
+      return null
+    }
+
+    return normalized
+  }
+
+  private resolveUploadedImageUrl(value: string): string {
+    const normalized = value.trim()
+    if (!normalized) {
+      throw new Error('Image upload did not return a usable image reference.')
+    }
+
+    if (normalized.startsWith('http://')) {
+      return `https://${normalized.slice('http://'.length)}`
+    }
+
+    if (/^(https:\/\/|data:|blob:)/i.test(normalized) || normalized.startsWith('/')) {
+      return normalized
+    }
+
+    const restBaseUrl = getWisefoodRestApiUrl()
+    const restOrigin = new URL(restBaseUrl).origin
+
+    if (normalized.startsWith('api/') || normalized.startsWith('rest/')) {
+      return new URL(`/${normalized.replace(/^\/+/, '')}`, `${restOrigin}/`).toString()
+    }
+
+    if (normalized.startsWith('v1/') || normalized.startsWith('images/')) {
+      return new URL(normalized.replace(/^\/+/, ''), `${restBaseUrl}/`).toString()
+    }
+
+    return `${restBaseUrl}/images/${encodeURIComponent(normalized)}`
+  }
+
+  private async fetchResponseWithTimeout(
+    endpoint: string,
+    requestInit: RequestInit,
+    timeoutMs: number = DEFAULT_TIMEOUT,
+    transport: RecipeApiTransport = this.resolveTransport()
+  ): Promise<Response> {
+    const baseUrl = this.getRecipeApiBaseUrl(transport)
+    const url = `${baseUrl}${endpoint}`
+
+    const authStore = useAuthStore()
+    let token = await this.ensureAuthToken(authStore)
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+    try {
+      const doRequest = async (authToken: string) => {
+        const headers = new Headers(requestInit.headers || {})
+        headers.set('Authorization', `Bearer ${authToken}`)
+
+        return fetch(url, {
+          ...requestInit,
+          headers,
+          signal: controller.signal
+        })
+      }
+
+      let response = await doRequest(token)
+
+      if (response.status === 401) {
+        try {
+          await authStore.refreshToken()
+          token = await this.ensureAuthToken(authStore)
+          response = await doRequest(token)
+        } catch {
+          // Let the shared error handling run below.
+        }
+      }
+
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        let errorData: unknown
+        try {
+          errorData = await response.json()
+        } catch {
+          errorData = await response.text()
+        }
+
+        if (response.status === 401) {
+          if (import.meta.client) {
+            await authStore.logout()
+          }
+          throw new Error('Authentication failed. Please log in again.')
+        }
+
+        throw {
+          message: `API request failed with status ${response.status}`,
+          status: response.status,
+          data: errorData
+        }
+      }
+
+      return response
+    } catch (error: unknown) {
+      clearTimeout(timeoutId)
+      const requestError = error as RecipeRequestErrorLike
+
+      if (requestError.name === 'AbortError') {
+        throw {
+          message: `Request timeout after ${timeoutMs / 1000} seconds. Please try again.`,
+          status: 408,
+          code: 'TIMEOUT'
+        }
+      }
+
+      throw error
+    }
+  }
+
+  /**
    * Fetch with timeout support
    * @private
    */
   private async fetchWithTimeout<T>(
     endpoint: string,
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
     data?: unknown,
     timeoutMs: number = DEFAULT_TIMEOUT,
     transport: RecipeApiTransport = this.resolveTransport()

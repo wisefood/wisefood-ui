@@ -465,13 +465,13 @@ import articlesApi from '~/services/articlesApi'
 import {
   articleSortOptions,
   buildArticleRoutePath,
-  formatPublicationYear,
+  formatConsolePublicationYear as formatPublicationYear,
   getDisplayArticleCategory,
   mergeFacetBuckets,
   normalizeFacetBuckets,
   slugifyArticleUrn
 } from '~/utils/consoleArticles'
-import { formatDate } from '~/utils/consoleGuideCatalog'
+import { formatConsoleDate as formatDate } from '~/utils/consoleGuideCatalog'
 
 definePageMeta({
   layout: 'default'

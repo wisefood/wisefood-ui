@@ -5,12 +5,12 @@ export interface ConsoleFacetBucket {
   count: number
 }
 
-export interface ConsoleSelectOption {
+export interface ConsoleArticleSelectOption {
   label: string
   value: string
 }
 
-export const articleSortOptions: ConsoleSelectOption[] = [
+export const articleSortOptions: ConsoleArticleSelectOption[] = [
   { label: 'Recently updated', value: 'updated_at desc' },
   { label: 'Newest created', value: 'created_at desc' },
   { label: 'Newest published', value: 'publication_year desc' },
@@ -39,7 +39,7 @@ export function slugifyArticleUrn(value: string) {
   return slug || 'new-article'
 }
 
-export function formatPublicationYear(value: string | null | undefined) {
+export function formatConsolePublicationYear(value: string | null | undefined) {
   if (!value) {
     return 'Year unknown'
   }

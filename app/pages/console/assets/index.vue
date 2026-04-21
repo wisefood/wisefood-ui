@@ -123,11 +123,11 @@ const assetSections = [
   },
   {
     title: 'Recipes',
-    description: 'Recipe asset operations will be added here in a future iteration.',
-    summary: 'Planned feature',
-    to: '',
+    description: 'Search recipe records, create structured recipes, and edit the instructions and linked imagery for each entry.',
+    summary: '',
+    to: '/console/assets/recipes',
     icon: 'i-lucide-utensils-crossed',
-    available: false,
+    available: true,
     iconWrapperClass: 'bg-brandp-50 dark:bg-brandp-500/10',
     iconClass: 'text-brandp-500 dark:text-brandp-300'
   }

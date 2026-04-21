@@ -5,6 +5,7 @@ import type {
   RecipeSearchResult,
   RecipeSearchParams,
   RecipeParamSearchParams,
+  GetRecipeOptions,
   ApiError
 } from '~/services/recipeApi'
 
@@ -235,12 +236,12 @@ export function useRecipes() {
   /**
    * Fetch a single recipe by ID with full details
    */
-  const fetchRecipe = async (recipeId: string) => {
+  const fetchRecipe = async (recipeId: string, options?: GetRecipeOptions) => {
     loading.value = true
     error.value = null
 
     try {
-      const recipe = await recipeApi.getRecipe(recipeId)
+      const recipe = await recipeApi.getRecipe(recipeId, options)
       currentRecipe.value = recipe
       return recipe
     } catch (err) {

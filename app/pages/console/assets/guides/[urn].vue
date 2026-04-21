@@ -989,9 +989,9 @@ import foodscholarGuidelinesApi, {
 import { fetchCatalogArtifactDownloadResponse, getArtifactPresignedUrl, hasS3Backing } from '~/services/objectStorageApi'
 import {
   buildGuideReviewRoutePath,
-  formatBytes,
-  formatDate,
-  formatEnumLabel,
+  formatConsoleBytes as formatBytes,
+  formatConsoleDate as formatDate,
+  formatConsoleEnumLabel as formatEnumLabel,
   resolveGuideRouteParam,
   reviewStatusColor,
   statusColor

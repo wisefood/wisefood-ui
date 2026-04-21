@@ -850,8 +850,8 @@ import type {
 import catalogApi from '~/services/catalogApi'
 import {
   buildGuideRoutePath,
-  formatDate,
-  formatEnumLabel,
+  formatConsoleDate as formatDate,
+  formatConsoleEnumLabel as formatEnumLabel,
   guideApplicabilityEditOptions,
   guideReviewEditOptions,
   guideStatusEditOptions,

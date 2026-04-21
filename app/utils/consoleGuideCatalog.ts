@@ -5,12 +5,12 @@ import type {
   CatalogStatus
 } from '~/services/catalogApi'
 
-export interface ConsoleSelectOption {
+export interface ConsoleGuideSelectOption {
   label: string
   value: string
 }
 
-export const guideStatusFilterOptions: ConsoleSelectOption[] = [
+export const guideStatusFilterOptions: ConsoleGuideSelectOption[] = [
   { label: 'All statuses', value: 'all' },
   { label: 'Active', value: 'active' },
   { label: 'Draft', value: 'draft' },
@@ -18,7 +18,7 @@ export const guideStatusFilterOptions: ConsoleSelectOption[] = [
   { label: 'Deprecated', value: 'deprecated' }
 ]
 
-export const guideReviewFilterOptions: ConsoleSelectOption[] = [
+export const guideReviewFilterOptions: ConsoleGuideSelectOption[] = [
   { label: 'All review states', value: 'all' },
   { label: 'Unreviewed', value: 'unreviewed' },
   { label: 'Pending Review', value: 'pending_review' },
@@ -28,7 +28,7 @@ export const guideReviewFilterOptions: ConsoleSelectOption[] = [
   { label: 'Rejected', value: 'rejected' }
 ]
 
-export const guideStatusEditOptions: ConsoleSelectOption[] = [
+export const guideStatusEditOptions: ConsoleGuideSelectOption[] = [
   { label: 'Unspecified', value: '' },
   { label: 'Active', value: 'active' },
   { label: 'Draft', value: 'draft' },
@@ -37,7 +37,7 @@ export const guideStatusEditOptions: ConsoleSelectOption[] = [
   { label: 'Deprecated', value: 'deprecated' }
 ]
 
-export const guideReviewEditOptions: ConsoleSelectOption[] = [
+export const guideReviewEditOptions: ConsoleGuideSelectOption[] = [
   { label: 'Unspecified', value: '' },
   { label: 'Unreviewed', value: 'unreviewed' },
   { label: 'Pending Review', value: 'pending_review' },
@@ -47,13 +47,13 @@ export const guideReviewEditOptions: ConsoleSelectOption[] = [
   { label: 'Rejected', value: 'rejected' }
 ]
 
-export const guideVisibilityEditOptions: ConsoleSelectOption[] = [
+export const guideVisibilityEditOptions: ConsoleGuideSelectOption[] = [
   { label: 'Unspecified', value: '' },
   { label: 'Internal', value: 'internal' },
   { label: 'Public', value: 'public' }
 ]
 
-export const guideApplicabilityEditOptions: ConsoleSelectOption[] = [
+export const guideApplicabilityEditOptions: ConsoleGuideSelectOption[] = [
   { label: 'Unspecified', value: '' },
   { label: 'Current', value: 'current' },
   { label: 'Expired', value: 'expired' },
@@ -62,7 +62,7 @@ export const guideApplicabilityEditOptions: ConsoleSelectOption[] = [
   { label: 'Unknown', value: 'unknown' }
 ]
 
-export const guidelineActionTypeEditOptions: ConsoleSelectOption[] = [
+export const guidelineActionTypeEditOptions: ConsoleGuideSelectOption[] = [
   { label: 'Unspecified', value: '' },
   { label: 'Eat', value: 'eat' },
   { label: 'Drink', value: 'drink' },
@@ -76,7 +76,7 @@ export const guidelineActionTypeEditOptions: ConsoleSelectOption[] = [
   { label: 'Reduce', value: 'reduce' }
 ]
 
-export const guidelineFrequencyEditOptions: ConsoleSelectOption[] = [
+export const guidelineFrequencyEditOptions: ConsoleGuideSelectOption[] = [
   { label: 'Unspecified', value: '' },
   { label: 'Per Meal', value: 'per_meal' },
   { label: 'Daily', value: 'daily' },
@@ -85,7 +85,7 @@ export const guidelineFrequencyEditOptions: ConsoleSelectOption[] = [
   { label: 'Occasional', value: 'occasional' }
 ]
 
-export const guidelineTargetPopulationEditOptions: ConsoleSelectOption[] = [
+export const guidelineTargetPopulationEditOptions: ConsoleGuideSelectOption[] = [
   { label: 'General Population', value: 'general_population' },
   { label: 'Infants', value: 'infants' },
   { label: 'Under 5 Years', value: 'under_5_years' },
@@ -97,7 +97,7 @@ export const guidelineTargetPopulationEditOptions: ConsoleSelectOption[] = [
   { label: 'Other', value: 'other' }
 ]
 
-export const guidelineFoodGroupEditOptions: ConsoleSelectOption[] = [
+export const guidelineFoodGroupEditOptions: ConsoleGuideSelectOption[] = [
   { label: 'None', value: 'none' },
   { label: 'Fruits', value: 'fruits' },
   { label: 'Vegetables', value: 'vegetables' },
@@ -112,7 +112,7 @@ export const guidelineFoodGroupEditOptions: ConsoleSelectOption[] = [
   { label: 'Other', value: 'other' }
 ]
 
-export const quantityOperatorEditOptions: ConsoleSelectOption[] = [
+export const quantityOperatorEditOptions: ConsoleGuideSelectOption[] = [
   { label: 'Unspecified', value: '' },
   { label: '<', value: 'lt' },
   { label: '<=', value: 'lte' },
@@ -138,7 +138,7 @@ export function resolveGuideRouteParam(value: string | string[] | undefined) {
   return typeof value === 'string' ? value : ''
 }
 
-export function formatEnumLabel(value: string | null | undefined) {
+export function formatConsoleEnumLabel(value: string | null | undefined) {
   if (!value) {
     return 'Unspecified'
   }
@@ -149,7 +149,7 @@ export function formatEnumLabel(value: string | null | undefined) {
     .join(' ')
 }
 
-export function formatDate(value: string | null | undefined) {
+export function formatConsoleDate(value: string | null | undefined) {
   if (!value) {
     return 'Not set'
   }
@@ -164,7 +164,7 @@ export function formatDate(value: string | null | undefined) {
   }).format(parsed)
 }
 
-export function formatBytes(value: number | null | undefined) {
+export function formatConsoleBytes(value: number | null | undefined) {
   if (value === null || value === undefined) {
     return 'Unknown'
   }

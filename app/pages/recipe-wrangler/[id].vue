@@ -174,79 +174,77 @@
                 leave-from-class="opacity-100 scale-100"
                 leave-to-class="opacity-0 scale-95"
               >
-                <div v-if="!showRadarChart" class="space-y-8">
-                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-                    <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border border-orange-200 dark:border-orange-800 hover:shadow-md transition-shadow">
-                      <div class="flex items-center gap-2 mb-3">
-                        <UIcon name="i-lucide-flame" class="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                        <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.calories') }}</p>
+                <div v-if="!showRadarChart" class="space-y-6">
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="rounded-xl bg-zinc-50 dark:bg-white/4 p-4 sm:p-5">
+                      <div class="flex items-center gap-1.5 mb-2">
+                        <UIcon name="i-lucide-flame" class="w-4 h-4 text-brand-500 dark:text-brand-400" />
+                        <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.calories') }}</p>
                       </div>
-                      <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
+                      <p class="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white">
                         {{ formatMetric(summaryCaloriesPerServing, 0) }}
                       </p>
                     </div>
 
-                    <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-200 dark:border-blue-800 hover:shadow-md transition-shadow">
-                      <div class="flex items-center gap-2 mb-3">
-                        <UIcon name="i-lucide-dumbbell" class="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                        <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.protein') }}</p>
+                    <div class="rounded-xl bg-zinc-50 dark:bg-white/4 p-4 sm:p-5">
+                      <div class="flex items-center gap-1.5 mb-2">
+                        <UIcon name="i-lucide-dumbbell" class="w-4 h-4 text-brandg-500 dark:text-brandg-400" />
+                        <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.protein') }}</p>
                       </div>
-                      <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
+                      <p class="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white">
                         {{ formatMetricWithUnit(summaryProteinPerServing, 1, 'g') }}
                       </p>
                     </div>
 
-                    <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border border-purple-200 dark:border-purple-800 hover:shadow-md transition-shadow">
-                      <div class="flex items-center gap-2 mb-3">
-                        <UIcon name="i-lucide-wheat" class="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                        <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.carbs') }}</p>
+                    <div class="rounded-xl bg-zinc-50 dark:bg-white/4 p-4 sm:p-5">
+                      <div class="flex items-center gap-1.5 mb-2">
+                        <UIcon name="i-lucide-wheat" class="w-4 h-4 text-brandp-400 dark:text-brandp-300" />
+                        <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.carbs') }}</p>
                       </div>
-                      <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
+                      <p class="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white">
                         {{ formatMetricWithUnit(summaryCarbsPerServing, 1, 'g') }}
                       </p>
                     </div>
 
-                    <div class="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 border border-yellow-200 dark:border-yellow-800 hover:shadow-md transition-shadow">
-                      <div class="flex items-center gap-2 mb-3">
-                        <UIcon name="i-lucide-droplet" class="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-                        <p class="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.fat') }}</p>
+                    <div class="rounded-xl bg-zinc-50 dark:bg-white/4 p-4 sm:p-5">
+                      <div class="flex items-center gap-1.5 mb-2">
+                        <UIcon name="i-lucide-droplet" class="w-4 h-4 text-terracotta dark:text-orange-400" />
+                        <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.fat') }}</p>
                       </div>
-                      <p class="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
+                      <p class="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white">
                         {{ formatMetricWithUnit(summaryFatPerServing, 1, 'g') }}
                       </p>
                     </div>
                   </div>
 
                   <!-- Additional Nutrition -->
-                  <div class="pt-8 border-t border-zinc-200 dark:border-zinc-700">
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-                      <div class="rounded-xl border border-emerald-200/80 dark:border-emerald-800/70 bg-emerald-50/70 dark:bg-emerald-900/15 p-4">
-                        <div class="flex items-center gap-2 mb-2">
-                          <UIcon name="i-lucide-leaf" class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                          <p class="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">Fiber</p>
-                        </div>
-                        <p class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">
-                          {{ formatMetricWithUnit(summaryFiberPerServing, 1, 'g') }}
-                        </p>
+                  <div class="grid grid-cols-3 gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                    <div class="rounded-lg bg-zinc-50 dark:bg-white/4 px-3 py-3">
+                      <div class="flex items-center gap-1.5 mb-1.5">
+                        <UIcon name="i-lucide-leaf" class="w-3.5 h-3.5 text-brandg-500 dark:text-brandg-400" />
+                        <p class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">Fiber</p>
                       </div>
-                      <div class="rounded-xl border border-pink-200/80 dark:border-pink-800/70 bg-pink-50/70 dark:bg-pink-900/15 p-4">
-                        <div class="flex items-center gap-2 mb-2">
-                          <UIcon name="i-lucide-candy" class="w-4 h-4 text-pink-600 dark:text-pink-400" />
-                          <p class="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">Sugar</p>
-                        </div>
-                        <p class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">
-                          {{ formatMetricWithUnit(summarySugarPerServing, 1, 'g') }}
-                        </p>
+                      <p class="text-lg font-bold text-zinc-900 dark:text-white">
+                        {{ formatMetricWithUnit(summaryFiberPerServing, 1, 'g') }}
+                      </p>
+                    </div>
+                    <div class="rounded-lg bg-zinc-50 dark:bg-white/4 px-3 py-3">
+                      <div class="flex items-center gap-1.5 mb-1.5">
+                        <UIcon name="i-lucide-candy" class="w-3.5 h-3.5 text-brand-400 dark:text-brand-300" />
+                        <p class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">Sugar</p>
                       </div>
-                      <div class="rounded-xl border border-cyan-200/80 dark:border-cyan-800/70 bg-cyan-50/70 dark:bg-cyan-900/15 p-4">
-                        <div class="flex items-center gap-2 mb-2">
-                          <UIcon name="i-lucide-droplets" class="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-                          <p class="text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">Sodium</p>
-                        </div>
-                        <p class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white">
-                          {{ formatMetricWithUnit(summarySodiumPerServing, 0, 'mg') }}
-                        </p>
+                      <p class="text-lg font-bold text-zinc-900 dark:text-white">
+                        {{ formatMetricWithUnit(summarySugarPerServing, 1, 'g') }}
+                      </p>
+                    </div>
+                    <div class="rounded-lg bg-zinc-50 dark:bg-white/4 px-3 py-3">
+                      <div class="flex items-center gap-1.5 mb-1.5">
+                        <UIcon name="i-lucide-droplets" class="w-3.5 h-3.5 text-brandp-400 dark:text-brandp-300" />
+                        <p class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">Sodium</p>
                       </div>
+                      <p class="text-lg font-bold text-zinc-900 dark:text-white">
+                        {{ formatMetricWithUnit(summarySodiumPerServing, 0, 'mg') }}
+                      </p>
                     </div>
                   </div>
                 </div>

@@ -73,7 +73,10 @@
               class="w-full pl-11 sm:pl-12 pr-12 sm:pr-16 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-brandg-500 text-sm sm:text-base"
               @input="handleSearchInput"
               @focus="handleSearchInput"
-              @keydown.enter.prevent="performSearch"
+              @keydown.enter.prevent="handleSearchEnter"
+              @keydown.down.prevent="handleSearchArrowDown"
+              @keydown.up.prevent="handleSearchArrowUp"
+              @keydown.esc.prevent="clearAutocomplete"
             />
             <button
               type="button"
@@ -94,13 +97,18 @@
               </div>
               <template v-else>
                 <button
-                  v-for="suggestion in autocompleteSuggestions"
-                  :key="suggestion"
+                  v-for="(suggestion, suggestionIndex) in autocompleteSuggestions"
+                  :key="suggestion.recipe_id || suggestion.title"
                   type="button"
                   @mousedown.prevent="selectSuggestion(suggestion)"
-                  class="w-full text-left px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                  :class="[
+                    'w-full text-left px-4 py-2.5 text-sm transition-colors',
+                    activeAutocompleteIndex === suggestionIndex
+                      ? 'bg-brandg-50 text-brandg-700 dark:bg-brandg-900/30 dark:text-brandg-200'
+                      : 'text-zinc-800 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-700'
+                  ]"
                 >
-                  {{ suggestion }}
+                  {{ suggestion.title }}
                 </button>
               </template>
             </div>
@@ -177,20 +185,20 @@
               Analysis Results: {{ analysisResult.title }}
             </h3>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-3 bg-zinc-50 dark:bg-zinc-800/50">
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Calories / serving</p>
+              <div class="rounded-xl border border-brand-200 dark:border-brand-800 p-3 bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/20 dark:to-brand-800/20">
+                <p class="text-sm text-brand-700 dark:text-brand-300">Calories / serving</p>
                 <p class="text-xl font-semibold text-zinc-900 dark:text-white">{{ analyzedCalories }}</p>
               </div>
-              <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-3 bg-zinc-50 dark:bg-zinc-800/50">
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Protein / serving</p>
+              <div class="rounded-xl border border-brandg-200 dark:border-brandg-800 p-3 bg-gradient-to-br from-brandg-50 to-brandg-100 dark:from-brandg-900/20 dark:to-brandg-800/20">
+                <p class="text-sm text-brandg-700 dark:text-brandg-300">Protein / serving</p>
                 <p class="text-xl font-semibold text-zinc-900 dark:text-white">{{ analyzedProtein }} g</p>
               </div>
-              <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-3 bg-zinc-50 dark:bg-zinc-800/50">
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Carbs / serving</p>
+              <div class="rounded-xl border border-brandp-200 dark:border-brandp-800 p-3 bg-gradient-to-br from-brandp-50 to-brandp-100 dark:from-brandp-900/20 dark:to-brandp-800/20">
+                <p class="text-sm text-brandp-700 dark:text-brandp-300">Carbs / serving</p>
                 <p class="text-xl font-semibold text-zinc-900 dark:text-white">{{ analyzedCarbs }} g</p>
               </div>
-              <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-3 bg-zinc-50 dark:bg-zinc-800/50">
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Fat / serving</p>
+              <div class="rounded-xl border border-brand-200 dark:border-brandg-800 p-3 bg-gradient-to-br from-brand-50 to-brandg-50 dark:from-brand-900/20 dark:to-brandg-900/20">
+                <p class="text-sm text-brand-700 dark:text-brandg-300">Fat / serving</p>
                 <p class="text-xl font-semibold text-zinc-900 dark:text-white">{{ analyzedFat }} g</p>
               </div>
             </div>
@@ -413,11 +421,20 @@
           v-else-if="hasSearchAttempted"
           class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
         >
-          <RecipesRecipeCard
+          <div
             v-for="(recipe, index) in paginatedRecipes"
             :key="recipe.recipe_id || recipe.id || `recipe-${index}`"
-            :recipe="recipe"
-          />
+            :class="[
+              'rounded-xl transition-all',
+              activeRecipeResultIndex === index
+                ? 'ring-2 ring-brandg-500 ring-offset-2 ring-offset-transparent'
+                : ''
+            ]"
+          >
+            <RecipesRecipeCard
+              :recipe="recipe"
+            />
+          </div>
         </div>
 
         <!-- Pre-search State -->
@@ -513,13 +530,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRecipes } from '~/composables/useRecipes'
 import { useRecipeStore } from '~/stores/recipe'
 import { useI18n } from 'vue-i18n'
 import { useHouseholdStore } from '~/stores/household'
 import recipeApi from '~/services/recipeApi'
-import type { PipelineTraceWeightDetail, RecipeProfileResult } from '~/services/recipeApi'
+import type {
+  PipelineTraceWeightDetail,
+  RecipeAutocompleteSuggestion,
+  RecipeProfileResult,
+  RecipeSearchResult
+} from '~/services/recipeApi'
 
 const { t } = useI18n()
 
@@ -547,9 +569,11 @@ const householdStore = useHouseholdStore()
 // ============================================================================
 const searchQuery = ref('')
 const searchBoxRef = ref<HTMLElement | null>(null)
-const autocompleteSuggestions = ref<string[]>([])
+const autocompleteSuggestions = ref<RecipeAutocompleteSuggestion[]>([])
 const autocompleteLoading = ref(false)
 const showAutocomplete = ref(false)
+const activeAutocompleteIndex = ref(-1)
+const activeRecipeResultIndex = ref(-1)
 const showFilters = ref(false)
 const currentPage = ref(1)
 const itemsPerPage = 10
@@ -680,6 +704,7 @@ const nutriScoreBadgeClass = computed(() => {
 const clearAutocomplete = () => {
   autocompleteSuggestions.value = []
   showAutocomplete.value = false
+  activeAutocompleteIndex.value = -1
 }
 
 const fetchAutocompleteSuggestions = async (query: string) => {
@@ -694,6 +719,7 @@ const fetchAutocompleteSuggestions = async (query: string) => {
     const suggestions = await recipeApi.autocompleteRecipes(normalizedQuery, 8)
     if (searchQuery.value.trim() !== normalizedQuery) return
     autocompleteSuggestions.value = suggestions
+    activeAutocompleteIndex.value = -1
     showAutocomplete.value = suggestions.length > 0
   } catch {
     clearAutocomplete()
@@ -704,6 +730,7 @@ const fetchAutocompleteSuggestions = async (query: string) => {
 
 const handleSearchInput = () => {
   const query = searchQuery.value.trim()
+  activeRecipeResultIndex.value = -1
   if (autocompleteDebounceTimer) {
     clearTimeout(autocompleteDebounceTimer)
     autocompleteDebounceTimer = null
@@ -718,10 +745,36 @@ const handleSearchInput = () => {
   }, 220)
 }
 
-const selectSuggestion = (suggestion: string) => {
-  searchQuery.value = suggestion
+const resolveRecipeIdentifier = (recipe: Pick<RecipeSearchResult, 'recipe_id' | 'id'> | null | undefined) => {
+  const recipeId = typeof recipe?.recipe_id === 'string' ? recipe.recipe_id.trim() : ''
+  if (recipeId) {
+    return recipeId
+  }
+
+  return typeof recipe?.id === 'string' ? recipe.id.trim() : ''
+}
+
+const openRecipeResult = async (recipe: RecipeSearchResult | null | undefined) => {
+  const recipeId = resolveRecipeIdentifier(recipe)
+  if (!recipeId) {
+    return
+  }
+
   clearAutocomplete()
-  void performSearch()
+  activeRecipeResultIndex.value = -1
+  await navigateTo(`/recipe-wrangler/${encodeURIComponent(recipeId)}`)
+}
+
+const selectSuggestion = async (suggestion: RecipeAutocompleteSuggestion) => {
+  searchQuery.value = suggestion.title
+  clearAutocomplete()
+
+  if (suggestion.recipe_id) {
+    await navigateTo(`/recipe-wrangler/${encodeURIComponent(suggestion.recipe_id)}`)
+    return
+  }
+
+  await performSearch({ openFirstResult: true })
 }
 
 const handleClickOutsideSearch = (event: MouseEvent) => {
@@ -730,6 +783,57 @@ const handleClickOutsideSearch = (event: MouseEvent) => {
   if (searchBoxRef.value && !searchBoxRef.value.contains(target)) {
     showAutocomplete.value = false
   }
+}
+
+const handleSearchArrowDown = () => {
+  if (showAutocomplete.value && autocompleteSuggestions.value.length > 0) {
+    activeAutocompleteIndex.value = activeAutocompleteIndex.value < autocompleteSuggestions.value.length - 1
+      ? activeAutocompleteIndex.value + 1
+      : 0
+    return
+  }
+
+  if (paginatedRecipes.value.length > 0) {
+    activeRecipeResultIndex.value = activeRecipeResultIndex.value < paginatedRecipes.value.length - 1
+      ? activeRecipeResultIndex.value + 1
+      : 0
+  }
+}
+
+const handleSearchArrowUp = () => {
+  if (showAutocomplete.value && autocompleteSuggestions.value.length > 0) {
+    activeAutocompleteIndex.value = activeAutocompleteIndex.value > 0
+      ? activeAutocompleteIndex.value - 1
+      : autocompleteSuggestions.value.length - 1
+    return
+  }
+
+  if (paginatedRecipes.value.length > 0) {
+    activeRecipeResultIndex.value = activeRecipeResultIndex.value > 0
+      ? activeRecipeResultIndex.value - 1
+      : paginatedRecipes.value.length - 1
+  }
+}
+
+const handleSearchEnter = () => {
+  if (showAutocomplete.value && autocompleteSuggestions.value.length > 0) {
+    const nextSuggestion = autocompleteSuggestions.value[
+      activeAutocompleteIndex.value >= 0 ? activeAutocompleteIndex.value : 0
+    ]
+
+    if (nextSuggestion) {
+      void selectSuggestion(nextSuggestion)
+      return
+    }
+  }
+
+  const nextRecipe = paginatedRecipes.value[activeRecipeResultIndex.value]
+  if (nextRecipe) {
+    void openRecipeResult(nextRecipe)
+    return
+  }
+
+  void performSearch()
 }
 
 /**
@@ -765,11 +869,12 @@ const formatNumber = (value: unknown): string => {
 /**
  * Search recipes with natural language query
  */
-const performSearch = async () => {
+const performSearch = async (options: { openFirstResult?: boolean } = {}) => {
   if (!searchQuery.value || searchQuery.value.trim() === '') return
   clearAutocomplete()
   hasUserTriggeredSearch.value = true
   hasSearchAttempted.value = true
+  activeRecipeResultIndex.value = -1
 
   try {
     clearError()
@@ -782,6 +887,15 @@ const performSearch = async () => {
     }, false)
 
     recipeStore.addSearchQuery(searchQuery.value)
+
+    if (options.openFirstResult) {
+      const normalizedQuery = searchQuery.value.trim().toLowerCase()
+      const exactMatch = recipes.value.find(recipe => recipe.title.trim().toLowerCase() === normalizedQuery)
+      const nextRecipe = exactMatch || recipes.value[0]
+      if (nextRecipe) {
+        await openRecipeResult(nextRecipe)
+      }
+    }
   } catch (err) {
     console.error('Search failed:', err)
   }
@@ -792,6 +906,7 @@ const performSearch = async () => {
  */
 const resetPagination = () => {
   currentPage.value = 1
+  activeRecipeResultIndex.value = -1
 }
 
 /**
@@ -799,6 +914,7 @@ const resetPagination = () => {
  */
 const goToPage = (page: number) => {
   currentPage.value = page
+  activeRecipeResultIndex.value = -1
   // Scroll to top of results
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
@@ -896,6 +1012,17 @@ const navigateToCompare = () => {
 const clearCompareSelection = () => {
   recipeStore.clearCompareList()
 }
+
+watch(() => paginatedRecipes.value.length, (nextLength) => {
+  if (nextLength === 0) {
+    activeRecipeResultIndex.value = -1
+    return
+  }
+
+  if (activeRecipeResultIndex.value >= nextLength) {
+    activeRecipeResultIndex.value = nextLength - 1
+  }
+})
 
 // ============================================================================
 // Lifecycle
