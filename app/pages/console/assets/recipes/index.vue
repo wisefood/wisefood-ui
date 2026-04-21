@@ -698,32 +698,130 @@
                     class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
                   >
                     <template #header>
-                      <h4 class="text-sm font-semibold text-gray-900 dark:text-white">
-                        Tags & Allergens
-                      </h4>
+                      <div class="flex items-center justify-between gap-3">
+                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">
+                          Tags & Allergens
+                        </h4>
+                        <UBadge v-if="createForm.nutrientsFromAnalysis" color="success" variant="soft" size="sm">
+                          Auto-extracted
+                        </UBadge>
+                      </div>
                     </template>
 
                     <div class="space-y-5">
+                      <!-- Tags token input -->
                       <UFormField label="Tags">
-                        <UTextarea
-                          v-model="createForm.tags"
-                          :rows="4"
-                          placeholder="Comma-separated or one tag per line"
-                          class="w-full"
-                        />
+                        <div class="space-y-2">
+                          <div class="flex gap-2">
+                            <UInput
+                              v-model="createForm.tagDraft"
+                              placeholder="Type a tag and press Enter"
+                              class="flex-1"
+                              @keydown.enter.prevent="() => { const t = createForm.tagDraft.trim(); if (t && !createForm.tags.map(x => x.toLowerCase()).includes(t.toLowerCase())) createForm.tags.push(t); createForm.tagDraft = '' }"
+                            />
+                            <UButton type="button" color="neutral" variant="outline" icon="i-lucide-plus"
+                              :disabled="!createForm.tagDraft.trim()"
+                              @click="() => { const t = createForm.tagDraft.trim(); if (t && !createForm.tags.map(x => x.toLowerCase()).includes(t.toLowerCase())) createForm.tags.push(t); createForm.tagDraft = '' }"
+                            />
+                          </div>
+                          <div v-if="createForm.tags.length" class="flex flex-wrap gap-1.5">
+                            <span v-for="(tag, idx) in createForm.tags" :key="`ctag-${idx}`"
+                              class="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:border-blue-700/40 dark:bg-blue-900/20 dark:text-blue-300"
+                            >
+                              {{ tag }}
+                              <button type="button" class="ml-0.5 flex items-center justify-center rounded-full p-0.5 hover:bg-blue-200 dark:hover:bg-blue-800/40"
+                                @click="createForm.tags.splice(idx, 1)"
+                              >
+                                <UIcon name="i-lucide-x" class="h-3 w-3" />
+                              </button>
+                            </span>
+                          </div>
+                          <p v-else class="text-xs text-gray-400 dark:text-gray-500">No tags added</p>
+                        </div>
                       </UFormField>
 
+                      <!-- Allergens token input -->
                       <UFormField label="Allergens">
-                        <UTextarea
-                          v-model="createForm.allergens"
-                          :rows="4"
-                          placeholder="Comma-separated or one allergen per line"
-                          class="w-full"
-                        />
+                        <div class="space-y-2">
+                          <div class="flex gap-2">
+                            <UInput
+                              v-model="createForm.allergenDraft"
+                              placeholder="Type an allergen and press Enter"
+                              class="flex-1"
+                              @keydown.enter.prevent="() => { const a = createForm.allergenDraft.trim(); if (a && !createForm.allergens.map(x => x.toLowerCase()).includes(a.toLowerCase())) createForm.allergens.push(a); createForm.allergenDraft = '' }"
+                            />
+                            <UButton type="button" color="neutral" variant="outline" icon="i-lucide-plus"
+                              :disabled="!createForm.allergenDraft.trim()"
+                              @click="() => { const a = createForm.allergenDraft.trim(); if (a && !createForm.allergens.map(x => x.toLowerCase()).includes(a.toLowerCase())) createForm.allergens.push(a); createForm.allergenDraft = '' }"
+                            />
+                          </div>
+                          <div v-if="createForm.allergens.length" class="flex flex-wrap gap-1.5">
+                            <span v-for="(allergen, idx) in createForm.allergens" :key="`callergen-${idx}`"
+                              class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:border-amber-700/40 dark:bg-amber-900/20 dark:text-amber-300"
+                            >
+                              {{ allergen }}
+                              <button type="button" class="ml-0.5 flex items-center justify-center rounded-full p-0.5 hover:bg-amber-200 dark:hover:bg-amber-800/40"
+                                @click="createForm.allergens.splice(idx, 1)"
+                              >
+                                <UIcon name="i-lucide-x" class="h-3 w-3" />
+                              </button>
+                            </span>
+                          </div>
+                          <p v-else class="text-xs text-gray-400 dark:text-gray-500">No allergens added</p>
+                        </div>
                       </UFormField>
                     </div>
                   </UCard>
                 </div>
+
+                <!-- Nutrition card -->
+                <UCard
+                  :ui="{ body: 'p-4 sm:p-5', header: 'p-4 sm:p-5' }"
+                  class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
+                >
+                  <template #header>
+                    <div class="flex items-center justify-between gap-3">
+                      <div>
+                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">
+                          Nutrition <span class="font-normal text-gray-400">(per serving, optional)</span>
+                        </h4>
+                        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                          {{ createForm.nutrientsFromAnalysis ? 'Pre-filled from analysis — review and adjust if needed. Providing values skips re-profiling on save.' : 'Leave blank to let the API auto-calculate from ingredients.' }}
+                        </p>
+                      </div>
+                      <UBadge v-if="createForm.nutrientsFromAnalysis" color="success" variant="soft" size="sm">
+                        From analysis
+                      </UBadge>
+                    </div>
+                  </template>
+
+                  <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <UFormField label="Energy (kcal)">
+                      <UInput v-model="createForm.energy_kcal" type="number" min="0" step="0.01" placeholder="e.g. 450" class="w-full" />
+                    </UFormField>
+                    <UFormField label="Protein (g)">
+                      <UInput v-model="createForm.protein_g" type="number" min="0" step="0.01" placeholder="e.g. 32" class="w-full" />
+                    </UFormField>
+                    <UFormField label="Carbs (g)">
+                      <UInput v-model="createForm.carbohydrate_g" type="number" min="0" step="0.01" placeholder="e.g. 55" class="w-full" />
+                    </UFormField>
+                    <UFormField label="Fat (g)">
+                      <UInput v-model="createForm.fat_g" type="number" min="0" step="0.01" placeholder="e.g. 18" class="w-full" />
+                    </UFormField>
+                    <UFormField label="Sugar (g)">
+                      <UInput v-model="createForm.sugar_g" type="number" min="0" step="0.01" placeholder="e.g. 8" class="w-full" />
+                    </UFormField>
+                    <UFormField label="Saturated fat (g)">
+                      <UInput v-model="createForm.saturated_fat_g" type="number" min="0" step="0.01" placeholder="e.g. 4" class="w-full" />
+                    </UFormField>
+                    <UFormField label="Sodium (mg)">
+                      <UInput v-model="createForm.sodium_mg" type="number" min="0" step="0.01" placeholder="e.g. 600" class="w-full" />
+                    </UFormField>
+                    <UFormField label="Fibre (g)">
+                      <UInput v-model="createForm.fibre_g" type="number" min="0" step="0.01" placeholder="e.g. 5" class="w-full" />
+                    </UFormField>
+                  </div>
+                </UCard>
               </div>
             </template>
           </div>
@@ -777,7 +875,6 @@ import recipeApi from '~/services/recipeApi'
 import {
   buildConsoleRecipeRoutePath,
   normalizeRecipeImageUrl,
-  parseConsoleTokenList,
   resolveConsoleRecipeErrorMessage,
   resolveRecipeIdentifier
 } from '~/utils/consoleRecipes'
@@ -849,8 +946,20 @@ const createForm = reactive({
   ingredients: [] as EditableIngredient[],
   instructions: [] as string[],
   imageUrl: '',
-  tags: '',
-  allergens: ''
+  tags: [] as string[],
+  allergens: [] as string[],
+  tagDraft: '',
+  allergenDraft: '',
+  // Nutrients — populated from analysis, editable by user
+  protein_g: '',
+  carbohydrate_g: '',
+  fat_g: '',
+  energy_kcal: '',
+  sugar_g: '',
+  saturated_fat_g: '',
+  sodium_mg: '',
+  fibre_g: '',
+  nutrientsFromAnalysis: false
 })
 
 const recipeColumns = [
@@ -1015,8 +1124,19 @@ function resetCreateForm() {
   ]
   createForm.instructions = ['']
   createForm.imageUrl = ''
-  createForm.tags = ''
-  createForm.allergens = ''
+  createForm.tags = []
+  createForm.allergens = []
+  createForm.tagDraft = ''
+  createForm.allergenDraft = ''
+  createForm.protein_g = ''
+  createForm.carbohydrate_g = ''
+  createForm.fat_g = ''
+  createForm.energy_kcal = ''
+  createForm.sugar_g = ''
+  createForm.saturated_fat_g = ''
+  createForm.sodium_mg = ''
+  createForm.fibre_g = ''
+  createForm.nutrientsFromAnalysis = false
   createAnalysisInput.value = ''
   createAnalysisLoading.value = false
   createAnalysisError.value = null
@@ -1236,32 +1356,61 @@ function buildCreateIngredientsFromAnalysis(result: RecipeProfileResult, rawReci
   return extractIngredientRowsFromRecipeText(rawRecipe)
 }
 
+function roundNutrient(value: number | undefined | null): string {
+  if (value == null || !Number.isFinite(value)) return ''
+  return String(Math.round(value * 100) / 100)
+}
+
 function applyCreateAnalysisToDraft(result: RecipeProfileResult) {
   const rawRecipe = createAnalysisInput.value
   const analyzedTitle = compactText(result.title) || extractTitleFromRecipeText(rawRecipe)
   const analyzedIngredients = buildCreateIngredientsFromAnalysis(result, rawRecipe)
-  const analyzedInstructions = Array.isArray(result.instructions)
-    ? result.instructions.map(step => compactText(step)).filter(Boolean)
-    : extractInstructionStepsFromRecipeText(rawRecipe)
+  const analyzedInstructions = (Array.isArray(result.directions) && result.directions.length
+    ? result.directions
+    : Array.isArray(result.instructions)
+      ? result.instructions
+      : []
+  ).map(step => compactText(step)).filter(Boolean)
+    || extractInstructionStepsFromRecipeText(rawRecipe)
   const analyzedServes = toPositiveWholeNumber(result.serves) || extractServesFromRecipeText(rawRecipe)
 
-  if (analyzedTitle) {
-    createForm.title = analyzedTitle
-  }
-
-  if (analyzedIngredients.length > 0) {
-    createForm.ingredients = analyzedIngredients
-  }
-
+  if (analyzedTitle) createForm.title = analyzedTitle
+  if (analyzedIngredients.length > 0) createForm.ingredients = analyzedIngredients
   if (analyzedInstructions.length > 0) {
     createForm.instructions = analyzedInstructions
   } else if (!buildCreateInstructions().length) {
     createForm.instructions = ['']
   }
+  if (analyzedServes) createForm.serves = String(analyzedServes)
 
-  if (analyzedServes) {
-    createForm.serves = String(analyzedServes)
+  // Populate tags & allergens from analysis
+  if (Array.isArray(result.tags) && result.tags.length) {
+    createForm.tags = result.tags.map(t => String(t || '').trim()).filter(Boolean)
   }
+  if (Array.isArray(result.allergens) && result.allergens.length) {
+    createForm.allergens = result.allergens.map(a => String(a || '').trim()).filter(Boolean)
+  }
+
+  // Populate nutrients from profiling_totals
+  const t = result.profiling_totals || {}
+  const protein = t.total_protein_g_per_serving_usda ?? t.total_protein_g_usda
+  const carbs = t.total_carbohydrate_g_per_serving_usda ?? t.total_carbohydrate_g_usda
+  const fat = t.total_fat_g_per_serving_usda ?? t.total_fat_g_usda
+  const kcal = t.total_energy_kcal_per_serving_usda ?? t.total_energy_kcal_usda
+  const sugar = t.total_sugar_g_per_serving_usda ?? t.total_sugar_g_usda
+  const satFat = t.total_saturated_fat_g_per_serving_usda ?? t.total_saturated_fat_g_usda
+  const sodium = t.total_sodium_mg_per_serving_usda ?? t.total_sodium_mg_usda
+  const fibre = t.total_fibre_g_per_serving_usda ?? t.total_fibre_g_usda
+
+  createForm.protein_g = roundNutrient(protein)
+  createForm.carbohydrate_g = roundNutrient(carbs)
+  createForm.fat_g = roundNutrient(fat)
+  createForm.energy_kcal = roundNutrient(kcal)
+  createForm.sugar_g = roundNutrient(sugar)
+  createForm.saturated_fat_g = roundNutrient(satFat)
+  createForm.sodium_mg = roundNutrient(sodium)
+  createForm.fibre_g = roundNutrient(fibre)
+  createForm.nutrientsFromAnalysis = true
 }
 
 function clearAutocomplete() {
@@ -1628,17 +1777,45 @@ function validateCreateStructure() {
   }
 }
 
+function parseOptionalFloat(value: string): number | undefined {
+  const n = parseFloat(value)
+  return Number.isFinite(n) && n >= 0 ? n : undefined
+}
+
 function buildCreatePayload(): CreateRecipeRequest {
   const basics = validateCreateBasics()
   const structure = validateCreateStructure()
 
-  return {
+  const payload: CreateRecipeRequest = {
     ...basics,
     ...structure,
     image_url: createForm.imageUrl.trim() || undefined,
-    tags: parseConsoleTokenList(createForm.tags),
-    allergens: parseConsoleTokenList(createForm.allergens)
+    tags: createForm.tags.filter(Boolean),
+    allergens: createForm.allergens.filter(Boolean),
   }
+
+  // Only send nutrients if at least one is provided (API skips profiling when nutrients present)
+  const protein = parseOptionalFloat(createForm.protein_g)
+  const carbs = parseOptionalFloat(createForm.carbohydrate_g)
+  const fat = parseOptionalFloat(createForm.fat_g)
+  const kcal = parseOptionalFloat(createForm.energy_kcal)
+  const sugar = parseOptionalFloat(createForm.sugar_g)
+  const satFat = parseOptionalFloat(createForm.saturated_fat_g)
+  const sodium = parseOptionalFloat(createForm.sodium_mg)
+  const fibre = parseOptionalFloat(createForm.fibre_g)
+
+  if ([protein, carbs, fat, kcal].some(v => v !== undefined)) {
+    payload.protein_g = protein
+    payload.carbohydrate_g = carbs
+    payload.fat_g = fat
+    payload.energy_kcal = kcal
+    payload.sugar_g = sugar
+    payload.saturated_fat_g = satFat
+    payload.sodium_mg = sodium
+    payload.fibre_g = fibre
+  }
+
+  return payload
 }
 
 async function ensureCreateAnalysisReady() {

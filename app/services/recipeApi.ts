@@ -110,8 +110,18 @@ export interface CreateRecipeRequest {
   serves: number
   region: string
   image_url?: string
+  source_id?: string
+  expert_recipe?: boolean
   tags?: string[]
   allergens?: string[]
+  protein_g?: number
+  carbohydrate_g?: number
+  fat_g?: number
+  energy_kcal?: number
+  sugar_g?: number
+  saturated_fat_g?: number
+  sodium_mg?: number
+  fibre_g?: number
 }
 
 export interface UpdateRecipeRequest {
@@ -215,6 +225,7 @@ export interface RecipeProfileResult {
   weights: number[]
   ingredients: Array<Record<string, unknown>>
   instructions?: string[]
+  directions?: string[]
   profiling_totals: Record<string, number>
   pipeline_trace?: PipelineTrace
   nutri_score?: {
@@ -226,6 +237,8 @@ export interface RecipeProfileResult {
   nutri_score_source?: string
   serves?: number
   message?: string
+  tags?: string[]
+  allergens?: string[]
 }
 
 type RecipeSearchPayload = RecipeSearchResult[] | { results?: RecipeSearchResult[] } | null | undefined
