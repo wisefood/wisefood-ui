@@ -99,6 +99,7 @@ export interface RecipeParamSearchParams {
   diet_tags?: string[]
   max_duration_minutes?: number
   limit?: number
+  offset?: number
 }
 
 export interface CreateRecipeRequest {
@@ -403,8 +404,9 @@ class RecipeApiService {
   /**
    * Search recipes against the WiseFood REST API for console management.
    */
-  async searchManagedRecipes(query: string, limit: number = 50): Promise<RecipeSearchResult[]> {
-    const safeLimit = Math.min(100, Math.max(1, Math.trunc(limit || 50)))
+  async searchManagedRecipes(query: string, limit: number = 25, offset: number = 0): Promise<RecipeSearchResult[]> {
+    const safeLimit = Math.max(1, Math.trunc(limit || 25))
+    const safeOffset = Math.max(0, Math.trunc(offset || 0))
     const normalizedQuery = String(query || '').trim()
 
     try {
@@ -412,7 +414,7 @@ class RecipeApiService {
         const data = await this.fetchWithTimeout<RecipeSearchPayload>(
           `${this.getRecipeBasePath('wisefood-rest')}/param_search`,
           'POST',
-          { limit: safeLimit },
+          { limit: safeLimit, offset: safeOffset },
           SEARCH_TIMEOUT,
           'wisefood-rest'
         )
@@ -428,9 +430,28 @@ class RecipeApiService {
         'wisefood-rest'
       )
 
-      return this.normalizeSearchResults(data).slice(0, safeLimit)
+      return this.normalizeSearchResults(data)
     } catch (error) {
       throw this.handleError(error, 'Failed to search recipes')
+    }
+  }
+
+  /**
+   * Return the total number of recipes in the graph.
+   */
+  async getRecipeCount(): Promise<number> {
+    try {
+      const transport = this.resolveTransport()
+      const data = await this.fetchWithTimeout<{ count: number }>(
+        `${this.getRecipeBasePath(transport)}/count`,
+        'GET',
+        undefined,
+        10000,
+        transport
+      )
+      return data.count ?? 0
+    } catch (error) {
+      throw this.handleError(error, 'Failed to fetch recipe count')
     }
   }
 

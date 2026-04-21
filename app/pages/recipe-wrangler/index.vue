@@ -514,7 +514,7 @@
         </div>
 
         <!-- Pagination -->
-        <div v-if="hasSearchAttempted && hasRecipes && totalPages > 1" class="mt-8 sm:mt-12 flex justify-center">
+        <div v-if="hasSearchAttempted && showPagination" class="mt-8 sm:mt-12 flex justify-center">
           <nav class="flex items-center gap-2" aria-label="Pagination">
             <!-- Previous Button -->
             <button
@@ -554,12 +554,19 @@
               >
                 {{ totalPages }}
               </button>
+              <!-- Fallback when count endpoint hasn't resolved yet -->
+              <span
+                v-if="totalPages === 0 && searchMode === 'params'"
+                class="px-4 py-2 rounded-lg border border-brandg-500 bg-brandg-500 text-white font-medium"
+              >
+                {{ currentPage }}
+              </span>
             </div>
 
             <!-- Next Button -->
             <button
               @click="goToPage(currentPage + 1)"
-              :disabled="currentPage === totalPages"
+              :disabled="isLastPage"
               class="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               :aria-label="t('recipeWrangler.nextPage')"
             >
@@ -601,6 +608,7 @@ import recipeApi from '~/services/recipeApi'
 import type {
   PipelineTraceWeightDetail,
   RecipeAutocompleteSuggestion,
+  RecipeParamSearchParams,
   RecipeProfileResult,
   RecipeSearchResult
 } from '~/services/recipeApi'
@@ -622,7 +630,7 @@ useSeoMeta({
 // ============================================================================
 // Composables & Stores
 // ============================================================================
-const { recipes, loading, error, searchRecipes, fetchRecipesByCategory, clearError } = useRecipes()
+const { recipes, loading, error, searchRecipes, searchRecipesByParams, fetchRecipeCount, fetchRecipesByCategory, clearError, hasMore, totalRecipeCount } = useRecipes()
 const recipeStore = useRecipeStore()
 const householdStore = useHouseholdStore()
 
@@ -639,6 +647,8 @@ const activeRecipeResultIndex = ref(-1)
 const showFilters = ref(false)
 const currentPage = ref(1)
 const itemsPerPage = 12
+const searchMode = ref<'nl' | 'params'>('nl')
+const lastParamSearch = ref<RecipeParamSearchParams | null>(null)
 const activeTab = ref<'search' | 'analyze'>('search')
 const hasSearchAttempted = ref(false)
 const hasUserTriggeredSearch = ref(false)
@@ -672,13 +682,29 @@ const recipesCount = computed(() => recipes.value?.length || 0)
 
 const hasRecipes = computed(() => recipesCount.value > 0)
 
-const totalPages = computed(() => Math.ceil(recipesCount.value / itemsPerPage))
+const totalPages = computed(() => {
+  if (searchMode.value === 'params') {
+    return totalRecipeCount.value > 0 ? Math.ceil(totalRecipeCount.value / itemsPerPage) : 0
+  }
+  return Math.ceil(recipesCount.value / itemsPerPage)
+})
 
 const paginatedRecipes = computed(() => {
   if (!recipes.value) return []
+  if (searchMode.value === 'params') return recipes.value
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
   return recipes.value.slice(start, end)
+})
+
+const showPagination = computed(() => {
+  if (!hasRecipes.value) return false
+  return totalPages.value > 1 || (searchMode.value === 'params' && (currentPage.value > 1 || hasMore.value))
+})
+
+const isLastPage = computed(() => {
+  if (totalPages.value > 0) return currentPage.value === totalPages.value
+  return !hasMore.value
 })
 
 const analysisTotals = computed(() => analysisResult.value?.profiling_totals || {})
@@ -974,6 +1000,8 @@ const performSearch = async (options: { openFirstResult?: boolean } = {}) => {
   try {
     clearError()
     resetPagination()
+    searchMode.value = 'nl'
+    lastParamSearch.value = null
     const excludeAllergens = recipeStore.excludedAllergens
 
     await searchRecipes({
@@ -1005,13 +1033,16 @@ const resetPagination = () => {
 }
 
 /**
- * Change page
+ * Change page — for param_search mode re-fetches from server with offset
  */
-const goToPage = (page: number) => {
+const goToPage = async (page: number) => {
   currentPage.value = page
   activeRecipeResultIndex.value = -1
-  // Scroll to top of results
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+
+  if (searchMode.value === 'params' && lastParamSearch.value) {
+    const offset = (page - 1) * itemsPerPage
+    await searchRecipesByParams({ ...lastParamSearch.value, limit: itemsPerPage, offset }, false)
+  }
 }
 
 /**
@@ -1023,6 +1054,8 @@ const browseCategory = async (category: { name: string; query: string }) => {
   try {
     clearError()
     resetPagination()
+    searchMode.value = 'nl'
+    lastParamSearch.value = null
     searchQuery.value = category.query
     const excludeAllergens = recipeStore.excludedAllergens
 
@@ -1039,11 +1072,19 @@ const browseCategory = async (category: { name: string; query: string }) => {
 /**
  * Handle filter changes
  */
-const handleFilterChange = () => {
-  // Re-run the last search with updated allergen filters
+const handleFilterChange = async () => {
   resetPagination()
   if (searchQuery.value) {
-    performSearch()
+    await performSearch()
+  } else if (lastParamSearch.value) {
+    const excludeAllergens = recipeStore.excludedAllergens
+    const updatedParams = {
+      ...lastParamSearch.value,
+      exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined,
+      offset: 0
+    }
+    lastParamSearch.value = updatedParams
+    await searchRecipesByParams(updatedParams, false)
   }
 }
 
@@ -1080,6 +1121,8 @@ const handleQuickFilter = async (filterType: string) => {
     }
 
     searchQuery.value = query
+    searchMode.value = 'nl'
+    lastParamSearch.value = null
     await searchRecipes({
       question: query,
       exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined
@@ -1141,20 +1184,24 @@ onMounted(async () => {
     }
   })()
 
-  // Load an initial random set of recipes on page open.
+  // Load an initial set of recipes on page open using param_search (supports server-side pagination).
   hasUserTriggeredSearch.value = false
   hasSearchAttempted.value = true
   try {
     clearError()
     resetPagination()
     const excludeAllergens = recipeStore.excludedAllergens
-    await searchRecipes(
-      {
-        question: '',
-        exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined
-      },
-      false
-    )
+    const initialParams = {
+      exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined,
+      limit: itemsPerPage,
+      offset: 0
+    }
+    searchMode.value = 'params'
+    lastParamSearch.value = initialParams
+    await Promise.all([
+      searchRecipesByParams(initialParams, false),
+      fetchRecipeCount()
+    ])
   } catch (err) {
     console.error('Failed to load initial random recipes:', err)
   }

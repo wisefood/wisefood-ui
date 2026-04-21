@@ -23,6 +23,8 @@ export function useRecipes() {
   const error = ref<string | null>(null)
   const lastSearchQuery = ref<string>('')
   const totalResults = ref(0)
+  const hasMore = ref(false)
+  const totalRecipeCount = ref(0)
 
   // ============================================================================
   // Computed Properties
@@ -52,7 +54,8 @@ export function useRecipes() {
       exclude_allergens: normalizeList(params.exclude_allergens),
       diet_tags: normalizeList(params.diet_tags),
       max_duration_minutes: params.max_duration_minutes,
-      limit: params.limit ?? 12
+      limit: params.limit ?? 12,
+      offset: params.offset ?? 0
     })
   }
 
@@ -137,9 +140,11 @@ export function useRecipes() {
     loading.value = true
 
     try {
+      const pageLimit = params.limit ?? 12
       const results = await recipeApi.searchRecipesByParams(params)
       recipes.value = results
       totalResults.value = results.length
+      hasMore.value = results.length === pageLimit
 
       if (import.meta.client) {
         const { useRecipeStore } = await import('~/stores/recipe')
@@ -152,6 +157,7 @@ export function useRecipes() {
       const apiError = err as ApiError
       error.value = apiError.message || 'Failed to search recipes with filters'
       recipes.value = []
+      hasMore.value = false
       throw err
     } finally {
       loading.value = false
@@ -311,6 +317,18 @@ export function useRecipes() {
     currentRecipe.value = null
   }
 
+  /**
+   * Fetch total recipe count from the graph
+   */
+  const fetchRecipeCount = async () => {
+    try {
+      totalRecipeCount.value = await recipeApi.getRecipeCount()
+    } catch {
+      // non-critical — pagination falls back to hasMore behaviour
+    }
+    return totalRecipeCount.value
+  }
+
   // ============================================================================
   // Return API
   // ============================================================================
@@ -324,10 +342,13 @@ export function useRecipes() {
     hasError,
     lastSearchQuery: computed(() => lastSearchQuery.value),
     totalResults: computed(() => totalResults.value),
+    hasMore: computed(() => hasMore.value),
+    totalRecipeCount: computed(() => totalRecipeCount.value),
 
     // Methods
     searchRecipes,
     searchRecipesByParams,
+    fetchRecipeCount,
     fetchRecipe,
     fetchRecipesByCategory,
     fetchRecipesByIngredient,

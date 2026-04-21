@@ -115,15 +115,7 @@
                   </div>
                 </div>
 
-                <div class="grid grid-cols-1 gap-2 sm:grid-cols-[12rem_auto] xl:flex xl:flex-none">
-                  <USelectMenu
-                    v-model="searchLimit"
-                    :items="searchLimitOptions"
-                    value-key="value"
-                    label-key="label"
-                    leading-icon="i-lucide-list-filter"
-                    class="w-full xl:w-44"
-                  />
+                <div class="flex flex-none gap-2">
                   <UButton
                     color="primary"
                     icon="i-lucide-search"
@@ -153,11 +145,12 @@
               :loading="recipesLoading"
               sticky="header"
               :on-select="handleRecipeRowSelect"
+              :ui="recipeTableUi"
               class="min-h-[28rem] min-w-[52rem]"
             >
               <template #title-cell="{ row }">
                 <div
-                  class="w-[30rem] max-w-[30rem] rounded-lg px-2 py-1.5 transition-colors"
+                  class="w-[30rem] max-w-[30rem] rounded-md px-1.5 py-0.5 transition-colors"
                   :class="isActiveRecipeRow(row.original)
                     ? 'bg-brand-50 dark:bg-brand-500/10'
                     : ''"
@@ -204,7 +197,7 @@
                   <UButton
                     :color="isActiveRecipeRow(row.original) ? 'primary' : 'neutral'"
                     variant="ghost"
-                    size="sm"
+                    size="xs"
                     trailing-icon="i-lucide-arrow-right"
                     :disabled="!resolveRecipeIdentifier(row.original)"
                     @click.stop="openRecipe(row.original)"
@@ -232,9 +225,60 @@
           </div>
 
           <template #footer>
-            <p class="text-sm text-gray-600 dark:text-gray-300">
-              {{ resultSummary }}
-            </p>
+            <div class="flex items-center justify-between gap-4">
+              <p class="text-sm text-gray-600 dark:text-gray-300">
+                {{ resultSummary }}
+              </p>
+
+              <!-- Pagination (param_search mode only) -->
+              <nav v-if="!isNlSearch && (currentPage > 1 || hasMore)" class="flex items-center gap-1">
+                <UButton
+                  color="neutral"
+                  variant="outline"
+                  size="xs"
+                  icon="i-lucide-chevron-left"
+                  :disabled="currentPage === 1 || recipesLoading"
+                  @click="goToPage(currentPage - 1)"
+                />
+
+                <template v-if="totalPages > 0">
+                  <UButton
+                    v-for="page in Math.min(totalPages, 5)"
+                    :key="page"
+                    :color="page === currentPage ? 'primary' : 'neutral'"
+                    :variant="page === currentPage ? 'solid' : 'outline'"
+                    size="xs"
+                    :disabled="recipesLoading"
+                    @click="goToPage(page)"
+                  >
+                    {{ page }}
+                  </UButton>
+                  <span v-if="totalPages > 5" class="px-1 text-xs text-gray-400">...</span>
+                  <UButton
+                    v-if="totalPages > 5 && currentPage < totalPages"
+                    color="neutral"
+                    variant="outline"
+                    size="xs"
+                    :disabled="recipesLoading"
+                    @click="goToPage(totalPages)"
+                  >
+                    {{ totalPages }}
+                  </UButton>
+                </template>
+                <span v-else class="px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-200">
+                  {{ currentPage }}
+                </span>
+
+                <UButton
+                  color="neutral"
+                  variant="outline"
+                  size="xs"
+                  icon="i-lucide-chevron-right"
+                  :disabled="!hasMore && (totalPages === 0 || currentPage === totalPages) || recipesLoading"
+                  @click="goToPage(currentPage + 1)"
+                />
+              </nav>
+            </div>
           </template>
         </UCard>
       </UPageBody>
@@ -774,13 +818,11 @@ const filters = reactive({
   q: ''
 })
 
-const searchLimitOptions = [
-  { label: '25 results', value: 25 },
-  { label: '50 results', value: 50 },
-  { label: '100 results', value: 100 }
-]
-
-const searchLimit = ref(searchLimitOptions[1].value)
+const itemsPerPage = 25
+const currentPage = ref(1)
+const totalCount = ref(0)
+const hasMore = ref(false)
+const isNlSearch = ref(false)
 
 const createModalOpen = ref(false)
 const createPending = ref(false)
@@ -817,6 +859,12 @@ const recipeColumns = [
   { id: 'actions', header: '', enableSorting: false }
 ]
 
+const recipeTableUi = {
+  th: 'px-3 py-2 text-xs',
+  td: 'px-3 py-2 align-middle',
+  tr: 'cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors'
+}
+
 const createWizardSteps = [
   {
     step: 1,
@@ -849,28 +897,33 @@ const breadcrumbItems = [
   }
 ]
 
-const hasActiveFilters = computed(() => {
-  return Boolean(filters.q.trim() || searchLimit.value !== searchLimitOptions[1].value)
+const hasActiveFilters = computed(() => Boolean(filters.q.trim()))
+
+const totalPages = computed(() => {
+  if (isNlSearch.value || totalCount.value === 0) return 0
+  return Math.ceil(totalCount.value / itemsPerPage)
 })
 
 const resultCountLabel = computed(() => {
+  if (totalCount.value > 0 && !isNlSearch.value) {
+    return `${totalCount.value.toLocaleString()} recipes`
+  }
   return recipes.value.length === 1 ? '1 recipe shown' : `${recipes.value.length.toLocaleString()} recipes shown`
 })
 
 const resultSummary = computed(() => {
-  if (recipesLoading.value) {
-    return 'Loading recipes...'
+  if (recipesLoading.value) return 'Loading recipes...'
+  if (!recipes.value.length) return 'No recipes are currently visible in the library view.'
+
+  if (isNlSearch.value) {
+    return `Showing ${recipes.value.length.toLocaleString()} results for "${filters.q.trim()}".`
   }
 
-  if (!recipes.value.length) {
-    return 'No recipes are currently visible in the library view.'
-  }
-
-  const modeLabel = filters.q.trim()
-    ? `for "${filters.q.trim()}"`
-    : 'from the current broad sample'
-
-  return `Showing ${recipes.value.length.toLocaleString()} recipes ${modeLabel}.`
+  const offset = (currentPage.value - 1) * itemsPerPage
+  const from = offset + 1
+  const to = offset + recipes.value.length
+  const total = totalCount.value > 0 ? ` of ${totalCount.value.toLocaleString()}` : ''
+  return `Showing ${from}–${to}${total} recipes.`
 })
 
 const createPreviewImageUrl = computed(() => normalizeRecipeImageUrl(createForm.imageUrl))
@@ -989,7 +1042,7 @@ function compactText(value: unknown) {
 
 function stripListMarker(value: string) {
   return value
-    .replace(/^(?:[-*•]\s+|\d+[\).:-]?\s+)/, '')
+    .replace(/^(?:[-*•]\s+|\d+[).:-]?\s+)/, '')
     .trim()
 }
 
@@ -1094,13 +1147,13 @@ function extractInstructionStepsFromRecipeText(rawRecipe: string): string[] {
   return String(rawRecipe || '')
     .split(/\r?\n/)
     .map(line => line.trim())
-    .filter(line => /^\d+[\).:-]?\s+/.test(line))
+    .filter(line => /^\d+[).:-]?\s+/.test(line))
     .map(stripListMarker)
     .filter(Boolean)
 }
 
 function extractServesFromRecipeText(rawRecipe: string) {
-  const match = String(rawRecipe || '').match(/\b(?:serves?|yield(?:s)?)\s*[:\-]?\s*(\d{1,2})\b/i)
+  const match = String(rawRecipe || '').match(/\b(?:serves?|yield(?:s)?)\s*[:-]?\s*(\d{1,2})\b/i)
   if (!match) {
     return null
   }
@@ -1318,19 +1371,31 @@ function handleClickOutsideSearch(event: MouseEvent) {
   }
 }
 
-async function loadRecipes() {
+async function loadRecipes(page = currentPage.value) {
   activeRecipeResultIndex.value = -1
   recipesLoading.value = true
   recipesError.value = null
 
+  const query = filters.q.trim()
+  const offset = (page - 1) * itemsPerPage
+
   try {
-    recipes.value = await recipeApi.searchManagedRecipes(filters.q, searchLimit.value)
+    const results = await recipeApi.searchManagedRecipes(query, itemsPerPage, query ? 0 : offset)
+    recipes.value = results
+    isNlSearch.value = Boolean(query)
+    hasMore.value = !query && results.length === itemsPerPage
   } catch (error) {
     recipes.value = []
+    hasMore.value = false
     recipesError.value = resolveConsoleRecipeErrorMessage(error, 'Failed to load recipes')
   } finally {
     recipesLoading.value = false
   }
+}
+
+async function goToPage(page: number) {
+  currentPage.value = page
+  await loadRecipes(page)
 }
 
 function refreshRecipes() {
@@ -1339,15 +1404,16 @@ function refreshRecipes() {
 }
 
 function applyFilters() {
+  currentPage.value = 1
   clearAutocomplete()
-  return loadRecipes()
+  return loadRecipes(1)
 }
 
 function resetFilters() {
   filters.q = ''
-  searchLimit.value = searchLimitOptions[1].value
+  currentPage.value = 1
   clearAutocomplete()
-  return loadRecipes()
+  return loadRecipes(1)
 }
 
 async function selectSuggestion(suggestion: RecipeAutocompleteSuggestion) {
@@ -1403,7 +1469,7 @@ function isActiveRecipeRow(recipe: RecipeSearchResult) {
   return Boolean(activeRecipe && resolveRecipeIdentifier(activeRecipe) === resolveRecipeIdentifier(recipe))
 }
 
-function handleRecipeRowSelect(row: { original: RecipeSearchResult }) {
+function handleRecipeRowSelect(_e: Event, row: { original: RecipeSearchResult }) {
   return openRecipe(row.original)
 }
 
@@ -1489,7 +1555,7 @@ async function handleCreateImageSelection(event: Event) {
 
 function buildCreateIngredients() {
   return createForm.ingredients
-    .map(ingredient => {
+    .map((ingredient) => {
       const measurement = ingredient.measurement.trim()
       const name = ingredient.name.trim()
       return [measurement, name].filter(Boolean).join(' ')
@@ -1636,7 +1702,10 @@ onMounted(() => {
   if (import.meta.client) {
     document.addEventListener('click', handleClickOutsideSearch)
   }
-  void loadRecipes()
+  void Promise.all([
+    loadRecipes(),
+    recipeApi.getRecipeCount().then(n => { totalCount.value = n }).catch(() => {})
+  ])
 })
 
 onBeforeUnmount(() => {
