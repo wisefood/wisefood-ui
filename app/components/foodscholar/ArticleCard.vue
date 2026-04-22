@@ -10,10 +10,14 @@
         {{ props.article.ai_category }}
       </span>
     </div>
-    <div v-if="primaryTopic" class="mb-2">
-      <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+    <div v-if="articleTopics.length" class="mb-2 flex flex-wrap gap-1">
+      <span
+        v-for="topic in articleTopics"
+        :key="topic"
+        class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800"
+      >
         <UIcon name="i-lucide-compass" class="w-3 h-3" />
-        {{ primaryTopic }}
+        {{ topic }}
       </span>
     </div>
 
@@ -113,8 +117,7 @@ const displayTags = computed(() => {
   return uniqueTags.slice(0, 4)
 })
 
-const primaryTopic = computed(() => {
-  const topics = props.article.topics || []
-  return topics.find(topic => typeof topic === 'string' && topic.trim()) || ''
-})
+const articleTopics = computed(() =>
+  (props.article.topics || []).filter(t => typeof t === 'string' && t.trim())
+)
 </script>

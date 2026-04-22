@@ -182,8 +182,21 @@
         </div>
       </div>
 
-      <!-- Active session: composer pinned to top of content, answer below -->
-      <div v-else class="flex-1 flex flex-col max-w-2xl mx-auto w-full px-4 py-6">
+      <!-- Active session: 3-column layout -->
+      <div v-else class="flex-1 w-full px-4 py-6">
+        <div ref="qaSessionGridRef" class="relative max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-[minmax(0,2.5fr)_18rem] gap-6 items-start">
+          <!-- SVG overlay for citation hover lines -->
+          <svg ref="citationSvgRef" class="pointer-events-none absolute inset-0 w-full h-full z-20 hidden xl:block" aria-hidden="true">
+            <line
+              v-if="citationLine"
+              :x1="citationLine.x1" :y1="citationLine.y1"
+              :x2="citationLine.x2" :y2="citationLine.y2"
+              class="citation-hover-line"
+            />
+          </svg>
+
+        <!-- Center: composer + answer -->
+        <div class="flex flex-col min-w-0">
         <!-- Pinned composer -->
         <div class="session-composer-wrap mb-6">
           <div class="relative">
@@ -308,7 +321,7 @@
                   <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPreferredAnswer ? t('foodScholarHome.qa.answer') : t('foodScholarHome.qa.answerA') }}</h4>
                   <span v-if="!selectedPreferredAnswer" class="text-xs text-gray-500 dark:text-gray-400">{{ answerALabel }}</span>
                 </div>
-                <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" @click="handleMarkdownClick" style="--answer-reveal-delay: 40ms" v-html="renderMarkdown(primaryAnswer.answer)" />
+                <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" @click="handleMarkdownClick" @mouseover="handleAnswerMouseOver" @mouseout="handleAnswerMouseOut" style="--answer-reveal-delay: 40ms" v-html="renderMarkdown(primaryAnswer.answer)" />
               </div>
               <div
                 v-if="(!selectedPreferredAnswer || selectedPreferredAnswer === 'b') && secondaryAnswer"
@@ -320,7 +333,7 @@
                   <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPreferredAnswer ? t('foodScholarHome.qa.answer') : t('foodScholarHome.qa.answerB') }}</h4>
                   <span v-if="!selectedPreferredAnswer" class="text-xs text-gray-500 dark:text-gray-400">{{ answerBLabel }}</span>
                 </div>
-                <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" @click="handleMarkdownClick" style="--answer-reveal-delay: 120ms" v-html="renderMarkdown(secondaryAnswer.answer)" />
+                <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" @click="handleMarkdownClick" @mouseover="handleAnswerMouseOver" @mouseout="handleAnswerMouseOut" style="--answer-reveal-delay: 120ms" v-html="renderMarkdown(secondaryAnswer.answer)" />
               </div>
             </div>
           </div>
@@ -330,7 +343,7 @@
               <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.answer') }}</h4>
               <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.confidence') }}: {{ primaryAnswer.confidence || t('foodScholarHome.qa.notAvailable') }}</span>
             </div>
-            <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" style="--answer-reveal-delay: 40ms" @click="handleMarkdownClick" v-html="renderMarkdown(primaryAnswer.answer)" />
+            <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" style="--answer-reveal-delay: 40ms" @click="handleMarkdownClick" @mouseover="handleAnswerMouseOver" @mouseout="handleAnswerMouseOut" v-html="renderMarkdown(primaryAnswer.answer)" />
 
             <div v-if="singleAnswerFeedbackEnabled" class="mt-4">
               <div class="flex items-center gap-2">
@@ -361,6 +374,7 @@
             </div>
           </div>
 
+          <!-- Follow-up suggestions -->
           <div v-if="qaResult.follow_up_suggestions?.length" class="chat-flow-bubble chat-flow-bubble-muted">
             <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">{{ t('foodScholarHome.qa.followUpSuggestions') }}</h4>
             <div class="flex flex-wrap gap-2">
@@ -372,6 +386,42 @@
             </div>
           </div>
         </div>
+        <!-- end answer block -->
+        </div>
+        <!-- end center column -->
+
+        <!-- Right panel: cited sources -->
+        <!-- Right panel: cited sources (titles only) -->
+        <aside class="hidden xl:flex flex-col gap-2 pt-1 sticky top-6">
+          <template v-if="qaResult && primaryAnswer && primaryAnswer.citations?.length">
+            <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mb-1">Sources cited</p>
+            <NuxtLink
+              v-for="(citation, idx) in primaryAnswer.citations"
+              :key="citation.article_urn"
+              :to="`/foodscholar/${citation.article_urn}`"
+              :data-citation-urn="citation.article_urn"
+              class="citation-source-card flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600 dark:hover:text-brand-400 transition-colors group"
+            >
+              <span class="text-[0.6rem] font-bold text-brand-400 dark:text-brand-500 shrink-0 mt-0.5">[{{ idx + 1 }}]</span>
+              <span class="text-xs text-gray-800 dark:text-gray-200 leading-snug line-clamp-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ citation.article_title }}</span>
+            </NuxtLink>
+
+            <template v-if="uncitedRetrievedArticles.length">
+              <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mt-3 mb-1">Also retrieved</p>
+              <NuxtLink
+                v-for="article in uncitedRetrievedArticles"
+                :key="article.urn"
+                :to="`/foodscholar/${article.urn}`"
+                class="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-100 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/50 opacity-60 hover:opacity-100 hover:border-gray-300 dark:hover:border-zinc-700 transition-all group"
+              >
+                <UIcon name="i-lucide-file-text" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
+                <span class="text-xs text-gray-700 dark:text-gray-300 leading-snug line-clamp-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ article.title }}</span>
+              </NuxtLink>
+            </template>
+          </template>
+        </aside>
+
+        </div><!-- end 3-col grid -->
       </div>
     </template>
 
@@ -1387,6 +1437,67 @@ const loadArticlesForTopic = async (topic: string) => {
 
 const primaryAnswer = computed<QaAnswer | null>(() => qaResult.value?.primary_answer || null)
 const secondaryAnswer = computed<QaAnswer | null>(() => qaResult.value?.secondary_answer || null)
+
+const retrievedArticleMap = computed(() => {
+  const map: Record<string, { urn: string; title: string; authors?: string[]; publication_year?: string; similarity_score?: number }> = {}
+  for (const a of qaResult.value?.retrieved_articles ?? []) {
+    map[a.urn] = a
+  }
+  return map
+})
+
+const uncitedRetrievedArticles = computed(() => {
+  const citedUrns = new Set((primaryAnswer.value?.citations ?? []).map(c => c.article_urn))
+  return (qaResult.value?.retrieved_articles ?? []).filter(a => !citedUrns.has(a.urn))
+})
+
+// Citation hover line
+const qaSessionGridRef = ref<HTMLElement | null>(null)
+const citationSvgRef = ref<SVGSVGElement | null>(null)
+const citationLine = ref<{ x1: number; y1: number; x2: number; y2: number } | null>(null)
+
+function getCitationUrnFromHref(href: string): string | null {
+  const match = href.match(/urn:article:[^/?#]+/)
+  return match ? match[0] : null
+}
+
+function drawCitationLine(anchorEl: HTMLElement, urn: string) {
+  const grid = qaSessionGridRef.value
+  if (!grid) return
+  const card = grid.querySelector<HTMLElement>(`.citation-source-card[data-citation-urn="${urn}"]`)
+  if (!card) return
+
+  const gridRect = grid.getBoundingClientRect()
+  const anchorRect = anchorEl.getBoundingClientRect()
+  const cardRect = card.getBoundingClientRect()
+
+  citationLine.value = {
+    x1: anchorRect.right - gridRect.left,
+    y1: anchorRect.top + anchorRect.height / 2 - gridRect.top,
+    x2: cardRect.left - gridRect.left,
+    y2: cardRect.top + cardRect.height / 2 - gridRect.top,
+  }
+  card.classList.add('citation-source-card--active')
+}
+
+function clearCitationLine() {
+  citationLine.value = null
+  const grid = qaSessionGridRef.value
+  grid?.querySelectorAll('.citation-source-card--active').forEach(el => el.classList.remove('citation-source-card--active'))
+}
+
+function handleAnswerMouseOver(e: MouseEvent) {
+  const a = (e.target as HTMLElement).closest<HTMLElement>('a[href*="urn:article:"]')
+  if (!a) return
+  const urn = getCitationUrnFromHref(a.getAttribute('href') ?? '')
+  if (urn) drawCitationLine(a, urn)
+}
+
+function handleAnswerMouseOut(e: MouseEvent) {
+  const a = (e.target as HTMLElement).closest<HTMLElement>('a[href*="urn:article:"]')
+  if (!a) return
+  clearCitationLine()
+}
 const hasDualAnswerMode = computed(() => Boolean(primaryAnswer.value && secondaryAnswer.value && qaResult.value?.dual_answer_feedback))
 const isAdvancedMode = computed(() => qaMode.value === 'advanced')
 const ragUsedForResponse = computed(() => primaryAnswer.value?.rag_used ?? ragEnabled.value)
@@ -2067,6 +2178,29 @@ onUnmounted(() => {
 
 :deep(.dark .qa-answer-markdown a[href*="/foodscholar/urn:"]:hover, .dark .qa-answer-markdown a[href*="/articles/urn:"]:hover) {
   color: rgb(212 212 216);
+}
+
+.citation-hover-line {
+  stroke: var(--color-brand-400, #60a5fa);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+  opacity: 0.7;
+  animation: citation-dash 0.3s ease-out;
+}
+
+.citation-source-card--active {
+  border-color: var(--color-brand-300, #93c5fd) !important;
+  background-color: rgb(239 246 255 / 0.9) !important;
+}
+
+.dark .citation-source-card--active {
+  border-color: var(--color-brand-700, #1d4ed8) !important;
+  background-color: rgb(30 58 138 / 0.2) !important;
+}
+
+@keyframes citation-dash {
+  from { stroke-dashoffset: 40; opacity: 0; }
+  to { stroke-dashoffset: 0; opacity: 0.7; }
 }
 
 @keyframes answer-reveal-ltr {

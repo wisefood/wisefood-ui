@@ -57,10 +57,16 @@
                 <UIcon name="i-lucide-users" class="w-4 h-4" />
                 <span class="text-xs sm:text-sm font-medium">{{ recipe.serves }} {{ t('recipeWrangler.recipe.servings', recipe.serves) }}</span>
               </div>
-              <div v-if="recipe.source" class="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
+              <NuxtLink
+                v-if="recipe.source"
+                :to="recipe.source_id ? `/recipe-wrangler/collections/${encodeURIComponent(recipe.source_id)}` : undefined"
+                :class="recipe.source_id ? 'hover:bg-white/30 transition-colors cursor-pointer' : ''"
+                class="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full"
+              >
                 <UIcon name="i-lucide-database" class="w-4 h-4" />
                 <span class="text-xs sm:text-sm font-medium">Source: {{ recipe.source }}</span>
-              </div>
+                <UIcon v-if="recipe.source_id" name="i-lucide-arrow-up-right" class="w-3 h-3 opacity-75" />
+              </NuxtLink>
             </div>
           </div>
         </div>
@@ -78,10 +84,16 @@
               <UIcon name="i-lucide-users" class="w-4 h-4 text-brandg-600 dark:text-brandg-400" />
               <span class="text-xs sm:text-sm font-medium">{{ recipe.serves }} {{ t('recipeWrangler.recipe.servings', recipe.serves) }}</span>
             </div>
-            <div v-if="recipe.source" class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full">
+            <NuxtLink
+              v-if="recipe.source"
+              :to="recipe.source_id ? `/recipe-wrangler/collections/${encodeURIComponent(recipe.source_id)}` : undefined"
+              :class="recipe.source_id ? 'hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer' : ''"
+              class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full"
+            >
               <UIcon name="i-lucide-database" class="w-4 h-4 text-brandg-600 dark:text-brandg-400" />
               <span class="text-xs sm:text-sm font-medium">Source: {{ recipe.source }}</span>
-            </div>
+              <UIcon v-if="recipe.source_id" name="i-lucide-arrow-up-right" class="w-3 h-3 text-brandg-500 dark:text-brandg-400" />
+            </NuxtLink>
             <div class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full">
               <UIcon name="i-lucide-award" class="w-4 h-4 text-brandg-600 dark:text-brandg-400" />
               <span class="text-xs sm:text-sm font-medium">Nutri-Score {{ nutriScoreGrade || 'N/A' }}</span>

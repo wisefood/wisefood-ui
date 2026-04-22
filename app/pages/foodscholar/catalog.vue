@@ -1,15 +1,12 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
     <!-- Header -->
-    <FoodscholarMicroHeader
-      :show-back="true"
+    <AppPageHeader
       back-to="/foodscholar"
       :back-label="t('foodScholarCatalog.header.backToFoodScholar')"
-      back-icon="i-lucide-arrow-left"
       brand-title="FoodScholar"
-      :brand-lead="t('foodScholarCatalog.header.brandLead')"
-      :section-title="t('foodScholarCatalog.header.sectionTitle')"
-      :section-subtitle="t('foodScholarCatalog.header.sectionSubtitle')"
+      brand-class="text-brand-500 dark:text-brand-400"
+      :subtitle="t('foodScholarCatalog.header.sectionSubtitle')"
     />
 
     <!-- Main Content -->
