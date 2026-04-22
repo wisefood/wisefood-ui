@@ -180,7 +180,7 @@
           <!-- Nutrition Information -->
           <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 sm:p-10 border border-zinc-200 dark:border-zinc-700 shadow-lg">
             <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
-              <h2 class="text-3xl font-claude text-zinc-900 dark:text-white flex items-center gap-3">
+              <h2 class="text-xl font-claude text-zinc-900 dark:text-white flex items-center gap-3">
                 <UIcon name="i-lucide-activity" class="w-7 h-7 text-brandg-600 dark:text-brandg-400" />
                 {{ t('recipeWrangler.detail.nutritionalInfo') }}
               </h2>
@@ -431,7 +431,7 @@
 
           <!-- Instructions -->
           <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 sm:p-10 border border-zinc-200 dark:border-zinc-700 shadow-lg">
-            <h2 class="text-3xl font-claude text-zinc-900 dark:text-white mb-8 flex items-center gap-3">
+            <h2 class="text-xl font-claude text-zinc-900 dark:text-white mb-8 flex items-center gap-3">
               <UIcon name="i-lucide-chef-hat" class="w-7 h-7 text-brandg-600 dark:text-brandg-400" />
               {{ t('recipeWrangler.detail.instructions') }}
             </h2>
@@ -477,7 +477,7 @@
         <div class="lg:col-span-2 space-y-8">
           <!-- Ingredients -->
           <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 border border-zinc-200 dark:border-zinc-700 shadow-lg sticky top-24 z-0">
-            <h2 class="text-3xl font-claude text-zinc-900 dark:text-white mb-8 flex items-center gap-3">
+            <h2 class="text-xl font-claude text-zinc-900 dark:text-white mb-8 flex items-center gap-3">
               <UIcon name="i-lucide-shopping-basket" class="w-7 h-7 text-brandg-600 dark:text-brandg-400" />
               {{ t('recipeWrangler.detail.ingredients') }}
             </h2>

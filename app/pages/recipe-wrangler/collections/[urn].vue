@@ -3,7 +3,7 @@
     <RecipesRecipeWranglerHeader back-to="/recipe-wrangler" back-label="RecipeWrangler" />
 
     <!-- Loading State -->
-    <div v-if="loading" class="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div v-if="loading" class="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div class="animate-pulse space-y-6">
         <div class="h-8 bg-zinc-200 dark:bg-zinc-700 rounded w-3/4" />
         <div class="aspect-[16/5] bg-zinc-200 dark:bg-zinc-700 rounded-2xl" />
@@ -16,7 +16,7 @@
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="max-w-5xl mx-auto px-4 sm:px-6 py-12 text-center">
+    <div v-else-if="error" class="max-w-7xl mx-auto px-4 sm:px-6 py-12 text-center">
       <UIcon name="i-lucide-alert-circle" class="w-16 h-16 text-red-500 mx-auto mb-4" />
       <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Failed to load collection</h2>
       <p class="text-zinc-600 dark:text-zinc-400 mb-6">{{ error }}</p>
@@ -24,7 +24,7 @@
     </div>
 
     <!-- Content -->
-    <main v-else-if="collection" class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+    <main v-else-if="collection" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
 
       <!-- Hero -->
       <div class="mb-8">
@@ -131,37 +131,9 @@
               leave-to-class="opacity-0 max-h-0"
             >
               <div v-if="descriptionExpanded" class="px-5 pb-5 border-t border-zinc-100 dark:border-zinc-800">
-                <div class="prose prose-sm dark:prose-invert max-w-none pt-4 text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed">{{ collection.description }}</div>
+                <div class="collection-markdown prose prose-sm dark:prose-invert max-w-none pt-4 text-zinc-700 dark:text-zinc-300 leading-relaxed" v-html="descriptionHtml" />
               </div>
             </Transition>
-          </div>
-
-          <!-- Curation notes -->
-          <div v-if="collection.curation_notes" class="bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-200 dark:border-amber-800 p-5">
-            <div class="flex items-start gap-3">
-              <UIcon name="i-lucide-clipboard-check" class="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
-              <div>
-                <h3 class="font-semibold text-amber-900 dark:text-amber-200 mb-1">Curation Notes</h3>
-                <p class="text-sm text-amber-800 dark:text-amber-300 leading-relaxed">{{ collection.curation_notes }}</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Dietary patterns -->
-          <div v-if="collection.dietary_patterns.length" class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
-            <h3 class="flex items-center gap-2 font-semibold text-zinc-900 dark:text-white mb-3">
-              <UIcon name="i-lucide-salad" class="w-4 h-4 text-brandg-500" />
-              Dietary Patterns
-            </h3>
-            <div class="flex flex-wrap gap-2">
-              <span
-                v-for="diet in collection.dietary_patterns"
-                :key="diet"
-                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-brandg-100/70 dark:bg-brandg-900/40 text-brandg-800 dark:text-brandg-200 border border-brandg-200 dark:border-brandg-700"
-              >
-                {{ formatTag(diet) }}
-              </span>
-            </div>
           </div>
 
           <!-- Cuisines & Meal types -->
@@ -215,22 +187,6 @@
             </div>
           </div>
 
-          <!-- Tags -->
-          <div v-if="collection.tags.length" class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
-            <h3 class="flex items-center gap-2 font-semibold text-zinc-900 dark:text-white mb-3">
-              <UIcon name="i-lucide-tag" class="w-4 h-4 text-brandg-500" />
-              Tags
-            </h3>
-            <div class="flex flex-wrap gap-2">
-              <span
-                v-for="tag in collection.tags"
-                :key="tag"
-                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700"
-              >
-                #{{ tag }}
-              </span>
-            </div>
-          </div>
         </div>
 
         <!-- Sidebar -->
@@ -272,38 +228,50 @@
             </div>
           </div>
 
-          <!-- Metadata card -->
-          <div class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5">
-            <h3 class="font-semibold text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
-              <UIcon name="i-lucide-info" class="w-4 h-4 text-brandg-500" />
-              Metadata
-            </h3>
-            <dl class="space-y-3 text-sm">
-              <div v-if="collection.urn">
-                <dt class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wide mb-0.5">URN</dt>
-                <dd class="text-zinc-700 dark:text-zinc-300 font-mono text-xs break-all">{{ collection.urn }}</dd>
+          <!-- Curation notes -->
+          <div v-if="collection.curation_notes" class="bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-200 dark:border-amber-800 p-5">
+            <div class="flex items-start gap-3">
+              <UIcon name="i-lucide-clipboard-check" class="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+              <div>
+                <h3 class="font-semibold text-amber-900 dark:text-amber-200 mb-1">Curation Notes</h3>
+                <p class="text-sm text-amber-800 dark:text-amber-300 leading-relaxed">{{ collection.curation_notes }}</p>
               </div>
-              <div v-if="collection.creator">
-                <dt class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wide mb-0.5">Creator</dt>
-                <dd class="text-zinc-700 dark:text-zinc-300">{{ collection.creator }}</dd>
+            </div>
+          </div>
+
+          <!-- Dietary patterns and tags -->
+          <div v-if="collection.dietary_patterns.length || collection.tags.length" class="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm p-5 space-y-5">
+            <div v-if="collection.dietary_patterns.length">
+              <h3 class="flex items-center gap-2 font-semibold text-zinc-900 dark:text-white mb-3">
+                <UIcon name="i-lucide-salad" class="w-4 h-4 text-brandg-500" />
+                Dietary Patterns
+              </h3>
+              <div class="flex flex-wrap gap-2">
+                <span
+                  v-for="diet in collection.dietary_patterns"
+                  :key="diet"
+                  class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-brandg-100/70 dark:bg-brandg-900/40 text-brandg-800 dark:text-brandg-200 border border-brandg-200 dark:border-brandg-700"
+                >
+                  {{ formatTag(diet) }}
+                </span>
               </div>
-              <div v-if="collection.license">
-                <dt class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wide mb-0.5">License</dt>
-                <dd class="text-zinc-700 dark:text-zinc-300">{{ collection.license }}</dd>
+            </div>
+
+            <div v-if="collection.tags.length">
+              <h3 class="flex items-center gap-2 font-semibold text-zinc-900 dark:text-white mb-3">
+                <UIcon name="i-lucide-tag" class="w-4 h-4 text-brandg-500" />
+                Tags
+              </h3>
+              <div class="flex flex-wrap gap-2">
+                <span
+                  v-for="tag in collection.tags"
+                  :key="tag"
+                  class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700"
+                >
+                  #{{ tag }}
+                </span>
               </div>
-              <div v-if="collection.version">
-                <dt class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wide mb-0.5">Version</dt>
-                <dd class="text-zinc-700 dark:text-zinc-300">{{ collection.version }}</dd>
-              </div>
-              <div v-if="collection.created_at">
-                <dt class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wide mb-0.5">Created</dt>
-                <dd class="text-zinc-700 dark:text-zinc-300">{{ formatDate(collection.created_at) }}</dd>
-              </div>
-              <div v-if="collection.updated_at">
-                <dt class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wide mb-0.5">Last updated</dt>
-                <dd class="text-zinc-700 dark:text-zinc-300">{{ formatDate(collection.updated_at) }}</dd>
-              </div>
-            </dl>
+            </div>
           </div>
 
           <!-- Search recipes CTA -->
@@ -315,14 +283,20 @@
             <p class="text-xs text-brandg-700 dark:text-brandg-300 mb-3 leading-relaxed">
               Explore recipes from this collection in RecipeWrangler.
             </p>
-            <UButton
-              to="/recipe-wrangler"
-              color="primary"
-              size="sm"
-              class="w-full justify-center"
-            >
-              Open RecipeWrangler
-            </UButton>
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <UButton
+                to="/recipe-wrangler"
+                color="primary"
+                size="sm"
+                class="justify-center sm:flex-1"
+              >
+                Open RecipeWrangler
+              </UButton>
+              <div v-if="collection.created_at || collection.updated_at" class="shrink-0 space-y-0.5 text-[11px] leading-snug text-brandg-700 dark:text-brandg-300 sm:text-right">
+                <p v-if="collection.created_at">Created {{ formatDate(collection.created_at) }}</p>
+                <p v-if="collection.updated_at">Updated {{ formatDate(collection.updated_at) }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -331,6 +305,8 @@
 </template>
 
 <script setup lang="ts">
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
 import rcollectionsApi from '~/services/rcollectionsApi'
 import type { RecipeCollection, RCollectionStatus, RCollectionReviewStatus, RCollectionSourceType } from '~/services/rcollectionsApi'
 
@@ -342,6 +318,12 @@ const loading = ref(true)
 const error = ref<string | null>(null)
 const imageError = ref(false)
 const descriptionExpanded = ref(true)
+
+const descriptionHtml = computed(() => {
+  if (!collection.value?.description) return ''
+  const raw = marked(collection.value.description, { breaks: true, gfm: true }) as string
+  return DOMPurify.sanitize(raw)
+})
 
 useHead(() => ({
   title: collection.value ? `${collection.value.title} - RecipeWrangler` : 'Recipe Collection - RecipeWrangler'
@@ -419,3 +401,26 @@ function reviewBadgeClass(status: RCollectionReviewStatus): string {
   return map[status] ?? 'bg-zinc-400/80 text-white'
 }
 </script>
+
+<style scoped>
+.collection-markdown :deep(ul) {
+  list-style: disc;
+  margin: 0.75rem 0 0.75rem 1.25rem;
+  padding-left: 1rem;
+}
+
+.collection-markdown :deep(ol) {
+  list-style: decimal;
+  margin: 0.75rem 0 0.75rem 1.25rem;
+  padding-left: 1rem;
+}
+
+.collection-markdown :deep(li) {
+  margin: 0.25rem 0;
+  padding-left: 0.125rem;
+}
+
+.collection-markdown :deep(li > p) {
+  margin: 0.25rem 0;
+}
+</style>

@@ -182,9 +182,9 @@
         </div>
       </div>
 
-      <!-- Active session: 3-column layout -->
+      <!-- Active session: centered answer + sidebar -->
       <div v-else class="flex-1 w-full px-4 py-6">
-        <div ref="qaSessionGridRef" class="relative max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-[minmax(0,2.5fr)_18rem] gap-6 items-start">
+        <div ref="qaSessionGridRef" class="relative max-w-7xl mx-auto flex justify-center items-start gap-6">
           <!-- SVG overlay for citation hover lines -->
           <svg ref="citationSvgRef" class="pointer-events-none absolute inset-0 w-full h-full z-20 hidden xl:block" aria-hidden="true">
             <line
@@ -195,8 +195,8 @@
             />
           </svg>
 
-        <!-- Center: composer + answer -->
-        <div class="flex flex-col min-w-0">
+        <!-- Center: composer + answer — same width as idle state -->
+        <div class="flex flex-col min-w-0 w-full max-w-2xl">
         <!-- Pinned composer -->
         <div class="session-composer-wrap mb-6">
           <div class="relative">
@@ -390,9 +390,8 @@
         </div>
         <!-- end center column -->
 
-        <!-- Right panel: cited sources -->
         <!-- Right panel: cited sources (titles only) -->
-        <aside class="hidden xl:flex flex-col gap-2 pt-1 sticky top-6">
+        <aside class="hidden xl:flex flex-col gap-2 pt-1 sticky top-6 w-[18rem] shrink-0">
           <template v-if="qaResult && primaryAnswer && primaryAnswer.citations?.length">
             <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mb-1">Sources cited</p>
             <NuxtLink
@@ -535,21 +534,23 @@
                       </NuxtLink>
                     </div>
 
-                    <!-- Textbook suggestions (non-navigable) -->
+                    <!-- Textbook suggestions -->
                     <div
                       v-if="libraryAutocompleteSuggestions.textbooks.length"
                       :class="(libraryAutocompleteSuggestions.articles.length || libraryAutocompleteSuggestions.guides.length) ? 'border-t border-gray-100 dark:border-zinc-800' : ''"
                     >
-                      <div class="px-4 pt-3 pb-1.5">
+                      <div class="px-4 pt-3 pb-1.5 flex items-center justify-between">
                         <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Textbooks</span>
                       </div>
-                      <div
+                      <NuxtLink
                         v-for="(suggestion, i) in libraryAutocompleteSuggestions.textbooks"
                         :key="suggestion.urn"
+                        :to="`/foodscholar/textbooks/${suggestion.urn}`"
                         :class="[
-                          'flex items-start gap-3 px-4 py-2.5 opacity-75 cursor-default',
-                          libraryActiveIndex === libraryAutocompleteSuggestions.articles.length + libraryAutocompleteSuggestions.guides.length + i ? 'bg-amber-50 dark:bg-amber-900/20' : ''
+                          'flex items-start gap-3 px-4 py-2.5 transition-colors',
+                          libraryActiveIndex === libraryAutocompleteSuggestions.articles.length + libraryAutocompleteSuggestions.guides.length + i ? 'bg-amber-50 dark:bg-amber-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
                         ]"
+                        @click="closeLibraryDropdown"
                         @mouseenter="libraryActiveIndex = libraryAutocompleteSuggestions.articles.length + libraryAutocompleteSuggestions.guides.length + i"
                       >
                         <UIcon name="i-lucide-book-open" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
@@ -559,8 +560,7 @@
                             {{ [suggestion.authors?.join(', '), suggestion.publication_year].filter(Boolean).join(' · ') || 'Textbook' }}
                           </p>
                         </div>
-                        <span class="ml-auto shrink-0 text-[0.58rem] uppercase tracking-wide text-amber-500/70 font-medium self-center">soon</span>
-                      </div>
+                      </NuxtLink>
                     </div>
 
                   </template>
@@ -626,18 +626,25 @@
                         </NuxtLink>
                       </div>
 
-                      <!-- Textbooks (non-clickable, coming soon) -->
+                      <!-- Textbooks -->
                       <div
                         v-if="librarySearchResults.textbooks.length"
                         :class="(librarySearchResults.articles.length || librarySearchResults.guides.length) ? 'border-t border-gray-100 dark:border-zinc-800' : ''"
                       >
-                        <div class="px-4 pt-3 pb-1.5">
+                        <div class="px-4 pt-3 pb-1.5 flex items-center justify-between">
                           <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Textbooks</span>
+                          <NuxtLink :to="`/foodscholar/textbooks?q=${encodeURIComponent(librarySearchResults.query)}`" class="text-[0.6rem] text-amber-600 hover:text-amber-700 font-medium" @click="closeLibraryDropdown">See all</NuxtLink>
                         </div>
-                        <div
-                          v-for="textbook in librarySearchResults.textbooks"
+                        <NuxtLink
+                          v-for="(textbook, i) in librarySearchResults.textbooks"
                           :key="textbook.urn"
-                          class="flex items-start gap-3 px-4 py-2.5 opacity-70 cursor-default"
+                          :to="`/foodscholar/textbooks/${textbook.urn}`"
+                          :class="[
+                            'flex items-start gap-3 px-4 py-2.5 transition-colors',
+                            libraryActiveIndex === librarySearchResults.articles.length + librarySearchResults.guides.length + i ? 'bg-amber-50 dark:bg-amber-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
+                          ]"
+                          @click="closeLibraryDropdown"
+                          @mouseenter="libraryActiveIndex = librarySearchResults.articles.length + librarySearchResults.guides.length + i"
                         >
                           <UIcon name="i-lucide-book-open" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                           <div class="min-w-0">
@@ -646,8 +653,7 @@
                               {{ [textbook.authors?.join(', '), textbook.publication_year].filter(Boolean).join(' · ') || 'Textbook' }}
                             </p>
                           </div>
-                          <span class="ml-auto shrink-0 text-[0.58rem] uppercase tracking-wide text-amber-500/70 font-medium self-center">soon</span>
-                        </div>
+                        </NuxtLink>
                       </div>
                     </template>
                   </template>
@@ -660,41 +666,57 @@
           <div class="flex lg:flex-col gap-3 flex-wrap">
             <NuxtLink
               to="/foodscholar/catalog"
-              class="group inline-flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-brand-300 dark:hover:border-brand-700 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
+              class="group inline-flex min-w-[14rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-brand-300 hover:bg-brand-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-brand-700 dark:hover:bg-brand-900/20"
             >
               <div class="w-8 h-8 rounded-lg bg-brand-50 dark:bg-brand-900/40 flex items-center justify-center shrink-0">
                 <UIcon name="i-lucide-file-text" class="w-4 h-4 text-brand-600 dark:text-brand-400" />
               </div>
               <div>
-                <p class="text-sm font-semibold text-gray-900 dark:text-white">Articles</p>
-                <p class="text-xs text-gray-400 dark:text-zinc-500">Research &amp; reviews</p>
+                <p class="text-base font-semibold text-gray-900 dark:text-white">Articles</p>
+                <p class="font-claude text-sm text-gray-400 dark:text-zinc-500">Browse by topic</p>
               </div>
               <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600 ml-2 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
             </NuxtLink>
 
             <NuxtLink
               to="/foodscholar/guides"
-              class="group inline-flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+              class="group inline-flex min-w-[18rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-emerald-300 hover:bg-emerald-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20"
             >
-              <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-                <UIcon name="i-lucide-map" class="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+              <div class="library-resource-map shrink-0" aria-hidden="true">
+                <div
+                  v-if="libraryMapLoading"
+                  class="h-full w-full animate-pulse rounded-lg bg-emerald-50 dark:bg-emerald-900/30"
+                />
+                <FoodscholarGuidesEuropeGuidesMap
+                  v-else-if="libraryEuRegions.length"
+                  class="library-resource-map-preview"
+                  :regions="libraryEuRegions"
+                  :hide-controls="true"
+                />
+                <div v-else class="flex h-full w-full items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-900/30">
+                  <UIcon name="i-lucide-map" class="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+                </div>
               </div>
-              <div>
-                <p class="text-sm font-semibold text-gray-900 dark:text-white">Dietary Guides</p>
-                <p class="text-xs text-gray-400 dark:text-zinc-500">National &amp; regional guidance</p>
+              <div class="min-w-0">
+                <p class="text-base font-semibold text-gray-900 dark:text-white">Dietary Guides</p>
+                <p class="font-claude text-sm text-gray-400 dark:text-zinc-500">Official dietary rules.</p>
               </div>
               <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600 ml-2 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
             </NuxtLink>
 
-            <div class="group inline-flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-gray-200 dark:border-zinc-700 bg-white/50 dark:bg-zinc-900/50 opacity-60 cursor-default">
-              <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center shrink-0">
+            <NuxtLink
+              to="/foodscholar/textbooks"
+              class="group inline-flex min-w-[14rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-amber-300 hover:bg-amber-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-amber-700 dark:hover:bg-amber-900/20"
+            >
+              <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
                 <UIcon name="i-lucide-book-open" class="w-4 h-4 text-amber-600 dark:text-amber-500" />
               </div>
               <div>
-                <p class="text-sm font-semibold text-gray-700 dark:text-zinc-300">Textbooks</p>
-                <p class="text-xs text-gray-400 dark:text-zinc-500">Searchable via Library search</p>
+                <p class="text-base font-semibold text-gray-900 dark:text-white">Textbooks</p>
+                <p class="font-claude text-sm text-gray-400 dark:text-zinc-500">Academic reference</p>
               </div>
-            </div>
+              <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600 ml-2 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all" />
+            </NuxtLink>
           </div>
         </section>
 
@@ -702,8 +724,8 @@
         <section>
           <div class="flex items-center justify-between gap-4 mb-6">
             <div>
-              <p class="text-[0.62rem] uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500 font-semibold mb-1">Articles</p>
-              <h2 class="text-xl font-serif font-semibold text-gray-900 dark:text-white">Browse by topic</h2>
+              <p class="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">Articles</p>
+              <h2 class="font-claude text-2xl text-gray-900 dark:text-white">Browse by topic</h2>
             </div>
             <NuxtLink
               to="/foodscholar/catalog"
@@ -760,13 +782,13 @@
           <div v-else-if="articlesError" class="py-10 text-center text-sm text-red-500">{{ articlesError }}</div>
         </section>
 
-        <!-- Dietary Guides Atlas (compact) -->
+        <!-- Dietary Guides overview -->
         <section>
           <div class="flex items-start justify-between gap-6 mb-6">
             <div>
-              <p class="text-[0.62rem] uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500 font-semibold mb-1">Dietary Guides Atlas</p>
-              <h2 class="text-xl font-serif font-semibold text-gray-900 dark:text-white">European guidance by country</h2>
-              <p class="mt-1 text-xs text-gray-400 dark:text-zinc-500">Select a country on the map — or open the full atlas for all guides and dietary rules.</p>
+              <p class="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">Dietary Guides</p>
+              <h2 class="font-claude text-2xl text-gray-900 dark:text-white">Official dietary rules.</h2>
+              <p class="mt-1 text-xs text-gray-400 dark:text-zinc-500">Browse European dietary guidance by country, source publication, and structured rule.</p>
             </div>
             <NuxtLink
               to="/foodscholar/guides"
@@ -777,72 +799,76 @@
             </NuxtLink>
           </div>
 
-          <div class="rounded-2xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 overflow-hidden">
-            <!-- Loading -->
-            <div v-if="libraryMapLoading" class="min-h-[22rem] animate-pulse bg-gray-50 dark:bg-zinc-800/50 flex items-center justify-center">
-              <p class="text-sm text-gray-400 dark:text-zinc-500">Loading map…</p>
-            </div>
-            <!-- Error -->
-            <div v-else-if="libraryMapError" class="min-h-[14rem] flex items-center justify-center px-6 py-10 text-center">
-              <p class="text-sm text-gray-400 dark:text-zinc-500">{{ libraryMapError }}</p>
-            </div>
-            <!-- Map + panel -->
-            <template v-else>
-              <div class="grid xl:grid-cols-[minmax(0,1fr)_14rem]">
-                <!-- Map scaled down to fit without clipping -->
-                <div class="library-map-wrap">
-                  <FoodscholarGuidesEuropeGuidesMap
-                    v-model:selected-region-code="librarySelectedRegion"
-                    :regions="libraryEuRegions"
-                  />
-                </div>
-                <!-- Sidebar -->
-                <div class="border-t xl:border-t-0 xl:border-l border-gray-100 dark:border-zinc-800 p-5 flex flex-col gap-5">
-                  <!-- Stats -->
-                  <dl class="grid grid-cols-3 xl:grid-cols-3 gap-3">
-                    <div>
-                      <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">Countries</dt>
-                      <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryEuRegions.length }}</dd>
-                    </div>
-                    <div>
-                      <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">Guides</dt>
-                      <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalGuides.toLocaleString() }}</dd>
-                    </div>
-                    <div>
-                      <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">Rules</dt>
-                      <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalGuidelines > 0 ? libraryTotalGuidelines.toLocaleString() : '—' }}</dd>
-                    </div>
-                  </dl>
+          <div v-if="libraryMapLoading" class="grid gap-3 sm:grid-cols-3">
+            <div v-for="i in 3" :key="`guide-stat-loading-${i}`" class="h-24 animate-pulse rounded-xl bg-gray-100 dark:bg-zinc-800" />
+          </div>
 
-                  <!-- Selected region detail -->
-                  <div v-if="librarySelectedRegionData" class="border-t border-gray-100 dark:border-zinc-800 pt-4">
-                    <p class="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-                      {{ `${librarySelectedRegionData.flag || ''} ${librarySelectedRegionData.label}`.trim() }}
-                    </p>
-                    <p class="text-xs text-gray-400 dark:text-zinc-500 mb-3">
-                      {{ librarySelectedRegionData.guideCount }} guide{{ librarySelectedRegionData.guideCount === 1 ? '' : 's' }}<template v-if="librarySelectedRegionData.guidelineCount"> · {{ librarySelectedRegionData.guidelineCount }} rules</template><template v-if="librarySelectedRegionData.latestPublicationYear"> · {{ librarySelectedRegionData.latestPublicationYear }}</template>
-                    </p>
-                    <NuxtLink
-                      :to="`/foodscholar/guides/${librarySelectedRegionData.slug}`"
-                      class="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 transition-colors group"
-                    >
-                      <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
-                      Open country guides
-                    </NuxtLink>
-                  </div>
-                  <div v-else class="border-t border-gray-100 dark:border-zinc-800 pt-4">
-                    <p class="text-xs text-gray-400 dark:text-zinc-500 leading-relaxed">Select a country to see its dietary guidance records and available publications.</p>
-                    <NuxtLink
-                      to="/foodscholar/guides"
-                      class="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 transition-colors group"
-                    >
-                      <UIcon name="i-lucide-list" class="w-3.5 h-3.5" />
-                      Browse all guides
-                    </NuxtLink>
-                  </div>
-                </div>
+          <div v-else-if="libraryMapError" class="rounded-xl border border-gray-200 bg-white px-5 py-4 text-sm text-gray-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-500">
+            {{ libraryMapError }}
+          </div>
+
+          <template v-else>
+            <dl class="grid gap-3 sm:grid-cols-3">
+              <div class="rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900">
+                <dt class="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-gray-400 dark:text-zinc-500">Countries</dt>
+                <dd class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ libraryEuRegions.length }}</dd>
               </div>
-            </template>
+              <div class="rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900">
+                <dt class="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-gray-400 dark:text-zinc-500">Guides</dt>
+                <dd class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalGuides.toLocaleString() }}</dd>
+              </div>
+              <div class="rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900">
+                <dt class="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-gray-400 dark:text-zinc-500">Rules</dt>
+                <dd class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalGuidelines > 0 ? libraryTotalGuidelines.toLocaleString() : '—' }}</dd>
+              </div>
+            </dl>
+
+            <div v-if="libraryEuRegions.length" class="mt-4 flex flex-wrap gap-2">
+              <NuxtLink
+                v-for="region in libraryEuRegions.slice(0, 10)"
+                :key="region.region"
+                :to="`/foodscholar/guides/${region.slug}`"
+                class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-emerald-300 hover:text-emerald-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
+              >
+                <span>{{ `${region.flag || ''} ${region.label}`.trim() }}</span>
+                <span class="text-gray-300 dark:text-zinc-600">{{ region.guideCount }}</span>
+              </NuxtLink>
+            </div>
+          </template>
+        </section>
+
+        <!-- Textbooks section -->
+        <section>
+          <div class="flex items-center justify-between gap-4 mb-6">
+            <div>
+              <p class="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">Textbooks</p>
+              <h2 class="font-claude text-2xl text-gray-900 dark:text-white">Academic reference</h2>
+            </div>
+            <NuxtLink
+              to="/foodscholar/textbooks"
+              class="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 transition-colors group"
+            >
+              Full catalog
+              <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </NuxtLink>
+          </div>
+
+          <div v-if="libraryTextbooksLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div v-for="i in 3" :key="i" class="h-44 rounded-2xl bg-gray-100 dark:bg-zinc-800 animate-pulse" />
+          </div>
+
+          <div v-else-if="libraryTextbooks.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <FoodscholarTextbookCard
+              v-for="(book, i) in libraryTextbooks"
+              :key="book.urn"
+              :textbook="book"
+              :index="i"
+              :fade="false"
+            />
+          </div>
+
+          <div v-else class="py-10 text-center text-sm text-gray-400 dark:text-zinc-500">
+            No textbooks available.
           </div>
         </section>
 
@@ -953,7 +979,6 @@ const libraryMapLoading = ref(false)
 const libraryMapLoaded = ref(false)
 const libraryMapError = ref<string | null>(null)
 const libraryRegionSummaries = ref<GuidesCatalogRegionSummary[]>([])
-const librarySelectedRegion = ref<string | null>(null)
 
 const LIBRARY_MAP_EXTRA = new Set(['RS']) // Serbia included even though not EU
 const libraryEuRegions = computed(() =>
@@ -969,12 +994,6 @@ const libraryTotalGuides = computed(() =>
 
 const libraryTotalGuidelines = computed(() =>
   libraryEuRegions.value.reduce((s, r) => s + (r.guidelineCount ?? 0), 0)
-)
-
-const librarySelectedRegionData = computed(() =>
-  libraryEuRegions.value.find(r =>
-    getRegionPresentation(r.region).value.toUpperCase() === librarySelectedRegion.value
-  ) ?? null
 )
 
 const librarySelectedTopic = ref(CATEGORY_ALL)
@@ -1011,6 +1030,22 @@ async function loadLibraryMap() {
     libraryMapError.value = 'Dietary guides data could not be loaded.'
   } finally {
     libraryMapLoading.value = false
+  }
+}
+
+const libraryTextbooks = ref<Textbook[]>([])
+const libraryTextbooksLoading = ref(false)
+
+async function loadLibraryTextbooks() {
+  if (libraryTextbooksLoading.value || libraryTextbooks.value.length) return
+  libraryTextbooksLoading.value = true
+  try {
+    const res = await textbooksApi.searchTextbooks({ q: null, limit: 6, offset: 0, sort: 'updated_at desc' })
+    libraryTextbooks.value = res.textbooks
+  } catch {
+    // silently fail — section stays empty
+  } finally {
+    libraryTextbooksLoading.value = false
   }
 }
 // ============================================================================
@@ -2014,7 +2049,10 @@ const setupObserver = () => {
 }
 
 watch(pageTab, (tab) => {
-  if (tab === 'resources') loadLibraryMap()
+  if (tab === 'resources') {
+    loadLibraryMap()
+    loadLibraryTextbooks()
+  }
 })
 
 onMounted(async () => {
@@ -2024,7 +2062,10 @@ onMounted(async () => {
     loadQaQuestions()
   ])
 
-  if (pageTab.value === 'resources') loadLibraryMap()
+  if (pageTab.value === 'resources') {
+    loadLibraryMap()
+    loadLibraryTextbooks()
+  }
 
   setupObserver()
   document.addEventListener('mousedown', handleLibraryClickOutside)
@@ -2240,24 +2281,32 @@ onUnmounted(() => {
   }
 }
 
-/*
-  Scale the map to ~65% of its natural size so it fits compactly
-  without clipping or internal scrolling. The wrapper is sized to
-  the post-scale footprint via padding-bottom trick.
-*/
-.library-map-wrap {
+.library-resource-map {
   position: relative;
+  width: 8.5rem;
+  height: 5.1rem;
   overflow: hidden;
-  /* natural min-height from the component is ~32rem; 0.65 × 32rem ≈ 20.8rem */
-  height: 21rem;
+  border-radius: 0.75rem;
+  background: rgb(236 253 245 / 0.9);
 }
 
-.library-map-wrap > * {
+.dark .library-resource-map {
+  background: rgb(6 78 59 / 0.22);
+}
+
+.library-resource-map-preview {
   position: absolute;
   inset: 0;
-  width: 153.85%; /* 1 / 0.65 */
-  height: 153.85%;
-  transform: scale(0.65);
+  width: 625%;
+  height: 625%;
+  pointer-events: none;
+  transform: scale(0.16);
   transform-origin: top left;
+}
+
+.library-resource-map :deep(.relative),
+.library-resource-map :deep([class*="min-h-"]) {
+  min-height: 32rem !important;
+  height: 32rem;
 }
 </style>
