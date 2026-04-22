@@ -71,7 +71,7 @@
                 v-model="chatQuery"
                 :disabled="asking"
                 :placeholder="qaPlaceholder"
-                input-class="w-full h-12 pl-11 pr-16 rounded-xl bg-transparent text-[15px] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
+                input-class="w-full h-12 pl-11 pr-28 rounded-xl bg-transparent text-[15px] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
                 @enter="askScholarQA"
                 @focus="composerFocused = true"
                 @blur="composerFocused = false"
@@ -80,14 +80,31 @@
                   <UIcon name="i-lucide-search" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 </template>
                 <template #right>
-                  <button
-                    :disabled="asking"
-                    class="chat-send-button h-10 w-10 flex items-center justify-center rounded-xl bg-brand-500 text-white disabled:opacity-50 shadow-md shadow-brand-700/20"
-                    :class="{ 'chat-send-idle': !asking }"
-                    @click="askScholarQA()"
-                  >
-                    <UIcon name="i-lucide-arrow-up" class="w-4 h-4 text-white" />
-                  </button>
+                  <div class="flex items-center gap-2">
+                    <UDropdownMenu
+                      :items="chatSettingsItems"
+                      :content="chatSettingsContent"
+                      :ui="chatSettingsUi"
+                    >
+                      <button
+                        type="button"
+                        class="chat-settings-button h-10 w-10 flex items-center justify-center rounded-xl border border-gray-200/80 dark:border-zinc-700/80 bg-white/80 dark:bg-zinc-900/80 text-gray-600 dark:text-zinc-300 shadow-sm transition-colors hover:text-brand-600 dark:hover:text-brand-400"
+                        :class="{ 'is-active': isAdvancedMode }"
+                        :aria-label="t('foodScholarHome.qa.advanced.title')"
+                        :title="t('foodScholarHome.qa.advanced.title')"
+                      >
+                        <UIcon name="i-lucide-sliders-horizontal" class="w-4 h-4" />
+                      </button>
+                    </UDropdownMenu>
+                    <button
+                      :disabled="asking"
+                      class="chat-send-button h-10 w-10 flex items-center justify-center rounded-xl bg-brand-500 text-white disabled:opacity-50 shadow-md shadow-brand-700/20"
+                      :class="{ 'chat-send-idle': !asking }"
+                      @click="askScholarQA()"
+                    >
+                      <UIcon name="i-lucide-arrow-up" class="w-4 h-4 text-white" />
+                    </button>
+                  </div>
                 </template>
               </FoodscholarNLInput>
             </div>
@@ -132,7 +149,7 @@
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="space-y-2">
                   <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.model') }}</label>
-                  <USelectMenu v-model="selectedModelValue" :items="modelOptions" class="w-full" size="lg" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :placeholder="t('foodScholarHome.qa.model.auto')" :portal="false" :disabled="modelsLoading || asking">
+                  <USelectMenu v-model="selectedModelValue" :items="modelOptions" class="w-full" size="lg" :ui="advancedSelectUi" :content="advancedSelectContent" value-key="value" label-key="label" :search-input="false" :placeholder="t('foodScholarHome.qa.model.auto')" :disabled="modelsLoading || asking">
                     <template #leading><UIcon :name="selectedModelOption.icon" class="w-4 h-4 text-gray-500 dark:text-gray-400" /></template>
                   </USelectMenu>
                   <p v-if="!modelsLoading && modelOptions.length <= 1" class="mt-2 text-[11px] text-amber-700 dark:text-amber-300">{{ t('foodScholarHome.qa.model.noProviderModels') }}</p>
@@ -140,14 +157,14 @@
                 </div>
                 <div class="space-y-2">
                   <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.sourceDepth') }}</label>
-                  <USelectMenu v-model="selectedTopKValue" :items="topKOptions" class="w-full" size="lg" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :portal="false" :disabled="asking || !ragEnabled">
+                  <USelectMenu v-model="selectedTopKValue" :items="topKOptions" class="w-full" size="lg" :ui="advancedSelectUi" :content="advancedSelectContent" value-key="value" label-key="label" :search-input="false" :disabled="asking || !ragEnabled">
                     <template #leading><UIcon :name="selectedTopKOption.icon" class="w-4 h-4 text-gray-500 dark:text-gray-400" /></template>
                   </USelectMenu>
                   <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">{{ ragEnabled ? selectedTopKOption.description : t('foodScholarHome.qa.advanced.enableRetrievalToAdjust') }}</p>
                 </div>
                 <div class="space-y-2">
                   <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.explanationStyle') }}</label>
-                  <USelectMenu v-model="selectedExpertiseValue" :items="expertiseOptions" class="w-full" size="lg" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :portal="false" :disabled="asking">
+                  <USelectMenu v-model="selectedExpertiseValue" :items="expertiseOptions" class="w-full" size="lg" :ui="advancedSelectUi" :content="advancedSelectContent" value-key="value" label-key="label" :search-input="false" :disabled="asking">
                     <template #leading><UIcon :name="selectedExpertiseOption.icon" class="w-4 h-4 text-gray-500 dark:text-gray-400" /></template>
                   </USelectMenu>
                   <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">{{ selectedExpertiseOption.description }}</p>
@@ -156,34 +173,19 @@
             </div>
           </Transition>
 
-          <!-- Mode switcher -->
-          <div class="mt-4 flex items-center justify-between gap-3">
-            <div
-              v-if="quickQuestions.length"
-              class="flex flex-wrap gap-2"
+          <div
+            v-if="quickQuestions.length"
+            class="mt-4 flex flex-wrap gap-2"
+          >
+            <button
+              v-for="quickQ in quickQuestions"
+              :key="quickQ"
+              type="button"
+              class="px-3 py-1.5 text-xs rounded-full bg-white/70 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-gray-300 hover:bg-brand-100 dark:hover:bg-brand-900/30 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
+              @click="askQuickQuestion(quickQ)"
             >
-              <button
-                v-for="quickQ in quickQuestions"
-                :key="quickQ"
-                type="button"
-                class="px-3 py-1.5 text-xs rounded-full bg-white/70 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-gray-300 hover:bg-brand-100 dark:hover:bg-brand-900/30 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
-                @click="askQuickQuestion(quickQ)"
-              >
-                {{ quickQ }}
-              </button>
-            </div>
-            <div class="ml-auto inline-flex items-center rounded-full border border-gray-200 dark:border-zinc-600 bg-white/70 dark:bg-zinc-900/70 p-1 shrink-0">
-              <button
-                type="button"
-                :class="['px-3 py-1.5 text-xs font-semibold rounded-full transition-colors', qaMode === 'simple' ? 'bg-brand-500 text-white' : 'text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400']"
-                @click="qaMode = 'simple'"
-              >{{ t('foodScholarHome.qa.mode.simple') }}</button>
-              <button
-                type="button"
-                :class="['px-3 py-1.5 text-xs font-semibold rounded-full transition-colors', qaMode === 'advanced' ? 'bg-brand-500 text-white' : 'text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400']"
-                @click="qaMode = 'advanced'"
-              >{{ t('foodScholarHome.qa.mode.advanced') }}</button>
-            </div>
+              {{ quickQ }}
+            </button>
           </div>
         </div>
       </div>
@@ -213,7 +215,7 @@
                 v-model="chatQuery"
                 :disabled="asking"
                 :placeholder="qaPlaceholder"
-                input-class="w-full h-12 pl-11 pr-16 rounded-xl bg-transparent text-[15px] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
+                input-class="w-full h-12 pl-11 pr-28 rounded-xl bg-transparent text-[15px] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
                 @enter="askScholarQA"
                 @focus="composerFocused = true"
                 @blur="composerFocused = false"
@@ -222,15 +224,32 @@
                   <UIcon name="i-lucide-search" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 </template>
                 <template #right>
-                  <button
-                    :disabled="asking"
-                    class="chat-send-button h-10 w-10 flex items-center justify-center rounded-xl bg-brand-500 text-white disabled:opacity-50 shadow-md shadow-brand-700/20"
-                    :class="{ 'chat-send-idle': !asking }"
-                    @click="askScholarQA()"
-                  >
-                    <UIcon v-if="asking" name="i-lucide-loader-2" class="w-4 h-4 animate-spin text-white" />
-                    <UIcon v-else name="i-lucide-arrow-up" class="w-4 h-4 text-white" />
-                  </button>
+                  <div class="flex items-center gap-2">
+                    <UDropdownMenu
+                      :items="chatSettingsItems"
+                      :content="chatSettingsContent"
+                      :ui="chatSettingsUi"
+                    >
+                      <button
+                        type="button"
+                        class="chat-settings-button h-10 w-10 flex items-center justify-center rounded-xl border border-gray-200/80 dark:border-zinc-700/80 bg-white/80 dark:bg-zinc-900/80 text-gray-600 dark:text-zinc-300 shadow-sm transition-colors hover:text-brand-600 dark:hover:text-brand-400"
+                        :class="{ 'is-active': isAdvancedMode }"
+                        :aria-label="t('foodScholarHome.qa.advanced.title')"
+                        :title="t('foodScholarHome.qa.advanced.title')"
+                      >
+                        <UIcon name="i-lucide-sliders-horizontal" class="w-4 h-4" />
+                      </button>
+                    </UDropdownMenu>
+                    <button
+                      :disabled="asking"
+                      class="chat-send-button h-10 w-10 flex items-center justify-center rounded-xl bg-brand-500 text-white disabled:opacity-50 shadow-md shadow-brand-700/20"
+                      :class="{ 'chat-send-idle': !asking }"
+                      @click="askScholarQA()"
+                    >
+                      <UIcon v-if="asking" name="i-lucide-loader-2" class="w-4 h-4 animate-spin text-white" />
+                      <UIcon v-else name="i-lucide-arrow-up" class="w-4 h-4 text-white" />
+                    </button>
+                  </div>
                 </template>
               </FoodscholarNLInput>
             </div>
@@ -238,10 +257,9 @@
               <p class="text-[11px] text-gray-500 dark:text-gray-400">
                 {{ composerFocused ? t('foodScholarHome.qa.composer.focusedHint') : t('foodScholarHome.qa.composer.idleHint') }}
               </p>
-              <div class="ml-auto inline-flex items-center rounded-full border border-gray-200 dark:border-zinc-600 bg-white/70 dark:bg-zinc-900/70 p-0.5">
-                <button type="button" :class="['px-2.5 py-1 text-[11px] font-semibold rounded-full transition-colors', qaMode === 'simple' ? 'bg-brand-500 text-white' : 'text-gray-600 dark:text-gray-300']" @click="qaMode = 'simple'">{{ t('foodScholarHome.qa.mode.simple') }}</button>
-                <button type="button" :class="['px-2.5 py-1 text-[11px] font-semibold rounded-full transition-colors', qaMode === 'advanced' ? 'bg-brand-500 text-white' : 'text-gray-600 dark:text-gray-300']" @click="qaMode = 'advanced'">{{ t('foodScholarHome.qa.mode.advanced') }}</button>
-              </div>
+              <span class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                {{ t('foodScholarHome.qa.composer.enterKey') }}
+              </span>
             </div>
           </div>
 
@@ -271,13 +289,13 @@
                 </div>
               </div>
               <div class="grid grid-cols-3 gap-3">
-                <USelectMenu v-model="selectedModelValue" :items="modelOptions" size="sm" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :placeholder="t('foodScholarHome.qa.model.auto')" :portal="false" :disabled="modelsLoading || asking">
+                <USelectMenu v-model="selectedModelValue" :items="modelOptions" size="sm" :ui="advancedSelectUi" :content="advancedSelectContent" value-key="value" label-key="label" :search-input="false" :placeholder="t('foodScholarHome.qa.model.auto')" :disabled="modelsLoading || asking">
                   <template #leading><UIcon :name="selectedModelOption.icon" class="w-3.5 h-3.5 text-gray-500" /></template>
                 </USelectMenu>
-                <USelectMenu v-model="selectedTopKValue" :items="topKOptions" size="sm" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :portal="false" :disabled="asking || !ragEnabled">
+                <USelectMenu v-model="selectedTopKValue" :items="topKOptions" size="sm" :ui="advancedSelectUi" :content="advancedSelectContent" value-key="value" label-key="label" :search-input="false" :disabled="asking || !ragEnabled">
                   <template #leading><UIcon :name="selectedTopKOption.icon" class="w-3.5 h-3.5 text-gray-500" /></template>
                 </USelectMenu>
-                <USelectMenu v-model="selectedExpertiseValue" :items="expertiseOptions" size="sm" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :portal="false" :disabled="asking">
+                <USelectMenu v-model="selectedExpertiseValue" :items="expertiseOptions" size="sm" :ui="advancedSelectUi" :content="advancedSelectContent" value-key="value" label-key="label" :search-input="false" :disabled="asking">
                   <template #leading><UIcon :name="selectedExpertiseOption.icon" class="w-3.5 h-3.5 text-gray-500" /></template>
                 </USelectMenu>
               </div>
@@ -922,6 +940,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import type { DropdownMenuItem } from '@nuxt/ui'
 import articlesApi, { type Article } from '~/services/articlesApi'
 import catalogApi, { type CatalogGuide } from '~/services/catalogApi'
 import textbooksApi, { type Textbook, type TextbookSuggestion } from '~/services/textbooksApi'
@@ -1020,6 +1039,27 @@ const CATEGORY_ALL = 'All'
 const CATEGORY_UNCATEGORIZED = 'Uncategorized'
 const pageTab = ref<'qa' | 'resources'>('qa')
 const hasActiveSession = computed(() => asking.value || !!qaResult.value || !!qaError.value)
+const advancedSelectContent = {
+  side: 'bottom' as const,
+  sideOffset: 6,
+  collisionPadding: 16,
+  position: 'popper' as const
+}
+const advancedSelectUi = {
+  base: 'cursor-pointer',
+  content: 'z-[140] max-h-72 w-auto min-w-64 max-w-[calc(100vw-2rem)]',
+  viewport: 'max-h-72',
+  item: 'cursor-pointer'
+}
+const chatSettingsContent = {
+  align: 'end' as const,
+  side: 'bottom' as const,
+  sideOffset: 8,
+  collisionPadding: 12
+}
+const chatSettingsUi = {
+  content: 'w-52 z-[140]'
+}
 
 // ============================================================================
 // Library tab state
@@ -1753,6 +1793,18 @@ const qaPlaceholder = computed(() => {
   return t('foodScholarHome.qa.placeholder.default')
 })
 
+const chatSettingsItems = computed<DropdownMenuItem[]>(() => [
+  {
+    label: t('foodScholarHome.qa.mode.advanced'),
+    icon: 'i-lucide-sliders-horizontal',
+    type: 'checkbox',
+    checked: isAdvancedMode.value,
+    onUpdateChecked: (checked: boolean) => {
+      qaMode.value = checked ? 'advanced' : 'simple'
+    }
+  }
+])
+
 const answerALabel = computed(() => qaResult.value?.dual_answer_feedback?.answer_a_label || t('foodScholarHome.qa.answerPrimaryModelResponse'))
 const answerBLabel = computed(() => qaResult.value?.dual_answer_feedback?.answer_b_label || t('foodScholarHome.qa.answerAlternativeModelResponse'))
 
@@ -2434,6 +2486,18 @@ onUnmounted(() => {
 
 .chat-send-button {
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.chat-settings-button.is-active {
+  border-color: var(--color-brand-300);
+  background: var(--color-brand-50);
+  color: var(--color-brand-600);
+}
+
+.dark .chat-settings-button.is-active {
+  border-color: color-mix(in srgb, var(--color-brand-500) 55%, transparent);
+  background: color-mix(in srgb, var(--color-brand-950) 35%, transparent);
+  color: var(--color-brand-300);
 }
 
 .chat-send-button:hover:not(:disabled) {
