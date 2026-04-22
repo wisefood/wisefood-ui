@@ -13,6 +13,7 @@ interface RuntimeConfigWindow extends Window {
     recipeWranglerApiUrl?: string
     recipeWranglerMode?: string
     sentryDsn?: string
+    sentryEnabled?: boolean | string
   }
 }
 
@@ -62,4 +63,12 @@ export const getSentryDsn = (): string => {
   const runtimeConfig = getWindowRuntimeConfig()
   const config = useRuntimeConfig()
   return String(runtimeConfig?.sentryDsn || config.public.sentryDsn || '')
+}
+
+export const isSentryEnabled = (): boolean => {
+  const runtimeConfig = getWindowRuntimeConfig()
+  const config = useRuntimeConfig()
+  const value = runtimeConfig?.sentryEnabled ?? config.public.sentryEnabled
+
+  return value === true || value === 'true'
 }

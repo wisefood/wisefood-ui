@@ -1,10 +1,11 @@
-import * as Sentry from '@sentry/nuxt'
 import { sentryFeedbackOptions } from './app/utils/sentryFeedback'
-import { getSentryDsn } from './app/utils/runtimeConfig'
+import { getSentryDsn, isSentryEnabled } from './app/utils/runtimeConfig'
 
 const sentryDsn = getSentryDsn()
 
-if (sentryDsn) {
+if (isSentryEnabled() && sentryDsn) {
+  const Sentry = await import('@sentry/nuxt')
+
   Sentry.init({
     dsn: sentryDsn,
     environment: import.meta.env.MODE,
@@ -21,4 +22,6 @@ if (sentryDsn) {
     replaysOnErrorSampleRate: 1.0,
     sendDefaultPii: true
   })
+
+  ;(window as Window & { __WISEFOOD_SENTRY__?: unknown }).__WISEFOOD_SENTRY__ = Sentry
 }

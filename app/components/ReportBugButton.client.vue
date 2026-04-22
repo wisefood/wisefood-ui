@@ -13,13 +13,30 @@
 </template>
 
 <script setup lang="ts">
-import * as Sentry from '@sentry/nuxt'
 import { sentryFeedbackOptions } from '~/utils/sentryFeedback'
-import { getSentryDsn } from '~/utils/runtimeConfig'
+import { getSentryDsn, isSentryEnabled } from '~/utils/runtimeConfig'
 
 const colorMode = useColorMode()
-const sentryEnabled = computed(() => Boolean(getSentryDsn()))
+const sentryEnabled = computed(() => isSentryEnabled() && Boolean(getSentryDsn()))
 
+interface SentryFeedback {
+  createForm: () => Promise<{ appendToDom: () => void, open: () => void }>
+  setTheme: (colorScheme: 'light' | 'dark' | 'system') => void
+}
+
+interface SentryModule {
+  getFeedback: () => SentryFeedback | undefined
+  addIntegration: (integration: unknown) => void
+  feedbackIntegration: (options: typeof sentryFeedbackOptions) => unknown
+}
+
+declare global {
+  interface Window {
+    __WISEFOOD_SENTRY__?: SentryModule
+  }
+}
+
+let sentryModule: SentryModule | null = null
 let dialog: { appendToDom: () => void, open: () => void } | null = null
 
 async function openFeedback() {
@@ -27,12 +44,17 @@ async function openFeedback() {
     return
   }
 
-  const feedback = getOrCreateFeedback()
+  const Sentry = await getSentryModule()
+  if (!Sentry) {
+    return
+  }
+
+  const feedback = getOrCreateFeedback(Sentry)
   if (!feedback) {
     return
   }
 
-  syncFeedbackTheme()
+  syncFeedbackTheme(Sentry)
 
   if (dialog) {
     dialog.open()
@@ -48,19 +70,28 @@ async function openFeedback() {
   }
 }
 
-function getOrCreateFeedback() {
+async function getSentryModule() {
   if (!sentryEnabled.value) {
     return null
   }
 
-  let feedback = getFeedbackSafely()
+  if (sentryModule) {
+    return sentryModule
+  }
+
+  sentryModule = window.__WISEFOOD_SENTRY__ || null
+  return sentryModule
+}
+
+function getOrCreateFeedback(Sentry: SentryModule) {
+  let feedback = getFeedbackSafely(Sentry)
 
   if (!feedback) {
     try {
       Sentry.addIntegration(
         Sentry.feedbackIntegration(sentryFeedbackOptions)
       )
-      feedback = getFeedbackSafely()
+      feedback = getFeedbackSafely(Sentry)
     } catch {
       return null
     }
@@ -69,7 +100,7 @@ function getOrCreateFeedback() {
   return feedback
 }
 
-function getFeedbackSafely() {
+function getFeedbackSafely(Sentry: SentryModule) {
   try {
     return Sentry.getFeedback()
   } catch {
@@ -89,17 +120,17 @@ function getFeedbackColorScheme() {
   return 'system'
 }
 
-function syncFeedbackTheme() {
+function syncFeedbackTheme(Sentry = sentryModule) {
   if (!sentryEnabled.value) {
     return
   }
 
   try {
-    getFeedbackSafely()?.setTheme(getFeedbackColorScheme())
+    Sentry && getFeedbackSafely(Sentry)?.setTheme(getFeedbackColorScheme())
   } catch {
     // Sentry feedback is optional; never block the app on theme sync.
   }
 }
 
-watchEffect(syncFeedbackTheme)
+watchEffect(() => syncFeedbackTheme())
 </script>

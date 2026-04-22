@@ -5,6 +5,7 @@ echo "Injecting runtime configuration into index.html..."
 
 CONTEXT_PATH_NORMALIZED="${CONTEXT_PATH%/}"
 SENTRY_DSN_RUNTIME="${NUXT_PUBLIC_SENTRY_DSN:-$SENTRY_DSN}"
+SENTRY_ENABLED_RUNTIME="${SENTRY_ENABLED:-true}"
 
 if [ -z "$CONTEXT_PATH_NORMALIZED" ]; then
   CONTEXT_PATH_NORMALIZED="/"
@@ -20,7 +21,8 @@ window.__RUNTIME_CONFIG__ = {
   wisefoodRestApiUrl: '${VITE_WISEFOOD_REST_API_URL}',
   recipeWranglerApiUrl: '${VITE_RECIPE_WRANGLER_API_URL}',
   recipeWranglerMode: '${VITE_RECIPE_WRANGLER_MODE}',
-  sentryDsn: '${SENTRY_DSN_RUNTIME}'
+  sentryDsn: '${SENTRY_DSN_RUNTIME}',
+  sentryEnabled: '${SENTRY_ENABLED_RUNTIME}'
 };
 EOF
 
