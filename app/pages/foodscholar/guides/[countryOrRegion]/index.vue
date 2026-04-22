@@ -721,8 +721,12 @@ function buildRegionFilter() {
   return resolvedRegion.value ? `region:${quoteCatalogFilterValue(resolvedRegion.value)}` : null
 }
 
+function buildGuidelineRegionFilter() {
+  return resolvedRegion.value ? `guide_region:${quoteCatalogFilterValue(resolvedRegion.value)}` : null
+}
+
 function buildGuidelineFilters() {
-  const filters = [buildRegionFilter()].filter((value): value is string => Boolean(value))
+  const filters = [buildGuidelineRegionFilter()].filter((value): value is string => Boolean(value))
 
   if (selectedTopic.value !== 'all') {
     filters.push(`${topicFilterField.value}:${quoteCatalogFilterValue(selectedTopic.value)}`)
@@ -802,7 +806,7 @@ async function loadOverview() {
       catalogApi.searchGuidelines({
         limit: 1,
         offset: 0,
-        fq: [regionFilter],
+        fq: [buildGuidelineRegionFilter()].filter((v): v is string => Boolean(v)),
         fields: ['guide_urn', 'topic', 'food_groups', 'audience', 'target_populations', 'publication_year'],
         facet_limit: 100
       })
@@ -848,7 +852,7 @@ async function loadGuides() {
 
   try {
     const response = await catalogApi.searchGuides({
-      q: queryText.value.trim() || null,
+      q: queryText.value.trim() || '',
       limit: guidePageSize,
       offset: (guidePage.value - 1) * guidePageSize,
       fq: [regionFilter],
@@ -898,7 +902,7 @@ async function loadGuidelines() {
 
   try {
     const response = await catalogApi.searchGuidelines({
-      q: queryText.value.trim() || null,
+      q: queryText.value.trim() || '',
       limit: guidelinePageSize,
       offset: (guidelinePage.value - 1) * guidelinePageSize,
       fq: buildGuidelineFilters(),

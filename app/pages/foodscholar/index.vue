@@ -539,6 +539,7 @@
               :to="getCitationSourcePath(citation)"
               :data-citation-urn="citation.article_urn"
               class="citation-source-card flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600 dark:hover:text-brand-400 transition-colors group"
+              @click.prevent="getCitationSourceType(citation) === 'guideline' ? navigateToGuideline(citation.article_urn) : router.push(getCitationSourcePath(citation))"
             >
               <UIcon :name="getQaSourceIcon(citation.article_urn, getCitationSourceType(citation))" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
               <span class="text-xs text-gray-800 dark:text-gray-200 leading-snug line-clamp-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ citation.article_title }}</span>
@@ -1059,6 +1060,7 @@ import { useAuthStore } from '~/stores/auth'
 import { useHouseholdStore } from '~/stores/household'
 import { getExcerpt } from '~/utils/articleHelpers'
 import {
+  buildGuideDetailPath,
   buildRegionSummaries,
   getRegionPresentation,
   type GuidesCatalogRegionSummary
@@ -1522,6 +1524,26 @@ const getCitationForUrn = (articleUrn: string) => {
   return citations.find(c => c.article_urn === articleUrn && (c.quote || c.section)) || null
 }
 
+const navigateToGuideline = async (guidelineId: string, extraQuery: Record<string, string> = {}) => {
+  try {
+    const guideline = await catalogApi.getGuideline(guidelineId)
+    if (!guideline.guide_urn) {
+      router.push({ path: `/foodscholar/catalog/guidelines/${encodeURIComponent(guidelineId)}`, query: { ...extraQuery, guideline: guidelineId } })
+      return
+    }
+    const query: Record<string, string> = { ...extraQuery, guideline: guidelineId }
+    if (typeof guideline.page_no === 'number') {
+      query.page_no = String(guideline.page_no)
+    }
+    router.push({
+      path: buildGuideDetailPath(guideline.region, guideline.guide_urn),
+      query,
+    })
+  } catch {
+    router.push({ path: `/foodscholar/catalog/guidelines/${encodeURIComponent(guidelineId)}`, query: { ...extraQuery, guideline: guidelineId } })
+  }
+}
+
 const resolveQaSourceHref = (href: string): { url: URL, urn: string, sourceType: QaEvidenceSourceType, path: string } | null => {
   const url = new URL(href, window.location.origin)
   const pathSegments = url.pathname
@@ -1592,17 +1614,16 @@ const handleMarkdownClick = (event: MouseEvent) => {
   const query = Object.fromEntries(url.searchParams.entries()) as Record<string, string>
 
   if (sourceType === 'guideline') {
-    if (!('guideline' in query)) query.guideline = targetUrn
+    void navigateToGuideline(targetUrn, query)
   } else {
     if (!('section' in query) && citation?.section) query.section = String(citation.section)
     if (!('hl' in query) && citation?.quote) query.hl = String(citation.quote)
+    router.push({
+      path: targetPath,
+      query,
+      hash: url.hash
+    })
   }
-
-  router.push({
-    path: targetPath,
-    query,
-    hash: url.hash
-  })
 }
 
 const selectedPopularTopic = ref(CATEGORY_ALL)
@@ -2076,6 +2097,30 @@ const buildBasePayload = (question: string): QaAskRequest => {
   return payload
 }
 
+const normalizeQaCitations = (citations: QaCitation[]): QaCitation[] => {
+  return citations.map((c) => {
+    const raw = c as unknown as Record<string, unknown>
+    return {
+      ...c,
+      article_urn: c.article_urn || (raw.source_id as string) || '',
+      article_title: c.article_title || (raw.source_title as string) || '',
+      source_type: c.source_type || (raw.source_type as QaCitation['source_type']) || null,
+    }
+  })
+}
+
+const normalizeQaResult = (result: QaAskResult): QaAskResult => {
+  const normalizeAnswer = (answer: typeof result.primary_answer) => ({
+    ...answer,
+    citations: normalizeQaCitations(answer.citations ?? [])
+  })
+  return {
+    ...result,
+    primary_answer: normalizeAnswer(result.primary_answer),
+    secondary_answer: result.secondary_answer ? normalizeAnswer(result.secondary_answer) : result.secondary_answer
+  }
+}
+
 const handleQaResponse = (result: QaAskResult, basePayload: QaAskRequest) => {
   if (result.needs_clarification && result.clarification) {
     pendingClarification.value = result.clarification
@@ -2088,7 +2133,7 @@ const handleQaResponse = (result: QaAskResult, basePayload: QaAskRequest) => {
     pendingClarification.value = null
     qaThreadId.value = null
     pendingPayload.value = null
-    qaResult.value = result
+    qaResult.value = normalizeQaResult(result)
   }
 }
 

@@ -435,6 +435,8 @@ const zoom = ref(0.7)
 const pdfTotalPages = ref(0)
 const selectedArtifactId = ref<string>('')
 const syncToPdfPage = ref(true)
+const pendingGuidelineId = ref<string | null>(null)
+const pendingGuidelinePage = ref<number | null>(null)
 
 // UI state
 const showInfoPanel = ref(false)
@@ -528,7 +530,19 @@ function handlePdfPageNavigation(page: number) {
 }
 
 function handlePdfStatusChange(status: { totalPages: number }) {
+  const wasUnloaded = pdfTotalPages.value === 0
   pdfTotalPages.value = status.totalPages
+
+  if (wasUnloaded && status.totalPages > 0 && pendingGuidelineId.value) {
+    const match = guidelines.value.find(g => g.id === pendingGuidelineId.value)
+    if (match) {
+      selectGuideline(match)
+    } else if (pendingGuidelinePage.value) {
+      currentPage.value = pendingGuidelinePage.value
+    }
+    pendingGuidelineId.value = null
+    pendingGuidelinePage.value = null
+  }
 }
 
 function buildGuidelineFilters() {
@@ -651,7 +665,11 @@ async function loadGuidelines() {
     }
 
     guidelines.value = response.guidelines
-    activeGuidelineId.value = null
+    if (pendingGuidelineId.value) {
+      activeGuidelineId.value = pendingGuidelineId.value
+    } else {
+      activeGuidelineId.value = null
+    }
   } catch (error) {
     if (loadToken !== guidelineLoadToken.value) return
     console.error('[GuideDetail] Failed to load guide guidelines:', error)
@@ -691,6 +709,28 @@ async function loadGuideDetail() {
     hydrateStateFromRoute()
     await loadGuidelineContext()
     await loadGuidelines()
+
+    const q = route.query as Record<string, string | string[] | null | undefined>
+    const targetGuidelineId = firstQueryValue(q.guideline)
+    const targetPageNo = parseInt(firstQueryValue(q.page_no) || '', 10) || null
+
+    if (targetGuidelineId) {
+      const match = guidelines.value.find(g => g.id === targetGuidelineId)
+      if (match) {
+        if (pdfTotalPages.value > 0) {
+          selectGuideline(match)
+        } else {
+          activeGuidelineId.value = match.id
+          pendingGuidelineId.value = match.id
+          pendingGuidelinePage.value = targetPageNo
+        }
+      } else {
+        activeGuidelineId.value = targetGuidelineId
+        pendingGuidelineId.value = targetGuidelineId
+        pendingGuidelinePage.value = targetPageNo
+      }
+    }
+
     await nextTick()
     suppressWatcher = false
   } catch (error) {
