@@ -100,11 +100,11 @@
                   <NuxtLink
                     v-if="activeInsightArticleTarget"
                     :to="activeInsightArticleTarget"
-                    class="text-gray-700 dark:text-gray-200 leading-relaxed insight-text-clamp insight-tip-emphasis hover:underline underline-offset-4"
+                    class="font-claude text-gray-700 dark:text-gray-200 leading-relaxed insight-text-clamp insight-tip-emphasis hover:underline underline-offset-4"
                   >
                     {{ activeInsight.text }}
                   </NuxtLink>
-                  <p v-else class="text-gray-700 dark:text-gray-200 leading-relaxed insight-text-clamp insight-tip-emphasis">
+                  <p v-else class="font-claude text-gray-700 dark:text-gray-200 leading-relaxed insight-text-clamp insight-tip-emphasis">
                     {{ activeInsight.text }}
                   </p>
                 </div>
@@ -841,8 +841,21 @@ onUnmounted(() => {
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap');
 
+@font-face {
+  font-family: 'ClaudeDisplay';
+  src: url('https://assets-proxy.anthropic.com/claude-ai/v2/assets/v1/c66fc489e-C-BHYa_K.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 .font-serif {
   font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+.font-claude {
+  font-family: 'ClaudeDisplay', 'Cormorant Garamond', Georgia, serif;
+  font-weight: normal;
 }
 
 .scroll-fade-in {

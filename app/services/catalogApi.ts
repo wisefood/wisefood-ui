@@ -848,6 +848,13 @@ class CatalogApiService {
     const payload = await wisefoodApi.patch<unknown, ArtifactUpdatePayload>(`${this.basePath}/artifacts/${encodeURIComponent(id)}`, data)
     return normalizeArtifact(unwrapEntity(payload, ['artifact', 'item', 'result', 'data']))
   }
+
+  async autocompleteGuides(q: string, limit = 8): Promise<Array<{ urn: string; title: string; region?: string | null }>> {
+    const normalized = q.trim()
+    if (normalized.length < 2) return []
+    const res = await wisefoodApi.get<{ result: Array<{ urn: string; title: string; short_title?: string | null; region?: string | null; publication_year?: number | null }> }>(`${this.basePath}/guides/autocomplete`, { params: { q: normalized, limit } })
+    return Array.isArray(res?.result) ? res.result : []
+  }
 }
 
 export default new CatalogApiService()

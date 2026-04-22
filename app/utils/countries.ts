@@ -65,7 +65,8 @@ export const euCountryCodes = [
   'SK',
   'SI',
   'ES',
-  'SE'
+  'SE',
+  'RS'
 ] as const
 
 const countryNameAliases: Record<string, string> = {

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+  <div class="min-h-screen flex flex-col bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
     <AppPageHeader
       back-to="/dashboard"
       :back-label="t('foodScholarHome.backToDashboard')"
@@ -8,65 +8,65 @@
       :subtitle="t('foodScholarHome.subtitle')"
     />
 
-    <main class="max-w-7xl mx-auto px-4 py-6">
-      <section
-        class="mb-12"
-      >
-        <div class="w-full">
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-full bg-brand-500 flex items-center justify-center shrink-0 shadow-md shadow-brand-500/25">
-                <UIcon
-                  name="i-lucide-sparkles"
-                  class="w-4 h-4 text-white"
-                />
-              </div>
-              <div>
-                <h2 class="text-3xl font-serif font-semibold text-gray-900 dark:text-white">
-                  {{ qaHeading }}
-                </h2>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ t('foodScholarHome.qa.tagline') }}
-                </p>
-              </div>
-            </div>
+    <!-- Page tab switcher -->
+    <div class="border-b border-zinc-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 flex justify-center">
+        <div class="flex gap-0">
+          <button
+            type="button"
+            :class="[
+              'px-5 py-3 text-sm font-medium border-b-2 transition-colors',
+              pageTab === 'qa'
+                ? 'border-brand-500 text-brand-600 dark:text-brand-400'
+                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+            ]"
+            @click="pageTab = 'qa'"
+          >
+            <span class="flex items-center gap-1.5">
+              <UIcon name="i-lucide-sparkles" class="w-3.5 h-3.5" />
+              Ask Questions
+            </span>
+          </button>
+          <button
+            type="button"
+            :class="[
+              'px-5 py-3 text-sm font-medium border-b-2 transition-colors',
+              pageTab === 'resources'
+                ? 'border-brand-500 text-brand-600 dark:text-brand-400'
+                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+            ]"
+            @click="pageTab = 'resources'"
+          >
+            <span class="flex items-center gap-1.5">
+              <UIcon name="i-lucide-library" class="w-3.5 h-3.5" />
+              Library
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
 
-            <div class="inline-flex items-center rounded-full border border-gray-200 dark:border-zinc-600 bg-white/70 dark:bg-zinc-900/70 p-1">
-              <button
-                type="button"
-                :class="[
-                  'px-3 py-1.5 text-xs font-semibold rounded-full transition-colors',
-                  qaMode === 'simple'
-                    ? 'bg-brand-500 text-white'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400'
-                ]"
-                @click="qaMode = 'simple'"
-              >
-                {{ t('foodScholarHome.qa.mode.simple') }}
-              </button>
-              <button
-                type="button"
-                :class="[
-                  'px-3 py-1.5 text-xs font-semibold rounded-full transition-colors',
-                  qaMode === 'advanced'
-                    ? 'bg-brand-500 text-white'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400'
-                ]"
-                @click="qaMode = 'advanced'"
-              >
-                {{ t('foodScholarHome.qa.mode.advanced') }}
-              </button>
-            </div>
+    <!-- QA tab -->
+    <template v-if="pageTab === 'qa'">
+      <!-- Idle state: composer centered vertically in remaining viewport -->
+      <div
+        v-if="!hasActiveSession"
+        class="qa-idle-shell flex-1 flex flex-col items-center justify-center px-4 pt-4 pb-48"
+      >
+        <div class="w-full max-w-2xl">
+          <div class="mb-8 text-center">
+            <h2 class="text-4xl font-claude text-gray-900 dark:text-white mb-2">
+              {{ qaHeading }}
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              {{ t('foodScholarHome.qa.tagline') }}
+            </p>
           </div>
 
           <div class="relative">
-            <div
-              class="chat-composer"
-              :class="{ 'is-focused': composerFocused }"
-            >
+            <div class="chat-composer" :class="{ 'is-focused': composerFocused }">
               <div class="chat-composer-accent chat-composer-accent-left" />
               <div class="chat-composer-accent chat-composer-accent-right" />
-
               <FoodscholarNLInput
                 v-model="chatQuery"
                 :disabled="asking"
@@ -77,39 +77,22 @@
                 @blur="composerFocused = false"
               >
                 <template #left>
-                  <UIcon
-                    name="i-lucide-search"
-                    class="w-5 h-5 text-gray-500 dark:text-gray-400"
-                  />
+                  <UIcon name="i-lucide-search" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
                 </template>
-
                 <template #right>
                   <button
                     :disabled="asking"
-                    class="chat-send-button h-10 w-10 flex items-center justify-center rounded-xl text-white disabled:opacity-50 shadow-md shadow-brand-700/20"
-                    :class="[
-                      'bg-brand-500',
-                      !asking ? 'chat-send-idle' : ''
-                    ]"
+                    class="chat-send-button h-10 w-10 flex items-center justify-center rounded-xl bg-brand-500 text-white disabled:opacity-50 shadow-md shadow-brand-700/20"
+                    :class="{ 'chat-send-idle': !asking }"
                     @click="askScholarQA()"
                   >
-                    <UIcon
-                      v-if="asking"
-                      name="i-lucide-loader-2"
-                      class="w-4 h-4 animate-spin text-white"
-                    />
-                    <UIcon
-                      v-else
-                      name="i-lucide-arrow-up"
-                      class="w-4 h-4 text-white"
-                    />
+                    <UIcon name="i-lucide-arrow-up" class="w-4 h-4 text-white" />
                   </button>
                 </template>
               </FoodscholarNLInput>
             </div>
-
             <div class="mt-2 px-1 flex items-center justify-between">
-              <p class="text-[11px] text-gray-500 dark:text-gray-400 transition-colors">
+              <p class="text-[11px] text-gray-500 dark:text-gray-400">
                 {{ composerFocused ? t('foodScholarHome.qa.composer.focusedHint') : t('foodScholarHome.qa.composer.idleHint') }}
               </p>
               <span class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
@@ -118,6 +101,7 @@
             </div>
           </div>
 
+          <!-- Advanced panel -->
           <div
             v-if="isAdvancedMode"
             class="mt-4 rounded-2xl border border-gray-200/80 dark:border-zinc-700/80 bg-white/60 dark:bg-zinc-900/40 backdrop-blur-sm p-4"
@@ -130,507 +114,690 @@
               <div class="inline-flex items-center rounded-full border border-gray-200 dark:border-zinc-600 bg-white dark:bg-zinc-900 p-1 shadow-sm">
                 <button
                   type="button"
-                  :class="[
-                    'px-3 py-1.5 text-xs font-semibold rounded-full transition-colors',
-                    ragEnabled
-                      ? 'bg-emerald-500 text-white'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400'
-                  ]"
+                  :class="['px-3 py-1.5 text-xs font-semibold rounded-full transition-colors', ragEnabled ? 'bg-emerald-500 text-white' : 'text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400']"
                   @click="ragEnabled = true"
-                >
-                  {{ t('foodScholarHome.qa.advanced.ragOn') }}
-                </button>
+                >{{ t('foodScholarHome.qa.advanced.ragOn') }}</button>
                 <button
                   type="button"
-                  :class="[
-                    'px-3 py-1.5 text-xs font-semibold rounded-full transition-colors',
-                    !ragEnabled
-                      ? 'bg-zinc-600 text-white'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400'
-                  ]"
+                  :class="['px-3 py-1.5 text-xs font-semibold rounded-full transition-colors', !ragEnabled ? 'bg-zinc-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400']"
                   @click="ragEnabled = false"
-                >
-                  {{ t('foodScholarHome.qa.advanced.ragOff') }}
-                </button>
+                >{{ t('foodScholarHome.qa.advanced.ragOff') }}</button>
               </div>
             </div>
-
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="space-y-2">
                 <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.model') }}</label>
-                <USelectMenu
-                  v-model="selectedModelValue"
-                  :items="modelOptions"
-                  class="w-full"
-                  size="lg"
-                  :ui="advancedSelectUi"
-                  value-key="value"
-                  label-key="label"
-                  :search-input="false"
-                  :placeholder="t('foodScholarHome.qa.model.auto')"
-                  :portal="false"
-                  :disabled="modelsLoading || asking"
-                >
-                  <template #leading>
-                    <UIcon
-                      :name="selectedModelOption.icon"
-                      class="w-4 h-4 text-gray-500 dark:text-gray-400"
-                    />
-                  </template>
+                <USelectMenu v-model="selectedModelValue" :items="modelOptions" class="w-full" size="lg" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :placeholder="t('foodScholarHome.qa.model.auto')" :portal="false" :disabled="modelsLoading || asking">
+                  <template #leading><UIcon :name="selectedModelOption.icon" class="w-4 h-4 text-gray-500 dark:text-gray-400" /></template>
                 </USelectMenu>
-                <p
-                  v-if="!modelsLoading && modelOptions.length <= 1"
-                  class="mt-2 text-[11px] text-amber-700 dark:text-amber-300"
-                >
-                  {{ t('foodScholarHome.qa.model.noProviderModels') }}
-                </p>
-                <p
-                  v-else
-                  class="mt-2 text-[11px] text-gray-500 dark:text-gray-400"
-                >
-                  {{ t('foodScholarHome.qa.model.autoHint') }}
-                </p>
+                <p v-if="!modelsLoading && modelOptions.length <= 1" class="mt-2 text-[11px] text-amber-700 dark:text-amber-300">{{ t('foodScholarHome.qa.model.noProviderModels') }}</p>
+                <p v-else class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.model.autoHint') }}</p>
               </div>
-
               <div class="space-y-2">
                 <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.sourceDepth') }}</label>
-                <USelectMenu
-                  v-model="selectedTopKValue"
-                  :items="topKOptions"
-                  class="w-full"
-                  size="lg"
-                  :ui="advancedSelectUi"
-                  value-key="value"
-                  label-key="label"
-                  :search-input="false"
-                  :portal="false"
-                  :disabled="asking || !ragEnabled"
-                >
-                  <template #leading>
-                    <UIcon
-                      :name="selectedTopKOption.icon"
-                      class="w-4 h-4 text-gray-500 dark:text-gray-400"
-                    />
-                  </template>
+                <USelectMenu v-model="selectedTopKValue" :items="topKOptions" class="w-full" size="lg" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :portal="false" :disabled="asking || !ragEnabled">
+                  <template #leading><UIcon :name="selectedTopKOption.icon" class="w-4 h-4 text-gray-500 dark:text-gray-400" /></template>
                 </USelectMenu>
-                <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
-                  {{ ragEnabled ? selectedTopKOption.description : t('foodScholarHome.qa.advanced.enableRagToAdjust') }}
-                </p>
+                <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">{{ ragEnabled ? selectedTopKOption.description : t('foodScholarHome.qa.advanced.enableRagToAdjust') }}</p>
               </div>
-
               <div class="space-y-2">
                 <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.explanationStyle') }}</label>
-                <USelectMenu
-                  v-model="selectedExpertiseValue"
-                  :items="expertiseOptions"
-                  class="w-full"
-                  size="lg"
-                  :ui="advancedSelectUi"
-                  value-key="value"
-                  label-key="label"
-                  :search-input="false"
-                  :portal="false"
-                  :disabled="asking"
-                >
-                  <template #leading>
-                    <UIcon
-                      :name="selectedExpertiseOption.icon"
-                      class="w-4 h-4 text-gray-500 dark:text-gray-400"
-                    />
-                  </template>
+                <USelectMenu v-model="selectedExpertiseValue" :items="expertiseOptions" class="w-full" size="lg" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :portal="false" :disabled="asking">
+                  <template #leading><UIcon :name="selectedExpertiseOption.icon" class="w-4 h-4 text-gray-500 dark:text-gray-400" /></template>
                 </USelectMenu>
                 <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">{{ selectedExpertiseOption.description }}</p>
               </div>
             </div>
           </div>
 
-          <div
-            v-if="quickQuestions.length"
-            class="mt-4 flex flex-wrap gap-2"
-          >
-            <button
-              v-for="quickQ in quickQuestions"
-              :key="quickQ"
-              type="button"
-              class="px-3 py-1.5 text-xs rounded-full bg-white/70 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-gray-300 hover:bg-brand-100 dark:hover:bg-brand-900/30 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
-              @click="askQuickQuestion(quickQ)"
-            >
-              {{ quickQ }}
-            </button>
-          </div>
-
-          <div
-            v-if="qaError"
-            class="mt-5 p-4 rounded-xl border border-red-200 dark:border-red-800 bg-red-50/90 dark:bg-red-900/20"
-          >
-            <p class="text-sm text-red-700 dark:text-red-300">{{ qaError }}</p>
-          </div>
-
-          <div
-            v-if="asking"
-            class="mt-6 space-y-4"
-          >
-            <div class="flex justify-end">
-              <div class="chat-flow-bubble chat-flow-bubble-user">
-                <p class="text-[10px] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
-                <p class="text-sm leading-relaxed">{{ chatQuery }}</p>
-              </div>
-            </div>
-
-            <div class="chat-flow-bubble chat-flow-bubble-assistant">
-              <div class="flex items-center justify-between mb-3">
-                <div class="h-4 w-16 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-                <div class="h-3 w-24 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-              </div>
-              <div class="space-y-2.5">
-                <div class="h-3 w-full rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-                <div class="h-3 w-11/12 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-                <div class="h-3 w-4/5 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-                <div class="h-3 w-full rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-                <div class="h-3 w-3/4 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-                <div class="h-3 w-5/6 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-                <div class="h-3 w-2/3 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-              </div>
-            </div>
-          </div>
-
-          <div
-            v-if="qaResult && primaryAnswer"
-            class="mt-6 space-y-4"
-          >
-            <div class="flex justify-end">
-              <div class="chat-flow-bubble chat-flow-bubble-user">
-                <p class="text-[10px] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
-                <p class="text-sm leading-relaxed">{{ qaResult.question }}</p>
-              </div>
-            </div>
-
+          <!-- Mode switcher -->
+          <div class="mt-4 flex items-center justify-between gap-3">
             <div
-              v-if="hasDualAnswerMode"
-              class="space-y-3"
+              v-if="quickQuestions.length"
+              class="flex flex-wrap gap-2"
             >
-              <p
-                v-if="!selectedPreferredAnswer"
-                class="text-xs text-gray-500 dark:text-gray-400"
+              <button
+                v-for="quickQ in quickQuestions"
+                :key="quickQ"
+                type="button"
+                class="px-3 py-1.5 text-xs rounded-full bg-white/70 dark:bg-zinc-800/80 border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-gray-300 hover:bg-brand-100 dark:hover:bg-brand-900/30 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
+                @click="askQuickQuestion(quickQ)"
               >
-                {{ t('foodScholarHome.qa.feedback.choosePreferredAnswer') }}
+                {{ quickQ }}
+              </button>
+            </div>
+            <div class="ml-auto inline-flex items-center rounded-full border border-gray-200 dark:border-zinc-600 bg-white/70 dark:bg-zinc-900/70 p-1 shrink-0">
+              <button
+                type="button"
+                :class="['px-3 py-1.5 text-xs font-semibold rounded-full transition-colors', qaMode === 'simple' ? 'bg-brand-500 text-white' : 'text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400']"
+                @click="qaMode = 'simple'"
+              >{{ t('foodScholarHome.qa.mode.simple') }}</button>
+              <button
+                type="button"
+                :class="['px-3 py-1.5 text-xs font-semibold rounded-full transition-colors', qaMode === 'advanced' ? 'bg-brand-500 text-white' : 'text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400']"
+                @click="qaMode = 'advanced'"
+              >{{ t('foodScholarHome.qa.mode.advanced') }}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active session: composer pinned to top of content, answer below -->
+      <div v-else class="flex-1 flex flex-col max-w-2xl mx-auto w-full px-4 py-6">
+        <!-- Pinned composer -->
+        <div class="session-composer-wrap mb-6">
+          <div class="relative">
+            <div class="chat-composer" :class="{ 'is-focused': composerFocused }">
+              <div class="chat-composer-accent chat-composer-accent-left" />
+              <div class="chat-composer-accent chat-composer-accent-right" />
+              <FoodscholarNLInput
+                v-model="chatQuery"
+                :disabled="asking"
+                :placeholder="qaPlaceholder"
+                input-class="w-full h-12 pl-11 pr-16 rounded-xl bg-transparent text-[15px] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
+                @enter="askScholarQA"
+                @focus="composerFocused = true"
+                @blur="composerFocused = false"
+              >
+                <template #left>
+                  <UIcon name="i-lucide-search" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                </template>
+                <template #right>
+                  <button
+                    :disabled="asking"
+                    class="chat-send-button h-10 w-10 flex items-center justify-center rounded-xl bg-brand-500 text-white disabled:opacity-50 shadow-md shadow-brand-700/20"
+                    :class="{ 'chat-send-idle': !asking }"
+                    @click="askScholarQA()"
+                  >
+                    <UIcon v-if="asking" name="i-lucide-loader-2" class="w-4 h-4 animate-spin text-white" />
+                    <UIcon v-else name="i-lucide-arrow-up" class="w-4 h-4 text-white" />
+                  </button>
+                </template>
+              </FoodscholarNLInput>
+            </div>
+            <div class="mt-2 px-1 flex items-center justify-between">
+              <p class="text-[11px] text-gray-500 dark:text-gray-400">
+                {{ composerFocused ? t('foodScholarHome.qa.composer.focusedHint') : t('foodScholarHome.qa.composer.idleHint') }}
               </p>
+              <div class="ml-auto inline-flex items-center rounded-full border border-gray-200 dark:border-zinc-600 bg-white/70 dark:bg-zinc-900/70 p-0.5">
+                <button type="button" :class="['px-2.5 py-1 text-[11px] font-semibold rounded-full transition-colors', qaMode === 'simple' ? 'bg-brand-500 text-white' : 'text-gray-600 dark:text-gray-300']" @click="qaMode = 'simple'">{{ t('foodScholarHome.qa.mode.simple') }}</button>
+                <button type="button" :class="['px-2.5 py-1 text-[11px] font-semibold rounded-full transition-colors', qaMode === 'advanced' ? 'bg-brand-500 text-white' : 'text-gray-600 dark:text-gray-300']" @click="qaMode = 'advanced'">{{ t('foodScholarHome.qa.mode.advanced') }}</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Advanced panel in session -->
+          <div
+            v-if="isAdvancedMode"
+            class="mt-3 rounded-2xl border border-gray-200/80 dark:border-zinc-700/80 bg-white/60 dark:bg-zinc-900/40 backdrop-blur-sm p-4"
+          >
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.advanced.title') }}</p>
+              <div class="inline-flex items-center rounded-full border border-gray-200 dark:border-zinc-600 bg-white dark:bg-zinc-900 p-1 shadow-sm">
+                <button type="button" :class="['px-3 py-1 text-xs font-semibold rounded-full transition-colors', ragEnabled ? 'bg-emerald-500 text-white' : 'text-gray-600 dark:text-gray-300']" @click="ragEnabled = true">{{ t('foodScholarHome.qa.advanced.ragOn') }}</button>
+                <button type="button" :class="['px-3 py-1 text-xs font-semibold rounded-full transition-colors', !ragEnabled ? 'bg-zinc-600 text-white' : 'text-gray-600 dark:text-gray-300']" @click="ragEnabled = false">{{ t('foodScholarHome.qa.advanced.ragOff') }}</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+              <USelectMenu v-model="selectedModelValue" :items="modelOptions" size="sm" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :placeholder="t('foodScholarHome.qa.model.auto')" :portal="false" :disabled="modelsLoading || asking">
+                <template #leading><UIcon :name="selectedModelOption.icon" class="w-3.5 h-3.5 text-gray-500" /></template>
+              </USelectMenu>
+              <USelectMenu v-model="selectedTopKValue" :items="topKOptions" size="sm" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :portal="false" :disabled="asking || !ragEnabled">
+                <template #leading><UIcon :name="selectedTopKOption.icon" class="w-3.5 h-3.5 text-gray-500" /></template>
+              </USelectMenu>
+              <USelectMenu v-model="selectedExpertiseValue" :items="expertiseOptions" size="sm" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :portal="false" :disabled="asking">
+                <template #leading><UIcon :name="selectedExpertiseOption.icon" class="w-3.5 h-3.5 text-gray-500" /></template>
+              </USelectMenu>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div v-if="qaError" class="mb-4 p-4 rounded-xl border border-red-200 dark:border-red-800 bg-red-50/90 dark:bg-red-900/20">
+          <p class="text-sm text-red-700 dark:text-red-300">{{ qaError }}</p>
+        </div>
+
+        <!-- Loading skeleton -->
+        <div v-if="asking" class="space-y-4 session-answer-enter">
+          <div class="flex justify-end">
+            <div class="chat-flow-bubble chat-flow-bubble-user">
+              <p class="text-[10px] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
+              <p class="text-sm leading-relaxed">{{ chatQuery }}</p>
+            </div>
+          </div>
+          <div class="chat-flow-bubble chat-flow-bubble-assistant">
+            <div class="flex items-center justify-between mb-3">
+              <div class="h-4 w-16 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+              <div class="h-3 w-24 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+            </div>
+            <div class="space-y-2.5">
+              <div class="h-3 w-full rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+              <div class="h-3 w-11/12 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+              <div class="h-3 w-4/5 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+              <div class="h-3 w-full rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+              <div class="h-3 w-3/4 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+              <div class="h-3 w-5/6 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+              <div class="h-3 w-2/3 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Answer -->
+        <div v-if="qaResult && primaryAnswer" class="space-y-4 session-answer-enter">
+          <div class="flex justify-end">
+            <div class="chat-flow-bubble chat-flow-bubble-user">
+              <p class="text-[10px] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
+              <p class="text-sm leading-relaxed">{{ qaResult.question }}</p>
+            </div>
+          </div>
+
+          <div v-if="hasDualAnswerMode" class="space-y-3">
+            <p v-if="!selectedPreferredAnswer" class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.feedback.choosePreferredAnswer') }}</p>
+            <div v-else class="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+              <UIcon name="i-lucide-check" class="w-4 h-4" />
+              {{ t('foodScholarHome.qa.feedback.preferenceSaved') }}
+            </div>
+            <div :class="['grid gap-3', selectedPreferredAnswer ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2']">
               <div
-                v-else
-                class="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-300"
+                v-if="!selectedPreferredAnswer || selectedPreferredAnswer === 'a'"
+                :class="['chat-flow-bubble chat-flow-bubble-assistant p-5 rounded-2xl transition-all duration-200', selectedPreferredAnswer === 'a' ? 'ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900' : feedbackSubmitting ? 'opacity-70 pointer-events-none' : 'cursor-pointer hover:ring-2 hover:ring-brandp-300 hover:ring-offset-2 hover:ring-offset-white dark:hover:ring-brandp-600 dark:hover:ring-offset-zinc-900']"
+                role="button" tabindex="0" :aria-pressed="selectedPreferredAnswer === 'a'"
+                @click="submitDualAnswerFeedback('a')" @keydown.enter.prevent="submitDualAnswerFeedback('a')" @keydown.space.prevent="submitDualAnswerFeedback('a')"
               >
-                <UIcon
-                  name="i-lucide-check"
-                  class="w-4 h-4"
+                <div class="flex items-center justify-between gap-2 mb-3">
+                  <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPreferredAnswer ? t('foodScholarHome.qa.answer') : t('foodScholarHome.qa.answerA') }}</h4>
+                  <span v-if="!selectedPreferredAnswer" class="text-xs text-gray-500 dark:text-gray-400">{{ answerALabel }}</span>
+                </div>
+                <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" @click="handleMarkdownClick" style="--answer-reveal-delay: 40ms" v-html="renderMarkdown(primaryAnswer.answer)" />
+              </div>
+              <div
+                v-if="(!selectedPreferredAnswer || selectedPreferredAnswer === 'b') && secondaryAnswer"
+                :class="['chat-flow-bubble chat-flow-bubble-assistant p-5 rounded-2xl transition-all duration-200', selectedPreferredAnswer === 'b' ? 'ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900' : feedbackSubmitting ? 'opacity-70 pointer-events-none' : 'cursor-pointer hover:ring-2 hover:ring-brandp-300 hover:ring-offset-2 hover:ring-offset-white dark:hover:ring-brandp-600 dark:hover:ring-offset-zinc-900']"
+                role="button" tabindex="0" :aria-pressed="selectedPreferredAnswer === 'b'"
+                @click="submitDualAnswerFeedback('b')" @keydown.enter.prevent="submitDualAnswerFeedback('b')" @keydown.space.prevent="submitDualAnswerFeedback('b')"
+              >
+                <div class="flex items-center justify-between gap-2 mb-3">
+                  <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPreferredAnswer ? t('foodScholarHome.qa.answer') : t('foodScholarHome.qa.answerB') }}</h4>
+                  <span v-if="!selectedPreferredAnswer" class="text-xs text-gray-500 dark:text-gray-400">{{ answerBLabel }}</span>
+                </div>
+                <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" @click="handleMarkdownClick" style="--answer-reveal-delay: 120ms" v-html="renderMarkdown(secondaryAnswer.answer)" />
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="chat-flow-bubble chat-flow-bubble-assistant">
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.answer') }}</h4>
+              <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.confidence') }}: {{ primaryAnswer.confidence || t('foodScholarHome.qa.notAvailable') }}</span>
+            </div>
+            <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" style="--answer-reveal-delay: 40ms" @click="handleMarkdownClick" v-html="renderMarkdown(primaryAnswer.answer)" />
+
+            <div v-if="singleAnswerFeedbackEnabled" class="mt-4">
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.feedback.helpfulQuestion') }}</span>
+                <template v-if="!singleAnswerFeedbackSubmitted && !showNegativeFeedbackReasons">
+                  <button :disabled="feedbackSubmitting" class="px-3 py-1.5 text-xs rounded-full border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-300 transition-colors disabled:opacity-50" @click="submitSingleAnswerFeedback(true)">{{ t('foodScholarHome.common.yes') }}</button>
+                  <button :disabled="feedbackSubmitting" class="px-3 py-1.5 text-xs rounded-full border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-300 transition-colors disabled:opacity-50" @click="submitSingleAnswerFeedback(false)">{{ t('foodScholarHome.common.no') }}</button>
+                </template>
+                <template v-else-if="singleAnswerFeedbackSubmitted">
+                  <UIcon name="i-lucide-check" class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <span class="text-xs font-medium text-emerald-700 dark:text-emerald-300">{{ t('foodScholarHome.qa.feedback.saved') }}</span>
+                </template>
+              </div>
+              <div v-if="showNegativeFeedbackReasons && !singleAnswerFeedbackSubmitted" class="mt-3 space-y-3">
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.feedback.whatWentWrong') }}</p>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    v-for="reason in negativeFeedbackReasons" :key="reason" :disabled="feedbackSubmitting"
+                    :class="['px-3 py-1.5 text-xs rounded-full border transition-colors disabled:opacity-50', selectedNegativeReason === reason ? 'border-red-500 bg-red-50 text-red-700 dark:border-red-400 dark:bg-red-900/30 dark:text-red-300' : 'border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-red-400 hover:bg-red-50 hover:text-red-700 dark:hover:border-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-300']"
+                    @click="selectNegativeReason(reason)"
+                  >{{ reason }}</button>
+                </div>
+                <div v-if="selectedNegativeReason">
+                  <textarea v-model="negativeFeedbackComment" :disabled="feedbackSubmitting" rows="2" :placeholder="t('foodScholarHome.qa.feedback.optionalComment')" class="w-full px-3 py-2 text-xs rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400 resize-none disabled:opacity-50" />
+                  <button :disabled="feedbackSubmitting" class="mt-2 px-4 py-1.5 text-xs font-medium rounded-full bg-brand-500 text-white hover:bg-brand-600 transition-colors disabled:opacity-50" @click="submitNegativeFeedback()">{{ t('foodScholarHome.qa.feedback.submit') }}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="qaResult.follow_up_suggestions?.length" class="chat-flow-bubble chat-flow-bubble-muted">
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">{{ t('foodScholarHome.qa.followUpSuggestions') }}</h4>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="suggestion in qaResult.follow_up_suggestions" :key="suggestion" type="button"
+                class="px-3 py-1.5 text-xs rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-200 hover:bg-brand-100 dark:hover:bg-brand-900/40 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
+                @click="askScholarQA(suggestion)"
+              >{{ suggestion }}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Library tab -->
+    <template v-else-if="pageTab === 'resources'">
+      <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 py-10 sm:py-14 space-y-16">
+
+        <!-- Introduction + resource type row -->
+        <section class="grid lg:grid-cols-[1fr_auto] gap-10 items-start">
+          <div>
+            <h2 class="text-3xl sm:text-4xl font-claude text-gray-900 dark:text-white leading-tight mb-4">
+              Access the science of human nutrition
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-zinc-400 leading-relaxed max-w-3xl mb-6">
+              FoodScholar consolidates peer-reviewed research, national dietary guidance, and academic reference material across the full breadth of nutritional science, for everyone.
+            </p>
+
+            <!-- Library search bar -->
+            <div ref="librarySearchBoxRef" class="relative max-w-xl">
+              <div class="relative flex items-center">
+                <UIcon name="i-lucide-search" class="absolute left-3.5 w-4 h-4 text-gray-400 dark:text-zinc-500 pointer-events-none z-10" />
+                <input
+                  ref="librarySearchInputRef"
+                  v-model="librarySearchQuery"
+                  type="text"
+                  placeholder="Search articles, guides, textbooks…"
+                  class="w-full pl-10 pr-20 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-400 dark:focus:ring-brand-600 transition"
+                  autocomplete="off"
+                  @input="handleLibrarySearchInput"
+                  @keydown.enter.prevent="handleLibrarySearchEnter"
+                  @keydown.down.prevent="handleLibraryArrowDown"
+                  @keydown.up.prevent="handleLibraryArrowUp"
+                  @keydown.esc.prevent="closeLibraryDropdown"
+                  @focus="libraryDropdownOpen = !!librarySearchQuery.trim()"
                 />
-                {{ t('foodScholarHome.qa.feedback.preferenceSaved') }}
-              </div>
-              <div
-                :class="[
-                  'grid gap-3',
-                  selectedPreferredAnswer ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'
-                ]"
-              >
-                <div
-                  v-if="!selectedPreferredAnswer || selectedPreferredAnswer === 'a'"
-                  :class="[
-                    'chat-flow-bubble chat-flow-bubble-assistant p-5 rounded-2xl transition-all duration-200',
-                    selectedPreferredAnswer === 'a'
-                      ? 'ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900'
-                      : feedbackSubmitting
-                        ? 'opacity-70 pointer-events-none'
-                        : 'cursor-pointer hover:ring-2 hover:ring-brandp-300 hover:ring-offset-2 hover:ring-offset-white dark:hover:ring-brandp-600 dark:hover:ring-offset-zinc-900'
-                  ]"
-                  role="button"
-                  tabindex="0"
-                  :aria-pressed="selectedPreferredAnswer === 'a'"
-                  @click="submitDualAnswerFeedback('a')"
-                  @keydown.enter.prevent="submitDualAnswerFeedback('a')"
-                  @keydown.space.prevent="submitDualAnswerFeedback('a')"
-                >
-                  <div class="flex items-center justify-between gap-2 mb-3">
-                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPreferredAnswer ? t('foodScholarHome.qa.answer') : t('foodScholarHome.qa.answerA') }}</h4>
-                    <span
-                      v-if="!selectedPreferredAnswer"
-                      class="text-xs text-gray-500 dark:text-gray-400"
-                    >
-                      {{ answerALabel }}
-                    </span>
-                  </div>
-                  <div
-                    class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none"
-                  @click="handleMarkdownClick"
-                    style="--answer-reveal-delay: 40ms"
-                    v-html="renderMarkdown(primaryAnswer.answer)"
-                  />
-                </div>
-
-                <div
-                  v-if="(!selectedPreferredAnswer || selectedPreferredAnswer === 'b') && secondaryAnswer"
-                  :class="[
-                    'chat-flow-bubble chat-flow-bubble-assistant p-5 rounded-2xl transition-all duration-200',
-                    selectedPreferredAnswer === 'b'
-                      ? 'ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900'
-                      : feedbackSubmitting
-                        ? 'opacity-70 pointer-events-none'
-                        : 'cursor-pointer hover:ring-2 hover:ring-brandp-300 hover:ring-offset-2 hover:ring-offset-white dark:hover:ring-brandp-600 dark:hover:ring-offset-zinc-900'
-                  ]"
-                  role="button"
-                  tabindex="0"
-                  :aria-pressed="selectedPreferredAnswer === 'b'"
-                  @click="submitDualAnswerFeedback('b')"
-                  @keydown.enter.prevent="submitDualAnswerFeedback('b')"
-                  @keydown.space.prevent="submitDualAnswerFeedback('b')"
-                >
-                  <div class="flex items-center justify-between gap-2 mb-3">
-                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPreferredAnswer ? t('foodScholarHome.qa.answer') : t('foodScholarHome.qa.answerB') }}</h4>
-                    <span
-                      v-if="!selectedPreferredAnswer"
-                      class="text-xs text-gray-500 dark:text-gray-400"
-                    >
-                      {{ answerBLabel }}
-                    </span>
-                  </div>
-                  <div
-                    class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none"
-                  @click="handleMarkdownClick"
-                    style="--answer-reveal-delay: 120ms"
-                    v-html="renderMarkdown(secondaryAnswer.answer)"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div
-              v-else
-              class="chat-flow-bubble chat-flow-bubble-assistant"
-            >
-              <div class="flex items-center justify-between mb-3">
-                <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.answer') }}</h4>
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.confidence') }}: {{ primaryAnswer.confidence || t('foodScholarHome.qa.notAvailable') }}</span>
-              </div>
-              <div
-                class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none"
-                style="--answer-reveal-delay: 40ms"
-                @click="handleMarkdownClick"
-                v-html="renderMarkdown(primaryAnswer.answer)"
-              />
-
-              <div
-                v-if="singleAnswerFeedbackEnabled"
-                class="mt-4"
-              >
-                <div class="flex items-center gap-2">
-                  <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.feedback.helpfulQuestion') }}</span>
-                  <template v-if="!singleAnswerFeedbackSubmitted && !showNegativeFeedbackReasons">
-                    <button
-                      :disabled="feedbackSubmitting"
-                      class="px-3 py-1.5 text-xs rounded-full border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-300 transition-colors disabled:opacity-50"
-                      @click="submitSingleAnswerFeedback(true)"
-                    >
-                      {{ t('foodScholarHome.common.yes') }}
-                    </button>
-                    <button
-                      :disabled="feedbackSubmitting"
-                      class="px-3 py-1.5 text-xs rounded-full border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-300 transition-colors disabled:opacity-50"
-                      @click="submitSingleAnswerFeedback(false)"
-                    >
-                      {{ t('foodScholarHome.common.no') }}
-                    </button>
-                  </template>
-                  <template v-else-if="singleAnswerFeedbackSubmitted">
-                    <UIcon
-                      name="i-lucide-check"
-                      class="w-4 h-4 text-emerald-600 dark:text-emerald-400"
-                    />
-                    <span
-                      class="text-xs font-medium text-emerald-700 dark:text-emerald-300"
-                    >
-                      {{ t('foodScholarHome.qa.feedback.saved') }}
-                    </span>
-                  </template>
-                </div>
-
-                <div
-                  v-if="showNegativeFeedbackReasons && !singleAnswerFeedbackSubmitted"
-                  class="mt-3 space-y-3"
-                >
-                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.feedback.whatWentWrong') }}</p>
-                  <div class="flex flex-wrap gap-2">
-                    <button
-                      v-for="reason in negativeFeedbackReasons"
-                      :key="reason"
-                      :disabled="feedbackSubmitting"
-                      :class="[
-                        'px-3 py-1.5 text-xs rounded-full border transition-colors disabled:opacity-50',
-                        selectedNegativeReason === reason
-                          ? 'border-red-500 bg-red-50 text-red-700 dark:border-red-400 dark:bg-red-900/30 dark:text-red-300'
-                          : 'border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-red-400 hover:bg-red-50 hover:text-red-700 dark:hover:border-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-300'
-                      ]"
-                      @click="selectNegativeReason(reason)"
-                    >
-                      {{ reason }}
-                    </button>
-                  </div>
-
-                  <div v-if="selectedNegativeReason">
-                    <textarea
-                      v-model="negativeFeedbackComment"
-                      :disabled="feedbackSubmitting"
-                      rows="2"
-                      :placeholder="t('foodScholarHome.qa.feedback.optionalComment')"
-                      class="w-full px-3 py-2 text-xs rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400 resize-none disabled:opacity-50"
-                    />
-                    <button
-                      :disabled="feedbackSubmitting"
-                      class="mt-2 px-4 py-1.5 text-xs font-medium rounded-full bg-brand-500 text-white hover:bg-brand-600 transition-colors disabled:opacity-50"
-                      @click="submitNegativeFeedback()"
-                    >
-                      {{ t('foodScholarHome.qa.feedback.submit') }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              v-if="qaResult.follow_up_suggestions?.length"
-              class="chat-flow-bubble chat-flow-bubble-muted"
-            >
-              <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">{{ t('foodScholarHome.qa.followUpSuggestions') }}</h4>
-              <div class="flex flex-wrap gap-2">
                 <button
-                  v-for="suggestion in qaResult.follow_up_suggestions"
-                  :key="suggestion"
+                  v-if="librarySearchQuery"
                   type="button"
-                  class="px-3 py-1.5 text-xs rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-200 hover:bg-brand-100 dark:hover:bg-brand-900/40 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
-                  @click="askScholarQA(suggestion)"
+                  class="absolute right-10 text-gray-300 dark:text-zinc-600 hover:text-gray-500 dark:hover:text-zinc-300 transition-colors"
+                  @mousedown.prevent="clearLibrarySearch"
                 >
-                  {{ suggestion }}
+                  <UIcon name="i-lucide-x" class="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  :disabled="!librarySearchQuery.trim() || librarySearching"
+                  class="absolute right-2 px-2 py-1 rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors"
+                  @mousedown.prevent="runLibrarySearch"
+                >
+                  <UIcon v-if="librarySearching" name="i-lucide-loader-2" class="w-3.5 h-3.5 animate-spin" />
+                  <UIcon v-else name="i-lucide-arrow-right" class="w-3.5 h-3.5" />
                 </button>
               </div>
+
+              <!-- Dropdown: autocomplete suggestions + full search results -->
+              <div
+                v-if="libraryDropdownOpen && (libraryAutocompleting || libraryAutocompleteSuggestions.articles.length > 0 || libraryAutocompleteSuggestions.guides.length > 0 || libraryAutocompleteSuggestions.textbooks.length > 0 || librarySearchResults !== null)"
+                class="absolute left-0 right-0 mt-2 z-30 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl overflow-hidden"
+              >
+                <!-- Autocomplete suggestions (while typing, before full search) -->
+                <template v-if="librarySearchResults === null">
+                  <div v-if="libraryAutocompleting" class="px-4 py-3 text-sm text-gray-400 dark:text-zinc-500">
+                    Looking up suggestions…
+                  </div>
+                  <template v-else>
+                    <!-- Article suggestions -->
+                    <div v-if="libraryAutocompleteSuggestions.articles.length">
+                      <div class="px-4 pt-3 pb-1.5">
+                        <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Articles</span>
+                      </div>
+                      <NuxtLink
+                        v-for="(suggestion, i) in libraryAutocompleteSuggestions.articles"
+                        :key="suggestion.urn"
+                        :to="`/foodscholar/${suggestion.urn}`"
+                        :class="[
+                          'flex items-start gap-3 px-4 py-2.5 transition-colors',
+                          libraryActiveIndex === i ? 'bg-brand-50 dark:bg-brand-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
+                        ]"
+                        @click="closeLibraryDropdown"
+                        @mouseenter="libraryActiveIndex = i"
+                      >
+                        <UIcon name="i-lucide-file-text" class="w-4 h-4 text-brand-400 dark:text-brand-500 shrink-0 mt-0.5" />
+                        <div class="min-w-0">
+                          <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ suggestion.title }}</p>
+                          <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">{{ suggestion.venue || suggestion.ai_category || '' }}</p>
+                        </div>
+                      </NuxtLink>
+                    </div>
+
+                    <!-- Guide suggestions -->
+                    <div v-if="libraryAutocompleteSuggestions.guides.length" :class="libraryAutocompleteSuggestions.articles.length ? 'border-t border-gray-100 dark:border-zinc-800' : ''">
+                      <div class="px-4 pt-3 pb-1.5">
+                        <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Dietary Guides</span>
+                      </div>
+                      <NuxtLink
+                        v-for="(suggestion, i) in libraryAutocompleteSuggestions.guides"
+                        :key="suggestion.urn"
+                        :to="`/foodscholar/catalog/guides/${suggestion.urn}`"
+                        :class="[
+                          'flex items-start gap-3 px-4 py-2.5 transition-colors',
+                          libraryActiveIndex === libraryAutocompleteSuggestions.articles.length + i ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
+                        ]"
+                        @click="closeLibraryDropdown"
+                        @mouseenter="libraryActiveIndex = libraryAutocompleteSuggestions.articles.length + i"
+                      >
+                        <UIcon name="i-lucide-map" class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                        <div class="min-w-0">
+                          <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ suggestion.title }}</p>
+                          <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">{{ suggestion.region || '' }}</p>
+                        </div>
+                      </NuxtLink>
+                    </div>
+
+                    <!-- Textbook suggestions (non-navigable) -->
+                    <div
+                      v-if="libraryAutocompleteSuggestions.textbooks.length"
+                      :class="(libraryAutocompleteSuggestions.articles.length || libraryAutocompleteSuggestions.guides.length) ? 'border-t border-gray-100 dark:border-zinc-800' : ''"
+                    >
+                      <div class="px-4 pt-3 pb-1.5">
+                        <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Textbooks</span>
+                      </div>
+                      <div
+                        v-for="(suggestion, i) in libraryAutocompleteSuggestions.textbooks"
+                        :key="suggestion.urn"
+                        :class="[
+                          'flex items-start gap-3 px-4 py-2.5 opacity-75 cursor-default',
+                          libraryActiveIndex === libraryAutocompleteSuggestions.articles.length + libraryAutocompleteSuggestions.guides.length + i ? 'bg-amber-50 dark:bg-amber-900/20' : ''
+                        ]"
+                        @mouseenter="libraryActiveIndex = libraryAutocompleteSuggestions.articles.length + libraryAutocompleteSuggestions.guides.length + i"
+                      >
+                        <UIcon name="i-lucide-book-open" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                        <div class="min-w-0">
+                          <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ suggestion.title }}</p>
+                          <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">
+                            {{ [suggestion.authors?.join(', '), suggestion.publication_year].filter(Boolean).join(' · ') || 'Textbook' }}
+                          </p>
+                        </div>
+                        <span class="ml-auto shrink-0 text-[0.58rem] uppercase tracking-wide text-amber-500/70 font-medium self-center">soon</span>
+                      </div>
+                    </div>
+
+                  </template>
+                </template>
+
+                <!-- Full search results (after Enter / clicking search) -->
+                <template v-else>
+                  <div v-if="librarySearching" class="px-4 py-6 text-center text-sm text-gray-400 dark:text-zinc-500">
+                    Searching…
+                  </div>
+                  <template v-else>
+                    <div v-if="!librarySearchResults.articles.length && !librarySearchResults.guides.length && !librarySearchResults.textbooks.length" class="px-4 py-6 text-center text-sm text-gray-400 dark:text-zinc-500">
+                      No results for <em>"{{ librarySearchResults.query }}"</em>
+                    </div>
+                    <template v-else>
+                      <!-- Articles -->
+                      <div v-if="librarySearchResults.articles.length">
+                        <div class="px-4 pt-3 pb-1.5 flex items-center justify-between">
+                          <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Articles</span>
+                          <NuxtLink :to="`/foodscholar/catalog?q=${encodeURIComponent(librarySearchResults.query)}`" class="text-[0.6rem] text-brand-500 hover:text-brand-600 font-medium" @click="closeLibraryDropdown">See all</NuxtLink>
+                        </div>
+                        <NuxtLink
+                          v-for="(article, i) in librarySearchResults.articles"
+                          :key="article.urn"
+                          :to="`/foodscholar/${article.urn}`"
+                          :class="[
+                            'flex items-start gap-3 px-4 py-2.5 transition-colors',
+                            libraryActiveIndex === i ? 'bg-brand-50 dark:bg-brand-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
+                          ]"
+                          @click="closeLibraryDropdown"
+                          @mouseenter="libraryActiveIndex = i"
+                        >
+                          <UIcon name="i-lucide-file-text" class="w-4 h-4 text-brand-400 dark:text-brand-500 shrink-0 mt-0.5" />
+                          <div class="min-w-0">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ article.title }}</p>
+                            <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">{{ article.venue || article.ai_category || '' }}</p>
+                          </div>
+                        </NuxtLink>
+                      </div>
+
+                      <!-- Dietary Guides -->
+                      <div v-if="librarySearchResults.guides.length" :class="librarySearchResults.articles.length ? 'border-t border-gray-100 dark:border-zinc-800' : ''">
+                        <div class="px-4 pt-3 pb-1.5 flex items-center justify-between">
+                          <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Dietary Guides</span>
+                          <NuxtLink to="/foodscholar/guides" class="text-[0.6rem] text-emerald-600 hover:text-emerald-700 font-medium" @click="closeLibraryDropdown">See all</NuxtLink>
+                        </div>
+                        <NuxtLink
+                          v-for="(guide, i) in librarySearchResults.guides"
+                          :key="guide.urn"
+                          :to="`/foodscholar/catalog/guides/${guide.urn}`"
+                          :class="[
+                            'flex items-start gap-3 px-4 py-2.5 transition-colors',
+                            libraryActiveIndex === librarySearchResults.articles.length + i ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
+                          ]"
+                          @click="closeLibraryDropdown"
+                          @mouseenter="libraryActiveIndex = librarySearchResults.articles.length + i"
+                        >
+                          <UIcon name="i-lucide-map" class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                          <div class="min-w-0">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ guide.title }}</p>
+                            <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">{{ guide.region || '' }}</p>
+                          </div>
+                        </NuxtLink>
+                      </div>
+
+                      <!-- Textbooks (non-clickable, coming soon) -->
+                      <div
+                        v-if="librarySearchResults.textbooks.length"
+                        :class="(librarySearchResults.articles.length || librarySearchResults.guides.length) ? 'border-t border-gray-100 dark:border-zinc-800' : ''"
+                      >
+                        <div class="px-4 pt-3 pb-1.5">
+                          <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Textbooks</span>
+                        </div>
+                        <div
+                          v-for="textbook in librarySearchResults.textbooks"
+                          :key="textbook.urn"
+                          class="flex items-start gap-3 px-4 py-2.5 opacity-70 cursor-default"
+                        >
+                          <UIcon name="i-lucide-book-open" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                          <div class="min-w-0">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ textbook.title }}</p>
+                            <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">
+                              {{ [textbook.authors?.join(', '), textbook.publication_year].filter(Boolean).join(' · ') || 'Textbook' }}
+                            </p>
+                          </div>
+                          <span class="ml-auto shrink-0 text-[0.58rem] uppercase tracking-wide text-amber-500/70 font-medium self-center">soon</span>
+                        </div>
+                      </div>
+                    </template>
+                  </template>
+                </template>
+              </div>
             </div>
-
           </div>
-        </div>
-      </section>
 
-      <section
-        id="popular-articles"
-        class="mb-16"
-      >
-        <div class="mb-8">
-          <div class="flex items-center justify-between">
-            <h2 class="text-3xl font-serif font-semibold text-gray-900 dark:text-white">
-              {{ t('foodScholarHome.popularArticles.title') }}
-            </h2>
+          <!-- Resource type pills -->
+          <div class="flex lg:flex-col gap-3 flex-wrap">
             <NuxtLink
               to="/foodscholar/catalog"
-              class="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-300 dark:border-zinc-600 bg-transparent hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-700 dark:text-gray-300 font-medium transition-colors"
+              class="group inline-flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-brand-300 dark:hover:border-brand-700 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
             >
-              <span>{{ t('foodScholarHome.popularArticles.browseFullCatalog') }}</span>
-              <UIcon
-                name="i-lucide-arrow-right"
-                class="w-4 h-4"
-              />
+              <div class="w-8 h-8 rounded-lg bg-brand-50 dark:bg-brand-900/40 flex items-center justify-center shrink-0">
+                <UIcon name="i-lucide-file-text" class="w-4 h-4 text-brand-600 dark:text-brand-400" />
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">Articles</p>
+                <p class="text-xs text-gray-400 dark:text-zinc-500">Research &amp; reviews</p>
+              </div>
+              <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600 ml-2 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
+            </NuxtLink>
+
+            <NuxtLink
+              to="/foodscholar/guides"
+              class="group inline-flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+            >
+              <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                <UIcon name="i-lucide-map" class="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">Dietary Guides</p>
+                <p class="text-xs text-gray-400 dark:text-zinc-500">National &amp; regional guidance</p>
+              </div>
+              <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600 ml-2 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
+            </NuxtLink>
+
+            <div class="group inline-flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-gray-200 dark:border-zinc-700 bg-white/50 dark:bg-zinc-900/50 opacity-60 cursor-default">
+              <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center shrink-0">
+                <UIcon name="i-lucide-book-open" class="w-4 h-4 text-amber-600 dark:text-amber-500" />
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-gray-700 dark:text-zinc-300">Textbooks</p>
+                <p class="text-xs text-gray-400 dark:text-zinc-500">Searchable via Library search</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Articles by topic -->
+        <section>
+          <div class="flex items-center justify-between gap-4 mb-6">
+            <div>
+              <p class="text-[0.62rem] uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500 font-semibold mb-1">Articles</p>
+              <h2 class="text-xl font-serif font-semibold text-gray-900 dark:text-white">Browse by topic</h2>
+            </div>
+            <NuxtLink
+              to="/foodscholar/catalog"
+              class="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 transition-colors group"
+            >
+              Full catalog
+              <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </NuxtLink>
           </div>
-          <div class="mt-4 flex flex-wrap gap-2">
-            <button
-              v-for="topic in popularArticleTopics"
-              :key="topic"
-              :class="[
-                'px-6 py-2 rounded-full font-medium transition-all duration-300',
-                selectedPopularTopic === topic
-                  ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/30'
-                  : 'bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700'
-              ]"
-              @click="selectPopularTopic(topic)"
-            >
-              {{ topic }}
-            </button>
+
+          <!-- Loading -->
+          <div v-if="articlesLoading" class="space-y-4">
+            <div class="flex gap-2 mb-4">
+              <div v-for="i in 5" :key="i" class="h-7 w-24 rounded-full bg-gray-100 dark:bg-zinc-800 animate-pulse" />
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div v-for="i in 6" :key="i" class="h-48 rounded-2xl bg-gray-100 dark:bg-zinc-800 animate-pulse" />
+            </div>
           </div>
-        </div>
 
-        <div
-          v-if="articlesLoading"
-          class="text-center py-12"
-        >
-          <div class="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p class="text-sm text-gray-600 dark:text-gray-400">
-            {{ t('foodScholarHome.popularArticles.loading') }}
-          </p>
-        </div>
+          <template v-else-if="allArticles.length">
+            <!-- Topic tabs -->
+            <div class="flex gap-1.5 flex-wrap mb-6">
+              <button
+                v-for="topic in libraryArticleTopics"
+                :key="topic"
+                type="button"
+                :class="[
+                  'px-3 py-1.5 text-xs font-medium rounded-full border transition-colors',
+                  librarySelectedTopic === topic
+                    ? 'bg-brand-500 border-brand-500 text-white'
+                    : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600 dark:hover:text-brand-400'
+                ]"
+                @click="librarySelectedTopic = topic"
+              >{{ topic }}</button>
+            </div>
 
-        <div
-          v-else-if="articlesError"
-          class="p-4 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 mb-4"
-        >
-          <p class="text-sm text-red-700 dark:text-red-300">
-            {{ articlesError }}
-          </p>
-        </div>
-
-        <div
-          v-else-if="filteredArticles.length"
-          class="grid grid-cols-1 md:grid-cols-2 gap-6"
-        >
-          <FoodscholarArticleCard
-            v-for="(article, index) in filteredArticles"
-            :key="article.urn"
-            :article="article"
-            :index="index"
-            :fade="false"
-          />
-        </div>
-
-        <div
-          v-else
-          class="text-center py-12 border border-gray-200 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900/40"
-        >
-          <p class="text-gray-600 dark:text-gray-400">
-            {{ t('foodScholarHome.popularArticles.noFilteredResults') }}
-          </p>
-        </div>
-      </section>
-
-      <section
-        class="bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/20 dark:to-brand-800/20 border border-brand-200 dark:border-brand-800 rounded-3xl p-8 sm:p-12 mb-12"
-      >
-        <h2 class="text-3xl font-serif font-semibold mb-8 text-gray-900 dark:text-white">
-          {{ t('foodScholarHome.popularTopics.title') }}
-        </h2>
-        <div
-          v-if="popularTopics.length"
-          class="grid grid-cols-1 md:grid-cols-3 gap-6"
-        >
-          <div
-            v-for="topic in popularTopics"
-            :key="topic.title"
-            class="text-left p-6 rounded-2xl bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm border border-gray-200 dark:border-zinc-700"
-          >
-            <div class="w-12 h-12 rounded-xl bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center mb-4">
-              <UIcon
-                :name="topic.icon"
-                class="w-6 h-6 text-brand-600 dark:text-brand-400"
+            <!-- Article cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <FoodscholarArticleCard
+                v-for="(article, i) in libraryFilteredArticles"
+                :key="article.urn"
+                :article="article"
+                :index="i"
+                :fade="false"
               />
             </div>
-            <h3 class="font-semibold text-gray-900 dark:text-white mb-2">
-              {{ topic.title }}
-            </h3>
-            <p class="text-sm text-gray-600 dark:text-gray-300 font-light">
-              {{ topic.description }}
+
+            <p v-if="!libraryFilteredArticles.length" class="py-10 text-center text-sm text-gray-400 dark:text-zinc-500">
+              No articles found for this topic.
             </p>
+          </template>
+
+          <div v-else-if="articlesError" class="py-10 text-center text-sm text-red-500">{{ articlesError }}</div>
+        </section>
+
+        <!-- Dietary Guides Atlas (compact) -->
+        <section>
+          <div class="flex items-start justify-between gap-6 mb-6">
+            <div>
+              <p class="text-[0.62rem] uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500 font-semibold mb-1">Dietary Guides Atlas</p>
+              <h2 class="text-xl font-serif font-semibold text-gray-900 dark:text-white">European guidance by country</h2>
+              <p class="mt-1 text-xs text-gray-400 dark:text-zinc-500">Select a country on the map — or open the full atlas for all guides and dietary rules.</p>
+            </div>
+            <NuxtLink
+              to="/foodscholar/guides"
+              class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 text-xs font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
+            >
+              <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
+              Open full atlas
+            </NuxtLink>
           </div>
-        </div>
-        <p
-          v-else
-          class="text-sm text-gray-600 dark:text-gray-300"
-        >
-          {{ t('foodScholarHome.popularTopics.emptyState') }}
-        </p>
-      </section>
-    </main>
+
+          <div class="rounded-2xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 overflow-hidden">
+            <!-- Loading -->
+            <div v-if="libraryMapLoading" class="min-h-[22rem] animate-pulse bg-gray-50 dark:bg-zinc-800/50 flex items-center justify-center">
+              <p class="text-sm text-gray-400 dark:text-zinc-500">Loading map…</p>
+            </div>
+            <!-- Error -->
+            <div v-else-if="libraryMapError" class="min-h-[14rem] flex items-center justify-center px-6 py-10 text-center">
+              <p class="text-sm text-gray-400 dark:text-zinc-500">{{ libraryMapError }}</p>
+            </div>
+            <!-- Map + panel -->
+            <template v-else>
+              <div class="grid xl:grid-cols-[minmax(0,1fr)_14rem]">
+                <!-- Map scaled down to fit without clipping -->
+                <div class="library-map-wrap">
+                  <FoodscholarGuidesEuropeGuidesMap
+                    v-model:selected-region-code="librarySelectedRegion"
+                    :regions="libraryEuRegions"
+                  />
+                </div>
+                <!-- Sidebar -->
+                <div class="border-t xl:border-t-0 xl:border-l border-gray-100 dark:border-zinc-800 p-5 flex flex-col gap-5">
+                  <!-- Stats -->
+                  <dl class="grid grid-cols-3 xl:grid-cols-3 gap-3">
+                    <div>
+                      <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">Countries</dt>
+                      <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryEuRegions.length }}</dd>
+                    </div>
+                    <div>
+                      <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">Guides</dt>
+                      <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalGuides.toLocaleString() }}</dd>
+                    </div>
+                    <div>
+                      <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">Rules</dt>
+                      <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalGuidelines > 0 ? libraryTotalGuidelines.toLocaleString() : '—' }}</dd>
+                    </div>
+                  </dl>
+
+                  <!-- Selected region detail -->
+                  <div v-if="librarySelectedRegionData" class="border-t border-gray-100 dark:border-zinc-800 pt-4">
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                      {{ `${librarySelectedRegionData.flag || ''} ${librarySelectedRegionData.label}`.trim() }}
+                    </p>
+                    <p class="text-xs text-gray-400 dark:text-zinc-500 mb-3">
+                      {{ librarySelectedRegionData.guideCount }} guide{{ librarySelectedRegionData.guideCount === 1 ? '' : 's' }}<template v-if="librarySelectedRegionData.guidelineCount"> · {{ librarySelectedRegionData.guidelineCount }} rules</template><template v-if="librarySelectedRegionData.latestPublicationYear"> · {{ librarySelectedRegionData.latestPublicationYear }}</template>
+                    </p>
+                    <NuxtLink
+                      :to="`/foodscholar/guides/${librarySelectedRegionData.slug}`"
+                      class="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 transition-colors group"
+                    >
+                      <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
+                      Open country guides
+                    </NuxtLink>
+                  </div>
+                  <div v-else class="border-t border-gray-100 dark:border-zinc-800 pt-4">
+                    <p class="text-xs text-gray-400 dark:text-zinc-500 leading-relaxed">Select a country to see its dietary guidance records and available publications.</p>
+                    <NuxtLink
+                      to="/foodscholar/guides"
+                      class="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 transition-colors group"
+                    >
+                      <UIcon name="i-lucide-list" class="w-3.5 h-3.5" />
+                      Browse all guides
+                    </NuxtLink>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </section>
+
+      </div>
+    </template>
   </div>
 </template>
 
@@ -641,6 +808,8 @@ import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import articlesApi, { type Article } from '~/services/articlesApi'
+import catalogApi, { type CatalogGuide } from '~/services/catalogApi'
+import textbooksApi, { type Textbook, type TextbookSuggestion } from '~/services/textbooksApi'
 import foodscholarApi, {
   type QaAskRequest,
   type QaAskResult,
@@ -649,6 +818,12 @@ import foodscholarApi, {
 import { useAuthStore } from '~/stores/auth'
 import { useHouseholdStore } from '~/stores/household'
 import { getExcerpt } from '~/utils/articleHelpers'
+import {
+  buildRegionSummaries,
+  getRegionPresentation,
+  type GuidesCatalogRegionSummary
+} from '~/utils/guidesCatalog'
+import { euCountryCodes } from '~/utils/countries'
 
 const { t, locale } = useI18n()
 
@@ -716,17 +891,289 @@ interface ExpertiseOption {
 const AUTO_MODEL_VALUE = '__auto__'
 const CATEGORY_ALL = 'All'
 const CATEGORY_UNCATEGORIZED = 'Uncategorized'
-const qaHeadingIndex = Math.floor(Math.random() * 3)
-const qaHeadings = computed(() => [
-  t('foodScholarHome.qa.headingOptions.first'),
-  t('foodScholarHome.qa.headingOptions.second'),
-  t('foodScholarHome.qa.headingOptions.third')
-])
-const qaHeading = computed(() => qaHeadings.value[qaHeadingIndex] || qaHeadings.value[0])
+const pageTab = ref<'qa' | 'resources'>('qa')
+const hasActiveSession = computed(() => asking.value || !!qaResult.value || !!qaError.value)
 
+// ============================================================================
+// Library tab state
+// ============================================================================
+const EU_REGION_SET = new Set<string>(euCountryCodes)
+
+const libraryMapLoading = ref(false)
+const libraryMapLoaded = ref(false)
+const libraryMapError = ref<string | null>(null)
+const libraryRegionSummaries = ref<GuidesCatalogRegionSummary[]>([])
+const librarySelectedRegion = ref<string | null>(null)
+
+const LIBRARY_MAP_EXTRA = new Set(['RS']) // Serbia included even though not EU
+const libraryEuRegions = computed(() =>
+  libraryRegionSummaries.value.filter(r => {
+    const code = getRegionPresentation(r.region).value.toUpperCase()
+    return EU_REGION_SET.has(code) || LIBRARY_MAP_EXTRA.has(code)
+  })
+)
+
+const libraryTotalGuides = computed(() =>
+  libraryEuRegions.value.reduce((s, r) => s + r.guideCount, 0)
+)
+
+const libraryTotalGuidelines = computed(() =>
+  libraryEuRegions.value.reduce((s, r) => s + (r.guidelineCount ?? 0), 0)
+)
+
+const librarySelectedRegionData = computed(() =>
+  libraryEuRegions.value.find(r =>
+    getRegionPresentation(r.region).value.toUpperCase() === librarySelectedRegion.value
+  ) ?? null
+)
+
+const librarySelectedTopic = ref(CATEGORY_ALL)
+
+const libraryArticleTopics = computed(() => popularArticleTopics.value.slice(0, 8))
+
+const libraryFilteredArticles = computed(() => {
+  const topic = librarySelectedTopic.value
+  const base = allArticles.value.slice(0, 24)
+  if (topic === CATEGORY_ALL) return base.slice(0, 6)
+  return base
+    .filter(a => (a.topics || []).includes(topic) || (a.tags || []).includes(topic) || (a.ai_tags || []).includes(topic))
+    .slice(0, 6)
+})
+
+async function loadLibraryMap() {
+  if (libraryMapLoaded.value || libraryMapLoading.value) return
+  libraryMapLoading.value = true
+  libraryMapError.value = null
+  try {
+    const [guideRes, guidelineRes] = await Promise.all([
+      catalogApi.searchGuides({ limit: 250, offset: 0, sort: 'publication_year desc', facet_limit: 100 }),
+      catalogApi.searchGuidelines({ limit: 1, offset: 0, fields: ['region'], facet_limit: 100 }).catch(() => ({
+        guidelines: [], total: 0, facets: {} as Record<string, Array<{ value: string; count: number }>>
+      }))
+    ])
+    libraryRegionSummaries.value = buildRegionSummaries(
+      guideRes.guides,
+      guideRes.facets.region || [],
+      guidelineRes.facets.region || []
+    )
+    libraryMapLoaded.value = true
+  } catch {
+    libraryMapError.value = 'Dietary guides data could not be loaded.'
+  } finally {
+    libraryMapLoading.value = false
+  }
+}
+// ============================================================================
+// Library search
+// ============================================================================
+const librarySearchBoxRef = ref<HTMLElement | null>(null)
+const librarySearchInputRef = ref<HTMLInputElement | null>(null)
+const librarySearchQuery = ref('')
+const librarySearching = ref(false)
+const librarySearchResults = ref<{ query: string; articles: HomeArticle[]; guides: CatalogGuide[]; textbooks: Textbook[] } | null>(null)
+const libraryDropdownOpen = ref(false)
+const libraryActiveIndex = ref(-1)
+
+interface LibraryAutocompleteSuggestions {
+  articles: Array<{ urn: string; title: string; venue?: string | null; ai_category?: string | null }>
+  guides: Array<{ urn: string; title: string; region?: string | null }>
+  textbooks: TextbookSuggestion[]
+}
+
+const libraryAutocompleting = ref(false)
+const libraryAutocompleteSuggestions = ref<LibraryAutocompleteSuggestions>({ articles: [], guides: [], textbooks: [] })
+let libraryAutocompleteTimer: ReturnType<typeof setTimeout> | null = null
+
+async function fetchLibraryAutocomplete(q: string) {
+  libraryAutocompleting.value = true
+  try {
+    const [articleSuggestions, guideSuggestions, textbookSuggestions] = await Promise.all([
+      articlesApi.autocompleteArticles(q, 5).catch(() => []),
+      catalogApi.autocompleteGuides(q, 5).catch(() => []),
+      textbooksApi.autocompleteTextbooks(q, 5).catch(() => [])
+    ])
+    if (librarySearchQuery.value.trim() !== q) return
+    libraryAutocompleteSuggestions.value = {
+      articles: articleSuggestions,
+      guides: guideSuggestions,
+      textbooks: textbookSuggestions
+    }
+    const hasAny = articleSuggestions.length > 0 || guideSuggestions.length > 0 || textbookSuggestions.length > 0
+    libraryDropdownOpen.value = hasAny
+    libraryActiveIndex.value = -1
+  } catch {
+    libraryAutocompleteSuggestions.value = { articles: [], guides: [], textbooks: [] }
+  } finally {
+    libraryAutocompleting.value = false
+  }
+}
+
+function handleLibrarySearchInput() {
+  const q = librarySearchQuery.value.trim()
+  librarySearchResults.value = null
+  libraryActiveIndex.value = -1
+
+  if (libraryAutocompleteTimer) {
+    clearTimeout(libraryAutocompleteTimer)
+    libraryAutocompleteTimer = null
+  }
+
+  if (q.length < 2) {
+    libraryAutocompleteSuggestions.value = []
+    libraryDropdownOpen.value = false
+    return
+  }
+
+  libraryDropdownOpen.value = true
+  libraryAutocompleteTimer = setTimeout(() => {
+    void fetchLibraryAutocomplete(q)
+  }, 220)
+}
+
+// Computed flat list of navigable items for arrow-key tracking
+const libraryNavItems = computed(() => {
+  if (librarySearchResults.value === null) {
+    // autocomplete mode — articles and guides are navigable, textbooks are not
+    const s = libraryAutocompleteSuggestions.value
+    return [
+      ...s.articles.map((_, i) => ({ type: 'ac-article' as const, index: i })),
+      ...s.guides.map((_, i) => ({ type: 'ac-guide' as const, index: i })),
+      ...s.textbooks.map((_, i) => ({ type: 'ac-textbook' as const, index: i }))
+    ]
+  }
+  const r = librarySearchResults.value
+  return [
+    ...r.articles.map((_, i) => ({ type: 'article' as const, index: i })),
+    ...r.guides.map((_, i) => ({ type: 'guide' as const, index: i }))
+  ]
+})
+
+function handleLibraryArrowDown() {
+  if (!libraryDropdownOpen.value) return
+  const max = libraryNavItems.value.length - 1
+  libraryActiveIndex.value = libraryActiveIndex.value < max ? libraryActiveIndex.value + 1 : 0
+}
+
+function handleLibraryArrowUp() {
+  if (!libraryDropdownOpen.value) return
+  const max = libraryNavItems.value.length - 1
+  libraryActiveIndex.value = libraryActiveIndex.value > 0 ? libraryActiveIndex.value - 1 : max
+}
+
+function handleLibrarySearchEnter() {
+  if (!libraryDropdownOpen.value || libraryNavItems.value.length === 0) {
+    void runLibrarySearch()
+    return
+  }
+
+  const item = libraryNavItems.value[libraryActiveIndex.value >= 0 ? libraryActiveIndex.value : 0]
+  if (!item) { void runLibrarySearch(); return }
+
+  if (item.type === 'ac-textbook') {
+    void runLibrarySearch()
+    return
+  }
+
+  if (item.type === 'ac-article') {
+    const article = libraryAutocompleteSuggestions.value.articles[item.index]
+    if (article) { closeLibraryDropdown(); void navigateTo(`/foodscholar/${article.urn}`) }
+    return
+  }
+
+  if (item.type === 'ac-guide') {
+    const guide = libraryAutocompleteSuggestions.value.guides[item.index]
+    if (guide) { closeLibraryDropdown(); void navigateTo(`/foodscholar/catalog/guides/${guide.urn}`) }
+    return
+  }
+
+  if (item.type === 'article' && librarySearchResults.value) {
+    const article = librarySearchResults.value.articles[item.index]
+    if (article) { closeLibraryDropdown(); void navigateTo(`/foodscholar/${article.urn}`) }
+    return
+  }
+
+  if (item.type === 'guide' && librarySearchResults.value) {
+    const guide = librarySearchResults.value.guides[item.index]
+    if (guide) { closeLibraryDropdown(); void navigateTo(`/foodscholar/catalog/guides/${guide.urn}`) }
+    return
+  }
+
+  void runLibrarySearch()
+}
+
+async function runLibrarySearch() {
+  const q = librarySearchQuery.value.trim()
+  if (!q || librarySearching.value) return
+  if (libraryAutocompleteTimer) { clearTimeout(libraryAutocompleteTimer); libraryAutocompleteTimer = null }
+  libraryAutocompleteSuggestions.value = { articles: [], guides: [], textbooks: [] }
+  librarySearching.value = true
+  librarySearchResults.value = { query: q, articles: [], guides: [], textbooks: [] }
+  libraryDropdownOpen.value = true
+  libraryActiveIndex.value = -1
+  try {
+    const [articleRes, guideRes, textbookRes] = await Promise.all([
+      articlesApi.searchArticles({ q, limit: 5, offset: 0 }),
+      catalogApi.searchGuides({ q, limit: 5, offset: 0 }),
+      textbooksApi.searchTextbooks({ q, limit: 5, offset: 0 }).catch(() => ({ textbooks: [], total: 0, facets: {} }))
+    ])
+    librarySearchResults.value = {
+      query: q,
+      articles: (articleRes.result?.results ?? []).slice(0, 5).map(mapArticleToHome),
+      guides: guideRes.guides.slice(0, 5),
+      textbooks: textbookRes.textbooks.slice(0, 5)
+    }
+  } catch {
+    // silent
+  } finally {
+    librarySearching.value = false
+  }
+}
+
+function closeLibraryDropdown() {
+  libraryDropdownOpen.value = false
+  libraryActiveIndex.value = -1
+}
+
+function clearLibrarySearch() {
+  librarySearchQuery.value = ''
+  librarySearchResults.value = null
+  libraryAutocompleteSuggestions.value = { articles: [], guides: [], textbooks: [] }
+  libraryDropdownOpen.value = false
+  libraryActiveIndex.value = -1
+  librarySearchInputRef.value?.focus()
+}
+
+function handleLibraryClickOutside(e: MouseEvent) {
+  if (librarySearchBoxRef.value && !librarySearchBoxRef.value.contains(e.target as Node)) {
+    closeLibraryDropdown()
+  }
+}
+
+// ============================================================================
+// QA headings
+// ============================================================================
 const router = useRouter()
 const authStore = useAuthStore()
 const householdStore = useHouseholdStore()
+
+const qaHeadingIndex = Math.floor(Math.random() * 10)
+const qaHeadings = computed(() => {
+  const name = householdStore.currentMember?.name?.split(' ')[0] || householdStore.currentMember?.name || ''
+  const greeting = name ? `, ${name}` : ''
+  return [
+    `What's on your mind${greeting}?`,
+    `Ready to explore nutrition${greeting}?`,
+    `Ask me anything${greeting}`,
+    `What would you like to know${greeting}?`,
+    `Where shall we start${greeting}?`,
+    `Your nutrition question${greeting}?`,
+    `Hello${greeting}! What can I help with?`,
+    `Let's dig into the science${greeting}`,
+    `Curious about something${greeting}?`,
+    `What are you researching${greeting}?`
+  ]
+})
+const qaHeading = computed(() => qaHeadings.value[qaHeadingIndex] || qaHeadings.value[0])
 
 const getCitationForUrn = (articleUrn: string) => {
   const citations = [
@@ -1455,6 +1902,10 @@ const setupObserver = () => {
   })
 }
 
+watch(pageTab, (tab) => {
+  if (tab === 'resources') loadLibraryMap()
+})
+
 onMounted(async () => {
   await Promise.all([
     loadPopularArticles(),
@@ -1462,19 +1913,37 @@ onMounted(async () => {
     loadQaQuestions()
   ])
 
+  if (pageTab.value === 'resources') loadLibraryMap()
+
   setupObserver()
+  document.addEventListener('mousedown', handleLibraryClickOutside)
 })
 
 onUnmounted(() => {
   observer?.disconnect()
+  document.removeEventListener('mousedown', handleLibraryClickOutside)
+  if (libraryAutocompleteTimer) clearTimeout(libraryAutocompleteTimer)
 })
 </script>
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap');
 
+@font-face {
+  font-family: 'ClaudeDisplay';
+  src: url('https://assets-proxy.anthropic.com/claude-ai/v2/assets/v1/c66fc489e-C-BHYa_K.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 .font-serif {
   font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+.font-claude {
+  font-family: 'ClaudeDisplay', 'Cormorant Garamond', Georgia, serif;
+  font-weight: normal;
 }
 
 .scroll-fade-in {
@@ -1620,5 +2089,41 @@ onUnmounted(() => {
   50% {
     box-shadow: 0 0 0 6px rgba(37, 99, 235, 0);
   }
+}
+
+.session-answer-enter {
+  animation: session-slide-up 420ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes session-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/*
+  Scale the map to ~65% of its natural size so it fits compactly
+  without clipping or internal scrolling. The wrapper is sized to
+  the post-scale footprint via padding-bottom trick.
+*/
+.library-map-wrap {
+  position: relative;
+  overflow: hidden;
+  /* natural min-height from the component is ~32rem; 0.65 × 32rem ≈ 20.8rem */
+  height: 21rem;
+}
+
+.library-map-wrap > * {
+  position: absolute;
+  inset: 0;
+  width: 153.85%; /* 1 / 0.65 */
+  height: 153.85%;
+  transform: scale(0.65);
+  transform-origin: top left;
 }
 </style>

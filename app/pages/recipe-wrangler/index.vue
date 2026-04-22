@@ -1,46 +1,48 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+  <div class="min-h-screen flex flex-col bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
     <!-- Header -->
     <RecipesRecipeWranglerHeader back-to="/dashboard" :back-label="t('recipeWrangler.backToDashboard')" />
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
-      <!-- Mode Tabs -->
-      <section class="mb-6 sm:mb-8">
-        <div class="max-w-2xl mx-auto">
-          <div class="p-1 rounded-xl sm:rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white/80 dark:bg-zinc-900/70 backdrop-blur-sm">
-            <div class="grid grid-cols-2 gap-1">
-              <button
-                type="button"
-                @click="activeTab = 'search'"
-                :class="[
-                  'inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold transition-colors',
-                  activeTab === 'search'
-                    ? 'bg-brandg-500 text-white'
-                    : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                ]"
-              >
-                <UIcon name="i-lucide-search" class="w-4 h-4" />
-                <span>Recipe Search</span>
-              </button>
-              <button
-                type="button"
-                @click="activeTab = 'analyze'"
-                :class="[
-                  'inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold transition-colors',
-                  activeTab === 'analyze'
-                    ? 'bg-brandg-500 text-white'
-                    : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                ]"
-              >
-                <UIcon name="i-lucide-flask-conical" class="w-4 h-4" />
-                <span>Analyze Recipe</span>
-              </button>
-            </div>
-          </div>
+    <!-- Page tab switcher -->
+    <div class="border-b border-zinc-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 flex justify-center">
+        <div class="flex gap-0">
+          <button
+            type="button"
+            :class="[
+              'px-5 py-3 text-sm font-medium border-b-2 transition-colors',
+              activeTab === 'search'
+                ? 'border-brandg-500 text-brandg-600 dark:text-brandg-400'
+                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+            ]"
+            @click="activeTab = 'search'"
+          >
+            <span class="flex items-center gap-1.5">
+              <UIcon name="i-lucide-search" class="w-3.5 h-3.5" />
+              Recipe Search
+            </span>
+          </button>
+          <button
+            type="button"
+            :class="[
+              'px-5 py-3 text-sm font-medium border-b-2 transition-colors',
+              activeTab === 'analyze'
+                ? 'border-brandg-500 text-brandg-600 dark:text-brandg-400'
+                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+            ]"
+            @click="activeTab = 'analyze'"
+          >
+            <span class="flex items-center gap-1.5">
+              <UIcon name="i-lucide-flask-conical" class="w-3.5 h-3.5" />
+              Analyze Recipe
+            </span>
+          </button>
         </div>
-      </section>
+      </div>
+    </div>
 
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-12">
       <!-- Search Bar -->
       <section v-if="activeTab === 'search'" class="mb-8 sm:mb-12">
         <div class="max-w-2xl mx-auto">
@@ -391,7 +393,7 @@
       <section v-if="activeTab === 'search'" class="mb-12 sm:mb-16">
         <div class="flex items-center justify-between mb-6 sm:mb-8">
           <div class="flex items-center gap-3">
-            <h2 class="text-2xl sm:text-3xl font-serif font-semibold text-zinc-900 dark:text-white">
+            <h2 class="text-2xl sm:text-3xl font-claude text-zinc-900 dark:text-white">
               <span v-if="!hasSearchAttempted">Search recipes to get started</span>
               <span v-else-if="loading">Searching...</span>
               <span v-else-if="error">Error loading recipes</span>
@@ -579,7 +581,7 @@
 
       <!-- Categories Section -->
       <section v-if="activeTab === 'search'" class="bg-gradient-to-br from-brandg-50 to-brandg-100 dark:from-brandg-900/20 dark:to-brandg-800/20 border border-brandg-200 dark:border-brandg-800 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12">
-        <h2 class="text-2xl sm:text-3xl font-serif font-semibold mb-6 sm:mb-8 text-zinc-900 dark:text-white">Browse by Category</h2>
+        <h2 class="text-2xl sm:text-3xl font-claude mb-6 sm:mb-8 text-zinc-900 dark:text-white">Browse by Category</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
           <button
             v-for="category in categories"
@@ -1232,7 +1234,20 @@ onBeforeUnmount(() => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap');
 
+@font-face {
+  font-family: 'ClaudeDisplay';
+  src: url('https://assets-proxy.anthropic.com/claude-ai/v2/assets/v1/c66fc489e-C-BHYa_K.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 .font-serif {
   font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+.font-claude {
+  font-family: 'ClaudeDisplay', 'Cormorant Garamond', Georgia, serif;
+  font-weight: normal;
 }
 </style>

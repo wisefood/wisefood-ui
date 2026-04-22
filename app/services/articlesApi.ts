@@ -351,6 +351,13 @@ class ArticlesApiService {
     const fq = params?.fq || []
     return this.searchArticles({ ...params, fq: [...fq, `authors:${author}`] })
   }
+
+  async autocompleteArticles(q: string, limit = 8): Promise<Array<{ urn: string; title: string; venue?: string | null; ai_category?: string | null }>> {
+    const normalized = q.trim()
+    if (normalized.length < 2) return []
+    const res = await wisefoodApi.get<{ result: Array<{ urn: string; title: string; venue?: string | null; ai_category?: string | null }> }>('/v1/articles/autocomplete', { params: { q: normalized, limit } })
+    return Array.isArray(res?.result) ? res.result : []
+  }
 }
 
 export default new ArticlesApiService()
