@@ -363,9 +363,6 @@
       <!-- Filters Sidebar Toggle -->
       <section v-if="activeTab === 'search'" class="mb-6 sm:mb-8">
         <div class="flex items-center justify-between">
-          <h2 class="text-base sm:text-lg font-semibold text-zinc-900 dark:text-white">
-            {{ t('recipeWrangler.filters.title') }}
-          </h2>
           <button
             @click="showFilters = !showFilters"
             class="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-sm"
@@ -397,7 +394,7 @@
               <span v-if="!hasSearchAttempted">Search recipes to get started</span>
               <span v-else-if="loading">Searching...</span>
               <span v-else-if="error">Error loading recipes</span>
-              <span v-else-if="!hasUserTriggeredSearch">Suggested recipes</span>
+              <span v-else-if="!hasUserTriggeredSearch">Explore Recipes</span>
               <span v-else>{{ recipesCount }} Recipe{{ recipesCount !== 1 ? 's' : '' }} Found</span>
             </h2>
           </div>

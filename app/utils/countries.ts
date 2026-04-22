@@ -27,6 +27,7 @@ export const countries: Country[] = [
   { code: 'LT', name: 'Lithuania', flag: '🇱🇹', label: '🇱🇹 Lithuania' },
   { code: 'LU', name: 'Luxembourg', flag: '🇱🇺', label: '🇱🇺 Luxembourg' },
   { code: 'MT', name: 'Malta', flag: '🇲🇹', label: '🇲🇹 Malta' },
+  { code: 'RS', name: 'Serbia', flag: '🇷🇸', label: '🇷🇸 Serbia' },
   { code: 'NL', name: 'Netherlands', flag: '🇳🇱', label: '🇳🇱 Netherlands' },
   { code: 'PL', name: 'Poland', flag: '🇵🇱', label: '🇵🇱 Poland' },
   { code: 'PT', name: 'Portugal', flag: '🇵🇹', label: '🇵🇹 Portugal' },

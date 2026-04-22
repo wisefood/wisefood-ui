@@ -537,10 +537,18 @@
         "subtitle": "Prilagajaj le, če potrebuješ več nadzora.",
         "ragOn": "RAG vklopljen",
         "ragOff": "RAG izklopljen",
+        "retrievalMode": "Način pridobivanja",
+        "retrieverRag": "RAG",
+        "retrieverLinearRag": "LinearRAG",
+        "retrieverModelOnly": "Samo model",
+        "retrieverRagDescription": "Uporabi pridobivanje dokazov iz virov FoodScholar.",
+        "retrieverLinearRagDescription": "Uporabi LinearRAG pridobivanje, podprto z grafom znanja.",
+        "retrieverModelOnlyDescription": "Vprašaj model brez pridobivanja virov.",
         "model": "Model",
         "sourceDepth": "Globina virov",
         "explanationStyle": "Slog razlage",
-        "enableRagToAdjust": "Za prilagoditev globine virov omogoči RAG."
+        "enableRagToAdjust": "Za prilagoditev globine virov omogoči RAG.",
+        "enableRetrievalToAdjust": "Za prilagoditev globine virov izberi RAG ali LinearRAG."
       },
       "model": {
         "auto": "Samodejno (priporočeno)",

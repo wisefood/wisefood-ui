@@ -537,10 +537,18 @@
         "subtitle": "Csak akkor állítsd, ha több kontrollra van szükséged.",
         "ragOn": "RAG be",
         "ragOff": "RAG ki",
+        "retrievalMode": "Lekérési mód",
+        "retrieverRag": "RAG",
+        "retrieverLinearRag": "LinearRAG",
+        "retrieverModelOnly": "Csak modell",
+        "retrieverRagDescription": "Bizonyítékkeresés FoodScholar-forrásokból.",
+        "retrieverLinearRagDescription": "Tudásgráffal támogatott LinearRAG lekérdezés.",
+        "retrieverModelOnlyDescription": "Kérdés a modellhez forráskeresés nélkül.",
         "model": "Modell",
         "sourceDepth": "Forrásmélység",
         "explanationStyle": "Magyarázat stílusa",
-        "enableRagToAdjust": "A forrásmélység állításához engedélyezd a RAG-ot."
+        "enableRagToAdjust": "A forrásmélység állításához engedélyezd a RAG-ot.",
+        "enableRetrievalToAdjust": "A forrásmélység állításához válaszd a RAG vagy LinearRAG módot."
       },
       "model": {
         "auto": "Automatikus (ajánlott)",

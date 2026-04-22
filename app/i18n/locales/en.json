@@ -538,10 +538,18 @@
         "subtitle": "Tune behavior only if you need more control.",
         "ragOn": "Include Articles",
         "ragOff": "Ask the Model Only",
+        "retrievalMode": "Retrieval mode",
+        "retrieverRag": "RAG",
+        "retrieverLinearRag": "LinearRAG",
+        "retrieverModelOnly": "Model only",
+        "retrieverRagDescription": "Use evidence retrieval from FoodScholar sources.",
+        "retrieverLinearRagDescription": "Use knowledge-graph informed LinearRAG retrieval.",
+        "retrieverModelOnlyDescription": "Ask the model without retrieval.",
         "model": "Model",
         "sourceDepth": "Source Depth",
         "explanationStyle": "Explanation Style",
-        "enableRagToAdjust": "Enable RAG to adjust source depth."
+        "enableRagToAdjust": "Enable RAG to adjust source depth.",
+        "enableRetrievalToAdjust": "Choose RAG or LinearRAG to adjust source depth."
       },
       "model": {
         "auto": "Auto (recommended)",
