@@ -12,6 +12,7 @@ node_modules
 # Logs
 logs
 *.log
+.codex
 
 # Misc
 .DS_Store
