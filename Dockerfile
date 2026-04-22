@@ -17,6 +17,12 @@ COPY . .
 
 # Build arguments for context path and Keycloak configuration
 ARG CONTEXT_PATH=/app
+ARG NUXT_PUBLIC_SENTRY_DSN=
+ARG SENTRY_DSN=
+ARG SENTRY_ORG=
+ARG SENTRY_PROJECT=
+ARG SENTRY_AUTH_TOKEN=
+ARG SENTRY_ENABLED=true
 
 # Set build-time environment variables
 ENV NUXT_APP_BASE_URL=${CONTEXT_PATH}

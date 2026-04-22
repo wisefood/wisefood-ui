@@ -1,3 +1,5 @@
+import { useRuntimeConfig } from '#imports'
+
 const DEFAULT_WISEFOOD_API_URL = 'https://wisefood.gr/dc/api'
 const DEFAULT_WISEFOOD_REST_API_URL = 'https://wisefood.gr/rest/api/v1'
 const DEFAULT_RECIPE_WRANGLER_MODE = 'auto'
@@ -10,6 +12,7 @@ interface RuntimeConfigWindow extends Window {
     wisefoodRestApiUrl?: string
     recipeWranglerApiUrl?: string
     recipeWranglerMode?: string
+    sentryDsn?: string
   }
 }
 
@@ -53,4 +56,10 @@ export const getRecipeWranglerMode = (): RecipeWranglerMode => {
   const config = useRuntimeConfig()
   const mode = runtimeConfig?.recipeWranglerMode || (config.public.recipeWranglerMode as string) || DEFAULT_RECIPE_WRANGLER_MODE
   return normalizeRecipeWranglerMode(mode)
+}
+
+export const getSentryDsn = (): string => {
+  const runtimeConfig = getWindowRuntimeConfig()
+  const config = useRuntimeConfig()
+  return String(runtimeConfig?.sentryDsn || config.public.sentryDsn || '')
 }

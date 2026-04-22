@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed bottom-5 right-5 z-50">
+  <div v-if="sentryEnabled" class="fixed bottom-5 right-5 z-50">
     <UButton
       color="primary"
       variant="solid"
@@ -15,12 +15,18 @@
 <script setup lang="ts">
 import * as Sentry from '@sentry/nuxt'
 import { sentryFeedbackOptions } from '~/utils/sentryFeedback'
+import { getSentryDsn } from '~/utils/runtimeConfig'
 
 const colorMode = useColorMode()
+const sentryEnabled = computed(() => Boolean(getSentryDsn()))
 
 let dialog: { appendToDom: () => void, open: () => void } | null = null
 
 async function openFeedback() {
+  if (!sentryEnabled.value) {
+    return
+  }
+
   const feedback = getOrCreateFeedback()
   if (!feedback) {
     return
@@ -43,16 +49,32 @@ async function openFeedback() {
 }
 
 function getOrCreateFeedback() {
-  let feedback = Sentry.getFeedback()
+  if (!sentryEnabled.value) {
+    return null
+  }
+
+  let feedback = getFeedbackSafely()
 
   if (!feedback) {
-    Sentry.addIntegration(
-      Sentry.feedbackIntegration(sentryFeedbackOptions)
-    )
-    feedback = Sentry.getFeedback()
+    try {
+      Sentry.addIntegration(
+        Sentry.feedbackIntegration(sentryFeedbackOptions)
+      )
+      feedback = getFeedbackSafely()
+    } catch {
+      return null
+    }
   }
 
   return feedback
+}
+
+function getFeedbackSafely() {
+  try {
+    return Sentry.getFeedback()
+  } catch {
+    return undefined
+  }
 }
 
 function getFeedbackColorScheme() {
@@ -68,7 +90,15 @@ function getFeedbackColorScheme() {
 }
 
 function syncFeedbackTheme() {
-  Sentry.getFeedback()?.setTheme(getFeedbackColorScheme())
+  if (!sentryEnabled.value) {
+    return
+  }
+
+  try {
+    getFeedbackSafely()?.setTheme(getFeedbackColorScheme())
+  } catch {
+    // Sentry feedback is optional; never block the app on theme sync.
+  }
 }
 
 watchEffect(syncFeedbackTheme)
