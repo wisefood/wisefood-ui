@@ -1,4 +1,4 @@
-import wisefoodRestApi from './wisefoodRestApi'
+import wisefoodRestApi from './wisefoodApi'
 
 export type RCollectionStatus = 'active' | 'draft' | 'archived' | 'deleted' | 'deprecated'
 export type RCollectionReviewStatus = 'unreviewed' | 'pending_review' | 'in_review' | 'verified' | 'changes_requested' | 'rejected'
@@ -107,7 +107,7 @@ const normalizeCollection = (value: unknown): RecipeCollection => {
 }
 
 class RCollectionsApiService {
-  private readonly basePath = '/rcollections'
+  private readonly basePath = '/v1/rcollections'
 
   async getCollection(urn: string): Promise<RecipeCollection> {
     const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/${encodeURIComponent(urn)}`)

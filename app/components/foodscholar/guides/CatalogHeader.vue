@@ -17,7 +17,7 @@
           </UBadge>
 
           <div class="space-y-2">
-            <h1 class="text-3xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+            <h1 class="text-3xl font-claude text-gray-900 dark:text-white sm:text-4xl">
               {{ title }}
             </h1>
             <p class="max-w-3xl text-sm leading-6 text-gray-600 dark:text-gray-300 sm:text-base">
@@ -65,9 +65,8 @@
             </template>
           </FoodscholarNLInput>
 
-          <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-400">
+          <div v-if="helperText" class="text-xs text-gray-500 dark:text-gray-400">
             <p>{{ helperText }}</p>
-            <span class="uppercase tracking-[0.16em]">Enter to search</span>
           </div>
         </form>
       </div>
@@ -101,3 +100,15 @@ const emit = defineEmits<{
 
 const inputClass = 'w-full h-14 rounded-2xl border border-gray-200/80 bg-gradient-to-r from-white via-earth-1/50 to-brandg-50/40 pl-11 pr-16 text-sm text-gray-900 shadow-sm shadow-slate-900/5 placeholder:text-gray-500 focus:border-brand-400/70 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-zinc-700/80 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800 dark:text-zinc-100 dark:shadow-black/20 dark:placeholder:text-zinc-400 dark:focus:border-brand-500/70 dark:focus:ring-brand-500/20 sm:text-[15px]'
 </script>
+
+<style scoped>
+@font-face {
+  font-family: 'ClaudeDisplay';
+  src: url('https://assets-proxy.anthropic.com/claude-ai/v2/assets/v1/c66fc489e-C-BHYa_K.woff2') format('woff2');
+  font-display: swap;
+}
+.font-claude {
+  font-family: 'ClaudeDisplay', serif;
+  font-weight: normal;
+}
+</style>
