@@ -102,53 +102,59 @@
           </div>
 
           <!-- Advanced panel -->
-          <div
-            v-if="isAdvancedMode"
-            class="mt-4 rounded-2xl border border-gray-200/80 dark:border-zinc-700/80 bg-white/60 dark:bg-zinc-900/40 backdrop-blur-sm p-4"
-          >
-            <div class="flex items-start justify-between gap-3 mb-4">
-              <div>
-                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.advanced.title') }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.advanced.subtitle') }}</p>
+          <Transition name="qa-advanced-panel">
+            <div
+              v-if="isAdvancedMode"
+              class="qa-advanced-panel mt-4 rounded-2xl border border-gray-200/80 dark:border-zinc-700/80 bg-white/60 dark:bg-zinc-900/40 backdrop-blur-sm p-4"
+            >
+              <div class="flex items-start justify-between gap-3 mb-4">
+                <div>
+                  <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.advanced.title') }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedRetrievalOption.description }}</p>
+                </div>
+                <div
+                  class="inline-flex flex-wrap items-center justify-end rounded-full border border-gray-200 dark:border-zinc-600 bg-white dark:bg-zinc-900 p-1 shadow-sm"
+                  :aria-label="t('foodScholarHome.qa.advanced.retrievalMode')"
+                >
+                  <button
+                    v-for="option in retrievalOptions"
+                    :key="option.value"
+                    type="button"
+                    :class="['inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full transition-colors', retrievalButtonClass(option.value)]"
+                    :title="option.description"
+                    @click="retrievalMode = option.value"
+                  >
+                    <UIcon :name="option.icon" class="h-3.5 w-3.5" />
+                    <span>{{ option.label }}</span>
+                  </button>
+                </div>
               </div>
-              <div class="inline-flex items-center rounded-full border border-gray-200 dark:border-zinc-600 bg-white dark:bg-zinc-900 p-1 shadow-sm">
-                <button
-                  type="button"
-                  :class="['px-3 py-1.5 text-xs font-semibold rounded-full transition-colors', ragEnabled ? 'bg-emerald-500 text-white' : 'text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400']"
-                  @click="ragEnabled = true"
-                >{{ t('foodScholarHome.qa.advanced.ragOn') }}</button>
-                <button
-                  type="button"
-                  :class="['px-3 py-1.5 text-xs font-semibold rounded-full transition-colors', !ragEnabled ? 'bg-zinc-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400']"
-                  @click="ragEnabled = false"
-                >{{ t('foodScholarHome.qa.advanced.ragOff') }}</button>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="space-y-2">
+                  <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.model') }}</label>
+                  <USelectMenu v-model="selectedModelValue" :items="modelOptions" class="w-full" size="lg" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :placeholder="t('foodScholarHome.qa.model.auto')" :portal="false" :disabled="modelsLoading || asking">
+                    <template #leading><UIcon :name="selectedModelOption.icon" class="w-4 h-4 text-gray-500 dark:text-gray-400" /></template>
+                  </USelectMenu>
+                  <p v-if="!modelsLoading && modelOptions.length <= 1" class="mt-2 text-[11px] text-amber-700 dark:text-amber-300">{{ t('foodScholarHome.qa.model.noProviderModels') }}</p>
+                  <p v-else class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.model.autoHint') }}</p>
+                </div>
+                <div class="space-y-2">
+                  <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.sourceDepth') }}</label>
+                  <USelectMenu v-model="selectedTopKValue" :items="topKOptions" class="w-full" size="lg" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :portal="false" :disabled="asking || !ragEnabled">
+                    <template #leading><UIcon :name="selectedTopKOption.icon" class="w-4 h-4 text-gray-500 dark:text-gray-400" /></template>
+                  </USelectMenu>
+                  <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">{{ ragEnabled ? selectedTopKOption.description : t('foodScholarHome.qa.advanced.enableRetrievalToAdjust') }}</p>
+                </div>
+                <div class="space-y-2">
+                  <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.explanationStyle') }}</label>
+                  <USelectMenu v-model="selectedExpertiseValue" :items="expertiseOptions" class="w-full" size="lg" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :portal="false" :disabled="asking">
+                    <template #leading><UIcon :name="selectedExpertiseOption.icon" class="w-4 h-4 text-gray-500 dark:text-gray-400" /></template>
+                  </USelectMenu>
+                  <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">{{ selectedExpertiseOption.description }}</p>
+                </div>
               </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="space-y-2">
-                <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.model') }}</label>
-                <USelectMenu v-model="selectedModelValue" :items="modelOptions" class="w-full" size="lg" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :placeholder="t('foodScholarHome.qa.model.auto')" :portal="false" :disabled="modelsLoading || asking">
-                  <template #leading><UIcon :name="selectedModelOption.icon" class="w-4 h-4 text-gray-500 dark:text-gray-400" /></template>
-                </USelectMenu>
-                <p v-if="!modelsLoading && modelOptions.length <= 1" class="mt-2 text-[11px] text-amber-700 dark:text-amber-300">{{ t('foodScholarHome.qa.model.noProviderModels') }}</p>
-                <p v-else class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.model.autoHint') }}</p>
-              </div>
-              <div class="space-y-2">
-                <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.sourceDepth') }}</label>
-                <USelectMenu v-model="selectedTopKValue" :items="topKOptions" class="w-full" size="lg" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :portal="false" :disabled="asking || !ragEnabled">
-                  <template #leading><UIcon :name="selectedTopKOption.icon" class="w-4 h-4 text-gray-500 dark:text-gray-400" /></template>
-                </USelectMenu>
-                <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">{{ ragEnabled ? selectedTopKOption.description : t('foodScholarHome.qa.advanced.enableRagToAdjust') }}</p>
-              </div>
-              <div class="space-y-2">
-                <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.explanationStyle') }}</label>
-                <USelectMenu v-model="selectedExpertiseValue" :items="expertiseOptions" class="w-full" size="lg" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :portal="false" :disabled="asking">
-                  <template #leading><UIcon :name="selectedExpertiseOption.icon" class="w-4 h-4 text-gray-500 dark:text-gray-400" /></template>
-                </USelectMenu>
-                <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">{{ selectedExpertiseOption.description }}</p>
-              </div>
-            </div>
-          </div>
+          </Transition>
 
           <!-- Mode switcher -->
           <div class="mt-4 flex items-center justify-between gap-3">
@@ -184,7 +190,7 @@
 
       <!-- Active session: centered answer + sidebar -->
       <div v-else class="flex-1 w-full px-4 py-6">
-        <div ref="qaSessionGridRef" class="relative max-w-7xl mx-auto flex justify-center items-start gap-6">
+        <div ref="qaSessionGridRef" class="qa-session-layout relative max-w-7xl mx-auto">
           <!-- SVG overlay for citation hover lines -->
           <svg ref="citationSvgRef" class="pointer-events-none absolute inset-0 w-full h-full z-20 hidden xl:block" aria-hidden="true">
             <line
@@ -196,7 +202,7 @@
           </svg>
 
         <!-- Center: composer + answer — same width as idle state -->
-        <div class="flex flex-col min-w-0 w-full max-w-2xl">
+        <div class="flex flex-col min-w-0 w-full max-w-2xl mx-auto">
         <!-- Pinned composer -->
         <div class="session-composer-wrap mb-6">
           <div class="relative">
@@ -240,29 +246,43 @@
           </div>
 
           <!-- Advanced panel in session -->
-          <div
-            v-if="isAdvancedMode"
-            class="mt-3 rounded-2xl border border-gray-200/80 dark:border-zinc-700/80 bg-white/60 dark:bg-zinc-900/40 backdrop-blur-sm p-4"
-          >
-            <div class="flex items-start justify-between gap-3 mb-3">
-              <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.advanced.title') }}</p>
-              <div class="inline-flex items-center rounded-full border border-gray-200 dark:border-zinc-600 bg-white dark:bg-zinc-900 p-1 shadow-sm">
-                <button type="button" :class="['px-3 py-1 text-xs font-semibold rounded-full transition-colors', ragEnabled ? 'bg-emerald-500 text-white' : 'text-gray-600 dark:text-gray-300']" @click="ragEnabled = true">{{ t('foodScholarHome.qa.advanced.ragOn') }}</button>
-                <button type="button" :class="['px-3 py-1 text-xs font-semibold rounded-full transition-colors', !ragEnabled ? 'bg-zinc-600 text-white' : 'text-gray-600 dark:text-gray-300']" @click="ragEnabled = false">{{ t('foodScholarHome.qa.advanced.ragOff') }}</button>
+          <Transition name="qa-advanced-panel">
+            <div
+              v-if="isAdvancedMode"
+              class="qa-advanced-panel mt-3 rounded-2xl border border-gray-200/80 dark:border-zinc-700/80 bg-white/60 dark:bg-zinc-900/40 backdrop-blur-sm p-4"
+            >
+              <div class="flex items-start justify-between gap-3 mb-3">
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.advanced.title') }}</p>
+                <div
+                  class="inline-flex flex-wrap items-center justify-end rounded-full border border-gray-200 dark:border-zinc-600 bg-white dark:bg-zinc-900 p-0.5 shadow-sm"
+                  :aria-label="t('foodScholarHome.qa.advanced.retrievalMode')"
+                >
+                  <button
+                    v-for="option in retrievalOptions"
+                    :key="option.value"
+                    type="button"
+                    :class="['inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-full transition-colors', retrievalButtonClass(option.value)]"
+                    :title="option.description"
+                    @click="retrievalMode = option.value"
+                  >
+                    <UIcon :name="option.icon" class="h-3 w-3" />
+                    <span>{{ option.label }}</span>
+                  </button>
+                </div>
+              </div>
+              <div class="grid grid-cols-3 gap-3">
+                <USelectMenu v-model="selectedModelValue" :items="modelOptions" size="sm" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :placeholder="t('foodScholarHome.qa.model.auto')" :portal="false" :disabled="modelsLoading || asking">
+                  <template #leading><UIcon :name="selectedModelOption.icon" class="w-3.5 h-3.5 text-gray-500" /></template>
+                </USelectMenu>
+                <USelectMenu v-model="selectedTopKValue" :items="topKOptions" size="sm" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :portal="false" :disabled="asking || !ragEnabled">
+                  <template #leading><UIcon :name="selectedTopKOption.icon" class="w-3.5 h-3.5 text-gray-500" /></template>
+                </USelectMenu>
+                <USelectMenu v-model="selectedExpertiseValue" :items="expertiseOptions" size="sm" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :portal="false" :disabled="asking">
+                  <template #leading><UIcon :name="selectedExpertiseOption.icon" class="w-3.5 h-3.5 text-gray-500" /></template>
+                </USelectMenu>
               </div>
             </div>
-            <div class="grid grid-cols-3 gap-3">
-              <USelectMenu v-model="selectedModelValue" :items="modelOptions" size="sm" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :placeholder="t('foodScholarHome.qa.model.auto')" :portal="false" :disabled="modelsLoading || asking">
-                <template #leading><UIcon :name="selectedModelOption.icon" class="w-3.5 h-3.5 text-gray-500" /></template>
-              </USelectMenu>
-              <USelectMenu v-model="selectedTopKValue" :items="topKOptions" size="sm" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :portal="false" :disabled="asking || !ragEnabled">
-                <template #leading><UIcon :name="selectedTopKOption.icon" class="w-3.5 h-3.5 text-gray-500" /></template>
-              </USelectMenu>
-              <USelectMenu v-model="selectedExpertiseValue" :items="expertiseOptions" size="sm" :ui="advancedSelectUi" value-key="value" label-key="label" :search-input="false" :portal="false" :disabled="asking">
-                <template #leading><UIcon :name="selectedExpertiseOption.icon" class="w-3.5 h-3.5 text-gray-500" /></template>
-              </USelectMenu>
-            </div>
-          </div>
+          </Transition>
         </div>
 
         <!-- Error -->
@@ -391,13 +411,13 @@
         <!-- end center column -->
 
         <!-- Right panel: cited sources (titles only) -->
-        <aside class="hidden xl:flex flex-col gap-2 pt-1 sticky top-6 w-[18rem] shrink-0">
+        <aside class="qa-source-sidebar hidden xl:flex flex-col gap-2 pt-1">
           <template v-if="qaResult && primaryAnswer && primaryAnswer.citations?.length">
             <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mb-1">Sources cited</p>
             <NuxtLink
               v-for="(citation, idx) in primaryAnswer.citations"
               :key="citation.article_urn"
-              :to="`/foodscholar/${citation.article_urn}`"
+              :to="getCitationSourcePath(citation)"
               :data-citation-urn="citation.article_urn"
               class="citation-source-card flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600 dark:hover:text-brand-400 transition-colors group"
             >
@@ -410,10 +430,10 @@
               <NuxtLink
                 v-for="article in uncitedRetrievedArticles"
                 :key="article.urn"
-                :to="`/foodscholar/${article.urn}`"
+                :to="getQaSourcePath(article.urn, article.source_type)"
                 class="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-100 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/50 opacity-60 hover:opacity-100 hover:border-gray-300 dark:hover:border-zinc-700 transition-all group"
               >
-                <UIcon name="i-lucide-file-text" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
+                <UIcon :name="getQaSourceIcon(article.urn, article.source_type)" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
                 <span class="text-xs text-gray-700 dark:text-gray-300 leading-snug line-clamp-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ article.title }}</span>
               </NuxtLink>
             </template>
@@ -680,26 +700,14 @@
 
             <NuxtLink
               to="/foodscholar/guides"
-              class="group inline-flex min-w-[18rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-emerald-300 hover:bg-emerald-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20"
+              class="group inline-flex min-w-[14rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-emerald-300 hover:bg-emerald-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20"
             >
-              <div class="library-resource-map shrink-0" aria-hidden="true">
-                <div
-                  v-if="libraryMapLoading"
-                  class="h-full w-full animate-pulse rounded-lg bg-emerald-50 dark:bg-emerald-900/30"
-                />
-                <FoodscholarGuidesEuropeGuidesMap
-                  v-else-if="libraryEuRegions.length"
-                  class="library-resource-map-preview"
-                  :regions="libraryEuRegions"
-                  :hide-controls="true"
-                />
-                <div v-else class="flex h-full w-full items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-900/30">
-                  <UIcon name="i-lucide-map" class="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
-                </div>
+              <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                <UIcon name="i-lucide-map" class="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
               </div>
-              <div class="min-w-0">
+              <div>
                 <p class="text-base font-semibold text-gray-900 dark:text-white">Dietary Guides</p>
-                <p class="font-claude text-sm text-gray-400 dark:text-zinc-500">Official dietary rules.</p>
+                <p class="font-claude text-sm text-gray-400 dark:text-zinc-500">Official dietary rules</p>
               </div>
               <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600 ml-2 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
             </NuxtLink>
@@ -729,10 +737,10 @@
             </div>
             <NuxtLink
               to="/foodscholar/catalog"
-              class="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 transition-colors group"
+              class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 text-xs font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
             >
-              Full catalog
-              <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
+              Browse articles
             </NuxtLink>
           </div>
 
@@ -788,53 +796,77 @@
             <div>
               <p class="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">Dietary Guides</p>
               <h2 class="font-claude text-2xl text-gray-900 dark:text-white">Official dietary rules.</h2>
-              <p class="mt-1 text-xs text-gray-400 dark:text-zinc-500">Browse European dietary guidance by country, source publication, and structured rule.</p>
             </div>
             <NuxtLink
               to="/foodscholar/guides"
               class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 text-xs font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
             >
               <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
-              Open full atlas
+              Browse Guides
             </NuxtLink>
           </div>
 
-          <div v-if="libraryMapLoading" class="grid gap-3 sm:grid-cols-3">
-            <div v-for="i in 3" :key="`guide-stat-loading-${i}`" class="h-24 animate-pulse rounded-xl bg-gray-100 dark:bg-zinc-800" />
-          </div>
-
-          <div v-else-if="libraryMapError" class="rounded-xl border border-gray-200 bg-white px-5 py-4 text-sm text-gray-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-500">
-            {{ libraryMapError }}
-          </div>
-
-          <template v-else>
-            <dl class="grid gap-3 sm:grid-cols-3">
-              <div class="rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900">
-                <dt class="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-gray-400 dark:text-zinc-500">Countries</dt>
-                <dd class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ libraryEuRegions.length }}</dd>
+          <div class="grid gap-5 xl:grid-cols-[minmax(0,0.82fr)_14rem] xl:items-start">
+            <div>
+              <div v-if="libraryMapLoading" class="library-map-wrap animate-pulse bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-center">
+                <p class="text-sm text-gray-400 dark:text-zinc-500">Loading map…</p>
               </div>
-              <div class="rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900">
-                <dt class="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-gray-400 dark:text-zinc-500">Guides</dt>
-                <dd class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalGuides.toLocaleString() }}</dd>
+              <div v-else-if="libraryMapError" class="flex min-h-40 items-center justify-center px-6 py-10 text-center">
+                <p class="text-sm text-gray-400 dark:text-zinc-500">{{ libraryMapError }}</p>
               </div>
-              <div class="rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900">
-                <dt class="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-gray-400 dark:text-zinc-500">Rules</dt>
-                <dd class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalGuidelines > 0 ? libraryTotalGuidelines.toLocaleString() : '—' }}</dd>
+              <div v-else class="library-map-wrap">
+                <FoodscholarGuidesEuropeGuidesMap
+                  v-model:selected-region-code="librarySelectedRegion"
+                  :regions="libraryEuRegions"
+                  :hide-controls="true"
+                  :view-padding="0.015"
+                />
               </div>
-            </dl>
-
-            <div v-if="libraryEuRegions.length" class="mt-4 flex flex-wrap gap-2">
-              <NuxtLink
-                v-for="region in libraryEuRegions.slice(0, 10)"
-                :key="region.region"
-                :to="`/foodscholar/guides/${region.slug}`"
-                class="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:border-emerald-300 hover:text-emerald-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-emerald-700 dark:hover:text-emerald-300"
-              >
-                <span>{{ `${region.flag || ''} ${region.label}`.trim() }}</span>
-                <span class="text-gray-300 dark:text-zinc-600">{{ region.guideCount }}</span>
-              </NuxtLink>
             </div>
-          </template>
+
+            <aside class="flex flex-col gap-5">
+              <dl class="grid grid-cols-3 gap-3 border-b border-gray-100 pb-4 dark:border-zinc-800">
+                <div>
+                  <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">Countries</dt>
+                  <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryEuRegions.length }}</dd>
+                </div>
+                <div>
+                  <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">Guides</dt>
+                  <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalGuides.toLocaleString() }}</dd>
+                </div>
+                <div>
+                  <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">Rules</dt>
+                  <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalGuidelines > 0 ? libraryTotalGuidelines.toLocaleString() : '—' }}</dd>
+                </div>
+              </dl>
+
+              <div v-if="librarySelectedRegionData" class="border-b border-gray-100 pb-4 dark:border-zinc-800">
+                <p class="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                  {{ `${librarySelectedRegionData.flag || ''} ${librarySelectedRegionData.label}`.trim() }}
+                </p>
+                <p class="text-xs text-gray-400 dark:text-zinc-500 mb-3">
+                  {{ librarySelectedRegionData.guideCount }} guide{{ librarySelectedRegionData.guideCount === 1 ? '' : 's' }}<template v-if="librarySelectedRegionData.guidelineCount"> · {{ librarySelectedRegionData.guidelineCount }} rules</template><template v-if="librarySelectedRegionData.latestPublicationYear"> · {{ librarySelectedRegionData.latestPublicationYear }}</template>
+                </p>
+                <NuxtLink
+                  :to="`/foodscholar/guides/${librarySelectedRegionData.slug}`"
+                  class="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 transition-colors group"
+                >
+                  <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
+                  Open country guides
+                </NuxtLink>
+              </div>
+              <div v-else class="border-b border-gray-100 pb-4 dark:border-zinc-800">
+                <p class="text-xs text-gray-400 dark:text-zinc-500 leading-relaxed">Select a country to see its dietary guidance records and available publications.</p>
+                <NuxtLink
+                  to="/foodscholar/guides"
+                  class="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 transition-colors group"
+                >
+                  <UIcon name="i-lucide-list" class="w-3.5 h-3.5" />
+                  Browse all guides
+                </NuxtLink>
+              </div>
+            </aside>
+          </div>
         </section>
 
         <!-- Textbooks section -->
@@ -850,6 +882,13 @@
             >
               Full catalog
               <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </NuxtLink>
+               <NuxtLink
+              to="/foodscholar/textbooks"
+              class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 text-xs font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
+            >
+              <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
+              Browse Textbooks
             </NuxtLink>
           </div>
 
@@ -889,7 +928,9 @@ import textbooksApi, { type Textbook, type TextbookSuggestion } from '~/services
 import foodscholarApi, {
   type QaAskRequest,
   type QaAskResult,
-  type QaAnswer
+  type QaAnswer,
+  type QaCitation,
+  type QaRetriever
 } from '~/services/foodscholarApi'
 import { useAuthStore } from '~/stores/auth'
 import { useHouseholdStore } from '~/stores/household'
@@ -964,6 +1005,16 @@ interface ExpertiseOption {
   icon: string
 }
 
+type QaRetrievalMode = QaRetriever | 'model'
+type QaEvidenceSourceType = NonNullable<QaCitation['source_type']>
+
+interface RetrievalOption {
+  value: QaRetrievalMode
+  label: string
+  description: string
+  icon: string
+}
+
 const AUTO_MODEL_VALUE = '__auto__'
 const CATEGORY_ALL = 'All'
 const CATEGORY_UNCATEGORIZED = 'Uncategorized'
@@ -979,6 +1030,7 @@ const libraryMapLoading = ref(false)
 const libraryMapLoaded = ref(false)
 const libraryMapError = ref<string | null>(null)
 const libraryRegionSummaries = ref<GuidesCatalogRegionSummary[]>([])
+const librarySelectedRegion = ref<string | null>(null)
 
 const LIBRARY_MAP_EXTRA = new Set(['RS']) // Serbia included even though not EU
 const libraryEuRegions = computed(() =>
@@ -994,6 +1046,12 @@ const libraryTotalGuides = computed(() =>
 
 const libraryTotalGuidelines = computed(() =>
   libraryEuRegions.value.reduce((s, r) => s + (r.guidelineCount ?? 0), 0)
+)
+
+const librarySelectedRegionData = computed(() =>
+  libraryEuRegions.value.find(r =>
+    getRegionPresentation(r.region).value.toUpperCase() === librarySelectedRegion.value
+  ) ?? null
 )
 
 const librarySelectedTopic = ref(CATEGORY_ALL)
@@ -1260,12 +1318,115 @@ const qaHeadings = computed(() => {
 })
 const qaHeading = computed(() => qaHeadings.value[qaHeadingIndex] || qaHeadings.value[0])
 
+const normalizeQaSourceType = (urn: string, sourceType?: QaCitation['source_type']): QaEvidenceSourceType => {
+  const normalizedType = sourceType?.toLowerCase()
+
+  if (normalizedType === 'guideline' || normalizedType === 'guide' || normalizedType === 'article') {
+    return normalizedType
+  }
+
+  if (urn.startsWith('urn:guide:')) {
+    return 'guide'
+  }
+
+  if (urn.startsWith('urn:article:')) {
+    return 'article'
+  }
+
+  return 'guideline'
+}
+
+const getQaSourcePath = (urn: string, sourceType?: QaCitation['source_type']) => {
+  const normalizedType = normalizeQaSourceType(urn, sourceType)
+
+  if (normalizedType === 'guideline') {
+    return `/foodscholar/catalog/guidelines/${encodeURIComponent(urn)}`
+  }
+
+  if (normalizedType === 'guide') {
+    return `/foodscholar/catalog/guides/${encodeURIComponent(urn)}`
+  }
+
+  return `/foodscholar/${urn}`
+}
+
+const getQaSourceIcon = (urn: string, sourceType?: QaCitation['source_type']) => {
+  const normalizedType = normalizeQaSourceType(urn, sourceType)
+
+  if (normalizedType === 'guideline') {
+    return 'i-lucide-list-checks'
+  }
+
+  if (normalizedType === 'guide') {
+    return 'i-lucide-book-open'
+  }
+
+  return 'i-lucide-file-text'
+}
+
+const getCitationSourceType = (citation: QaCitation): QaCitation['source_type'] =>
+  citation.source_type ?? retrievedArticleMap.value[citation.article_urn]?.source_type ?? null
+
+const getCitationSourcePath = (citation: QaCitation) =>
+  getQaSourcePath(citation.article_urn, getCitationSourceType(citation))
+
 const getCitationForUrn = (articleUrn: string) => {
   const citations = [
     ...(primaryAnswer.value?.citations || []),
     ...(secondaryAnswer.value?.citations || [])
   ]
   return citations.find(c => c.article_urn === articleUrn && (c.quote || c.section)) || null
+}
+
+const resolveQaSourceHref = (href: string): { url: URL, urn: string, sourceType: QaEvidenceSourceType, path: string } | null => {
+  const url = new URL(href, window.location.origin)
+  const pathSegments = url.pathname
+    .split('/')
+    .filter(Boolean)
+    .map(segment => decodeURIComponent(segment))
+
+  const guidelineId = pathSegments[0] === 'guidelines'
+    ? pathSegments[1]
+    : pathSegments[0] === 'foodscholar' && pathSegments[1] === 'catalog' && pathSegments[2] === 'guidelines'
+      ? pathSegments[3]
+      : null
+
+  if (guidelineId) {
+    return {
+      url,
+      urn: guidelineId,
+      sourceType: 'guideline',
+      path: getQaSourcePath(guidelineId, 'guideline')
+    }
+  }
+
+  const catalogGuideUrn = pathSegments[0] === 'foodscholar' && pathSegments[1] === 'catalog' && pathSegments[2] === 'guides'
+    ? pathSegments[3]
+    : null
+
+  if (catalogGuideUrn) {
+    return {
+      url,
+      urn: catalogGuideUrn,
+      sourceType: 'guide',
+      path: getQaSourcePath(catalogGuideUrn, 'guide')
+    }
+  }
+
+  const articleUrn = (pathSegments[0] === 'foodscholar' || pathSegments[0] === 'articles') && pathSegments[1]?.startsWith('urn:article:')
+    ? pathSegments[1]
+    : null
+
+  if (articleUrn) {
+    return {
+      url,
+      urn: articleUrn,
+      sourceType: 'article',
+      path: getQaSourcePath(articleUrn, 'article')
+    }
+  }
+
+  return null
 }
 
 const handleMarkdownClick = (event: MouseEvent) => {
@@ -1275,21 +1436,23 @@ const handleMarkdownClick = (event: MouseEvent) => {
   const href = anchor.getAttribute('href')
   if (!href) return
 
-  const url = new URL(href, window.location.origin)
-  const pathname = url.pathname
-  const match = pathname.match(/\/(foodscholar|articles)\/(urn:article:[^/?#]+)/)
-  if (!match) return
+  const resolvedSource = resolveQaSourceHref(href)
+  if (!resolvedSource) return
 
-  const targetUrn = match[2]
-  const targetPath = `/foodscholar/${targetUrn}`
+  const { url, urn: targetUrn, sourceType, path: targetPath } = resolvedSource
   const citation = getCitationForUrn(targetUrn)
 
   event.preventDefault()
   event.stopPropagation()
 
   const query = Object.fromEntries(url.searchParams.entries()) as Record<string, string>
-  if (!('section' in query) && citation?.section) query.section = String(citation.section)
-  if (!('hl' in query) && citation?.quote) query.hl = String(citation.quote)
+
+  if (sourceType === 'guideline') {
+    if (!('guideline' in query)) query.guideline = targetUrn
+  } else {
+    if (!('section' in query) && citation?.section) query.section = String(citation.section)
+    if (!('hl' in query) && citation?.quote) query.hl = String(citation.quote)
+  }
 
   router.push({
     path: targetPath,
@@ -1310,7 +1473,16 @@ const asking = ref(false)
 const qaError = ref<string | null>(null)
 const qaResult = ref<QaAskResult | null>(null)
 const qaMode = ref<'simple' | 'advanced'>('simple')
-const ragEnabled = ref(true)
+const retrievalMode = ref<QaRetrievalMode>('rag')
+const ragEnabled = computed({
+  get: () => retrievalMode.value !== 'model',
+  set: (enabled: boolean) => {
+    retrievalMode.value = enabled
+      ? (retrievalMode.value === 'model' ? 'rag' : retrievalMode.value)
+      : 'model'
+  }
+})
+const selectedRetriever = computed<QaRetriever>(() => retrievalMode.value === 'linearrag' ? 'linearrag' : 'rag')
 const qaModels = ref<string[]>([])
 const selectedModel = ref('')
 const modelsLoading = ref(false)
@@ -1333,6 +1505,45 @@ const negativeFeedbackReasons = computed(() => [
 ])
 
 const quickQuestions = ref<string[]>([])
+
+const retrievalOptions = computed<RetrievalOption[]>(() => [
+  {
+    value: 'rag',
+    label: t('foodScholarHome.qa.advanced.retrieverRag'),
+    description: t('foodScholarHome.qa.advanced.retrieverRagDescription'),
+    icon: 'i-lucide-library'
+  },
+  {
+    value: 'linearrag',
+    label: t('foodScholarHome.qa.advanced.retrieverLinearRag'),
+    description: t('foodScholarHome.qa.advanced.retrieverLinearRagDescription'),
+    icon: 'i-lucide-git-branch'
+  },
+  {
+    value: 'model',
+    label: t('foodScholarHome.qa.advanced.retrieverModelOnly'),
+    description: t('foodScholarHome.qa.advanced.retrieverModelOnlyDescription'),
+    icon: 'i-lucide-brain'
+  }
+])
+
+const selectedRetrievalOption = computed<RetrievalOption>(() => retrievalOptions.value.find(option => option.value === retrievalMode.value) ?? retrievalOptions.value[0]!)
+
+const retrievalButtonClass = (value: QaRetrievalMode) => {
+  if (retrievalMode.value !== value) {
+    return 'text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400'
+  }
+
+  if (value === 'linearrag') {
+    return 'bg-brand-500 text-white shadow-sm'
+  }
+
+  if (value === 'model') {
+    return 'bg-zinc-600 text-white shadow-sm'
+  }
+
+  return 'bg-emerald-500 text-white shadow-sm'
+}
 
 const topKOptions = computed<TopKOption[]>(() => [
   { value: 3, label: t('foodScholarHome.qa.topK.focusedLabel'), description: t('foodScholarHome.qa.topK.focusedDescription'), icon: 'i-lucide-zap' },
@@ -1474,7 +1685,7 @@ const primaryAnswer = computed<QaAnswer | null>(() => qaResult.value?.primary_an
 const secondaryAnswer = computed<QaAnswer | null>(() => qaResult.value?.secondary_answer || null)
 
 const retrievedArticleMap = computed(() => {
-  const map: Record<string, { urn: string; title: string; authors?: string[]; publication_year?: string; similarity_score?: number }> = {}
+  const map: Record<string, { urn: string; title: string; source_type?: QaCitation['source_type']; authors?: string[] | null; publication_year?: string; similarity_score?: number }> = {}
   for (const a of qaResult.value?.retrieved_articles ?? []) {
     map[a.urn] = a
   }
@@ -1492,8 +1703,7 @@ const citationSvgRef = ref<SVGSVGElement | null>(null)
 const citationLine = ref<{ x1: number; y1: number; x2: number; y2: number } | null>(null)
 
 function getCitationUrnFromHref(href: string): string | null {
-  const match = href.match(/urn:article:[^/?#]+/)
-  return match ? match[0] : null
+  return resolveQaSourceHref(href)?.urn ?? null
 }
 
 function drawCitationLine(anchorEl: HTMLElement, urn: string) {
@@ -1675,6 +1885,10 @@ const askScholarQA = async (questionOverride?: string) => {
       mode: qaMode.value,
       rag_enabled: ragEnabled.value,
       language: 'en'
+    }
+
+    if (ragEnabled.value) {
+      payload.retriever = selectedRetriever.value
     }
 
     if (isAdvancedMode.value) {
@@ -2110,6 +2324,52 @@ onUnmounted(() => {
   transform: translateY(0);
 }
 
+.qa-session-layout {
+  min-height: 100%;
+}
+
+.qa-source-sidebar {
+  position: absolute;
+  right: 0;
+  top: 0.25rem;
+  width: clamp(12rem, calc((100% - 42rem) / 2 - 1.5rem), 18rem);
+  max-width: 18rem;
+}
+
+.qa-advanced-panel {
+  overflow: hidden;
+}
+
+.qa-advanced-panel-enter-active,
+.qa-advanced-panel-leave-active {
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease,
+    max-height 260ms ease,
+    margin-top 260ms ease,
+    padding-top 260ms ease,
+    padding-bottom 260ms ease,
+    border-color 260ms ease;
+}
+
+.qa-advanced-panel-enter-from,
+.qa-advanced-panel-leave-to {
+  border-color: transparent;
+  max-height: 0;
+  margin-top: 0;
+  opacity: 0;
+  padding-bottom: 0;
+  padding-top: 0;
+  transform: translateY(-0.5rem);
+}
+
+.qa-advanced-panel-enter-to,
+.qa-advanced-panel-leave-from {
+  max-height: 40rem;
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .chat-composer {
   position: relative;
   overflow: hidden;
@@ -2281,32 +2541,23 @@ onUnmounted(() => {
   }
 }
 
-.library-resource-map {
+.library-map-wrap {
   position: relative;
-  width: 8.5rem;
-  height: 5.1rem;
+  width: min(100%, 46rem);
+  margin-inline: auto;
   overflow: hidden;
-  border-radius: 0.75rem;
-  background: rgb(236 253 245 / 0.9);
+  height: clamp(18rem, 30vw, 25rem);
 }
 
-.dark .library-resource-map {
-  background: rgb(6 78 59 / 0.22);
+.library-map-wrap > * {
+  height: 100%;
+  min-height: 0 !important;
 }
 
-.library-resource-map-preview {
-  position: absolute;
-  inset: 0;
-  width: 625%;
-  height: 625%;
-  pointer-events: none;
-  transform: scale(0.16);
-  transform-origin: top left;
-}
-
-.library-resource-map :deep(.relative),
-.library-resource-map :deep([class*="min-h-"]) {
-  min-height: 32rem !important;
-  height: 32rem;
+.library-map-wrap :deep(.relative),
+.library-map-wrap :deep(.europe-guides-map-host),
+.library-map-wrap :deep([class*="min-h-"]) {
+  min-height: unset !important;
+  height: 100%;
 }
 </style>

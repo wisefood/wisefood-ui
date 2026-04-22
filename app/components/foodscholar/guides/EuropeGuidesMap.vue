@@ -4,7 +4,7 @@
 
     <div
       v-if="loadError"
-      class="relative flex min-h-[32rem] items-center justify-center sm:min-h-[42rem]"
+      class="relative flex min-h-[32rem] sm:min-h-[42rem] items-center justify-center"
     >
       <div class="rounded-full bg-white/55 px-4 py-2 text-sm text-[#3c332a] shadow-[0_14px_36px_rgba(70,46,30,0.12)] backdrop-blur-xl dark:bg-white/10 dark:text-stone-200 dark:shadow-[0_18px_36px_rgba(0,0,0,0.28)]">
         {{ loadError }}
@@ -14,7 +14,7 @@
     <div
       v-else
       ref="frameRef"
-      class="relative min-h-[32rem] select-none touch-none overflow-hidden cursor-grab active:cursor-grabbing sm:min-h-[42rem]"
+      class="relative min-h-[32rem] sm:min-h-[42rem] select-none touch-none overflow-hidden cursor-grab active:cursor-grabbing"
       @pointerdown="handlePointerDown"
       @pointermove="handlePointerMove"
       @pointerup="handlePointerUp"
@@ -24,7 +24,7 @@
     >
       <div
         ref="svgHost"
-        class="europe-guides-map-host h-full min-h-[32rem] transition-opacity duration-300 sm:min-h-[42rem]"
+        class="europe-guides-map-host h-full min-h-[32rem] sm:min-h-[42rem] transition-opacity duration-300"
         :class="isReady ? 'opacity-100' : 'opacity-0'"
       />
 
@@ -37,7 +37,7 @@
         </div>
       </div>
 
-      <div class="absolute right-0 top-0 z-10 flex items-center gap-2">
+      <div v-if="!props.hideControls" class="absolute right-0 top-0 z-10 flex items-center gap-2">
         <button
           type="button"
           class="flex h-10 w-10 items-center justify-center rounded-full bg-white/50 text-[#173f35] shadow-[0_14px_32px_rgba(70,46,30,0.12)] backdrop-blur-xl transition-colors hover:bg-white/65 dark:bg-white/10 dark:text-stone-100 dark:shadow-[0_16px_34px_rgba(0,0,0,0.28)] dark:hover:bg-white/16"
@@ -87,7 +87,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import europeSvgMarkup from '~/assets/foodscholar/guides/europe-countries-outline-iso-coded-plain.svg?raw'
+import europeSvgUrl from '~/assets/foodscholar/guides/europe-countries-outline-iso-coded-plain.svg?url'
 import { euCountryCodes, getCountryByCode } from '~/utils/countries'
 import { getRegionPresentation, type GuidesCatalogRegionSummary } from '~/utils/guidesCatalog'
 
@@ -116,16 +116,13 @@ const SVG_CANVAS = {
 
 const EU_CODES = new Set(euCountryCodes.map(code => code.toLowerCase()))
 const COVERAGE_COLORS = ['#eadfce', '#dfc4a7', '#d4a07c', '#b97755', '#91523a']
-const preparedSvgMarkup = europeSvgMarkup
-  .replace(/<\?xml[\s\S]*?\?>\s*/, '')
-  .replace(
-    /<svg\b/,
-    `<svg class="europe-guides-map-svg" viewBox="${SVG_CANVAS.x} ${SVG_CANVAS.y} ${SVG_CANVAS.width} ${SVG_CANVAS.height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Interactive Europe map"`
-  )
+let preparedSvgMarkup: string | null = null
 
 const props = defineProps<{
   regions: GuidesCatalogRegionSummary[]
   selectedRegionCode?: string | null
+  hideControls?: boolean
+  viewPadding?: number
 }>()
 
 const emit = defineEmits<{
@@ -147,6 +144,13 @@ const tooltip = reactive<TooltipState>({
 })
 
 const selectedCode = computed(() => props.selectedRegionCode?.toUpperCase() || null)
+const viewPadding = computed(() => {
+  if (typeof props.viewPadding !== 'number') {
+    return 0.12
+  }
+
+  return Math.min(0.3, Math.max(0, props.viewPadding))
+})
 const regionByCode = computed<Record<string, GuidesCatalogRegionSummary>>(() => {
   return Object.fromEntries(
     props.regions.map(region => [getRegionPresentation(region.region).value.toUpperCase(), region])
@@ -181,6 +185,26 @@ let boundsViewBox: ViewBoxRect | null = null
 let currentViewBox: ViewBoxRect | null = null
 let animationFrame = 0
 let resizeObserver: ResizeObserver | null = null
+
+async function loadPreparedSvgMarkup() {
+  if (preparedSvgMarkup) {
+    return preparedSvgMarkup
+  }
+
+  const response = await fetch(europeSvgUrl)
+  if (!response.ok) {
+    throw new Error(`Failed to load Europe SVG: ${response.status}`)
+  }
+
+  preparedSvgMarkup = (await response.text())
+    .replace(/<\?xml[\s\S]*?\?>\s*/, '')
+    .replace(
+      /<svg\b/,
+      `<svg class="europe-guides-map-svg" viewBox="${SVG_CANVAS.x} ${SVG_CANVAS.y} ${SVG_CANVAS.width} ${SVG_CANVAS.height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Interactive Europe map"`
+    )
+
+  return preparedSvgMarkup
+}
 
 function cloneRect(rect: ViewBoxRect) {
   return { ...rect }
@@ -380,7 +404,7 @@ function syncBaseViewBox() {
 
   const aspectRatio = getFrameAspectRatio()
   const union = getUnionRect(euPaths)
-  const fitted = fitRectToAspect(expandRect(union, 0.12), aspectRatio)
+  const fitted = fitRectToAspect(expandRect(union, viewPadding.value), aspectRatio)
 
   baseViewBox = fitted
   boundsViewBox = expandRect(fitted, 0.04)
@@ -687,7 +711,7 @@ async function initializeMap() {
   try {
     destroyMap()
 
-    svgHost.value.innerHTML = preparedSvgMarkup
+    svgHost.value.innerHTML = await loadPreparedSvgMarkup()
     await nextTick()
 
     const svg = svgHost.value.querySelector('svg')

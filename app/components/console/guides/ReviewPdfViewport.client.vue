@@ -1,7 +1,7 @@
 <template>
   <div
     ref="viewportInnerEl"
-    class="relative min-h-[36rem]"
+    class="relative min-h-[36rem] w-full"
   >
     <div
       v-if="loading || rendering"
@@ -43,7 +43,7 @@
 
     <div
       v-else
-      class="flex w-max min-w-full items-start justify-center gap-4 p-4"
+      class="flex min-w-full items-start justify-center gap-4 p-4"
     >
       <div
         v-for="panel in visiblePanels"
@@ -257,7 +257,8 @@ function handlePanelRenderFailure(renderError: unknown) {
 
 function syncViewportWidth() {
   const element = viewportInnerEl.value
-  viewportWidth.value = element ? Math.floor(element.clientWidth) : 0
+  const scrollContainer = element?.parentElement ?? element
+  viewportWidth.value = scrollContainer ? Math.floor(scrollContainer.clientWidth) : 0
 }
 
 async function resolvePdfSource(artifact: CatalogArtifact, forceReload = false): Promise<PdfDocumentSource> {

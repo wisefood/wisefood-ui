@@ -3,7 +3,7 @@
     <FoodscholarMicroHeader
       :show-back="true"
       :back-to="buildGuidesCatalogPath()"
-      back-label="Back to Guides Atlas"
+      back-label="Back to Guides"
       back-icon="i-lucide-arrow-left"
       brand-title="FoodScholar"
       brand-lead="Country and region explorers combine guide publications with searchable dietary rules."
@@ -49,17 +49,17 @@
             v-model="queryText"
             badge="Country / Region Explorer"
             :title="regionTitle"
-            description="Search within this country or region’s guide collection, then switch between overview, guide records, and rule-level guideline browsing."
+            description=""
             placeholder="Search this country’s guides or guideline rules"
             helper-text="Filters persist in the URL so this view stays shareable."
           >
             <UBadge color="neutral" variant="outline">
               {{ totalRegionGuides.toLocaleString() }} guides
             </UBadge>
-            <UBadge color="neutral" variant="outline">
+            <UBadge v-if="totalRegionGuidelines === null || totalRegionGuidelines > 0" color="neutral" variant="outline">
               {{ totalRegionGuidelines === null ? 'Rules indexed live' : `${totalRegionGuidelines.toLocaleString()} rules` }}
             </UBadge>
-            <UBadge color="neutral" variant="outline">
+            <UBadge v-if="artifactTotal > 0" color="neutral" variant="outline">
               {{ artifactTotal.toLocaleString() }} artifacts
             </UBadge>
           </CatalogHeader>
@@ -225,7 +225,7 @@
                         :key="guide.urn"
                         :guide="guide"
                         :guideline-count="guideGuidelineCounts[guide.urn] ?? null"
-                        :to="buildGuideDetailPath(resolvedRegion, guide.urn)"
+                        :to="getGuideCardTarget(guide)"
                       />
                     </div>
                   </section>
@@ -302,7 +302,7 @@
                     :key="guide.urn"
                     :guide="guide"
                     :guideline-count="guideGuidelineCounts[guide.urn] ?? null"
-                    :to="buildGuideDetailPath(resolvedRegion, guide.urn)"
+                    :to="getGuideCardTarget(guide)"
                   />
                 </div>
 
@@ -512,6 +512,9 @@ const validTabValues = new Set<CountryTab>(['overview', 'guides', 'guidelines'])
 const validGuideSortValues = new Set(guideSortOptions.map(option => option.value))
 const validGuidelineSortValues = new Set(guidelineSortOptions.map(option => option.value))
 
+const regionPresentation = computed(() => getRegionPresentation(resolvedRegion.value))
+const regionTitle = computed(() => regionPresentation.value.label)
+
 useHead({
   title: computed(() => `${regionTitle.value} Dietary Guides`)
 })
@@ -520,9 +523,6 @@ useSeoMeta({
   description: computed(() => `Browse ${regionTitle.value} dietary guides and guideline rules in FoodScholar.`)
 })
 
-const regionPresentation = computed(() => getRegionPresentation(resolvedRegion.value))
-const regionTitle = computed(() => regionPresentation.value.label)
-
 const breadcrumbItems = computed(() => [
   {
     label: 'FoodScholar',
@@ -530,7 +530,7 @@ const breadcrumbItems = computed(() => [
     to: '/foodscholar'
   },
   {
-    label: 'Guides Atlas',
+    label: 'Dietary Guides',
     icon: 'i-lucide-book-open',
     to: buildGuidesCatalogPath()
   },
@@ -562,6 +562,10 @@ const tabItems = [
 const regionGuideLookup = computed<Record<string, CatalogGuide>>(() => {
   return Object.fromEntries(regionGuidesAll.value.map(guide => [guide.urn, guide]))
 })
+
+function getGuideCardTarget(guide: CatalogGuide) {
+  return buildGuideDetailPath(resolvedRegion.value, guide.urn)
+}
 
 const featuredGuides = computed(() => {
   return regionGuidesAll.value

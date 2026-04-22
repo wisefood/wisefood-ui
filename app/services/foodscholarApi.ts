@@ -1,10 +1,13 @@
 import wisefoodRestApi from './wisefoodRestApi'
 
+export type QaRetriever = 'rag' | 'linearrag'
+
 export interface QaAskRequest {
   question: string
   mode?: string
   model?: string
   rag_enabled?: boolean
+  retriever?: QaRetriever
   top_k?: number
   expertise_level?: string
   language?: string
@@ -15,7 +18,8 @@ export interface QaAskRequest {
 export interface QaCitation {
   article_urn: string
   article_title: string
-  authors: string[]
+  source_type?: 'article' | 'guide' | 'guideline' | null
+  authors?: string[] | null
   year?: number | null
   journal?: string | null
   section?: string | null
@@ -40,9 +44,10 @@ export interface QaDualAnswerFeedback {
 }
 
 export interface QaRetrievedArticle {
+  source_type?: 'article' | 'guide' | 'guideline' | null
   urn: string
   title: string
-  authors: string[]
+  authors?: string[] | null
   venue?: string | null
   publication_year?: string | null
   category?: string | null

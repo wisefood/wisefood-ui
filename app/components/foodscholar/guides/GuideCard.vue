@@ -5,30 +5,6 @@
       class="h-full border border-gray-200/70 bg-white/95 shadow-sm transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-md dark:border-white/10 dark:bg-zinc-900/80"
     >
       <div class="flex h-full flex-col gap-4">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-          <div class="flex flex-wrap gap-2">
-            <UBadge
-              v-if="showRegion && regionPresentation.value"
-              color="neutral"
-              variant="outline"
-            >
-              {{ [regionPresentation.value.flag, regionPresentation.value.label].filter(Boolean).join(' ') }}
-            </UBadge>
-            <UBadge
-              v-if="guide.document_type"
-              color="primary"
-              variant="soft"
-            >
-              {{ guide.document_type }}
-            </UBadge>
-          </div>
-
-          <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-            <UIcon name="i-lucide-file-text" class="h-4 w-4" />
-            <span>{{ guide.artifacts.length }} artifact{{ guide.artifacts.length === 1 ? '' : 's' }}</span>
-          </div>
-        </div>
-
         <div class="space-y-2">
           <h3 class="text-lg font-semibold leading-7 text-gray-900 transition-colors group-hover:text-brand-600 dark:text-white dark:group-hover:text-brand-300">
             {{ guide.title }}
@@ -39,6 +15,11 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+          <span v-if="region" class="inline-flex items-center gap-1.5 font-medium text-gray-700 dark:text-gray-200">
+            <span v-if="region.flag">{{ region.flag }}</span>
+            <UIcon v-else name="i-lucide-globe" class="h-4 w-4 text-brand-500" />
+            {{ region.label }}
+          </span>
           <span v-if="publisher" class="inline-flex items-center gap-1.5">
             <UIcon name="i-lucide-building-2" class="h-4 w-4 text-brand-500" />
             {{ publisher }}
@@ -117,6 +98,6 @@ const publisher = computed(() => getGuidePublisher(props.guide))
 const publicationLabel = computed(() => getGuidePublicationLabel(props.guide))
 const audience = computed(() => getGuideAudience(props.guide))
 const topics = computed(() => getGuideTopics(props.guide))
-const regionPresentation = computed(() => props.showRegion ? getRegionPresentation(props.guide.region) : null)
 const hasPdf = computed(() => props.guide.artifacts.some(artifact => isPdfArtifact(artifact)))
+const region = computed(() => props.showRegion ? getRegionPresentation(props.guide.region) : null)
 </script>
