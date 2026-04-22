@@ -194,11 +194,16 @@
       <div v-else class="flex-1 w-full px-4 py-6">
         <div ref="qaSessionGridRef" class="qa-session-layout relative max-w-7xl mx-auto">
           <!-- SVG overlay for citation hover lines -->
-          <svg ref="citationSvgRef" class="pointer-events-none absolute inset-0 w-full h-full z-20 hidden xl:block" aria-hidden="true">
+          <svg ref="citationSvgRef" class="pointer-events-none absolute inset-0 w-full h-full z-20 hidden xl:block" style="overflow:visible" aria-hidden="true">
             <line
               v-if="citationLine"
+              :key="`${citationLine.x1}-${citationLine.y1}-${citationLine.x2}-${citationLine.y2}`"
               :x1="citationLine.x1" :y1="citationLine.y1"
               :x2="citationLine.x2" :y2="citationLine.y2"
+              stroke="#60a5fa"
+              stroke-width="1.5"
+              stroke-dasharray="5 4"
+              opacity="0.7"
               class="citation-hover-line"
             />
           </svg>
@@ -313,7 +318,7 @@
           <div class="flex justify-end">
             <div class="chat-flow-bubble chat-flow-bubble-user">
               <p class="text-[10px] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
-              <p class="text-sm leading-relaxed">{{ chatQuery }}</p>
+              <p class="text-sm leading-relaxed">{{ pendingQuestion || chatQuery }}</p>
             </div>
           </div>
           <div class="chat-flow-bubble chat-flow-bubble-assistant">
@@ -329,6 +334,102 @@
               <div class="h-3 w-3/4 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
               <div class="h-3 w-5/6 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
               <div class="h-3 w-2/3 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Clarification panel -->
+        <div v-if="pendingClarification && !asking" class="space-y-4 session-answer-enter">
+          <div class="flex justify-end">
+            <div class="chat-flow-bubble chat-flow-bubble-user">
+              <p class="text-[10px] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
+              <p class="text-sm leading-relaxed">{{ pendingQuestion }}</p>
+            </div>
+          </div>
+
+          <div class="chat-flow-bubble chat-flow-bubble-assistant">
+            <div class="flex items-start gap-2 mb-4">
+              <UIcon name="i-lucide-help-circle" class="w-4 h-4 text-brand-500 dark:text-brand-400 mt-0.5 shrink-0" />
+              <div>
+                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ pendingClarification.question }}</p>
+                <p v-if="pendingClarification.reason" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ pendingClarification.reason }}</p>
+              </div>
+            </div>
+
+            <!-- single_choice / boolean -->
+            <div
+              v-if="pendingClarification.input_type === 'single_choice' || pendingClarification.input_type === 'boolean'"
+              class="flex flex-wrap gap-2 mb-4"
+            >
+              <button
+                v-for="opt in (pendingClarification.options ?? (pendingClarification.input_type === 'boolean' ? [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] : []))"
+                :key="opt.value"
+                type="button"
+                :class="[
+                  'px-3.5 py-1.5 text-sm rounded-full border transition-colors',
+                  clarificationSelectedValues.includes(opt.value)
+                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 font-medium'
+                    : 'border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-400 dark:hover:border-brand-600'
+                ]"
+                @click="clarificationSelectedValues = [opt.value]"
+              >{{ opt.label }}</button>
+            </div>
+
+            <!-- multiple_choice -->
+            <div v-else-if="pendingClarification.input_type === 'multiple_choice'" class="flex flex-wrap gap-2 mb-4">
+              <button
+                v-for="opt in (pendingClarification.options ?? [])"
+                :key="opt.value"
+                type="button"
+                :class="[
+                  'px-3.5 py-1.5 text-sm rounded-full border transition-colors',
+                  clarificationSelectedValues.includes(opt.value)
+                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 font-medium'
+                    : 'border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-400 dark:hover:border-brand-600'
+                ]"
+                @click="clarificationSelectedValues.includes(opt.value)
+                  ? clarificationSelectedValues = clarificationSelectedValues.filter(v => v !== opt.value)
+                  : clarificationSelectedValues.push(opt.value)"
+              >{{ opt.label }}</button>
+            </div>
+
+            <!-- free_text / number -->
+            <div v-else-if="pendingClarification.input_type === 'free_text' || pendingClarification.input_type === 'number'" class="mb-4">
+              <input
+                v-model="clarificationFreeText"
+                :type="pendingClarification.input_type === 'number' ? 'number' : 'text'"
+                class="w-full px-3 py-2 text-sm rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400"
+                placeholder="Your answer…"
+                @keydown.enter.prevent="submitClarification"
+              />
+            </div>
+
+            <!-- allow_free_text addon for choice types -->
+            <div
+              v-if="(pendingClarification.input_type === 'single_choice' || pendingClarification.input_type === 'multiple_choice') && pendingClarification.allow_free_text"
+              class="mb-4"
+            >
+              <input
+                v-model="clarificationFreeText"
+                type="text"
+                class="w-full px-3 py-2 text-sm rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400"
+                placeholder="Other (optional)…"
+                @keydown.enter.prevent="submitClarification"
+              />
+            </div>
+
+            <div class="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                class="px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                @click="pendingClarification = null; qaError = null"
+              >Skip</button>
+              <button
+                type="button"
+                :disabled="clarificationSelectedValues.length === 0 && !clarificationFreeText.trim()"
+                class="px-4 py-1.5 text-sm font-medium rounded-full bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                @click="submitClarification"
+              >Continue</button>
             </div>
           </div>
         </div>
@@ -444,7 +545,7 @@
             </NuxtLink>
 
             <template v-if="uncitedRetrievedArticles.length">
-              <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mt-3 mb-1">Also retrieved</p>
+              <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mt-3 mb-1">Sources consulted</p>
               <NuxtLink
                 v-for="article in uncitedRetrievedArticles"
                 :key="article.urn"
@@ -949,6 +1050,8 @@ import foodscholarApi, {
   type QaAskResult,
   type QaAnswer,
   type QaCitation,
+  type QaClarification,
+  type QaClarificationResponse,
   type QaRetriever
 } from '~/services/foodscholarApi'
 import { useAuthStore } from '~/stores/auth'
@@ -1038,7 +1141,7 @@ const AUTO_MODEL_VALUE = '__auto__'
 const CATEGORY_ALL = 'All'
 const CATEGORY_UNCATEGORIZED = 'Uncategorized'
 const pageTab = ref<'qa' | 'resources'>('qa')
-const hasActiveSession = computed(() => asking.value || !!qaResult.value || !!qaError.value)
+const hasActiveSession = computed(() => asking.value || !!qaResult.value || !!qaError.value || !!pendingClarification.value)
 const advancedSelectContent = {
   side: 'bottom' as const,
   sideOffset: 6,
@@ -1512,6 +1615,14 @@ const composerFocused = ref(false)
 const asking = ref(false)
 const qaError = ref<string | null>(null)
 const qaResult = ref<QaAskResult | null>(null)
+
+// clarification state
+const pendingClarification = ref<QaClarification | null>(null)
+const qaThreadId = ref<string | null>(null)
+const pendingQuestion = ref<string>('')
+const pendingPayload = ref<QaAskRequest | null>(null)
+const clarificationSelectedValues = ref<string[]>([])
+const clarificationFreeText = ref<string>('')
 const qaMode = ref<'simple' | 'advanced'>('simple')
 const retrievalMode = ref<QaRetrievalMode>('rag')
 const ragEnabled = computed({
@@ -1724,9 +1835,13 @@ const loadArticlesForTopic = async (topic: string) => {
 const primaryAnswer = computed<QaAnswer | null>(() => qaResult.value?.primary_answer || null)
 const secondaryAnswer = computed<QaAnswer | null>(() => qaResult.value?.secondary_answer || null)
 
+const retrievedSources = computed(() =>
+  qaResult.value?.retrieved_sources ?? qaResult.value?.retrieved_articles ?? []
+)
+
 const retrievedArticleMap = computed(() => {
   const map: Record<string, { urn: string; title: string; source_type?: QaCitation['source_type']; authors?: string[] | null; publication_year?: string; similarity_score?: number }> = {}
-  for (const a of qaResult.value?.retrieved_articles ?? []) {
+  for (const a of retrievedSources.value) {
     map[a.urn] = a
   }
   return map
@@ -1734,7 +1849,7 @@ const retrievedArticleMap = computed(() => {
 
 const uncitedRetrievedArticles = computed(() => {
   const citedUrns = new Set((primaryAnswer.value?.citations ?? []).map(c => c.article_urn))
-  return (qaResult.value?.retrieved_articles ?? []).filter(a => !citedUrns.has(a.urn))
+  return retrievedSources.value.filter(a => !citedUrns.has(a.urn))
 })
 
 // Citation hover line
@@ -1772,16 +1887,23 @@ function clearCitationLine() {
 }
 
 function handleAnswerMouseOver(e: MouseEvent) {
-  const a = (e.target as HTMLElement).closest<HTMLElement>('a[href*="urn:article:"]')
+  const a = (e.target as HTMLElement).closest<HTMLElement>('a[href]')
   if (!a) return
-  const urn = getCitationUrnFromHref(a.getAttribute('href') ?? '')
-  if (urn) drawCitationLine(a, urn)
+  const href = a.getAttribute('href') ?? ''
+  const resolved = resolveQaSourceHref(href)
+  if (!resolved) return
+  // match sidebar card by its data-citation-urn (which holds article_urn from citations)
+  const grid = qaSessionGridRef.value
+  if (!grid) return
+  const card = grid.querySelector<HTMLElement>(`[data-citation-urn="${CSS.escape(resolved.urn)}"]`)
+  if (card) drawCitationLine(a, resolved.urn)
 }
 
 function handleAnswerMouseOut(e: MouseEvent) {
-  const a = (e.target as HTMLElement).closest<HTMLElement>('a[href*="urn:article:"]')
+  const a = (e.target as HTMLElement).closest<HTMLElement>('a[href]')
   if (!a) return
-  clearCitationLine()
+  const href = a.getAttribute('href') ?? ''
+  if (resolveQaSourceHref(href)) clearCitationLine()
 }
 const hasDualAnswerMode = computed(() => Boolean(primaryAnswer.value && secondaryAnswer.value && qaResult.value?.dual_answer_feedback))
 const isAdvancedMode = computed(() => qaMode.value === 'advanced')
@@ -1914,6 +2036,61 @@ const loadQaQuestions = async () => {
   }
 }
 
+const buildBasePayload = (question: string): QaAskRequest => {
+  const payload: QaAskRequest = {
+    question,
+    mode: qaMode.value,
+    rag_enabled: ragEnabled.value,
+    language: 'en'
+  }
+
+  if (ragEnabled.value) {
+    payload.retriever = selectedRetriever.value
+  }
+
+  if (isAdvancedMode.value) {
+    payload.expertise_level = expertiseLevel.value || 'intermediate'
+    if (ragEnabled.value) {
+      payload.top_k = selectedTopKOption.value.value
+    }
+  } else {
+    payload.expertise_level = 'intermediate'
+    if (ragEnabled.value) {
+      payload.top_k = 5
+    }
+  }
+
+  if (isAdvancedMode.value && selectedModel.value) {
+    payload.model = selectedModel.value
+  }
+
+  if (authStore.currentUser?.id) {
+    payload.user_id = authStore.currentUser.id
+  }
+
+  if (householdStore.currentMember?.id) {
+    payload.member_id = householdStore.currentMember.id
+  }
+
+  return payload
+}
+
+const handleQaResponse = (result: QaAskResult, basePayload: QaAskRequest) => {
+  if (result.needs_clarification && result.clarification) {
+    pendingClarification.value = result.clarification
+    qaThreadId.value = result.qa_thread_id ?? null
+    pendingPayload.value = basePayload
+    clarificationSelectedValues.value = []
+    clarificationFreeText.value = ''
+    qaResult.value = null
+  } else {
+    pendingClarification.value = null
+    qaThreadId.value = null
+    pendingPayload.value = null
+    qaResult.value = result
+  }
+}
+
 const askScholarQA = async (questionOverride?: string) => {
   const question = (questionOverride ?? chatQuery.value).trim()
   if (!question || asking.value) return
@@ -1925,6 +2102,9 @@ const askScholarQA = async (questionOverride?: string) => {
   asking.value = true
   qaResult.value = null
   qaError.value = null
+  pendingClarification.value = null
+  qaThreadId.value = null
+  pendingPayload.value = null
   selectedPreferredAnswer.value = null
   singleAnswerFeedbackSubmitted.value = false
   showNegativeFeedbackReasons.value = false
@@ -1932,47 +2112,44 @@ const askScholarQA = async (questionOverride?: string) => {
   negativeFeedbackComment.value = ''
 
   try {
-    const payload: QaAskRequest = {
-      question,
-      mode: qaMode.value,
-      rag_enabled: ragEnabled.value,
-      language: 'en'
-    }
-
-    if (ragEnabled.value) {
-      payload.retriever = selectedRetriever.value
-    }
-
-    if (isAdvancedMode.value) {
-      payload.expertise_level = expertiseLevel.value || 'intermediate'
-      if (ragEnabled.value) {
-        payload.top_k = selectedTopKOption.value.value
-      }
-    } else {
-      payload.expertise_level = 'intermediate'
-      if (ragEnabled.value) {
-        payload.top_k = 5
-      }
-    }
-
-    if (isAdvancedMode.value && selectedModel.value) {
-      payload.model = selectedModel.value
-    }
-
-    if (authStore.currentUser?.id) {
-      payload.user_id = authStore.currentUser.id
-    }
-
-    if (householdStore.currentMember?.id) {
-      payload.member_id = householdStore.currentMember.id
-    }
-
-    qaResult.value = await foodscholarApi.askQuestion(payload)
+    const payload = buildBasePayload(question)
+    pendingQuestion.value = question
+    const result = await foodscholarApi.askQuestion(payload)
+    handleQaResponse(result, payload)
   } catch (err: unknown) {
     qaError.value = getErrorMessage(err, t('foodScholarHome.errors.failedToGetQaResponse'))
   } finally {
     asking.value = false
     chatQuery.value = ''
+  }
+}
+
+const submitClarification = async () => {
+  if (!pendingClarification.value || !pendingPayload.value || asking.value) return
+
+  const clarif = pendingClarification.value
+  asking.value = true
+  qaError.value = null
+
+  try {
+    const clarificationResponse: QaClarificationResponse = {
+      question_id: clarif.id,
+      selected_values: [...clarificationSelectedValues.value],
+      free_text: clarificationFreeText.value.trim() || null
+    }
+
+    const payload: QaAskRequest = {
+      ...pendingPayload.value,
+      qa_thread_id: qaThreadId.value ?? undefined,
+      clarification_response: clarificationResponse
+    }
+
+    const result = await foodscholarApi.askQuestion(payload)
+    handleQaResponse(result, pendingPayload.value)
+  } catch (err: unknown) {
+    qaError.value = getErrorMessage(err, t('foodScholarHome.errors.failedToGetQaResponse'))
+  } finally {
+    asking.value = false
   }
 }
 

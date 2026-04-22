@@ -2,6 +2,12 @@ import wisefoodRestApi from './wisefoodRestApi'
 
 export type QaRetriever = 'rag' | 'linearrag'
 
+export interface QaClarificationResponse {
+  question_id: string
+  selected_values: string[]
+  free_text?: string | null
+}
+
 export interface QaAskRequest {
   question: string
   mode?: string
@@ -13,6 +19,9 @@ export interface QaAskRequest {
   language?: string
   user_id?: string
   member_id?: string
+  experience_group?: string
+  qa_thread_id?: string
+  clarification_response?: QaClarificationResponse | null
 }
 
 export interface QaCitation {
@@ -55,12 +64,31 @@ export interface QaRetrievedArticle {
   similarity_score?: number | null
 }
 
+export interface QaClarificationOption {
+  label: string
+  value: string
+}
+
+export interface QaClarification {
+  id: string
+  question: string
+  input_type: 'single_choice' | 'multiple_choice' | 'free_text' | 'number' | 'boolean'
+  options?: QaClarificationOption[]
+  allow_free_text?: boolean
+  reason?: string | null
+}
+
 export interface QaAskResult {
   question: string
   mode: string
+  needs_clarification: boolean
+  qa_thread_id?: string | null
+  clarification?: QaClarification | null
   primary_answer: QaAnswer
   secondary_answer?: QaAnswer | null
   dual_answer_feedback?: QaDualAnswerFeedback | null
+  retrieved_sources?: QaRetrievedArticle[]
+  /** @deprecated use retrieved_sources */
   retrieved_articles?: QaRetrievedArticle[]
   follow_up_suggestions?: string[]
   generated_at?: string

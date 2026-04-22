@@ -797,7 +797,6 @@ async function loadOverview() {
         offset: 0,
         fq: [regionFilter],
         sort: 'publication_year desc',
-        fields: ['topic', 'audience', 'publication_year'],
         facet_limit: 100
       }),
       catalogApi.searchGuidelines({
