@@ -1730,8 +1730,8 @@ function buildCreateInstructions() {
     .filter(Boolean)
 }
 
-function parseRequiredPositiveInteger(value: string, label: string) {
-  const parsed = Number.parseInt(value.trim(), 10)
+function parseRequiredPositiveInteger(value: string | number, label: string) {
+  const parsed = Number.parseInt(String(value ?? '').trim(), 10)
   if (!Number.isInteger(parsed) || parsed <= 0) {
     throw new Error(`${label} must be a positive whole number.`)
   }
@@ -1740,7 +1740,7 @@ function parseRequiredPositiveInteger(value: string, label: string) {
 }
 
 function validateCreateBasics() {
-  const title = createForm.title.trim()
+  const title = String(createForm.title ?? '').trim()
   const region = normalizeRecipeRegion(createForm.region)
 
   if (!title) {
