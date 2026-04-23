@@ -327,11 +327,13 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useHouseholdStore } from '@/stores/household'
 import foodscholarApi, { type QaTipsResult } from '~/services/foodscholarApi'
+import catalogApi from '~/services/catalogApi'
 import recipeApi, { type RecipeSearchResult } from '~/services/recipeApi'
 import memberMealPlansApi, { extractMealPlanFromMemberMealPlanResponse } from '~/services/memberMealPlansApi'
 import type { MealPlan, MealRecipe } from '~/services/foodchatApi'
 import type { HouseholdMember } from '~/services/householdsApi'
 import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
+import { buildGuideDetailPath } from '~/utils/guidesCatalog'
 
 const { t } = useI18n()
 
@@ -377,6 +379,7 @@ interface InsightSlide {
   text: string
   evidenceUrn?: string | null
   evidencePassage?: string | null
+  evidencePath?: string | null
 }
 
 const insightSlides = ref<InsightSlide[]>([])
@@ -417,18 +420,19 @@ const activeInsightTitle = computed(() => {
 })
 
 const activeInsightArticleTarget = computed(() => {
-  const urn = activeInsight.value.evidenceUrn
+  const slide = activeInsight.value
+  const urn = slide.evidenceUrn
   if (!urn) return null
 
-  if (urn.startsWith('urn:guide:')) {
-    return { path: `/foodscholar/catalog/guides/${encodeURIComponent(urn)}` }
+  if (slide.evidencePath) {
+    return { path: slide.evidencePath }
   }
 
   if (urn.startsWith('urn:guideline:') || (!urn.startsWith('urn:') && urn.length > 0)) {
     return { path: `/foodscholar/catalog/guidelines/${encodeURIComponent(urn)}` }
   }
 
-  const passage = activeInsight.value.evidencePassage?.trim() || ''
+  const passage = slide.evidencePassage?.trim() || ''
   return passage
     ? { path: `/foodscholar/${urn}`, query: { section: 'abstract', hl: passage } }
     : { path: `/foodscholar/${urn}` }
@@ -790,10 +794,39 @@ const restartInsightRotation = () => {
   }, insightRotationMs)
 }
 
+const resolveGuideEvidencePaths = async (slides: InsightSlide[]): Promise<InsightSlide[]> => {
+  const guideUrns = [...new Set(
+    slides
+      .map(s => s.evidenceUrn)
+      .filter((urn): urn is string => typeof urn === 'string' && urn.startsWith('urn:guide:'))
+  )]
+
+  if (!guideUrns.length) return slides
+
+  const pathByUrn = new Map<string, string>()
+  await Promise.all(
+    guideUrns.map(async (urn) => {
+      try {
+        const guide = await catalogApi.getGuide(urn)
+        pathByUrn.set(urn, buildGuideDetailPath(guide.region, guide.urn))
+      } catch {
+        // guide not in catalog — link will be omitted
+      }
+    })
+  )
+
+  return slides.map(slide =>
+    slide.evidenceUrn && pathByUrn.has(slide.evidenceUrn)
+      ? { ...slide, evidencePath: pathByUrn.get(slide.evidenceUrn) }
+      : slide
+  )
+}
+
 const loadFoodScholarInsights = async () => {
   try {
     const response = await foodscholarApi.listTips()
-    insightSlides.value = normalizeInsightSlides(response)
+    const slides = normalizeInsightSlides(response)
+    insightSlides.value = await resolveGuideEvidencePaths(slides)
   } catch (err) {
     console.warn('Failed to fetch FoodScholar tips', err)
     insightSlides.value = []

@@ -29,14 +29,12 @@ if (pathSegments.length === 1 && decodeURIComponent(pathSegments[0]).startsWith(
       replace: true
     })
   } catch (error) {
-    console.warn('[CatalogGuideAlias] Failed to resolve guide via catalog, falling back to direct route:', error)
+    console.error('[CatalogGuideAlias] Failed to resolve guide detail route:', error)
 
-    await navigateTo({
-      path: buildGuideDetailPath(null, guideUrn),
-      query: route.query,
-      hash: route.hash
-    }, {
-      replace: true
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'Guide not found',
+      fatal: true
     })
   }
 } else {
