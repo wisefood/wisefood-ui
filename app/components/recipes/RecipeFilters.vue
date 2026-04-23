@@ -33,6 +33,55 @@
       </div>
     </div>
 
+    <!-- Dish Type Filters -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+        <UIcon name="i-lucide-utensils" class="w-4 h-4 text-brandg-500" />
+        Dish Type
+      </h3>
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="dishType in dishTypeOptions"
+          :key="dishType.value"
+          @click="toggleDishType(dishType.value)"
+          :class="[
+            'px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200',
+            isDishTypeSelected(dishType.value)
+              ? 'bg-brandg-100 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-400 ring-2 ring-brandg-400 dark:ring-brandg-600'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+          ]"
+        >
+          <span class="flex items-center gap-1.5">
+            <UIcon :name="dishType.icon" class="w-3.5 h-3.5" />
+            {{ dishType.label }}
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Source Filters -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+        <UIcon name="i-lucide-database" class="w-4 h-4 text-blue-500" />
+        Source
+      </h3>
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="source in sourceOptions"
+          :key="source.value"
+          @click="toggleSource(source.value)"
+          :class="[
+            'px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200',
+            isSourceSelected(source.value)
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 ring-2 ring-blue-400 dark:ring-blue-600'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+          ]"
+        >
+          {{ source.label }}
+        </button>
+      </div>
+    </div>
+
     <!-- Quick Filters -->
     <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
       <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
@@ -89,6 +138,7 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRecipeStore } from '~/stores/recipe'
+import type { RecipeDishType, RecipeParamSortBy, RecipeSource } from '~/services/recipeApi'
 
 // ============================================================================
 // Props & Emits
@@ -96,7 +146,7 @@ import { useRecipeStore } from '~/stores/recipe'
 const emit = defineEmits<{
   filterChange: []
   quickFilter: [filterType: string]
-  sortChange: [sortBy: string]
+  sortChange: [sortBy: RecipeParamSortBy | null]
 }>()
 
 // ============================================================================
@@ -109,7 +159,6 @@ const { t } = useI18n()
 // State
 // ============================================================================
 const selectedQuickFilter = ref<string | null>(null)
-type RecipeSortBy = 'relevance' | 'duration' | 'calories' | 'nutri_score'
 
 // ============================================================================
 // Constants
@@ -127,6 +176,22 @@ const commonAllergens = computed(() => [
   { value: 'lactose', label: t('recipeWrangler.filters.allergens.lactose') }
 ])
 
+const dishTypeOptions: { value: RecipeDishType; label: string; icon: string }[] = [
+  { value: 'main-dish', label: 'Main Dish', icon: 'i-lucide-soup' },
+  { value: 'breakfast', label: 'Breakfast', icon: 'i-lucide-sunrise' },
+  { value: 'desserts', label: 'Desserts', icon: 'i-lucide-cake' },
+  { value: 'beverages', label: 'Beverages', icon: 'i-lucide-coffee' },
+  { value: 'snacks', label: 'Snacks', icon: 'i-lucide-cookie' }
+]
+
+const sourceOptions: { value: RecipeSource; label: string }[] = [
+  { value: 'healthyfoods', label: 'Healthy Foods' },
+  { value: 'foodhero', label: 'Food Hero' },
+  { value: 'myplate', label: 'MyPlate' },
+  { value: 'irish_safefood', label: 'Irish Safefood' },
+  { value: 'recipe1m', label: 'Recipe1M' }
+]
+
 const quickFilters = computed(() => [
   { value: 'quick', label: t('recipeWrangler.filters.quickOptions.quickEasy'), icon: 'i-lucide-zap' },
   { value: 'healthy', label: t('recipeWrangler.filters.quickOptions.healthy'), icon: 'i-lucide-leaf' },
@@ -135,33 +200,50 @@ const quickFilters = computed(() => [
   { value: 'low-calorie', label: t('recipeWrangler.filters.quickOptions.lowCalorie'), icon: 'i-lucide-flame' }
 ])
 
-const sortOptions = computed(() => [
-  { value: 'relevance', label: t('recipeWrangler.filters.sortOptions.mostRelevant'), icon: 'i-lucide-star' },
-  { value: 'duration', label: t('recipeWrangler.filters.sortOptions.cookingTime'), icon: 'i-lucide-clock' },
-  { value: 'calories', label: t('recipeWrangler.filters.sortOptions.calories'), icon: 'i-lucide-flame' },
-  { value: 'nutri_score', label: t('recipeWrangler.filters.sortOptions.nutritionScore'), icon: 'i-lucide-award' }
-])
+const sortOptions: { value: RecipeParamSortBy; label: string; icon: string }[] = [
+  { value: 'title_asc', label: 'Title (A–Z)', icon: 'i-lucide-arrow-up-a-z' },
+  { value: 'title_desc', label: 'Title (Z–A)', icon: 'i-lucide-arrow-down-z-a' },
+  { value: 'time_asc', label: 'Quickest First', icon: 'i-lucide-clock' },
+  { value: 'time_desc', label: 'Longest First', icon: 'i-lucide-clock-3' },
+  { value: 'random', label: 'Random', icon: 'i-lucide-shuffle' }
+]
 
 // ============================================================================
 // Computed
 // ============================================================================
 const sortBy = computed(() => recipeStore.sortBy)
-const hasActiveFilters = computed(() => recipeStore.excludedAllergens.length > 0)
+const hasActiveFilters = computed(() =>
+  recipeStore.excludedAllergens.length > 0 ||
+  recipeStore.selectedSources.length > 0 ||
+  recipeStore.selectedDishTypes.length > 0
+)
 
 // ============================================================================
 // Methods
 // ============================================================================
-const isAllergenExcluded = (allergen: string) => {
-  return recipeStore.isAllergenExcluded(allergen)
-}
+const isAllergenExcluded = (allergen: string) => recipeStore.isAllergenExcluded(allergen)
+const isSourceSelected = (source: RecipeSource) => recipeStore.selectedSources.includes(source)
+const isDishTypeSelected = (dishType: RecipeDishType) => recipeStore.selectedDishTypes.includes(dishType)
 
 const toggleAllergen = (allergen: string) => {
   recipeStore.toggleAllergen(allergen)
   emit('filterChange')
 }
 
+const toggleSource = (source: RecipeSource) => {
+  recipeStore.toggleSource(source)
+  emit('filterChange')
+}
+
+const toggleDishType = (dishType: RecipeDishType) => {
+  recipeStore.toggleDishType(dishType)
+  emit('filterChange')
+}
+
 const clearAllFilters = () => {
   recipeStore.clearAllergenFilters()
+  recipeStore.clearSourceFilters()
+  recipeStore.clearDishTypeFilters()
   selectedQuickFilter.value = null
   emit('filterChange')
 }
@@ -175,9 +257,10 @@ const applyQuickFilter = (filterType: string) => {
   emit('quickFilter', filterType)
 }
 
-const changeSortBy = (sortByValue: string) => {
-  recipeStore.setSortBy(sortByValue as RecipeSortBy)
-  emit('sortChange', sortByValue)
+const changeSortBy = (value: RecipeParamSortBy) => {
+  const next = recipeStore.sortBy === value ? null : value
+  recipeStore.setSortBy(next)
+  emit('sortChange', next)
 }
 </script>
 

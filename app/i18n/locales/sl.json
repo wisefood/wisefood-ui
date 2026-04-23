@@ -1091,7 +1091,9 @@
     "input": {
       "generate": "Generiraj",
       "placeholderInitial": "Opiši svoje idealne obroke — npr. visoko beljakovinsko, mediteranski slog...",
-      "placeholderModify": "Prilagodi svoj jedilnik — npr. zamenjaj kosilo za nekaj lažjega..."
+      "placeholderModify": "Prilagodi načrt — npr. zamenjaj kosilo za lažje...",
+      "placeholderChat": "Vpiši sporočilo...",
+      "enterHint": "Shift+Enter za novo vrstico"
     },
     "welcomeTitle": {
       "prefix": "Kaj bomo",
@@ -1105,7 +1107,8 @@
     },
     "startFresh": "Začni znova",
     "planHeader": {
-      "dailyPlan": "Dnevni plan"
+      "dailyPlan": "Dnevni plan",
+      "weeklyPlan": "Tedenski plan"
     },
     "apply": {
       "title": "Uporabi ta načrt za člane",
@@ -1145,10 +1148,10 @@
       "someMembersNoPlan": "Nekateri izbrani člani nimajo tega jedilnika za izbrani datum."
     },
     "suggestedQuestions": {
-      "balancedPlan": "Ustvari uravnotežen jedilnik za danes",
+      "dailyPlan": "Ustvari dnevni jedilnik za danes",
+      "weeklyPlan": "Ustvari celoten tedenski jedilnik",
       "highProtein": "Ideje za vegetarijanske obroke z veliko beljakovin",
-      "mediterranean": "Mediteranska prehrana za danes",
-      "lowSugar": "Alternative sladic z manj sladkorja"
+      "mediterranean": "Mediteranski prehranski plan"
     },
     "modifyChips": {
       "lowerCalorie": "Naj bo manj kalorično",
@@ -1160,6 +1163,23 @@
     "mealCard": {
       "viewRecipe": "Prikaži recept",
       "loadingNutrition": "Nalaganje hranilnih vrednosti..."
+    },
+    "canvas": {
+      "placeholderTitle": "Tvoj jedilnik se bo pojavil tukaj",
+      "placeholderSubtitle": "Zahtevaj dnevni ali tedenski načrt za začetek",
+      "rateThisPlan": "Oceni ta načrt:"
+    },
+    "chat": {
+      "loadEarlier": "Naloži prejšnja sporočila",
+      "feedbackSaved": "Hvala za povratne informacije",
+      "startFresh": "Začni novo sejo",
+      "previousSessions": "Prejšnje seje"
+    },
+    "feedback": {
+      "tooGeneric": "Preveč splošno",
+      "notAccurate": "Ni točno",
+      "missingInfo": "Manjkajoče informacije",
+      "irrelevant": "Ni relevantno"
     },
     "cookingAnimation": {
       "yourMealPlan": "tvoj jedilnik",

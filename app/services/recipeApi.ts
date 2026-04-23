@@ -92,14 +92,22 @@ export interface RecipeSearchParams {
   exclude_allergens?: string[]
 }
 
+export type RecipeParamSortBy = 'title_asc' | 'title_desc' | 'time_asc' | 'time_desc' | 'random'
+export type RecipeSource = 'healthyfoods' | 'foodhero' | 'myplate' | 'irish_safefood' | 'recipe1m'
+export type RecipeDishType = 'main-dish' | 'breakfast' | 'desserts' | 'beverages' | 'snacks'
+
 export interface RecipeParamSearchParams {
   include_ingredients?: string[]
   exclude_ingredients?: string[]
   exclude_allergens?: string[]
   diet_tags?: string[]
+  sources?: RecipeSource[]
+  dish_types?: RecipeDishType[]
   max_duration_minutes?: number
   limit?: number
   offset?: number
+  sort_by?: RecipeParamSortBy
+  include_facets?: boolean
 }
 
 export interface CreateRecipeRequest {

@@ -1092,7 +1092,9 @@
     "input": {
       "generate": "Generate",
       "placeholderInitial": "Describe your ideal meals — e.g. high-protein, Mediterranean style...",
-      "placeholderModify": "Modify your meal plan — e.g. swap lunch for something lighter..."
+      "placeholderModify": "Refine your plan — e.g. swap lunch for something lighter...",
+      "placeholderChat": "Type your message here...",
+      "enterHint": "Shift+Enter for new line"
     },
     "welcomeTitle": {
       "prefix": "What shall we",
@@ -1106,7 +1108,8 @@
     },
     "startFresh": "Start fresh",
     "planHeader": {
-      "dailyPlan": "Daily Plan"
+      "dailyPlan": "Daily Plan",
+      "weeklyPlan": "Weekly Plan"
     },
     "apply": {
       "title": "Apply this plan to members",
@@ -1146,10 +1149,10 @@
       "someMembersNoPlan": "Some selected members do not have this meal plan for the chosen date."
     },
     "suggestedQuestions": {
-      "balancedPlan": "Create a balanced meal plan for today",
+      "dailyPlan": "Create a daily meal plan for today",
+      "weeklyPlan": "Generate a full weekly meal plan",
       "highProtein": "High-protein vegetarian ideas",
-      "mediterranean": "Mediterranean diet for today",
-      "lowSugar": "Low-sugar dessert alternatives"
+      "mediterranean": "Mediterranean diet plan"
     },
     "modifyChips": {
       "lowerCalorie": "Make it lower calorie",
@@ -1161,6 +1164,23 @@
     "mealCard": {
       "viewRecipe": "View recipe",
       "loadingNutrition": "Loading nutrition..."
+    },
+    "canvas": {
+      "placeholderTitle": "Your meal plan will appear here",
+      "placeholderSubtitle": "Ask for a daily or weekly plan to get started",
+      "rateThisPlan": "Rate this plan:"
+    },
+    "chat": {
+      "loadEarlier": "Load earlier messages",
+      "feedbackSaved": "Thanks for the feedback",
+      "startFresh": "Start a new session",
+      "previousSessions": "Previous sessions"
+    },
+    "feedback": {
+      "tooGeneric": "Too generic",
+      "notAccurate": "Not accurate",
+      "missingInfo": "Missing info",
+      "irrelevant": "Not relevant"
     },
     "cookingAnimation": {
       "yourMealPlan": "your meal plan",

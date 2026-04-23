@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { Recipe, RecipeSearchResult } from '~/services/recipeApi'
+import type { Recipe, RecipeDishType, RecipeParamSortBy, RecipeSearchResult, RecipeSource } from '~/services/recipeApi'
 
 /**
  * RecipeWrangler Pinia Store
@@ -14,11 +14,13 @@ export const useRecipeStore = defineStore('recipe', {
     recentlyViewed: [] as string[],
     searchHistory: [] as string[],
     excludedAllergens: [] as string[],
+    selectedSources: [] as RecipeSource[],
+    selectedDishTypes: [] as RecipeDishType[],
     compareList: [] as string[], // Recipe IDs for comparison
 
     // UI preferences
     viewMode: 'grid' as 'grid' | 'list',
-    sortBy: 'relevance' as 'relevance' | 'duration' | 'calories' | 'nutri_score',
+    sortBy: null as RecipeParamSortBy | null,
 
     // Cache
     recipesCache: new Map<string, Recipe>(),
@@ -249,9 +251,33 @@ export const useRecipeStore = defineStore('recipe', {
     /**
      * Set sort preference
      */
-    setSortBy(sortBy: 'relevance' | 'duration' | 'calories' | 'nutri_score') {
+    setSortBy(sortBy: RecipeParamSortBy | null) {
       this.sortBy = sortBy
       this.persistSortBy()
+    },
+
+    toggleSource(source: RecipeSource) {
+      const idx = this.selectedSources.indexOf(source)
+      if (idx >= 0) this.selectedSources.splice(idx, 1)
+      else this.selectedSources.push(source)
+      this.persistSources()
+    },
+
+    toggleDishType(dishType: RecipeDishType) {
+      const idx = this.selectedDishTypes.indexOf(dishType)
+      if (idx >= 0) this.selectedDishTypes.splice(idx, 1)
+      else this.selectedDishTypes.push(dishType)
+      this.persistDishTypes()
+    },
+
+    clearSourceFilters() {
+      this.selectedSources = []
+      this.persistSources()
+    },
+
+    clearDishTypeFilters() {
+      this.selectedDishTypes = []
+      this.persistDishTypes()
     },
 
     /**
@@ -391,6 +417,8 @@ export const useRecipeStore = defineStore('recipe', {
         this.loadRecentlyViewed()
         this.loadSearchHistory()
         this.loadAllergens()
+        this.loadSources()
+        this.loadDishTypes()
         this.loadViewMode()
         this.loadSortBy()
         this.loadCompareList()
@@ -405,8 +433,10 @@ export const useRecipeStore = defineStore('recipe', {
       this.recentlyViewed = []
       this.searchHistory = []
       this.excludedAllergens = []
+      this.selectedSources = []
+      this.selectedDishTypes = []
       this.viewMode = 'grid'
-      this.sortBy = 'relevance'
+      this.sortBy = null
       this.compareList = []
       this.recipesCache.clear()
       this.lastSearchResults = []
@@ -416,6 +446,8 @@ export const useRecipeStore = defineStore('recipe', {
         localStorage.removeItem('recipe-recently-viewed')
         localStorage.removeItem('recipe-search-history')
         localStorage.removeItem('recipe-allergens')
+        localStorage.removeItem('recipe-sources')
+        localStorage.removeItem('recipe-dish-types')
         localStorage.removeItem('recipe-view-mode')
         localStorage.removeItem('recipe-sort-by')
         localStorage.removeItem('recipe-compare-list')
@@ -519,15 +551,45 @@ export const useRecipeStore = defineStore('recipe', {
 
     persistSortBy() {
       if (import.meta.client) {
-        localStorage.setItem('recipe-sort-by', this.sortBy)
+        if (this.sortBy) localStorage.setItem('recipe-sort-by', this.sortBy)
+        else localStorage.removeItem('recipe-sort-by')
       }
     },
 
     loadSortBy() {
       if (import.meta.client) {
         const stored = localStorage.getItem('recipe-sort-by')
-        if (stored === 'relevance' || stored === 'duration' || stored === 'calories' || stored === 'nutri_score') {
-          this.sortBy = stored
+        const valid: RecipeParamSortBy[] = ['title_asc', 'title_desc', 'time_asc', 'time_desc', 'random']
+        this.sortBy = valid.includes(stored as RecipeParamSortBy) ? (stored as RecipeParamSortBy) : null
+      }
+    },
+
+    persistSources() {
+      if (import.meta.client) {
+        localStorage.setItem('recipe-sources', JSON.stringify(this.selectedSources))
+      }
+    },
+
+    loadSources() {
+      if (import.meta.client) {
+        const stored = localStorage.getItem('recipe-sources')
+        if (stored) {
+          try { this.selectedSources = JSON.parse(stored) } catch { this.selectedSources = [] }
+        }
+      }
+    },
+
+    persistDishTypes() {
+      if (import.meta.client) {
+        localStorage.setItem('recipe-dish-types', JSON.stringify(this.selectedDishTypes))
+      }
+    },
+
+    loadDishTypes() {
+      if (import.meta.client) {
+        const stored = localStorage.getItem('recipe-dish-types')
+        if (stored) {
+          try { this.selectedDishTypes = JSON.parse(stored) } catch { this.selectedDishTypes = [] }
         }
       }
     },

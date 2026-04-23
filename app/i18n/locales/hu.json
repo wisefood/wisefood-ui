@@ -1091,7 +1091,9 @@
     "input": {
       "generate": "Generálás",
       "placeholderInitial": "Írd le az ideális étkezéseidet — pl. magas fehérje, mediterrán stílus...",
-      "placeholderModify": "Módosítsd a menütervet — pl. cseréld az ebédet valami könnyebbre..."
+      "placeholderModify": "Módosítsd a tervet — pl. cseréld az ebédet valami könnyebbre...",
+      "placeholderChat": "Írd be az üzeneted...",
+      "enterHint": "Shift+Enter az új sorhoz"
     },
     "welcomeTitle": {
       "prefix": "Mit",
@@ -1105,7 +1107,8 @@
     },
     "startFresh": "Újrakezdés",
     "planHeader": {
-      "dailyPlan": "Napi terv"
+      "dailyPlan": "Napi terv",
+      "weeklyPlan": "Heti terv"
     },
     "apply": {
       "title": "Alkalmazd ezt a tervet a tagokra",
@@ -1145,10 +1148,10 @@
       "someMembersNoPlan": "Néhány kiválasztott tagnál nincs ez a menüterv a választott dátumon."
     },
     "suggestedQuestions": {
-      "balancedPlan": "Készíts kiegyensúlyozott menütervet mára",
+      "dailyPlan": "Készíts napi menütervet mára",
+      "weeklyPlan": "Készíts teljes heti menütervet",
       "highProtein": "Magas fehérjetartalmú vegetáriánus ötletek",
-      "mediterranean": "Mediterrán étrend mára",
-      "lowSugar": "Alacsony cukortartalmú desszert alternatívák"
+      "mediterranean": "Mediterrán étrendterv"
     },
     "modifyChips": {
       "lowerCalorie": "Legyen alacsonyabb kalóriás",
@@ -1160,6 +1163,23 @@
     "mealCard": {
       "viewRecipe": "Recept megnyitása",
       "loadingNutrition": "Tápérték betöltése..."
+    },
+    "canvas": {
+      "placeholderTitle": "A menüterved itt fog megjelenni",
+      "placeholderSubtitle": "Kérj napi vagy heti tervet a kezdéshez",
+      "rateThisPlan": "Értékeld ezt a tervet:"
+    },
+    "chat": {
+      "loadEarlier": "Korábbi üzenetek betöltése",
+      "feedbackSaved": "Köszönjük a visszajelzést",
+      "startFresh": "Új munkamenet indítása",
+      "previousSessions": "Korábbi munkamenetek"
+    },
+    "feedback": {
+      "tooGeneric": "Túl általános",
+      "notAccurate": "Nem pontos",
+      "missingInfo": "Hiányzó információ",
+      "irrelevant": "Nem releváns"
     },
     "cookingAnimation": {
       "yourMealPlan": "a menütervedet",
