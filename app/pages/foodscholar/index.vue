@@ -65,8 +65,6 @@
 
           <div class="relative">
             <div class="chat-composer" :class="{ 'is-focused': composerFocused }">
-              <div class="chat-composer-accent chat-composer-accent-left" />
-              <div class="chat-composer-accent chat-composer-accent-right" />
               <FoodscholarNLInput
                 v-model="chatQuery"
                 :disabled="asking"
@@ -214,8 +212,6 @@
         <div class="session-composer-wrap mb-6">
           <div class="relative">
             <div class="chat-composer" :class="{ 'is-focused': composerFocused }">
-              <div class="chat-composer-accent chat-composer-accent-left" />
-              <div class="chat-composer-accent chat-composer-accent-right" />
               <FoodscholarNLInput
                 v-model="chatQuery"
                 :disabled="asking"
@@ -2680,32 +2676,6 @@ onUnmounted(() => {
     0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
-.chat-composer-accent {
-  pointer-events: none;
-  position: absolute;
-  width: 8rem;
-  height: 8rem;
-  border-radius: 9999px;
-  filter: blur(28px);
-  opacity: 0.26;
-  transition: opacity 0.25s ease;
-}
-
-.chat-composer.is-focused .chat-composer-accent {
-  opacity: 0.42;
-}
-
-.chat-composer-accent-left {
-  top: -3.5rem;
-  left: -2rem;
-  background: var(--color-brand-400 / 0.26);
-}
-
-.chat-composer-accent-right {
-  bottom: -4rem;
-  right: -2.2rem;
-  background: var(--color-brand-600 / 0.2);
-}
 
 .chat-send-button {
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;

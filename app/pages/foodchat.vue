@@ -32,8 +32,6 @@
           <!-- Central chat input -->
           <div class="relative mb-3">
             <div class="chat-composer" :class="{ 'is-focused': inputFocused }">
-              <div class="chat-composer-accent chat-composer-accent-left" />
-              <div class="chat-composer-accent chat-composer-accent-right" />
               <div class="flex items-end gap-2 p-2">
                 <textarea
                   ref="idleInputRef"
@@ -245,20 +243,6 @@
 
           <!-- ── Chat input (pinned to bottom) ── -->
           <div class="fc-composer-wrap px-4 pb-4 pt-2">
-            <!-- Modify chips -->
-            <Transition name="chips-fade">
-              <div v-if="hasAnyPlan && !sending" class="flex flex-wrap gap-1.5 mb-2">
-                <button
-                  v-for="chip in modifyChips"
-                  :key="chip.text"
-                  class="px-3 py-1 rounded-full text-[11px] font-light border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 bg-white/60 dark:bg-zinc-800/40 hover:border-brandp-300 dark:hover:border-brandp-700 hover:text-brandp-600 dark:hover:text-brandp-400 transition-all"
-                  @click="handleQuickAsk(chip.text)"
-                >
-                  {{ chip.text }}
-                </button>
-              </div>
-            </Transition>
-
             <div class="relative">
               <div class="chat-composer" :class="{ 'is-focused': sessionInputFocused }">
                 <div class="chat-composer-accent chat-composer-accent-left" />
@@ -295,11 +279,11 @@
 
         <!-- ── RIGHT: Canvas column ── -->
         <div class="fc-canvas-col flex flex-col overflow-y-auto">
-          <div class="flex-1 p-4 sm:p-6">
+          <div class="flex-1 p-4 sm:p-6 flex flex-col justify-center">
 
             <!-- Generating animation -->
             <Transition name="plan-reveal">
-              <div v-if="sending && !hasAnyPlan" class="flex flex-col items-center justify-center h-full min-h-80">
+              <div v-if="sending" class="flex flex-col items-center justify-center h-full min-h-80">
                 <FoodchatCookingAnimation />
               </div>
             </Transition>
@@ -315,188 +299,225 @@
               </div>
             </Transition>
 
-            <!-- Daily meal plan canvas -->
+            <!-- Plan canvas -->
             <Transition name="plan-reveal">
-              <div v-if="latestMealPlan && !sending" class="plan-card">
-                <!-- Canvas header -->
-                <div class="flex items-center justify-between mb-4">
-                  <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg bg-brandp-100 dark:bg-brandp-950/50 flex items-center justify-center">
-                      <UIcon name="i-lucide-calendar-days" class="w-4 h-4 text-brandp-500" />
-                    </div>
-                    <div>
-                      <span class="text-sm font-medium text-gray-900 dark:text-white">{{ t('foodChatHome.planHeader.dailyPlan') }}</span>
-                      <span v-if="latestMealPlan.version" class="ml-2 text-[10px] text-gray-400 bg-gray-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-full">v{{ latestMealPlan.version }}</span>
-                    </div>
-                  </div>
-                  <span class="text-xs text-gray-400 font-light">{{ formatPlanDate(latestMealPlan.created_at) }}</span>
-                </div>
+              <div v-if="hasAnyPlan && !sending" class="plan-card">
 
-                <!-- Meal cards -->
-                <div
-                  class="rounded-2xl overflow-hidden mb-4"
-                  :class="mealGridCols(latestMealPlan)"
-                >
-                  <FoodchatMealScheduleCard
-                    v-if="latestMealPlan.breakfast"
-                    :type="t('foodChatHome.meals.breakfast')"
-                    time="08:00"
-                    icon="i-lucide-coffee"
-                    :recipe="latestMealPlan.breakfast"
-                  />
-                  <FoodchatMealScheduleCard
-                    v-if="latestMealPlan.lunch"
-                    :type="t('foodChatHome.meals.lunch')"
-                    time="13:00"
-                    icon="i-lucide-utensils"
-                    :recipe="latestMealPlan.lunch"
-                  />
-                  <FoodchatMealScheduleCard
-                    v-if="latestMealPlan.dinner"
-                    :type="t('foodChatHome.meals.dinner')"
-                    time="19:30"
-                    icon="i-lucide-moon"
-                    :recipe="latestMealPlan.dinner"
-                  />
-                </div>
-
-                <!-- Reasoning -->
-                <div v-if="latestMealPlan.reasoning" class="flex items-start gap-2 mb-4 px-1">
-                  <UIcon name="i-lucide-lightbulb" class="w-3.5 h-3.5 text-brandp-400 mt-0.5 shrink-0" />
-                  <p class="text-xs text-gray-500 dark:text-gray-400 font-light leading-relaxed">{{ latestMealPlan.reasoning }}</p>
-                </div>
-
-                <!-- Plan vote -->
-                <div class="flex items-center gap-2 mb-5 px-1">
-                  <span class="text-xs text-gray-400">{{ t('foodChatHome.canvas.rateThisPlan') }}</span>
-                  <UTooltip :text="t('foodChatHome.tooltips.planWorksWell')">
+                <!-- ── Canvas toolbar ── -->
+                <div class="flex items-center justify-between mb-4 gap-2 flex-wrap">
+                  <!-- Type toggle (only if both types exist) -->
+                  <div v-if="hasMealPlans && hasWeeklyMealPlans" class="flex rounded-lg border border-gray-200 dark:border-zinc-700 overflow-hidden text-xs">
                     <button
-                      :class="['fc-feedback-btn', planVotes[latestMealPlan.id] === 'up' ? 'fc-feedback-active-up' : '']"
-                      @click="votePlan(latestMealPlan.id, 'up')"
-                    >
-                      <UIcon name="i-lucide-thumbs-up" class="w-3.5 h-3.5" />
-                    </button>
-                  </UTooltip>
-                  <UTooltip :text="t('foodChatHome.tooltips.needsImprovement')">
+                      :class="['px-3 py-1.5 transition-colors', canvasMode === 'daily' ? 'bg-brandp-500 text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800']"
+                      @click="canvasMode = 'daily'"
+                    >{{ t('foodChatHome.planHeader.dailyPlan') }}</button>
                     <button
-                      :class="['fc-feedback-btn', planVotes[latestMealPlan.id] === 'down' ? 'fc-feedback-active-down' : '']"
-                      @click="votePlan(latestMealPlan.id, 'down')"
-                    >
-                      <UIcon name="i-lucide-thumbs-down" class="w-3.5 h-3.5" />
-                    </button>
-                  </UTooltip>
-                </div>
-
-                <!-- Apply section -->
-                <div class="rounded-2xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/30 p-4">
-                  <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
-                    <div>
-                      <p class="text-sm font-medium text-gray-900 dark:text-white">{{ t('foodChatHome.apply.title') }}</p>
-                      <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodChatHome.apply.subtitle') }}</p>
-                    </div>
-                    <div class="flex items-center gap-2 flex-wrap">
-                      <UPopover :content="{ align: 'end', side: 'top', sideOffset: 8 }">
-                        <UButton color="neutral" variant="outline" size="xs" icon="i-lucide-calendar">
-                          {{ selectedApplyDate }}
-                        </UButton>
-                        <template #content>
-                          <div class="p-2">
-                            <UCalendar v-model="selectedApplyDateValue" :min-value="minApplyDateValue" :year-controls="true" />
-                          </div>
-                        </template>
-                      </UPopover>
-
-                      <UPopover :content="{ align: 'end', side: 'top', sideOffset: 8 }">
-                        <UButton color="neutral" variant="outline" size="xs" icon="i-lucide-users" trailing-icon="i-lucide-chevron-down">
-                          {{ selectedMembersLabel }}
-                        </UButton>
-                        <template #content>
-                          <div class="w-64 p-3">
-                            <div class="flex items-center justify-between mb-2">
-                              <p class="text-xs font-medium text-gray-900 dark:text-white">{{ t('foodChatHome.apply.selectMembers') }}</p>
-                              <div class="flex items-center gap-1.5">
-                                <UButton variant="ghost" size="xs" color="neutral" @click="selectOnlyCurrentMember">{{ t('foodChatHome.apply.onlyMe') }}</UButton>
-                                <UButton variant="ghost" size="xs" color="neutral" @click="selectAllMembers">{{ t('foodChatHome.apply.all') }}</UButton>
-                              </div>
-                            </div>
-                            <div v-if="householdMembers.length === 0" class="text-xs text-gray-500 py-2">{{ t('foodChatHome.apply.noHouseholdMembers') }}</div>
-                            <div v-else class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                              <div
-                                v-for="member in householdMembers"
-                                :key="member.id"
-                                class="flex items-center gap-2.5 px-2 py-1.5 rounded-lg transition-colors"
-                                :class="isCurrentMember(member.id) ? 'bg-brandp-50/70 dark:bg-brandp-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-700/40 cursor-pointer'"
-                                @click="toggleApplyMember(member.id, !isApplyMemberSelected(member.id))"
-                              >
-                                <UCheckbox :model-value="isApplyMemberSelected(member.id)" :disabled="isCurrentMember(member.id)" @click.stop @update:model-value="(c) => toggleApplyMember(member.id, c)" />
-                                <ProfileAvatar v-if="getMemberAvatar(member)" :avatar="getMemberAvatarForDisplay(member)" size="sm" class="w-7 h-7 shrink-0" />
-                                <div v-else class="w-7 h-7 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white text-[10px] font-semibold flex items-center justify-center shrink-0">{{ memberInitials(member.name) }}</div>
-                                <p class="text-xs text-gray-900 dark:text-white truncate flex-1">{{ member.name }}</p>
-                                <UBadge v-if="isCurrentMember(member.id)" color="primary" variant="subtle" size="xs">{{ t('foodChatHome.apply.main') }}</UBadge>
-                              </div>
-                            </div>
-                          </div>
-                        </template>
-                      </UPopover>
-                    </div>
+                      :class="['px-3 py-1.5 transition-colors', canvasMode === 'weekly' ? 'bg-brandp-500 text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800']"
+                      @click="canvasMode = 'weekly'"
+                    >{{ t('foodChatHome.planHeader.weeklyPlan') }}</button>
                   </div>
-
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <UButton color="primary" size="sm" icon="i-lucide-check" :loading="applyingMealPlan" :disabled="!canApplyMealPlan" @click="applyMealPlanToMembers">
-                      {{ t('foodChatHome.apply.buttons.apply') }}
-                    </UButton>
-                    <UButton color="neutral" variant="ghost" size="sm" icon="i-lucide-undo-2" :loading="revokingMealPlan" :disabled="!canRevokeMealPlan" @click="revokeMealPlanFromMembers">
-                      {{ t('foodChatHome.apply.buttons.revoke') }}
-                    </UButton>
-                    <div v-if="applySuccess" class="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
-                      <UIcon name="i-lucide-check" class="w-3.5 h-3.5" />
-                      <span>{{ applySuccess }}</span>
-                    </div>
-                  </div>
-
-                  <UAlert v-if="applyError" class="mt-3" color="red" variant="soft" icon="i-lucide-alert-circle" :title="applyError" />
-                </div>
-              </div>
-            </Transition>
-
-            <!-- Weekly meal plan canvas -->
-            <Transition name="plan-reveal">
-              <div v-if="latestWeeklyPlan && !latestMealPlan && !sending" class="plan-card">
-                <div class="flex items-center justify-between mb-4">
-                  <div class="flex items-center gap-2">
+                  <!-- Title when only one type -->
+                  <div v-else class="flex items-center gap-2">
                     <div class="w-7 h-7 rounded-lg bg-brandp-100 dark:bg-brandp-950/50 flex items-center justify-center">
-                      <UIcon name="i-lucide-calendar-range" class="w-4 h-4 text-brandp-500" />
+                      <UIcon :name="canvasMode === 'weekly' ? 'i-lucide-calendar-range' : 'i-lucide-calendar-days'" class="w-4 h-4 text-brandp-500" />
                     </div>
-                    <div>
-                      <span class="text-sm font-medium text-gray-900 dark:text-white">{{ t('foodChatHome.planHeader.weeklyPlan') }}</span>
-                      <span v-if="latestWeeklyPlan.version" class="ml-2 text-[10px] text-gray-400 bg-gray-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-full">v{{ latestWeeklyPlan.version }}</span>
-                    </div>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ canvasMode === 'weekly' ? t('foodChatHome.planHeader.weeklyPlan') : t('foodChatHome.planHeader.dailyPlan') }}</span>
                   </div>
-                  <span class="text-xs text-gray-400 font-light">{{ formatPlanDate(latestWeeklyPlan.created_at) }}</span>
+
+                  <!-- Plan history dropdown -->
+                  <USelect
+                    v-if="canvasMode === 'daily' && mealPlans.length > 1"
+                    :model-value="selectedDailyPlanIdx"
+                    :items="mealPlans.map((p, i) => ({ label: formatPlanDate(p.created_at) + (p.version ? ' · v' + p.version : ''), value: i }))"
+                    size="xs"
+                    color="neutral"
+                    variant="outline"
+                    class="w-44"
+                    @update:model-value="selectedDailyPlanIdx = $event"
+                  />
+                  <USelect
+                    v-else-if="canvasMode === 'weekly' && weeklyMealPlans.length > 1"
+                    :model-value="selectedWeeklyPlanIdx"
+                    :items="weeklyMealPlans.map((p, i) => ({ label: formatPlanDate(p.created_at) + (p.version ? ' · v' + p.version : ''), value: i }))"
+                    size="xs"
+                    color="neutral"
+                    variant="outline"
+                    class="w-44"
+                    @update:model-value="selectedWeeklyPlanIdx = $event"
+                  />
+                  <span v-else class="text-xs text-gray-400 font-light">
+                    {{ canvasMode === 'daily' && displayedMealPlan ? formatPlanDate(displayedMealPlan.created_at) : '' }}
+                    {{ canvasMode === 'weekly' && displayedWeeklyPlan ? formatPlanDate(displayedWeeklyPlan.created_at) : '' }}
+                  </span>
                 </div>
 
-                <!-- Weekly entries grouped by day -->
-                <div class="space-y-3">
+                <!-- ── Daily plan content ── -->
+                <template v-if="canvasMode === 'daily' && displayedMealPlan">
                   <div
-                    v-for="day in weeklyDays"
-                    :key="day.dayIndex"
-                    class="rounded-xl border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-800/30 overflow-hidden"
+                    class="rounded-2xl overflow-hidden mb-4"
+                    :class="mealGridCols(displayedMealPlan)"
                   >
-                    <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-100 dark:border-zinc-700/50 bg-gray-50/50 dark:bg-zinc-800/50">
-                      <UIcon name="i-lucide-calendar" class="w-3.5 h-3.5 text-brandp-400" />
-                      <span class="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">{{ day.label }}</span>
+                    <FoodchatMealScheduleCard
+                      v-if="displayedMealPlan.breakfast"
+                      :type="t('foodChatHome.meals.breakfast')"
+                      time="08:00"
+                      icon="i-lucide-coffee"
+                      :recipe="displayedMealPlan.breakfast"
+                    />
+                    <FoodchatMealScheduleCard
+                      v-if="displayedMealPlan.lunch"
+                      :type="t('foodChatHome.meals.lunch')"
+                      time="13:00"
+                      icon="i-lucide-utensils"
+                      :recipe="displayedMealPlan.lunch"
+                    />
+                    <FoodchatMealScheduleCard
+                      v-if="displayedMealPlan.dinner"
+                      :type="t('foodChatHome.meals.dinner')"
+                      time="19:30"
+                      icon="i-lucide-moon"
+                      :recipe="displayedMealPlan.dinner"
+                    />
+                  </div>
+
+                  <div v-if="displayedMealPlan.reasoning" class="flex items-start gap-2 mb-4 px-1">
+                    <UIcon name="i-lucide-lightbulb" class="w-3.5 h-3.5 text-brandp-400 mt-0.5 shrink-0" />
+                    <p class="text-xs text-gray-500 dark:text-gray-400 font-light leading-relaxed">{{ displayedMealPlan.reasoning }}</p>
+                  </div>
+
+                  <!-- Plan vote -->
+                  <div class="mb-5 px-1">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs text-gray-400">{{ t('foodChatHome.canvas.rateThisPlan') }}</span>
+                      <UTooltip :text="t('foodChatHome.tooltips.planWorksWell')">
+                        <button
+                          :class="['fc-feedback-btn', planVotes[displayedMealPlan.id] === 'up' ? 'fc-feedback-active-up' : '']"
+                          @click="votePlan(displayedMealPlan.id, 'up', getMessageIdForPlanIdx(selectedDailyPlanIdx))"
+                        >
+                          <UIcon name="i-lucide-thumbs-up" class="w-3.5 h-3.5" />
+                        </button>
+                      </UTooltip>
+                      <UTooltip :text="t('foodChatHome.tooltips.needsImprovement')">
+                        <button
+                          :class="['fc-feedback-btn', planVotes[displayedMealPlan.id] === 'down' ? 'fc-feedback-active-down' : '']"
+                          @click="votePlan(displayedMealPlan.id, 'down', getMessageIdForPlanIdx(selectedDailyPlanIdx))"
+                        >
+                          <UIcon name="i-lucide-thumbs-down" class="w-3.5 h-3.5" />
+                        </button>
+                      </UTooltip>
+                      <Transition name="chips-fade">
+                        <span v-if="planFeedbackSubmitted[displayedMealPlan.id]" class="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          <UIcon name="i-lucide-check" class="w-3 h-3" />
+                          {{ t('foodChatHome.chat.feedbackSaved') }}
+                        </span>
+                      </Transition>
                     </div>
-                    <div class="divide-y divide-gray-100 dark:divide-zinc-700/50">
-                      <div v-for="entry in day.entries" :key="`${entry.day}-${entry.meal_idx}`" class="px-4 py-2.5 flex items-center gap-3">
-                        <UIcon :name="mealTypeIcon(entry.meal_type)" class="w-4 h-4 text-brandp-400 shrink-0" />
-                        <div class="flex-1 min-w-0">
-                          <p class="text-xs font-medium text-gray-900 dark:text-white capitalize">{{ entry.meal_type }}</p>
-                          <p class="text-[11px] text-gray-500 dark:text-gray-400 truncate">{{ getWeeklyRecipeTitle(entry) }}</p>
-                        </div>
+                    <Transition name="chips-fade">
+                      <div v-if="planVotes[displayedMealPlan.id] === 'down' && !planFeedbackSubmitted[displayedMealPlan.id]" class="mt-2 flex items-center gap-2">
+                        <input
+                          v-model="planFeedbackComments[displayedMealPlan.id]"
+                          type="text"
+                          :placeholder="t('foodChatHome.canvas.feedbackCommentPlaceholder')"
+                          class="flex-1 text-xs px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:border-brandp-400"
+                          @keydown.enter="submitPlanComment(displayedMealPlan.id, getMessageIdForPlanIdx(selectedDailyPlanIdx))"
+                        />
+                        <button
+                          class="text-xs px-3 py-1.5 rounded-lg bg-brandp-500 text-white hover:bg-brandp-600 transition-colors"
+                          @click="submitPlanComment(displayedMealPlan.id, getMessageIdForPlanIdx(selectedDailyPlanIdx))"
+                        >
+                          {{ t('foodChatHome.canvas.feedbackCommentSend') }}
+                        </button>
                       </div>
+                    </Transition>
+                  </div>
+                </template>
+
+                <!-- ── Weekly plan content ── -->
+                <template v-else-if="canvasMode === 'weekly' && displayedWeeklyPlan">
+                  <div class="overflow-x-auto">
+                    <div class="grid grid-cols-7 gap-1 min-w-[560px]">
+                      <!-- Day headers -->
+                      <div
+                        v-for="day in weeklyDays"
+                        :key="day.dayIndex"
+                        class="text-center text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wide pb-1"
+                      >
+                        {{ day.label }}
+                      </div>
+                      <!-- Meal cells: breakfast, lunch, dinner rows -->
+                      <template v-for="mealType in ['breakfast', 'lunch', 'dinner']" :key="mealType">
+                        <div
+                          v-for="day in weeklyDays"
+                          :key="`${day.dayIndex}-${mealType}`"
+                          class="relative rounded-lg border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-800/40 p-1.5 min-h-[130px] flex flex-col gap-1"
+                        >
+                          <div class="flex items-center gap-1">
+                            <UIcon :name="mealTypeIcon(mealType)" class="w-2.5 h-2.5 text-brandp-400 shrink-0" />
+                            <span class="text-[9px] text-gray-400 dark:text-zinc-500 capitalize">{{ mealType }}</span>
+                          </div>
+                          <!-- Circular image bubble -->
+                          <NuxtLink
+                            :to="getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)) ? `/recipe-wrangler/${getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType))}` : ''"
+                            :target="getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)) ? '_blank' : undefined"
+                            class="w-8 h-8 rounded-full overflow-hidden bg-gray-100 dark:bg-zinc-700 shrink-0 transition-transform duration-200 hover:scale-150 cursor-pointer block"
+                          >
+                            <img
+                              v-if="getRecipeImage(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)))"
+                              :src="getRecipeImage(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)))"
+                              class="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                            <div
+                              v-else-if="isRecipeImagePending(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)))"
+                              class="w-full h-full animate-pulse"
+                            />
+                            <div v-else class="w-full h-full flex items-center justify-center">
+                              <UIcon name="i-lucide-utensils" class="w-3 h-3 text-gray-300 dark:text-zinc-600" />
+                            </div>
+                          </NuxtLink>
+                          <NuxtLink
+                            v-if="getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType))"
+                            :to="`/recipe-wrangler/${getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType))}`"
+                            target="_blank"
+                            class="text-[11px] font-medium text-brandp-600 dark:text-brandp-400 leading-tight line-clamp-2 hover:underline pr-7"
+                          >
+                            {{ getWeeklyRecipeTitle(day.entries.find(e => e.meal_type === mealType)) }}
+                          </NuxtLink>
+                          <p v-else class="text-[11px] font-medium text-gray-800 dark:text-gray-200 leading-tight line-clamp-2 pr-7">
+                            {{ getWeeklyRecipeTitle(day.entries.find(e => e.meal_type === mealType)) }}
+                          </p>
+                          <!-- Nutrient donut — bottom right -->
+                          <div
+                            v-if="getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)) && getWeeklySegments(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType))).length"
+                            class="absolute bottom-1 right-1 cursor-help"
+                            @mouseleave="weeklyHovered[`${day.dayIndex}-${mealType}`] = null"
+                          >
+                            <svg width="28" height="28" viewBox="0 0 28 28" style="transform:rotate(-90deg)">
+                              <circle cx="14" cy="14" r="11" stroke="#e5e7eb" stroke-width="3.5" fill="none" />
+                              <circle
+                                v-for="seg in getWeeklySegments(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)))"
+                                :key="seg.key"
+                                cx="14" cy="14" r="11"
+                                :stroke="seg.color"
+                                stroke-width="3.5"
+                                fill="none"
+                                :stroke-dasharray="`${seg.dash} ${weeklyCircumference}`"
+                                :stroke-dashoffset="-seg.offset"
+                                stroke-linecap="butt"
+                                :style="{ opacity: weeklyHovered[`${day.dayIndex}-${mealType}`] && weeklyHovered[`${day.dayIndex}-${mealType}`] !== seg.key ? 0.25 : 1, transition: 'opacity 0.15s' }"
+                                @mouseenter="weeklyHovered[`${day.dayIndex}-${mealType}`] = seg.key"
+                              />
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                              <span class="text-[7px] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ getWeeklyCenterValue(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)), `${day.dayIndex}-${mealType}`) }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </template>
                     </div>
                   </div>
-                </div>
+                </template>
+
               </div>
             </Transition>
 
@@ -538,6 +559,7 @@ import DOMPurify from 'dompurify'
 import { useFoodChat } from '~/composables/useFoodChat'
 import { useHouseholdStore } from '~/stores/household'
 import type { MealPlan, MealRecipe, WeeklyMealEntry } from '~/services/foodchatApi'
+import recipeApi from '~/services/recipeApi'
 import { today, getLocalTimeZone, type DateValue } from '@internationalized/date'
 import memberMealPlansApi, {
   extractSourceMealPlanIdFromMemberMealPlanResponse,
@@ -560,6 +582,7 @@ const {
   hasMealPlans,
   hasWeeklyMealPlans,
   hasAnyPlan,
+  currentPlanType,
   hasMoreMessages,
   loadingMoreMessages,
   sending,
@@ -586,6 +609,17 @@ const hasSentFirstMessage = ref(false)
 
 // ── Plan votes ──
 const planVotes = reactive<Record<string, 'up' | 'down' | null>>({})
+const planFeedbackComments = reactive<Record<string, string>>({})
+const planFeedbackSubmitted = reactive<Record<string, boolean>>({})
+
+// Assistant messages newest-first (for plan→message mapping)
+const assistantMessagesDesc = computed(() =>
+  [...messages.value].filter(m => m.role === 'assistant' && m.id != null).reverse()
+)
+
+function getMessageIdForPlanIdx(idx: number): number | null {
+  return assistantMessagesDesc.value[idx]?.id ?? null
+}
 
 // ── Message feedback ──
 const messageFeedback = reactive<Record<number, 'up' | 'down'>>({})
@@ -611,6 +645,20 @@ const selectedApplyDate = computed(() => selectedApplyDateValue.value.toString()
 const canSend = computed(() => inputText.value.trim().length > 0 && !sending.value)
 const latestMealPlan = computed(() => mealPlans.value?.[0] ?? null)
 const latestWeeklyPlan = computed(() => weeklyMealPlans.value?.[0] ?? null)
+
+// ── Canvas mode & plan selection ──
+const canvasMode = ref<'daily' | 'weekly'>('daily')
+const selectedDailyPlanIdx = ref(0)
+const selectedWeeklyPlanIdx = ref(0)
+
+const displayedMealPlan = computed(() => mealPlans.value?.[selectedDailyPlanIdx.value] ?? null)
+const displayedWeeklyPlan = computed(() => weeklyMealPlans.value?.[selectedWeeklyPlanIdx.value] ?? null)
+
+// Switch canvas tab to match the plan type returned by the latest response (or session load)
+watch(currentPlanType, (type) => {
+  if (type === 'weekly') { selectedWeeklyPlanIdx.value = 0; canvasMode.value = 'weekly' }
+  else if (type === 'daily') { selectedDailyPlanIdx.value = 0; canvasMode.value = 'daily' }
+}, { immediate: true })
 
 const sessionItems = computed(() =>
   sessions.value.map(s => ({
@@ -683,12 +731,12 @@ const negativeFeedbackReasons = [
 ]
 
 // ── Weekly plan helpers ──
-const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const DAY_NAMES = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7']
 
 const weeklyDays = computed(() => {
-  if (!latestWeeklyPlan.value) return []
+  if (!displayedWeeklyPlan.value) return []
   const grouped: Record<number, WeeklyMealEntry[]> = {}
-  for (const entry of latestWeeklyPlan.value.entries) {
+  for (const entry of displayedWeeklyPlan.value.entries) {
     if (!grouped[entry.day]) grouped[entry.day] = []
     grouped[entry.day].push(entry)
   }
@@ -701,10 +749,94 @@ const weeklyDays = computed(() => {
     }))
 })
 
-function getWeeklyRecipeTitle(entry: WeeklyMealEntry): string {
+function getWeeklyRecipeTitle(entry: WeeklyMealEntry | undefined): string {
+  if (!entry) return '—'
   const r = entry.recipe as Record<string, unknown>
-  return (r?.title as string) || (r?.name as string) || '—'
+  return (r?.recipe_title as string) || (r?.title as string) || (r?.name as string) || '—'
 }
+
+function getWeeklyRecipeId(entry: WeeklyMealEntry | undefined): string | null {
+  if (!entry) return null
+  const r = entry.recipe as Record<string, unknown>
+  return (r?.recipe_id as string) || null
+}
+
+// ── Recipe cache (recipe_id → Recipe | null, absent = pending) ──
+import type { Recipe as RecipeData } from '~/services/recipeApi'
+const recipeCache = reactive<Record<string, RecipeData | null>>({})
+
+function getRecipeImage(id: string | null): string | null {
+  if (!id) return null
+  return recipeCache[id]?.image_url ?? null
+}
+
+function isRecipeImagePending(id: string | null): boolean {
+  return !!id && !(id in recipeCache)
+}
+
+// Nutrition helpers for weekly cells
+const WEEKLY_SEGMENT_DEFS = [
+  { key: 'protein', label: 'prot',  color: '#a25ece' },
+  { key: 'carbs',   label: 'carbs', color: '#CAD5B2' },
+  { key: 'fat',     label: 'fat',   color: '#D98A6B' },
+  { key: 'fiber',   label: 'fiber', color: '#b8c455' },
+]
+const weeklyCircumference = 2 * Math.PI * 11
+const weeklyHovered = reactive<Record<string, string | null>>({})
+
+function getWeeklySegments(id: string | null) {
+  if (!id) return []
+  const d = recipeCache[id]
+  if (!d) return []
+  const values: Record<string, number> = {
+    protein: Math.max(d.total_protein_g_per_serving ?? 0, 0),
+    carbs:   Math.max(d.total_carbs_g_per_serving   ?? 0, 0),
+    fat:     Math.max(d.total_fat_g_per_serving     ?? 0, 0),
+    fiber:   Math.max(d.total_fiber_g_per_serving   ?? 0, 0),
+  }
+  const total = Object.values(values).reduce((s, v) => s + v, 0) || 1
+  let offset = 0
+  return WEEKLY_SEGMENT_DEFS.map(def => {
+    const dash = (values[def.key] / total) * weeklyCircumference
+    const seg = { ...def, dash, offset }
+    offset += dash
+    return seg
+  })
+}
+
+function getWeeklyCenterValue(id: string, cellKey: string): string {
+  const d = recipeCache[id]
+  if (!d) return '—'
+  const hovered = weeklyHovered[cellKey] ?? 'protein'
+  const map: Record<string, number> = {
+    protein: d.total_protein_g_per_serving ?? 0,
+    carbs:   d.total_carbs_g_per_serving   ?? 0,
+    fat:     d.total_fat_g_per_serving     ?? 0,
+    fiber:   d.total_fiber_g_per_serving   ?? 0,
+  }
+  return `${Math.round(map[hovered] ?? 0)}g`
+}
+
+function getWeeklyCenterLabel(cellKey: string): string {
+  const key = weeklyHovered[cellKey] ?? 'protein'
+  return WEEKLY_SEGMENT_DEFS.find(d => d.key === key)?.label ?? 'prot'
+}
+
+async function prefetchWeeklyRecipes(plan: typeof displayedWeeklyPlan.value) {
+  if (!plan) return
+  const ids = [...new Set(plan.entries.map(e => getWeeklyRecipeId(e)).filter(Boolean) as string[])]
+  await Promise.allSettled(
+    ids.filter(id => !(id in recipeCache)).map(async id => {
+      try {
+        recipeCache[id] = await recipeApi.getRecipe(id)
+      } catch {
+        recipeCache[id] = null
+      }
+    })
+  )
+}
+
+watch(displayedWeeklyPlan, (plan) => { if (plan) prefetchWeeklyRecipes(plan) }, { immediate: true })
 
 function mealTypeIcon(type: string): string {
   const t = type?.toLowerCase() ?? ''
@@ -811,8 +943,25 @@ function autoResize(e: Event, refEl: HTMLTextAreaElement | null) {
 }
 
 // ── Feedback ──
-function votePlan(planId: string, vote: 'up' | 'down') {
-  planVotes[planId] = planVotes[planId] === vote ? null : vote
+async function votePlan(planId: string, vote: 'up' | 'down', messageId: number | null) {
+  const next = planVotes[planId] === vote ? null : vote
+  planVotes[planId] = next
+  if (next === 'up' && messageId != null) {
+    try {
+      await submitMessageFeedback(messageId, 'up')
+      planFeedbackSubmitted[planId] = true
+    } catch { /* best-effort */ }
+  }
+  if (next === null) planFeedbackSubmitted[planId] = false
+}
+
+async function submitPlanComment(planId: string, messageId: number | null) {
+  if (messageId == null) return
+  const comment = planFeedbackComments[planId]?.trim()
+  try {
+    await submitMessageFeedback(messageId, 'down', comment || undefined)
+    planFeedbackSubmitted[planId] = true
+  } catch { /* best-effort */ }
 }
 
 async function handleMessageFeedback(messageId: number, rating: 'up' | 'down') {
@@ -1284,27 +1433,6 @@ onMounted(async () => {
   border-color: var(--color-brandp-500);
   background: rgba(24, 24, 27, 0.8);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brandp-400) 18%, transparent), 0 8px 24px rgba(0,0,0,0.3);
-}
-.chat-composer-accent {
-  pointer-events: none;
-  position: absolute;
-  width: 7rem;
-  height: 7rem;
-  border-radius: 9999px;
-  filter: blur(24px);
-  opacity: 0.22;
-  transition: opacity 0.2s;
-}
-.chat-composer.is-focused .chat-composer-accent { opacity: 0.38; }
-.chat-composer-accent-left {
-  top: -3rem;
-  left: -1.5rem;
-  background: var(--color-brandp-400);
-}
-.chat-composer-accent-right {
-  bottom: -3.5rem;
-  right: -1.8rem;
-  background: var(--color-brandp-600);
 }
 
 /* ── Send button ── */

@@ -1167,7 +1167,9 @@
     "canvas": {
       "placeholderTitle": "Tvoj jedilnik se bo pojavil tukaj",
       "placeholderSubtitle": "Zahtevaj dnevni ali tedenski načrt za začetek",
-      "rateThisPlan": "Oceni ta načrt:"
+      "rateThisPlan": "Oceni ta načrt:",
+      "feedbackCommentPlaceholder": "Povej nam, kaj bi lahko izboljšali...",
+      "feedbackCommentSend": "Pošlji"
     },
     "chat": {
       "loadEarlier": "Naloži prejšnja sporočila",

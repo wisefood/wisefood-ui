@@ -220,15 +220,17 @@ export const useFoodChatStore = defineStore('foodchat', {
         // Re-fetch conversation for ground truth
         await this.fetchConversation(sessionId, memberId)
 
-        // Refresh plans based on response intent
-        if (response.meal_plan) await this.fetchMealPlans(sessionId, memberId)
-        if (response.weekly_meal_plan) await this.fetchWeeklyMealPlans(sessionId, memberId)
+        // Always refresh both plan lists so stale plans don't hide the new type
+        await Promise.all([
+          this.fetchMealPlans(sessionId, memberId),
+          this.fetchWeeklyMealPlans(sessionId, memberId)
+        ])
 
         // Refresh session metadata
         const idx = this.sessions.findIndex(s => s.session_id === sessionId)
         if (idx !== -1) {
           try {
-            const updated = await foodchatApi.getSession(sessionId)
+            const updated = await foodchatApi.getSession(sessionId, memberId)
             this.sessions[idx] = updated
           } catch { /* non-critical */ }
         }

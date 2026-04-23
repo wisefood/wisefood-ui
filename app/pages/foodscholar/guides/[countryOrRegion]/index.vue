@@ -11,11 +11,11 @@
       :section-subtitle="regionTitle"
     />
 
-    <UPage class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <UPageBody class="space-y-6">
+    <UPage class="mx-auto max-w-7xl px-4 pt-3 pb-6 sm:px-6 lg:px-8">
+      <UPageBody class="space-y-0">
         <UBreadcrumb
           :items="breadcrumbItems"
-          class="mb-2"
+          class="mb-4"
         />
 
         <UAlert
@@ -24,6 +24,7 @@
           variant="soft"
           icon="i-lucide-alert-circle"
           :title="pageError"
+          class="mt-4"
         >
           <template #description>
             <div class="space-y-3">
@@ -44,7 +45,7 @@
           </template>
         </UAlert>
 
-        <template v-else>
+        <div v-else class="space-y-6">
           <CatalogHeader
             v-model="queryText"
             badge="Country / Region Explorer"
@@ -105,88 +106,6 @@
                         <div class="rounded-2xl bg-brand-50 p-3 text-brand-600 ring-1 ring-brand-200/70 dark:bg-brand-500/10 dark:text-brand-300 dark:ring-brand-500/20">
                           <UIcon :name="stat.icon" class="h-5 w-5" />
                         </div>
-                      </div>
-                    </UCard>
-                  </section>
-
-                  <section class="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
-                    <UCard
-                      :ui="{ body: 'p-5 sm:p-6' }"
-                      class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
-                    >
-                      <div>
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-                          Overview
-                        </h2>
-                        <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-300">
-                          Use the high-level entry points below to move from atlas navigation into either publication detail or rule-level exploration.
-                        </p>
-                      </div>
-
-                      <div class="mt-5 grid gap-3">
-                        <button
-                          type="button"
-                          class="flex items-start justify-between rounded-2xl border border-gray-200/70 bg-gray-50/80 p-4 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/60 dark:border-white/10 dark:bg-white/5 dark:hover:border-brand-500/30 dark:hover:bg-brand-500/10"
-                          @click="activeTab = 'guides'"
-                        >
-                          <div>
-                            <p class="font-medium text-gray-900 dark:text-white">
-                              Browse guides
-                            </p>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                              Compare publishers, publication years, audiences, and artifact coverage.
-                            </p>
-                          </div>
-                          <UIcon name="i-lucide-arrow-right" class="mt-1 h-4 w-4 text-gray-400" />
-                        </button>
-
-                        <button
-                          type="button"
-                          class="flex items-start justify-between rounded-2xl border border-gray-200/70 bg-gray-50/80 p-4 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/60 dark:border-white/10 dark:bg-white/5 dark:hover:border-brand-500/30 dark:hover:bg-brand-500/10"
-                          @click="activeTab = 'guidelines'"
-                        >
-                          <div>
-                            <p class="font-medium text-gray-900 dark:text-white">
-                              Search guideline rules
-                            </p>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                              Filter by topic, audience, year, or source guide through the catalog search endpoint.
-                            </p>
-                          </div>
-                          <UIcon name="i-lucide-arrow-right" class="mt-1 h-4 w-4 text-gray-400" />
-                        </button>
-                      </div>
-                    </UCard>
-
-                    <UCard
-                      :ui="{ body: 'p-5 sm:p-6' }"
-                      class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
-                    >
-                      <div class="flex items-center justify-between gap-3">
-                        <div>
-                          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-                            Themes & Clusters
-                          </h2>
-                          <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                            Topics derived from the guides already present in this explorer.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div v-if="themeBuckets.length" class="mt-5 flex flex-wrap gap-2">
-                        <button
-                          v-for="theme in themeBuckets"
-                          :key="theme.value"
-                          type="button"
-                          class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:border-brand-300 hover:text-brand-700 dark:border-white/10 dark:bg-zinc-900 dark:text-gray-200 dark:hover:border-brand-500/40 dark:hover:text-brand-200"
-                          @click="openTheme(theme.value)"
-                        >
-                          <span>{{ theme.value }}</span>
-                          <span class="text-xs text-gray-500 dark:text-gray-400">{{ theme.count }}</span>
-                        </button>
-                      </div>
-                      <div v-else class="mt-5 rounded-2xl border border-dashed border-gray-300/80 bg-gray-50/70 px-5 py-8 text-center text-sm text-gray-500 dark:border-white/15 dark:bg-white/5 dark:text-gray-400">
-                        Topic metadata will appear here as guides expose it.
                       </div>
                     </UCard>
                   </section>
@@ -411,7 +330,7 @@
               </div>
             </template>
           </UTabs>
-        </template>
+        </div>
       </UPageBody>
     </UPage>
   </div>
@@ -430,7 +349,6 @@ import {
   buildGuideDetailPath,
   buildGuidesCatalogPath,
   buildGuidesRegionPath,
-  collectThemeBucketsFromGuides,
   firstQueryValue,
   formatEnumLabel,
   getRegionPresentation,
@@ -554,9 +472,9 @@ const availableRegionLinks = computed(() => {
 })
 
 const tabItems = [
-  { label: 'Overview', value: 'overview', icon: 'i-lucide-layout-grid' },
-  { label: 'Guides', value: 'guides', icon: 'i-lucide-book-open' },
-  { label: 'Guidelines', value: 'guidelines', icon: 'i-lucide-list-checks' }
+  { label: 'Overview', value: 'overview', slot: 'overview' as const, icon: 'i-lucide-layout-grid' },
+  { label: 'Guides', value: 'guides', slot: 'guides' as const, icon: 'i-lucide-book-open' },
+  { label: 'Guidelines', value: 'guidelines', slot: 'guidelines' as const, icon: 'i-lucide-list-checks' }
 ]
 
 const regionGuideLookup = computed<Record<string, CatalogGuide>>(() => {
@@ -576,9 +494,6 @@ const featuredGuides = computed(() => {
     .slice(0, 3)
 })
 
-const themeBuckets = computed(() => {
-  return collectThemeBucketsFromGuides(regionGuidesAll.value).slice(0, 10)
-})
 
 const regionStats = computed(() => {
   const latestYear = regionGuidesAll.value.reduce<number | null>((latest, guide) => {
@@ -1005,10 +920,6 @@ function resetGuidelineFilters() {
   guidelineSort.value = DEFAULT_GUIDELINE_SORT
 }
 
-function openTheme(theme: string) {
-  activeTab.value = 'guidelines'
-  queryText.value = theme
-}
 
 watch(activeTab, () => {
   if (suppressWatcher) {

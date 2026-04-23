@@ -140,9 +140,10 @@ class FoodChatApiService {
     )
   }
 
-  async getSession(sessionId: string): Promise<ChatSession> {
+  async getSession(sessionId: string, memberId: string): Promise<ChatSession> {
+    const params = new URLSearchParams({ member_id: memberId })
     return this.fetchWithTimeout<ChatSession>(
-      `${this.basePath}/sessions/${sessionId}`,
+      `${this.basePath}/sessions/${sessionId}?${params}`,
       'GET'
     )
   }

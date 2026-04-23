@@ -420,14 +420,18 @@ const activeInsightArticleTarget = computed(() => {
   const urn = activeInsight.value.evidenceUrn
   if (!urn) return null
 
-  const basePath = urn.startsWith('urn:guide:')
-    ? `/foodscholar/catalog/guides/${encodeURIComponent(urn)}`
-    : `/foodscholar/${urn}`
+  if (urn.startsWith('urn:guide:')) {
+    return { path: `/foodscholar/catalog/guides/${encodeURIComponent(urn)}` }
+  }
+
+  if (urn.startsWith('urn:guideline:') || (!urn.startsWith('urn:') && urn.length > 0)) {
+    return { path: `/foodscholar/catalog/guidelines/${encodeURIComponent(urn)}` }
+  }
 
   const passage = activeInsight.value.evidencePassage?.trim() || ''
-  return passage && !urn.startsWith('urn:guide:')
-    ? { path: basePath, query: { section: 'abstract', hl: passage } }
-    : { path: basePath }
+  return passage
+    ? { path: `/foodscholar/${urn}`, query: { section: 'abstract', hl: passage } }
+    : { path: `/foodscholar/${urn}` }
 })
 
 const recommendedRecipes = ref<RecipeSearchResult[]>([])

@@ -1167,7 +1167,9 @@
     "canvas": {
       "placeholderTitle": "A menüterved itt fog megjelenni",
       "placeholderSubtitle": "Kérj napi vagy heti tervet a kezdéshez",
-      "rateThisPlan": "Értékeld ezt a tervet:"
+      "rateThisPlan": "Értékeld ezt a tervet:",
+      "feedbackCommentPlaceholder": "Mondd el, min lehetne javítani...",
+      "feedbackCommentSend": "Küldés"
     },
     "chat": {
       "loadEarlier": "Korábbi üzenetek betöltése",

@@ -1,2 +1,2 @@
-export * from '@vueuse/core/index.js'
+export * from '@vueuse/core/index.mjs'
 export { toValue } from 'vue'

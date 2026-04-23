@@ -1168,7 +1168,9 @@
     "canvas": {
       "placeholderTitle": "Your meal plan will appear here",
       "placeholderSubtitle": "Ask for a daily or weekly plan to get started",
-      "rateThisPlan": "Rate this plan:"
+      "rateThisPlan": "Rate this plan:",
+      "feedbackCommentPlaceholder": "Tell us what could be improved...",
+      "feedbackCommentSend": "Send"
     },
     "chat": {
       "loadEarlier": "Load earlier messages",
