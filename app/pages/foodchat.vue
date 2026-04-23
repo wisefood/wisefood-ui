@@ -723,17 +723,28 @@ function renderMarkdown(text: string): string {
 
 // ── Scroll to bottom ──
 function scrollToBottom(smooth = true) {
-  const attempt = (retries = 8) => {
-    nextTick(() => {
-      const el = messagesScrollRef.value
-      if (!el) {
-        if (retries > 0) setTimeout(() => attempt(retries - 1), 60)
-        return
-      }
-      el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'instant' })
+  nextTick(() => {
+    const el = messagesScrollRef.value
+    if (!el) return
+
+    const prevHeight = el.scrollHeight
+    const doScroll = () => el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'instant' })
+
+    // If the DOM has already grown (e.g. called after await), scroll immediately.
+    // Otherwise observe the container for its next resize (new content rendered).
+    if (el.scrollHeight > prevHeight || el.scrollTop + el.clientHeight >= prevHeight - 8) {
+      doScroll()
+      return
+    }
+
+    const ro = new ResizeObserver(() => {
+      ro.disconnect()
+      doScroll()
     })
-  }
-  attempt()
+    ro.observe(el)
+    // Fallback: disconnect and scroll after 500 ms regardless
+    setTimeout(() => { ro.disconnect(); doScroll() }, 500)
+  })
 }
 
 function handleMessagesScroll(e: Event) {
@@ -997,8 +1008,7 @@ async function revokeMealPlanFromMembers() {
 }
 
 // ── Watch messages to auto-scroll ──
-watch(messages, () => scrollToBottom(), { flush: 'post' })
-watch(sending, (val) => { if (!val) scrollToBottom() }, { flush: 'post' })
+watch(messages, () => scrollToBottom(), { deep: true, flush: 'post' })
 watch(messagesScrollRef, (el) => { if (el) scrollToBottom(false) })
 
 // ── Mount ──
