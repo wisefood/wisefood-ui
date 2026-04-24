@@ -144,69 +144,134 @@
     "signIn": "Prijava",
     "register": "Registracija"
   },
+  "seo": {
+    "title": "WiseFood – Tvoja personalizirana prehranska pot",
+    "description": "Preoblikuj svoj odnos do hrane s pomočjo znanstveno podprtih vpogledov in priporočil, ki jih poganja umetna inteligenca."
+  },
   "hero": {
     "eyebrow": "Prehrana · Trajnost · Dobro počutje",
-    "titleLead": "Opolnomočeni državljani",
-    "titleAccent": "Bolj zdrave skupnosti",
-    "description": "Preoblikuj svoje prehranske izbire s pametnimi orodji na osnovi umetne inteligence za bolj zdravo in trajnostno življenje.",
-    "ctaPrimary": "Začni",
-    "ctaSecondary": "Poglej predstavitev"
+    "titleLead": "Inteligenten način, kako",
+    "titleAccent": "spoznavati, kuhati in jesti.",
+    "titleTrail": "",
+    "description": "WiseFood združuje prehransko znanost, umetno inteligenco in razumevanje resničnih gospodinjstev v enega samega spremljevalca — tako, da postane dobro hranjenje najlažja izbira dneva.",
+    "ctaPrimary": "Začni svojo pot",
+    "ctaSecondary": "Poglej v živo",
+    "ctaDashboard": "Pojdi na nadzorno ploščo",
+    "scrollHint": "Podrsaj za raziskovanje"
   },
-  "features": {
-    "heading": "Zgrajeno za",
-    "headingAccent": "ljudi",
-    "subheading": "Odkrij zmogljive funkcije, zaradi katerih je WiseFood popoln prehranski spremljevalec.",
+  "pillars": {
+    "eyebrow": "Tri orodja. En spremljevalec.",
+    "heading": "Vsa orodja za",
+    "headingAccent": "vsakodnevno prehrano.",
+    "headingTrail": "",
+    "subheading": "WiseFood je zbirka povezanih izkušenj, ki se učijo skupaj s tabo — od sestavin na krožniku do raziskav, ki stojijo za njimi.",
     "items": {
-      "scientific": {
-        "title": "Znanstveno znanje",
-        "description": "Dostop do najsodobnejših prehranskih raziskav na preprost način. Zapletene študije prevedemo v jasne, uporabne vpoglede."
+      "foodchat": {
+        "tag": "FoodChat",
+        "title": "Tvoj prehranski sopilot",
+        "description": "Pogovorni asistent, ki načrtuje obroke, odgovarja na vprašanja o hrani in se prilagaja vsakemu članu gospodinjstva — alergijam, ciljem in kulturam.",
+        "highlights": ["Prilagojeni jedilniki", "Zaveden gospodinjstva", "Takojšnja vprašanja in odgovori"]
       },
-      "personalized": {
-        "title": "Prilagojeno tebi",
-        "description": "Vsako priporočilo se prilagodi tvojemu profilu. Tvoje prehranske preference, alergije in cilji oblikujejo vse predloge."
+      "foodscholar": {
+        "tag": "FoodScholar",
+        "title": "Znanje, podprto z dokazi",
+        "description": "Brskaj po prehranskih smernicah po državi in viru, beri odgovore z navedenimi viri in odkrivaj znanost, ki stoji za hrano — brez žargona.",
+        "highlights": ["Atlas smernic", "Odgovori s citati", "Smernice po državah"]
       },
-      "culinary": {
-        "title": "Kulinarični navdih",
-        "description": "Odkrij recepte, ki ustrezajo tvojemu okusu in zdravstvenim ciljem. Od hitrih obrokov med tednom do gurmanskih jedi."
+      "recipewrangler": {
+        "tag": "RecipeWrangler",
+        "title": "Recepti, ki ustrezajo tvojemu življenju",
+        "description": "Odkrivaj, prilagajaj in analiziraj recepte glede na svoje prehranske cilje in okoljski odtis — od hitrih obrokov med tednom do ambicioznih vikendov.",
+        "highlights": ["Analizator receptov z UI", "Pametni filtri", "Primerjaj in načrtuj"]
+      }
+    }
+  },
+  "manifesto": {
+    "eyebrow": "Zakaj WiseFood",
+    "heading": "Dobro hranjenje je",
+    "headingAccent": "praksa.",
+    "body": "Verjamemo, da način, kako ješ, oblikuje, kako živiš. WiseFood ti pomaga razumeti hrano — od kod prihaja, kaj naredi in kako dobro izbirati — tako da se vsakodnevne odločitve za mizo seštejejo v bolj zdravo življenje zate, tvoje gospodinjstvo in planet.",
+    "points": {
+      "one": {
+        "title": "Utemeljeno na znanosti",
+        "description": "Vsako priporočilo izhaja iz recenziranih raziskav in priznanih prehranskih smernic."
       },
-      "ai": {
-        "title": "Vpogledi z umetno inteligenco",
-        "description": "Pametni algoritmi neprestano analizirajo tvoje prehranske navade. Prejmi proaktivne predloge za boljše dnevne izbire."
+      "two": {
+        "title": "Zasnovano za resnična gospodinjstva",
+        "description": "Alergije, preference, kulture in urniki — vse hkrati, brez kompromisov."
       },
-      "planning": {
-        "title": "Načrtovanje obrokov",
-        "description": "Kuhanje za vse člane gospodinjstva še nikoli ni bilo lažje. Prejmi predloge obrokov, ki zadovoljijo vse."
-      },
-      "progress": {
-        "title": "Spremljaj svoj napredek",
-        "description": "Lepi nadzorni prikazi jasno pokažejo tvojo zdravstveno pot. Praznuj mejnike in ostani motiviran."
+      "three": {
+        "title": "Zasebno po zasnovi",
+        "description": "Tvoj profil je tvoj. Tvojih podatkov ne prodajamo, ti pa ostaneš v nadzoru nad tem, kaj deliš."
       }
     }
   },
   "steps": {
-    "heading": "Preprosti",
-    "headingAccent": "koraki",
-    "subheading": "Začni v nekaj minutah in preoblikuj svoj odnos do hrane.",
+    "eyebrow": "Začni",
+    "heading": "Trije koraki do",
+    "headingAccent": "modrejšega krožnika.",
+    "subheading": "Brez dietnih dogem. Brez neskončnega uvajanja. Le nekaj minut, da nam poveš o sebi — in že začnemo.",
     "items": {
       "profile": {
-        "title": "Ustvari svoj profil",
-        "description": "Deli svoje prehranske preference, zdravstvene cilje in morebitne omejitve. Začetek traja le nekaj minut."
+        "title": "Povej nam o svojem gospodinjstvu",
+        "description": "Preference, alergije, cilji, kulturni kontekst — za vsakega člana. Več kot vemo, bolje se prilagaja."
       },
       "recommendations": {
-        "title": "Pridobi priporočila",
-        "description": "Naša umetna inteligenca takoj analizira tvoj profil in pripravi personalizirane načrte obrokov, recepte in prehranske smernice."
+        "title": "Spoznaj svojega spremljevalca",
+        "description": "FoodChat, FoodScholar in RecipeWrangler se uskladijo s tvojim profilom in začnejo predlagati obroke, odgovore in recepte, vredne tvoje pozornosti."
       },
       "track": {
-        "title": "Spremljaj in izboljšuj",
-        "description": "Beleži svoje obroke in spremljaj napredek skozi čas. Opazuj, kako se sistem uči in prilagaja tebi."
+        "title": "Razvijaj se",
+        "description": "Vračaj se k naučenemu, izboljšuj svoje preference in pusti, da se WiseFood prilagaja, kakor se razvija tvoj okus. Majhne, dosledne odločitve postanejo življenjski slog."
       }
     }
   },
   "cta": {
-    "heading": "Si pripravljen preoblikovati svoj",
-    "accent": "odnos do hrane?",
-    "description": "Pridruži se skupnosti uporabnikov, ki z WiseFood gradijo bolj zdrave navade. Začni danes in odkrij pametnejši način prehranjevanja.",
-    "primary": "Začni danes"
+    "heading": "Prinesi modrost v",
+    "accent": "naslednji obrok.",
+    "description": "Nastavi gospodinjstvo v nekaj minutah in pusti, da ti FoodScholar, RecipeWrangler in FoodChat pomagajo jesti namensko — vsak dan.",
+    "primary": "Začni",
+    "secondary": "Poglej demo"
+  },
+  "mockups": {
+    "foodchat": {
+      "userMessage": "Načrtuj večerjo z veliko beljakovinami za 4 — brez oreščkov.",
+      "assistantMessage": "Tukaj je uravnotežen načrt za jutri — z veliko beljakovinami, brez oreščkov.",
+      "typing": "tipka",
+      "table": {
+        "mealHeader": "Obrok",
+        "dishHeader": "Jed",
+        "kcalHeader": "kcal",
+        "breakfast": "Zajtrk",
+        "breakfastDish": "Grški jogurt · jagodičevje",
+        "lunch": "Kosilo",
+        "lunchDish": "Skleda piščanca s kvinojo",
+        "snack": "Prigrizek",
+        "snackDish": "Humus · korenčkove paličice",
+        "dinner": "Večerja",
+        "dinnerDish": "Pečeni losos · faro"
+      }
+    },
+    "foodscholar": {
+      "question": "»Je ekstra deviško oljčno olje boljše od semenskih olj?«",
+      "answer": "EVOO je primarna maščoba v sredozemskih smernicah{ref1}, povezana z manjšim tveganjem za srčno-žilne bolezni v dolgoročnih študijah{ref2} — dokazi so močnejši kot za večino semenskih olj{ref3}.",
+      "sources": "Viri",
+      "guideLabel": "Vodnik",
+      "guideTitle": "Sredozemska prehrana",
+      "articleLabel": "Članek",
+      "articleTitle": "Študija PREDIMED, NEJM",
+      "textbookLabel": "Učbenik",
+      "textbookTitle": "Osnove prehrane"
+    },
+    "recipewrangler": {
+      "duration": "25 min",
+      "recipeTitle": "Jajčevec z miso glazuro in rižem",
+      "protein": "Beljakovine",
+      "carbs": "Ogljikovi hidrati",
+      "fat": "Maščobe",
+      "lowImpact": "Nizek vpliv",
+      "compare": "Primerjaj"
+    }
   },
   "recipeWrangler": {
     "title": "RecipeWrangler",
@@ -308,6 +373,7 @@
       "viewRecipe": "Prikaži recept",
       "save": "Shrani",
       "saved": "Shranjeno",
+      "editInConsole": "Uredi v konzoli",
       "servings": "porcija | porcije",
       "minutes": "minute",
       "minuteShort": "min",
@@ -848,6 +914,7 @@
       "showMore": "Prikaži več ({count})",
       "copyLink": "Kopiraj povezavo",
       "copied": "Kopirano!",
+      "editInConsole": "Uredi v konzoli",
       "save": "Shrani"
     },
     "evaluation": {

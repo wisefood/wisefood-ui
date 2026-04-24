@@ -452,6 +452,16 @@
                   {{ t('foodScholarArticle.actions.save') }}
                 </UButton>
               </div>
+              <UButton
+                v-if="article?.urn && authStore.hasAnyRole(['expert', 'admin'])"
+                :to="`/console/assets/articles/${encodeURIComponent(article.urn)}`"
+                variant="outline"
+                size="sm"
+                icon="i-lucide-pencil"
+                class="mt-2 w-full cursor-pointer"
+              >
+                {{ t('foodScholarArticle.actions.editInConsole') }}
+              </UButton>
             </div>
           </div>
         </aside>
@@ -477,6 +487,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useArticles } from '~/composables/useArticles'
+import { useAuthStore } from '~/stores/auth'
 import { formatDoiUrl } from '~/utils/articleHelpers'
 import type { GlossaryTerm, QAItem } from '~/services/articlesApi'
 
@@ -490,6 +501,7 @@ const route = useRoute()
 const urn = computed(() => route.params.id as string)
 
 const { currentArticle: article, loading, error, fetchArticle } = useArticles()
+const authStore = useAuthStore()
 
 // State
 const isSimplified = ref(false)

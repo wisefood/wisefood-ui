@@ -67,6 +67,17 @@
         </div>
         <div class="flex shrink-0 items-center gap-2 pt-0.5">
           <UButton
+            v-if="selectedGuide?.urn && authStore.hasAnyRole(['expert', 'admin'])"
+            :to="`/console/assets/guides/${encodeURIComponent(selectedGuide.urn)}`"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            icon="i-lucide-pencil"
+            class="hidden sm:flex"
+          >
+            Edit in Console
+          </UButton>
+          <UButton
             v-if="selectedGuide?.url"
             :to="selectedGuide.url"
             target="_blank"
@@ -378,6 +389,7 @@ import GuideArtifactList from '~/components/foodscholar/guides/GuideArtifactList
 import GuideMetadataPanel from '~/components/foodscholar/guides/GuideMetadataPanel.vue'
 import ReviewPdfViewport from '~/components/console/guides/ReviewPdfViewport.client.vue'
 import catalogApi from '~/services/catalogApi'
+import { useAuthStore } from '~/stores/auth'
 import {
   buildFacetSelectOptions,
   buildGuideDetailPath,
@@ -404,6 +416,7 @@ const guidelinePageSize = 8
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 
 const regionParam = computed(() => String(route.params.countryOrRegion || ''))
 const guideId = computed(() => decodeURIComponent(String(route.params.guideId || '')))

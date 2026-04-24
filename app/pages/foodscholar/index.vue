@@ -1203,17 +1203,52 @@ const librarySelectedRegionData = computed(() =>
 )
 
 const librarySelectedTopic = ref(CATEGORY_ALL)
+const libraryTopicArticles = ref<HomeArticle[]>([])
+const libraryTopicArticlesLoading = ref(false)
+const libraryTopicFacetsLoaded = ref(false)
 
 const libraryArticleTopics = computed(() => popularArticleTopics.value.slice(0, 8))
 
 const libraryFilteredArticles = computed(() => {
   const topic = librarySelectedTopic.value
-  const base = allArticles.value.slice(0, 24)
-  if (topic === CATEGORY_ALL) return base.slice(0, 6)
-  return base
-    .filter(a => (a.topics || []).includes(topic) || (a.tags || []).includes(topic) || (a.ai_tags || []).includes(topic))
-    .slice(0, 6)
+  if (topic === CATEGORY_ALL) return allArticles.value.slice(0, 6)
+  return libraryTopicArticles.value.slice(0, 6)
 })
+
+async function loadLibraryTopicFacets() {
+  if (libraryTopicFacetsLoaded.value) return
+  if (!allArticles.value.length) {
+    await loadPopularArticles()
+  }
+  libraryTopicFacetsLoaded.value = true
+}
+
+async function selectLibraryTopic(topic: string) {
+  librarySelectedTopic.value = topic
+  if (topic === CATEGORY_ALL) {
+    libraryTopicArticles.value = []
+    return
+  }
+
+  libraryTopicArticlesLoading.value = true
+  try {
+    const response = await articlesApi.searchArticles({
+      q: null,
+      limit: 6,
+      offset: 0,
+      sort: 'created_at desc',
+      fl: ['id', 'urn', 'title', 'abstract', 'description', 'content', 'authors', 'tags', 'ai_tags', 'topics', 'venue', 'publication_year', 'category', 'ai_category'],
+      fq: [`topics:"${topic}"`],
+      fields: []
+    })
+    const results = response.result.results || []
+    libraryTopicArticles.value = results.map(mapArticleToHome)
+  } catch {
+    libraryTopicArticles.value = []
+  } finally {
+    libraryTopicArticlesLoading.value = false
+  }
+}
 
 async function loadLibraryMap() {
   if (libraryMapLoaded.value || libraryMapLoading.value) return

@@ -144,69 +144,134 @@
     "signIn": "Bejelentkezés",
     "register": "Regisztráció"
   },
+  "seo": {
+    "title": "WiseFood – A személyre szabott táplálkozási utad",
+    "description": "Alakítsd át kapcsolatod az étellel tudományosan megalapozott felismerések és MI-alapú ajánlások segítségével."
+  },
   "hero": {
     "eyebrow": "Táplálkozás · Fenntarthatóság · Jóllét",
-    "titleLead": "Megerősített polgárok",
-    "titleAccent": "Egészségesebb közösségek",
-    "description": "Alakítsd át étkezési döntéseidet intelligens, MI-alapú eszközökkel az egészségesebb és fenntarthatóbb életért.",
-    "ctaPrimary": "Kezdés",
-    "ctaSecondary": "Demó megtekintése"
+    "titleLead": "Az intelligens módja annak, hogy",
+    "titleAccent": "tanulj, főzz és egyél.",
+    "titleTrail": "",
+    "description": "A WiseFood egyetlen társban egyesíti a táplálkozástudományt, az MI-t és a háztartás valós ismeretét — így a jó étkezés válik a legkönnyebb döntéseddé.",
+    "ctaPrimary": "Kezdd el az utad",
+    "ctaSecondary": "Nézd meg működés közben",
+    "ctaDashboard": "Irányítópult megnyitása",
+    "scrollHint": "Görgess a felfedezéshez"
   },
-  "features": {
-    "heading": "Embereknek",
-    "headingAccent": "tervezve",
-    "subheading": "Fedezd fel az erős funkciókat, amelyek a WiseFoodot a tökéletes táplálkozási társsá teszik.",
+  "pillars": {
+    "eyebrow": "Három eszköz. Egy társ.",
+    "heading": "Minden eszköz a",
+    "headingAccent": "mindennapi táplálkozáshoz.",
+    "headingTrail": "",
+    "subheading": "A WiseFood összekapcsolt élmények sora, amelyek veled együtt tanulnak — a tányérodon lévő hozzávalóktól a mögöttük álló kutatásig.",
     "items": {
-      "scientific": {
-        "title": "Tudományos tudás",
-        "description": "Korszerű táplálkozási kutatások egyszerűen. Az összetett tanulmányokat világos, gyakorlatias felismerésekké fordítjuk."
+      "foodchat": {
+        "tag": "FoodChat",
+        "title": "A táplálkozási társpilótád",
+        "description": "Beszélgetős asszisztens, amely étkezéseket tervez, válaszol az ételekkel kapcsolatos kérdésekre, és minden családtaghoz alkalmazkodik — allergiák, célok, kultúrák egyaránt.",
+        "highlights": ["Személyre szabott étkezési tervek", "Háztartás-tudatos", "Azonnali kérdés-válasz"]
       },
-      "personalized": {
-        "title": "Rád szabva",
-        "description": "Minden ajánlás a profilodhoz igazodik. Étkezési preferenciáid, allergiáid és céljaid formálják a javaslatokat."
+      "foodscholar": {
+        "tag": "FoodScholar",
+        "title": "Bizonyítékokra alapozott tudás",
+        "description": "Böngéssz táplálkozási útmutatókat ország és forrás szerint, olvass hivatkozásokkal alátámasztott válaszokat, és fedezd fel az ételeid mögötti tudományt — szakzsargon nélkül.",
+        "highlights": ["Útmutatók atlasza", "Hivatkozott válaszok", "Országspecifikus iránymutatás"]
       },
-      "culinary": {
-        "title": "Kulináris inspiráció",
-        "description": "Találj recepteket, amelyek illenek az ízlésedhez és egészségcéljaidhoz. A gyors hétköznapi ételektől a gourmet fogásokig."
+      "recipewrangler": {
+        "tag": "RecipeWrangler",
+        "title": "Az életedhez illő receptek",
+        "description": "Fedezz fel, alakíts át és elemezz recepteket táplálkozási céljaid és környezeti lábnyomod alapján — a gyors hétköznapoktól az ambiciózus hétvégékig.",
+        "highlights": ["MI receptelemző", "Okos szűrők", "Összehasonlítás és tervezés"]
+      }
+    }
+  },
+  "manifesto": {
+    "eyebrow": "Miért a WiseFood",
+    "heading": "A jó étkezés",
+    "headingAccent": "egy gyakorlat.",
+    "body": "Hisszük, hogy az étkezésed módja meghatározza, hogyan élsz. A WiseFood segít megérteni az ételt — honnan származik, mit tesz veled, és hogyan válassz jól — így a hétköznapi döntéseid az asztalnál egészségesebb életté állnak össze számodra, a háztartásod és a bolygó számára.",
+    "points": {
+      "one": {
+        "title": "Tudományosan megalapozott",
+        "description": "Minden ajánlás bírált kutatásokra és elismert táplálkozási irányelvekre vezethető vissza."
       },
-      "ai": {
-        "title": "MI-alapú betekintések",
-        "description": "Okos algoritmusok folyamatosan elemzik étkezési szokásaidat. Kapj proaktív javaslatokat a jobb napi döntésekhez."
+      "two": {
+        "title": "Valós háztartásokra tervezve",
+        "description": "Allergiák, preferenciák, kultúrák és időbeosztások — egyszerre, kompromisszumok nélkül."
       },
-      "planning": {
-        "title": "Étkezéstervezés",
-        "description": "A háztartás minden tagjára főzni még sosem volt ilyen egyszerű. Mindenkinek megfelelő étkezési javaslatokat kapsz."
-      },
-      "progress": {
-        "title": "Kövesd a fejlődésed",
-        "description": "Átlátható irányítópultok mutatják az egészségutadat. Ünnepeld a mérföldköveket és maradj motivált."
+      "three": {
+        "title": "Tervezetten privát",
+        "description": "A profilod a tiéd. Nem adjuk el az adataidat, és te döntesz arról, mit osztasz meg."
       }
     }
   },
   "steps": {
-    "heading": "Egyszerű",
-    "headingAccent": "lépések",
-    "subheading": "Kezdd el percek alatt, és alakítsd át a kapcsolatod az étellel.",
+    "eyebrow": "Vágj bele",
+    "heading": "Három lépés egy",
+    "headingAccent": "bölcsebb tányérhoz.",
+    "subheading": "Nincs diétás dogma. Nincs végtelen bevezetés. Csak néhány perc, hogy elmondd, ki vagy — és máris indulunk.",
     "items": {
       "profile": {
-        "title": "Profil létrehozása",
-        "description": "Add meg étkezési preferenciáidat, egészségcéljaidat és korlátozásaidat. A kezdés csak pár perc."
+        "title": "Mesélj a háztartásodról",
+        "description": "Preferenciák, allergiák, célok, kulturális háttér — minden tagra. Minél többet tudunk, annál jobban illeszkedik."
       },
       "recommendations": {
-        "title": "Ajánlások kérése",
-        "description": "MI-nk azonnal elemzi profilodat, és személyre szabott menüterveket, recepteket és táplálkozási útmutatást ad."
+        "title": "Ismerd meg a társadat",
+        "description": "A FoodChat, a FoodScholar és a RecipeWrangler a profilod köré igazodik, és olyan étkezéseket, válaszokat és recepteket javasol, amelyek érdemesek a figyelmedre."
       },
       "track": {
-        "title": "Kövesd és javítsd",
-        "description": "Naplózd étkezéseidet és figyeld a fejlődésed. Ahogy a rendszer tanul, egyre jobban igazodik hozzád."
+        "title": "Növekedj bele",
+        "description": "Térj vissza a tanultakhoz, finomítsd a preferenciáidat, és hagyd, hogy a WiseFood az ízlésed fejlődésével együtt változzon. Az apró, következetes döntésekből életstílus lesz."
       }
     }
   },
   "cta": {
-    "heading": "Készen állsz átalakítani az",
-    "accent": "étellel való kapcsolatodat?",
-    "description": "Csatlakozz a WiseFood közösségéhez, amely egészségesebb szokásokat épít. Kezdd el ma, és fedezd fel az okosabb táplálkozást.",
-    "primary": "Kezdd el ma"
+    "heading": "Vidd a bölcsességet a",
+    "accent": "következő étkezésedbe.",
+    "description": "Állítsd be a háztartásodat percek alatt, és hagyd, hogy a FoodScholar, a RecipeWrangler és a FoodChat segítsen tudatosan étkezni — minden nap.",
+    "primary": "Kezdés",
+    "secondary": "Nézd meg a demót"
+  },
+  "mockups": {
+    "foodchat": {
+      "userMessage": "Tervezz egy magas fehérjetartalmú vacsorát 4 főre — diómentesen.",
+      "assistantMessage": "Íme egy kiegyensúlyozott terv holnapra — magas fehérjetartalmú, diómentes.",
+      "typing": "ír",
+      "table": {
+        "mealHeader": "Étkezés",
+        "dishHeader": "Fogás",
+        "kcalHeader": "kcal",
+        "breakfast": "Reggeli",
+        "breakfastDish": "Görög joghurt · bogyós gyümölcs",
+        "lunch": "Ebéd",
+        "lunchDish": "Csirkés quinoa tál",
+        "snack": "Uzsonna",
+        "snackDish": "Hummusz · répacsíkok",
+        "dinner": "Vacsora",
+        "dinnerDish": "Grillezett lazac · farro"
+      }
+    },
+    "foodscholar": {
+      "question": "„Az extra szűz olívaolaj jobb-e a magolajoknál?”",
+      "answer": "Az EVOO a mediterrán irányelvek elsődleges zsírja{ref1}, hosszú távú vizsgálatokban alacsonyabb szív- és érrendszeri kockázattal társítják{ref2} — a bizonyítékok erősebbek, mint a legtöbb magolaj esetében{ref3}.",
+      "sources": "Források",
+      "guideLabel": "Útmutató",
+      "guideTitle": "Mediterrán étrend",
+      "articleLabel": "Cikk",
+      "articleTitle": "PREDIMED vizsgálat, NEJM",
+      "textbookLabel": "Tankönyv",
+      "textbookTitle": "Táplálkozási alapok"
+    },
+    "recipewrangler": {
+      "duration": "25 perc",
+      "recipeTitle": "Miso-mázas padlizsán rizzsel",
+      "protein": "Fehérje",
+      "carbs": "Szénhidrát",
+      "fat": "Zsír",
+      "lowImpact": "Alacsony hatás",
+      "compare": "Összehasonlítás"
+    }
   },
   "recipeWrangler": {
     "title": "RecipeWrangler",
@@ -308,6 +373,7 @@
       "viewRecipe": "Recept megnyitása",
       "save": "Mentés",
       "saved": "Mentve",
+      "editInConsole": "Szerkesztés a konzolon",
       "servings": "adag | adag",
       "minutes": "perc",
       "minuteShort": "p",
@@ -848,6 +914,7 @@
       "showMore": "Továbbiak ({count})",
       "copyLink": "Link másolása",
       "copied": "Másolva!",
+      "editInConsole": "Szerkesztés a konzolon",
       "save": "Mentés"
     },
     "evaluation": {

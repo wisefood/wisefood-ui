@@ -117,6 +117,19 @@
 
                 <div class="flex flex-none gap-2">
                   <UButton
+                    :color="showFacetPanel ? 'primary' : 'neutral'"
+                    :variant="showFacetPanel ? 'soft' : 'outline'"
+                    icon="i-lucide-sliders-horizontal"
+                    :trailing-icon="showFacetPanel ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+                    @click="showFacetPanel = !showFacetPanel"
+                  >
+                    Filters
+                    <UBadge v-if="activeFacetCount > 0" color="primary" variant="solid" size="xs" class="ml-1">
+                      {{ activeFacetCount }}
+                    </UBadge>
+                  </UButton>
+
+                  <UButton
                     color="primary"
                     icon="i-lucide-search"
                     :loading="recipesLoading"
@@ -124,6 +137,109 @@
                   >
                     Search
                   </UButton>
+                </div>
+              </div>
+
+              <div
+                v-if="showFacetPanel"
+                class="grid gap-3 rounded-xl border border-gray-200/70 bg-gray-50/60 p-4 dark:border-white/10 dark:bg-white/5 lg:grid-cols-2 xl:grid-cols-4"
+              >
+                <!-- Exclude Allergens -->
+                <div>
+                  <h3 class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">
+                    <UIcon name="i-lucide-shield-alert" class="h-3.5 w-3.5 text-amber-500" />
+                    Exclude Allergens
+                  </h3>
+                  <div class="flex flex-wrap gap-1.5">
+                    <button
+                      v-for="allergen in allergenOptions"
+                      :key="allergen.value"
+                      type="button"
+                      :class="[
+                        'rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200',
+                        filters.excludeAllergens.includes(allergen.value)
+                          ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-400 dark:bg-amber-900/30 dark:text-amber-400 dark:ring-amber-600'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-zinc-800 dark:text-gray-300 dark:hover:bg-zinc-700'
+                      ]"
+                      @click="toggleAllergen(allergen.value)"
+                    >
+                      {{ allergen.label }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Dish Type -->
+                <div>
+                  <h3 class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">
+                    <UIcon name="i-lucide-utensils" class="h-3.5 w-3.5 text-brandg-500" />
+                    Dish Type
+                  </h3>
+                  <div class="flex flex-wrap gap-1.5">
+                    <button
+                      v-for="dishType in dishTypeOptions"
+                      :key="dishType.value"
+                      type="button"
+                      :class="[
+                        'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200',
+                        filters.dishTypes.includes(dishType.value)
+                          ? 'bg-brandg-100 text-brandg-700 ring-2 ring-brandg-400 dark:bg-brandg-900/30 dark:text-brandg-400 dark:ring-brandg-600'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-zinc-800 dark:text-gray-300 dark:hover:bg-zinc-700'
+                      ]"
+                      @click="toggleDishType(dishType.value)"
+                    >
+                      <UIcon :name="dishType.icon" class="h-3 w-3" />
+                      {{ dishType.label }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Source -->
+                <div>
+                  <h3 class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">
+                    <UIcon name="i-lucide-database" class="h-3.5 w-3.5 text-blue-500" />
+                    Source
+                  </h3>
+                  <div class="flex flex-wrap gap-1.5">
+                    <button
+                      v-for="source in sourceOptions"
+                      :key="source.value"
+                      type="button"
+                      :class="[
+                        'rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200',
+                        filters.sources.includes(source.value)
+                          ? 'bg-blue-100 text-blue-700 ring-2 ring-blue-400 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-600'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-zinc-800 dark:text-gray-300 dark:hover:bg-zinc-700'
+                      ]"
+                      @click="toggleSource(source.value)"
+                    >
+                      {{ source.label }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Sort By -->
+                <div>
+                  <h3 class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">
+                    <UIcon name="i-lucide-arrow-up-down" class="h-3.5 w-3.5 text-blue-500" />
+                    Sort By
+                  </h3>
+                  <div class="flex flex-wrap gap-1.5">
+                    <button
+                      v-for="option in sortByOptions"
+                      :key="option.value"
+                      type="button"
+                      :class="[
+                        'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200',
+                        filters.sortBy === option.value
+                          ? 'bg-blue-100 text-blue-700 ring-2 ring-blue-400 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-600'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-zinc-800 dark:text-gray-300 dark:hover:bg-zinc-700'
+                      ]"
+                      @click="setSortBy(option.value)"
+                    >
+                      <UIcon :name="option.icon" class="h-3 w-3" />
+                      {{ option.label }}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -868,8 +984,11 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import type {
   CreateRecipeRequest,
   RecipeAutocompleteSuggestion,
+  RecipeDishType,
+  RecipeParamSortBy,
   RecipeProfileResult,
-  RecipeSearchResult
+  RecipeSearchResult,
+  RecipeSource
 } from '~/services/recipeApi'
 import recipeApi from '~/services/recipeApi'
 import {
@@ -914,8 +1033,84 @@ let autocompleteDebounceTimer: ReturnType<typeof setTimeout> | null = null
 let autocompleteRequestSequence = 0
 
 const filters = reactive({
-  q: ''
+  q: '',
+  excludeAllergens: [] as string[],
+  sources: [] as RecipeSource[],
+  dishTypes: [] as RecipeDishType[],
+  sortBy: null as RecipeParamSortBy | null
 })
+
+const showFacetPanel = ref(true)
+
+const allergenOptions: { value: string; label: string }[] = [
+  { value: 'peanuts', label: 'Peanuts' },
+  { value: 'tree nuts', label: 'Tree Nuts' },
+  { value: 'dairy', label: 'Dairy' },
+  { value: 'eggs', label: 'Eggs' },
+  { value: 'soy', label: 'Soy' },
+  { value: 'wheat', label: 'Wheat' },
+  { value: 'fish', label: 'Fish' },
+  { value: 'shellfish', label: 'Shellfish' },
+  { value: 'gluten', label: 'Gluten' },
+  { value: 'lactose', label: 'Lactose' }
+]
+
+const dishTypeOptions: { value: RecipeDishType; label: string; icon: string }[] = [
+  { value: 'main-dish', label: 'Main Dish', icon: 'i-lucide-soup' },
+  { value: 'breakfast', label: 'Breakfast', icon: 'i-lucide-sunrise' },
+  { value: 'desserts', label: 'Desserts', icon: 'i-lucide-cake' },
+  { value: 'beverages', label: 'Beverages', icon: 'i-lucide-coffee' },
+  { value: 'snacks', label: 'Snacks', icon: 'i-lucide-cookie' }
+]
+
+const sourceOptions: { value: RecipeSource; label: string }[] = [
+  { value: 'healthyfoods', label: 'Healthy Foods' },
+  { value: 'foodhero', label: 'Food Hero' },
+  { value: 'myplate', label: 'MyPlate' },
+  { value: 'irish_safefood', label: 'Irish Safefood' },
+  { value: 'recipe1m', label: 'Recipe1M' }
+]
+
+const sortByOptions: { value: RecipeParamSortBy; label: string; icon: string }[] = [
+  { value: 'title_asc', label: 'Title (A–Z)', icon: 'i-lucide-arrow-up-a-z' },
+  { value: 'title_desc', label: 'Title (Z–A)', icon: 'i-lucide-arrow-down-z-a' },
+  { value: 'time_asc', label: 'Quickest First', icon: 'i-lucide-clock' },
+  { value: 'time_desc', label: 'Longest First', icon: 'i-lucide-clock-3' },
+  { value: 'random', label: 'Random', icon: 'i-lucide-shuffle' }
+]
+
+function toggleAllergen(value: string) {
+  const idx = filters.excludeAllergens.indexOf(value)
+  if (idx >= 0) filters.excludeAllergens.splice(idx, 1)
+  else filters.excludeAllergens.push(value)
+  void applyFilters()
+}
+
+function toggleSource(value: RecipeSource) {
+  const idx = filters.sources.indexOf(value)
+  if (idx >= 0) filters.sources.splice(idx, 1)
+  else filters.sources.push(value)
+  void applyFilters()
+}
+
+function toggleDishType(value: RecipeDishType) {
+  const idx = filters.dishTypes.indexOf(value)
+  if (idx >= 0) filters.dishTypes.splice(idx, 1)
+  else filters.dishTypes.push(value)
+  void applyFilters()
+}
+
+function setSortBy(value: RecipeParamSortBy) {
+  filters.sortBy = filters.sortBy === value ? null : value
+  void applyFilters()
+}
+
+const activeFacetCount = computed(() =>
+  filters.excludeAllergens.length +
+  filters.sources.length +
+  filters.dishTypes.length +
+  (filters.sortBy ? 1 : 0)
+)
 
 const itemsPerPage = 25
 const currentPage = ref(1)
@@ -1008,7 +1203,7 @@ const breadcrumbItems = [
   }
 ]
 
-const hasActiveFilters = computed(() => Boolean(filters.q.trim()))
+const hasActiveFilters = computed(() => Boolean(filters.q.trim()) || activeFacetCount.value > 0)
 
 const totalPages = computed(() => {
   if (isNlSearch.value || totalCount.value === 0) return 0
@@ -1541,7 +1736,17 @@ async function loadRecipes(page = currentPage.value) {
   const offset = (page - 1) * itemsPerPage
 
   try {
-    const results = await recipeApi.searchManagedRecipes(query, itemsPerPage, query ? 0 : offset)
+    const results = await recipeApi.searchManagedRecipes(
+      query,
+      itemsPerPage,
+      query ? 0 : offset,
+      {
+        exclude_allergens: filters.excludeAllergens.length ? [...filters.excludeAllergens] : undefined,
+        sources: filters.sources.length ? [...filters.sources] : undefined,
+        dish_types: filters.dishTypes.length ? [...filters.dishTypes] : undefined,
+        sort_by: filters.sortBy ?? undefined
+      }
+    )
     recipes.value = results
     isNlSearch.value = Boolean(query)
     hasMore.value = !query && results.length === itemsPerPage
@@ -1572,6 +1777,10 @@ function applyFilters() {
 
 function resetFilters() {
   filters.q = ''
+  filters.excludeAllergens = []
+  filters.sources = []
+  filters.dishTypes = []
+  filters.sortBy = null
   currentPage.value = 1
   clearAutocomplete()
   return loadRecipes(1)

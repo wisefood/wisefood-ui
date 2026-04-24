@@ -144,6 +144,10 @@
     "signIn": "Sign in",
     "register": "Register"
   },
+  "seo": {
+    "title": "WiseFood - Your Personalized Nutrition Journey",
+    "description": "Transform your relationship with food through science-backed insights and AI-powered recommendations."
+  },
   "hero": {
     "eyebrow": "Nutrition · Sustainability · Wellness",
     "titleLead": "The intelligent way to",
@@ -152,7 +156,48 @@
     "description": "WiseFood brings nutrition science, AI, and real-household awareness into one companion — so eating well becomes the easiest choice you make today.",
     "ctaPrimary": "Begin your journey",
     "ctaSecondary": "See it in motion",
+    "ctaDashboard": "Go to Dashboard",
     "scrollHint": "Scroll to explore"
+  },
+  "mockups": {
+    "foodchat": {
+      "userMessage": "Plan a high-protein dinner for 4 — no nuts.",
+      "assistantMessage": "Here's a balanced plan for tomorrow — high-protein, nut-free.",
+      "typing": "typing",
+      "table": {
+        "mealHeader": "Meal",
+        "dishHeader": "Dish",
+        "kcalHeader": "kcal",
+        "breakfast": "Breakfast",
+        "breakfastDish": "Greek yogurt · berries",
+        "lunch": "Lunch",
+        "lunchDish": "Chicken quinoa bowl",
+        "snack": "Snack",
+        "snackDish": "Hummus · carrot sticks",
+        "dinner": "Dinner",
+        "dinnerDish": "Grilled salmon · farro"
+      }
+    },
+    "foodscholar": {
+      "question": "\"Is extra-virgin olive oil better than seed oils?\"",
+      "answer": "EVOO is a primary fat in Mediterranean guidelines{ref1}, linked to lower CVD risk in long-term trials{ref2} — evidence is stronger than for most seed oils{ref3}.",
+      "sources": "Sources",
+      "guideLabel": "Guide",
+      "guideTitle": "Mediterranean diet",
+      "articleLabel": "Article",
+      "articleTitle": "PREDIMED trial, NEJM",
+      "textbookLabel": "Textbook",
+      "textbookTitle": "Nutrition Essentials"
+    },
+    "recipewrangler": {
+      "duration": "25 min",
+      "recipeTitle": "Miso-glazed aubergine with rice",
+      "protein": "Protein",
+      "carbs": "Carbs",
+      "fat": "Fat",
+      "lowImpact": "Low impact",
+      "compare": "Compare"
+    }
   },
   "pillars": {
     "eyebrow": "Three tools. One companion.",
@@ -329,6 +374,7 @@
       "viewRecipe": "View Recipe",
       "save": "Save",
       "saved": "Saved",
+      "editInConsole": "Edit in Console",
       "servings": "serving | servings",
       "minutes": "minutes",
       "minuteShort": "min",
@@ -869,7 +915,8 @@
       "showMore": "Show more ({count})",
       "copyLink": "Copy Link",
       "copied": "Copied!",
-      "save": "Save"
+      "save": "Save",
+      "editInConsole": "Edit in Console"
     },
     "evaluation": {
       "actionability": "Actionability",

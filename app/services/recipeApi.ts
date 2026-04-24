@@ -433,17 +433,28 @@ class RecipeApiService {
   /**
    * Search recipes against the WiseFood REST API for console management.
    */
-  async searchManagedRecipes(query: string, limit: number = 25, offset: number = 0): Promise<RecipeSearchResult[]> {
+  async searchManagedRecipes(
+    query: string,
+    limit: number = 25,
+    offset: number = 0,
+    filters: Pick<RecipeParamSearchParams, 'exclude_allergens' | 'sources' | 'dish_types' | 'sort_by'> = {}
+  ): Promise<RecipeSearchResult[]> {
     const safeLimit = Math.max(1, Math.trunc(limit || 25))
     const safeOffset = Math.max(0, Math.trunc(offset || 0))
     const normalizedQuery = String(query || '').trim()
+
+    const filterPayload: Partial<RecipeParamSearchParams> = {}
+    if (filters.exclude_allergens?.length) filterPayload.exclude_allergens = filters.exclude_allergens
+    if (filters.sources?.length) filterPayload.sources = filters.sources
+    if (filters.dish_types?.length) filterPayload.dish_types = filters.dish_types
+    if (filters.sort_by) filterPayload.sort_by = filters.sort_by
 
     try {
       if (!normalizedQuery) {
         const data = await this.fetchWithTimeout<RecipeSearchPayload>(
           `${this.getRecipeBasePath('wisefood-rest')}/param_search`,
           'POST',
-          { limit: safeLimit, offset: safeOffset },
+          { ...filterPayload, limit: safeLimit, offset: safeOffset },
           SEARCH_TIMEOUT,
           'wisefood-rest'
         )
@@ -454,7 +465,10 @@ class RecipeApiService {
       const data = await this.fetchWithTimeout<RecipeSearchPayload>(
         `${this.getRecipeBasePath('wisefood-rest')}/search`,
         'POST',
-        { question: normalizedQuery },
+        {
+          question: normalizedQuery,
+          ...(filterPayload.exclude_allergens ? { exclude_allergens: filterPayload.exclude_allergens } : {})
+        },
         SEARCH_TIMEOUT,
         'wisefood-rest'
       )
