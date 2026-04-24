@@ -1,5 +1,9 @@
 <template>
-  <UHeader class="z-[120]">
+  <UHeader
+    class="z-[120]"
+    :class="isLanding ? 'landing-header' : ''"
+    :ui="isLanding ? { root: 'bg-white/15 !border-b-0 backdrop-blur-xl backdrop-saturate-150 shadow-[0_1px_0_0_rgba(255,255,255,0.15)_inset,0_8px_32px_-8px_rgba(0,0,0,0.35)]' } : undefined"
+  >
     <template #left>
       <AppLogo
         class="w-auto h-10 shrink-0"
@@ -188,6 +192,7 @@ const userDisplayName = computed(() => {
 })
 
 const isConsoleRoute = computed(() => route.path.startsWith('/console'))
+const isLanding = computed(() => route.path === '/')
 
 // User dropdown menu items
 const userMenuItems = computed<DropdownMenuItem[]>(() => [
@@ -237,3 +242,37 @@ const userMenuItems = computed<DropdownMenuItem[]>(() => [
   }
 ])
 </script>
+
+<style>
+/* Landing-only header overrides — unscoped so they beat Nuxt UI's
+   higher-specificity color tokens on UButton / UColorModeButton.
+   Forces every control to white in both light and dark mode. */
+.landing-header,
+.landing-header * {
+  color: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+.landing-header button:hover,
+.landing-header a:hover,
+.landing-header button:hover *,
+.landing-header a:hover * {
+  color: rgba(255, 255, 255, 1) !important;
+}
+/* Preserve the primary Sign In / Console button's solid brand look */
+.landing-header [class*="bg-brand-"],
+.landing-header [class*="bg-primary-"] {
+  color: #fff !important;
+}
+/* Keep the profile avatar gradient readable */
+.landing-header .bg-gradient-to-br {
+  color: #fff !important;
+}
+/* Dropdown menus (locale list, user menu) should stay normal-styled when open */
+.landing-header [role="menu"],
+.landing-header [role="menu"] *,
+[data-ui-popper] [role="menu"],
+[data-ui-popper] [role="menu"] * {
+  color: initial !important;
+  border-color: initial !important;
+}
+</style>

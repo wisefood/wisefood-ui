@@ -9,6 +9,8 @@
       :subtitle="t('foodChatHome.subtitle')"
     />
 
+    <AppFeatureGate feature="foodchat">
+
     <!-- ===== IDLE STATE ===== -->
     <Transition name="layout-fade">
       <div
@@ -548,6 +550,7 @@
         </div>
       </div>
     </Transition>
+    </AppFeatureGate>
   </div>
 </template>
 
@@ -568,7 +571,7 @@ import memberMealPlansApi, {
 import type { HouseholdMember } from '~/services/householdsApi'
 import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
 
-definePageMeta({ layout: 'default', middleware: ['auth', 'profile'] })
+definePageMeta({ layout: 'default', middleware: ['auth'] })
 
 const { t, locale } = useI18n()
 useHead({ title: computed(() => t('foodChatHome.pageTitle')) })

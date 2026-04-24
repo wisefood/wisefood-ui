@@ -55,8 +55,9 @@
       >
         <div class="w-full max-w-2xl">
           <div class="mb-8 text-center">
-            <h2 class="text-4xl font-claude text-gray-900 dark:text-white mb-2">
-              {{ qaHeading }}
+            <h2 class="text-3xl font-claude text-gray-900 dark:text-white mb-2 inline-flex items-center justify-center gap-2 flex-wrap">
+              <img src="/fig.png" alt="" aria-hidden="true" class="inline-block h-[1.2em] w-auto align-[-0.05em] select-none" draggable="false" />
+              <span>{{ qaHeading }}</span>
             </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400">
               {{ t('foodScholarHome.qa.tagline') }}
@@ -884,24 +885,29 @@
                     ? 'bg-brand-500 border-brand-500 text-white'
                     : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600 dark:hover:text-brand-400'
                 ]"
-                @click="librarySelectedTopic = topic"
+                @click="selectLibraryTopic(topic)"
               >{{ topic }}</button>
             </div>
 
-            <!-- Article cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <FoodscholarArticleCard
-                v-for="(article, i) in libraryFilteredArticles"
-                :key="article.urn"
-                :article="article"
-                :index="i"
-                :fade="false"
-              />
+            <div v-if="libraryTopicArticlesLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div v-for="i in 6" :key="i" class="h-48 rounded-2xl bg-gray-100 dark:bg-zinc-800 animate-pulse" />
             </div>
+            <template v-else>
+              <!-- Article cards -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <FoodscholarArticleCard
+                  v-for="(article, i) in libraryFilteredArticles"
+                  :key="article.urn"
+                  :article="article"
+                  :index="i"
+                  :fade="false"
+                />
+              </div>
 
-            <p v-if="!libraryFilteredArticles.length" class="py-10 text-center text-sm text-gray-400 dark:text-zinc-500">
-              No articles found for this topic.
-            </p>
+              <p v-if="!libraryFilteredArticles.length" class="py-10 text-center text-sm text-gray-400 dark:text-zinc-500">
+                No articles found for this topic.
+              </p>
+            </template>
           </template>
 
           <div v-else-if="articlesError" class="py-10 text-center text-sm text-red-500">{{ articlesError }}</div>
@@ -1529,7 +1535,7 @@ const navigateToGuideline = async (guidelineId: string, extraQuery: Record<strin
     }
     const query: Record<string, string> = { ...extraQuery, guideline: guidelineId }
     if (typeof guideline.page_no === 'number') {
-      query.page_no = String(guideline.page_no)
+      query.pdf_page = String(guideline.page_no)
     }
     router.push({
       path: buildGuideDetailPath(guideline.region, guideline.guide_urn),
@@ -1882,7 +1888,7 @@ function getCitationUrnFromHref(href: string): string | null {
 function drawCitationLine(anchorEl: HTMLElement, urn: string) {
   const grid = qaSessionGridRef.value
   if (!grid) return
-  const card = grid.querySelector<HTMLElement>(`.citation-source-card[data-citation-urn="${urn}"]`)
+  const card = grid.querySelector<HTMLElement>(`.citation-source-card[data-citation-urn="${CSS.escape(urn)}"]`)
   if (!card) return
 
   const gridRect = grid.getBoundingClientRect()
@@ -1904,24 +1910,26 @@ function clearCitationLine() {
   grid?.querySelectorAll('.citation-source-card--active').forEach(el => el.classList.remove('citation-source-card--active'))
 }
 
+function getAnchorCitationUrn(a: HTMLElement): string | null {
+  const annotated = a.getAttribute('data-citation-urn')
+  if (annotated) return annotated
+  // Fallback: resolve from href in case the anchor wasn't annotated at render time.
+  const href = a.getAttribute('href') ?? ''
+  return resolveQaSourceHref(href)?.urn ?? null
+}
+
 function handleAnswerMouseOver(e: MouseEvent) {
   const a = (e.target as HTMLElement).closest<HTMLElement>('a[href]')
   if (!a) return
-  const href = a.getAttribute('href') ?? ''
-  const resolved = resolveQaSourceHref(href)
-  if (!resolved) return
-  // match sidebar card by its data-citation-urn (which holds article_urn from citations)
-  const grid = qaSessionGridRef.value
-  if (!grid) return
-  const card = grid.querySelector<HTMLElement>(`[data-citation-urn="${CSS.escape(resolved.urn)}"]`)
-  if (card) drawCitationLine(a, resolved.urn)
+  const urn = getAnchorCitationUrn(a)
+  if (!urn) return
+  drawCitationLine(a, urn)
 }
 
 function handleAnswerMouseOut(e: MouseEvent) {
   const a = (e.target as HTMLElement).closest<HTMLElement>('a[href]')
   if (!a) return
-  const href = a.getAttribute('href') ?? ''
-  if (resolveQaSourceHref(href)) clearCitationLine()
+  if (getAnchorCitationUrn(a)) clearCitationLine()
 }
 const hasDualAnswerMode = computed(() => Boolean(primaryAnswer.value && secondaryAnswer.value && qaResult.value?.dual_answer_feedback))
 const isAdvancedMode = computed(() => qaMode.value === 'advanced')
@@ -2435,7 +2443,26 @@ const renderMarkdown = (text: string): string => {
     gfm: true
   }) as string
 
-  return DOMPurify.sanitize(rawHtml)
+  const sanitized = DOMPurify.sanitize(rawHtml)
+  return annotateCitationAnchors(sanitized)
+}
+
+// Inject data-citation-urn / data-citation-type onto each anchor whose href
+// points to a known QA source (article / guide / guideline). Doing this once,
+// during render, makes hover-to-sidebar matching robust to baseURL prefixes,
+// URL-encoding differences, and future href shapes.
+const annotateCitationAnchors = (html: string): string => {
+  if (!html || typeof window === 'undefined') return html
+  const container = document.createElement('div')
+  container.innerHTML = html
+  container.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((anchor) => {
+    const href = anchor.getAttribute('href') ?? ''
+    const resolved = resolveQaSourceHref(href)
+    if (!resolved) return
+    anchor.setAttribute('data-citation-urn', resolved.urn)
+    anchor.setAttribute('data-citation-type', resolved.sourceType)
+  })
+  return container.innerHTML
 }
 
 const formatDateTime = (dateTime?: string): string => {
@@ -2480,6 +2507,13 @@ const getErrorMessage = (err: unknown, fallback: string): string => {
 watch(popularArticleTopics, (newTopics) => {
   if (newTopics.length > 0 && !newTopics.includes(selectedPopularTopic.value)) {
     selectedPopularTopic.value = CATEGORY_ALL
+  }
+})
+
+watch(libraryArticleTopics, (newTopics) => {
+  if (newTopics.length > 0 && !newTopics.includes(librarySelectedTopic.value)) {
+    librarySelectedTopic.value = CATEGORY_ALL
+    libraryTopicArticles.value = []
   }
 })
 
@@ -2537,6 +2571,7 @@ watch(pageTab, (tab) => {
   if (tab === 'resources') {
     loadLibraryMap()
     loadLibraryTextbooks()
+    loadLibraryTopicFacets()
   }
 })
 
@@ -2550,6 +2585,7 @@ onMounted(async () => {
   if (pageTab.value === 'resources') {
     loadLibraryMap()
     loadLibraryTextbooks()
+    loadLibraryTopicFacets()
   }
 
   setupObserver()

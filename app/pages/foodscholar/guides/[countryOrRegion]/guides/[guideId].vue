@@ -634,6 +634,13 @@ async function loadGuidelineContext() {
   }
 }
 
+function findGuidelinePaginationPage(guidelineId: string): number | null {
+  if (!allGuideGuidelines.value.length) return null
+  const index = allGuideGuidelines.value.findIndex(g => g.id === guidelineId)
+  if (index < 0) return null
+  return Math.floor(index / guidelinePageSize) + 1
+}
+
 async function loadGuidelines() {
   if (!selectedGuide.value) {
     guidelines.value = []
@@ -708,11 +715,22 @@ async function loadGuideDetail() {
     suppressWatcher = true
     hydrateStateFromRoute()
     await loadGuidelineContext()
-    await loadGuidelines()
 
     const q = route.query as Record<string, string | string[] | null | undefined>
     const targetGuidelineId = firstQueryValue(q.guideline)
-    const targetPageNo = parseInt(firstQueryValue(q.page_no) || '', 10) || null
+    const targetPdfPage = parseInt(firstQueryValue(q.pdf_page) || firstQueryValue(q.page_no) || '', 10) || null
+
+    if (targetGuidelineId) {
+      syncToPdfPage.value = false
+      const correctPage = findGuidelinePaginationPage(targetGuidelineId)
+      if (correctPage) {
+        guidelinePage.value = correctPage
+      }
+      pendingGuidelineId.value = targetGuidelineId
+      pendingGuidelinePage.value = targetPdfPage
+    }
+
+    await loadGuidelines()
 
     if (targetGuidelineId) {
       const match = guidelines.value.find(g => g.id === targetGuidelineId)
@@ -721,13 +739,9 @@ async function loadGuideDetail() {
           selectGuideline(match)
         } else {
           activeGuidelineId.value = match.id
-          pendingGuidelineId.value = match.id
-          pendingGuidelinePage.value = targetPageNo
         }
       } else {
         activeGuidelineId.value = targetGuidelineId
-        pendingGuidelineId.value = targetGuidelineId
-        pendingGuidelinePage.value = targetPageNo
       }
     }
 

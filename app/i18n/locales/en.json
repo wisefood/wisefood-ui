@@ -146,67 +146,87 @@
   },
   "hero": {
     "eyebrow": "Nutrition · Sustainability · Wellness",
-    "titleLead": "Empowered Citizens",
-    "titleAccent": "Healthier Communities",
-    "description": "Transform your food choices with smart, AI-powered tools towards healthier and more sustainable living.",
-    "ctaPrimary": "Get Started",
-    "ctaSecondary": "Watch Demo"
+    "titleLead": "The intelligent way to",
+    "titleAccent": "learn, cook, and eat.",
+    "titleTrail": "",
+    "description": "WiseFood brings nutrition science, AI, and real-household awareness into one companion — so eating well becomes the easiest choice you make today.",
+    "ctaPrimary": "Begin your journey",
+    "ctaSecondary": "See it in motion",
+    "scrollHint": "Scroll to explore"
   },
-  "features": {
-    "heading": "Built for",
-    "headingAccent": "humans",
-    "subheading": "Discover the powerful features that make WiseFood the ultimate nutritional companion.",
+  "pillars": {
+    "eyebrow": "Three tools. One companion.",
+    "heading": "Every tool for",
+    "headingAccent": "daily nutrition.",
+    "headingTrail": "",
+    "subheading": "WiseFood is a suite of connected experiences that learn with you — from the ingredients on your plate to the research behind them.",
     "items": {
-      "scientific": {
-        "title": "Scientific Knowledge",
-        "description": "Access cutting-edge nutrition research made simple. We translate complex scientific studies into clear, actionable insights."
+      "foodchat": {
+        "tag": "FoodChat",
+        "title": "Your nutrition co-pilot",
+        "description": "A conversational assistant that plans meals, answers food questions, and adapts to every household member — allergies, goals, cultures and all.",
+        "highlights": ["Personalized meal plans", "Household-aware", "Instant Q&A"]
       },
-      "personalized": {
-        "title": "Personalized For You",
-        "description": "Every recommendation adapts to your unique profile. Your dietary preferences, allergies, and goals shape all suggestions."
+      "foodscholar": {
+        "tag": "FoodScholar",
+        "title": "Knowledge, grounded in evidence",
+        "description": "Browse dietary guides by country and source, read citation-grounded answers, and explore the science behind what you eat — without the jargon.",
+        "highlights": ["Guides Atlas", "Citation-grounded answers", "Country-specific guidance"]
       },
-      "culinary": {
-        "title": "Culinary Inspiration",
-        "description": "Discover recipes matching your taste and health goals. From quick weeknight meals to gourmet dishes, find new favorites."
+      "recipewrangler": {
+        "tag": "RecipeWrangler",
+        "title": "Recipes that fit your life",
+        "description": "Discover, adapt, and analyze recipes against your nutritional goals and environmental footprint — from quick weeknights to ambitious weekends.",
+        "highlights": ["AI recipe analyzer", "Smart filters", "Compare & plan"]
+      }
+    }
+  },
+  "manifesto": {
+    "eyebrow": "Why WiseFood",
+    "heading": "Eating well is",
+    "headingAccent": "a practice.",
+    "body": "We believe the way you eat shapes how you live. WiseFood helps you understand food — where it comes from, what it does, and how to choose well — so the everyday decisions you make around your table compound into a healthier life for you, your household, and the planet.",
+    "points": {
+      "one": {
+        "title": "Grounded in science",
+        "description": "Every recommendation traces back to peer-reviewed research and recognized dietary guidelines."
       },
-      "ai": {
-        "title": "AI-Powered Insights",
-        "description": "Smart algorithms analyze your eating habits continuously. Get proactive suggestions to make better food choices daily."
+      "two": {
+        "title": "Designed for real households",
+        "description": "Allergies, preferences, cultures and schedules — all at once, without compromise."
       },
-      "planning": {
-        "title": "Meal Planning",
-        "description": "Cooking for all household members has never been made easier. Receive meal plans suggestions that keep everyone happy."
-      },
-      "progress": {
-        "title": "Track Your Progress",
-        "description": "Beautiful dashboards visualize your health journey clearly. Celebrate milestones and stay motivated with smart tracking."
+      "three": {
+        "title": "Private by design",
+        "description": "Your profile is yours. We don't sell your data, and you stay in control of what's shared."
       }
     }
   },
   "steps": {
-    "heading": "Simple",
-    "headingAccent": "steps",
-    "subheading": "Get started in minutes and transform your relationship with food.",
+    "eyebrow": "Get started",
+    "heading": "Three steps to a",
+    "headingAccent": "wiser plate.",
+    "subheading": "No dieting dogma. No endless onboarding. Just a few minutes to tell us about you — and then we go.",
     "items": {
       "profile": {
-        "title": "Create Your Profile",
-        "description": "Share your dietary preferences, health goals, and any restrictions. Getting started takes just a couple of minutes."
+        "title": "Tell us about your household",
+        "description": "Preferences, allergies, goals, cultural context — for every member. The more we know, the better it fits."
       },
       "recommendations": {
-        "title": "Get Recommendations",
-        "description": "Our AI analyzes your profile instantly and delivers personalized meal plans, recipes, and nutritional guidance."
+        "title": "Meet your companion",
+        "description": "FoodChat, FoodScholar and RecipeWrangler align around your profile and start suggesting meals, answers, and recipes worth your attention."
       },
       "track": {
-        "title": "Track & Improve",
-        "description": "Log your meals and monitor your progress over time. Watch as our system learns and adapts to serve you better."
+        "title": "Grow into it",
+        "description": "Revisit what you learn, refine your preferences, and let WiseFood adapt as your tastes evolve. Small choices, made consistently, become a lifestyle."
       }
     }
   },
   "cta": {
-    "heading": "Ready to transform your",
-    "accent": "relationship with food?",
-    "description": "Join a community of users building healthier habits with WiseFood. Start your journey today and discover a smarter way to nourish your body.",
-    "primary": "Start Today"
+    "heading": "Bring wisdom to your",
+    "accent": "next meal.",
+    "description": "Set up your household in minutes and let FoodScholar, RecipeWrangler and FoodChat help you eat with intention — every day.",
+    "primary": "Get started",
+    "secondary": "Watch the demo"
   },
   "recipeWrangler": {
     "title": "RecipeWrangler",
@@ -1083,6 +1103,27 @@
       "smoothies": "Smoothies",
       "wine": "Wine",
       "beer": "Beer"
+    }
+  },
+  "featureGate": {
+    "loading": "Loading...",
+    "features": {
+      "foodchat": "FoodChat"
+    },
+    "needs-household": {
+      "title": "Set up your household first",
+      "description": "{feature} is personalised to your household. Create one to get started.",
+      "cta": "Set up household"
+    },
+    "needs-member": {
+      "title": "Add a profile to continue",
+      "description": "Add at least one profile to your household so {feature} knows who it's cooking for.",
+      "cta": "Add a profile"
+    },
+    "needs-selection": {
+      "title": "Pick a profile",
+      "description": "Choose whose profile {feature} should use for this session.",
+      "cta": "Choose a profile"
     }
   },
   "foodChatHome": {
