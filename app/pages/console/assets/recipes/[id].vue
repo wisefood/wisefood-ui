@@ -42,9 +42,19 @@
           </div>
 
           <div
-            v-if="recipe && (displayTags.length || displayAllergens.length)"
+            v-if="recipe && (dishTypeChips.length || displayTags.length || displayAllergens.length)"
             class="flex flex-wrap gap-1.5"
           >
+            <UBadge
+              v-for="chip in dishTypeChips"
+              :key="`dish-${chip.value}`"
+              color="primary"
+              variant="soft"
+              size="sm"
+              :icon="chip.icon"
+            >
+              {{ chip.label }}
+            </UBadge>
             <UBadge
               v-for="tag in displayTags"
               :key="`tag-${tag}`"
@@ -523,6 +533,7 @@ import {
   normalizeRecipeImageUrl,
   resolveConsoleRecipeErrorMessage
 } from '~/utils/consoleRecipes'
+import { formatDishTypeLabel, getDishTypeIcon, normalizeDishTypes } from '~/utils/dishTypes'
 
 definePageMeta({
   layout: 'default'
@@ -614,6 +625,14 @@ const previewImageUrl = computed(() => normalizeRecipeImageUrl(imageUrlInput.val
 function humanizeLabel(value: string) {
   return value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
+
+const dishTypeChips = computed(() =>
+  normalizeDishTypes(recipe.value?.dish_types).map(value => ({
+    value,
+    label: formatDishTypeLabel(value),
+    icon: getDishTypeIcon(value)
+  }))
+)
 
 const displayTags = computed(() => {
   const tags = recipe.value?.tags || []

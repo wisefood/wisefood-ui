@@ -112,6 +112,17 @@
         </div>
       </div>
 
+      <div v-if="dishTypeChips.length" class="mt-2 flex flex-wrap gap-1.5">
+        <span
+          v-for="chip in dishTypeChips"
+          :key="chip.value"
+          class="inline-flex items-center gap-1 rounded-full bg-brandg-50 dark:bg-brandg-900/30 px-2 py-0.5 text-[11px] font-medium text-brandg-700 dark:text-brandg-300 border border-brandg-100 dark:border-brandg-800"
+        >
+          <UIcon :name="chip.icon" class="w-3 h-3" />
+          {{ chip.label }}
+        </span>
+      </div>
+
       <div v-if="recipe.source" class="mt-2">
         <span class="inline-flex items-center rounded-full bg-zinc-100 dark:bg-zinc-700 px-2.5 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">
           Source: {{ recipe.source }}
@@ -140,6 +151,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRecipeStore } from '~/stores/recipe'
 import type { RecipeSearchResult } from '~/services/recipeApi'
+import { formatDishTypeLabel, getDishTypeIcon, normalizeDishTypes } from '~/utils/dishTypes'
 
 // ============================================================================
 // Props & Emits
@@ -171,6 +183,13 @@ const recipeImageUrl = computed(() => {
 })
 const isFavorite = computed(() => effectiveRecipeId.value ? recipeStore.isFavorite(effectiveRecipeId.value) : false)
 const isInCompare = computed(() => effectiveRecipeId.value ? recipeStore.isInCompareList(effectiveRecipeId.value) : false)
+const dishTypeChips = computed(() =>
+  normalizeDishTypes(props.recipe.dish_types).map(value => ({
+    value,
+    label: formatDishTypeLabel(value),
+    icon: getDishTypeIcon(value)
+  }))
+)
 
 watch(() => effectiveRecipeId.value, () => {
   imageLoadFailed.value = false

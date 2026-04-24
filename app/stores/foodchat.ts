@@ -89,6 +89,9 @@ export const useFoodChatStore = defineStore('foodchat', {
       return this.hasMealPlans || this.hasWeeklyMealPlans
     },
 
+    clarificationPending: (state): boolean =>
+      state.lastResponse?.needs_clarification === true,
+
     currentPlanType: (state): 'daily' | 'weekly' | null => {
       if (state.lastResponse?.weekly_meal_plan) return 'weekly'
       if (state.lastResponse?.meal_plan) return 'daily'

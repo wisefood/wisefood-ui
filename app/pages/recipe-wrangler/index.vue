@@ -379,6 +379,7 @@
         <!-- Filters Component -->
         <div v-if="showFilters" class="mt-4">
           <RecipesRecipeFilters
+            :facets="paramSearchFacets"
             @filter-change="handleFilterChange"
             @quick-filter="handleQuickFilter"
             @sort-change="handleFilterChange"
@@ -395,10 +396,18 @@
               <span v-else-if="loading">Searching...</span>
               <span v-else-if="error">Error loading recipes</span>
               <span v-else-if="!hasUserTriggeredSearch">Explore Recipes</span>
-              <span v-else>{{ recipesCount }} Recipe{{ recipesCount !== 1 ? 's' : '' }} Found</span>
+              <span v-else>Recipe Results</span>
             </h2>
           </div>
           <div class="flex items-center gap-2">
+            <span
+              v-if="!loading && !error && hasRecipes"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm font-medium text-zinc-700 dark:text-zinc-200 shadow-sm"
+            >
+              <UIcon name="i-lucide-list-filter" class="w-3.5 h-3.5 text-brandg-500" />
+              <span class="tabular-nums">{{ totalResultsDisplay.toLocaleString() }}</span>
+              <span class="text-zinc-400 dark:text-zinc-500">{{ totalResultsDisplay === 1 ? 'result' : 'results' }}</span>
+            </span>
             <button
               v-if="recipeStore.compareCount > 0"
               @click="clearCompareSelection"
@@ -630,7 +639,7 @@ useSeoMeta({
 // ============================================================================
 // Composables & Stores
 // ============================================================================
-const { recipes, loading, error, searchRecipes, searchRecipesByParams, fetchRecipeCount, fetchRecipesByCategory, clearError, hasMore, totalRecipeCount } = useRecipes()
+const { recipes, loading, error, searchRecipes, searchRecipesByParams, fetchRecipesByCategory, clearError, hasMore, paramSearchTotal, paramSearchFacets } = useRecipes()
 const recipeStore = useRecipeStore()
 const householdStore = useHouseholdStore()
 
@@ -680,11 +689,16 @@ const categories = computed(() => [
 // ============================================================================
 const recipesCount = computed(() => recipes.value?.length || 0)
 
+const totalResultsDisplay = computed(() => {
+  if (searchMode.value === 'params' && paramSearchTotal.value > 0) return paramSearchTotal.value
+  return recipesCount.value
+})
+
 const hasRecipes = computed(() => recipesCount.value > 0)
 
 const totalPages = computed(() => {
   if (searchMode.value === 'params') {
-    return totalRecipeCount.value > 0 ? Math.ceil(totalRecipeCount.value / itemsPerPage) : 0
+    return paramSearchTotal.value > 0 ? Math.ceil(paramSearchTotal.value / itemsPerPage) : 0
   }
   return Math.ceil(recipesCount.value / itemsPerPage)
 })
@@ -1221,10 +1235,7 @@ onMounted(async () => {
     }
     searchMode.value = 'params'
     lastParamSearch.value = initialParams
-    await Promise.all([
-      searchRecipesByParams(initialParams, false),
-      fetchRecipeCount()
-    ])
+    await searchRecipesByParams(initialParams, false)
   } catch (err) {
     console.error('Failed to load initial random recipes:', err)
   }

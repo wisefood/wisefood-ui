@@ -39,7 +39,7 @@
         <UIcon name="i-lucide-utensils" class="w-4 h-4 text-brandg-500" />
         Dish Type
       </h3>
-      <div class="flex flex-wrap gap-2">
+      <div v-if="dishTypeOptions.length" class="flex flex-wrap gap-2">
         <button
           v-for="dishType in dishTypeOptions"
           :key="dishType.value"
@@ -54,9 +54,16 @@
           <span class="flex items-center gap-1.5">
             <UIcon :name="dishType.icon" class="w-3.5 h-3.5" />
             {{ dishType.label }}
+            <span
+              v-if="dishType.count !== null"
+              class="text-[10px] font-normal opacity-70 tabular-nums"
+            >{{ dishType.count }}</span>
           </span>
         </button>
       </div>
+      <p v-else class="text-xs text-gray-400 dark:text-gray-500">
+        Run a search to see available dish types.
+      </p>
     </div>
 
     <!-- Source Filters -->
@@ -138,11 +145,16 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRecipeStore } from '~/stores/recipe'
-import type { RecipeDishType, RecipeParamSortBy, RecipeSource } from '~/services/recipeApi'
+import type { RecipeDishType, RecipeFacetMap, RecipeParamSortBy, RecipeSource } from '~/services/recipeApi'
+import { formatDishTypeLabel, getDishTypeIcon } from '~/utils/dishTypes'
 
 // ============================================================================
 // Props & Emits
 // ============================================================================
+const props = defineProps<{
+  facets?: RecipeFacetMap
+}>()
+
 const emit = defineEmits<{
   filterChange: []
   quickFilter: [filterType: string]
@@ -176,13 +188,25 @@ const commonAllergens = computed(() => [
   { value: 'lactose', label: t('recipeWrangler.filters.allergens.lactose') }
 ])
 
-const dishTypeOptions: { value: RecipeDishType; label: string; icon: string }[] = [
-  { value: 'main-dish', label: 'Main Dish', icon: 'i-lucide-soup' },
-  { value: 'breakfast', label: 'Breakfast', icon: 'i-lucide-sunrise' },
-  { value: 'desserts', label: 'Desserts', icon: 'i-lucide-cake' },
-  { value: 'beverages', label: 'Beverages', icon: 'i-lucide-coffee' },
-  { value: 'snacks', label: 'Snacks', icon: 'i-lucide-cookie' }
-]
+// Dish types are driven by whatever buckets the backend returns in the
+// param_search `dish_type` facet, merged with any currently-selected values
+// so a user can always deselect what they've chosen even if it doesn't
+// appear in the current filtered result set.
+const dishTypeOptions = computed<{ value: RecipeDishType; label: string; icon: string; count: number | null }[]>(() => {
+  // Backend keys the facet bucket by the Tag.category value, which is
+  // 'dish-type' (hyphen), not 'dish_type'.
+  const bucket = (props.facets?.['dish-type'] ?? {}) as Record<string, number>
+  const values = new Set<string>(Object.keys(bucket))
+  for (const selected of recipeStore.selectedDishTypes) values.add(selected)
+  return [...values]
+    .map(value => ({
+      value,
+      label: formatDishTypeLabel(value),
+      icon: getDishTypeIcon(value),
+      count: typeof bucket[value] === 'number' ? bucket[value] : null
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label))
+})
 
 const sourceOptions: { value: RecipeSource; label: string }[] = [
   { value: 'healthyfoods', label: 'Healthy Foods' },

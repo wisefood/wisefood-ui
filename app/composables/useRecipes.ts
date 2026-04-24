@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import recipeApi from '~/services/recipeApi'
 import type {
   Recipe,
+  RecipeFacetMap,
   RecipeSearchResult,
   RecipeSearchParams,
   RecipeParamSearchParams,
@@ -25,6 +26,8 @@ export function useRecipes() {
   const totalResults = ref(0)
   const hasMore = ref(false)
   const totalRecipeCount = ref(0)
+  const paramSearchTotal = ref(0)
+  const paramSearchFacets = ref<RecipeFacetMap>({})
 
   // ============================================================================
   // Computed Properties
@@ -38,26 +41,6 @@ export function useRecipes() {
   // ============================================================================
   // Methods
   // ============================================================================
-
-  const normalizeList = (values?: string[]): string[] => {
-    if (!values || values.length === 0) return []
-    return values
-      .map(value => value.trim())
-      .filter(value => value.length > 0)
-      .sort()
-  }
-
-  const buildParamSearchCacheKey = (params: RecipeParamSearchParams): string => {
-    return JSON.stringify({
-      include_ingredients: normalizeList(params.include_ingredients),
-      exclude_ingredients: normalizeList(params.exclude_ingredients),
-      exclude_allergens: normalizeList(params.exclude_allergens),
-      diet_tags: normalizeList(params.diet_tags),
-      max_duration_minutes: params.max_duration_minutes,
-      limit: params.limit ?? 12,
-      offset: params.offset ?? 0
-    })
-  }
 
   /**
    * Search for recipes using natural language query
@@ -116,48 +99,42 @@ export function useRecipes() {
   }
 
   /**
-   * Search recipes using deterministic parameter filters
+   * Search recipes using deterministic parameter filters.
+   * Returns the raw {results, facets, total} payload so callers can drive
+   * accurate filtered-total pagination.
    */
-  const searchRecipesByParams = async (params: RecipeParamSearchParams, useCache = true) => {
+  // Param_search is not cached: the legacy results-only cache cannot round-trip
+  // the per-filter `total` + `facets`, so a cache hit would serve a stale total
+  // that breaks the page selector when filters change.
+  const searchRecipesByParams = async (params: RecipeParamSearchParams, _useCache = true) => {
     error.value = null
     lastSearchQuery.value = ''
-
-    const normalizedAllergens = normalizeList(params.exclude_allergens)
-    const cacheKey = `param:${buildParamSearchCacheKey(params)}`
-
-    if (useCache && import.meta.client) {
-      const { useRecipeStore } = await import('~/stores/recipe')
-      const recipeStore = useRecipeStore()
-      const cachedResults = recipeStore.getCachedSearch(cacheKey, normalizedAllergens)
-
-      if (cachedResults) {
-        recipes.value = cachedResults
-        totalResults.value = cachedResults.length
-        return cachedResults
-      }
-    }
+    void _useCache
 
     loading.value = true
 
     try {
       const pageLimit = params.limit ?? 12
-      const results = await recipeApi.searchRecipesByParams(params)
+      const offset = params.offset ?? 0
+      const response = await recipeApi.searchRecipesByParams(params)
+      const { results, facets, total } = response
+
       recipes.value = results
-      totalResults.value = results.length
-      hasMore.value = results.length === pageLimit
+      totalResults.value = total
+      paramSearchTotal.value = total
+      paramSearchFacets.value = facets
+      hasMore.value = total > 0
+        ? offset + results.length < total
+        : results.length === pageLimit
 
-      if (import.meta.client) {
-        const { useRecipeStore } = await import('~/stores/recipe')
-        const recipeStore = useRecipeStore()
-        recipeStore.cacheSearchResults(cacheKey, normalizedAllergens, results)
-      }
-
-      return results
+      return response
     } catch (err) {
       const apiError = err as ApiError
       error.value = apiError.message || 'Failed to search recipes with filters'
       recipes.value = []
       hasMore.value = false
+      paramSearchTotal.value = 0
+      paramSearchFacets.value = {}
       throw err
     } finally {
       loading.value = false
@@ -344,6 +321,8 @@ export function useRecipes() {
     totalResults: computed(() => totalResults.value),
     hasMore: computed(() => hasMore.value),
     totalRecipeCount: computed(() => totalRecipeCount.value),
+    paramSearchTotal: computed(() => paramSearchTotal.value),
+    paramSearchFacets: computed(() => paramSearchFacets.value),
 
     // Methods
     searchRecipes,

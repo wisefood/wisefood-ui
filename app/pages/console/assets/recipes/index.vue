@@ -174,7 +174,7 @@
                     <UIcon name="i-lucide-utensils" class="h-3.5 w-3.5 text-brandg-500" />
                     Dish Type
                   </h3>
-                  <div class="flex flex-wrap gap-1.5">
+                  <div v-if="dishTypeOptions.length" class="flex flex-wrap gap-1.5">
                     <button
                       v-for="dishType in dishTypeOptions"
                       :key="dishType.value"
@@ -189,8 +189,15 @@
                     >
                       <UIcon :name="dishType.icon" class="h-3 w-3" />
                       {{ dishType.label }}
+                      <span
+                        v-if="dishType.count !== null"
+                        class="text-[10px] font-normal opacity-70 tabular-nums"
+                      >{{ dishType.count }}</span>
                     </button>
                   </div>
+                  <p v-else class="text-xs text-gray-400 dark:text-gray-500">
+                    {{ isNlSearch ? 'Not available for text search.' : 'Run a search to see available dish types.' }}
+                  </p>
                 </div>
 
                 <!-- Source -->
@@ -985,6 +992,7 @@ import type {
   CreateRecipeRequest,
   RecipeAutocompleteSuggestion,
   RecipeDishType,
+  RecipeFacetMap,
   RecipeParamSortBy,
   RecipeProfileResult,
   RecipeSearchResult,
@@ -997,6 +1005,7 @@ import {
   resolveConsoleRecipeErrorMessage,
   resolveRecipeIdentifier
 } from '~/utils/consoleRecipes'
+import { formatDishTypeLabel, getDishTypeIcon } from '~/utils/dishTypes'
 
 type EditableIngredient = {
   name: string
@@ -1055,13 +1064,27 @@ const allergenOptions: { value: string; label: string }[] = [
   { value: 'lactose', label: 'Lactose' }
 ]
 
-const dishTypeOptions: { value: RecipeDishType; label: string; icon: string }[] = [
-  { value: 'main-dish', label: 'Main Dish', icon: 'i-lucide-soup' },
-  { value: 'breakfast', label: 'Breakfast', icon: 'i-lucide-sunrise' },
-  { value: 'desserts', label: 'Desserts', icon: 'i-lucide-cake' },
-  { value: 'beverages', label: 'Beverages', icon: 'i-lucide-coffee' },
-  { value: 'snacks', label: 'Snacks', icon: 'i-lucide-cookie' }
-]
+const paramSearchFacets = ref<RecipeFacetMap>({})
+
+// Dish-type chips are driven by the `dish_type` facet returned from
+// param_search, merged with any currently-selected values so users can
+// always deselect what they've chosen even when the current result set
+// doesn't include that bucket.
+const dishTypeOptions = computed<{ value: RecipeDishType; label: string; icon: string; count: number | null }[]>(() => {
+  // Backend keys the facet bucket by the Tag.category value, which is
+  // 'dish-type' (hyphen), not 'dish_type'.
+  const bucket = (paramSearchFacets.value?.['dish-type'] ?? {}) as Record<string, number>
+  const values = new Set<string>(Object.keys(bucket))
+  for (const selected of filters.dishTypes) values.add(selected)
+  return [...values]
+    .map(value => ({
+      value,
+      label: formatDishTypeLabel(value),
+      icon: getDishTypeIcon(value),
+      count: typeof bucket[value] === 'number' ? bucket[value] : null
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label))
+})
 
 const sourceOptions: { value: RecipeSource; label: string }[] = [
   { value: 'healthyfoods', label: 'Healthy Foods' },
@@ -1736,7 +1759,7 @@ async function loadRecipes(page = currentPage.value) {
   const offset = (page - 1) * itemsPerPage
 
   try {
-    const results = await recipeApi.searchManagedRecipes(
+    const { results, facets, total } = await recipeApi.searchManagedRecipes(
       query,
       itemsPerPage,
       query ? 0 : offset,
@@ -1748,11 +1771,19 @@ async function loadRecipes(page = currentPage.value) {
       }
     )
     recipes.value = results
+    paramSearchFacets.value = facets
     isNlSearch.value = Boolean(query)
-    hasMore.value = !query && results.length === itemsPerPage
+    if (query) {
+      totalCount.value = results.length
+      hasMore.value = false
+    } else {
+      totalCount.value = total
+      hasMore.value = offset + results.length < total
+    }
   } catch (error) {
     recipes.value = []
     hasMore.value = false
+    paramSearchFacets.value = {}
     recipesError.value = resolveConsoleRecipeErrorMessage(error, 'Failed to load recipes')
   } finally {
     recipesLoading.value = false
@@ -2100,10 +2131,7 @@ onMounted(() => {
   if (import.meta.client) {
     document.addEventListener('click', handleClickOutsideSearch)
   }
-  void Promise.all([
-    loadRecipes(),
-    recipeApi.getRecipeCount().then(n => { totalCount.value = n }).catch(() => {})
-  ])
+  void loadRecipes()
 })
 
 onBeforeUnmount(() => {

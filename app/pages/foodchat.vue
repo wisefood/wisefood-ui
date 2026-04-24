@@ -186,57 +186,55 @@
                     <div class="fc-md text-gray-800 dark:text-gray-200" v-html="renderMarkdown(msg.content)" />
 
                     <!-- Feedback row -->
-                    <div v-if="msg.id" class="mt-2 flex items-center gap-1 opacity-0 group-hover/msg:opacity-100 transition-opacity">
-                      <button
-                        :class="['fc-feedback-btn', messageFeedback[msg.id] === 'up' ? 'fc-feedback-active-up' : '']"
-                        @click="handleMessageFeedback(msg.id, 'up')"
-                      >
-                        <UIcon name="i-lucide-thumbs-up" class="w-3 h-3" />
-                      </button>
-                      <button
-                        :class="['fc-feedback-btn', messageFeedback[msg.id] === 'down' ? 'fc-feedback-active-down' : '']"
-                        @click="handleMessageFeedback(msg.id, 'down')"
-                      >
-                        <UIcon name="i-lucide-thumbs-down" class="w-3 h-3" />
-                      </button>
+                    <div v-if="msg.id" class="mt-2 flex items-center gap-1 transition-opacity" :class="feedbackSubmitted[msg.id] ? 'opacity-100' : 'opacity-0 group-hover/msg:opacity-100'">
+                      <template v-if="!feedbackSubmitted[msg.id]">
+                        <button
+                          :class="['fc-feedback-btn', messageFeedback[msg.id] === 'up' ? 'fc-feedback-active-up' : '']"
+                          @click="handleMessageFeedback(msg.id, 'up')"
+                        >
+                          <UIcon name="i-lucide-thumbs-up" class="w-3 h-3" />
+                        </button>
+                        <button
+                          :class="['fc-feedback-btn', messageFeedback[msg.id] === 'down' ? 'fc-feedback-active-down' : '']"
+                          @click="handleMessageFeedback(msg.id, 'down')"
+                        >
+                          <UIcon name="i-lucide-thumbs-down" class="w-3 h-3" />
+                        </button>
 
-                      <!-- Negative reason chips (appear after thumbs down) -->
-                      <Transition name="chips-fade">
-                        <div v-if="messageFeedback[msg.id] === 'down' && !feedbackSubmitted[msg.id]" class="flex flex-wrap gap-1 ml-1">
-                          <button
-                            v-for="reason in negativeFeedbackReasons"
-                            :key="reason"
-                            :class="['px-2 py-0.5 text-[10px] rounded-full border transition-colors',
-                              selectedFeedbackReason[msg.id] === reason
-                                ? 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300'
-                                : 'border-gray-300 dark:border-zinc-600 text-gray-500 dark:text-gray-400 hover:border-red-300']"
-                            @click="handleFeedbackReason(msg.id, reason)"
-                          >
-                            {{ reason }}
-                          </button>
-                        </div>
-                      </Transition>
+                        <!-- Negative reason chips (appear after thumbs down) -->
+                        <Transition name="chips-fade">
+                          <div v-if="messageFeedback[msg.id] === 'down'" class="flex flex-wrap gap-1 ml-1">
+                            <button
+                              v-for="reason in negativeFeedbackReasons"
+                              :key="reason"
+                              :class="['px-2 py-0.5 text-[10px] rounded-full border transition-colors',
+                                selectedFeedbackReason[msg.id] === reason
+                                  ? 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300'
+                                  : 'border-gray-300 dark:border-zinc-600 text-gray-500 dark:text-gray-400 hover:border-red-300']"
+                              @click="handleFeedbackReason(msg.id, reason)"
+                            >
+                              {{ reason }}
+                            </button>
+                          </div>
+                        </Transition>
+                      </template>
 
-                      <Transition name="chips-fade">
-                        <span v-if="feedbackSubmitted[msg.id]" class="text-[10px] text-emerald-600 dark:text-emerald-400 ml-1 flex items-center gap-1">
-                          <UIcon name="i-lucide-check" class="w-3 h-3" />
-                          {{ t('foodChatHome.chat.feedbackSaved') }}
-                        </span>
-                      </Transition>
+                      <span v-else class="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <UIcon name="i-lucide-check" class="w-3 h-3" />
+                        {{ t('foodChatHome.chat.feedbackSaved') }}
+                      </span>
                     </div>
                   </div>
                 </div>
               </TransitionGroup>
 
-              <!-- Sending skeleton -->
+              <!-- Ephemeral "Working on it…" bubble — shown only when a new
+                   generation was kicked off (not when answering a clarification). -->
               <Transition name="msg">
-                <div v-if="sending" class="flex justify-start">
-                  <div class="fc-bubble fc-bubble-assistant fc-bubble-loading">
-                    <div class="flex items-center gap-1.5">
-                      <span class="fc-dot" style="animation-delay: 0ms" />
-                      <span class="fc-dot" style="animation-delay: 160ms" />
-                      <span class="fc-dot" style="animation-delay: 320ms" />
-                    </div>
+                <div v-if="showEphemeralGenerating" class="flex justify-start">
+                  <div class="fc-bubble fc-bubble-generating">
+                    <UIcon name="i-lucide-loader-2" class="w-3.5 h-3.5 animate-spin text-brandp-500 shrink-0" />
+                    <span class="text-sm font-light text-gray-600 dark:text-zinc-300">Working on it…</span>
                   </div>
                 </div>
               </Transition>
@@ -283,16 +281,41 @@
         <div class="fc-canvas-col flex flex-col overflow-y-auto">
           <div class="flex-1 p-4 sm:p-6 flex flex-col justify-center">
 
-            <!-- Generating animation -->
+            <!-- Generating (fresh plan, nothing to show yet) -->
             <Transition name="plan-reveal">
-              <div v-if="sending" class="flex flex-col items-center justify-center h-full min-h-80">
+              <div v-if="showCookingAnimation" class="flex flex-col items-center justify-center h-full min-h-80">
                 <FoodchatCookingAnimation />
+                <p class="mt-4 text-sm font-light text-stone-500 dark:text-stone-400">Cooking up your plan…</p>
               </div>
             </Transition>
 
-            <!-- Placeholder when no plan yet and not generating -->
+            <!-- Paused — awaiting clarification, no plan yet -->
             <Transition name="plan-reveal">
-              <div v-if="!sending && !hasAnyPlan" class="flex flex-col items-center justify-center h-full min-h-80 text-center px-8">
+              <div v-if="showPausedPanel" class="flex flex-col items-center justify-center h-full min-h-80 text-center px-8">
+                <div class="fc-paused-pot relative mb-6">
+                  <svg width="120" height="96" viewBox="0 0 140 110" fill="none" class="opacity-60 grayscale drop-shadow-sm">
+                    <ellipse cx="70" cy="85" rx="45" ry="10" class="fill-stone-200/50 dark:fill-stone-700/30" />
+                    <ellipse cx="70" cy="75" rx="48" ry="14" class="fill-stone-400 dark:fill-stone-500" />
+                    <path d="M22 50C22 50 22 75 70 75C118 75 118 50 118 50" stroke="currentColor" stroke-width="6" stroke-linecap="round" class="text-stone-300 dark:text-stone-400" fill="none" />
+                    <ellipse cx="70" cy="50" rx="48" ry="14" class="fill-stone-300 dark:fill-stone-400" />
+                    <ellipse cx="70" cy="50" rx="40" ry="10" class="fill-amber-50 dark:fill-stone-600" />
+                    <rect x="115" y="47" width="30" height="6" rx="3" class="fill-stone-300 dark:fill-stone-500" />
+                  </svg>
+                  <div class="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-brandp-100 dark:bg-brandp-950/60 flex items-center justify-center shadow-sm">
+                    <UIcon name="i-lucide-pause" class="w-3.5 h-3.5 text-brandp-500 dark:text-brandp-400" />
+                  </div>
+                </div>
+                <p class="text-base font-light text-gray-500 dark:text-zinc-400 mb-2">Paused — answer the question to continue</p>
+                <div class="flex items-center gap-1.5 text-xs text-brandp-500 dark:text-brandp-400">
+                  <UIcon name="i-lucide-arrow-left" class="w-3.5 h-3.5" />
+                  <span class="font-light">Reply in the chat</span>
+                </div>
+              </div>
+            </Transition>
+
+            <!-- Idle / fallback placeholder -->
+            <Transition name="plan-reveal">
+              <div v-if="showIdlePlaceholder" class="flex flex-col items-center justify-center h-full min-h-80 text-center px-8">
                 <div class="w-16 h-16 rounded-2xl bg-brandp-50 dark:bg-brandp-950/30 flex items-center justify-center mb-4">
                   <UIcon name="i-lucide-calendar-days" class="w-8 h-8 text-brandp-300 dark:text-brandp-700" />
                 </div>
@@ -301,9 +324,16 @@
               </div>
             </Transition>
 
-            <!-- Plan canvas -->
+            <!-- Plan canvas — visible whenever a plan exists (idle, refining,
+                 or awaiting clarification after a prior plan). -->
             <Transition name="plan-reveal">
-              <div v-if="hasAnyPlan && !sending" class="plan-card">
+              <div v-if="hasAnyPlan" class="plan-card relative">
+                <div v-if="sending" class="fc-refining-overlay">
+                  <div class="fc-refining-pill">
+                    <UIcon name="i-lucide-loader-2" class="w-3.5 h-3.5 animate-spin" />
+                    <span>Updating…</span>
+                  </div>
+                </div>
 
                 <!-- ── Canvas toolbar ── -->
                 <div class="flex items-center justify-between mb-4 gap-2 flex-wrap">
@@ -390,29 +420,29 @@
                   <!-- Plan vote -->
                   <div class="mb-5 px-1">
                     <div class="flex items-center gap-2">
-                      <span class="text-xs text-gray-400">{{ t('foodChatHome.canvas.rateThisPlan') }}</span>
-                      <UTooltip :text="t('foodChatHome.tooltips.planWorksWell')">
-                        <button
-                          :class="['fc-feedback-btn', planVotes[displayedMealPlan.id] === 'up' ? 'fc-feedback-active-up' : '']"
-                          @click="votePlan(displayedMealPlan.id, 'up', getMessageIdForPlanIdx(selectedDailyPlanIdx))"
-                        >
-                          <UIcon name="i-lucide-thumbs-up" class="w-3.5 h-3.5" />
-                        </button>
-                      </UTooltip>
-                      <UTooltip :text="t('foodChatHome.tooltips.needsImprovement')">
-                        <button
-                          :class="['fc-feedback-btn', planVotes[displayedMealPlan.id] === 'down' ? 'fc-feedback-active-down' : '']"
-                          @click="votePlan(displayedMealPlan.id, 'down', getMessageIdForPlanIdx(selectedDailyPlanIdx))"
-                        >
-                          <UIcon name="i-lucide-thumbs-down" class="w-3.5 h-3.5" />
-                        </button>
-                      </UTooltip>
-                      <Transition name="chips-fade">
-                        <span v-if="planFeedbackSubmitted[displayedMealPlan.id]" class="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                          <UIcon name="i-lucide-check" class="w-3 h-3" />
-                          {{ t('foodChatHome.chat.feedbackSaved') }}
-                        </span>
-                      </Transition>
+                      <template v-if="!planFeedbackSubmitted[displayedMealPlan.id]">
+                        <span class="text-xs text-gray-400">{{ t('foodChatHome.canvas.rateThisPlan') }}</span>
+                        <UTooltip :text="t('foodChatHome.tooltips.planWorksWell')">
+                          <button
+                            :class="['fc-feedback-btn', planVotes[displayedMealPlan.id] === 'up' ? 'fc-feedback-active-up' : '']"
+                            @click="votePlan(displayedMealPlan.id, 'up', getMessageIdForPlanIdx(selectedDailyPlanIdx))"
+                          >
+                            <UIcon name="i-lucide-thumbs-up" class="w-3.5 h-3.5" />
+                          </button>
+                        </UTooltip>
+                        <UTooltip :text="t('foodChatHome.tooltips.needsImprovement')">
+                          <button
+                            :class="['fc-feedback-btn', planVotes[displayedMealPlan.id] === 'down' ? 'fc-feedback-active-down' : '']"
+                            @click="votePlan(displayedMealPlan.id, 'down', getMessageIdForPlanIdx(selectedDailyPlanIdx))"
+                          >
+                            <UIcon name="i-lucide-thumbs-down" class="w-3.5 h-3.5" />
+                          </button>
+                        </UTooltip>
+                      </template>
+                      <span v-else class="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <UIcon name="i-lucide-check" class="w-3 h-3" />
+                        {{ t('foodChatHome.chat.feedbackSaved') }}
+                      </span>
                     </div>
                     <Transition name="chips-fade">
                       <div v-if="planVotes[displayedMealPlan.id] === 'down' && !planFeedbackSubmitted[displayedMealPlan.id]" class="mt-2 flex items-center gap-2">
@@ -585,6 +615,7 @@ const {
   hasMealPlans,
   hasWeeklyMealPlans,
   hasAnyPlan,
+  clarificationPending,
   currentPlanType,
   hasMoreMessages,
   loadingMoreMessages,
@@ -609,6 +640,21 @@ const messagesScrollRef = ref<HTMLElement | null>(null)
 const inputFocused = ref(false)
 const sessionInputFocused = ref(false)
 const hasSentFirstMessage = ref(false)
+const showEphemeralGenerating = ref(false)
+
+watch(sending, (now, prev) => {
+  if (prev && !now) showEphemeralGenerating.value = false
+})
+
+const showCookingAnimation = computed(() =>
+  sending.value && !hasAnyPlan.value
+)
+const showPausedPanel = computed(() =>
+  !sending.value && clarificationPending.value && !hasAnyPlan.value
+)
+const showIdlePlaceholder = computed(() =>
+  !hasAnyPlan.value && !showCookingAnimation.value && !showPausedPanel.value
+)
 
 // ── Plan votes ──
 const planVotes = reactive<Record<string, 'up' | 'down' | null>>({})
@@ -905,6 +951,7 @@ async function ensureSessionAndSend(content: string) {
     await nextTick()
   }
   if (!activeSession.value) await newSession()
+  showEphemeralGenerating.value = true
   await sendMessage(content)
   scrollToBottom()
 }
@@ -947,19 +994,18 @@ function autoResize(e: Event, refEl: HTMLTextAreaElement | null) {
 
 // ── Feedback ──
 async function votePlan(planId: string, vote: 'up' | 'down', messageId: number | null) {
-  const next = planVotes[planId] === vote ? null : vote
-  planVotes[planId] = next
-  if (next === 'up' && messageId != null) {
+  if (planFeedbackSubmitted[planId]) return
+  planVotes[planId] = vote
+  if (vote === 'up' && messageId != null) {
     try {
       await submitMessageFeedback(messageId, 'up')
       planFeedbackSubmitted[planId] = true
     } catch { /* best-effort */ }
   }
-  if (next === null) planFeedbackSubmitted[planId] = false
 }
 
 async function submitPlanComment(planId: string, messageId: number | null) {
-  if (messageId == null) return
+  if (messageId == null || planFeedbackSubmitted[planId]) return
   const comment = planFeedbackComments[planId]?.trim()
   try {
     await submitMessageFeedback(messageId, 'down', comment || undefined)
@@ -968,6 +1014,7 @@ async function submitPlanComment(planId: string, messageId: number | null) {
 }
 
 async function handleMessageFeedback(messageId: number, rating: 'up' | 'down') {
+  if (feedbackSubmitted[messageId]) return
   messageFeedback[messageId] = rating
   if (rating === 'up') {
     try {
@@ -979,6 +1026,7 @@ async function handleMessageFeedback(messageId: number, rating: 'up' | 'down') {
 }
 
 async function handleFeedbackReason(messageId: number, reason: string) {
+  if (feedbackSubmitted[messageId]) return
   selectedFeedbackReason[messageId] = reason
   try {
     await submitMessageFeedback(messageId, 'down', reason)
@@ -1319,6 +1367,58 @@ onMounted(async () => {
 }
 .fc-bubble-loading {
   padding: 0.75rem 1rem;
+}
+.fc-bubble-generating {
+  max-width: 85%;
+  border-radius: 1.25rem;
+  border-bottom-left-radius: 0.375rem;
+  padding: 0.55rem 0.875rem;
+  background: rgb(244 244 245 / 0.8);
+  border: 1px solid rgb(228 228 231 / 0.6);
+  color: rgb(82 82 91);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.dark .fc-bubble-generating {
+  background: rgb(39 39 42 / 0.5);
+  border-color: rgb(63 63 70 / 0.4);
+  color: rgb(212 212 216);
+}
+
+.fc-refining-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: inherit;
+  background: rgb(255 255 255 / 0.55);
+  backdrop-filter: blur(1px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 1rem;
+  pointer-events: none;
+}
+.dark .fc-refining-overlay {
+  background: rgb(24 24 27 / 0.55);
+}
+.fc-refining-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background: white;
+  border: 1px solid rgb(228 228 231 / 0.8);
+  color: var(--color-brandp-600, #7c3aed);
+  font-size: 0.75rem;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.06);
+}
+.dark .fc-refining-pill {
+  background: rgb(39 39 42);
+  border-color: rgb(63 63 70 / 0.6);
+  color: var(--color-brandp-300);
 }
 
 /* ── Typing dots ── */

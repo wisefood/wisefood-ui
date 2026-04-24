@@ -103,6 +103,19 @@
 
         <!-- Tags + Nutri-Score strip + Sustainability bar -->
         <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2 justify-between">
+          <!-- Dish types -->
+          <div v-if="dishTypeChips.length" class="flex flex-wrap items-center gap-2">
+            <span class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Dish</span>
+            <span
+              v-for="chip in dishTypeChips"
+              :key="`dish-${chip.value}`"
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-brandg-50 dark:bg-brandg-900/40 text-brandg-700 dark:text-brandg-200 border border-brandg-200 dark:border-brandg-700"
+            >
+              <UIcon :name="chip.icon" class="w-3 h-3" />
+              {{ chip.label }}
+            </span>
+          </div>
+
           <!-- Tags -->
           <div v-if="displayRecipeTags.length" class="flex flex-wrap items-center gap-2">
             <span class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Tags</span>
@@ -792,6 +805,7 @@ import type {
   RecipeNutritionProfilingDetail,
   RecipeProfileResult
 } from '~/services/recipeApi'
+import { formatDishTypeLabel, getDishTypeIcon, normalizeDishTypes } from '~/utils/dishTypes'
 
 definePageMeta({
   middleware: ['auth', 'profile']
@@ -970,6 +984,13 @@ const recipeTags = computed<string[]>(() => {
   }
   return Array.from(unique)
 })
+const dishTypeChips = computed(() =>
+  normalizeDishTypes(recipe.value?.dish_types).map(value => ({
+    value,
+    label: formatDishTypeLabel(value),
+    icon: getDishTypeIcon(value)
+  }))
+)
 const displayRecipeTags = computed<Array<{ raw: string; label: string }>>(() => {
   return recipeTags.value.map((raw) => ({
     raw,

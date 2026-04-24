@@ -17,6 +17,7 @@ export function useFoodChat() {
   const hasMealPlans = computed(() => store.hasMealPlans)
   const hasWeeklyMealPlans = computed(() => store.hasWeeklyMealPlans)
   const hasAnyPlan = computed(() => store.hasAnyPlan)
+  const clarificationPending = computed(() => store.clarificationPending)
   const currentPlanType = computed(() => store.currentPlanType)
   const hasMoreMessages = computed(() => store.hasMoreMessages)
   const loadingMoreMessages = computed(() => store.loadingMoreMessages)
@@ -85,6 +86,7 @@ export function useFoodChat() {
     hasMealPlans,
     hasWeeklyMealPlans,
     hasAnyPlan,
+    clarificationPending,
     currentPlanType,
     hasMoreMessages,
     loadingMoreMessages,

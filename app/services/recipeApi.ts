@@ -48,6 +48,7 @@ export interface Recipe {
   region?: string | null
   image_url: string | null
   tags?: Array<string | null> | null
+  dish_types?: string[] | null
   allergens?: Array<string | null> | null
   ingredients: RecipeIngredient[]
   instructions: string[]
@@ -85,6 +86,7 @@ export interface RecipeSearchResult {
   nutri_score_color?: string | null
   sust_score?: number | null
   expert_recipe?: boolean | null
+  dish_types?: string[] | null
 }
 
 export interface RecipeSearchParams {
@@ -94,7 +96,9 @@ export interface RecipeSearchParams {
 
 export type RecipeParamSortBy = 'title_asc' | 'title_desc' | 'time_asc' | 'time_desc' | 'random'
 export type RecipeSource = 'healthyfoods' | 'foodhero' | 'myplate' | 'irish_safefood' | 'recipe1m'
-export type RecipeDishType = 'main-dish' | 'breakfast' | 'desserts' | 'beverages' | 'snacks'
+// Backend-owned taxonomy — treat as an open string set so newly emitted
+// values (e.g. "side-dish") don't require a frontend type bump.
+export type RecipeDishType = string
 
 export interface RecipeParamSearchParams {
   include_ingredients?: string[]
@@ -175,6 +179,14 @@ export interface RecipeSearchResponse {
   }
 }
 
+export type RecipeFacetMap = Record<string, Record<string, number>>
+
+export interface RecipeParamSearchResult {
+  results: RecipeSearchResult[]
+  facets: RecipeFacetMap
+  total: number
+}
+
 export interface RecipeAutocompleteResponse {
   suggestions?: string[] | Record<string, string> | null
 }
@@ -249,7 +261,11 @@ export interface RecipeProfileResult {
   allergens?: string[]
 }
 
-type RecipeSearchPayload = RecipeSearchResult[] | { results?: RecipeSearchResult[] } | null | undefined
+type RecipeSearchPayload =
+  | RecipeSearchResult[]
+  | { results?: RecipeSearchResult[]; facets?: RecipeFacetMap; total?: number }
+  | null
+  | undefined
 type RecipeApiTransport = 'local-proxy' | 'wisefood-rest'
 
 // ============================================================================
@@ -388,7 +404,8 @@ class RecipeApiService {
         if (params.exclude_allergens?.length) {
           paramSearchParams.exclude_allergens = params.exclude_allergens
         }
-        return await this.searchRecipesByParams({ ...paramSearchParams, limit: paramSearchParams.limit ?? 12 })
+        const fallback = await this.searchRecipesByParams({ ...paramSearchParams, limit: paramSearchParams.limit ?? 12 })
+        return fallback.results
       }
 
       const transport = this.resolveTransport()
@@ -411,20 +428,21 @@ class RecipeApiService {
   }
 
   /**
-   * Search for recipes using deterministic filters
+   * Search for recipes using deterministic filters.
+   * Always requests facets so the UI gets an accurate filtered `total` for pagination.
    */
-  async searchRecipesByParams(params: RecipeParamSearchParams): Promise<RecipeSearchResult[]> {
+  async searchRecipesByParams(params: RecipeParamSearchParams): Promise<RecipeParamSearchResult> {
     try {
       const transport = this.resolveTransport()
       const data = await this.fetchWithTimeout<RecipeSearchPayload>(
         `${this.getRecipeBasePath(transport)}/param_search`,
         'POST',
-        params,
+        { include_facets: true, ...params },
         SEARCH_TIMEOUT,
         transport
       )
 
-      return this.normalizeSearchResults(data)
+      return this.normalizeParamSearchResult(data)
     } catch (error) {
       throw this.handleError(error, 'Failed to search recipes with filters')
     }
@@ -432,13 +450,16 @@ class RecipeApiService {
 
   /**
    * Search recipes against the WiseFood REST API for console management.
+   * For filtered param_search calls this returns the full `{ results, facets, total }` shape;
+   * the natural-language `/search` path has no filtered total, so facets are empty and total
+   * falls back to the number of returned results.
    */
   async searchManagedRecipes(
     query: string,
     limit: number = 25,
     offset: number = 0,
     filters: Pick<RecipeParamSearchParams, 'exclude_allergens' | 'sources' | 'dish_types' | 'sort_by'> = {}
-  ): Promise<RecipeSearchResult[]> {
+  ): Promise<RecipeParamSearchResult> {
     const safeLimit = Math.max(1, Math.trunc(limit || 25))
     const safeOffset = Math.max(0, Math.trunc(offset || 0))
     const normalizedQuery = String(query || '').trim()
@@ -454,12 +475,12 @@ class RecipeApiService {
         const data = await this.fetchWithTimeout<RecipeSearchPayload>(
           `${this.getRecipeBasePath('wisefood-rest')}/param_search`,
           'POST',
-          { ...filterPayload, limit: safeLimit, offset: safeOffset },
+          { include_facets: true, ...filterPayload, limit: safeLimit, offset: safeOffset },
           SEARCH_TIMEOUT,
           'wisefood-rest'
         )
 
-        return this.normalizeSearchResults(data)
+        return this.normalizeParamSearchResult(data)
       }
 
       const data = await this.fetchWithTimeout<RecipeSearchPayload>(
@@ -473,7 +494,8 @@ class RecipeApiService {
         'wisefood-rest'
       )
 
-      return this.normalizeSearchResults(data)
+      const results = this.normalizeSearchResults(data)
+      return { results, facets: {}, total: results.length }
     } catch (error) {
       throw this.handleError(error, 'Failed to search recipes')
     }
@@ -624,6 +646,22 @@ class RecipeApiService {
     }
 
     return []
+  }
+
+  private normalizeParamSearchResult(data: RecipeSearchPayload): RecipeParamSearchResult {
+    const results = this.normalizeSearchResults(data)
+
+    if (Array.isArray(data) || !data) {
+      return { results, facets: {}, total: results.length }
+    }
+
+    const rawFacets = (data.facets ?? {}) as RecipeFacetMap
+    const rawTotal = data.total
+    const total = typeof rawTotal === 'number' && Number.isFinite(rawTotal) && rawTotal >= 0
+      ? Math.trunc(rawTotal)
+      : results.length
+
+    return { results, facets: rawFacets, total }
   }
 
   /**
