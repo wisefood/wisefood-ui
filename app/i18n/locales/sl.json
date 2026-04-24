@@ -511,6 +511,14 @@
       "failedToGetQaResponse": "Pridobivanje odgovora FoodScholar QA ni uspelo.",
       "failedToSubmitFeedback": "Pošiljanje povratne informacije ni uspelo."
     },
+    "library": {
+      "articleStats": {
+        "articles": "Članki",
+        "journals": "Revije",
+        "topics": "Teme",
+        "rules": "Pravila"
+      }
+    },
     "guidesAtlas": {
       "badge": "Guides Atlas",
       "title": "Browse dietary guides by country, source, and rule",
@@ -868,7 +876,8 @@
     "card": {
       "readArticle": "Preberi članek",
       "unknownAuthor": "Neznani avtor",
-      "and": "in"
+      "and": "in",
+      "moreTopics": "+{count} več"
     }
   },
   "foodScholarArticle": {

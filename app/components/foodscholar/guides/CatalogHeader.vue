@@ -17,10 +17,11 @@
           </UBadge>
 
           <div class="space-y-2">
-            <h1 class="text-3xl font-claude text-gray-900 dark:text-white sm:text-4xl">
+            <div v-if="loading" class="h-9 w-2/3 max-w-md animate-pulse rounded-lg bg-gray-200 dark:bg-zinc-700 sm:h-10" />
+            <h1 v-else class="text-3xl font-claude text-gray-900 dark:text-white sm:text-4xl">
               {{ title }}
             </h1>
-            <p class="max-w-3xl text-sm leading-6 text-gray-600 dark:text-gray-300 sm:text-base">
+            <p v-if="description" class="max-w-3xl text-sm leading-6 text-gray-600 dark:text-gray-300 sm:text-base">
               {{ description }}
             </p>
           </div>
@@ -83,6 +84,7 @@ interface Props {
   helperText?: string
   badge?: string | null
   submitting?: boolean
+  loading?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
@@ -90,7 +92,8 @@ withDefaults(defineProps<Props>(), {
   placeholder: 'Search dietary guides, topics, or rules',
   helperText: 'Search can surface both guide records and guideline rules.',
   badge: null,
-  submitting: false
+  submitting: false,
+  loading: false
 })
 
 const emit = defineEmits<{

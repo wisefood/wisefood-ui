@@ -512,6 +512,14 @@
       "failedToGetQaResponse": "Failed to get a QA response from FoodScholar.",
       "failedToSubmitFeedback": "Failed to submit feedback."
     },
+    "library": {
+      "articleStats": {
+        "articles": "Articles",
+        "journals": "Journals",
+        "topics": "Topics",
+        "rules": "Rules"
+      }
+    },
     "guidesAtlas": {
       "badge": "Guides Atlas",
       "title": "Browse dietary guides by country, source, and rule",
@@ -869,7 +877,8 @@
     "card": {
       "readArticle": "Read Article",
       "unknownAuthor": "Unknown Author",
-      "and": "and"
+      "and": "and",
+      "moreTopics": "+{count} more"
     }
   },
   "foodScholarArticle": {

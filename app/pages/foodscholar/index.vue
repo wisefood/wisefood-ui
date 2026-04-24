@@ -56,7 +56,7 @@
         <div class="w-full max-w-2xl">
           <div class="mb-8 text-center">
             <h2 class="text-3xl font-claude text-gray-900 dark:text-white mb-2 inline-flex items-center justify-center gap-2 flex-wrap">
-              <img src="/fig.png" alt="" aria-hidden="true" class="inline-block h-[1.2em] w-auto align-[-0.05em] select-none" draggable="false" />
+              <img ref="figImgRef" src="/fig.png" alt="" aria-hidden="true" class="fig-mark inline-block h-[1.2em] w-auto align-[-0.05em] select-none cursor-pointer" draggable="false" @load="onFigLoad" @mouseenter="replayFigTilt" :class="{ 'fig-mark--animate': figLoaded }" />
               <span>{{ qaHeading }}</span>
             </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -848,7 +848,7 @@
 
         <!-- Articles by topic -->
         <section>
-          <div class="flex items-center justify-between gap-4 mb-6">
+          <div class="flex items-center justify-between gap-4 mb-4">
             <div>
               <p class="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">Articles</p>
               <h2 class="font-claude text-2xl text-gray-900 dark:text-white">Browse by topic</h2>
@@ -861,6 +861,24 @@
               Browse articles
             </NuxtLink>
           </div>
+
+          <dl
+            v-if="!articlesLoading && (libraryTotalArticles || libraryTotalJournals || libraryTotalTopics)"
+            class="grid grid-cols-3 gap-3 border-b border-gray-100 dark:border-zinc-800 pb-4 mb-6 max-w-md"
+          >
+            <div>
+              <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">{{ t('foodScholarHome.library.articleStats.articles') }}</dt>
+              <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalArticles > 0 ? libraryTotalArticles.toLocaleString() : '—' }}</dd>
+            </div>
+            <div>
+              <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">{{ t('foodScholarHome.library.articleStats.journals') }}</dt>
+              <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalJournals > 0 ? libraryTotalJournals.toLocaleString() : '—' }}</dd>
+            </div>
+            <div>
+              <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">{{ t('foodScholarHome.library.articleStats.topics') }}</dt>
+              <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalTopics > 0 ? libraryTotalTopics.toLocaleString() : '—' }}</dd>
+            </div>
+          </dl>
 
           <!-- Loading -->
           <div v-if="articlesLoading" class="space-y-4">
@@ -901,6 +919,8 @@
                   :article="article"
                   :index="i"
                   :fade="false"
+                  :selected-topic="librarySelectedTopic === CATEGORY_ALL ? null : librarySelectedTopic"
+                  :hide-abstract="true"
                 />
               </div>
 
@@ -959,7 +979,7 @@
                 </div>
                 <div>
                   <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">Rules</dt>
-                  <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalGuidelines > 0 ? libraryTotalGuidelines.toLocaleString() : '—' }}</dd>
+                  <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryRulesTotal > 0 ? libraryRulesTotal.toLocaleString() : (libraryTotalGuidelines > 0 ? libraryTotalGuidelines.toLocaleString() : '—') }}</dd>
                 </div>
               </dl>
 
@@ -1179,6 +1199,7 @@ const libraryMapLoaded = ref(false)
 const libraryMapError = ref<string | null>(null)
 const libraryRegionSummaries = ref<GuidesCatalogRegionSummary[]>([])
 const librarySelectedRegion = ref<string | null>(null)
+const libraryRulesTotal = ref(0)
 
 const LIBRARY_MAP_EXTRA = new Set(['RS']) // Serbia included even though not EU
 const libraryEuRegions = computed(() =>
@@ -1208,6 +1229,16 @@ const libraryTopicArticlesLoading = ref(false)
 const libraryTopicFacetsLoaded = ref(false)
 
 const libraryArticleTopics = computed(() => popularArticleTopics.value.slice(0, 8))
+
+const libraryTotalArticles = computed(() => allArticlesTotal.value)
+const libraryTotalJournals = computed(() => {
+  const venues = facets.value.venue || []
+  return venues.filter(v => v?.value && String(v.value).trim()).length
+})
+const libraryTotalTopics = computed(() => {
+  const topics = facets.value.topics || []
+  return topics.filter(t => t?.value && String(t.value).trim()).length
+})
 
 const libraryFilteredArticles = computed(() => {
   const topic = librarySelectedTopic.value
@@ -1266,6 +1297,7 @@ async function loadLibraryMap() {
       guideRes.facets.region || [],
       guidelineRes.facets.region || []
     )
+    libraryRulesTotal.value = guidelineRes.total || 0
     libraryMapLoaded.value = true
   } catch {
     libraryMapError.value = 'Dietary guides data could not be loaded.'
@@ -1667,10 +1699,25 @@ const selectedPopularTopic = ref(CATEGORY_ALL)
 const articlesLoading = ref(false)
 const articlesError = ref<string | null>(null)
 const allArticles = ref<HomeArticle[]>([])
+const allArticlesTotal = ref(0)
 const facets = ref<Record<string, Array<{ value: string, count: number }>>>({})
 
 const chatQuery = ref('')
 const composerFocused = ref(false)
+const figLoaded = ref(false)
+const figImgRef = ref<HTMLImageElement | null>(null)
+let figLastReplayAt = 0
+const onFigLoad = () => { figLoaded.value = true }
+const replayFigTilt = () => {
+  const el = figImgRef.value
+  if (!el) return
+  const now = Date.now()
+  if (now - figLastReplayAt < 3000) return
+  figLastReplayAt = now
+  el.classList.remove('fig-mark--animate', 'fig-mark--replay')
+  void el.offsetWidth
+  el.classList.add('fig-mark--replay')
+}
 const asking = ref(false)
 const qaError = ref<string | null>(null)
 const qaResult = ref<QaAskResult | null>(null)
@@ -2057,13 +2104,14 @@ const loadPopularArticles = async () => {
       offset: 0,
       sort: 'created_at desc',
       fl: ['id', 'urn', 'title', 'abstract', 'description', 'content', 'authors', 'tags', 'ai_tags', 'topics', 'venue', 'publication_year', 'category', 'ai_category'],
-      fields: ['category', 'ai_category', 'tags', 'ai_tags', 'topics'],
-      facet_limit: 50
+      fields: ['category', 'ai_category', 'tags', 'ai_tags', 'topics', 'venue'],
+      facet_limit: 200
     })
 
     const results = response.result.results || []
 
     allArticles.value = results.map(mapArticleToHome)
+    allArticlesTotal.value = response.result.total || 0
     facets.value = (response.result.facets || {}) as Record<string, Array<{ value: string, count: number }>>
   } catch (err: unknown) {
     articlesError.value = getErrorMessage(err, t('foodScholarHome.errors.failedToLoadPopularArticles'))
@@ -2625,6 +2673,10 @@ onMounted(async () => {
 
   setupObserver()
   document.addEventListener('mousedown', handleLibraryClickOutside)
+
+  if (figImgRef.value?.complete && figImgRef.value.naturalWidth > 0) {
+    figLoaded.value = true
+  }
 })
 
 onUnmounted(() => {
@@ -2887,5 +2939,31 @@ onUnmounted(() => {
 .library-map-wrap :deep([class*="min-h-"]) {
   min-height: unset !important;
   height: 100%;
+}
+
+.fig-mark {
+  transform-origin: 50% 90%;
+  will-change: transform;
+}
+
+.fig-mark--animate {
+  animation: fig-tilt 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) 120ms 1 both;
+}
+
+.fig-mark.fig-mark--replay {
+  animation: fig-tilt 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) 0s 1 both;
+}
+
+@keyframes fig-tilt {
+  0%   { transform: rotate(0deg) scale(0.96); }
+  25%  { transform: rotate(-9deg) scale(1.02); }
+  55%  { transform: rotate(7deg) scale(1.01); }
+  80%  { transform: rotate(-3deg) scale(1); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fig-mark--animate,
+  .fig-mark--replay { animation: none; }
 }
 </style>

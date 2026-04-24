@@ -177,7 +177,9 @@ const dragState = reactive({
   startClientPoint: null as { x: number, y: number } | null,
   startViewBox: null as ViewBoxRect | null,
   pressedRegionCode: null as string | null,
-  moved: false
+  moved: false,
+  scaleX: 1,
+  scaleY: 1
 })
 
 let baseViewBox: ViewBoxRect | null = null
@@ -185,6 +187,8 @@ let boundsViewBox: ViewBoxRect | null = null
 let currentViewBox: ViewBoxRect | null = null
 let animationFrame = 0
 let resizeObserver: ResizeObserver | null = null
+let dragRafId = 0
+let pendingDragRect: ViewBoxRect | null = null
 
 async function loadPreparedSvgMarkup() {
   if (preparedSvgMarkup) {
@@ -582,41 +586,49 @@ function handlePointerDown(event: PointerEvent) {
     return
   }
 
+  const frameRect = frameRef.value.getBoundingClientRect()
+  const scaleX = frameRect.width > 0 ? currentViewBox.width / frameRect.width : 1
+  const scaleY = frameRect.height > 0 ? currentViewBox.height / frameRect.height : 1
+
   dragState.pointerId = event.pointerId
   dragState.startPoint = { x: point.x, y: point.y }
   dragState.startClientPoint = { x: event.clientX, y: event.clientY }
   dragState.startViewBox = cloneRect(currentViewBox)
   dragState.pressedRegionCode = findRegionCodeFromEventTarget(event.target)
   dragState.moved = false
+  dragState.scaleX = scaleX
+  dragState.scaleY = scaleY
   hideTooltip()
   frameRef.value.setPointerCapture(event.pointerId)
 }
 
 function handlePointerMove(event: PointerEvent) {
-  if (dragState.pointerId === event.pointerId && dragState.startPoint && dragState.startClientPoint && dragState.startViewBox) {
-    const point = getSvgPointFromClient(event.clientX, event.clientY)
-    if (!point) {
-      return
-    }
-
-    const deltaX = dragState.startPoint.x - point.x
-    const deltaY = dragState.startPoint.y - point.y
-    const movement = Math.hypot(
-      event.clientX - dragState.startClientPoint.x,
-      event.clientY - dragState.startClientPoint.y
-    )
+  if (dragState.pointerId === event.pointerId && dragState.startClientPoint && dragState.startViewBox) {
+    const clientDx = event.clientX - dragState.startClientPoint.x
+    const clientDy = event.clientY - dragState.startClientPoint.y
+    const movement = Math.hypot(clientDx, clientDy)
 
     if (movement > 5) {
       dragState.moved = true
     }
 
-    stopAnimation()
-    applyViewBox(clampViewBox({
-      x: dragState.startViewBox.x + deltaX,
-      y: dragState.startViewBox.y + deltaY,
+    pendingDragRect = clampViewBox({
+      x: dragState.startViewBox.x - clientDx * dragState.scaleX,
+      y: dragState.startViewBox.y - clientDy * dragState.scaleY,
       width: dragState.startViewBox.width,
       height: dragState.startViewBox.height
-    }))
+    })
+
+    if (!dragRafId) {
+      dragRafId = requestAnimationFrame(() => {
+        dragRafId = 0
+        if (pendingDragRect) {
+          stopAnimation()
+          applyViewBox(pendingDragRect)
+          pendingDragRect = null
+        }
+      })
+    }
     return
   }
 
@@ -636,6 +648,15 @@ function handlePointerUp(event: PointerEvent) {
 
   const pressedRegionCode = dragState.pressedRegionCode
   const shouldSelect = !dragState.moved && Boolean(pressedRegionCode && regionByCode.value[pressedRegionCode])
+
+  if (dragRafId) {
+    cancelAnimationFrame(dragRafId)
+    dragRafId = 0
+  }
+  if (pendingDragRect) {
+    applyViewBox(pendingDragRect)
+    pendingDragRect = null
+  }
 
   if (frameRef.value.hasPointerCapture(event.pointerId)) {
     frameRef.value.releasePointerCapture(event.pointerId)
@@ -688,6 +709,11 @@ function resetView() {
 
 function destroyMap() {
   stopAnimation()
+  if (dragRafId) {
+    cancelAnimationFrame(dragRafId)
+    dragRafId = 0
+  }
+  pendingDragRect = null
   hideTooltip()
   countryPaths.clear()
   svgElement.value = null

@@ -10,15 +10,27 @@
         {{ props.article.ai_category }}
       </span>
     </div>
-    <div v-if="articleTopics.length" class="mb-2 flex flex-wrap gap-1">
+    <div v-if="visibleTopics.length" class="mb-2 flex flex-wrap gap-1">
       <span
-        v-for="topic in articleTopics"
+        v-for="topic in visibleTopics"
         :key="topic"
         class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800"
       >
         <UIcon name="i-lucide-compass" class="w-3 h-3" />
         {{ topic }}
       </span>
+      <UTooltip
+        v-if="hiddenTopics.length"
+        :text="hiddenTopics.join(' · ')"
+        :delay-duration="100"
+      >
+        <span
+          class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 border border-gray-200 dark:border-zinc-600 cursor-help"
+          @click.prevent.stop
+        >
+          {{ t('foodScholarCatalog.card.moreTopics', { count: hiddenTopics.length }) }}
+        </span>
+      </UTooltip>
     </div>
 
     <!-- Title -->
@@ -43,9 +55,10 @@
     </div>
 
     <!-- Abstract/Excerpt with truncation -->
-    <p class="text-gray-600 dark:text-gray-300 font-light leading-relaxed mb-3 line-clamp-2 grow">
+    <p v-if="!props.hideAbstract" class="text-gray-600 dark:text-gray-300 font-light leading-relaxed mb-3 line-clamp-2 grow">
       {{ props.article.excerpt }}
     </p>
+    <div v-else class="grow" />
 
     <!-- Tags -->
     <div v-if="displayTags.length > 0" class="flex flex-wrap gap-1.5 mb-3">
@@ -91,10 +104,12 @@ interface Props {
   article: Article
   index?: number
   fade?: boolean
+  selectedTopic?: string | null
+  hideAbstract?: boolean
 }
 
 // Provide defaults: index = 0, fade = true
-const props = withDefaults(defineProps<Props>(), { index: 0, fade: true })
+const props = withDefaults(defineProps<Props>(), { index: 0, fade: true, selectedTopic: null, hideAbstract: false })
 
 // Format authors for display
 const formatAuthors = (authors: string[]): string => {
@@ -120,4 +135,18 @@ const displayTags = computed(() => {
 const articleTopics = computed(() =>
   (props.article.topics || []).filter(t => typeof t === 'string' && t.trim())
 )
+
+const visibleTopics = computed(() => {
+  const topics = articleTopics.value
+  const selected = props.selectedTopic?.trim()
+  if (!selected) return topics
+  const match = topics.find(topic => topic.toLowerCase() === selected.toLowerCase())
+  return match ? [match] : topics.slice(0, 1)
+})
+
+const hiddenTopics = computed(() => {
+  const topics = articleTopics.value
+  const visible = new Set(visibleTopics.value)
+  return topics.filter(topic => !visible.has(topic))
+})
 </script>

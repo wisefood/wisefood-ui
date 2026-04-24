@@ -511,6 +511,14 @@
       "failedToGetQaResponse": "Nem sikerült választ kapni a FoodScholar QA-tól.",
       "failedToSubmitFeedback": "A visszajelzés küldése sikertelen."
     },
+    "library": {
+      "articleStats": {
+        "articles": "Cikkek",
+        "journals": "Folyóiratok",
+        "topics": "Témák",
+        "rules": "Szabályok"
+      }
+    },
     "guidesAtlas": {
       "badge": "Guides Atlas",
       "title": "Browse dietary guides by country, source, and rule",
@@ -868,7 +876,8 @@
     "card": {
       "readArticle": "Cikk elolvasása",
       "unknownAuthor": "Ismeretlen szerző",
-      "and": "és"
+      "and": "és",
+      "moreTopics": "+{count} további"
     }
   },
   "foodScholarArticle": {

@@ -8,7 +8,7 @@
       brand-title="FoodScholar"
       brand-lead="Country and region explorers combine guide publications with searchable dietary rules."
       section-title="Country Explorer"
-      :section-subtitle="regionTitle"
+      :section-subtitle="bootstrapping ? '' : regionTitle"
     />
 
     <UPage class="mx-auto max-w-7xl px-4 pt-3 pb-6 sm:px-6 lg:px-8">
@@ -53,16 +53,26 @@
             description=""
             placeholder="Search this country’s guides or guideline rules"
             helper-text="Filters persist in the URL so this view stays shareable."
+            :loading="bootstrapping"
           >
-            <UBadge color="neutral" variant="outline">
-              {{ totalRegionGuides.toLocaleString() }} guides
-            </UBadge>
-            <UBadge v-if="totalRegionGuidelines === null || totalRegionGuidelines > 0" color="neutral" variant="outline">
-              {{ totalRegionGuidelines === null ? 'Rules indexed live' : `${totalRegionGuidelines.toLocaleString()} rules` }}
-            </UBadge>
-            <UBadge v-if="artifactTotal > 0" color="neutral" variant="outline">
-              {{ artifactTotal.toLocaleString() }} artifacts
-            </UBadge>
+            <template v-if="bootstrapping || overviewLoading">
+              <div
+                v-for="index in 3"
+                :key="`header-badge-loading-${index}`"
+                class="h-6 w-24 animate-pulse rounded-full bg-gray-200 dark:bg-zinc-700"
+              />
+            </template>
+            <template v-else>
+              <UBadge color="neutral" variant="outline">
+                {{ totalRegionGuides.toLocaleString() }} guides
+              </UBadge>
+              <UBadge v-if="totalRegionGuidelines === null || totalRegionGuidelines > 0" color="neutral" variant="outline">
+                {{ totalRegionGuidelines === null ? 'Rules indexed live' : `${totalRegionGuidelines.toLocaleString()} rules` }}
+              </UBadge>
+              <UBadge v-if="artifactTotal > 0" color="neutral" variant="outline">
+                {{ artifactTotal.toLocaleString() }} artifacts
+              </UBadge>
+            </template>
           </CatalogHeader>
 
           <UTabs
@@ -83,7 +93,25 @@
                 />
 
                 <div v-else class="space-y-6">
-                  <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <section v-if="bootstrapping || (overviewLoading && !regionGuidesAll.length)" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <UCard
+                      v-for="index in 4"
+                      :key="`stat-loading-${index}`"
+                      :ui="{ body: 'p-5' }"
+                      class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
+                    >
+                      <div class="flex items-start justify-between gap-3">
+                        <div class="flex-1 space-y-3 animate-pulse">
+                          <div class="h-3 w-24 rounded bg-gray-200 dark:bg-zinc-700" />
+                          <div class="h-7 w-20 rounded bg-gray-200 dark:bg-zinc-700" />
+                          <div class="h-3 w-32 rounded bg-gray-200 dark:bg-zinc-700" />
+                        </div>
+                        <div class="h-11 w-11 animate-pulse rounded-2xl bg-gray-200 dark:bg-zinc-700" />
+                      </div>
+                    </UCard>
+                  </section>
+
+                  <section v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <UCard
                       v-for="stat in regionStats"
                       :key="stat.label"
@@ -376,6 +404,7 @@ const regionParam = computed(() => String(route.params.countryOrRegion || ''))
 const availableRegions = ref<string[]>([])
 const resolvedRegion = ref('')
 const pageError = ref<string | null>(null)
+const bootstrapping = ref(true)
 
 const overviewLoading = ref(false)
 const overviewError = ref<string | null>(null)
@@ -855,6 +884,7 @@ async function loadGuidelines() {
 
 async function bootstrapRegion() {
   pageError.value = null
+  bootstrapping.value = true
   clearScheduledRefresh()
 
   try {
@@ -909,6 +939,8 @@ async function bootstrapRegion() {
     regionGuidesAll.value = []
     guides.value = []
     guidelines.value = []
+  } finally {
+    bootstrapping.value = false
   }
 }
 
