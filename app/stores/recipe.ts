@@ -575,6 +575,8 @@ export const useRecipeStore = defineStore('recipe', {
         const stored = localStorage.getItem('recipe-sources')
         if (stored) {
           try { this.selectedSources = JSON.parse(stored) } catch { this.selectedSources = [] }
+        } else {
+          this.selectedSources = ['healthyfoods', 'irish_safefood', 'foodhero']
         }
       }
     },

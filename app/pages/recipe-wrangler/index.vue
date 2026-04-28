@@ -135,7 +135,7 @@
             />
           </div>
 
-          <div class="mt-4 flex items-center gap-3">
+          <div class="mt-4 flex items-center gap-3 flex-wrap">
             <button
               type="button"
               @click="runRecipeAnalysis"
@@ -146,6 +146,24 @@
               <UIcon v-else name="i-lucide-flask-conical" class="w-4 h-4" />
               <span>{{ analysisLoading ? 'Analyzing...' : 'Analyze Recipe' }}</span>
             </button>
+
+            <div class="flex items-center rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/40 p-1 gap-1">
+              <button
+                v-for="region in ANALYSIS_REGIONS"
+                :key="region"
+                type="button"
+                :disabled="analysisLoading"
+                @click="analysisRegion = region"
+                :class="[
+                  'px-3 py-1 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50',
+                  analysisRegion === region
+                    ? 'bg-brandg-500 text-white'
+                    : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                ]"
+              >
+                {{ region }}
+              </button>
+            </div>
 
             <button
               v-if="analysisResult"
@@ -662,7 +680,8 @@ const activeTab = ref<'search' | 'analyze'>('search')
 const hasSearchAttempted = ref(false)
 const hasUserTriggeredSearch = ref(false)
 const analysisInput = ref('')
-const analysisRegion = ref('IE')
+const ANALYSIS_REGIONS = ['IE', 'HU', 'US'] as const
+const analysisRegion = ref<typeof ANALYSIS_REGIONS[number]>('IE')
 const analysisLoading = ref(false)
 const analysisError = ref<string | null>(null)
 const analysisResult = ref<RecipeProfileResult | null>(null)
@@ -1207,8 +1226,8 @@ onMounted(async () => {
     try {
       await householdStore.initialize()
       const userRegion = String(householdStore.currentHousehold?.region || '').trim().toUpperCase()
-      if (userRegion) {
-        analysisRegion.value = userRegion
+      if ((ANALYSIS_REGIONS as readonly string[]).includes(userRegion)) {
+        analysisRegion.value = userRegion as typeof ANALYSIS_REGIONS[number]
       }
     } catch (err) {
       console.error('Failed to load household region:', err)

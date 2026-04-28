@@ -672,7 +672,7 @@ class RecipeApiService {
       throw new Error('Recipe text is required for analysis')
     }
     const normalizedRegion = String(region || 'IE').trim().toUpperCase()
-    const safeRegion = (normalizedRegion === 'IE' || normalizedRegion === 'US')
+    const safeRegion = (normalizedRegion === 'IE' || normalizedRegion === 'HU' || normalizedRegion === 'US')
       ? normalizedRegion
       : 'US'
     try {

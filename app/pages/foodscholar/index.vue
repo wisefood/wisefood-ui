@@ -604,197 +604,99 @@
                 </button>
                 <button
                   type="button"
-                  :disabled="!librarySearchQuery.trim() || librarySearching"
+                  :disabled="!librarySearchQuery.trim()"
                   class="absolute right-2 px-2 py-1 rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors"
-                  @mousedown.prevent="runLibrarySearch"
+                  @mousedown.prevent="navigateToCatalogWithQuery"
                 >
-                  <UIcon v-if="librarySearching" name="i-lucide-loader-2" class="w-3.5 h-3.5 animate-spin" />
-                  <UIcon v-else name="i-lucide-arrow-right" class="w-3.5 h-3.5" />
+                  <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              <!-- Dropdown: autocomplete suggestions + full search results -->
+              <!-- Dropdown: autocomplete suggestions -->
               <div
-                v-if="libraryDropdownOpen && (libraryAutocompleting || libraryAutocompleteSuggestions.articles.length > 0 || libraryAutocompleteSuggestions.guides.length > 0 || libraryAutocompleteSuggestions.textbooks.length > 0 || librarySearchResults !== null)"
+                v-if="libraryDropdownOpen && (libraryAutocompleting || libraryAutocompleteSuggestions.articles.length > 0 || libraryAutocompleteSuggestions.guides.length > 0 || libraryAutocompleteSuggestions.textbooks.length > 0)"
                 class="absolute left-0 right-0 mt-2 z-30 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl overflow-hidden"
               >
-                <!-- Autocomplete suggestions (while typing, before full search) -->
-                <template v-if="librarySearchResults === null">
-                  <div v-if="libraryAutocompleting" class="px-4 py-3 text-sm text-gray-400 dark:text-zinc-500">
-                    Looking up suggestions…
-                  </div>
-                  <template v-else>
-                    <!-- Article suggestions -->
-                    <div v-if="libraryAutocompleteSuggestions.articles.length">
-                      <div class="px-4 pt-3 pb-1.5">
-                        <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Articles</span>
-                      </div>
-                      <NuxtLink
-                        v-for="(suggestion, i) in libraryAutocompleteSuggestions.articles"
-                        :key="suggestion.urn"
-                        :to="`/foodscholar/${suggestion.urn}`"
-                        :class="[
-                          'flex items-start gap-3 px-4 py-2.5 transition-colors',
-                          libraryActiveIndex === i ? 'bg-brand-50 dark:bg-brand-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
-                        ]"
-                        @click="closeLibraryDropdown"
-                        @mouseenter="libraryActiveIndex = i"
-                      >
-                        <UIcon name="i-lucide-file-text" class="w-4 h-4 text-brand-400 dark:text-brand-500 shrink-0 mt-0.5" />
-                        <div class="min-w-0">
-                          <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ suggestion.title }}</p>
-                          <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">{{ suggestion.venue || suggestion.ai_category || '' }}</p>
-                        </div>
-                      </NuxtLink>
-                    </div>
-
-                    <!-- Guide suggestions -->
-                    <div v-if="libraryAutocompleteSuggestions.guides.length" :class="libraryAutocompleteSuggestions.articles.length ? 'border-t border-gray-100 dark:border-zinc-800' : ''">
-                      <div class="px-4 pt-3 pb-1.5">
-                        <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Dietary Guides</span>
-                      </div>
-                      <NuxtLink
-                        v-for="(suggestion, i) in libraryAutocompleteSuggestions.guides"
-                        :key="suggestion.urn"
-                        :to="`/foodscholar/catalog/guides/${suggestion.urn}`"
-                        :class="[
-                          'flex items-start gap-3 px-4 py-2.5 transition-colors',
-                          libraryActiveIndex === libraryAutocompleteSuggestions.articles.length + i ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
-                        ]"
-                        @click="closeLibraryDropdown"
-                        @mouseenter="libraryActiveIndex = libraryAutocompleteSuggestions.articles.length + i"
-                      >
-                        <UIcon name="i-lucide-map" class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                        <div class="min-w-0">
-                          <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ suggestion.title }}</p>
-                          <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">{{ suggestion.region || '' }}</p>
-                        </div>
-                      </NuxtLink>
-                    </div>
-
-                    <!-- Textbook suggestions -->
-                    <div
-                      v-if="libraryAutocompleteSuggestions.textbooks.length"
-                      :class="(libraryAutocompleteSuggestions.articles.length || libraryAutocompleteSuggestions.guides.length) ? 'border-t border-gray-100 dark:border-zinc-800' : ''"
-                    >
-                      <div class="px-4 pt-3 pb-1.5 flex items-center justify-between">
-                        <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Textbooks</span>
-                      </div>
-                      <NuxtLink
-                        v-for="(suggestion, i) in libraryAutocompleteSuggestions.textbooks"
-                        :key="suggestion.urn"
-                        :to="`/foodscholar/textbooks/${suggestion.urn}`"
-                        :class="[
-                          'flex items-start gap-3 px-4 py-2.5 transition-colors',
-                          libraryActiveIndex === libraryAutocompleteSuggestions.articles.length + libraryAutocompleteSuggestions.guides.length + i ? 'bg-amber-50 dark:bg-amber-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
-                        ]"
-                        @click="closeLibraryDropdown"
-                        @mouseenter="libraryActiveIndex = libraryAutocompleteSuggestions.articles.length + libraryAutocompleteSuggestions.guides.length + i"
-                      >
-                        <UIcon name="i-lucide-book-open" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                        <div class="min-w-0">
-                          <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ suggestion.title }}</p>
-                          <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">
-                            {{ [suggestion.authors?.join(', '), suggestion.publication_year].filter(Boolean).join(' · ') || 'Textbook' }}
-                          </p>
-                        </div>
-                      </NuxtLink>
-                    </div>
-
-                  </template>
-                </template>
-
-                <!-- Full search results (after Enter / clicking search) -->
+                <div v-if="libraryAutocompleting" class="px-4 py-3 text-sm text-gray-400 dark:text-zinc-500">
+                  Looking up suggestions…
+                </div>
                 <template v-else>
-                  <div v-if="librarySearching" class="px-4 py-6 text-center text-sm text-gray-400 dark:text-zinc-500">
-                    Searching…
-                  </div>
-                  <template v-else>
-                    <div v-if="!librarySearchResults.articles.length && !librarySearchResults.guides.length && !librarySearchResults.textbooks.length" class="px-4 py-6 text-center text-sm text-gray-400 dark:text-zinc-500">
-                      No results for <em>"{{ librarySearchResults.query }}"</em>
+                  <!-- Article suggestions -->
+                  <div v-if="libraryAutocompleteSuggestions.articles.length">
+                    <div class="px-4 pt-3 pb-1.5">
+                      <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Articles</span>
                     </div>
-                    <template v-else>
-                      <!-- Articles -->
-                      <div v-if="librarySearchResults.articles.length">
-                        <div class="px-4 pt-3 pb-1.5 flex items-center justify-between">
-                          <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Articles</span>
-                          <NuxtLink :to="`/foodscholar/catalog?q=${encodeURIComponent(librarySearchResults.query)}`" class="text-[0.6rem] text-brand-500 hover:text-brand-600 font-medium" @click="closeLibraryDropdown">See all</NuxtLink>
-                        </div>
-                        <NuxtLink
-                          v-for="(article, i) in librarySearchResults.articles"
-                          :key="article.urn"
-                          :to="`/foodscholar/${article.urn}`"
-                          :class="[
-                            'flex items-start gap-3 px-4 py-2.5 transition-colors',
-                            libraryActiveIndex === i ? 'bg-brand-50 dark:bg-brand-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
-                          ]"
-                          @click="closeLibraryDropdown"
-                          @mouseenter="libraryActiveIndex = i"
-                        >
-                          <UIcon name="i-lucide-file-text" class="w-4 h-4 text-brand-400 dark:text-brand-500 shrink-0 mt-0.5" />
-                          <div class="min-w-0">
-                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ article.title }}</p>
-                            <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">{{ article.venue || article.ai_category || '' }}</p>
-                          </div>
-                        </NuxtLink>
+                    <NuxtLink
+                      v-for="(suggestion, i) in libraryAutocompleteSuggestions.articles"
+                      :key="suggestion.urn"
+                      :to="`/foodscholar/${suggestion.urn}`"
+                      :class="[
+                        'flex items-start gap-3 px-4 py-2.5 transition-colors',
+                        libraryActiveIndex === i ? 'bg-brand-50 dark:bg-brand-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
+                      ]"
+                      @click="closeLibraryDropdown"
+                      @mouseenter="libraryActiveIndex = i"
+                    >
+                      <UIcon name="i-lucide-file-text" class="w-4 h-4 text-brand-400 dark:text-brand-500 shrink-0 mt-0.5" />
+                      <div class="min-w-0">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ suggestion.title }}</p>
+                        <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">{{ suggestion.venue || suggestion.ai_category || '' }}</p>
                       </div>
+                    </NuxtLink>
+                  </div>
 
-                      <!-- Dietary Guides -->
-                      <div v-if="librarySearchResults.guides.length" :class="librarySearchResults.articles.length ? 'border-t border-gray-100 dark:border-zinc-800' : ''">
-                        <div class="px-4 pt-3 pb-1.5 flex items-center justify-between">
-                          <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Dietary Guides</span>
-                          <NuxtLink to="/foodscholar/guides" class="text-[0.6rem] text-emerald-600 hover:text-emerald-700 font-medium" @click="closeLibraryDropdown">See all</NuxtLink>
-                        </div>
-                        <NuxtLink
-                          v-for="(guide, i) in librarySearchResults.guides"
-                          :key="guide.urn"
-                          :to="`/foodscholar/catalog/guides/${guide.urn}`"
-                          :class="[
-                            'flex items-start gap-3 px-4 py-2.5 transition-colors',
-                            libraryActiveIndex === librarySearchResults.articles.length + i ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
-                          ]"
-                          @click="closeLibraryDropdown"
-                          @mouseenter="libraryActiveIndex = librarySearchResults.articles.length + i"
-                        >
-                          <UIcon name="i-lucide-map" class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                          <div class="min-w-0">
-                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ guide.title }}</p>
-                            <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">{{ guide.region || '' }}</p>
-                          </div>
-                        </NuxtLink>
+                  <!-- Guide suggestions -->
+                  <div v-if="libraryAutocompleteSuggestions.guides.length" :class="libraryAutocompleteSuggestions.articles.length ? 'border-t border-gray-100 dark:border-zinc-800' : ''">
+                    <div class="px-4 pt-3 pb-1.5">
+                      <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Dietary Guides</span>
+                    </div>
+                    <NuxtLink
+                      v-for="(suggestion, i) in libraryAutocompleteSuggestions.guides"
+                      :key="suggestion.urn"
+                      :to="`/foodscholar/catalog/guides/${suggestion.urn}`"
+                      :class="[
+                        'flex items-start gap-3 px-4 py-2.5 transition-colors',
+                        libraryActiveIndex === libraryAutocompleteSuggestions.articles.length + i ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
+                      ]"
+                      @click="closeLibraryDropdown"
+                      @mouseenter="libraryActiveIndex = libraryAutocompleteSuggestions.articles.length + i"
+                    >
+                      <UIcon name="i-lucide-map" class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <div class="min-w-0">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ suggestion.title }}</p>
+                        <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">{{ suggestion.region || '' }}</p>
                       </div>
+                    </NuxtLink>
+                  </div>
 
-                      <!-- Textbooks -->
-                      <div
-                        v-if="librarySearchResults.textbooks.length"
-                        :class="(librarySearchResults.articles.length || librarySearchResults.guides.length) ? 'border-t border-gray-100 dark:border-zinc-800' : ''"
-                      >
-                        <div class="px-4 pt-3 pb-1.5 flex items-center justify-between">
-                          <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Textbooks</span>
-                          <NuxtLink :to="`/foodscholar/textbooks?q=${encodeURIComponent(librarySearchResults.query)}`" class="text-[0.6rem] text-amber-600 hover:text-amber-700 font-medium" @click="closeLibraryDropdown">See all</NuxtLink>
-                        </div>
-                        <NuxtLink
-                          v-for="(textbook, i) in librarySearchResults.textbooks"
-                          :key="textbook.urn"
-                          :to="`/foodscholar/textbooks/${textbook.urn}`"
-                          :class="[
-                            'flex items-start gap-3 px-4 py-2.5 transition-colors',
-                            libraryActiveIndex === librarySearchResults.articles.length + librarySearchResults.guides.length + i ? 'bg-amber-50 dark:bg-amber-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
-                          ]"
-                          @click="closeLibraryDropdown"
-                          @mouseenter="libraryActiveIndex = librarySearchResults.articles.length + librarySearchResults.guides.length + i"
-                        >
-                          <UIcon name="i-lucide-book-open" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                          <div class="min-w-0">
-                            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ textbook.title }}</p>
-                            <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">
-                              {{ [textbook.authors?.join(', '), textbook.publication_year].filter(Boolean).join(' · ') || 'Textbook' }}
-                            </p>
-                          </div>
-                        </NuxtLink>
+                  <!-- Textbook suggestions -->
+                  <div
+                    v-if="libraryAutocompleteSuggestions.textbooks.length"
+                    :class="(libraryAutocompleteSuggestions.articles.length || libraryAutocompleteSuggestions.guides.length) ? 'border-t border-gray-100 dark:border-zinc-800' : ''"
+                  >
+                    <div class="px-4 pt-3 pb-1.5 flex items-center justify-between">
+                      <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Textbooks</span>
+                    </div>
+                    <NuxtLink
+                      v-for="(suggestion, i) in libraryAutocompleteSuggestions.textbooks"
+                      :key="suggestion.urn"
+                      :to="`/foodscholar/textbooks/${suggestion.urn}`"
+                      :class="[
+                        'flex items-start gap-3 px-4 py-2.5 transition-colors',
+                        libraryActiveIndex === libraryAutocompleteSuggestions.articles.length + libraryAutocompleteSuggestions.guides.length + i ? 'bg-amber-50 dark:bg-amber-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
+                      ]"
+                      @click="closeLibraryDropdown"
+                      @mouseenter="libraryActiveIndex = libraryAutocompleteSuggestions.articles.length + libraryAutocompleteSuggestions.guides.length + i"
+                    >
+                      <UIcon name="i-lucide-book-open" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                      <div class="min-w-0">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ suggestion.title }}</p>
+                        <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">
+                          {{ [suggestion.authors?.join(', '), suggestion.publication_year].filter(Boolean).join(' · ') || 'Textbook' }}
+                        </p>
                       </div>
-                    </template>
-                  </template>
+                    </NuxtLink>
+                  </div>
                 </template>
               </div>
             </div>
@@ -1327,8 +1229,6 @@ async function loadLibraryTextbooks() {
 const librarySearchBoxRef = ref<HTMLElement | null>(null)
 const librarySearchInputRef = ref<HTMLInputElement | null>(null)
 const librarySearchQuery = ref('')
-const librarySearching = ref(false)
-const librarySearchResults = ref<{ query: string; articles: HomeArticle[]; guides: CatalogGuide[]; textbooks: Textbook[] } | null>(null)
 const libraryDropdownOpen = ref(false)
 const libraryActiveIndex = ref(-1)
 
@@ -1368,7 +1268,6 @@ async function fetchLibraryAutocomplete(q: string) {
 
 function handleLibrarySearchInput() {
   const q = librarySearchQuery.value.trim()
-  librarySearchResults.value = null
   libraryActiveIndex.value = -1
 
   if (libraryAutocompleteTimer) {
@@ -1377,12 +1276,14 @@ function handleLibrarySearchInput() {
   }
 
   if (q.length < 2) {
-    libraryAutocompleteSuggestions.value = []
+    libraryAutocompleteSuggestions.value = { articles: [], guides: [], textbooks: [] }
+    libraryAutocompleting.value = false
     libraryDropdownOpen.value = false
     return
   }
 
   libraryDropdownOpen.value = true
+  libraryAutocompleting.value = true
   libraryAutocompleteTimer = setTimeout(() => {
     void fetchLibraryAutocomplete(q)
   }, 220)
@@ -1390,19 +1291,11 @@ function handleLibrarySearchInput() {
 
 // Computed flat list of navigable items for arrow-key tracking
 const libraryNavItems = computed(() => {
-  if (librarySearchResults.value === null) {
-    // autocomplete mode — articles and guides are navigable, textbooks are not
-    const s = libraryAutocompleteSuggestions.value
-    return [
-      ...s.articles.map((_, i) => ({ type: 'ac-article' as const, index: i })),
-      ...s.guides.map((_, i) => ({ type: 'ac-guide' as const, index: i })),
-      ...s.textbooks.map((_, i) => ({ type: 'ac-textbook' as const, index: i }))
-    ]
-  }
-  const r = librarySearchResults.value
+  const s = libraryAutocompleteSuggestions.value
   return [
-    ...r.articles.map((_, i) => ({ type: 'article' as const, index: i })),
-    ...r.guides.map((_, i) => ({ type: 'guide' as const, index: i }))
+    ...s.articles.map((_, i) => ({ type: 'ac-article' as const, index: i })),
+    ...s.guides.map((_, i) => ({ type: 'ac-guide' as const, index: i })),
+    ...s.textbooks.map((_, i) => ({ type: 'ac-textbook' as const, index: i }))
   ]
 })
 
@@ -1418,17 +1311,28 @@ function handleLibraryArrowUp() {
   libraryActiveIndex.value = libraryActiveIndex.value > 0 ? libraryActiveIndex.value - 1 : max
 }
 
+function navigateToCatalogWithQuery() {
+  const q = librarySearchQuery.value.trim()
+  if (!q) return
+  closeLibraryDropdown()
+  void navigateTo(`/foodscholar/catalog?q=${encodeURIComponent(q)}`)
+}
+
 function handleLibrarySearchEnter() {
-  if (!libraryDropdownOpen.value || libraryNavItems.value.length === 0) {
-    void runLibrarySearch()
+  if (libraryActiveIndex.value < 0) {
+    navigateToCatalogWithQuery()
     return
   }
 
-  const item = libraryNavItems.value[libraryActiveIndex.value >= 0 ? libraryActiveIndex.value : 0]
-  if (!item) { void runLibrarySearch(); return }
+  const item = libraryNavItems.value[libraryActiveIndex.value]
+  if (!item) {
+    navigateToCatalogWithQuery()
+    return
+  }
 
   if (item.type === 'ac-textbook') {
-    void runLibrarySearch()
+    const textbook = libraryAutocompleteSuggestions.value.textbooks[item.index]
+    if (textbook) { closeLibraryDropdown(); void navigateTo(`/foodscholar/textbooks/${textbook.urn}`) }
     return
   }
 
@@ -1444,47 +1348,7 @@ function handleLibrarySearchEnter() {
     return
   }
 
-  if (item.type === 'article' && librarySearchResults.value) {
-    const article = librarySearchResults.value.articles[item.index]
-    if (article) { closeLibraryDropdown(); void navigateTo(`/foodscholar/${article.urn}`) }
-    return
-  }
-
-  if (item.type === 'guide' && librarySearchResults.value) {
-    const guide = librarySearchResults.value.guides[item.index]
-    if (guide) { closeLibraryDropdown(); void navigateTo(`/foodscholar/catalog/guides/${guide.urn}`) }
-    return
-  }
-
-  void runLibrarySearch()
-}
-
-async function runLibrarySearch() {
-  const q = librarySearchQuery.value.trim()
-  if (!q || librarySearching.value) return
-  if (libraryAutocompleteTimer) { clearTimeout(libraryAutocompleteTimer); libraryAutocompleteTimer = null }
-  libraryAutocompleteSuggestions.value = { articles: [], guides: [], textbooks: [] }
-  librarySearching.value = true
-  librarySearchResults.value = { query: q, articles: [], guides: [], textbooks: [] }
-  libraryDropdownOpen.value = true
-  libraryActiveIndex.value = -1
-  try {
-    const [articleRes, guideRes, textbookRes] = await Promise.all([
-      articlesApi.searchArticles({ q, limit: 5, offset: 0 }),
-      catalogApi.searchGuides({ q, limit: 5, offset: 0 }),
-      textbooksApi.searchTextbooks({ q, limit: 5, offset: 0 }).catch(() => ({ textbooks: [], total: 0, facets: {} }))
-    ])
-    librarySearchResults.value = {
-      query: q,
-      articles: (articleRes.result?.results ?? []).slice(0, 5).map(mapArticleToHome),
-      guides: guideRes.guides.slice(0, 5),
-      textbooks: textbookRes.textbooks.slice(0, 5)
-    }
-  } catch {
-    // silent
-  } finally {
-    librarySearching.value = false
-  }
+  navigateToCatalogWithQuery()
 }
 
 function closeLibraryDropdown() {
@@ -1494,7 +1358,6 @@ function closeLibraryDropdown() {
 
 function clearLibrarySearch() {
   librarySearchQuery.value = ''
-  librarySearchResults.value = null
   libraryAutocompleteSuggestions.value = { articles: [], guides: [], textbooks: [] }
   libraryDropdownOpen.value = false
   libraryActiveIndex.value = -1

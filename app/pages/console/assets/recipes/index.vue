@@ -615,11 +615,23 @@
                         label="Region"
                         required
                       >
-                        <UInput
-                          v-model="createForm.region"
-                          placeholder="e.g. US"
-                          class="w-full"
-                        />
+                        <div class="flex items-center rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/40 p-1 gap-1 w-fit">
+                          <button
+                            v-for="region in CREATE_REGIONS"
+                            :key="region"
+                            type="button"
+                            :disabled="createAnalysisLoading"
+                            @click="createForm.region = region"
+                            :class="[
+                              'px-3 py-1 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50',
+                              createForm.region === region
+                                ? 'bg-brandg-500 text-white'
+                                : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                            ]"
+                          >
+                            {{ region }}
+                          </button>
+                        </div>
                       </UFormField>
 
                       <UFormField
@@ -1155,6 +1167,8 @@ const createAnalysisLoading = ref(false)
 const createAnalysisError = ref<string | null>(null)
 const createAnalysisResult = ref<RecipeProfileResult | null>(null)
 const createAnalysisSignature = ref('')
+
+const CREATE_REGIONS = ['IE', 'HU', 'US'] as const
 
 const createForm = reactive({
   title: '',
