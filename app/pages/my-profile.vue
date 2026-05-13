@@ -515,7 +515,10 @@
       <!-- Food Picker Modal -->
       <UModal v-model:open="showFoodPicker">
         <template #content>
-          <UCard class="max-h-[80vh] flex flex-col">
+          <UCard
+            class="flex flex-col max-h-[85vh]"
+            :ui="{ body: 'flex-1 min-h-0 flex flex-col overflow-hidden' }"
+          >
             <template #header>
               <div class="flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
@@ -532,7 +535,7 @@
             </template>
 
             <!-- Search -->
-            <div class="mb-4">
+            <div class="mb-4 shrink-0">
               <UInput
                 v-model="foodSearch"
                 :placeholder="t('myProfile.foodPicker.searchFoodsPlaceholder')"
@@ -542,7 +545,7 @@
             </div>
 
             <!-- Category tabs -->
-            <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
+            <div class="flex gap-2 mb-4 overflow-x-auto pb-2 shrink-0">
               <UButton
                 v-for="cat in foodCategories"
                 :key="cat.id"
@@ -557,7 +560,7 @@
             </div>
 
             <!-- Diet compatibility notice -->
-            <div v-if="currentDietaryGroups.length > 0" class="mb-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+            <div v-if="currentDietaryGroups.length > 0" class="mb-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 shrink-0">
               <div class="flex items-start gap-2">
                 <UIcon name="i-lucide-info" class="w-4 h-4 text-blue-500 mt-0.5" />
                 <p class="text-xs text-blue-700 dark:text-blue-300">
@@ -566,8 +569,24 @@
               </div>
             </div>
 
+            <!-- Bulk selection controls -->
+            <div v-if="selectableFoods.length > 0" class="flex items-center justify-between gap-2 mb-3 shrink-0">
+              <UButton
+                variant="soft"
+                color="primary"
+                size="xs"
+                :icon="allSelectableSelected ? 'i-lucide-square' : 'i-lucide-check-square'"
+                @click="toggleSelectAll"
+              >
+                {{ allSelectableSelected ? t('myProfile.foodPicker.deselectAll') : t('myProfile.foodPicker.selectAll') }}
+              </UButton>
+              <span class="text-xs text-gray-500 dark:text-gray-400">
+                {{ t('myProfile.foodPicker.selectableCount', { count: selectableFoods.length }) }}
+              </span>
+            </div>
+
             <!-- Foods grid -->
-            <div class="flex-1 overflow-y-auto">
+            <div class="flex-1 min-h-0 overflow-y-auto pr-1">
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 <button
                   v-for="food in filteredFoods"
@@ -587,7 +606,7 @@
                 >
                   <UIcon
                     :name="food.icon"
-                    class="w-5 h-5"
+                    class="w-5 h-5 shrink-0"
                     :class="selectedFoods.includes(food.id)
                       ? foodPickerMode === 'likes' ? 'text-pink-500' : 'text-orange-500'
                       : 'text-gray-400'"
@@ -596,7 +615,7 @@
                   <UIcon
                     v-if="selectedFoods.includes(food.id)"
                     name="i-lucide-check"
-                    class="w-4 h-4 ml-auto"
+                    class="w-4 h-4 ml-auto shrink-0"
                     :class="foodPickerMode === 'likes' ? 'text-pink-500' : 'text-orange-500'"
                   />
                 </button>
@@ -897,6 +916,14 @@ const filteredFoods = computed(() => {
   return foods
 })
 
+// Foods in the current view that can still be toggled (not already saved on either list)
+const selectableFoods = computed(() => filteredFoods.value.filter(f => !isAlreadySelected(f.id)))
+
+const allSelectableSelected = computed(() => {
+  if (selectableFoods.value.length === 0) return false
+  return selectableFoods.value.every(f => selectedFoods.value.includes(f.id))
+})
+
 const ageGroupLabel = computed(() => {
   if (!currentMember.value?.age_group) return t('myProfile.values.notSpecified')
   const option = ageGroupOptions.value.find(o => o.value === currentMember.value?.age_group)
@@ -967,9 +994,19 @@ function toggleFood(foodId: string) {
 
   const idx = selectedFoods.value.indexOf(foodId)
   if (idx === -1) {
-    selectedFoods.value.push(foodId)
+    selectedFoods.value = [...selectedFoods.value, foodId]
   } else {
-    selectedFoods.value.splice(idx, 1)
+    selectedFoods.value = selectedFoods.value.filter(id => id !== foodId)
+  }
+}
+
+function toggleSelectAll() {
+  const ids = selectableFoods.value.map(f => f.id)
+  if (allSelectableSelected.value) {
+    selectedFoods.value = selectedFoods.value.filter(id => !ids.includes(id))
+  } else {
+    const set = new Set([...selectedFoods.value, ...ids])
+    selectedFoods.value = Array.from(set)
   }
 }
 

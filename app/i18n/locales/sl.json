@@ -168,9 +168,9 @@
     "items": {
       "foodchat": {
         "tag": "FoodChat",
-        "title": "Tvoj prehranski sopilot",
-        "description": "Pogovorni asistent, ki načrtuje obroke, odgovarja na vprašanja o hrani in se prilagaja vsakemu članu gospodinjstva — alergijam, ciljem in kulturam.",
-        "highlights": ["Prilagojeni jedilniki", "Zaveden gospodinjstva", "Takojšnja vprašanja in odgovori"]
+        "title": "Tvoj sopilot za načrtovanje obrokov",
+        "description": "Asistent za načrtovanje obrokov, ki pripravi prilagojene jedilnike za vsakega člana gospodinjstva — upošteva alergije, cilje in kulture — in se prilagaja spremembam tedna.",
+        "highlights": ["Prilagojeni jedilniki", "Zaveden gospodinjstva", "Prilagaja se tvojemu tednu"]
       },
       "foodscholar": {
         "tag": "FoodScholar",
@@ -738,8 +738,9 @@
       "step1": {
         "titlePrefix": "Dobrodošli v",
         "subtitle": "Nastavimo tvoje gospodinjstvo za prilagojeno izkušnjo",
-        "householdNameLabel": "Ime gospodinjstva",
-        "householdNamePlaceholder": "npr. Družina Novak",
+        "householdNameLabel": "Kako naj poimenujemo ta prostor?",
+        "householdNamePlaceholder": "npr. Družina Novak ali kar tvoje ime",
+        "householdNameHint": "Živiš sam? Uporabi svoje ime — preimenuješ lahko kadarkoli.",
         "countryOptionalLabel": "Država (neobvezno)",
         "countryPlaceholder": "Izberi državo",
         "countrySearchPlaceholder": "Išči države...",
@@ -1032,6 +1033,9 @@
       "compatibilityNotice": "Prikaz hrane, ki je združljiva s tvojimi prehranskimi nastavitvami: {diets}",
       "noFoodsFound": "Ni najdene hrane, ki bi ustrezala iskanju.",
       "selectedCount": "{count} izbranih",
+      "selectableCount": "{count} na voljo v tem prikazu",
+      "selectAll": "Izberi vse",
+      "deselectAll": "Odznači vse",
       "addOneFood": "Dodaj 1 živilo",
       "addManyFoods": "Dodaj {count} živil"
     },
@@ -1278,5 +1282,22 @@
         "simmering": "Potrpežljivo gradimo tvoj dnevni meni"
       }
     }
+  },
+  "a11y": {
+    "open": "Odpri možnosti dostopnosti",
+    "close": "Zapri",
+    "title": "Dostopnost",
+    "fontSize": "Velikost besedila",
+    "contrast": {
+      "label": "Kontrast",
+      "normal": "Običajno",
+      "high": "Visok",
+      "grayscale": "Sivina"
+    },
+    "dyslexiaFont": "Pisava za disleksijo",
+    "reducedMotion": "Zmanjšaj gibanje",
+    "underlineLinks": "Podčrtaj povezave",
+    "largeCursor": "Velik kazalec",
+    "reset": "Ponastavi"
   }
 }

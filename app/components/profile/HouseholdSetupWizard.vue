@@ -53,6 +53,9 @@
               icon="i-lucide-home"
               :disabled="isSubmitting"
             />
+            <template #hint>
+              <span class="text-xs text-gray-500">{{ t('profileSelection.setupWizard.step1.householdNameHint') }}</span>
+            </template>
           </UFormField>
 
           <UFormField :label="t('profileSelection.setupWizard.step1.countryOptionalLabel')">

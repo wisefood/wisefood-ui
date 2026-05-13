@@ -168,9 +168,9 @@
     "items": {
       "foodchat": {
         "tag": "FoodChat",
-        "title": "A táplálkozási társpilótád",
-        "description": "Beszélgetős asszisztens, amely étkezéseket tervez, válaszol az ételekkel kapcsolatos kérdésekre, és minden családtaghoz alkalmazkodik — allergiák, célok, kultúrák egyaránt.",
-        "highlights": ["Személyre szabott étkezési tervek", "Háztartás-tudatos", "Azonnali kérdés-válasz"]
+        "title": "Az étkezéstervező társpilótád",
+        "description": "Étkezéstervező asszisztens, amely személyre szabott terveket készít minden családtag számára — figyelembe véve az allergiákat, célokat és kultúrákat —, és alkalmazkodik a heti változásokhoz.",
+        "highlights": ["Személyre szabott étkezési tervek", "Háztartás-tudatos", "Alkalmazkodik a hetedhez"]
       },
       "foodscholar": {
         "tag": "FoodScholar",
@@ -738,8 +738,9 @@
       "step1": {
         "titlePrefix": "Üdvözlünk a",
         "subtitle": "Állítsuk be a háztartásodat, hogy személyre szabjuk az élményt",
-        "householdNameLabel": "Háztartás neve",
-        "householdNamePlaceholder": "pl. A Kovács család",
+        "householdNameLabel": "Hogy nevezzük ezt a teret?",
+        "householdNamePlaceholder": "pl. A Kovács család, vagy egyszerűen a neved",
+        "householdNameHint": "Egyedül élsz? Használd a saját nevedet — bármikor átnevezheted.",
         "countryOptionalLabel": "Ország (opcionális)",
         "countryPlaceholder": "Válaszd ki az országot",
         "countrySearchPlaceholder": "Ország keresése...",
@@ -1032,6 +1033,9 @@
       "compatibilityNotice": "A diétás preferenciáiddal kompatibilis ételek: {diets}",
       "noFoodsFound": "Nincs a keresésnek megfelelő étel.",
       "selectedCount": "{count} kiválasztva",
+      "selectableCount": "{count} elérhető ebben a nézetben",
+      "selectAll": "Összes kijelölése",
+      "deselectAll": "Kijelölés megszüntetése",
       "addOneFood": "1 étel hozzáadása",
       "addManyFoods": "{count} étel hozzáadása"
     },
@@ -1278,5 +1282,22 @@
         "simmering": "Türelmesen építjük a napi menüdet"
       }
     }
+  },
+  "a11y": {
+    "open": "Akadálymentesítési beállítások",
+    "close": "Bezárás",
+    "title": "Akadálymentesítés",
+    "fontSize": "Szövegméret",
+    "contrast": {
+      "label": "Kontraszt",
+      "normal": "Normál",
+      "high": "Magas",
+      "grayscale": "Szürkeárnyalat"
+    },
+    "dyslexiaFont": "Diszlexia-barát betűtípus",
+    "reducedMotion": "Mozgás csökkentése",
+    "underlineLinks": "Linkek aláhúzása",
+    "largeCursor": "Nagy kurzor",
+    "reset": "Visszaállítás"
   }
 }

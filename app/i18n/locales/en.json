@@ -208,9 +208,9 @@
     "items": {
       "foodchat": {
         "tag": "FoodChat",
-        "title": "Your nutrition co-pilot",
-        "description": "A conversational assistant that plans meals, answers food questions, and adapts to every household member — allergies, goals, cultures and all.",
-        "highlights": ["Personalized meal plans", "Household-aware", "Instant Q&A"]
+        "title": "Your meal-planning co-pilot",
+        "description": "A meal-planning assistant that builds personalized plans for every household member — accounting for allergies, goals, and cultures — and adapts as your week changes.",
+        "highlights": ["Personalized meal plans", "Household-aware", "Adapts to your week"]
       },
       "foodscholar": {
         "tag": "FoodScholar",
@@ -738,9 +738,10 @@
       },
       "step1": {
         "titlePrefix": "Welcome to",
-        "subtitle": "Let's set up your household to personalize your experience",
-        "householdNameLabel": "Household Name",
-        "householdNamePlaceholder": "e.g., The Smith Family",
+        "subtitle": "Let's set up your space to personalize your experience",
+        "householdNameLabel": "What should we call this space?",
+        "householdNamePlaceholder": "e.g., The Smith Family, or just your name",
+        "householdNameHint": "Living solo? Use your own name — you can rename this any time.",
         "countryOptionalLabel": "Country (optional)",
         "countryPlaceholder": "Select your country",
         "countrySearchPlaceholder": "Search countries...",
@@ -1033,6 +1034,9 @@
       "compatibilityNotice": "Showing foods compatible with your dietary preferences: {diets}",
       "noFoodsFound": "No foods found matching your search.",
       "selectedCount": "{count} selected",
+      "selectableCount": "{count} available in this view",
+      "selectAll": "Select all",
+      "deselectAll": "Deselect all",
       "addOneFood": "Add 1 Food",
       "addManyFoods": "Add {count} Foods"
     },
@@ -1300,5 +1304,22 @@
         "simmering": "Patiently building your daily menu"
       }
     }
+  },
+  "a11y": {
+    "open": "Open accessibility options",
+    "close": "Close",
+    "title": "Accessibility",
+    "fontSize": "Text size",
+    "contrast": {
+      "label": "Contrast",
+      "normal": "Normal",
+      "high": "High",
+      "grayscale": "Grayscale"
+    },
+    "dyslexiaFont": "Dyslexia-friendly font",
+    "reducedMotion": "Reduce motion",
+    "underlineLinks": "Underline links",
+    "largeCursor": "Large cursor",
+    "reset": "Reset to defaults"
   }
 }

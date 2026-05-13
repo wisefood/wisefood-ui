@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap");
 @import "tailwindcss";
 @import "@nuxt/ui";
 
@@ -156,4 +156,159 @@ body {
   .conic-sweep, .marquee-track, .shimmer-line::after, .float-soft {
     animation: none !important;
   }
+}
+
+/* ── Accessibility overrides driven by the AccessibilityToolbar ──
+   The toolbar widget itself opts out via .a11y-toolbar-root so users
+   can always reach the controls regardless of the active mode. */
+:root {
+  --a11y-font-scale: 1;
+}
+
+/* Scale the root font size — Tailwind's rem-based typography follows.
+   Also scale `body` explicitly so descendants using `em` units inherit. */
+html {
+  font-size: calc(100% * var(--a11y-font-scale));
+}
+body {
+  font-size: calc(1rem * var(--a11y-font-scale));
+  line-height: 1.55;
+}
+
+/* ── High contrast: WCAG-style ─────────────────────────────────────
+   Strategy: force a dark canvas, white text, yellow links/buttons,
+   remove shadows / translucent layers. Critically, we DO NOT paint
+   `background-color: #000` on every descendant — Nuxt Icon renders
+   icons via CSS `mask-image` / `background-image` on `<span>`s, and a
+   blanket background rule destroys them.
+
+   Instead we set the canvas on html/body/main containers, force text
+   colour broadly (via inheritance), and only restyle specific element
+   types (buttons, links, inputs). */
+html.a11y-contrast-high,
+.a11y-contrast-high body {
+  background: #000 !important;
+  color: #fff !important;
+}
+
+/* Strip translucent/gradient backgrounds from layout containers so the
+   black canvas shows through, but leave icon-bearing spans alone. */
+.a11y-contrast-high :is(div, section, article, aside, header, footer, nav, main, ul, ol, li, table, tr, td, th, dialog, form, fieldset):not(.a11y-toolbar-root, .a11y-toolbar-root *) {
+  background-color: #000 !important;
+  background-image: none !important;
+  color: #fff !important;
+  border-color: #fff !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Belt-and-braces: any element with a Tailwind background utility, a
+   gradient class, Nuxt UI card slots, or inline background style. The
+   `:where()` keeps specificity at zero so this still loses to the
+   explicit overrides on buttons/links/inputs above. */
+.a11y-contrast-high :where([class*="bg-"], [class*="from-"], [class*="to-"], [class*="via-"], [data-slot="root"], [data-slot="body"], [data-slot="header"], [data-slot="footer"], [data-slot="content"], [class*="backdrop-blur"], [style*="background"]):not(.a11y-toolbar-root, .a11y-toolbar-root *) {
+  background-color: #000 !important;
+  background-image: none !important;
+}
+
+/* Broad text colour — applies everywhere by inheritance, including
+   spans that wrap icons (those spans use `color: currentColor` as
+   their mask paint, so this colours the icons white too). */
+.a11y-contrast-high *:not(.a11y-toolbar-root, .a11y-toolbar-root *) {
+  color: #fff !important;
+  border-color: #fff !important;
+}
+
+/* Links and buttons get yellow text + a visible border. */
+.a11y-contrast-high :is(a, [role="link"]):not(.a11y-toolbar-root *) {
+  color: #ffeb3b !important;
+  text-decoration: underline !important;
+}
+.a11y-contrast-high :is(button, [role="button"]):not(.a11y-toolbar-root *) {
+  color: #ffeb3b !important;
+  border: 2px solid #ffeb3b !important;
+  background-color: #000 !important;
+  background-image: none !important;
+}
+/* Icons (which inherit `color`) inside links/buttons go yellow too. */
+.a11y-contrast-high :is(a, button, [role="button"], [role="link"]) :not(.a11y-toolbar-root *) {
+  color: #ffeb3b !important;
+}
+
+.a11y-contrast-high :focus-visible:not(.a11y-toolbar-root *) {
+  outline: 3px solid #ffeb3b !important;
+  outline-offset: 2px !important;
+}
+.a11y-contrast-high :is(input, textarea, select):not(.a11y-toolbar-root *) {
+  background: #000 !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+}
+
+/* SVG-based icons (rare in this app — most use Nuxt Icon CSS mode):
+   force monochrome white via currentColor. */
+.a11y-contrast-high svg:not(.a11y-toolbar-root *),
+.a11y-contrast-high svg:not(.a11y-toolbar-root *) * {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+  background: transparent !important;
+}
+.a11y-contrast-high :is(img, video):not(.a11y-toolbar-root *) {
+  background: transparent !important;
+}
+
+/* ── Grayscale: remove colour while preserving layout.
+   We can't apply `filter` to <html> or <body> because any CSS filter
+   on an ancestor creates a new containing block for `position: fixed`
+   descendants — which would re-anchor the accessibility toolbar to
+   the filtered element's box instead of the viewport. Instead, we
+   apply the filter only to <body>'s direct children, and skip the
+   toolbar so it stays correctly positioned and in full colour. */
+.a11y-grayscale body > *:not(.a11y-toolbar-root) {
+  filter: grayscale(100%);
+}
+
+/* ── Dyslexia-friendly font.
+   Atkinson Hyperlegible is loaded from Google Fonts above; the stack
+   falls back to OpenDyslexic if the user has it installed, then to
+   the system sans. */
+.a11y-dyslexia-font,
+.a11y-dyslexia-font * {
+  font-family: "OpenDyslexic", "Atkinson Hyperlegible", "Lexend", system-ui, sans-serif !important;
+  letter-spacing: 0.03em !important;
+  word-spacing: 0.1em !important;
+  line-height: 1.7 !important;
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────── */
+.a11y-reduced-motion,
+.a11y-reduced-motion *,
+.a11y-reduced-motion *::before,
+.a11y-reduced-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* ── Underline all links ──────────────────────────────────────────── */
+.a11y-underline-links a {
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
+}
+
+/* ── Large cursor (clearer arrow + halo) ──────────────────────────── */
+.a11y-large-cursor,
+.a11y-large-cursor * {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><path d='M4 2 L4 32 L12 24 L17 36 L22 34 L17 22 L28 22 Z' fill='black' stroke='white' stroke-width='2' stroke-linejoin='round'/></svg>") 4 2, auto !important;
+}
+.a11y-large-cursor a,
+.a11y-large-cursor button,
+.a11y-large-cursor [role="button"],
+.a11y-large-cursor input,
+.a11y-large-cursor select,
+.a11y-large-cursor textarea {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><path d='M14 2 v16 M6 10 h16 M14 18 c-6 0 -10 5 -10 12 h20 c0 -7 -4 -12 -10 -12 z' fill='white' stroke='black' stroke-width='2' stroke-linejoin='round'/></svg>") 14 14, pointer !important;
 }
