@@ -13,7 +13,7 @@ interface ApiError {
 
 /**
  * WiseFood REST API Service
- * Base URL: https://wisefood.gr/rest/api/v1
+ * Base URL: https://demo.wisefood-project.eu/rest/api/v1
  * Used for: Households, Members, Profiles
  */
 class WiseFoodRestApiService {

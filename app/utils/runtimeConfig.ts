@@ -1,7 +1,7 @@
 import { useRuntimeConfig } from '#imports'
 
-const DEFAULT_WISEFOOD_API_URL = 'https://wisefood.gr/dc/api'
-const DEFAULT_WISEFOOD_REST_API_URL = 'https://wisefood.gr/rest/api/v1'
+const DEFAULT_WISEFOOD_API_URL = 'https://demo.wisefood-project.eu/dc/api'
+const DEFAULT_WISEFOOD_REST_API_URL = 'https://demo.wisefood-project.eu/rest/api/v1'
 const DEFAULT_RECIPE_WRANGLER_MODE = 'auto'
 
 export type RecipeWranglerMode = 'auto' | 'local' | 'rest'
