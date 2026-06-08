@@ -333,6 +333,23 @@
         "cookingTime": "Čas priprave",
         "calories": "Kalorije",
         "nutritionScore": "Prehranski rezultat"
+      },
+      "timeRange": "Čas priprave",
+      "timeRangeComingSoon": "Kmalu",
+      "timeRangeOptions": {
+        "quick": "Hitro",
+        "medium": "Srednje",
+        "slow": "Počasi",
+        "any": "Karkoli"
+      },
+      "dietTags": "Prehranske oznake",
+      "dietTagsOptions": {
+        "nutFree": "Brez oreščkov",
+        "vegetarian": "Vegetarijansko",
+        "pescatarian": "Peskovrijansko",
+        "dairyFree": "Brez mlečnih izdelkov",
+        "vegan": "Vegansko",
+        "glutenFree": "Brez glutena"
       }
     },
     "allergens": {
@@ -1299,5 +1316,21 @@
     "underlineLinks": "Podčrtaj povezave",
     "largeCursor": "Velik kazalec",
     "reset": "Ponastavi"
+  },
+  "feedback": {
+    "open": "Pošlji povratno informacijo",
+    "close": "Zapri",
+    "title": "Kakšna je bila vaša izkušnja?",
+    "commentPlaceholder": "Želite kaj dodati? (neobvezno)",
+    "submit": "Pošlji povratno informacijo",
+    "thanks": "Hvala za vašo povratno informacijo!",
+    "thanksSub": "Cenimo, da nam pomagate izboljšati storitev.",
+    "ratings": {
+      "great": "Zelo zadovoljen/a",
+      "good": "Zadovoljen/a",
+      "ok": "Nevtralno",
+      "bad": "Nezadovoljen/a",
+      "awful": "Zelo nezadovoljen/a"
+    }
   }
 }

@@ -89,6 +89,58 @@
       </div>
     </div>
 
+    <!-- Time Range (placeholder, not yet wired) -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <UIcon name="i-lucide-timer" class="w-4 h-4 text-blue-500" />
+          {{ t('recipeWrangler.filters.timeRange') }}
+        </h3>
+        <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500">
+          {{ t('recipeWrangler.filters.timeRangeComingSoon') }}
+        </span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="range in timeRanges"
+          :key="range.value"
+          @click="toggleTimeRange(range.value)"
+          :class="[
+            'px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex flex-col items-start leading-tight',
+            selectedTimeRange === range.value
+              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 ring-2 ring-blue-400 dark:ring-blue-600'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+          ]"
+        >
+          <span>{{ range.label }}</span>
+          <span v-if="range.hint" class="text-[10px] font-normal opacity-70">{{ range.hint }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Dietary Tags -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+      <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+        <UIcon name="i-lucide-leaf" class="w-4 h-4 text-brandg-500" />
+        {{ t('recipeWrangler.filters.dietTags') }}
+      </h3>
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="tag in dietTagOptions"
+          :key="tag.value"
+          @click="toggleDietTag(tag.value)"
+          :class="[
+            'px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200',
+            isDietTagSelected(tag.value)
+              ? 'bg-brandg-100 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-400 ring-2 ring-brandg-400 dark:ring-brandg-600'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+          ]"
+        >
+          {{ tag.label }}
+        </button>
+      </div>
+    </div>
+
     <!-- Quick Filters -->
     <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
       <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
@@ -171,6 +223,8 @@ const { t } = useI18n()
 // State
 // ============================================================================
 const selectedQuickFilter = ref<string | null>(null)
+// Visual-only placeholder selection — not wired to the store or API yet.
+const selectedTimeRange = ref<string | null>(null)
 
 // ============================================================================
 // Constants
@@ -208,6 +262,26 @@ const dishTypeOptions = computed<{ value: RecipeDishType; label: string; icon: s
     .sort((a, b) => a.label.localeCompare(b.label))
 })
 
+// Time-range buckets are visual placeholders for now. When wired they will map
+// to `max_duration_minutes` (quick=30, medium=60, slow=open-ended, any=cleared).
+const timeRanges = computed(() => [
+  { value: 'quick', label: t('recipeWrangler.filters.timeRangeOptions.quick'), hint: '≤ 30 min' },
+  { value: 'medium', label: t('recipeWrangler.filters.timeRangeOptions.medium'), hint: '30–60 min' },
+  { value: 'slow', label: t('recipeWrangler.filters.timeRangeOptions.slow'), hint: '60+ min' },
+  { value: 'any', label: t('recipeWrangler.filters.timeRangeOptions.any'), hint: '' }
+])
+
+// Diet-tag values are sent to the backend as snake_case (`diet_tags[]`), matching
+// the backend convention surfaced in the recipe detail page tag map.
+const dietTagOptions = computed(() => [
+  { value: 'nut_free', label: t('recipeWrangler.filters.dietTagsOptions.nutFree') },
+  { value: 'vegetarian', label: t('recipeWrangler.filters.dietTagsOptions.vegetarian') },
+  { value: 'pescatarian', label: t('recipeWrangler.filters.dietTagsOptions.pescatarian') },
+  { value: 'dairy_free', label: t('recipeWrangler.filters.dietTagsOptions.dairyFree') },
+  { value: 'vegan', label: t('recipeWrangler.filters.dietTagsOptions.vegan') },
+  { value: 'gluten_free', label: t('recipeWrangler.filters.dietTagsOptions.glutenFree') }
+])
+
 const sourceOptions: { value: RecipeSource; label: string }[] = [
   { value: 'healthyfoods', label: 'Healthy Foods' },
   { value: 'foodhero', label: 'Food Hero' },
@@ -239,7 +313,8 @@ const sortBy = computed(() => recipeStore.sortBy)
 const hasActiveFilters = computed(() =>
   recipeStore.excludedAllergens.length > 0 ||
   recipeStore.selectedSources.length > 0 ||
-  recipeStore.selectedDishTypes.length > 0
+  recipeStore.selectedDishTypes.length > 0 ||
+  recipeStore.selectedDietTags.length > 0
 )
 
 // ============================================================================
@@ -248,6 +323,7 @@ const hasActiveFilters = computed(() =>
 const isAllergenExcluded = (allergen: string) => recipeStore.isAllergenExcluded(allergen)
 const isSourceSelected = (source: RecipeSource) => recipeStore.selectedSources.includes(source)
 const isDishTypeSelected = (dishType: RecipeDishType) => recipeStore.selectedDishTypes.includes(dishType)
+const isDietTagSelected = (tag: string) => recipeStore.selectedDietTags.includes(tag)
 
 const toggleAllergen = (allergen: string) => {
   recipeStore.toggleAllergen(allergen)
@@ -264,10 +340,21 @@ const toggleDishType = (dishType: RecipeDishType) => {
   emit('filterChange')
 }
 
+const toggleDietTag = (tag: string) => {
+  recipeStore.toggleDietTag(tag)
+  emit('filterChange')
+}
+
+// Placeholder only: toggles the visual selection without touching the store/API.
+const toggleTimeRange = (range: string) => {
+  selectedTimeRange.value = selectedTimeRange.value === range ? null : range
+}
+
 const clearAllFilters = () => {
   recipeStore.clearAllergenFilters()
   recipeStore.clearSourceFilters()
   recipeStore.clearDishTypeFilters()
+  recipeStore.clearDietTagFilters()
   selectedQuickFilter.value = null
   emit('filterChange')
 }

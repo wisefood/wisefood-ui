@@ -16,6 +16,7 @@ export const useRecipeStore = defineStore('recipe', {
     excludedAllergens: [] as string[],
     selectedSources: [] as RecipeSource[],
     selectedDishTypes: [] as RecipeDishType[],
+    selectedDietTags: [] as string[],
     compareList: [] as string[], // Recipe IDs for comparison
 
     // UI preferences
@@ -270,9 +271,21 @@ export const useRecipeStore = defineStore('recipe', {
       this.persistDishTypes()
     },
 
+    toggleDietTag(tag: string) {
+      const idx = this.selectedDietTags.indexOf(tag)
+      if (idx >= 0) this.selectedDietTags.splice(idx, 1)
+      else this.selectedDietTags.push(tag)
+      this.persistDietTags()
+    },
+
     clearSourceFilters() {
       this.selectedSources = []
       this.persistSources()
+    },
+
+    clearDietTagFilters() {
+      this.selectedDietTags = []
+      this.persistDietTags()
     },
 
     clearDishTypeFilters() {
@@ -419,6 +432,7 @@ export const useRecipeStore = defineStore('recipe', {
         this.loadAllergens()
         this.loadSources()
         this.loadDishTypes()
+        this.loadDietTags()
         this.loadViewMode()
         this.loadSortBy()
         this.loadCompareList()
@@ -435,6 +449,7 @@ export const useRecipeStore = defineStore('recipe', {
       this.excludedAllergens = []
       this.selectedSources = []
       this.selectedDishTypes = []
+      this.selectedDietTags = []
       this.viewMode = 'grid'
       this.sortBy = null
       this.compareList = []
@@ -448,6 +463,7 @@ export const useRecipeStore = defineStore('recipe', {
         localStorage.removeItem('recipe-allergens')
         localStorage.removeItem('recipe-sources')
         localStorage.removeItem('recipe-dish-types')
+        localStorage.removeItem('recipe-diet-tags')
         localStorage.removeItem('recipe-view-mode')
         localStorage.removeItem('recipe-sort-by')
         localStorage.removeItem('recipe-compare-list')
@@ -592,6 +608,21 @@ export const useRecipeStore = defineStore('recipe', {
         const stored = localStorage.getItem('recipe-dish-types')
         if (stored) {
           try { this.selectedDishTypes = JSON.parse(stored) } catch { this.selectedDishTypes = [] }
+        }
+      }
+    },
+
+    persistDietTags() {
+      if (import.meta.client) {
+        localStorage.setItem('recipe-diet-tags', JSON.stringify(this.selectedDietTags))
+      }
+    },
+
+    loadDietTags() {
+      if (import.meta.client) {
+        const stored = localStorage.getItem('recipe-diet-tags')
+        if (stored) {
+          try { this.selectedDietTags = JSON.parse(stored) } catch { this.selectedDietTags = [] }
         }
       }
     },

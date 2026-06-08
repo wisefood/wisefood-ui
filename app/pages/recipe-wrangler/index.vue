@@ -1123,12 +1123,14 @@ const handleFilterChange = async () => {
     const excludeAllergens = recipeStore.excludedAllergens
     const sources = recipeStore.selectedSources
     const dishTypes = recipeStore.selectedDishTypes
+    const dietTags = recipeStore.selectedDietTags
     const sortBy = recipeStore.sortBy
     const updatedParams = {
       ...(lastParamSearch.value ?? {}),
       exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined,
       sources: sources.length > 0 ? sources : undefined,
       dish_types: dishTypes.length > 0 ? dishTypes : undefined,
+      diet_tags: dietTags.length > 0 ? dietTags : undefined,
       sort_by: sortBy ?? undefined,
       offset: 0
     }
@@ -1243,11 +1245,13 @@ onMounted(async () => {
     const excludeAllergens = recipeStore.excludedAllergens
     const sources = recipeStore.selectedSources
     const dishTypes = recipeStore.selectedDishTypes
+    const dietTags = recipeStore.selectedDietTags
     const sortBy = recipeStore.sortBy
     const initialParams = {
       exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined,
       sources: sources.length > 0 ? sources : undefined,
       dish_types: dishTypes.length > 0 ? dishTypes : undefined,
+      diet_tags: dietTags.length > 0 ? dietTags : undefined,
       sort_by: sortBy ?? undefined,
       limit: itemsPerPage,
       offset: 0

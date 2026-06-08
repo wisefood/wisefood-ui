@@ -334,6 +334,23 @@
         "cookingTime": "Cooking Time",
         "calories": "Calories",
         "nutritionScore": "Nutrition Score"
+      },
+      "timeRange": "Time Range",
+      "timeRangeComingSoon": "Coming soon",
+      "timeRangeOptions": {
+        "quick": "Quick",
+        "medium": "Medium",
+        "slow": "Slow",
+        "any": "Any"
+      },
+      "dietTags": "Dietary Tags",
+      "dietTagsOptions": {
+        "nutFree": "Nut-Free",
+        "vegetarian": "Vegetarian",
+        "pescatarian": "Pescatarian",
+        "dairyFree": "Dairy-Free",
+        "vegan": "Vegan",
+        "glutenFree": "Gluten-Free"
       }
     },
     "allergens": {
@@ -1321,5 +1338,21 @@
     "underlineLinks": "Underline links",
     "largeCursor": "Large cursor",
     "reset": "Reset to defaults"
+  },
+  "feedback": {
+    "open": "Give feedback",
+    "close": "Close",
+    "title": "How was your experience?",
+    "commentPlaceholder": "Anything you'd like to add? (optional)",
+    "submit": "Submit feedback",
+    "thanks": "Thanks for your feedback!",
+    "thanksSub": "We appreciate you helping us improve.",
+    "ratings": {
+      "great": "Very satisfied",
+      "good": "Satisfied",
+      "ok": "Neutral",
+      "bad": "Dissatisfied",
+      "awful": "Very dissatisfied"
+    }
   }
 }

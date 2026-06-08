@@ -333,6 +333,23 @@
         "cookingTime": "Elkészítési idő",
         "calories": "Kalória",
         "nutritionScore": "Táplálkozási pontszám"
+      },
+      "timeRange": "Elkészítési idő",
+      "timeRangeComingSoon": "Hamarosan",
+      "timeRangeOptions": {
+        "quick": "Gyors",
+        "medium": "Közepes",
+        "slow": "Lassú",
+        "any": "Bármely"
+      },
+      "dietTags": "Étrendi címkék",
+      "dietTagsOptions": {
+        "nutFree": "Diómentes",
+        "vegetarian": "Vegetáriánus",
+        "pescatarian": "Pescetáriánus",
+        "dairyFree": "Tejmentes",
+        "vegan": "Vegán",
+        "glutenFree": "Gluténmentes"
       }
     },
     "allergens": {
@@ -1299,5 +1316,21 @@
     "underlineLinks": "Linkek aláhúzása",
     "largeCursor": "Nagy kurzor",
     "reset": "Visszaállítás"
+  },
+  "feedback": {
+    "open": "Visszajelzés küldése",
+    "close": "Bezárás",
+    "title": "Milyen volt az élményed?",
+    "commentPlaceholder": "Szeretnél hozzátenni valamit? (opcionális)",
+    "submit": "Visszajelzés küldése",
+    "thanks": "Köszönjük a visszajelzésed!",
+    "thanksSub": "Hálásak vagyunk, hogy segítesz a fejlődésünkben.",
+    "ratings": {
+      "great": "Nagyon elégedett",
+      "good": "Elégedett",
+      "ok": "Semleges",
+      "bad": "Elégedetlen",
+      "awful": "Nagyon elégedetlen"
+    }
   }
 }
