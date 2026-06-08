@@ -3,6 +3,7 @@
     <NuxtPage />
   </NuxtLayout>
   <ReportBugButton />
+  <FeedbackButton />
 </template>
 
 <script setup lang="ts">
