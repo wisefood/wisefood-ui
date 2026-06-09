@@ -535,8 +535,9 @@
               :key="citation.article_urn"
               :to="getCitationSourcePath(citation)"
               :data-citation-urn="citation.article_urn"
+              target="_blank"
+              rel="noopener noreferrer"
               class="citation-source-card flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600 dark:hover:text-brand-400 transition-colors group"
-              @click.prevent="getCitationSourceType(citation) === 'guideline' ? navigateToGuideline(citation.article_urn) : router.push(getCitationSourcePath(citation))"
             >
               <UIcon :name="getQaSourceIcon(citation.article_urn, getCitationSourceType(citation))" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
               <span class="text-xs text-gray-800 dark:text-gray-200 leading-snug line-clamp-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ citation.article_title }}</span>
@@ -549,6 +550,8 @@
                 v-for="article in uncitedRetrievedArticles"
                 :key="article.urn"
                 :to="getQaSourcePath(article.urn, article.source_type)"
+                target="_blank"
+                rel="noopener noreferrer"
                 class="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-100 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/50 opacity-60 hover:opacity-100 hover:border-gray-300 dark:hover:border-zinc-700 transition-all group"
               >
                 <UIcon :name="getQaSourceIcon(article.urn, article.source_type)" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
@@ -966,13 +969,6 @@
             </div>
             <NuxtLink
               to="/foodscholar/textbooks"
-              class="shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:text-amber-700 transition-colors group"
-            >
-              Full catalog
-              <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-            </NuxtLink>
-               <NuxtLink
-              to="/foodscholar/textbooks"
               class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 text-xs font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
             >
               <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
@@ -1025,6 +1021,7 @@ import foodscholarApi, {
 } from '~/services/foodscholarApi'
 import { useAuthStore } from '~/stores/auth'
 import { useHouseholdStore } from '~/stores/household'
+import { useFoodScholarQaStore } from '~/stores/foodscholarQa'
 import { getExcerpt } from '~/utils/articleHelpers'
 import {
   buildGuideDetailPath,
@@ -1508,6 +1505,7 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const householdStore = useHouseholdStore()
+const qaStore = useFoodScholarQaStore()
 
 const qaHeadingIndex = Math.floor(Math.random() * 10)
 const qaHeadings = computed(() => {
@@ -1588,23 +1586,34 @@ const getCitationForUrn = (articleUrn: string) => {
   return citations.find(c => c.article_urn === articleUrn && (c.quote || c.section)) || null
 }
 
-const navigateToGuideline = async (guidelineId: string, extraQuery: Record<string, string> = {}) => {
+// Navigate (current tab) or open (new tab) a resolved location, depending on intent.
+const goToLocation = (location: { path: string, query?: Record<string, string>, hash?: string }, openInNewTab: boolean) => {
+  if (!openInNewTab) {
+    router.push(location)
+    return
+  }
+  const resolved = router.resolve(location)
+  window.open(resolved.href, '_blank', 'noopener')
+}
+
+const navigateToGuideline = async (guidelineId: string, extraQuery: Record<string, string> = {}, openInNewTab = false) => {
+  const fallback = { path: `/foodscholar/catalog/guidelines/${encodeURIComponent(guidelineId)}`, query: { ...extraQuery, guideline: guidelineId } }
   try {
     const guideline = await catalogApi.getGuideline(guidelineId)
     if (!guideline.guide_urn) {
-      router.push({ path: `/foodscholar/catalog/guidelines/${encodeURIComponent(guidelineId)}`, query: { ...extraQuery, guideline: guidelineId } })
+      goToLocation(fallback, openInNewTab)
       return
     }
     const query: Record<string, string> = { ...extraQuery, guideline: guidelineId }
     if (typeof guideline.page_no === 'number') {
       query.pdf_page = String(guideline.page_no)
     }
-    router.push({
+    goToLocation({
       path: buildGuideDetailPath(guideline.region, guideline.guide_urn),
-      query,
-    })
+      query
+    }, openInNewTab)
   } catch {
-    router.push({ path: `/foodscholar/catalog/guidelines/${encodeURIComponent(guidelineId)}`, query: { ...extraQuery, guideline: guidelineId } })
+    goToLocation(fallback, openInNewTab)
   }
 }
 
@@ -1678,15 +1687,15 @@ const handleMarkdownClick = (event: MouseEvent) => {
   const query = Object.fromEntries(url.searchParams.entries()) as Record<string, string>
 
   if (sourceType === 'guideline') {
-    void navigateToGuideline(targetUrn, query)
+    void navigateToGuideline(targetUrn, query, true)
   } else {
     if (!('section' in query) && citation?.section) query.section = String(citation.section)
     if (!('hl' in query) && citation?.quote) query.hl = String(citation.quote)
-    router.push({
+    goToLocation({
       path: targetPath,
       query,
       hash: url.hash
-    })
+    }, true)
   }
 }
 
@@ -2216,6 +2225,11 @@ const handleQaResponse = (result: QaAskResult, basePayload: QaAskRequest) => {
     qaThreadId.value = null
     pendingPayload.value = null
     qaResult.value = normalizeQaResult(result)
+    qaStore.save({
+      question: pendingQuestion.value,
+      result: qaResult.value,
+      expertiseLevel: expertiseLevel.value
+    })
   }
 }
 
@@ -2657,6 +2671,17 @@ watch(pageTab, (tab) => {
 onMounted(async () => {
   hydrateLibraryFromQuery()
 
+  // Restore a recent QA thread (within the store's TTL) so navigating away and
+  // back to /foodscholar doesn't lose the question, answer, and citations.
+  if (!qaResult.value && !asking.value) {
+    const saved = qaStore.restore()
+    if (saved) {
+      qaResult.value = saved.result
+      pendingQuestion.value = saved.question
+      expertiseLevel.value = saved.expertiseLevel
+    }
+  }
+
   await Promise.all([
     loadPopularArticles(),
     loadQaModels(),
@@ -2730,6 +2755,38 @@ onUnmounted(() => {
   top: 0.25rem;
   width: clamp(12rem, calc((100% - 42rem) / 2 - 1.5rem), 18rem);
   max-width: 18rem;
+  /* Cap to the viewport and scroll internally so a long source list never
+     overruns the page footer. */
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 113, 108, 0.35) transparent;
+}
+
+.qa-source-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.qa-source-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.qa-source-sidebar::-webkit-scrollbar-thumb {
+  background-color: rgba(120, 113, 108, 0.35);
+  border-radius: 9999px;
+}
+
+.qa-source-sidebar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(120, 113, 108, 0.55);
+}
+
+.dark .qa-source-sidebar {
+  scrollbar-color: rgba(161, 161, 170, 0.3) transparent;
+}
+
+.dark .qa-source-sidebar::-webkit-scrollbar-thumb {
+  background-color: rgba(161, 161, 170, 0.3);
 }
 
 .qa-advanced-panel {

@@ -7,6 +7,12 @@ export default <RouterConfig>{
       return savedPosition
     }
 
+    // Same-page query-only changes (e.g. updating filter state in the URL)
+    // should not jump the scroll position.
+    if (to.path === from.path && !to.hash) {
+      return false
+    }
+
     // If the hash looks like a Keycloak callback (contains state= or session_state=),
     // don't try to scroll to it as it's not a valid CSS selector
     if (to.hash && (to.hash.includes('state=') || to.hash.includes('session_state=') || to.hash.includes('code='))) {
