@@ -2,8 +2,8 @@
   <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
     <!-- Header -->
     <AppPageHeader
-      back-to="/foodscholar/catalog"
-      :back-label="t('foodScholarArticle.backToCatalog')"
+      :back-to="backLink.to"
+      :back-label="backLink.label"
       brand-title="FoodScholar"
       brand-class="text-brand-500 dark:text-brand-400"
       :subtitle="t('foodScholarHome.subtitle')"
@@ -484,7 +484,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useArticles } from '~/composables/useArticles'
 import { useAuthStore } from '~/stores/auth'
@@ -498,7 +498,19 @@ definePageMeta({
 const { t } = useI18n()
 
 const route = useRoute()
+const router = useRouter()
 const urn = computed(() => route.params.id as string)
+
+// Articles are reachable from the catalog, the FoodScholar home/Library cards, and
+// QA citations. Honor the actual entry point so "back" doesn't teleport, falling
+// back to the catalog on a cold/direct load. Mirrors recipe-wrangler/[id].vue.
+const backLink = computed(() => {
+  const prev = router.options.history.state.back as string | undefined
+  if (prev && prev.startsWith('/foodscholar') && !prev.startsWith('/foodscholar/catalog')) {
+    return { to: '/foodscholar', label: t('foodScholarCatalog.header.backToFoodScholar') }
+  }
+  return { to: '/foodscholar/catalog', label: t('foodScholarArticle.backToCatalog') }
+})
 
 const { currentArticle: article, loading, error, fetchArticle } = useArticles()
 const authStore = useAuthStore()
