@@ -81,6 +81,21 @@
           {{ tooltip.facts }}
         </p>
       </div>
+
+      <transition
+        enter-active-class="transition-opacity duration-300"
+        enter-from-class="opacity-0"
+        leave-active-class="transition-opacity duration-300"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="showHintChip && isReady"
+          class="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2 flex items-center gap-1.5 rounded-full bg-white/70 px-3.5 py-1.5 text-xs font-medium text-[#173f35] shadow-[0_14px_32px_rgba(70,46,30,0.14)] backdrop-blur-xl dark:bg-white/12 dark:text-stone-100"
+        >
+          <UIcon name="i-lucide-mouse-pointer-click" class="h-3.5 w-3.5" />
+          Click a region to open its guides
+        </div>
+      </transition>
     </div>
   </div>
 </template>
@@ -123,6 +138,7 @@ const props = defineProps<{
   selectedRegionCode?: string | null
   hideControls?: boolean
   viewPadding?: number
+  showHint?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -144,6 +160,7 @@ const tooltip = reactive<TooltipState>({
 })
 
 const selectedCode = computed(() => props.selectedRegionCode?.toUpperCase() || null)
+const showHintChip = computed(() => Boolean(props.showHint) && !selectedCode.value)
 const viewPadding = computed(() => {
   if (typeof props.viewPadding !== 'number') {
     return 0.12
