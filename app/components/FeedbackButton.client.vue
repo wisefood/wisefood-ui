@@ -108,7 +108,7 @@ onClickOutside(panel, () => {
       variant="solid"
       icon="i-lucide-smile"
       size="lg"
-      class="fixed bottom-24 right-5 z-[140] rounded-full shadow-lg shadow-brand-500/25 hover:shadow-brand-500/35 hover:scale-105 transition-transform"
+      class="fixed bottom-20 right-5 z-[140] rounded-full shadow-lg shadow-brand-500/25 hover:shadow-brand-500/35 hover:scale-105 transition-transform"
       @click="toggle"
     />
 
@@ -125,7 +125,7 @@ onClickOutside(panel, () => {
         ref="panel"
         role="dialog"
         :aria-label="t('feedback.title')"
-        class="fixed bottom-40 right-5 z-[140] w-80 max-w-[calc(100vw-3rem)] rounded-xl shadow-2xl bg-white dark:bg-gray-900 ring-1 ring-gray-200 dark:ring-gray-800 p-5"
+        class="fixed bottom-36 right-5 z-[140] w-80 max-w-[calc(100vw-3rem)] rounded-xl shadow-2xl bg-white dark:bg-gray-900 ring-1 ring-gray-200 dark:ring-gray-800 p-5"
       >
         <!-- Form -->
         <template v-if="!submitted">
