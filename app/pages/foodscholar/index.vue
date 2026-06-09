@@ -1126,11 +1126,57 @@ const librarySelectedRegionData = computed(() =>
 )
 
 const librarySelectedTopic = ref(CATEGORY_ALL)
+const libraryBrowseAxis = ref<'category' | 'journal'>('category')
 const libraryTopicArticles = ref<HomeArticle[]>([])
 const libraryTopicArticlesLoading = ref(false)
 const libraryTopicFacetsLoaded = ref(false)
 
 const libraryArticleTopics = computed(() => popularArticleTopics.value.slice(0, 8))
+
+const libraryCategoryPills = computed<string[]>(() => {
+  const merged = new Map<string, number>()
+  ;(facets.value.category || []).forEach((f) => {
+    if (f?.value) merged.set(f.value, (merged.get(f.value) || 0) + Number(f.count || 0))
+  })
+  ;(facets.value.ai_category || []).forEach((f) => {
+    if (f?.value) merged.set(f.value, (merged.get(f.value) || 0) + Number(f.count || 0))
+  })
+  const top = Array.from(merged.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8)
+    .map(([value]) => value)
+  return [CATEGORY_ALL, ...top]
+})
+
+const libraryJournalPills = computed<string[]>(() => {
+  const top = (facets.value.venue || [])
+    .filter(f => f?.value && String(f.value).trim())
+    .sort((a, b) => Number(b.count || 0) - Number(a.count || 0))
+    .slice(0, 8)
+    .map(f => f.value)
+  return [CATEGORY_ALL, ...top]
+})
+
+const libraryActivePills = computed<string[]>(() =>
+  libraryBrowseAxis.value === 'journal' ? libraryJournalPills.value : libraryCategoryPills.value
+)
+
+const librarySelectedCount = computed<number>(() => {
+  const value = librarySelectedTopic.value
+  if (value === CATEGORY_ALL) return 0
+  if (libraryBrowseAxis.value === 'journal') {
+    return Number((facets.value.venue || []).find(f => f.value === value)?.count || 0)
+  }
+  const cat = Number((facets.value.category || []).find(f => f.value === value)?.count || 0)
+  const ai = Number((facets.value.ai_category || []).find(f => f.value === value)?.count || 0)
+  return cat + ai
+})
+
+const libraryEmptyMessage = computed(() =>
+  libraryBrowseAxis.value === 'journal'
+    ? 'No articles in this journal yet.'
+    : 'No articles in this category yet.'
+)
 
 const libraryTotalArticles = computed(() => allArticlesTotal.value)
 const libraryTotalJournals = computed(() => {
@@ -1156,13 +1202,18 @@ async function loadLibraryTopicFacets() {
   libraryTopicFacetsLoaded.value = true
 }
 
-async function selectLibraryTopic(topic: string) {
-  librarySelectedTopic.value = topic
-  if (topic === CATEGORY_ALL) {
+// Temporary stub — replaced with the real implementation in the URL-persistence task.
+function syncLibraryQuery() {}
+
+async function selectLibraryFacet(value: string) {
+  librarySelectedTopic.value = value
+  if (value === CATEGORY_ALL) {
     libraryTopicArticles.value = []
+    syncLibraryQuery()
     return
   }
 
+  const field = libraryBrowseAxis.value === 'journal' ? 'venue' : 'category'
   libraryTopicArticlesLoading.value = true
   try {
     const response = await articlesApi.searchArticles({
@@ -1171,7 +1222,7 @@ async function selectLibraryTopic(topic: string) {
       offset: 0,
       sort: 'created_at desc',
       fl: ['id', 'urn', 'title', 'abstract', 'description', 'content', 'authors', 'tags', 'ai_tags', 'topics', 'venue', 'publication_year', 'category', 'ai_category'],
-      fq: [`topics:"${topic}"`],
+      fq: [`${field}:"${value}"`],
       fields: []
     })
     const results = response.result.results || []
@@ -1181,6 +1232,15 @@ async function selectLibraryTopic(topic: string) {
   } finally {
     libraryTopicArticlesLoading.value = false
   }
+  syncLibraryQuery()
+}
+
+function setLibraryBrowseAxis(axis: 'category' | 'journal') {
+  if (libraryBrowseAxis.value === axis) return
+  libraryBrowseAxis.value = axis
+  librarySelectedTopic.value = CATEGORY_ALL
+  libraryTopicArticles.value = []
+  syncLibraryQuery()
 }
 
 async function loadLibraryMap() {
@@ -2456,8 +2516,8 @@ watch(popularArticleTopics, (newTopics) => {
   }
 })
 
-watch(libraryArticleTopics, (newTopics) => {
-  if (newTopics.length > 0 && !newTopics.includes(librarySelectedTopic.value)) {
+watch(libraryActivePills, (pills) => {
+  if (pills.length > 0 && !pills.includes(librarySelectedTopic.value)) {
     librarySelectedTopic.value = CATEGORY_ALL
     libraryTopicArticles.value = []
   }
