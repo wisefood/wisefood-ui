@@ -527,7 +527,8 @@
         <!-- end center column -->
 
         <!-- Right panel: cited sources (titles only) -->
-        <aside class="qa-source-sidebar hidden xl:flex flex-col gap-2 pt-1">
+        <aside class="qa-source-sidebar hidden xl:block pt-1">
+          <div class="qa-source-sidebar-inner">
           <template v-if="qaResult && primaryAnswer && primaryAnswer.citations?.length">
             <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mb-1">Sources cited</p>
             <NuxtLink
@@ -559,6 +560,7 @@
               </NuxtLink>
             </template>
           </template>
+          </div>
         </aside>
 
         </div><!-- end 3-col grid -->
@@ -2776,39 +2778,51 @@ onUnmounted(() => {
   position: absolute;
   right: 0;
   top: 0.25rem;
+  bottom: 0.25rem;
   width: clamp(12rem, calc((100% - 42rem) / 2 - 1.5rem), 18rem);
   max-width: 18rem;
-  /* Cap to the viewport and scroll internally so a long source list never
-     overruns the page footer. */
-  max-height: calc(100vh - 2rem);
+  /* Bound the rail to its container's height and scroll internally so a long
+     source list never overruns the page footer. The sticky inner wrapper
+     (.qa-source-sidebar-inner) keeps the visible sources pinned in the
+     viewport as the answer scrolls. */
+  overflow: visible;
+}
+
+.qa-source-sidebar-inner {
+  position: sticky;
+  top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: calc(100vh - 3rem);
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(120, 113, 108, 0.35) transparent;
 }
 
-.qa-source-sidebar::-webkit-scrollbar {
+.qa-source-sidebar-inner::-webkit-scrollbar {
   width: 5px;
 }
 
-.qa-source-sidebar::-webkit-scrollbar-track {
+.qa-source-sidebar-inner::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.qa-source-sidebar::-webkit-scrollbar-thumb {
+.qa-source-sidebar-inner::-webkit-scrollbar-thumb {
   background-color: rgba(120, 113, 108, 0.35);
   border-radius: 9999px;
 }
 
-.qa-source-sidebar::-webkit-scrollbar-thumb:hover {
+.qa-source-sidebar-inner::-webkit-scrollbar-thumb:hover {
   background-color: rgba(120, 113, 108, 0.55);
 }
 
-.dark .qa-source-sidebar {
+.dark .qa-source-sidebar-inner {
   scrollbar-color: rgba(161, 161, 170, 0.3) transparent;
 }
 
-.dark .qa-source-sidebar::-webkit-scrollbar-thumb {
+.dark .qa-source-sidebar-inner::-webkit-scrollbar-thumb {
   background-color: rgba(161, 161, 170, 0.3);
 }
 
