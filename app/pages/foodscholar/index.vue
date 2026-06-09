@@ -1187,18 +1187,15 @@ interface LibraryPill {
   count: number
 }
 
+// Category pills use ai_category — the subject taxonomy shown on the article
+// cards (e.g. "Supplements"). The `category` field holds study-type values
+// (e.g. "Randomized Controlled Trial"), a different taxonomy we don't browse by.
 const libraryCategoryPills = computed<LibraryPill[]>(() => {
-  const merged = new Map<string, number>()
-  ;(facets.value.category || []).forEach((f) => {
-    if (f?.value) merged.set(f.value, (merged.get(f.value) || 0) + Number(f.count || 0))
-  })
-  ;(facets.value.ai_category || []).forEach((f) => {
-    if (f?.value) merged.set(f.value, (merged.get(f.value) || 0) + Number(f.count || 0))
-  })
-  const top = Array.from(merged.entries())
-    .sort((a, b) => b[1] - a[1])
+  const top = (facets.value.ai_category || [])
+    .filter(f => f?.value && String(f.value).trim())
+    .sort((a, b) => Number(b.count || 0) - Number(a.count || 0))
     .slice(0, 8)
-    .map(([value, count]) => ({ value, count }))
+    .map(f => ({ value: f.value, count: Number(f.count || 0) }))
   return [{ value: CATEGORY_ALL, count: 0 }, ...top]
 })
 
@@ -1218,12 +1215,8 @@ const libraryActivePills = computed<LibraryPill[]>(() =>
 const librarySelectedCount = computed<number>(() => {
   const value = librarySelectedTopic.value
   if (value === CATEGORY_ALL) return 0
-  if (libraryBrowseAxis.value === 'journal') {
-    return Number((facets.value.venue || []).find(f => f.value === value)?.count || 0)
-  }
-  const cat = Number((facets.value.category || []).find(f => f.value === value)?.count || 0)
-  const ai = Number((facets.value.ai_category || []).find(f => f.value === value)?.count || 0)
-  return cat + ai
+  const field = libraryBrowseAxis.value === 'journal' ? 'venue' : 'ai_category'
+  return Number((facets.value[field] || []).find(f => f.value === value)?.count || 0)
 })
 
 const libraryEmptyMessage = computed(() =>
@@ -1297,11 +1290,9 @@ async function selectLibraryFacet(value: string) {
     return
   }
 
-  // A category value may live in either the human `category` field or the
-  // AI-assigned `ai_category` field, so match both. Journals only use `venue`.
-  const fq = libraryBrowseAxis.value === 'journal'
-    ? [`venue:"${value}"`]
-    : [`(category:"${value}" OR ai_category:"${value}")`]
+  // Category browses by ai_category (the card's subject label); journals by venue.
+  const field = libraryBrowseAxis.value === 'journal' ? 'venue' : 'ai_category'
+  const fq = [`${field}:"${value}"`]
   libraryTopicArticlesLoading.value = true
   try {
     const response = await articlesApi.searchArticles({
