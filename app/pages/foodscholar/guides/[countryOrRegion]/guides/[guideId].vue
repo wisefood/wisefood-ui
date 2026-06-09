@@ -3,7 +3,7 @@
     <FoodscholarMicroHeader
       :show-back="true"
       :back-to="resolvedRegion ? buildGuidesRegionPath(resolvedRegion) : buildGuidesCatalogPath()"
-      back-label="Back to Guides"
+      :back-label="backLabel"
       back-icon="i-lucide-arrow-left"
       brand-title="FoodScholar"
       brand-lead="Dietary guides by country."
@@ -460,6 +460,7 @@ let refreshTimeout: ReturnType<typeof setTimeout> | null = null
 
 const guideTitle = computed(() => selectedGuide.value?.title || 'Guide detail')
 const regionTitle = computed(() => getRegionPresentation(resolvedRegion.value || regionParam.value).label)
+const backLabel = computed(() => resolvedRegion.value ? `Back to ${getRegionPresentation(resolvedRegion.value).label}` : 'Back to Guides')
 const guidePublisher = computed(() => selectedGuide.value ? getGuidePublisher(selectedGuide.value) : null)
 const guidePublicationLabel = computed(() => selectedGuide.value ? getGuidePublicationLabel(selectedGuide.value) : null)
 

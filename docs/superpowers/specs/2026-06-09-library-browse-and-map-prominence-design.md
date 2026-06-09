@@ -77,6 +77,41 @@ async function selectLibraryFacet(field: 'category' | 'venue', value: string) { 
 ### Stats row
 The existing stats dl (Articles / Journals / Topics) is unchanged.
 
+### Per-axis empty states
+When a selection yields zero cards, show axis-aware copy instead of the current generic
+"No articles found for this topic.":
+- Category axis → **"No articles in this category yet."**
+- Journal axis → **"No articles in this journal yet."**
+
+Implement as a computed string keyed off `libraryBrowseAxis`.
+
+### See-all-in-catalog link
+When a non-`All` pill is selected, render a small link below/beside the card grid:
+**"See all {N} in catalog →"**, where `{N}` is the matching facet's `count` (already available
+from the facet entry that produced the pill — no extra request).
+
+Destination depends on axis, constrained by what the catalog page can hydrate from its URL
+(`hydrateStateFromRoute`, `app/pages/foodscholar/catalog.vue:782`):
+- **Journal** → `/foodscholar/catalog?venue=<value>` — the catalog reads `route.query.venue` directly,
+  so the filter lands exactly.
+- **Category** → the catalog has **no URL-addressable `category` param** (category filtering there is
+  internal facet state, not a query key). Use the closest approximation: `/foodscholar/catalog?q=<value>`,
+  routing the category name into the catalog's NL search box. Note this in code with a brief comment so
+  the asymmetry is intentional, not a bug. If exact category pre-selection is later wanted, the catalog
+  page would need a new `?category=` query key — out of scope here.
+
+### URL query persistence
+Persist the Library browse state in the page URL so a view is shareable and survives refresh:
+- Query keys: `?browse=category|journal` and a value key — reuse `category=<value>` / `venue=<value>`
+  to mirror the catalog's convention (`venue` for journal; `category` for the category axis, which
+  the Library tab *can* address even though the catalog cannot).
+- On mount, hydrate `libraryBrowseAxis` and the selected value from `route.query` (guard against
+  unknown values → fall back to `category` / `CATEGORY_ALL`). Only applies when `pageTab === 'resources'`.
+- On toggle/pill change, update the query via `router.replace` (not `push`, to avoid history spam),
+  preserving any existing `pageTab` query the page already uses.
+- Check how `pageTab` itself is currently persisted (if at all) and follow the same mechanism so the
+  two don't fight over the query string.
+
 ## Part 2 — Map prominence & interactivity
 
 ### Shared affordance in `EuropeGuidesMap.vue`

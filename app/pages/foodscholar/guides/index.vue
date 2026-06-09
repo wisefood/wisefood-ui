@@ -249,6 +249,15 @@
             >
               Clear all
             </button>
+
+            <NuxtLink
+              v-if="selectedCatalogRegions.length === 1"
+              :to="buildGuidesRegionPath(selectedCatalogRegions[0])"
+              class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-[#173f35] transition-colors hover:text-[#0d241f] dark:text-emerald-300 dark:hover:text-emerald-100"
+            >
+              <span>Open {{ getRegionPresentation(selectedCatalogRegions[0]).label }} explorer</span>
+              <UIcon name="i-lucide-arrow-right" class="h-3.5 w-3.5" />
+            </NuxtLink>
           </div>
 
           <!-- Region quick-filter chips from available summaries -->
