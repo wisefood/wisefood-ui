@@ -573,11 +573,16 @@
 
         <!-- Introduction + resource type row -->
         <section class="grid lg:grid-cols-[1fr_auto] gap-10 items-start">
-          <div>
-            <h2 class="text-3xl sm:text-4xl font-claude text-gray-900 dark:text-white leading-tight mb-4">
+          <div class="relative">
+            <!-- Subtle wavy grainient behind the intro copy -->
+            <div class="grainient-intro" aria-hidden="true">
+              <div class="grainient-intro__mesh" />
+              <div class="grainient-intro__grain" />
+            </div>
+            <h2 class="relative text-3xl sm:text-4xl font-claude text-gray-900 dark:text-white leading-tight mb-4">
               Access the science of human nutrition
             </h2>
-            <p class="text-sm text-gray-500 dark:text-zinc-400 leading-relaxed max-w-3xl mb-6">
+            <p class="relative text-sm text-gray-500 dark:text-zinc-400 leading-relaxed max-w-3xl mb-6">
               FoodScholar consolidates peer-reviewed research, national dietary guidance, and academic reference material across the full breadth of nutritional science, for everyone.
             </p>
 
@@ -3045,6 +3050,95 @@ onUnmounted(() => {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Subtle wavy grainient behind the Library intro heading.
+   Animated CSS mesh of brand + earth-tone blobs, softly masked at the edges,
+   with a film-grain overlay. Adapted from the grainient vocabulary to the
+   app's light-first rose/earth palette. */
+.grainient-intro {
+  position: absolute;
+  /* A medium organic glow sitting behind the copy, kept clear of the
+     container edges on every side. */
+  /* Extra bleed room on every side so the blobs have space to fade out fully
+     inside the element, never reaching its edges. */
+  inset: -7rem -7rem -7rem -7rem;
+  z-index: 0;
+  overflow: visible;
+  pointer-events: none;
+  /* Blobs are clustered toward the centre with fades that complete well inside
+     the element bounds (transparent reached by ~58-62% radius), so nothing is
+     clipped at the edges. */
+  -webkit-mask-image:
+    radial-gradient(38% 44% at 36% 42%, #000 0%, transparent 60%),
+    radial-gradient(34% 40% at 60% 36%, #000 0%, transparent 62%),
+    radial-gradient(42% 48% at 48% 62%, #000 0%, transparent 60%);
+  mask-image:
+    radial-gradient(38% 44% at 36% 42%, #000 0%, transparent 60%),
+    radial-gradient(34% 40% at 60% 36%, #000 0%, transparent 62%),
+    radial-gradient(42% 48% at 48% 62%, #000 0%, transparent 60%);
+  -webkit-mask-composite: source-over;
+  mask-composite: add;
+  opacity: 0.5;
+}
+
+.grainient-intro__mesh {
+  position: absolute;
+  inset: -8%;
+  background:
+    radial-gradient(42% 48% at 36% 42%, var(--color-brand-300, #e68599) 0%, transparent 64%),
+    radial-gradient(38% 44% at 60% 36%, var(--earth-2, #cad5b2) 0%, transparent 66%),
+    radial-gradient(46% 52% at 48% 62%, var(--color-brand-200, #eeadbb) 0%, transparent 64%);
+  filter: blur(40px) saturate(108%);
+  will-change: transform;
+  animation: grainient-wave 26s ease-in-out infinite alternate;
+}
+
+/* Dark mode: deeper brand tones, lower lift, so it stays subtle on dark. */
+:global(.dark) .grainient-intro {
+  opacity: 0.4;
+}
+
+:global(.dark) .grainient-intro__mesh {
+  background:
+    radial-gradient(42% 48% at 36% 42%, var(--color-brand-600, #aa2944) 0%, transparent 64%),
+    radial-gradient(38% 44% at 60% 36%, var(--color-brandg-700, #646d1a) 0%, transparent 66%),
+    radial-gradient(46% 52% at 48% 62%, var(--color-brand-700, #801f33) 0%, transparent 64%);
+  filter: blur(44px) saturate(115%);
+}
+
+.grainient-intro__grain {
+  position: absolute;
+  inset: 0;
+  /* Tiled SVG fractal noise — the "grain" of grainient. Higher frequency =
+     finer, denser grain; raised opacity makes the texture clearly visible. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 130px 130px;
+  opacity: 0.34;
+  mix-blend-mode: overlay;
+}
+
+:global(.dark) .grainient-intro__grain {
+  opacity: 0.26;
+}
+
+@keyframes grainient-wave {
+  0% {
+    transform: translate3d(-1.5%, -1%, 0) rotate(0deg) scale(1.02);
+  }
+  50% {
+    transform: translate3d(1.5%, 1%, 0) rotate(3deg) scale(1.06);
+  }
+  100% {
+    transform: translate3d(1%, -0.5%, 0) rotate(-2deg) scale(1.03);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grainient-intro__mesh {
+    animation: none;
+    transform: translate3d(0, 0, 0) scale(1.02);
   }
 }
 
