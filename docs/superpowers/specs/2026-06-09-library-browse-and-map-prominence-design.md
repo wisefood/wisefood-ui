@@ -107,10 +107,16 @@ Persist the Library browse state in the page URL so a view is shareable and surv
   the Library tab *can* address even though the catalog cannot).
 - On mount, hydrate `libraryBrowseAxis` and the selected value from `route.query` (guard against
   unknown values → fall back to `category` / `CATEGORY_ALL`). Only applies when `pageTab === 'resources'`.
-- On toggle/pill change, update the query via `router.replace` (not `push`, to avoid history spam),
-  preserving any existing `pageTab` query the page already uses.
-- Check how `pageTab` itself is currently persisted (if at all) and follow the same mechanism so the
-  two don't fight over the query string.
+- On toggle/pill change, update the query via `router.replace` (not `push`, to avoid history spam).
+- `pageTab` is currently **not** URL-persisted — it's a plain `ref<'qa' | 'resources'>('qa')`
+  (`app/pages/foodscholar/index.vue:1070`) selected on mount via `pageTab.value === 'resources'`
+  (`onMounted`, ~line 2531). For a shared Library link to actually open the Library tab, persist
+  `pageTab` too: add `?tab=resources` to the query and hydrate `pageTab` from `route.query.tab` on mount.
+  Final shareable shape: `/foodscholar?tab=resources&browse=journal&venue=<value>`.
+- Keep the existing `watch(pageTab, …)` / `onMounted` lazy-load triggers
+  (`loadLibraryMap` / `loadLibraryTextbooks` / `loadLibraryTopicFacets`) working when the tab is
+  hydrated from the URL — i.e. hydrate `pageTab` *before* the `onMounted` lazy-load check runs, or
+  fire the loaders after hydration.
 
 ## Part 2 — Map prominence & interactivity
 
@@ -154,7 +160,8 @@ Add an optional prop and overlay so both call sites get identical behavior:
 
 ## Files touched
 
-- `app/pages/foodscholar/index.vue` — browse toggle + selector logic; map section copy + `show-hint`.
+- `app/pages/foodscholar/index.vue` — browse toggle + selector logic; per-axis empty states;
+  see-all-in-catalog link; URL persistence (`tab` + `browse` + value); map section copy + `show-hint`.
 - `app/pages/foodscholar/guides/index.vue` — map tab caption + `show-hint`.
 - `app/components/foodscholar/guides/EuropeGuidesMap.vue` — `showHint` prop + hint chip + cursor.
 - i18n locale files (`en`/`hu`/`sl`) if new visible strings are added through the i18n layer
