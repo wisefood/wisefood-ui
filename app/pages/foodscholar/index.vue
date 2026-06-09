@@ -793,20 +793,20 @@
           </div>
 
           <template v-else-if="allArticles.length">
-            <!-- Topic tabs -->
+            <!-- Browse-axis pills -->
             <div class="flex gap-1.5 flex-wrap mb-6">
               <button
-                v-for="topic in libraryArticleTopics"
-                :key="topic"
+                v-for="pill in libraryActivePills"
+                :key="pill"
                 type="button"
                 :class="[
                   'px-3 py-1.5 text-xs font-medium rounded-full border transition-colors',
-                  librarySelectedTopic === topic
+                  librarySelectedTopic === pill
                     ? 'bg-brand-500 border-brand-500 text-white'
                     : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600 dark:hover:text-brand-400'
                 ]"
-                @click="selectLibraryTopic(topic)"
-              >{{ topic }}</button>
+                @click="selectLibraryFacet(pill)"
+              >{{ pill }}</button>
             </div>
 
             <div v-if="libraryTopicArticlesLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -827,7 +827,7 @@
               </div>
 
               <p v-if="!libraryFilteredArticles.length" class="py-10 text-center text-sm text-gray-400 dark:text-zinc-500">
-                No articles found for this topic.
+                {{ libraryEmptyMessage }}
               </p>
             </template>
           </template>
@@ -1130,8 +1130,6 @@ const libraryBrowseAxis = ref<'category' | 'journal'>('category')
 const libraryTopicArticles = ref<HomeArticle[]>([])
 const libraryTopicArticlesLoading = ref(false)
 const libraryTopicFacetsLoaded = ref(false)
-
-const libraryArticleTopics = computed(() => popularArticleTopics.value.slice(0, 8))
 
 const libraryCategoryPills = computed<string[]>(() => {
   const merged = new Map<string, number>()
