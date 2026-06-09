@@ -753,7 +753,7 @@
           <div class="flex items-center justify-between gap-4 mb-4">
             <div>
               <p class="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">Articles</p>
-              <h2 class="font-claude text-2xl text-gray-900 dark:text-white">Browse by topic</h2>
+              <h2 class="font-claude text-2xl text-gray-900 dark:text-white">Browse articles</h2>
             </div>
             <NuxtLink
               to="/foodscholar/catalog"
@@ -793,6 +793,36 @@
           </div>
 
           <template v-else-if="allArticles.length">
+            <!-- Browse axis toggle -->
+            <div class="inline-flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 p-0.5 mb-4">
+              <button
+                type="button"
+                :class="[
+                  'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors',
+                  libraryBrowseAxis === 'category'
+                    ? 'bg-white dark:bg-zinc-900 text-brand-600 dark:text-brand-400 shadow-sm'
+                    : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200'
+                ]"
+                @click="setLibraryBrowseAxis('category')"
+              >
+                <UIcon name="i-lucide-shapes" class="w-3.5 h-3.5" />
+                Category
+              </button>
+              <button
+                type="button"
+                :class="[
+                  'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors',
+                  libraryBrowseAxis === 'journal'
+                    ? 'bg-white dark:bg-zinc-900 text-brand-600 dark:text-brand-400 shadow-sm'
+                    : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200'
+                ]"
+                @click="setLibraryBrowseAxis('journal')"
+              >
+                <UIcon name="i-lucide-book-marked" class="w-3.5 h-3.5" />
+                Journal
+              </button>
+            </div>
+
             <!-- Browse-axis pills -->
             <div class="flex gap-1.5 flex-wrap mb-6">
               <button
