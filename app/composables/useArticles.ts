@@ -9,6 +9,26 @@ import type {
 } from '~/services/articlesApi'
 import type { ApiError } from '~/services/wisefoodApi'
 
+// Elasticsearch refuses to serve results where offset + limit exceeds its
+// result window (default 10000). Clamp the total used for pagination so the UI
+// never renders a page button that would request a rejected window. The real
+// total is still shown to the user separately.
+const DEFAULT_MAX_RESULT_WINDOW = 10000
+
+export function navigableTotal(
+  total: number,
+  limit: number,
+  maxResultWindow: number = DEFAULT_MAX_RESULT_WINDOW
+): number {
+  if (!total || total <= 0) return 0
+  const window = maxResultWindow > 0 ? maxResultWindow : DEFAULT_MAX_RESULT_WINDOW
+  if (limit <= 0) return Math.min(total, window)
+  // The last fully-reachable page starts at an offset < window. Round the window
+  // down to a whole number of pages so the final page never spills past it.
+  const reachable = Math.floor(window / limit) * limit
+  return Math.min(total, reachable)
+}
+
 export function useArticles() {
   const articles = ref<Article[]>([])
   const currentArticle = ref<Article | null>(null)
@@ -17,6 +37,9 @@ export function useArticles() {
   const totalResults = ref(0)
   const totalPages = ref(0)
   const currentPage = ref(1)
+  // Largest offset+limit the backend will serve. Defaults to ES's standard
+  // 10000 window until a response tells us otherwise.
+  const maxResultWindow = ref(10000)
 
   /**
    * Fetch articles with optional search/filter parameters
@@ -29,10 +52,11 @@ export function useArticles() {
       const response: ArticleListResponse = await articlesApi.getArticles(params)
       articles.value = response.result.results
       totalResults.value = response.result.total
+      maxResultWindow.value = response.result.max_result_window ?? maxResultWindow.value
 
-      // Calculate pages based on limit/offset
+      // Calculate pages based on limit/offset, clamped to the navigable window.
       const limit = params?.limit || 10
-      totalPages.value = Math.ceil(response.result.total / limit)
+      totalPages.value = Math.ceil(navigableTotal(response.result.total, limit) / limit)
       currentPage.value = Math.floor((params?.offset || 0) / limit) + 1
 
       return response
@@ -78,10 +102,11 @@ export function useArticles() {
       const response = await articlesApi.searchArticles(searchParams)
       articles.value = response.result.results
       totalResults.value = response.result.total
+      maxResultWindow.value = response.result.max_result_window ?? maxResultWindow.value
 
-      // Calculate pages based on limit/offset
+      // Calculate pages based on limit/offset, clamped to the navigable window.
       const limit = searchParams.limit || 10
-      totalPages.value = Math.ceil(response.result.total / limit)
+      totalPages.value = Math.ceil(navigableTotal(response.result.total, limit) / limit)
       currentPage.value = Math.floor((searchParams.offset || 0) / limit) + 1
 
       return response
@@ -207,6 +232,7 @@ export function useArticles() {
     totalResults: computed(() => totalResults.value),
     totalPages: computed(() => totalPages.value),
     currentPage: computed(() => currentPage.value),
+    maxResultWindow: computed(() => maxResultWindow.value),
 
     // Methods
     fetchArticles,

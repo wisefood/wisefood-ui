@@ -567,14 +567,22 @@
             </div>
 
             <!-- Pagination -->
-            <div class="flex justify-center">
+            <div class="flex flex-col items-center gap-2">
               <UPagination
                 v-model:page="page"
-                :total="totalResults"
+                :total="paginationTotal"
                 :items-per-page="itemsPerPage"
                 :sibling-count="1"
                 show-edges
               />
+              <p
+                v-if="resultsWindowExceeded"
+                class="text-xs text-gray-500 dark:text-gray-400 text-center"
+              >
+                Showing the first {{ paginationTotal.toLocaleString() }} of
+                {{ totalResults.toLocaleString() }} results. Refine your search to
+                reach the rest.
+              </p>
             </div>
           </div>
 
@@ -601,7 +609,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useArticles } from '~/composables/useArticles'
+import { useArticles, navigableTotal } from '~/composables/useArticles'
 import { useAuthStore } from '~/stores/auth'
 import articlesApi, { type Article } from '~/services/articlesApi'
 import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
@@ -631,6 +639,7 @@ const {
   loading,
   error,
   totalResults,
+  maxResultWindow,
   searchArticles,
   clearError
 } = useArticles()
@@ -656,6 +665,16 @@ const sortBy = ref("created_at desc")
 const showFilters = ref(false)
 const page = ref(1)
 const itemsPerPage = 6
+
+// Total fed to the pager: clamped to the result window so we never render a page
+// the backend would reject. The real total is still shown to the user.
+const paginationTotal = computed(() =>
+  navigableTotal(totalResults.value, itemsPerPage, maxResultWindow.value)
+)
+// True when more results exist than can be paged through (ES result window).
+const resultsWindowExceeded = computed(
+  () => totalResults.value > paginationTotal.value
+)
 const showMoreTopics = ref(false)
 const showMoreTags = ref(false)
 
@@ -1467,11 +1486,16 @@ const loadArticles = async () => {
       fq.push(`citation_count:[${min} TO ${max}]`)
     }
 
+    // Clamp the offset to the result window. Guards against a URL-driven page
+    // number (e.g. ?page=1667) requesting a window the backend would reject.
+    const maxOffset = Math.max(0, maxResultWindow.value - itemsPerPage)
+    const offset = Math.min((page.value - 1) * itemsPerPage, maxOffset)
+
     // Load articles with filters (backend may still return facets even with `fields: []`)
     const articleResponse = await searchArticles({
       q: nlQuery.value || null,
       limit: itemsPerPage,
-      offset: (page.value - 1) * itemsPerPage,
+      offset,
       sort: sortBy.value,
       fl: ['urn', 'title', 'authors', 'tags', 'ai_tags', 'topics', 'abstract', 'description', 'venue', 'publication_year', 'category', 'ai_category'],
       fq: fq.length > 0 ? fq : null,

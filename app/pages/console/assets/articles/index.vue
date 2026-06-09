@@ -218,13 +218,21 @@
               </div>
 
               <UPagination
-                v-if="totalArticles > pageSize"
+                v-if="paginationTotal > pageSize"
                 v-model:page="page"
-                :total="totalArticles"
+                :total="paginationTotal"
                 :items-per-page="pageSize"
                 :sibling-count="1"
                 show-edges
               />
+              <p
+                v-if="resultsWindowExceeded"
+                class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1"
+              >
+                Only the first {{ paginationTotal.toLocaleString() }} of
+                {{ totalArticles.toLocaleString() }} results are browsable. Refine
+                your filters to narrow the set.
+              </p>
             </div>
           </template>
         </UCard>
@@ -462,6 +470,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import type { Article, CreateArticleRequest } from '~/services/articlesApi'
 import articlesApi from '~/services/articlesApi'
+import { navigableTotal } from '~/composables/useArticles'
 import {
   articleSortOptions,
   buildArticleRoutePath,
@@ -495,8 +504,18 @@ const facetFields = ['category', 'ai_category', 'study_type', 'reader_group', 'r
 
 const articles = ref<Article[]>([])
 const totalArticles = ref(0)
+const maxResultWindow = ref(10000)
 const articlesLoading = ref(false)
 const articlesError = ref<string | null>(null)
+
+// Total fed to the pager: clamped to the result window so navigation never
+// requests an offset the backend rejects. The real total is shown separately.
+const paginationTotal = computed(() =>
+  navigableTotal(totalArticles.value, pageSize, maxResultWindow.value)
+)
+const resultsWindowExceeded = computed(
+  () => totalArticles.value > paginationTotal.value
+)
 
 const facets = ref<SearchFacets>({})
 
@@ -758,10 +777,15 @@ async function loadArticles() {
   articlesError.value = null
 
   try {
+    // Clamp the offset to the result window so a stale/high page number can't
+    // request a window the backend rejects.
+    const maxOffset = Math.max(0, maxResultWindow.value - pageSize)
+    const offset = Math.min((page.value - 1) * pageSize, maxOffset)
+
     const response = await articlesApi.searchArticles({
       q: filters.q.trim() || null,
       limit: pageSize,
-      offset: (page.value - 1) * pageSize,
+      offset,
       sort: sortBy.value,
       fq: buildSearchFilters(),
       fl: [
@@ -784,6 +808,7 @@ async function loadArticles() {
 
     articles.value = response.result.results || []
     totalArticles.value = response.result.total || 0
+    maxResultWindow.value = response.result.max_result_window ?? maxResultWindow.value
 
     if (Object.keys(facets.value).length === 0 && response.result.facets) {
       facets.value = response.result.facets

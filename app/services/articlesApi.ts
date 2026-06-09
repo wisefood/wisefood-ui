@@ -138,6 +138,9 @@ export interface ArticleListResponse {
     results: Article[]
     facets: Record<string, any>
     total: number
+    // Largest offset+limit the backend will serve (ES result window). Used to
+    // clamp pagination so the UI never requests a page the API rejects.
+    max_result_window?: number
   }
 }
 
