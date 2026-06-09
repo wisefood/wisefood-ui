@@ -856,6 +856,17 @@
                 />
               </div>
 
+              <div v-if="librarySeeAllTo && libraryFilteredArticles.length" class="mt-5 flex justify-center">
+                <NuxtLink
+                  :to="librarySeeAllTo"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 text-xs font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
+                >
+                  <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5" />
+                  <span v-if="librarySelectedCount">See all {{ librarySelectedCount.toLocaleString() }} in catalog</span>
+                  <span v-else>See all in catalog</span>
+                </NuxtLink>
+              </div>
+
               <p v-if="!libraryFilteredArticles.length" class="py-10 text-center text-sm text-gray-400 dark:text-zinc-500">
                 {{ libraryEmptyMessage }}
               </p>
@@ -1205,6 +1216,15 @@ const libraryEmptyMessage = computed(() =>
     ? 'No articles in this journal yet.'
     : 'No articles in this category yet.'
 )
+
+const librarySeeAllTo = computed(() => {
+  const value = librarySelectedTopic.value
+  if (value === CATEGORY_ALL) return null
+  // Catalog hydrates ?venue directly; it has no ?category key, so category
+  // routes into the catalog's NL search box via ?q as the closest match.
+  const query = libraryBrowseAxis.value === 'journal' ? { venue: value } : { q: value }
+  return { path: '/foodscholar/catalog', query }
+})
 
 const libraryTotalArticles = computed(() => allArticlesTotal.value)
 const libraryTotalJournals = computed(() => {
