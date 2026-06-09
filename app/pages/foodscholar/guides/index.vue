@@ -47,6 +47,13 @@
       </div>
     </div>
 
+    <p
+      v-show="activeTab === 'map'"
+      class="mx-auto max-w-[92rem] px-4 pt-4 sm:px-6 lg:px-8 text-sm text-zinc-500 dark:text-zinc-400"
+    >
+      Click a region to open its official guides.
+    </p>
+
     <UPage class="mx-auto max-w-[92rem] px-4 pb-10 pt-6 sm:px-6 lg:px-8">
       <UPageBody>
         <UAlert
@@ -99,6 +106,7 @@
                 :regions="euRegionSummaries"
                 :hide-controls="true"
                 :view-padding="0.04"
+                :show-hint="true"
               />
             </div>
 

@@ -880,8 +880,9 @@
         <section>
           <div class="flex items-start justify-between gap-6 mb-6">
             <div>
-              <p class="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">Dietary Guides</p>
-              <h2 class="font-claude text-2xl text-gray-900 dark:text-white">Official dietary rules.</h2>
+              <p class="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">Explore</p>
+              <h2 class="font-claude text-2xl text-gray-900 dark:text-white">Dietary guides by region</h2>
+              <p class="mt-1 text-sm text-gray-400 dark:text-zinc-500">Click a region to open its official guides →</p>
             </div>
             <NuxtLink
               to="/foodscholar/guides"
@@ -906,6 +907,7 @@
                   :regions="libraryEuRegions"
                   :hide-controls="true"
                   :view-padding="0.015"
+                  :show-hint="true"
                 />
               </div>
             </div>
