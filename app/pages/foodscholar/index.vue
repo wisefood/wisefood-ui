@@ -1004,7 +1004,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
@@ -1250,8 +1250,29 @@ async function loadLibraryTopicFacets() {
   libraryTopicFacetsLoaded.value = true
 }
 
-// Temporary stub — replaced with the real implementation in the URL-persistence task.
-function syncLibraryQuery() {}
+function syncLibraryQuery() {
+  if (pageTab.value !== 'resources') return
+  const query: Record<string, string> = { ...(route.query as Record<string, string>) }
+  query.tab = 'resources'
+  query.browse = libraryBrowseAxis.value
+  // Clear both value keys, then set the active one (if a real selection).
+  delete query.venue
+  delete query.category
+  if (librarySelectedTopic.value !== CATEGORY_ALL) {
+    if (libraryBrowseAxis.value === 'journal') query.venue = librarySelectedTopic.value
+    else query.category = librarySelectedTopic.value
+  }
+  router.replace({ query })
+}
+
+function hydrateLibraryFromQuery() {
+  const tab = route.query.tab
+  if (tab === 'resources') pageTab.value = 'resources'
+  const browse = route.query.browse
+  if (browse === 'journal' || browse === 'category') libraryBrowseAxis.value = browse
+  const value = libraryBrowseAxis.value === 'journal' ? route.query.venue : route.query.category
+  if (typeof value === 'string' && value) librarySelectedTopic.value = value
+}
 
 async function selectLibraryFacet(value: string) {
   librarySelectedTopic.value = value
@@ -1482,6 +1503,7 @@ function handleLibraryClickOutside(e: MouseEvent) {
 // QA headings
 // ============================================================================
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const householdStore = useHouseholdStore()
 
@@ -1715,7 +1737,7 @@ const qaModels = ref<string[]>([])
 const selectedModel = ref('')
 const modelsLoading = ref(false)
 const topK = ref(5)
-const expertiseLevel = ref('intermediate')
+const expertiseLevel = ref('beginner')
 const feedbackSubmitting = ref(false)
 const selectedPreferredAnswer = ref<'a' | 'b' | null>(null)
 const singleAnswerFeedbackSubmitted = ref(false)
@@ -2626,15 +2648,22 @@ watch(pageTab, (tab) => {
     loadLibraryMap()
     loadLibraryTextbooks()
     loadLibraryTopicFacets()
+    syncLibraryQuery()
   }
 })
 
 onMounted(async () => {
+  hydrateLibraryFromQuery()
+
   await Promise.all([
     loadPopularArticles(),
     loadQaModels(),
     loadQaQuestions()
   ])
+
+  if (pageTab.value === 'resources' && librarySelectedTopic.value !== CATEGORY_ALL) {
+    selectLibraryFacet(librarySelectedTopic.value)
+  }
 
   if (pageTab.value === 'resources') {
     loadLibraryMap()
