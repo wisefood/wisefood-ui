@@ -2944,6 +2944,27 @@ onUnmounted(() => {
   color: rgb(212 212 216);
 }
 
+/* Guideline mentions (Gn) — emphasized in the brand colour. Keyed on
+   data-citation-type so it is independent of the deployment base path. */
+:deep(.qa-answer-markdown a[data-citation-type="guideline"]) {
+  color: var(--color-brand-600, #aa2944);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+:deep(.qa-answer-markdown a[data-citation-type="guideline"]:hover) {
+  color: var(--color-brand-700, #801f33);
+  text-decoration: underline;
+}
+
+:deep(.dark .qa-answer-markdown a[data-citation-type="guideline"]) {
+  color: var(--color-brand-400, #dd5c77);
+}
+
+:deep(.dark .qa-answer-markdown a[data-citation-type="guideline"]:hover) {
+  color: var(--color-brand-300, #e6839a);
+}
+
 .citation-hover-line {
   stroke: var(--color-brand-400, #60a5fa);
   stroke-width: 1.5;
