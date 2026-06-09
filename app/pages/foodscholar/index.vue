@@ -802,14 +802,14 @@
                 type="button"
                 :class="[
                   'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors',
-                  libraryBrowseAxis === 'category'
+                  libraryBrowseAxis === 'topic'
                     ? 'bg-white dark:bg-zinc-900 text-brand-600 dark:text-brand-400 shadow-sm'
                     : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200'
                 ]"
-                @click="setLibraryBrowseAxis('category')"
+                @click="setLibraryBrowseAxis('topic')"
               >
-                <UIcon name="i-lucide-shapes" class="w-3.5 h-3.5" />
-                Category
+                <UIcon name="i-lucide-compass" class="w-3.5 h-3.5" />
+                Topic
               </button>
               <button
                 type="button"
@@ -865,7 +865,7 @@
                   :article="article"
                   :index="i"
                   :fade="false"
-                  :selected-topic="librarySelectedTopic === CATEGORY_ALL ? null : librarySelectedTopic"
+                  :selected-topic="libraryBrowseAxis === 'topic' && librarySelectedTopic !== CATEGORY_ALL ? librarySelectedTopic : null"
                   :hide-abstract="true"
                 />
               </div>
@@ -1177,7 +1177,7 @@ const librarySelectedRegionData = computed(() =>
 )
 
 const librarySelectedTopic = ref(CATEGORY_ALL)
-const libraryBrowseAxis = ref<'category' | 'journal'>('category')
+const libraryBrowseAxis = ref<'topic' | 'journal'>('topic')
 const libraryTopicArticles = ref<HomeArticle[]>([])
 const libraryTopicArticlesLoading = ref(false)
 const libraryTopicFacetsLoaded = ref(false)
@@ -1187,11 +1187,10 @@ interface LibraryPill {
   count: number
 }
 
-// Category pills use ai_category — the subject taxonomy shown on the article
-// cards (e.g. "Supplements"). The `category` field holds study-type values
-// (e.g. "Randomized Controlled Trial"), a different taxonomy we don't browse by.
-const libraryCategoryPills = computed<LibraryPill[]>(() => {
-  const top = (facets.value.ai_category || [])
+// Topic pills use the topics field — the subject chips shown on the article
+// cards (e.g. "Oral Health", "Iron Supplementation").
+const libraryTopicPills = computed<LibraryPill[]>(() => {
+  const top = (facets.value.topics || [])
     .filter(f => f?.value && String(f.value).trim())
     .sort((a, b) => Number(b.count || 0) - Number(a.count || 0))
     .slice(0, 8)
@@ -1209,28 +1208,28 @@ const libraryJournalPills = computed<LibraryPill[]>(() => {
 })
 
 const libraryActivePills = computed<LibraryPill[]>(() =>
-  libraryBrowseAxis.value === 'journal' ? libraryJournalPills.value : libraryCategoryPills.value
+  libraryBrowseAxis.value === 'journal' ? libraryJournalPills.value : libraryTopicPills.value
 )
 
 const librarySelectedCount = computed<number>(() => {
   const value = librarySelectedTopic.value
   if (value === CATEGORY_ALL) return 0
-  const field = libraryBrowseAxis.value === 'journal' ? 'venue' : 'ai_category'
+  const field = libraryBrowseAxis.value === 'journal' ? 'venue' : 'topics'
   return Number((facets.value[field] || []).find(f => f.value === value)?.count || 0)
 })
 
 const libraryEmptyMessage = computed(() =>
   libraryBrowseAxis.value === 'journal'
     ? 'No articles in this journal yet.'
-    : 'No articles in this category yet.'
+    : 'No articles in this topic yet.'
 )
 
 const librarySeeAllTo = computed(() => {
   const value = librarySelectedTopic.value
   if (value === CATEGORY_ALL) return null
-  // Catalog hydrates ?venue directly; it has no ?category key, so category
-  // routes into the catalog's NL search box via ?q as the closest match.
-  const query = libraryBrowseAxis.value === 'journal' ? { venue: value } : { q: value }
+  // Catalog hydrates both ?venue and ?topic directly, so the active filter
+  // transfers exactly.
+  const query = libraryBrowseAxis.value === 'journal' ? { venue: value } : { topic: value }
   return { path: '/foodscholar/catalog', query }
 })
 
@@ -1265,10 +1264,10 @@ function syncLibraryQuery() {
   query.browse = libraryBrowseAxis.value
   // Clear both value keys, then set the active one (if a real selection).
   delete query.venue
-  delete query.category
+  delete query.topic
   if (librarySelectedTopic.value !== CATEGORY_ALL) {
     if (libraryBrowseAxis.value === 'journal') query.venue = librarySelectedTopic.value
-    else query.category = librarySelectedTopic.value
+    else query.topic = librarySelectedTopic.value
   }
   router.replace({ query })
 }
@@ -1277,8 +1276,8 @@ function hydrateLibraryFromQuery() {
   const tab = route.query.tab
   if (tab === 'resources') pageTab.value = 'resources'
   const browse = route.query.browse
-  if (browse === 'journal' || browse === 'category') libraryBrowseAxis.value = browse
-  const value = libraryBrowseAxis.value === 'journal' ? route.query.venue : route.query.category
+  if (browse === 'journal' || browse === 'topic') libraryBrowseAxis.value = browse
+  const value = libraryBrowseAxis.value === 'journal' ? route.query.venue : route.query.topic
   if (typeof value === 'string' && value) librarySelectedTopic.value = value
 }
 
@@ -1290,8 +1289,8 @@ async function selectLibraryFacet(value: string) {
     return
   }
 
-  // Category browses by ai_category (the card's subject label); journals by venue.
-  const field = libraryBrowseAxis.value === 'journal' ? 'venue' : 'ai_category'
+  // Topic browses by topics (the card's subject chips); journals by venue.
+  const field = libraryBrowseAxis.value === 'journal' ? 'venue' : 'topics'
   const fq = [`${field}:"${value}"`]
   libraryTopicArticlesLoading.value = true
   try {
@@ -1314,7 +1313,7 @@ async function selectLibraryFacet(value: string) {
   syncLibraryQuery()
 }
 
-function setLibraryBrowseAxis(axis: 'category' | 'journal') {
+function setLibraryBrowseAxis(axis: 'topic' | 'journal') {
   if (libraryBrowseAxis.value === axis) return
   libraryBrowseAxis.value = axis
   librarySelectedTopic.value = CATEGORY_ALL
