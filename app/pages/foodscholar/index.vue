@@ -759,7 +759,7 @@
               <h2 class="font-claude text-2xl text-gray-900 dark:text-white">Browse articles</h2>
             </div>
             <NuxtLink
-              to="/foodscholar/catalog"
+              :to="librarySeeAllTo || '/foodscholar/catalog'"
               class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 text-xs font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
             >
               <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
@@ -830,16 +830,27 @@
             <div class="flex gap-1.5 flex-wrap mb-6">
               <button
                 v-for="pill in libraryActivePills"
-                :key="pill"
+                :key="pill.value"
                 type="button"
                 :class="[
-                  'px-3 py-1.5 text-xs font-medium rounded-full border transition-colors',
-                  librarySelectedTopic === pill
+                  'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-colors',
+                  librarySelectedTopic === pill.value
                     ? 'bg-brand-500 border-brand-500 text-white'
                     : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600 dark:hover:text-brand-400'
                 ]"
-                @click="selectLibraryFacet(pill)"
-              >{{ pill }}</button>
+                @click="selectLibraryFacet(pill.value)"
+              >
+                {{ pill.value }}
+                <span
+                  v-if="pill.count"
+                  :class="[
+                    'rounded-full px-1.5 py-px text-[0.625rem] font-semibold tabular-nums',
+                    librarySelectedTopic === pill.value
+                      ? 'bg-white/20 text-white'
+                      : 'bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400'
+                  ]"
+                >{{ pill.count.toLocaleString() }}</span>
+              </button>
             </div>
 
             <div v-if="libraryTopicArticlesLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1171,7 +1182,12 @@ const libraryTopicArticles = ref<HomeArticle[]>([])
 const libraryTopicArticlesLoading = ref(false)
 const libraryTopicFacetsLoaded = ref(false)
 
-const libraryCategoryPills = computed<string[]>(() => {
+interface LibraryPill {
+  value: string
+  count: number
+}
+
+const libraryCategoryPills = computed<LibraryPill[]>(() => {
   const merged = new Map<string, number>()
   ;(facets.value.category || []).forEach((f) => {
     if (f?.value) merged.set(f.value, (merged.get(f.value) || 0) + Number(f.count || 0))
@@ -1182,20 +1198,20 @@ const libraryCategoryPills = computed<string[]>(() => {
   const top = Array.from(merged.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
-    .map(([value]) => value)
-  return [CATEGORY_ALL, ...top]
+    .map(([value, count]) => ({ value, count }))
+  return [{ value: CATEGORY_ALL, count: 0 }, ...top]
 })
 
-const libraryJournalPills = computed<string[]>(() => {
+const libraryJournalPills = computed<LibraryPill[]>(() => {
   const top = (facets.value.venue || [])
     .filter(f => f?.value && String(f.value).trim())
     .sort((a, b) => Number(b.count || 0) - Number(a.count || 0))
     .slice(0, 8)
-    .map(f => f.value)
-  return [CATEGORY_ALL, ...top]
+    .map(f => ({ value: f.value, count: Number(f.count || 0) }))
+  return [{ value: CATEGORY_ALL, count: 0 }, ...top]
 })
 
-const libraryActivePills = computed<string[]>(() =>
+const libraryActivePills = computed<LibraryPill[]>(() =>
   libraryBrowseAxis.value === 'journal' ? libraryJournalPills.value : libraryCategoryPills.value
 )
 
@@ -1281,7 +1297,11 @@ async function selectLibraryFacet(value: string) {
     return
   }
 
-  const field = libraryBrowseAxis.value === 'journal' ? 'venue' : 'category'
+  // A category value may live in either the human `category` field or the
+  // AI-assigned `ai_category` field, so match both. Journals only use `venue`.
+  const fq = libraryBrowseAxis.value === 'journal'
+    ? [`venue:"${value}"`]
+    : [`(category:"${value}" OR ai_category:"${value}")`]
   libraryTopicArticlesLoading.value = true
   try {
     const response = await articlesApi.searchArticles({
@@ -1290,7 +1310,7 @@ async function selectLibraryFacet(value: string) {
       offset: 0,
       sort: 'created_at desc',
       fl: ['id', 'urn', 'title', 'abstract', 'description', 'content', 'authors', 'tags', 'ai_tags', 'topics', 'venue', 'publication_year', 'category', 'ai_category'],
-      fq: [`${field}:"${value}"`],
+      fq,
       fields: []
     })
     const results = response.result.results || []
@@ -1619,7 +1639,20 @@ const navigateToGuideline = async (guidelineId: string, extraQuery: Record<strin
 
 const resolveQaSourceHref = (href: string): { url: URL, urn: string, sourceType: QaEvidenceSourceType, path: string } | null => {
   const url = new URL(href, window.location.origin)
-  const pathSegments = url.pathname
+
+  // Strip the deployment base path (e.g. "/app" in production) so segment
+  // matching below is independent of the context path. Without this, the
+  // baseURL prefix shifts pathSegments[0] and article/guide links stop
+  // resolving in prod (guideline links happen to survive — see renderMarkdown).
+  const base = useRuntimeConfig().app.baseURL?.replace(/\/$/, '') || ''
+  let pathname = url.pathname
+  if (base && pathname.startsWith(base + '/')) {
+    pathname = pathname.slice(base.length)
+  } else if (base && pathname === base) {
+    pathname = '/'
+  }
+
+  const pathSegments = pathname
     .split('/')
     .filter(Boolean)
     .map(segment => decodeURIComponent(segment))
@@ -2603,7 +2636,7 @@ watch(popularArticleTopics, (newTopics) => {
 })
 
 watch(libraryActivePills, (pills) => {
-  if (pills.length > 0 && !pills.includes(librarySelectedTopic.value)) {
+  if (pills.length > 0 && !pills.some(p => p.value === librarySelectedTopic.value)) {
     librarySelectedTopic.value = CATEGORY_ALL
     libraryTopicArticles.value = []
   }
