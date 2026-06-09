@@ -2794,15 +2794,28 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  max-height: calc(100vh - 3rem);
+  /* Fixed, compact cap; never taller than the viewport. Scrolls internally
+     with a minimal, mostly-transparent scrollbar. */
+  max-height: min(32rem, calc(100vh - 3rem));
   overflow-y: auto;
   overscroll-behavior: contain;
+  padding-right: 2px;
+  /* Scrollbar stays hidden until the pointer enters the column. */
   scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s ease;
+}
+
+.qa-source-sidebar-inner:hover {
   scrollbar-color: rgba(120, 113, 108, 0.35) transparent;
 }
 
+.dark .qa-source-sidebar-inner:hover {
+  scrollbar-color: rgba(161, 161, 170, 0.35) transparent;
+}
+
 .qa-source-sidebar-inner::-webkit-scrollbar {
-  width: 5px;
+  width: 3px;
 }
 
 .qa-source-sidebar-inner::-webkit-scrollbar-track {
@@ -2810,20 +2823,17 @@ onUnmounted(() => {
 }
 
 .qa-source-sidebar-inner::-webkit-scrollbar-thumb {
-  background-color: rgba(120, 113, 108, 0.35);
+  background-color: transparent;
   border-radius: 9999px;
+  transition: background-color 0.2s ease;
 }
 
-.qa-source-sidebar-inner::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(120, 113, 108, 0.55);
+.qa-source-sidebar-inner:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(120, 113, 108, 0.4);
 }
 
-.dark .qa-source-sidebar-inner {
-  scrollbar-color: rgba(161, 161, 170, 0.3) transparent;
-}
-
-.dark .qa-source-sidebar-inner::-webkit-scrollbar-thumb {
-  background-color: rgba(161, 161, 170, 0.3);
+.dark .qa-source-sidebar-inner:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(161, 161, 170, 0.38);
 }
 
 .qa-advanced-panel {
