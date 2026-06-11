@@ -80,7 +80,9 @@ export default defineNuxtConfig({
       wisefoodApiUrl: process.env.VITE_WISEFOOD_API_URL, // Data Catalog API: https://wisefood.gr/dc/api
       wisefoodRestApiUrl: process.env.VITE_WISEFOOD_REST_API_URL, // REST API: https://wisefood.gr/rest/api/v1
       recipeWranglerApiUrl: process.env.VITE_RECIPE_WRANGLER_API_URL,
-      recipeWranglerMode: process.env.VITE_RECIPE_WRANGLER_MODE
+      recipeWranglerMode: process.env.VITE_RECIPE_WRANGLER_MODE,
+      flowsOrgId: process.env.VITE_FLOWS_ORG_ID, // Flows.js organization id (interactive walkthroughs)
+      flowsEnvironment: process.env.VITE_FLOWS_ENVIRONMENT || 'production'
     }
   },
   routeRules: {
@@ -95,6 +97,14 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: '2025-01-15',
+
+  // Tell Vue about Flows custom elements so it doesn't try to resolve them as components
+  vue: {
+    compilerOptions: {
+      isCustomElement: (tag: string) => ['flows-floating-blocks', 'flows-slot'].includes(tag)
+    }
+  },
+
   vite: {
     resolve: {
          alias: [
