@@ -79,7 +79,12 @@ const tabs = [
   { label: 'Content', value: 'content', slot: 'content', icon: 'i-lucide-folder-open' },
   { label: 'Observability', value: 'observability', slot: 'observability', icon: 'i-lucide-sparkles' }
 ]
-const activeTab = ref('content')
+
+// Allow deep-linking to a tab via ?tab=observability (e.g. from the console
+// "Prompt / LLM Controls" card). Falls back to Content for any other value.
+const route = useRoute()
+const initialTab = route.query.tab === 'observability' ? 'observability' : 'content'
+const activeTab = ref(initialTab)
 
 const { catalog, obsStatus, load } = useConsoleStats()
 const obsEnabled = computed(() => Boolean(obsStatus.value?.enabled))

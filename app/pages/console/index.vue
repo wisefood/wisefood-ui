@@ -250,7 +250,7 @@ const quickAccessCards = [
     title: 'Prompt / LLM Controls',
     description: 'Inspect prompt variants, telemetry, and operational controls for generative features.',
     icon: 'i-lucide-sliders-horizontal',
-    to: '/console/operations',
+    to: '/console/operations?tab=observability',
     available: true,
     iconWrapperClass: 'bg-brand-50 dark:bg-brand-500/10',
     iconClass: 'text-brand-600 dark:text-brand-300'
