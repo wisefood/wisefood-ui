@@ -143,9 +143,23 @@
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted } from 'vue'
+import { useConsoleStats } from '~/composables/useConsoleStats'
+
 definePageMeta({
   layout: 'default'
 })
+
+const { catalog, recipeCount, obsStatus, load } = useConsoleStats()
+onMounted(() => {
+  void load()
+})
+
+const fmt = (n: number | null | undefined): string => {
+  if (n === null || n === undefined || n < 0) return '—'
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
+  return String(n)
+}
 
 useHead({
   title: 'Console'
@@ -167,13 +181,13 @@ const breadcrumbItems = [
   }
 ]
 
-const kpis = [
+const kpis = computed(() => [
   {
-    label: 'Total Managed Assets',
-    value: '184.2K',
-    delta: '+4.8% vs last week',
+    label: 'Total Catalog Assets',
+    value: fmt(catalog.value?.totalAssets),
+    delta: `${catalog.value?.entities.filter(e => e.total >= 0).length ?? 0} content types`,
     deltaColor: 'success' as const,
-    hint: 'Recipes, ingredients, prompts, taxonomies',
+    hint: 'Guides, guidelines, articles, textbooks, collections, FC tables',
     icon: 'i-lucide-database',
     available: true,
     cardClass: 'border-t-2 border-t-brand-400 dark:border-t-brand-500/70',
@@ -183,44 +197,44 @@ const kpis = [
   },
   {
     label: 'Pending Curation Reviews',
-    value: '126',
-    delta: '19 high-priority',
+    value: fmt(catalog.value?.pendingReviews),
+    delta: 'Awaiting verification',
     deltaColor: 'warning' as const,
-    hint: 'Awaiting expert validation',
+    hint: 'Non-verified review states across catalog',
     icon: 'i-lucide-clipboard-check',
-    available: false,
+    available: true,
     cardClass: 'border-t-2 border-t-brandg-400 dark:border-t-brandg-500/70',
     labelClass: 'text-brandg-700 dark:text-brandg-300',
     iconWrapperClass: 'bg-brandg-50 dark:bg-brandg-500/10',
     iconClass: 'text-brandg-600 dark:text-brandg-300'
   },
   {
-    label: 'Active Expert Sessions',
-    value: '14',
-    delta: '+2 since 09:00',
+    label: 'Recipes',
+    value: fmt(recipeCount.value),
+    delta: 'In the recipe graph',
     deltaColor: 'info' as const,
-    hint: 'Moderation and curation users online',
-    icon: 'i-lucide-users',
-    available: false,
+    hint: 'Total RecipeWrangler recipes',
+    icon: 'i-lucide-chef-hat',
+    available: true,
     cardClass: 'border-t-2 border-t-brandp-300 dark:border-t-brandp-400/70',
     labelClass: 'text-brandp-600 dark:text-brandp-300',
     iconWrapperClass: 'bg-brandp-50 dark:bg-brandp-500/15',
     iconClass: 'text-brandp-500 dark:text-brandp-300'
   },
   {
-    label: 'LLM Requests Today',
-    value: '28.4K',
-    delta: '+11.2%',
+    label: 'LLM Observability',
+    value: obsStatus.value?.enabled ? 'Live' : '—',
+    delta: obsStatus.value?.enabled ? 'Langfuse connected' : 'Not configured',
     deltaColor: 'primary' as const,
-    hint: 'Across Foodchat, RecipeWrangler and FoodScholar',
+    hint: 'Open Analytics for traces, tokens, cost',
     icon: 'i-lucide-sparkles',
-    available: false,
+    available: Boolean(obsStatus.value?.enabled),
     cardClass: 'border-t-2 border-t-brand-400 dark:border-t-brand-500/70',
     labelClass: 'text-brand-700 dark:text-brand-300',
     iconWrapperClass: 'bg-brand-50 dark:bg-brand-500/10',
     iconClass: 'text-brand-500 dark:text-brand-300'
   }
-]
+])
 
 const quickAccessCards = [
   {
@@ -237,18 +251,18 @@ const quickAccessCards = [
     description: 'Inspect prompt variants, telemetry, and operational controls for generative features.',
     icon: 'i-lucide-sliders-horizontal',
     to: '/console/operations',
-    available: false,
-    iconWrapperClass: 'bg-gray-200/80 dark:bg-white/10',
-    iconClass: 'text-gray-500 dark:text-gray-400'
+    available: true,
+    iconWrapperClass: 'bg-brand-50 dark:bg-brand-500/10',
+    iconClass: 'text-brand-600 dark:text-brand-300'
   },
   {
     title: 'Analytics Reports',
     description: 'Open performance summaries, observability snapshots, and expert operations reports.',
     icon: 'i-lucide-chart-column',
     to: '/console/operations',
-    available: false,
-    iconWrapperClass: 'bg-gray-200/80 dark:bg-white/10',
-    iconClass: 'text-gray-500 dark:text-gray-400'
+    available: true,
+    iconWrapperClass: 'bg-brand-50 dark:bg-brand-500/10',
+    iconClass: 'text-brand-600 dark:text-brand-300'
   }
 ]
 </script>
