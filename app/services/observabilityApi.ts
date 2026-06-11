@@ -1,4 +1,4 @@
-import wisefoodApi from './wisefoodApi'
+import wisefoodRestApi from './wisefoodRestApi'
 
 export interface ObservabilityStatus {
   enabled: boolean
@@ -43,11 +43,14 @@ const unwrap = <T>(payload: unknown, key: string, fallback: T): T => {
 }
 
 class ObservabilityApiService {
-  private readonly basePath = '/v1/observability'
+  // The observability endpoints live on wisefood-api (CONTEXT_PATH=/rest), reached
+  // via wisefoodRestApi whose base already includes /rest/api/v1 — NOT the /dc/api
+  // Data API that backs catalogApi.
+  private readonly basePath = '/observability'
 
   async getStatus(): Promise<ObservabilityStatus> {
     try {
-      const payload = await wisefoodApi.get<unknown>(`${this.basePath}/status`)
+      const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/status`)
       return {
         enabled: Boolean(unwrap(payload, 'enabled', false)),
         langfuse_reachable: Boolean(unwrap(payload, 'langfuse_reachable', false))
@@ -73,7 +76,7 @@ class ObservabilityApiService {
       if (params.aggregation) query.set('aggregation', params.aggregation)
       if (params.dimension) query.set('dimension', params.dimension)
       if (params.granularity) query.set('granularity', params.granularity)
-      const payload = await wisefoodApi.get<unknown>(`${this.basePath}/metrics?${query.toString()}`)
+      const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/metrics?${query.toString()}`)
       return {
         rows: unwrap<MetricRow[]>(payload, 'rows', []),
         enabled: Boolean(unwrap(payload, 'enabled', false))
@@ -87,7 +90,7 @@ class ObservabilityApiService {
     try {
       const query = new URLSearchParams({ limit: String(limit) })
       if (tag) query.set('tag', tag)
-      const payload = await wisefoodApi.get<unknown>(`${this.basePath}/traces?${query.toString()}`)
+      const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/traces?${query.toString()}`)
       return unwrap<TraceRow[]>(payload, 'traces', [])
     } catch {
       return []
@@ -96,7 +99,7 @@ class ObservabilityApiService {
 
   async getPrompts(): Promise<PromptSummary[]> {
     try {
-      const payload = await wisefoodApi.get<unknown>(`${this.basePath}/prompts`)
+      const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/prompts`)
       return unwrap<PromptSummary[]>(payload, 'prompts', [])
     } catch {
       return []
