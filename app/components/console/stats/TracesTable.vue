@@ -53,7 +53,7 @@
             {{ formatWhen(t.timestamp) }}
           </td>
           <td class="px-5 py-2 text-right tabular-nums">
-            {{ t.latency != null ? `${Math.round(Number(t.latency))}ms` : '—' }}
+            {{ formatLatency(t.latency) }}
           </td>
           <td class="px-5 py-2 text-right tabular-nums">
             {{ t.totalCost != null ? `$${Number(t.totalCost).toFixed(4)}` : '—' }}
@@ -78,5 +78,14 @@ const formatWhen = (ts?: string): string => {
   const d = new Date(ts)
   if (Number.isNaN(d.getTime())) return '—'
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+// Langfuse reports trace latency in SECONDS (e.g. 0.74). Show ms for short
+// traces and s for longer ones rather than a misleading rounded-to-zero "1ms".
+const formatLatency = (seconds?: number): string => {
+  if (seconds == null) return '—'
+  const s = Number(seconds)
+  if (Number.isNaN(s)) return '—'
+  return s < 1 ? `${Math.round(s * 1000)}ms` : `${s.toFixed(2)}s`
 }
 </script>

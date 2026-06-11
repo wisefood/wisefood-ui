@@ -27,10 +27,11 @@ export interface TraceRow {
 
 export interface PromptSummary {
   name: string
-  version?: number
+  // Langfuse v2 prompts list returns `versions` (array) and `lastUpdatedAt`.
+  versions?: number[]
   labels?: string[]
   tags?: string[]
-  updatedAt?: string
+  lastUpdatedAt?: string
   [k: string]: unknown
 }
 

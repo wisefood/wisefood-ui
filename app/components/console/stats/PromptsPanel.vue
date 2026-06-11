@@ -53,9 +53,9 @@
           </div>
         </div>
         <span
-          v-if="p.version != null"
+          v-if="latestVersion(p) != null"
           class="text-xs text-gray-500 dark:text-gray-400"
-        >v{{ p.version }}</span>
+        >v{{ latestVersion(p) }}</span>
       </li>
     </ul>
   </UCard>
@@ -65,4 +65,10 @@
 import type { PromptSummary } from '~/services/observabilityApi'
 
 defineProps<{ prompts: PromptSummary[], enabled: boolean }>()
+
+// Langfuse returns `versions` as an array; show the highest (latest) version.
+const latestVersion = (p: PromptSummary): number | null => {
+  if (!p.versions?.length) return null
+  return Math.max(...p.versions)
+}
 </script>
