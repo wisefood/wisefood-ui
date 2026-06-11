@@ -442,8 +442,10 @@ const recommendedRecipes = ref<RecipeSearchResult[]>([])
 const loadingRecommendedRecipes = ref(false)
 const failedRecommendedImages = ref<Record<string, boolean>>({})
 
-const RECOMMENDED_RECIPES_CACHE_KEY = 'dashboard.recommendedRecipes.v1'
-const RECOMMENDED_RECIPES_CACHE_TTL_MS = 12 * 60 * 60 * 1000
+const RECOMMENDED_RECIPES_CACHE_KEY = 'dashboard.recommendedRecipes.v2'
+const RECOMMENDED_RECIPES_CACHE_TTL_MS = 20 * 60 * 1000
+const RECOMMENDED_RECIPES_POOL_SIZE = 24
+const RECOMMENDED_RECIPES_DISPLAY_COUNT = 4
 
 interface RecommendedRecipesCachePayload {
   savedAt: number
@@ -497,50 +499,34 @@ const writeRecommendedRecipesCache = (recipes: RecipeSearchResult[]) => {
   }
 }
 
+const recipeKey = (recipe: RecipeSearchResult): string =>
+  String(recipe.recipe_id ?? recipe.id ?? '')
+
 const loadRecommendedRecipes = async () => {
   loadingRecommendedRecipes.value = true
-
-  const queryPool = [
-    'quick balanced meals',
-    'high protein dinner recipes',
-    'family friendly recipes',
-    'easy pasta recipes',
-    'seafood dinner recipes',
-    'healthy chicken recipes',
-    'high protein breakfast recipes',
-    'quick lunch recipes'
-  ]
 
   try {
     const cachedRecipes = readRecommendedRecipesCache()
     if (cachedRecipes?.length) {
-      recommendedRecipes.value = shuffleList(cachedRecipes).slice(0, 4)
+      recommendedRecipes.value = shuffleList(cachedRecipes).slice(0, RECOMMENDED_RECIPES_DISPLAY_COUNT)
       failedRecommendedImages.value = {}
       return
     }
 
-    const selectedQueries = shuffleList(queryPool).slice(0, 4)
-    const groupedResults = await Promise.all(
-      selectedQueries.map(async (question) => {
-        const results = await recipeApi.searchRecipes({ question })
-        const unique = Array.from(new Map(results.map(recipe => [recipe.recipe_id, recipe])).values())
-        return shuffleList(unique).slice(0, 8)
-      })
-    )
+    // Pull a fresh random sample straight from the backend. `sort_by: 'random'`
+    // maps to ORDER BY rand() and is evaluated per request, so each load draws a
+    // different set — no need for a fixed natural-language query pool.
+    const excludeAllergens = householdStore.currentMember?.allergies ?? []
+    const { results } = await recipeApi.searchRecipesByParams({
+      sort_by: 'random',
+      limit: RECOMMENDED_RECIPES_POOL_SIZE,
+      include_facets: false,
+      ...(excludeAllergens.length ? { exclude_allergens: excludeAllergens } : {})
+    })
 
-    const interleaved: RecipeSearchResult[] = []
-    const maxGroupSize = Math.max(...groupedResults.map(group => group.length), 0)
-
-    for (let index = 0; index < maxGroupSize; index += 1) {
-      for (const group of groupedResults) {
-        const recipe = group[index]
-        if (recipe) interleaved.push(recipe)
-      }
-    }
-
-    const uniqueById = Array.from(new Map(interleaved.map(recipe => [recipe.recipe_id, recipe])).values()).slice(0, 24)
-    writeRecommendedRecipesCache(uniqueById)
-    recommendedRecipes.value = shuffleList(uniqueById).slice(0, 4)
+    const pool = Array.from(new Map(results.map(recipe => [recipeKey(recipe), recipe])).values())
+    writeRecommendedRecipesCache(pool)
+    recommendedRecipes.value = shuffleList(pool).slice(0, RECOMMENDED_RECIPES_DISPLAY_COUNT)
     failedRecommendedImages.value = {}
   } catch (err) {
     console.warn('Failed to fetch recommended recipes', err)
