@@ -1,4 +1,4 @@
-import { defineNuxtPlugin, navigateTo, useRuntimeConfig } from '#app'
+import { defineNuxtPlugin, navigateTo } from '#app'
 
 import { init } from '@flows/js'
 import { setupJsComponents } from '@flows/js-components'
@@ -8,13 +8,17 @@ import * as surveyComponents from '@flows/js-components/survey-components'
 
 import '@flows/js-components/index.css'
 
+import { getFlowsEnvironment, getFlowsOrgId } from '~/utils/runtimeConfig'
+
 // Guard so init()/setupJsComponents() never run twice (HMR, re-invocation).
 // Double-registration breaks the custom-element rendering.
 let flowsInitialized = false
 
 export default defineNuxtPlugin(async () => {
-  const config = useRuntimeConfig()
-  const organizationId = config.public.flowsOrgId as string | undefined
+  // Read via the runtime-config helper so the org id resolves from the
+  // container-injected __RUNTIME_CONFIG__ in production, not just the
+  // build-time value baked into the static bundle.
+  const organizationId = getFlowsOrgId()
 
   // No org id configured -> Flows is disabled. Never breaks the app.
   if (!organizationId) return
@@ -36,7 +40,7 @@ export default defineNuxtPlugin(async () => {
   init({
     organizationId,
     userId,
-    environment: (config.public.flowsEnvironment as string) || 'production',
+    environment: getFlowsEnvironment(),
     onNavigate: (href, event) => {
       event.preventDefault()
       navigateTo(href)

@@ -3,6 +3,7 @@ import { useRuntimeConfig } from '#imports'
 const DEFAULT_WISEFOOD_API_URL = 'https://demo.wisefood-project.eu/dc/api'
 const DEFAULT_WISEFOOD_REST_API_URL = 'https://demo.wisefood-project.eu/rest/api/v1'
 const DEFAULT_RECIPE_WRANGLER_MODE = 'auto'
+const DEFAULT_FLOWS_ENVIRONMENT = 'production'
 
 export type RecipeWranglerMode = 'auto' | 'local' | 'rest'
 
@@ -14,6 +15,8 @@ interface RuntimeConfigWindow extends Window {
     recipeWranglerMode?: string
     sentryDsn?: string
     sentryEnabled?: boolean | string
+    flowsOrgId?: string
+    flowsEnvironment?: string
   }
 }
 
@@ -71,4 +74,17 @@ export const isSentryEnabled = (): boolean => {
   const value = runtimeConfig?.sentryEnabled ?? config.public.sentryEnabled
 
   return value === true || value === 'true'
+}
+
+export const getFlowsOrgId = (): string => {
+  const runtimeConfig = getWindowRuntimeConfig()
+  const config = useRuntimeConfig()
+  return String(runtimeConfig?.flowsOrgId || config.public.flowsOrgId || '').trim()
+}
+
+export const getFlowsEnvironment = (): string => {
+  const runtimeConfig = getWindowRuntimeConfig()
+  const config = useRuntimeConfig()
+  const value = String(runtimeConfig?.flowsEnvironment || config.public.flowsEnvironment || '').trim()
+  return value || DEFAULT_FLOWS_ENVIRONMENT
 }

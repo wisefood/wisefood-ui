@@ -22,7 +22,9 @@ window.__RUNTIME_CONFIG__ = {
   recipeWranglerApiUrl: '${VITE_RECIPE_WRANGLER_API_URL}',
   recipeWranglerMode: '${VITE_RECIPE_WRANGLER_MODE}',
   sentryDsn: '${SENTRY_DSN_RUNTIME}',
-  sentryEnabled: '${SENTRY_ENABLED_RUNTIME}'
+  sentryEnabled: '${SENTRY_ENABLED_RUNTIME}',
+  flowsOrgId: '${VITE_FLOWS_ORG_ID}',
+  flowsEnvironment: '${VITE_FLOWS_ENVIRONMENT}'
 };
 EOF
 
