@@ -67,11 +67,18 @@ Read-only counterpart to the existing producer-side runbook. Follows the verifie
 - `langfuse_read_enabled()` — true only when `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` set
   (mirrors the runbook's opt-in contract).
 - `httpx.AsyncClient` singleton, `base_url = LANGFUSE_BASE_URL`, `auth=(public, secret)` Basic.
-- `fetch_metrics(query)` → `GET /api/public/metrics` (v3 metrics API): counts, token sums, cost,
-  latency p50/p95/p99, grouped by `model` / `name` / time bucket.
+- `fetch_metrics(query)` → `GET /api/public/metrics` (**v1** metrics API — the **v2** metrics API
+  is Cloud-only and unavailable on self-hosted Langfuse, which WiseFood runs). Query is a
+  URL-encoded JSON object `{view, metrics:[{measure,aggregation}], dimensions:[{field}], filters:[],
+  fromTimestamp, toTimestamp, timeDimension?:{granularity}}`; response is
+  `{ "data": [ {<dimension>, "<measure>_<aggregation>": "<stringified-number>"} ] }`. Used for
+  counts, token sums, cost, latency, grouped by `name` / `providedModelName` / time bucket.
 - `fetch_traces(params)` → `GET /api/public/traces`: recent traces (name, latency, cost, tokens,
   tags, timestamp).
-- `fetch_prompts()` / `fetch_prompt(name)` → `GET /api/public/v2/prompts`: list + version/label/tags.
+- `fetch_prompts()` / `fetch_prompt(name)` → `GET /api/public/v2/prompts` (list) and
+  `GET /api/public/v2/prompts/{name}` (detail): name/version/labels/tags. (The list endpoint has no
+  SDK convenience method, so it is fetched over HTTP; single-prompt detail may alternatively use the
+  SDK `get_prompt` for client-side caching/fallback.)
 - All methods raise nothing into the request path on Langfuse failure — return empty + log WARNING.
 
 **`src/routers/observability.py`** — `APIRouter(prefix="/api/v1/observability")`, every route
