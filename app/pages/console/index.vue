@@ -150,7 +150,7 @@ definePageMeta({
   layout: 'default'
 })
 
-const { catalog, recipeCount, obsStatus, load } = useConsoleStats()
+const { catalog, recipeCount, obsStatus, llmCost, load } = useConsoleStats()
 onMounted(() => {
   void load()
 })
@@ -222,11 +222,11 @@ const kpis = computed(() => [
     iconClass: 'text-brandp-500 dark:text-brandp-300'
   },
   {
-    label: 'LLM Observability',
-    value: obsStatus.value?.enabled ? 'Live' : '—',
-    delta: obsStatus.value?.enabled ? 'Langfuse connected' : 'Not configured',
+    label: 'LLM Cost (7d)',
+    value: llmCost.value != null ? `$${llmCost.value.toFixed(2)}` : (obsStatus.value?.enabled ? '$0.00' : '—'),
+    delta: obsStatus.value?.enabled ? 'Across all models' : 'Not configured',
     deltaColor: 'primary' as const,
-    hint: 'Open Analytics for traces, tokens, cost',
+    hint: 'Last 7 days · open Analytics for detail',
     icon: 'i-lucide-sparkles',
     available: Boolean(obsStatus.value?.enabled),
     cardClass: 'border-t-2 border-t-brand-400 dark:border-t-brand-500/70',

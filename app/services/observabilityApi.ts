@@ -105,6 +105,25 @@ class ObservabilityApiService {
       return []
     }
   }
+
+  /**
+   * Total LLM cost (USD) over the last `days`, summed across all models — used for
+   * the console KPI tile. Returns null when observability is disabled/unavailable.
+   */
+  async getCostSummary(days = 7): Promise<number | null> {
+    const to = new Date()
+    const from = new Date(to.getTime() - days * 24 * 60 * 60 * 1000)
+    const { rows, enabled } = await this.getMetrics({
+      from: from.toISOString(),
+      to: to.toISOString(),
+      view: 'observations',
+      measure: 'totalCost',
+      aggregation: 'sum',
+      dimension: 'providedModelName'
+    })
+    if (!enabled) return null
+    return rows.reduce((sum, r) => sum + (Number.isFinite(r.value) ? r.value : 0), 0)
+  }
 }
 
 export default new ObservabilityApiService()
