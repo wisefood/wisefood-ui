@@ -8,7 +8,7 @@
         <p class="text-sm text-gray-500 dark:text-gray-400">
           {{ label }}
         </p>
-        <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">
+        <p class="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-white">
           {{ display }}
         </p>
       </div>

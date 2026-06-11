@@ -49,7 +49,7 @@
           <td class="px-5 py-2 text-gray-900 dark:text-white">
             {{ t.name ?? '—' }}
           </td>
-          <td class="px-5 py-2 text-gray-500 dark:text-gray-400">
+          <td class="px-5 py-2 font-mono text-xs tabular-nums text-gray-500 dark:text-gray-400">
             {{ formatWhen(t.timestamp) }}
           </td>
           <td class="px-5 py-2 text-right tabular-nums">
@@ -69,9 +69,14 @@ import type { TraceRow } from '~/services/observabilityApi'
 
 defineProps<{ traces: TraceRow[], enabled: boolean }>()
 
+// Deterministic, locale-stable timestamp (YYYY-MM-DD HH:mm) so the column reads
+// as a clean monospace data field rather than locale text like "12:52 π.μ.".
+const pad = (n: number): string => String(n).padStart(2, '0')
+
 const formatWhen = (ts?: string): string => {
   if (!ts) return '—'
   const d = new Date(ts)
-  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString()
+  if (Number.isNaN(d.getTime())) return '—'
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 </script>
