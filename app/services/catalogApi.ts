@@ -278,6 +278,20 @@ export interface CatalogGuidelineSearchResult {
   facets: Record<string, CatalogFacetBucket[]>
 }
 
+export interface CatalogEntityStat {
+  key: string // 'guides' | 'guidelines' | ...
+  label: string // human label
+  total: number // count; -1 means "failed to load"
+  reviewStatus: Record<string, number> // review_status facet → count
+  status: Record<string, number> // lifecycle status facet → count
+}
+
+export interface CatalogStats {
+  entities: CatalogEntityStat[]
+  totalAssets: number // sum of successful entity totals
+  pendingReviews: number // sum of non-'verified' review_status across entities
+}
+
 interface CatalogGuideSearchApiResponse {
   help?: string
   success?: boolean
@@ -300,6 +314,12 @@ const asRecord = (value: unknown): UnknownRecord | null => {
 
 const asString = (value: unknown): string | null => typeof value === 'string' ? value : null
 const asNumber = (value: unknown): number | null => typeof value === 'number' && Number.isFinite(value) ? value : null
+
+const facetMap = (buckets: CatalogFacetBucket[] | undefined): Record<string, number> => {
+  const out: Record<string, number> = {}
+  for (const b of buckets ?? []) out[b.value] = b.count
+  return out
+}
 
 const asStringArray = (value: unknown): string[] => {
   if (!Array.isArray(value)) {
@@ -849,11 +869,79 @@ class CatalogApiService {
     return normalizeArtifact(unwrapEntity(payload, ['artifact', 'item', 'result', 'data']))
   }
 
-  async autocompleteGuides(q: string, limit = 8): Promise<Array<{ urn: string; title: string; region?: string | null }>> {
+  async autocompleteGuides(q: string, limit = 8): Promise<Array<{ urn: string, title: string, region?: string | null }>> {
     const normalized = q.trim()
     if (normalized.length < 2) return []
-    const res = await wisefoodApi.get<{ result: Array<{ urn: string; title: string; short_title?: string | null; region?: string | null; publication_year?: number | null }> }>(`${this.basePath}/guides/autocomplete`, { params: { q: normalized, limit } })
+    const res = await wisefoodApi.get<{ result: Array<{ urn: string, title: string, short_title?: string | null, region?: string | null, publication_year?: number | null }> }>(`${this.basePath}/guides/autocomplete`, { params: { q: normalized, limit } })
     return Array.isArray(res?.result) ? res.result : []
+  }
+
+  /**
+   * Count-only search against any catalog entity's /search endpoint. Returns just
+   * total + facets (the only data the stats aggregator needs), reusing the shared
+   * search-response extraction helpers — no per-entity normalization required.
+   */
+  private async searchEntityStats(
+    entity: string,
+    fields: string[]
+  ): Promise<{ total: number, facets: Record<string, CatalogFacetBucket[]> }> {
+    const payload = await wisefoodApi.post<unknown, CatalogSearchParams>(`${this.basePath}/${entity}/search`, {
+      q: null,
+      limit: 1,
+      offset: 0,
+      sort: 'updated_at desc',
+      fields
+    })
+
+    const directResult = asRecord(asRecord(payload)?.['result'])
+    const directTotal = asNumber(directResult?.['total'])
+    const directFacets = asRecord(directResult?.['facets'])
+
+    return {
+      total: directTotal ?? extractSearchTotal(payload, 0),
+      facets: directFacets ? extractSearchFacets({ result: { facets: directFacets } }) : extractSearchFacets(payload)
+    }
+  }
+
+  /**
+   * Aggregate headline counts + editorial-review breakdowns across the catalog
+   * artifacts (NO organizations). One lightweight count-only search per entity,
+   * run in parallel; a failed entity yields total -1 so the rest still render.
+   */
+  async fetchCatalogStats(): Promise<CatalogStats> {
+    const specs: Array<{ key: string, label: string, entity: string, fields: string[] }> = [
+      { key: 'guides', label: 'Guides', entity: 'guides', fields: ['status', 'review_status'] },
+      { key: 'guidelines', label: 'Guidelines', entity: 'guidelines', fields: ['status', 'review_status'] },
+      { key: 'articles', label: 'Articles', entity: 'articles', fields: ['status', 'review_status'] },
+      { key: 'textbooks', label: 'Textbooks', entity: 'textbooks', fields: ['status', 'review_status'] },
+      { key: 'passages', label: 'Textbook Passages', entity: 'textbook-passages', fields: ['status'] },
+      { key: 'rcollections', label: 'Recipe Collections', entity: 'rcollections', fields: ['status'] },
+      { key: 'fctables', label: 'Food Composition Tables', entity: 'fctables', fields: ['status'] }
+    ]
+
+    const settled = await Promise.allSettled(specs.map(s => this.searchEntityStats(s.entity, s.fields)))
+    const entities: CatalogEntityStat[] = settled.map((res, i) => {
+      const spec = specs[i]
+      if (res.status === 'fulfilled') {
+        return {
+          key: spec.key,
+          label: spec.label,
+          total: res.value.total,
+          reviewStatus: facetMap(res.value.facets['review_status']),
+          status: facetMap(res.value.facets['status'])
+        }
+      }
+      return { key: spec.key, label: spec.label, total: -1, reviewStatus: {}, status: {} }
+    })
+
+    const totalAssets = entities.filter(e => e.total >= 0).reduce((sum, e) => sum + e.total, 0)
+    const pendingReviews = entities.reduce((sum, e) => {
+      const verified = e.reviewStatus['verified'] ?? 0
+      const all = Object.values(e.reviewStatus).reduce((a, b) => a + b, 0)
+      return sum + Math.max(0, all - verified)
+    }, 0)
+
+    return { entities, totalAssets, pendingReviews }
   }
 }
 
