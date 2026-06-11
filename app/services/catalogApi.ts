@@ -914,7 +914,8 @@ class CatalogApiService {
       { key: 'guidelines', label: 'Guidelines', entity: 'guidelines', fields: ['status', 'review_status'] },
       { key: 'articles', label: 'Articles', entity: 'articles', fields: ['status', 'review_status'] },
       { key: 'textbooks', label: 'Textbooks', entity: 'textbooks', fields: ['status', 'review_status'] },
-      { key: 'passages', label: 'Textbook Passages', entity: 'textbook-passages', fields: ['status'] },
+      // Passages have no standalone /search (only /by-textbook/{urn}/search), so
+      // there is no global passage count to surface here.
       { key: 'rcollections', label: 'Recipe Collections', entity: 'rcollections', fields: ['status'] },
       { key: 'fctables', label: 'Food Composition Tables', entity: 'fctables', fields: ['status'] }
     ]
