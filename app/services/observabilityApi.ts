@@ -35,6 +35,19 @@ export interface PromptSummary {
   [k: string]: unknown
 }
 
+export interface PromptDetail {
+  name: string
+  version?: number
+  type?: string
+  // `prompt` is a string for text prompts, or an array of chat messages.
+  prompt?: string | Array<{ role?: string, content?: string }>
+  labels?: string[]
+  tags?: string[]
+  config?: Record<string, unknown>
+  commitMessage?: string | null
+  [k: string]: unknown
+}
+
 export interface TimeBucket {
   bucket: string
   value: number
@@ -124,6 +137,21 @@ class ObservabilityApiService {
       return unwrap<PromptSummary[]>(payload, 'prompts', [])
     } catch {
       return []
+    }
+  }
+
+  /**
+   * Fetch a single prompt's detail (template content, labels, tags, config) for
+   * the read-only drawer. Prompt names can contain '/', which we keep as-is so
+   * the gateway forwards the full path to Langfuse. Returns null on any failure.
+   */
+  async getPromptDetail(name: string): Promise<PromptDetail | null> {
+    try {
+      const encoded = name.split('/').map(encodeURIComponent).join('/')
+      const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/prompts/${encoded}`)
+      return unwrap<PromptDetail | null>(payload, 'prompt', null)
+    } catch {
+      return null
     }
   }
 
