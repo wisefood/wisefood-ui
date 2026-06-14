@@ -25,7 +25,20 @@ async function resolveNutritionProfileProperties(): Promise<Record<string, boole
     const member = householdStore.currentMember
     if (!member?.id) return {}
 
-    const profile = await householdStore.getMemberProfile(member.id)
+    // A member with no profile row yet returns 404 from GET .../profile, which
+    // the API service throws. That 404 IS the "nothing set up" signal, so treat
+    // it as an empty profile rather than letting it fall to the catch below
+    // (which would set no properties and the start-block targeting nothing).
+    let profile
+    try {
+      profile = await householdStore.getMemberProfile(member.id)
+    } catch (err) {
+      const status = (err as { status?: number })?.status
+      if (status === 404) {
+        return { hasDietGroup: false, nutritionProfileComplete: false }
+      }
+      throw err
+    }
     if (!profile) {
       // No profile row yet => nothing set up.
       return { hasDietGroup: false, nutritionProfileComplete: false }
