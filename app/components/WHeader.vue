@@ -42,6 +42,7 @@
         }"
       >
         <button
+          data-flows="profile-dropdown-trigger"
           class="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
         >
           <!-- Profile Avatar -->

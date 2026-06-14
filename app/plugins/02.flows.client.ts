@@ -14,6 +14,42 @@ import { getFlowsEnvironment, getFlowsOrgId } from '~/utils/runtimeConfig'
 // Double-registration breaks the custom-element rendering.
 let flowsInitialized = false
 
+// Computes Flows user properties describing the selected member's nutrition
+// profile, used to target the preferences-setup tour. Returns an empty object
+// on any failure so Flows still initializes.
+async function resolveNutritionProfileProperties(): Promise<Record<string, boolean>> {
+  try {
+    const householdStore = useHouseholdStore()
+    await householdStore.initialize()
+
+    const member = householdStore.currentMember
+    if (!member?.id) return {}
+
+    const profile = await householdStore.getMemberProfile(member.id)
+    if (!profile) {
+      // No profile row yet => nothing set up.
+      return { hasDietGroup: false, nutritionProfileComplete: false }
+    }
+
+    const hasDietGroup = (profile.dietary_groups?.length ?? 0) > 0
+    const prefs = profile.nutritional_preferences
+    const hasPreferences =
+      (profile.allergies?.length ?? 0) > 0 ||
+      (prefs?.food_likes?.length ?? 0) > 0 ||
+      (prefs?.food_dislikes?.length ?? 0) > 0
+
+    return {
+      hasDietGroup,
+      // "Complete enough" to not re-prompt: the user has added at least one
+      // allergy, like, or dislike. The tour targets hasDietGroup && !complete.
+      nutritionProfileComplete: hasPreferences
+    }
+  } catch (err) {
+    console.warn('[Flows] Could not resolve nutrition-profile properties:', err)
+    return {}
+  }
+}
+
 export default defineNuxtPlugin(async () => {
   // Read via the runtime-config helper so the org id resolves from the
   // container-injected __RUNTIME_CONFIG__ in production, not just the
@@ -37,10 +73,18 @@ export default defineNuxtPlugin(async () => {
 
   flowsInitialized = true
 
+  // Derive nutrition-profile targeting properties for the selected member.
+  // The "set up your preferences" tour targets members who have a diet group
+  // but no other preferences yet; these flags let the workflow start block
+  // target the right users and stop replaying once preferences are filled.
+  // Best-effort only: any failure here must never block Flows init.
+  const userProperties = await resolveNutritionProfileProperties()
+
   init({
     organizationId,
     userId,
     environment: getFlowsEnvironment(),
+    userProperties,
     onNavigate: (href, event) => {
       event.preventDefault()
       navigateTo(href)

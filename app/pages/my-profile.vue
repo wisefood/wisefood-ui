@@ -166,7 +166,7 @@
         </UCard>
 
         <!-- Food Likes Card -->
-        <UCard>
+        <UCard data-flows="card-food-likes">
           <template #header>
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
@@ -218,7 +218,7 @@
         </UCard>
 
         <!-- Food Dislikes Card -->
-        <UCard>
+        <UCard data-flows="card-food-dislikes">
           <template #header>
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
@@ -270,7 +270,7 @@
         </UCard>
 
         <!-- Allergies & Intolerances Card -->
-        <UCard>
+        <UCard data-flows="card-allergies">
           <template #header>
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
