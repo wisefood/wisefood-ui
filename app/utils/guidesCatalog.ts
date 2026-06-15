@@ -327,6 +327,25 @@ export function getGuidelinePageReferences(guideline: CatalogGuideline) {
   return [...pageNumbers].sort((left, right) => left - right)
 }
 
+export function formatGuidelineSourceReference(guideline: CatalogGuideline) {
+  const pages = getGuidelinePageReferences(guideline)
+  const sections = uniqueStrings(guideline.source_refs.map(ref => ref.section_label))
+
+  const parts: string[] = []
+
+  if (pages.length === 1) {
+    parts.push(`p. ${pages[0]}`)
+  } else if (pages.length > 1) {
+    parts.push(`pp. ${pages[0]}–${pages[pages.length - 1]}`)
+  }
+
+  if (sections.length) {
+    parts.push(sections.join(', '))
+  }
+
+  return parts.length ? parts.join(' · ') : null
+}
+
 export function hasGuidePageAssociations(guidelines: CatalogGuideline[]) {
   return guidelines.some(guideline => getGuidelinePageReferences(guideline).length > 0)
 }

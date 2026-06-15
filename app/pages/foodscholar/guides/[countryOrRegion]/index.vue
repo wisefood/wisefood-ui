@@ -340,6 +340,7 @@
                     v-for="guideline in guidelines"
                     :key="guideline.id"
                     :guideline="guideline"
+                    :guide="regionGuideLookup[guideline.guide_urn] || null"
                     :guide-title="regionGuideLookup[guideline.guide_urn]?.title || guideline.guide_title"
                     :guide-to="buildGuideDetailPath(resolvedRegion, guideline.guide_urn)"
                   />
