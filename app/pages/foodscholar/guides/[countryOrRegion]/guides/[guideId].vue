@@ -1,384 +1,485 @@
 <template>
-  <div class="flex h-screen flex-col overflow-hidden bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
-    <FoodscholarMicroHeader
-      :show-back="true"
-      :back-to="resolvedRegion ? buildGuidesRegionPath(resolvedRegion) : buildGuidesCatalogPath()"
-      :back-label="backLabel"
-      back-icon="i-lucide-arrow-left"
-      brand-title="FoodScholar"
-      brand-lead="Dietary guides by country."
-    />
+  <div class="flex flex-col">
+    <div class="flex h-[calc(100dvh-6rem)] flex-col overflow-hidden bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+      <FoodscholarMicroHeader
+        :show-back="true"
+        :back-to="resolvedRegion ? buildGuidesRegionPath(resolvedRegion) : buildGuidesCatalogPath()"
+        :back-label="backLabel"
+        back-icon="i-lucide-arrow-left"
+        brand-title="FoodScholar"
+        brand-lead="Dietary guides by country."
+      />
 
-    <!-- Guide title + metadata header -->
-    <div v-if="selectedGuide" class="shrink-0 bg-white/70 px-4 py-5 backdrop-blur-sm dark:bg-zinc-900/50 sm:px-6">
-      <div class="mx-auto flex max-w-6xl items-start justify-between gap-4">
-        <div class="min-w-0 space-y-2.5">
-          <h1 class="text-xl font-semibold leading-snug text-gray-900 dark:text-white sm:text-2xl">
-            {{ selectedGuide.title }}
-          </h1>
-          <p v-if="selectedGuide.description" class="text-sm leading-relaxed text-gray-500 dark:text-gray-400">
-            {{ selectedGuide.description }}
+      <!-- Guide title + metadata header -->
+      <div
+        v-if="selectedGuide"
+        class="shrink-0 bg-white/70 px-4 py-5 backdrop-blur-sm dark:bg-zinc-900/50 sm:px-6"
+      >
+        <div class="mx-auto flex max-w-6xl items-start justify-between gap-4">
+          <div class="min-w-0 space-y-2.5">
+            <h1 class="text-xl font-semibold leading-snug text-gray-900 dark:text-white sm:text-2xl">
+              {{ selectedGuide.title }}
+            </h1>
+            <p
+              v-if="selectedGuide.description"
+              class="text-sm leading-relaxed text-gray-500 dark:text-gray-400"
+            >
+              {{ selectedGuide.description }}
+            </p>
+            <!-- Primary metadata row -->
+            <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-gray-500 dark:text-gray-400">
+              <span class="inline-flex items-center gap-1.5 font-medium text-brand-600 dark:text-brand-400">
+                {{ regionTitle }}
+              </span>
+              <span
+                v-if="guidePublisher"
+                class="inline-flex items-center gap-1.5"
+              >
+                <UIcon
+                  name="i-lucide-building-2"
+                  class="h-3.5 w-3.5 shrink-0"
+                />
+                {{ guidePublisher }}
+              </span>
+              <span
+                v-if="guidePublicationLabel"
+                class="inline-flex items-center gap-1.5"
+              >
+                <UIcon
+                  name="i-lucide-calendar"
+                  class="h-3.5 w-3.5 shrink-0"
+                />
+                {{ guidePublicationLabel }}
+              </span>
+              <span class="inline-flex items-center gap-1.5">
+                <UIcon
+                  name="i-lucide-list-checks"
+                  class="h-3.5 w-3.5 shrink-0"
+                />
+                {{ totalGuideGuidelines }} rules
+              </span>
+            </div>
+            <!-- Secondary metadata row -->
+            <div class="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
+              <span
+                v-if="selectedGuide.document_type"
+                class="inline-flex items-center gap-1.5"
+              >
+                <UIcon
+                  name="i-lucide-file-type"
+                  class="h-3.5 w-3.5 shrink-0"
+                />
+                {{ formatEnumLabel(selectedGuide.document_type) }}
+              </span>
+              <span
+                v-if="selectedGuide.language"
+                class="inline-flex items-center gap-1.5"
+              >
+                <UIcon
+                  name="i-lucide-languages"
+                  class="h-3.5 w-3.5 shrink-0"
+                />
+                {{ selectedGuide.language.toUpperCase() }}
+              </span>
+              <span
+                v-if="selectedGuide.license"
+                class="inline-flex items-center gap-1.5"
+              >
+                <UIcon
+                  name="i-lucide-scale"
+                  class="h-3.5 w-3.5 shrink-0"
+                />
+                {{ formatEnumLabel(selectedGuide.license) }}
+              </span>
+              <span
+                v-if="selectedGuide.graphical_model"
+                class="inline-flex items-center gap-1.5"
+              >
+                <UIcon
+                  name="i-lucide-pie-chart"
+                  class="h-3.5 w-3.5 shrink-0"
+                />
+                {{ formatEnumLabel(selectedGuide.graphical_model) }}
+              </span>
+              <span
+                v-if="selectedGuide.evidence_basis"
+                class="inline-flex items-center gap-1.5"
+              >
+                <UIcon
+                  name="i-lucide-microscope"
+                  class="h-3.5 w-3.5 shrink-0"
+                />
+                {{ formatEnumLabel(selectedGuide.evidence_basis) }}
+              </span>
+              <span
+                v-if="selectedGuide.applicability_status && selectedGuide.applicability_status !== 'unknown'"
+                class="inline-flex items-center gap-1.5"
+              >
+                <UIcon
+                  name="i-lucide-circle-check"
+                  class="h-3.5 w-3.5 shrink-0"
+                />
+                {{ formatEnumLabel(selectedGuide.applicability_status) }}
+              </span>
+            </div>
+          </div>
+          <div class="flex shrink-0 items-center gap-2 pt-0.5">
+            <UButton
+              v-if="selectedGuide?.urn && authStore.hasAnyRole(['expert', 'admin'])"
+              :to="`/console/assets/guides/${encodeURIComponent(selectedGuide.urn)}`"
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              icon="i-lucide-pencil"
+              class="hidden sm:flex"
+            >
+              Edit in Console
+            </UButton>
+            <UButton
+              v-if="selectedGuide?.url"
+              :to="selectedGuide.url"
+              target="_blank"
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              icon="i-lucide-external-link"
+              class="hidden sm:flex"
+            >
+              Source
+            </UButton>
+            <UButton
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              :icon="showInfoPanel ? 'i-lucide-panel-right-close' : 'i-lucide-info'"
+              class="xl:hidden"
+              @click="showInfoPanel = !showInfoPanel"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading / error states -->
+      <div
+        v-if="detailLoading && !selectedGuide"
+        class="flex flex-1 items-center justify-center"
+      >
+        <div class="text-center">
+          <div class="mx-auto h-10 w-10 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
+          <p class="mt-4 text-sm text-gray-600 dark:text-gray-300">
+            Loading guide…
           </p>
-          <!-- Primary metadata row -->
-          <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-gray-500 dark:text-gray-400">
-            <span class="inline-flex items-center gap-1.5 font-medium text-brand-600 dark:text-brand-400">
-              {{ regionTitle }}
-            </span>
-            <span v-if="guidePublisher" class="inline-flex items-center gap-1.5">
-              <UIcon name="i-lucide-building-2" class="h-3.5 w-3.5 shrink-0" />
-              {{ guidePublisher }}
-            </span>
-            <span v-if="guidePublicationLabel" class="inline-flex items-center gap-1.5">
-              <UIcon name="i-lucide-calendar" class="h-3.5 w-3.5 shrink-0" />
-              {{ guidePublicationLabel }}
-            </span>
-            <span class="inline-flex items-center gap-1.5">
-              <UIcon name="i-lucide-list-checks" class="h-3.5 w-3.5 shrink-0" />
-              {{ totalGuideGuidelines }} rules
-            </span>
-          </div>
-          <!-- Secondary metadata row -->
-          <div class="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
-            <span v-if="selectedGuide.document_type" class="inline-flex items-center gap-1.5">
-              <UIcon name="i-lucide-file-type" class="h-3.5 w-3.5 shrink-0" />
-              {{ formatEnumLabel(selectedGuide.document_type) }}
-            </span>
-            <span v-if="selectedGuide.language" class="inline-flex items-center gap-1.5">
-              <UIcon name="i-lucide-languages" class="h-3.5 w-3.5 shrink-0" />
-              {{ selectedGuide.language.toUpperCase() }}
-            </span>
-            <span v-if="selectedGuide.license" class="inline-flex items-center gap-1.5">
-              <UIcon name="i-lucide-scale" class="h-3.5 w-3.5 shrink-0" />
-              {{ formatEnumLabel(selectedGuide.license) }}
-            </span>
-            <span v-if="selectedGuide.graphical_model" class="inline-flex items-center gap-1.5">
-              <UIcon name="i-lucide-pie-chart" class="h-3.5 w-3.5 shrink-0" />
-              {{ formatEnumLabel(selectedGuide.graphical_model) }}
-            </span>
-            <span v-if="selectedGuide.evidence_basis" class="inline-flex items-center gap-1.5">
-              <UIcon name="i-lucide-microscope" class="h-3.5 w-3.5 shrink-0" />
-              {{ formatEnumLabel(selectedGuide.evidence_basis) }}
-            </span>
-            <span v-if="selectedGuide.applicability_status && selectedGuide.applicability_status !== 'unknown'" class="inline-flex items-center gap-1.5">
-              <UIcon name="i-lucide-circle-check" class="h-3.5 w-3.5 shrink-0" />
-              {{ formatEnumLabel(selectedGuide.applicability_status) }}
-            </span>
-          </div>
-        </div>
-        <div class="flex shrink-0 items-center gap-2 pt-0.5">
-          <UButton
-            v-if="selectedGuide?.urn && authStore.hasAnyRole(['expert', 'admin'])"
-            :to="`/console/assets/guides/${encodeURIComponent(selectedGuide.urn)}`"
-            color="neutral"
-            variant="ghost"
-            size="xs"
-            icon="i-lucide-pencil"
-            class="hidden sm:flex"
-          >
-            Edit in Console
-          </UButton>
-          <UButton
-            v-if="selectedGuide?.url"
-            :to="selectedGuide.url"
-            target="_blank"
-            color="neutral"
-            variant="ghost"
-            size="xs"
-            icon="i-lucide-external-link"
-            class="hidden sm:flex"
-          >
-            Source
-          </UButton>
-          <UButton
-            color="neutral"
-            variant="ghost"
-            size="xs"
-            :icon="showInfoPanel ? 'i-lucide-panel-right-close' : 'i-lucide-info'"
-            class="xl:hidden"
-            @click="showInfoPanel = !showInfoPanel"
-          />
         </div>
       </div>
-    </div>
 
-    <!-- Loading / error states -->
-    <div v-if="detailLoading && !selectedGuide" class="flex flex-1 items-center justify-center">
-      <div class="text-center">
-        <div class="mx-auto h-10 w-10 rounded-full border-4 border-brand-500 border-t-transparent animate-spin" />
-        <p class="mt-4 text-sm text-gray-600 dark:text-gray-300">
-          Loading guide…
-        </p>
-      </div>
-    </div>
+      <UAlert
+        v-else-if="detailError && !selectedGuide"
+        color="error"
+        variant="soft"
+        icon="i-lucide-alert-circle"
+        :title="detailError"
+        class="m-4"
+      />
 
-    <UAlert
-      v-else-if="detailError && !selectedGuide"
-      color="error"
-      variant="soft"
-      icon="i-lucide-alert-circle"
-      :title="detailError"
-      class="m-4"
-    />
+      <!-- Main split layout -->
+      <div
+        v-else-if="selectedGuide"
+        class="flex min-h-0 flex-1 justify-center"
+      >
+        <div class="flex min-h-0 w-full max-w-6xl flex-1">
+          <!-- LEFT: PDF viewer -->
+          <div
+            v-if="primaryPdfArtifact"
+            class="flex min-w-0 flex-1 flex-col"
+          >
+            <!-- PDF toolbar -->
+            <div class="flex shrink-0 flex-wrap items-center gap-2 border-b border-gray-100/60 bg-white/70 px-3 py-2 dark:border-white/5 dark:bg-zinc-900/40">
+              <!-- Artifact selector -->
+              <USelectMenu
+                v-if="pdfArtifacts.length > 1"
+                v-model="selectedArtifactId"
+                :items="pdfArtifactOptions"
+                value-key="value"
+                label-key="label"
+                size="xs"
+                class="w-44"
+              />
 
-    <!-- Main split layout -->
-    <div v-else-if="selectedGuide" class="flex min-h-0 flex-1 justify-center">
-    <div class="flex min-h-0 w-full max-w-6xl flex-1">
-      <!-- LEFT: PDF viewer -->
-      <div v-if="primaryPdfArtifact" class="flex min-w-0 flex-1 flex-col">
-        <!-- PDF toolbar -->
-        <div class="flex shrink-0 flex-wrap items-center gap-2 border-b border-gray-100/60 bg-white/70 px-3 py-2 dark:border-white/5 dark:bg-zinc-900/40">
-          <!-- Artifact selector -->
-          <USelectMenu
-            v-if="pdfArtifacts.length > 1"
-            v-model="selectedArtifactId"
-            :items="pdfArtifactOptions"
-            value-key="value"
-            label-key="label"
-            size="xs"
-            class="w-44"
-          />
+              <div class="ml-auto flex items-center gap-1">
+                <!-- Page navigation -->
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  icon="i-lucide-chevron-left"
+                  :disabled="currentPage <= 1"
+                  @click="currentPage = Math.max(1, currentPage - 1)"
+                />
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  icon="i-lucide-chevron-right"
+                  :disabled="pdfTotalPages > 0 && currentPage >= pdfTotalPages"
+                  @click="currentPage = pdfTotalPages ? Math.min(pdfTotalPages, currentPage + 1) : currentPage + 1"
+                />
 
-          <div class="ml-auto flex items-center gap-1">
-            <!-- Page navigation -->
-            <UButton
-              color="neutral"
-              variant="ghost"
-              size="xs"
-              icon="i-lucide-chevron-left"
-              :disabled="currentPage <= 1"
-              @click="currentPage = Math.max(1, currentPage - 1)"
-            />
-            <UButton
-              color="neutral"
-              variant="ghost"
-              size="xs"
-              icon="i-lucide-chevron-right"
-              :disabled="pdfTotalPages > 0 && currentPage >= pdfTotalPages"
-              @click="currentPage = pdfTotalPages ? Math.min(pdfTotalPages, currentPage + 1) : currentPage + 1"
-            />
+                <div class="mx-1 h-4 w-px bg-gray-200 dark:bg-white/10" />
 
-            <div class="mx-1 h-4 w-px bg-gray-200 dark:bg-white/10" />
+                <!-- Zoom -->
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  icon="i-lucide-zoom-out"
+                  :disabled="zoom <= 0.5"
+                  @click="zoom = Math.max(0.5, parseFloat((zoom - 0.1).toFixed(1)))"
+                />
+                <span class="min-w-[2.5rem] text-center text-xs text-gray-600 dark:text-gray-300">
+                  {{ Math.round(zoom * 100) }}%
+                </span>
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  icon="i-lucide-zoom-in"
+                  :disabled="zoom >= 2"
+                  @click="zoom = Math.min(2, parseFloat((zoom + 0.1).toFixed(1)))"
+                />
+              </div>
+            </div>
 
-            <!-- Zoom -->
-            <UButton
-              color="neutral"
-              variant="ghost"
-              size="xs"
-              icon="i-lucide-zoom-out"
-              :disabled="zoom <= 0.5"
-              @click="zoom = Math.max(0.5, parseFloat((zoom - 0.1).toFixed(1)))"
-            />
-            <span class="min-w-[2.5rem] text-center text-xs text-gray-600 dark:text-gray-300">
-              {{ Math.round(zoom * 100) }}%
-            </span>
-            <UButton
-              color="neutral"
-              variant="ghost"
-              size="xs"
-              icon="i-lucide-zoom-in"
-              :disabled="zoom >= 2"
-              @click="zoom = Math.min(2, parseFloat((zoom + 0.1).toFixed(1)))"
-            />
+            <!-- PDF canvas area -->
+            <div class="flex-1 overflow-auto pb-8">
+              <ClientOnly>
+                <ReviewPdfViewport
+                  :artifact="primaryPdfArtifact"
+                  :current-page="currentPage"
+                  :zoom="zoom"
+                  @navigate-page="handlePdfPageNavigation"
+                  @status-change="handlePdfStatusChange"
+                />
+                <template #fallback>
+                  <div class="flex h-full items-center justify-center">
+                    <div class="text-center text-sm text-gray-500 dark:text-gray-400">
+                      <UIcon
+                        name="i-lucide-loader-circle"
+                        class="mx-auto h-6 w-6 animate-spin"
+                      />
+                      <p class="mt-2">
+                        Loading PDF viewer…
+                      </p>
+                    </div>
+                  </div>
+                </template>
+              </ClientOnly>
+            </div>
           </div>
-        </div>
 
-        <!-- PDF canvas area -->
-        <div class="flex-1 overflow-auto pb-8">
-          <ClientOnly>
-            <ReviewPdfViewport
-              :artifact="primaryPdfArtifact"
-              :current-page="currentPage"
-              :zoom="zoom"
-              @navigate-page="handlePdfPageNavigation"
-              @status-change="handlePdfStatusChange"
+          <!-- LEFT (no PDF): metadata + artifacts column -->
+          <div
+            v-else
+            class="flex w-80 shrink-0 flex-col gap-4 overflow-y-auto border-r border-gray-200/70 p-4 dark:border-white/10"
+          >
+            <GuideMetadataPanel
+              :guide="selectedGuide"
+              :guideline-count="totalGuideGuidelines"
             />
-            <template #fallback>
-              <div class="flex h-full items-center justify-center">
-                <div class="text-center text-sm text-gray-500 dark:text-gray-400">
-                  <UIcon name="i-lucide-loader-circle" class="mx-auto h-6 w-6 animate-spin" />
-                  <p class="mt-2">Loading PDF viewer…</p>
+            <GuideArtifactList :artifacts="selectedGuide.artifacts" />
+          </div>
+
+          <!-- RIGHT: Guidelines panel -->
+          <div class="flex w-[22rem] shrink-0 flex-col bg-white/60 dark:bg-zinc-900/50 xl:w-96">
+            <!-- Panel header -->
+            <div class="shrink-0 px-4 pt-4 pb-3 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
+                  {{ guidelineTotal }} Rules
+                </span>
+                <div class="flex items-center gap-3">
+                  <button
+                    v-if="hasActiveFilters"
+                    type="button"
+                    class="text-xs text-gray-400 hover:text-brand-600 dark:hover:text-brand-300 transition-colors"
+                    @click="resetGuidelineFilters"
+                  >
+                    Clear filters
+                  </button>
+                  <!-- Page sync toggle -->
+                  <button
+                    v-if="primaryPdfArtifact && hasPageAssociations"
+                    type="button"
+                    :class="[
+                      'flex items-center gap-1.5 text-xs transition-colors',
+                      syncToPdfPage ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                    ]"
+                    @click="syncToPdfPage = !syncToPdfPage"
+                  >
+                    <UIcon
+                      :name="syncToPdfPage ? 'i-lucide-link' : 'i-lucide-link-2-off'"
+                      class="h-3.5 w-3.5"
+                    />
+                    <span>Sync</span>
+                  </button>
                 </div>
               </div>
-            </template>
-          </ClientOnly>
-        </div>
-      </div>
 
-      <!-- LEFT (no PDF): metadata + artifacts column -->
-      <div v-else class="flex w-80 shrink-0 flex-col gap-4 overflow-y-auto border-r border-gray-200/70 p-4 dark:border-white/10">
-        <GuideMetadataPanel
-          :guide="selectedGuide"
-          :guideline-count="totalGuideGuidelines"
-        />
-        <GuideArtifactList :artifacts="selectedGuide.artifacts" />
-      </div>
-
-      <!-- RIGHT: Guidelines panel -->
-      <div class="flex w-[22rem] shrink-0 flex-col bg-white/60 dark:bg-zinc-900/50 xl:w-96">
-        <!-- Panel header -->
-        <div class="shrink-0 px-4 pt-4 pb-3 space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-zinc-500">
-              {{ guidelineTotal }} Rules
-            </span>
-            <div class="flex items-center gap-3">
-              <button
-                v-if="hasActiveFilters"
-                type="button"
-                class="text-xs text-gray-400 hover:text-brand-600 dark:hover:text-brand-300 transition-colors"
-                @click="resetGuidelineFilters"
+              <!-- Search -->
+              <input
+                v-model="queryText"
+                type="text"
+                placeholder="Search rules…"
+                class="w-full rounded-md border-0 bg-gray-100/80 px-3 py-1.5 text-xs text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-400/40 dark:bg-zinc-800/60 dark:text-white dark:placeholder-gray-500 dark:focus:bg-zinc-800 transition-colors"
               >
-                Clear filters
-              </button>
-              <!-- Page sync toggle -->
-              <button
-                v-if="primaryPdfArtifact && hasPageAssociations"
-                type="button"
-                :class="[
-                  'flex items-center gap-1.5 text-xs transition-colors',
-                  syncToPdfPage ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                ]"
-                @click="syncToPdfPage = !syncToPdfPage"
+
+              <!-- Filters -->
+              <div
+                v-if="topicOptions.length > 1 || audienceOptions.length > 1"
+                class="flex gap-2"
               >
-                <UIcon :name="syncToPdfPage ? 'i-lucide-link' : 'i-lucide-link-2-off'" class="h-3.5 w-3.5" />
-                <span>Sync</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Search -->
-          <input
-            v-model="queryText"
-            type="text"
-            placeholder="Search rules…"
-            class="w-full rounded-md border-0 bg-gray-100/80 px-3 py-1.5 text-xs text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-400/40 dark:bg-zinc-800/60 dark:text-white dark:placeholder-gray-500 dark:focus:bg-zinc-800 transition-colors"
-          />
-
-          <!-- Filters -->
-          <div v-if="topicOptions.length > 1 || audienceOptions.length > 1" class="flex gap-2">
-            <USelectMenu
-              v-if="topicOptions.length > 1"
-              v-model="selectedTopic"
-              :items="topicOptions"
-              value-key="value"
-              label-key="label"
-              size="xs"
-              class="flex-1"
-            />
-            <USelectMenu
-              v-if="audienceOptions.length > 1"
-              v-model="selectedAudience"
-              :items="audienceOptions"
-              value-key="value"
-              label-key="label"
-              size="xs"
-              class="flex-1"
-            />
-          </div>
-        </div>
-
-        <!-- Guidelines list -->
-        <div class="flex-1 overflow-y-auto pb-8">
-          <!-- Loading skeletons -->
-          <div v-if="guidelinesLoading && !guidelines.length" class="space-y-px px-4 py-2">
-            <div
-              v-for="index in 6"
-              :key="`gl-skeleton-${index}`"
-              class="animate-pulse py-3"
-            >
-              <div class="space-y-2">
-                <div class="h-2.5 w-full rounded bg-gray-100 dark:bg-zinc-800" />
-                <div class="h-2.5 w-4/5 rounded bg-gray-100 dark:bg-zinc-800" />
-                <div class="h-2.5 w-3/5 rounded bg-gray-100 dark:bg-zinc-800" />
+                <USelectMenu
+                  v-if="topicOptions.length > 1"
+                  v-model="selectedTopic"
+                  :items="topicOptions"
+                  value-key="value"
+                  label-key="label"
+                  size="xs"
+                  class="flex-1"
+                />
+                <USelectMenu
+                  v-if="audienceOptions.length > 1"
+                  v-model="selectedAudience"
+                  :items="audienceOptions"
+                  value-key="value"
+                  label-key="label"
+                  size="xs"
+                  class="flex-1"
+                />
               </div>
             </div>
-          </div>
 
-          <div v-else-if="guidelinesError" class="mx-4 mt-4 rounded-lg bg-red-50/60 p-3 text-xs text-red-600 dark:bg-red-900/10 dark:text-red-300">
-            {{ guidelinesError }}
-          </div>
-
-          <div v-else-if="!guidelines.length" class="py-16 text-center">
-            <p class="text-xs text-gray-400 dark:text-gray-500">
-              {{ syncToPdfPage && hasPageAssociations ? `No rules for page ${currentPage}.` : 'No rules match.' }}
-            </p>
-          </div>
-
-          <div v-else class="divide-y divide-gray-100/80 dark:divide-white/5">
-            <button
-              v-for="guideline in guidelines"
-              :key="guideline.id"
-              type="button"
-              :class="[
-                'group w-full px-4 py-3.5 text-left transition-colors duration-100',
-                activeGuidelineId === guideline.id
-                  ? 'bg-brand-50/80 dark:bg-brand-900/20'
-                  : 'hover:bg-gray-50/80 dark:hover:bg-white/[0.03]'
-              ]"
-              @click="selectGuideline(guideline)"
-            >
-              <div class="flex gap-3">
+            <!-- Guidelines list -->
+            <div class="flex-1 overflow-y-auto pb-8">
+              <!-- Loading skeletons -->
+              <div
+                v-if="guidelinesLoading && !guidelines.length"
+                class="space-y-px px-4 py-2"
+              >
                 <div
-                  :class="[
-                    'mt-1 h-1.5 w-1.5 shrink-0 rounded-full transition-colors',
-                    activeGuidelineId === guideline.id ? 'bg-brand-500' : 'bg-gray-300 group-hover:bg-gray-400 dark:bg-zinc-600'
-                  ]"
-                />
-                <p class="text-xs leading-5 text-gray-700 dark:text-gray-300">
-                  {{ guideline.rule_text }}
+                  v-for="index in 6"
+                  :key="`gl-skeleton-${index}`"
+                  class="animate-pulse py-3"
+                >
+                  <div class="space-y-2">
+                    <div class="h-2.5 w-full rounded bg-gray-100 dark:bg-zinc-800" />
+                    <div class="h-2.5 w-4/5 rounded bg-gray-100 dark:bg-zinc-800" />
+                    <div class="h-2.5 w-3/5 rounded bg-gray-100 dark:bg-zinc-800" />
+                  </div>
+                </div>
+              </div>
+
+              <div
+                v-else-if="guidelinesError"
+                class="mx-4 mt-4 rounded-lg bg-red-50/60 p-3 text-xs text-red-600 dark:bg-red-900/10 dark:text-red-300"
+              >
+                {{ guidelinesError }}
+              </div>
+
+              <div
+                v-else-if="!guidelines.length"
+                class="py-16 text-center"
+              >
+                <p class="text-xs text-gray-400 dark:text-gray-500">
+                  {{ syncToPdfPage && hasPageAssociations ? `No rules for page ${currentPage}.` : 'No rules match.' }}
                 </p>
               </div>
-            </button>
+
+              <div
+                v-else
+                class="divide-y divide-gray-100/80 dark:divide-white/5"
+              >
+                <button
+                  v-for="guideline in guidelines"
+                  :key="guideline.id"
+                  type="button"
+                  :class="[
+                    'group w-full px-4 py-3.5 text-left transition-colors duration-100',
+                    activeGuidelineId === guideline.id
+                      ? 'bg-brand-50/80 dark:bg-brand-900/20'
+                      : 'hover:bg-gray-50/80 dark:hover:bg-white/[0.03]'
+                  ]"
+                  @click="selectGuideline(guideline)"
+                >
+                  <div class="flex gap-3">
+                    <div
+                      :class="[
+                        'mt-1 h-1.5 w-1.5 shrink-0 rounded-full transition-colors',
+                        activeGuidelineId === guideline.id ? 'bg-brand-500' : 'bg-gray-300 group-hover:bg-gray-400 dark:bg-zinc-600'
+                      ]"
+                    />
+                    <p class="text-xs leading-5 text-gray-700 dark:text-gray-300">
+                      {{ guideline.rule_text }}
+                    </p>
+                  </div>
+                </button>
+              </div>
+
+              <!-- Pagination -->
+              <div
+                v-if="guidelineTotal > guidelinePageSize"
+                class="flex items-center justify-between px-4 py-3 text-xs text-gray-500 dark:text-gray-400"
+              >
+                <button
+                  type="button"
+                  :disabled="guidelinePage <= 1"
+                  class="disabled:opacity-30 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                  @click="guidelinePage--"
+                >
+                  ← Prev
+                </button>
+                <span>{{ guidelinePage }} / {{ Math.ceil(guidelineTotal / guidelinePageSize) }}</span>
+                <button
+                  type="button"
+                  :disabled="guidelinePage >= Math.ceil(guidelineTotal / guidelinePageSize)"
+                  class="disabled:opacity-30 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                  @click="guidelinePage++"
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
           </div>
 
-          <!-- Pagination -->
-          <div v-if="guidelineTotal > guidelinePageSize" class="flex items-center justify-between px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
-            <button
-              type="button"
-              :disabled="guidelinePage <= 1"
-              class="disabled:opacity-30 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
-              @click="guidelinePage--"
-            >
-              ← Prev
-            </button>
-            <span>{{ guidelinePage }} / {{ Math.ceil(guidelineTotal / guidelinePageSize) }}</span>
-            <button
-              type="button"
-              :disabled="guidelinePage >= Math.ceil(guidelineTotal / guidelinePageSize)"
-              class="disabled:opacity-30 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
-              @click="guidelinePage++"
-            >
-              Next →
-            </button>
+          <!-- Info panel overlay (mobile / optional) -->
+          <div
+            v-if="showInfoPanel && selectedGuide"
+            class="absolute inset-y-0 right-0 z-30 flex w-80 flex-col gap-4 overflow-y-auto border-l border-gray-200/70 bg-white/95 p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900/95 xl:hidden"
+          >
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
+                Guide Info
+              </h2>
+              <UButton
+                color="neutral"
+                variant="ghost"
+                size="xs"
+                icon="i-lucide-x"
+                @click="showInfoPanel = false"
+              />
+            </div>
+            <GuideMetadataPanel
+              :guide="selectedGuide"
+              :guideline-count="totalGuideGuidelines"
+            />
+            <GuideArtifactList :artifacts="selectedGuide.artifacts" />
           </div>
         </div>
       </div>
-
-      <!-- Info panel overlay (mobile / optional) -->
-      <div
-        v-if="showInfoPanel && selectedGuide"
-        class="absolute inset-y-0 right-0 z-30 flex w-80 flex-col gap-4 overflow-y-auto border-l border-gray-200/70 bg-white/95 p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900/95 xl:hidden"
-      >
-        <div class="flex items-center justify-between">
-          <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
-            Guide Info
-          </h2>
-          <UButton
-            color="neutral"
-            variant="ghost"
-            size="xs"
-            icon="i-lucide-x"
-            @click="showInfoPanel = false"
-          />
-        </div>
-        <GuideMetadataPanel
-          :guide="selectedGuide"
-          :guideline-count="totalGuideGuidelines"
-        />
-        <GuideArtifactList :artifacts="selectedGuide.artifacts" />
-      </div>
     </div>
-    </div>
+    <div
+      class="h-16 shrink-0"
+      aria-hidden="true"
+    />
   </div>
 </template>
 
@@ -444,7 +545,7 @@ const activeGuidelineId = ref<string | null>(null)
 
 // PDF state
 const currentPage = ref(1)
-const zoom = ref(0.7)
+const zoom = ref(1)
 const pdfTotalPages = ref(0)
 const selectedArtifactId = ref<string>('')
 const syncToPdfPage = ref(true)
@@ -464,7 +565,6 @@ const backLabel = computed(() => resolvedRegion.value ? `Back to ${getRegionPres
 const guidePublisher = computed(() => selectedGuide.value ? getGuidePublisher(selectedGuide.value) : null)
 const guidePublicationLabel = computed(() => selectedGuide.value ? getGuidePublicationLabel(selectedGuide.value) : null)
 
-
 useHead({
   title: computed(() => `${guideTitle.value} | FoodScholar`)
 })
@@ -472,7 +572,6 @@ useHead({
 useSeoMeta({
   description: computed(() => `Browse guide metadata, artifacts, and rule-level guidelines for ${guideTitle.value}.`)
 })
-
 
 const pdfArtifacts = computed<CatalogArtifact[]>(() => {
   return selectedGuide.value?.artifacts.filter(artifact => isPdfArtifact(artifact)) ?? []
@@ -528,7 +627,6 @@ const audienceOptions = computed(() => {
 const hasActiveFilters = computed(() => {
   return queryText.value.trim() !== '' || selectedTopic.value !== 'all' || selectedAudience.value !== 'all' || (syncToPdfPage.value && hasPageAssociations.value)
 })
-
 
 function selectGuideline(guideline: CatalogGuideline) {
   activeGuidelineId.value = guideline.id

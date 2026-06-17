@@ -1,7 +1,7 @@
 <template>
   <div
     ref="viewportInnerEl"
-    class="relative min-h-[36rem] w-full"
+    class="relative h-full min-h-[24rem] w-full"
   >
     <div
       v-if="loading || rendering"
@@ -43,41 +43,43 @@
 
     <div
       v-else
-      class="flex min-w-full items-start justify-center gap-4 p-4"
+      class="flex w-max min-w-full p-4"
     >
-      <div
-        v-for="panel in visiblePanels"
-        :key="panel.key"
-        class="shrink-0 space-y-2"
-      >
-        <div class="flex items-center justify-between gap-2 px-1">
-          <div class="flex items-center gap-2">
-            <UBadge
-              :color="panel.kind === 'active' ? 'primary' : 'neutral'"
-              :variant="panel.kind === 'active' ? 'soft' : 'outline'"
-            >
-              {{ panel.kind === 'active' ? 'Active page' : 'Context only' }}
-            </UBadge>
-            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">
-              Page {{ panel.page }}
-            </span>
+      <div class="mx-auto flex items-start gap-4">
+        <div
+          v-for="panel in visiblePanels"
+          :key="panel.key"
+          class="shrink-0 space-y-2"
+        >
+          <div class="flex items-center justify-between gap-2 px-1">
+            <div class="flex items-center gap-2">
+              <UBadge
+                :color="panel.kind === 'active' ? 'primary' : 'neutral'"
+                :variant="panel.kind === 'active' ? 'soft' : 'outline'"
+              >
+                {{ panel.kind === 'active' ? 'Active page' : 'Context only' }}
+              </UBadge>
+              <span class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                Page {{ panel.page }}
+              </span>
+            </div>
           </div>
-        </div>
 
-        <div class="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm dark:border-white/10">
-          <VuePdfEmbed
-            v-if="pdfDocument"
-            :key="buildPanelRenderKey(panel)"
-            :source="pdfDocument"
-            :page="panel.page"
-            :width="resolvedPageWidth"
-            annotation-layer
-            class="block bg-white"
-            @internal-link-clicked="emit('navigate-page', $event)"
-            @rendered="handlePanelRendered(panel.key)"
-            @loading-failed="handleDocumentLoadFailure"
-            @rendering-failed="handlePanelRenderFailure"
-          />
+          <div class="overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-sm dark:border-white/10">
+            <VuePdfEmbed
+              v-if="pdfDocument"
+              :key="buildPanelRenderKey(panel)"
+              :source="pdfDocument"
+              :page="panel.page"
+              :width="resolvedPageWidth"
+              annotation-layer
+              class="block bg-white"
+              @internal-link-clicked="emit('navigate-page', $event)"
+              @rendered="handlePanelRendered(panel.key)"
+              @loading-failed="handleDocumentLoadFailure"
+              @rendering-failed="handlePanelRenderFailure"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -182,11 +184,11 @@ const visiblePanels = computed(() => {
 const resolvedPageWidth = computed(() => {
   const containerWidth = Math.max(viewportWidth.value - 32, 320)
   const interPageGap = visiblePanels.value.length > 1 ? 16 : 0
-  const perPageWidth = visiblePanels.value.length > 1
+  const fitWidth = visiblePanels.value.length > 1
     ? Math.max((containerWidth - interPageGap) / 2, 240)
     : containerWidth
 
-  return Math.max(Math.floor(perPageWidth * props.zoom), 240)
+  return Math.max(Math.floor(fitWidth * props.zoom), 240)
 })
 
 const renderSignature = computed(() => {
