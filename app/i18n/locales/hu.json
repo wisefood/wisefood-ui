@@ -170,19 +170,31 @@
         "tag": "FoodChat",
         "title": "Az étkezéstervező társpilótád",
         "description": "Étkezéstervező asszisztens, amely személyre szabott terveket készít minden családtag számára — figyelembe véve az allergiákat, célokat és kultúrákat —, és alkalmazkodik a heti változásokhoz.",
-        "highlights": ["Személyre szabott étkezési tervek", "Háztartás-tudatos", "Alkalmazkodik a hetedhez"]
+        "highlights": [
+          "Személyre szabott étkezési tervek",
+          "Háztartás-tudatos",
+          "Alkalmazkodik a hetedhez"
+        ]
       },
       "foodscholar": {
         "tag": "FoodScholar",
         "title": "Bizonyítékokra alapozott tudás",
         "description": "Böngéssz táplálkozási útmutatókat ország és forrás szerint, olvass hivatkozásokkal alátámasztott válaszokat, és fedezd fel az ételeid mögötti tudományt — szakzsargon nélkül.",
-        "highlights": ["Útmutatók atlasza", "Hivatkozott válaszok", "Országspecifikus iránymutatás"]
+        "highlights": [
+          "Útmutatók atlasza",
+          "Hivatkozott válaszok",
+          "Országspecifikus iránymutatás"
+        ]
       },
       "recipewrangler": {
         "tag": "RecipeWrangler",
         "title": "Az életedhez illő receptek",
         "description": "Fedezz fel, alakíts át és elemezz recepteket táplálkozási céljaid és környezeti lábnyomod alapján — a gyors hétköznapoktól az ambiciózus hétvégékig.",
-        "highlights": ["MI receptelemző", "Okos szűrők", "Összehasonlítás és tervezés"]
+        "highlights": [
+          "MI receptelemző",
+          "Okos szűrők",
+          "Összehasonlítás és tervezés"
+        ]
       }
     }
   },
@@ -310,23 +322,31 @@
       "quickFilters": "Gyors szűrők",
       "sortBy": "Rendezés",
       "allergens": {
-        "peanuts": "Mogyoró",
-        "treeNuts": "Diófélék",
-        "dairy": "Tejtermék",
-        "eggs": "Tojás",
-        "soy": "Szója",
-        "wheat": "Búza",
+        "celery": "Zeller",
+        "crustaceanShellfish": "Rákfélék",
+        "egg": "Tojás",
         "fish": "Hal",
-        "shellfish": "Rákfélék",
         "gluten": "Glutén",
-        "lactose": "Laktóz"
+        "lupin": "Csillagfürt",
+        "milk": "Tej",
+        "molluscs": "Puhatestűek",
+        "mustard": "Mustár",
+        "peanut": "Mogyoró",
+        "sesame": "Szezám",
+        "soy": "Szója",
+        "sulphites": "Szulfitok",
+        "treeNut": "Diófélék",
+        "wheat": "Búza"
       },
       "quickOptions": {
         "quickEasy": "Gyors és egyszerű (< 30 perc)",
         "healthy": "Egészséges és tápláló",
         "vegetarian": "Vegetáriánus",
         "vegan": "Vegán",
-        "lowCalorie": "Alacsony kalória"
+        "lowCalorie": "Alacsony kalória",
+        "lowFat": "Alacsony zsírtartalom",
+        "highFibre": "Magas rosttartalom",
+        "highProtein": "Magas fehérjetartalom"
       },
       "sortOptions": {
         "mostRelevant": "Legrelevánsabb",

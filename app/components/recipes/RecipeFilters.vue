@@ -229,17 +229,26 @@ const selectedTimeRange = ref<string | null>(null)
 // ============================================================================
 // Constants
 // ============================================================================
+// Allergen `value`s are matched on the backend as `toLower(al.name) IN exclude_allergens`
+// (param_search), so they must equal the lowercase canonical `Allergen.name` used by the
+// graph tagging (e.g. `tree_nut`, `crustacean_shellfish`). Entries not yet covered by the
+// backend allergen tagging won't match any recipes until that vocabulary is extended.
 const commonAllergens = computed(() => [
-  { value: 'peanuts', label: t('recipeWrangler.filters.allergens.peanuts') },
-  { value: 'tree nuts', label: t('recipeWrangler.filters.allergens.treeNuts') },
-  { value: 'dairy', label: t('recipeWrangler.filters.allergens.dairy') },
-  { value: 'eggs', label: t('recipeWrangler.filters.allergens.eggs') },
-  { value: 'soy', label: t('recipeWrangler.filters.allergens.soy') },
-  { value: 'wheat', label: t('recipeWrangler.filters.allergens.wheat') },
+  { value: 'celery', label: t('recipeWrangler.filters.allergens.celery') },
+  { value: 'crustacean_shellfish', label: t('recipeWrangler.filters.allergens.crustaceanShellfish') },
+  { value: 'egg', label: t('recipeWrangler.filters.allergens.egg') },
   { value: 'fish', label: t('recipeWrangler.filters.allergens.fish') },
-  { value: 'shellfish', label: t('recipeWrangler.filters.allergens.shellfish') },
   { value: 'gluten', label: t('recipeWrangler.filters.allergens.gluten') },
-  { value: 'lactose', label: t('recipeWrangler.filters.allergens.lactose') }
+  { value: 'lupin', label: t('recipeWrangler.filters.allergens.lupin') },
+  { value: 'milk', label: t('recipeWrangler.filters.allergens.milk') },
+  { value: 'molluscs', label: t('recipeWrangler.filters.allergens.molluscs') },
+  { value: 'mustard', label: t('recipeWrangler.filters.allergens.mustard') },
+  { value: 'peanut', label: t('recipeWrangler.filters.allergens.peanut') },
+  { value: 'sesame', label: t('recipeWrangler.filters.allergens.sesame') },
+  { value: 'soy', label: t('recipeWrangler.filters.allergens.soy') },
+  { value: 'sulphites', label: t('recipeWrangler.filters.allergens.sulphites') },
+  { value: 'tree_nut', label: t('recipeWrangler.filters.allergens.treeNut') },
+  { value: 'wheat', label: t('recipeWrangler.filters.allergens.wheat') }
 ])
 
 // Dish types are driven by whatever buckets the backend returns in the
@@ -295,7 +304,10 @@ const quickFilters = computed(() => [
   { value: 'healthy', label: t('recipeWrangler.filters.quickOptions.healthy'), icon: 'i-lucide-leaf' },
   { value: 'vegetarian', label: t('recipeWrangler.filters.quickOptions.vegetarian'), icon: 'i-lucide-sprout' },
   { value: 'vegan', label: t('recipeWrangler.filters.quickOptions.vegan'), icon: 'i-lucide-carrot' },
-  { value: 'low-calorie', label: t('recipeWrangler.filters.quickOptions.lowCalorie'), icon: 'i-lucide-flame' }
+  { value: 'low-calorie', label: t('recipeWrangler.filters.quickOptions.lowCalorie'), icon: 'i-lucide-flame' },
+  { value: 'low-fat', label: t('recipeWrangler.filters.quickOptions.lowFat'), icon: 'i-lucide-droplet' },
+  { value: 'high-fibre', label: t('recipeWrangler.filters.quickOptions.highFibre'), icon: 'i-lucide-wheat' },
+  { value: 'high-protein', label: t('recipeWrangler.filters.quickOptions.highProtein'), icon: 'i-lucide-beef' }
 ])
 
 const sortOptions: { value: RecipeParamSortBy; label: string; icon: string }[] = [

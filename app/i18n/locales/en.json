@@ -210,19 +210,31 @@
         "tag": "FoodChat",
         "title": "Your meal-planning co-pilot",
         "description": "A meal-planning assistant that builds personalized plans for every household member — accounting for allergies, goals, and cultures — and adapts as your week changes.",
-        "highlights": ["Personalized meal plans", "Household-aware", "Adapts to your week"]
+        "highlights": [
+          "Personalized meal plans",
+          "Household-aware",
+          "Adapts to your week"
+        ]
       },
       "foodscholar": {
         "tag": "FoodScholar",
         "title": "Knowledge, grounded in evidence",
         "description": "Browse dietary guides by country and source, read citation-grounded answers, and explore the science behind what you eat — without the jargon.",
-        "highlights": ["Guides Atlas", "Citation-grounded answers", "Country-specific guidance"]
+        "highlights": [
+          "Guides Atlas",
+          "Citation-grounded answers",
+          "Country-specific guidance"
+        ]
       },
       "recipewrangler": {
         "tag": "RecipeWrangler",
         "title": "Recipes that fit your life",
         "description": "Discover, adapt, and analyze recipes against your nutritional goals and environmental footprint — from quick weeknights to ambitious weekends.",
-        "highlights": ["AI recipe analyzer", "Smart filters", "Compare & plan"]
+        "highlights": [
+          "AI recipe analyzer",
+          "Smart filters",
+          "Compare & plan"
+        ]
       }
     }
   },
@@ -311,23 +323,31 @@
       "quickFilters": "Quick Filters",
       "sortBy": "Sort By",
       "allergens": {
-        "peanuts": "Peanuts",
-        "treeNuts": "Tree Nuts",
-        "dairy": "Dairy",
-        "eggs": "Eggs",
-        "soy": "Soy",
-        "wheat": "Wheat",
+        "celery": "Celery",
+        "crustaceanShellfish": "Crustacean Shellfish",
+        "egg": "Egg",
         "fish": "Fish",
-        "shellfish": "Shellfish",
         "gluten": "Gluten",
-        "lactose": "Lactose"
+        "lupin": "Lupin",
+        "milk": "Milk",
+        "molluscs": "Molluscs",
+        "mustard": "Mustard",
+        "peanut": "Peanut",
+        "sesame": "Sesame",
+        "soy": "Soy",
+        "sulphites": "Sulphites",
+        "treeNut": "Tree Nut",
+        "wheat": "Wheat"
       },
       "quickOptions": {
         "quickEasy": "Quick and Easy (< 30 min)",
         "healthy": "Healthy and Nutritious",
         "vegetarian": "Vegetarian",
         "vegan": "Vegan",
-        "lowCalorie": "Low Calorie"
+        "lowCalorie": "Low Calorie",
+        "lowFat": "Low Fat",
+        "highFibre": "High Fibre",
+        "highProtein": "High Protein"
       },
       "sortOptions": {
         "mostRelevant": "Most Relevant",

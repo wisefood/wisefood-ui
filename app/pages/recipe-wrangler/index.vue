@@ -1168,6 +1168,15 @@ const handleQuickFilter = async (filterType: string) => {
       case 'low-calorie':
         query = 'low calorie recipes'
         break
+      case 'low-fat':
+        query = 'low fat recipes'
+        break
+      case 'high-fibre':
+        query = 'high fibre recipes'
+        break
+      case 'high-protein':
+        query = 'high protein recipes'
+        break
       default:
         return
     }

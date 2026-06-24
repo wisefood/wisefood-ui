@@ -249,6 +249,33 @@
         "dairyFree": "Χωρίς Γαλακτοκομικά",
         "vegan": "Vegan",
         "glutenFree": "Χωρίς Γλουτένη"
+      },
+      "allergens": {
+        "celery": "Σέλινο",
+        "crustaceanShellfish": "Καρκινοειδή",
+        "egg": "Αυγό",
+        "fish": "Ψάρι",
+        "gluten": "Γλουτένη",
+        "lupin": "Λούπινο",
+        "milk": "Γάλα",
+        "molluscs": "Μαλάκια",
+        "mustard": "Μουστάρδα",
+        "peanut": "Φιστίκι",
+        "sesame": "Σουσάμι",
+        "soy": "Σόγια",
+        "sulphites": "Θειώδη",
+        "treeNut": "Ξηροί καρποί",
+        "wheat": "Σιτάρι"
+      },
+      "quickOptions": {
+        "quickEasy": "Γρήγορο και εύκολο (< 30 λεπτά)",
+        "healthy": "Υγιεινό και θρεπτικό",
+        "vegetarian": "Χορτοφαγικό",
+        "vegan": "Βίγκαν",
+        "lowCalorie": "Χαμηλές θερμίδες",
+        "lowFat": "Χαμηλά λιπαρά",
+        "highFibre": "Υψηλές φυτικές ίνες",
+        "highProtein": "Υψηλή πρωτεΐνη"
       }
     },
     "allergens": {

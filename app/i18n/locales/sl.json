@@ -170,19 +170,31 @@
         "tag": "FoodChat",
         "title": "Tvoj sopilot za načrtovanje obrokov",
         "description": "Asistent za načrtovanje obrokov, ki pripravi prilagojene jedilnike za vsakega člana gospodinjstva — upošteva alergije, cilje in kulture — in se prilagaja spremembam tedna.",
-        "highlights": ["Prilagojeni jedilniki", "Zaveden gospodinjstva", "Prilagaja se tvojemu tednu"]
+        "highlights": [
+          "Prilagojeni jedilniki",
+          "Zaveden gospodinjstva",
+          "Prilagaja se tvojemu tednu"
+        ]
       },
       "foodscholar": {
         "tag": "FoodScholar",
         "title": "Znanje, podprto z dokazi",
         "description": "Brskaj po prehranskih smernicah po državi in viru, beri odgovore z navedenimi viri in odkrivaj znanost, ki stoji za hrano — brez žargona.",
-        "highlights": ["Atlas smernic", "Odgovori s citati", "Smernice po državah"]
+        "highlights": [
+          "Atlas smernic",
+          "Odgovori s citati",
+          "Smernice po državah"
+        ]
       },
       "recipewrangler": {
         "tag": "RecipeWrangler",
         "title": "Recepti, ki ustrezajo tvojemu življenju",
         "description": "Odkrivaj, prilagajaj in analiziraj recepte glede na svoje prehranske cilje in okoljski odtis — od hitrih obrokov med tednom do ambicioznih vikendov.",
-        "highlights": ["Analizator receptov z UI", "Pametni filtri", "Primerjaj in načrtuj"]
+        "highlights": [
+          "Analizator receptov z UI",
+          "Pametni filtri",
+          "Primerjaj in načrtuj"
+        ]
       }
     }
   },
@@ -310,23 +322,31 @@
       "quickFilters": "Hitri filtri",
       "sortBy": "Razvrsti po",
       "allergens": {
-        "peanuts": "Arašidi",
-        "treeNuts": "Oreščki",
-        "dairy": "Mlečni izdelki",
-        "eggs": "Jajca",
-        "soy": "Soja",
-        "wheat": "Pšenica",
+        "celery": "Zelena",
+        "crustaceanShellfish": "Raki",
+        "egg": "Jajca",
         "fish": "Ribe",
-        "shellfish": "Lupinarji",
         "gluten": "Gluten",
-        "lactose": "Laktoza"
+        "lupin": "Volčji bob",
+        "milk": "Mleko",
+        "molluscs": "Mehkužci",
+        "mustard": "Gorčica",
+        "peanut": "Arašidi",
+        "sesame": "Sezam",
+        "soy": "Soja",
+        "sulphites": "Sulfiti",
+        "treeNut": "Oreščki",
+        "wheat": "Pšenica"
       },
       "quickOptions": {
         "quickEasy": "Hitro in enostavno (< 30 min)",
         "healthy": "Zdravo in hranljivo",
         "vegetarian": "Vegetarijansko",
         "vegan": "Vegansko",
-        "lowCalorie": "Nizkokalorično"
+        "lowCalorie": "Nizkokalorično",
+        "lowFat": "Malo maščob",
+        "highFibre": "Veliko vlaknin",
+        "highProtein": "Veliko beljakovin"
       },
       "sortOptions": {
         "mostRelevant": "Najbolj relevantno",
