@@ -86,6 +86,13 @@
         >
           {{ source.label }}
         </button>
+        <!-- Placeholder: PLAN'EAT (Curated Hungarian Recipes) source, not yet wired. -->
+        <button
+          type="button"
+          class="px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+        >
+          Curated Hungarian Recipes
+        </button>
       </div>
     </div>
 
@@ -295,7 +302,8 @@ const sourceOptions: { value: RecipeSource; label: string }[] = [
   { value: 'healthyfoods', label: 'Healthy Foods' },
   { value: 'foodhero', label: 'Food Hero' },
   { value: 'myplate', label: 'MyPlate' },
-  { value: 'irish_safefood', label: 'Irish Safefood' },
+  { value: 'irish_safefood', label: 'Curated Irish Recipes' },
+  { value: 'slovenian', label: 'Curated Slovenian Recipes' },
   { value: 'recipe1m', label: 'Recipe1M' }
 ]
 

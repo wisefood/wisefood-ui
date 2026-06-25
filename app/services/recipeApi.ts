@@ -95,7 +95,7 @@ export interface RecipeSearchParams {
 }
 
 export type RecipeParamSortBy = 'title_asc' | 'title_desc' | 'time_asc' | 'time_desc' | 'random'
-export type RecipeSource = 'healthyfoods' | 'foodhero' | 'myplate' | 'irish_safefood' | 'recipe1m'
+export type RecipeSource = 'healthyfoods' | 'foodhero' | 'myplate' | 'irish_safefood' | 'slovenian' | 'recipe1m'
 // Backend-owned taxonomy — treat as an open string set so newly emitted
 // values (e.g. "side-dish") don't require a frontend type bump.
 export type RecipeDishType = string
