@@ -30,6 +30,27 @@ http {
             return 302 /app/;
         }
 
+        # Reverse-proxy the Flows data API through our own origin. The SDK is
+        # configured with init({ apiUrl: <our origin> }) and requests fixed paths
+        # under /v2/sdk/*, so we proxy exactly those to api.flows-cloud.com over
+        # TLS. Keeping the requests first-party stops Brave Shields / Firefox ETP
+        # from blocking them as a third-party tracker (which otherwise left a blur
+        # overlay with no content). Mounted at both / and /app for the optional
+        # context path. Must precede the generic SPA/static locations below.
+        location ~* ^/(app/)?(v2/sdk/.*)$ {
+            resolver 1.1.1.1 8.8.8.8 valid=300s;
+            set $flows_upstream "https://api.flows-cloud.com/$2$is_args$args";
+
+            proxy_pass $flows_upstream;
+            proxy_http_version 1.1;
+            proxy_set_header Host api.flows-cloud.com;
+            proxy_ssl_server_name on;
+            proxy_ssl_name api.flows-cloud.com;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_pass_request_headers on;
+        }
+
         location = /runtime-config.js {
             try_files /runtime-config.js =404;
 

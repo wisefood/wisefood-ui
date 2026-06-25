@@ -8,7 +8,7 @@ import * as surveyComponents from '@flows/js-components/survey-components'
 
 import '@flows/js-components/index.css'
 
-import { getFlowsEnvironment, getFlowsOrgId } from '~/utils/runtimeConfig'
+import { getFlowsApiUrl, getFlowsEnvironment, getFlowsOrgId } from '~/utils/runtimeConfig'
 
 // Guard so init()/setupJsComponents() never run twice (HMR, re-invocation).
 // Double-registration breaks the custom-element rendering.
@@ -98,6 +98,9 @@ export default defineNuxtPlugin(async () => {
     userId,
     environment: getFlowsEnvironment(),
     userProperties,
+    // Route the data API through our own origin (proxy) so privacy browsers
+    // (Brave Shields, Firefox ETP) don't block it as a third-party tracker.
+    apiUrl: getFlowsApiUrl(),
     onNavigate: (href, event) => {
       event.preventDefault()
       navigateTo(href)

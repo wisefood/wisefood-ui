@@ -24,7 +24,8 @@ window.__RUNTIME_CONFIG__ = {
   sentryDsn: '${SENTRY_DSN_RUNTIME}',
   sentryEnabled: '${SENTRY_ENABLED_RUNTIME}',
   flowsOrgId: '${VITE_FLOWS_ORG_ID}',
-  flowsEnvironment: '${VITE_FLOWS_ENVIRONMENT}'
+  flowsEnvironment: '${VITE_FLOWS_ENVIRONMENT}',
+  flowsApiUrl: '${VITE_FLOWS_API_URL}'
 };
 EOF
 

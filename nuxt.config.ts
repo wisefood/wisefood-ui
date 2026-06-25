@@ -82,7 +82,8 @@ export default defineNuxtConfig({
       recipeWranglerApiUrl: process.env.VITE_RECIPE_WRANGLER_API_URL,
       recipeWranglerMode: process.env.VITE_RECIPE_WRANGLER_MODE,
       flowsOrgId: process.env.VITE_FLOWS_ORG_ID, // Flows.js organization id (interactive walkthroughs)
-      flowsEnvironment: process.env.VITE_FLOWS_ENVIRONMENT || 'production'
+      flowsEnvironment: process.env.VITE_FLOWS_ENVIRONMENT || 'production',
+      flowsApiUrl: process.env.VITE_FLOWS_API_URL || '' // Override Flows apiUrl; empty => same-origin (proxied to api.flows-cloud.com)
     }
   },
   routeRules: {
@@ -93,7 +94,12 @@ export default defineNuxtConfig({
     '/console/**': { ssr: false },
     '/foodscholar/**': { ssr: false },
     '/recipe-wrangler/**': { ssr: false },
-    '/foodchat/**': { ssr: false }
+    '/foodchat/**': { ssr: false },
+    // Proxy Flows' data API through our own origin so privacy browsers don't
+    // block it as a third-party tracker. The SDK requests fixed /v2/sdk/* paths
+    // against apiUrl (= our origin). nginx handles this in production; this rule
+    // covers `nuxt dev` and the Nitro server build.
+    '/v2/sdk/**': { proxy: { to: 'https://api.flows-cloud.com/v2/sdk/**' } }
   },
 
   compatibilityDate: '2025-01-15',
