@@ -2,6 +2,8 @@
   <UApp>
     <WHeader />
 
+    <GuestBanner />
+
     <UMain>
       <slot />
     </UMain>

@@ -85,7 +85,7 @@
         </div>
 
         <!-- Register Button -->
-        <UButton 
+        <UButton
           color="neutral"
           variant="outline"
           size="xl"
@@ -103,6 +103,34 @@
             {{ t('auth.createAccount') || 'Create new account' }}
           </span>
         </UButton>
+
+        <!-- Guest Button -->
+        <UButton
+          color="neutral"
+          variant="ghost"
+          size="xl"
+          block
+          :loading="isGuestLoading"
+          :disabled="isGuestLoading"
+          icon="i-lucide-flask-conical"
+          class="justify-center font-semibold cursor-pointer transition-all"
+          @click="handleGuestLogin"
+        >
+          <span v-if="isGuestLoading">
+            {{ t('auth.guestStarting') || 'Preparing your sandbox...' }}
+          </span>
+          <span v-else>
+            {{ t('auth.continueAsGuest') || 'Try it as a guest' }}
+          </span>
+        </UButton>
+
+        <UAlert
+          v-if="guestError"
+          icon="i-lucide-alert-triangle"
+          color="error"
+          variant="soft"
+          :description="guestError"
+        />
       </div>
     </UCard>
 
@@ -152,6 +180,8 @@ const route = useRoute()
 const isChecking = ref(true)
 const isLoggingIn = ref(false)
 const isRegistering = ref(false)
+const isGuestLoading = ref(false)
+const guestError = ref<string | null>(null)
 
 const redirectTarget = computed(() => {
   const redirect = route.query.redirect
@@ -190,6 +220,22 @@ const handleLogin = () => {
 const handleRegister = () => {
   isRegistering.value = true
   KeycloakAuthService.register(redirectTarget.value)
+}
+
+const handleGuestLogin = async () => {
+  isGuestLoading.value = true
+  guestError.value = null
+  try {
+    await authStore.loginAsGuest()
+    await router.push(redirectTarget.value)
+  } catch (err) {
+    guestError.value =
+      err instanceof Error
+        ? err.message
+        : (t('auth.guestFailed') || 'Guest access is unavailable right now.')
+  } finally {
+    isGuestLoading.value = false
+  }
 }
 </script>
 
