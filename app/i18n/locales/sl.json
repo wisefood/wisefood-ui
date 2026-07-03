@@ -142,7 +142,12 @@
     "terms": "Pogoji storitve",
     "noAccount": "Nimate računa?",
     "signIn": "Prijava",
-    "register": "Registracija"
+    "register": "Registracija",
+    "continueAsGuest": "Preizkusite kot gost",
+    "guestStarting": "Pripravljamo vaše testno okolje ...",
+    "guestFailed": "Gostujoči dostop trenutno ni na voljo.",
+    "guestBanner": "Brskate kot gost — vaši podatki so začasni",
+    "guestExpires": "poteče čez"
   },
   "seo": {
     "title": "WiseFood – Tvoja personalizirana prehranska pot",

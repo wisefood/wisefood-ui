@@ -142,7 +142,12 @@
     "terms": "Terms of Service",
     "noAccount": "Don't have an account?",
     "signIn": "Sign in",
-    "register": "Register"
+    "register": "Register",
+    "continueAsGuest": "Try it as a guest",
+    "guestStarting": "Preparing your sandbox...",
+    "guestFailed": "Guest access is unavailable right now.",
+    "guestBanner": "You're exploring as a guest — your data is temporary",
+    "guestExpires": "expires in"
   },
   "seo": {
     "title": "WiseFood - Your Personalized Nutrition Journey",

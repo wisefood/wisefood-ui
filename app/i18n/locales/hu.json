@@ -142,7 +142,12 @@
     "terms": "Szolgáltatási feltételek",
     "noAccount": "Még nincs fiókod?",
     "signIn": "Bejelentkezés",
-    "register": "Regisztráció"
+    "register": "Regisztráció",
+    "continueAsGuest": "Kipróbálom vendégként",
+    "guestStarting": "Tesztkörnyezet előkészítése...",
+    "guestFailed": "A vendég hozzáférés jelenleg nem érhető el.",
+    "guestBanner": "Vendégként böngészik — az adatai ideiglenesek",
+    "guestExpires": "lejár"
   },
   "seo": {
     "title": "WiseFood – A személyre szabott táplálkozási utad",

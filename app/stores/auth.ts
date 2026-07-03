@@ -63,6 +63,8 @@ const decodeJwtPayload = (token: string): Record<string, any> | null => {
   }
 }
 
+let guestLoginInFlight: Promise<boolean> | null = null
+
 const loadGuestSession = (): GuestSession | null => {
   if (typeof window === 'undefined') return null
   try {
@@ -197,10 +199,22 @@ export const useAuthStore = defineStore('auth', {
      * deleted server-side when the guest TTL expires.
      */
     async loginAsGuest() {
+      // Concurrent calls (double click, remount) share one request so we
+      // never mint two guest accounts.
+      if (guestLoginInFlight) {
+        return guestLoginInFlight
+      }
+      guestLoginInFlight = this.doGuestLogin().finally(() => {
+        guestLoginInFlight = null
+      })
+      return guestLoginInFlight
+    },
+
+    async doGuestLogin() {
+      // Base URL already includes the /api/v1 prefix.
       const baseUrl = getWisefoodRestApiUrl()
-      const response = await fetch(`${baseUrl}/api/v1/system/guest`, {
+      const response = await fetch(`${baseUrl}/system/guest`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
       })
       if (!response.ok) {
         const body = await response.json().catch(() => null)
