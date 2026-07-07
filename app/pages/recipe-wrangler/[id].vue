@@ -1474,6 +1474,7 @@ const handleImageError = (event: Event) => {
 // Lifecycle
 // ============================================================================
 onMounted(async () => {
+  recipeStore.initialize()
   try {
     await householdStore.initialize()
     selectedRegion.value = resolveRegion(householdStore.currentHousehold?.region)

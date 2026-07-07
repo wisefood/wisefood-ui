@@ -1,5 +1,10 @@
 import { defineStore } from 'pinia'
+import { watch } from 'vue'
 import type { Recipe, RecipeDishType, RecipeParamSortBy, RecipeSearchResult, RecipeSource } from '~/services/recipeApi'
+import memberFavoritesApi from '~/services/memberFavoritesApi'
+import { useHouseholdStore } from '~/stores/household'
+
+const FAVORITES_MIGRATED_KEY = 'recipe-favorites-migrated'
 
 /**
  * RecipeWrangler Pinia Store
@@ -11,6 +16,10 @@ export const useRecipeStore = defineStore('recipe', {
   // ============================================================================
   state: () => ({
     favorites: [] as string[],
+    // Member whose favorites are currently loaded (null = local-only fallback)
+    favoritesMemberId: null as string | null,
+    favoritesLoading: false,
+    favoritesSyncStarted: false,
     recentlyViewed: [] as string[],
     searchHistory: [] as string[],
     excludedAllergens: [] as string[],
@@ -105,42 +114,179 @@ export const useRecipeStore = defineStore('recipe', {
      * Toggle favorite status for a recipe
      */
     toggleFavorite(recipeId: string) {
-      const index = this.favorites.indexOf(recipeId)
-      if (index > -1) {
-        this.favorites.splice(index, 1)
+      if (this.favorites.includes(recipeId)) {
+        this.removeFavorite(recipeId)
       } else {
-        this.favorites.push(recipeId)
+        this.addFavorite(recipeId)
       }
-      this.persistFavorites()
     },
 
     /**
-     * Add recipe to favorites
+     * Add recipe to favorites (optimistic — synced to the API when a member is selected)
      */
     addFavorite(recipeId: string) {
-      if (!this.favorites.includes(recipeId)) {
-        this.favorites.push(recipeId)
-        this.persistFavorites()
-      }
+      if (this.favorites.includes(recipeId)) return
+      this.favorites.push(recipeId)
+      this.persistFavorites()
+      this.syncFavoriteAdd(recipeId)
     },
 
     /**
-     * Remove recipe from favorites
+     * Remove recipe from favorites (optimistic — synced to the API when a member is selected)
      */
     removeFavorite(recipeId: string) {
       const index = this.favorites.indexOf(recipeId)
-      if (index > -1) {
-        this.favorites.splice(index, 1)
-        this.persistFavorites()
-      }
+      if (index === -1) return
+      this.favorites.splice(index, 1)
+      this.persistFavorites()
+      this.syncFavoriteRemove(recipeId)
     },
 
     /**
      * Clear all favorites
      */
     clearFavorites() {
+      const removed = [...this.favorites]
       this.favorites = []
       this.persistFavorites()
+      removed.forEach(recipeId => this.syncFavoriteRemove(recipeId))
+    },
+
+    /**
+     * Push an added favorite to the API, reverting local state on failure
+     */
+    syncFavoriteAdd(recipeId: string) {
+      const memberId = this.favoritesMemberId
+      if (!memberId) return
+
+      memberFavoritesApi.addFavorite(memberId, recipeId).catch((e) => {
+        console.error('[RecipeStore] Failed to add favorite on server, reverting:', e)
+        // Revert only if the same member is still active and the entry is still present
+        if (this.favoritesMemberId !== memberId) return
+        const index = this.favorites.indexOf(recipeId)
+        if (index > -1) {
+          this.favorites.splice(index, 1)
+          this.persistFavorites()
+        }
+      })
+    },
+
+    /**
+     * Push a removed favorite to the API, reverting local state on failure
+     */
+    syncFavoriteRemove(recipeId: string) {
+      const memberId = this.favoritesMemberId
+      if (!memberId) return
+
+      memberFavoritesApi.removeFavorite(memberId, recipeId).catch((e) => {
+        console.error('[RecipeStore] Failed to remove favorite on server, reverting:', e)
+        // Revert only if the same member is still active and the entry is still absent
+        if (this.favoritesMemberId !== memberId) return
+        if (!this.favorites.includes(recipeId)) {
+          this.favorites.push(recipeId)
+          this.persistFavorites()
+        }
+      })
+    },
+
+    /**
+     * Load favorites for a member from the API.
+     * Falls back to the localStorage copy on failure so the recipes page keeps working.
+     */
+    async loadFavoritesFromApi(memberId: string) {
+      this.favoritesLoading = true
+      try {
+        const entries = await memberFavoritesApi.listFavorites(memberId)
+        const serverIds = entries.map(entry => entry.recipe_id).filter(Boolean)
+        const migratedIds = await this.migrateLocalFavorites(memberId, serverIds)
+
+        // Ignore stale responses if the member changed while loading
+        if (this.favoritesMemberId !== memberId) return
+
+        this.favorites = [...new Set([...serverIds, ...migratedIds])]
+        this.persistFavorites()
+      } catch (e) {
+        console.error('[RecipeStore] Failed to load favorites from API, using local fallback:', e)
+        this.loadFavorites()
+      } finally {
+        this.favoritesLoading = false
+      }
+    },
+
+    /**
+     * One-time migration of pre-existing localStorage favorites to the server.
+     * PUTs each local favorite missing server-side, then marks localStorage as
+     * migrated so it only runs once. Returns the recipe IDs that were migrated.
+     */
+    async migrateLocalFavorites(memberId: string, serverIds: string[]): Promise<string[]> {
+      if (!import.meta.client) return []
+      if (localStorage.getItem(FAVORITES_MIGRATED_KEY) === 'true') return []
+
+      let localIds: string[] = []
+      const stored = localStorage.getItem('recipe-favorites')
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored)
+          if (Array.isArray(parsed)) {
+            localIds = parsed.map(item => String(item || '').trim()).filter(Boolean)
+          }
+        } catch (e) {
+          console.error('[RecipeStore] Failed to parse local favorites for migration:', e)
+        }
+      }
+
+      const missing = localIds.filter(id => !serverIds.includes(id))
+      if (missing.length === 0) {
+        localStorage.setItem(FAVORITES_MIGRATED_KEY, 'true')
+        return []
+      }
+
+      const results = await Promise.allSettled(
+        missing.map(recipeId => memberFavoritesApi.addFavorite(memberId, recipeId))
+      )
+
+      const migrated: string[] = []
+      let failures = 0
+      results.forEach((result, idx) => {
+        if (result.status === 'fulfilled') {
+          migrated.push(missing[idx]!)
+        } else {
+          failures++
+          console.error('[RecipeStore] Failed to migrate local favorite:', missing[idx], result.reason)
+        }
+      })
+
+      // Only mark as migrated once every local favorite made it server-side;
+      // PUT is idempotent so a retry on the next load is safe.
+      if (failures === 0) {
+        localStorage.setItem(FAVORITES_MIGRATED_KEY, 'true')
+      }
+
+      return migrated
+    },
+
+    /**
+     * Watch the selected household member and (re)load their favorites from
+     * the API. With no member selected, favorites stay localStorage-backed.
+     */
+    startFavoritesSync() {
+      if (this.favoritesSyncStarted || !import.meta.client) return
+      this.favoritesSyncStarted = true
+
+      const householdStore = useHouseholdStore()
+      watch(
+        () => householdStore.currentMember?.id ?? null,
+        (memberId) => {
+          this.favoritesMemberId = memberId
+          if (memberId) {
+            this.loadFavoritesFromApi(memberId)
+          } else {
+            // Unauthenticated / no member selected: local-only behavior
+            this.loadFavorites()
+          }
+        },
+        { immediate: true }
+      )
     },
 
     /**
@@ -426,7 +572,7 @@ export const useRecipeStore = defineStore('recipe', {
      */
     initialize() {
       if (import.meta.client) {
-        this.loadFavorites()
+        this.startFavoritesSync()
         this.loadRecentlyViewed()
         this.loadSearchHistory()
         this.loadAllergens()
@@ -444,6 +590,8 @@ export const useRecipeStore = defineStore('recipe', {
      */
     reset() {
       this.favorites = []
+      this.favoritesMemberId = null
+      this.favoritesLoading = false
       this.recentlyViewed = []
       this.searchHistory = []
       this.excludedAllergens = []
@@ -458,6 +606,7 @@ export const useRecipeStore = defineStore('recipe', {
 
       if (import.meta.client) {
         localStorage.removeItem('recipe-favorites')
+        localStorage.removeItem(FAVORITES_MIGRATED_KEY)
         localStorage.removeItem('recipe-recently-viewed')
         localStorage.removeItem('recipe-search-history')
         localStorage.removeItem('recipe-allergens')

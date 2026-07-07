@@ -6,7 +6,24 @@
         <UIcon :name="icon" class="w-5 h-5 text-brandp-500" />
         <span class="text-xs font-semibold uppercase tracking-wider text-brandp-600 dark:text-brandp-400">{{ type }}</span>
       </div>
-      <span class="text-xs text-gray-400 font-light">{{ time }}</span>
+      <div class="flex items-center gap-1.5">
+        <button
+          v-if="recipe.recipe_id"
+          type="button"
+          class="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 hover:scale-110 transition-all duration-200"
+          :aria-label="isFavorite ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
+          @click.prevent.stop="toggleFavorite"
+        >
+          <UIcon
+            name="i-lucide-heart"
+            :class="[
+              'w-4 h-4 transition-colors duration-200',
+              isFavorite ? 'text-red-500 fill-red-500' : 'text-gray-400 dark:text-zinc-500'
+            ]"
+          />
+        </button>
+        <span class="text-xs text-gray-400 font-light">{{ time }}</span>
+      </div>
     </div>
 
     <!-- Recipe info row -->
@@ -84,6 +101,7 @@ import { useI18n } from 'vue-i18n'
 import type { MealRecipe } from '~/services/foodchatApi'
 import type { Recipe } from '~/services/recipeApi'
 import recipeApi from '~/services/recipeApi'
+import { useRecipeStore } from '~/stores/recipe'
 
 const props = defineProps<{
   type: string
@@ -92,6 +110,15 @@ const props = defineProps<{
   recipe: MealRecipe
 }>()
 const { t } = useI18n()
+
+const recipeStore = useRecipeStore()
+
+const isFavorite = computed(() => props.recipe.recipe_id ? recipeStore.isFavorite(props.recipe.recipe_id) : false)
+
+const toggleFavorite = () => {
+  if (!props.recipe.recipe_id) return
+  recipeStore.toggleFavorite(props.recipe.recipe_id)
+}
 
 const nutritionData = ref<Recipe | null>(null)
 const nutritionLoading = ref(false)

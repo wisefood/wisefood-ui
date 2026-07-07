@@ -533,6 +533,23 @@
                           <div class="flex items-center gap-1">
                             <UIcon :name="mealTypeIcon(mealType)" class="w-2.5 h-2.5 text-brandp-400 shrink-0" />
                             <span class="text-[9px] text-gray-400 dark:text-zinc-500 capitalize">{{ mealType }}</span>
+                            <button
+                              v-if="getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType))"
+                              type="button"
+                              class="ml-auto flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 hover:scale-110 transition-all duration-200 shrink-0"
+                              :aria-label="isRecipeFavorite(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType))) ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
+                              @click.prevent.stop="toggleRecipeFavorite(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)))"
+                            >
+                              <UIcon
+                                name="i-lucide-heart"
+                                :class="[
+                                  'w-3 h-3 transition-colors duration-200',
+                                  isRecipeFavorite(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)))
+                                    ? 'text-red-500 fill-red-500'
+                                    : 'text-gray-300 dark:text-zinc-600'
+                                ]"
+                              />
+                            </button>
                           </div>
                           <!-- Circular image bubble -->
                           <NuxtLink
@@ -638,6 +655,7 @@ import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { useFoodChat } from '~/composables/useFoodChat'
 import { useHouseholdStore } from '~/stores/household'
+import { useRecipeStore } from '~/stores/recipe'
 import type { AttributionCitation, MealPlan, MealRecipe, WeeklyMealEntry } from '~/services/foodchatApi'
 import recipeApi from '~/services/recipeApi'
 import { today, getLocalTimeZone, type DateValue } from '@internationalized/date'
@@ -678,6 +696,17 @@ const {
 } = useFoodChat()
 
 const householdStore = useHouseholdStore()
+const recipeStore = useRecipeStore()
+
+// ── Recipe favorites (weekly plan cells) ──
+function isRecipeFavorite(recipeId: string | null): boolean {
+  return recipeId ? recipeStore.isFavorite(recipeId) : false
+}
+
+function toggleRecipeFavorite(recipeId: string | null) {
+  if (!recipeId) return
+  recipeStore.toggleFavorite(recipeId)
+}
 
 // ── Input state ──
 const inputText = ref('')
@@ -1272,6 +1301,7 @@ watch(messagesScrollRef, (el) => { if (el) scrollToBottom(false) })
 
 // ── Mount ──
 onMounted(async () => {
+  recipeStore.initialize()
   await loadSessions()
   if (messages.value.length > 0 || hasAnyPlan.value) {
     hasSentFirstMessage.value = true
