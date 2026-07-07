@@ -223,6 +223,13 @@ export const useFoodChatStore = defineStore('foodchat', {
         // Re-fetch conversation for ground truth
         await this.fetchConversation(sessionId, memberId)
 
+        // Attribution is not persisted server-side, so carry it from the live
+        // response onto the just-fetched assistant message (client-side only)
+        if (response.attribution) {
+          const lastAssistant = [...this.messages].reverse().find(m => m.role === 'assistant')
+          if (lastAssistant) lastAssistant.attribution = response.attribution
+        }
+
         // Always refresh both plan lists so stale plans don't hide the new type
         await Promise.all([
           this.fetchMealPlans(sessionId, memberId),

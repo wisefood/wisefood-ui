@@ -1297,7 +1297,12 @@
       "loadEarlier": "Naloži prejšnja sporočila",
       "feedbackSaved": "Hvala za povratne informacije",
       "startFresh": "Začni novo sejo",
-      "previousSessions": "Prejšnje seje"
+      "previousSessions": "Prejšnje seje",
+      "attribution": {
+        "answeredWith": "Answered with FoodScholar",
+        "learnMore": "Learn more in FoodScholar",
+        "confidence": "Confidence"
+      }
     },
     "feedback": {
       "tooGeneric": "Preveč splošno",

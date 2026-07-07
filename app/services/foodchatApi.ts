@@ -21,12 +21,30 @@ export interface ChatSession {
   updated_at?: string
 }
 
+export interface AttributionCitation {
+  title: string
+  source_type: 'article' | 'guideline'
+  url?: string | null
+  label?: string | null
+}
+
+/** Attribution metadata for answers routed through FoodScholar */
+export interface ChatAttribution {
+  source: string
+  confidence?: 'high' | 'medium' | 'low' | null
+  citations: AttributionCitation[]
+  /** UI-relative path, e.g. "/foodscholar?q=..." */
+  learn_more_url?: string | null
+}
+
 export interface ChatMessage {
   id?: number
   role: 'user' | 'assistant'
   content: string
   intent?: string
   timestamp: string
+  /** Client-side only — not persisted; absent on messages reloaded via getConversation() */
+  attribution?: ChatAttribution
 }
 
 export interface MealRecipe {
@@ -86,6 +104,7 @@ export interface UnifiedChatResponse {
   at_message_limit: boolean
   plan_version?: number
   plan_parent_id?: string
+  attribution?: ChatAttribution
 }
 
 export interface ConversationResponse {

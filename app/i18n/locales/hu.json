@@ -1297,7 +1297,12 @@
       "loadEarlier": "Korábbi üzenetek betöltése",
       "feedbackSaved": "Köszönjük a visszajelzést",
       "startFresh": "Új munkamenet indítása",
-      "previousSessions": "Korábbi munkamenetek"
+      "previousSessions": "Korábbi munkamenetek",
+      "attribution": {
+        "answeredWith": "Answered with FoodScholar",
+        "learnMore": "Learn more in FoodScholar",
+        "confidence": "Confidence"
+      }
     },
     "feedback": {
       "tooGeneric": "Túl általános",

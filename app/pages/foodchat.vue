@@ -185,6 +185,53 @@
                   <div v-else class="fc-bubble fc-bubble-assistant group/msg">
                     <div class="fc-md text-gray-800 dark:text-gray-200" v-html="renderMarkdown(msg.content)" />
 
+                    <!-- FoodScholar attribution (only on live responses; not persisted) -->
+                    <div v-if="msg.attribution?.source === 'foodscholar'" class="mt-2 pt-2 border-t border-gray-100 dark:border-zinc-700/50">
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span
+                          class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full border border-brandp-100 dark:border-brandp-900/60 bg-brandp-50 dark:bg-brandp-950/40 text-brandp-600 dark:text-brandp-300"
+                          :title="msg.attribution.confidence ? `${t('foodChatHome.chat.attribution.confidence')}: ${msg.attribution.confidence}` : undefined"
+                        >
+                          <UIcon name="i-lucide-graduation-cap" class="w-3 h-3" />
+                          {{ t('foodChatHome.chat.attribution.answeredWith') }}
+                        </span>
+                        <span v-if="msg.attribution.confidence" class="text-[10px] text-gray-400 dark:text-zinc-500">
+                          {{ t('foodChatHome.chat.attribution.confidence') }}: {{ msg.attribution.confidence }}
+                        </span>
+                      </div>
+
+                      <!-- Citation chips -->
+                      <div v-if="msg.attribution.citations?.length" class="mt-1.5 flex flex-wrap gap-1">
+                        <template v-for="(citation, cIdx) in msg.attribution.citations" :key="cIdx">
+                          <NuxtLink
+                            v-if="citation.url"
+                            :to="citation.url"
+                            :class="['px-2 py-0.5 text-[10px] rounded-full border transition-colors hover:underline', citationChipClass(citation)]"
+                            :title="citation.title"
+                          >
+                            {{ citationLabel(citation) }}
+                          </NuxtLink>
+                          <span
+                            v-else
+                            :class="['px-2 py-0.5 text-[10px] rounded-full border', citationChipClass(citation)]"
+                            :title="citation.title"
+                          >
+                            {{ citationLabel(citation) }}
+                          </span>
+                        </template>
+                      </div>
+
+                      <!-- Learn more link -->
+                      <NuxtLink
+                        v-if="msg.attribution.learn_more_url"
+                        :to="msg.attribution.learn_more_url"
+                        class="mt-1.5 inline-flex items-center gap-1 text-[11px] text-brandp-500 dark:text-brandp-400 hover:text-brandp-600 dark:hover:text-brandp-300 hover:underline transition-colors"
+                      >
+                        {{ t('foodChatHome.chat.attribution.learnMore') }}
+                        <UIcon name="i-lucide-arrow-right" class="w-3 h-3" />
+                      </NuxtLink>
+                    </div>
+
                     <!-- Feedback row -->
                     <div v-if="msg.id" class="mt-2 flex items-center gap-1 transition-opacity" :class="feedbackSubmitted[msg.id] ? 'opacity-100' : 'opacity-0 group-hover/msg:opacity-100'">
                       <template v-if="!feedbackSubmitted[msg.id]">
@@ -591,7 +638,7 @@ import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { useFoodChat } from '~/composables/useFoodChat'
 import { useHouseholdStore } from '~/stores/household'
-import type { MealPlan, MealRecipe, WeeklyMealEntry } from '~/services/foodchatApi'
+import type { AttributionCitation, MealPlan, MealRecipe, WeeklyMealEntry } from '~/services/foodchatApi'
 import recipeApi from '~/services/recipeApi'
 import { today, getLocalTimeZone, type DateValue } from '@internationalized/date'
 import memberMealPlansApi, {
@@ -893,6 +940,18 @@ function mealTypeIcon(type: string): string {
   if (t.includes('lunch')) return 'i-lucide-utensils'
   if (t.includes('dinner') || t.includes('supper')) return 'i-lucide-moon'
   return 'i-lucide-utensils'
+}
+
+// ── FoodScholar attribution ──
+function citationLabel(citation: AttributionCitation): string {
+  const text = citation.label || citation.title
+  return text.length > 40 ? `${text.slice(0, 40).trimEnd()}…` : text
+}
+
+function citationChipClass(citation: AttributionCitation): string {
+  return citation.source_type === 'guideline'
+    ? 'border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
+    : 'border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-300'
 }
 
 // ── Markdown ──

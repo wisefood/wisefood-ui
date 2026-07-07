@@ -2701,6 +2701,19 @@ watch(pageTab, (tab) => {
 onMounted(async () => {
   hydrateLibraryFromQuery()
 
+  // FoodChat bridge: /foodscholar?q=... prefills the composer and auto-asks
+  // once. The query param is consumed (removed from the URL) before asking so
+  // a hot reload or back-navigation doesn't re-trigger the question.
+  const incomingQuestion = route.query.q
+  if (typeof incomingQuestion === 'string' && incomingQuestion.trim() && !asking.value) {
+    pageTab.value = 'qa'
+    chatQuery.value = incomingQuestion.trim()
+    const query = { ...route.query }
+    delete query.q
+    router.replace({ query })
+    askScholarQA()
+  }
+
   // Restore a recent QA thread (within the store's TTL) so navigating away and
   // back to /foodscholar doesn't lose the question, answer, and citations.
   if (!qaResult.value && !asking.value) {

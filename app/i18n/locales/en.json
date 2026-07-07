@@ -1319,7 +1319,12 @@
       "loadEarlier": "Load earlier messages",
       "feedbackSaved": "Thanks for the feedback",
       "startFresh": "Start a new session",
-      "previousSessions": "Previous sessions"
+      "previousSessions": "Previous sessions",
+      "attribution": {
+        "answeredWith": "Answered with FoodScholar",
+        "learnMore": "Learn more in FoodScholar",
+        "confidence": "Confidence"
+      }
     },
     "feedback": {
       "tooGeneric": "Too generic",
