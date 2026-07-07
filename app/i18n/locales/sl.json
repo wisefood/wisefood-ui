@@ -1029,7 +1029,16 @@
       "foodLikes": "Najljubša hrana",
       "foodDislikes": "Hrana, ki je ne maraš",
       "allergiesAndIntolerances": "Alergije in intolerance",
+      "memory": "Kaj si WiseFood zapomni",
       "dangerZone": "Nevarno območje"
+    },
+    "memory": {
+      "learnedInFoodChat": "Naučeno v FoodChatu",
+      "forget": "Pozabi",
+      "empty": "Tukaj še ni ničesar — pogovarjaj se s FoodChatom in sproti si bo zapomnil tvoj okus.",
+      "today": "danes",
+      "yesterday": "včeraj",
+      "daysAgo": "pred {count} dnevi"
     },
     "fields": {
       "name": "Ime",
@@ -1302,7 +1311,17 @@
         "answeredWith": "Answered with FoodScholar",
         "learnMore": "Learn more in FoodScholar",
         "confidence": "Confidence"
+      },
+      "memory": {
+        "remember": "Zapomni si",
+        "noThanks": "Ne, hvala",
+        "saved": "Shranjeno v tvoj profil"
       }
+    },
+    "diners": {
+      "label": "Kuhamo za",
+      "you": "{name} (ti)",
+      "cookingFor": "Kuhamo za: {names}"
     },
     "feedback": {
       "tooGeneric": "Preveč splošno",
@@ -1362,5 +1381,10 @@
       "bad": "Nezadovoljen/a",
       "awful": "Zelo nezadovoljen/a"
     }
+  },
+  "consent": {
+    "message": "Piškotke uporabljamo in vaše osebne podatke obdelujemo izključno za zagotavljanje storitve WiseFood.",
+    "privacyPolicy": "Politika zasebnosti",
+    "accept": "Sprejmi"
   }
 }

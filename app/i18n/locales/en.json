@@ -1030,7 +1030,16 @@
       "foodLikes": "Food Likes",
       "foodDislikes": "Food Dislikes",
       "allergiesAndIntolerances": "Allergies & Intolerances",
+      "memory": "What WiseFood remembers",
       "dangerZone": "Danger Zone"
+    },
+    "memory": {
+      "learnedInFoodChat": "Learned in FoodChat",
+      "forget": "Forget this",
+      "empty": "Nothing here yet — chat with FoodChat and it will remember your tastes as you go.",
+      "today": "today",
+      "yesterday": "yesterday",
+      "daysAgo": "{count} days ago"
     },
     "fields": {
       "name": "Name",
@@ -1324,7 +1333,17 @@
         "answeredWith": "Answered with FoodScholar",
         "learnMore": "Learn more in FoodScholar",
         "confidence": "Confidence"
+      },
+      "memory": {
+        "remember": "Remember",
+        "noThanks": "No thanks",
+        "saved": "Saved to your profile"
       }
+    },
+    "diners": {
+      "label": "Cooking for",
+      "you": "{name} (you)",
+      "cookingFor": "Cooking for: {names}"
     },
     "feedback": {
       "tooGeneric": "Too generic",
@@ -1384,5 +1403,10 @@
       "bad": "Dissatisfied",
       "awful": "Very dissatisfied"
     }
+  },
+  "consent": {
+    "message": "We use cookies and process your personal data solely to provide the WiseFood service.",
+    "privacyPolicy": "Privacy Policy",
+    "accept": "Accept"
   }
 }

@@ -6,8 +6,15 @@ import type {
   MealPlan,
   WeeklyMealPlan,
   UnifiedChatResponse,
-  ConversationResponse
+  ConversationResponse,
+  MemorySuggestion,
+  SessionDinersResponse
 } from '~/services/foodchatApi'
+
+interface SessionDiners {
+  cooking_for: string[]
+  cooking_for_names: string[]
+}
 
 interface FoodChatState {
   sessions: ChatSession[]
@@ -18,6 +25,8 @@ interface FoodChatState {
   mealPlans: MealPlan[]
   weeklyMealPlans: WeeklyMealPlan[]
   lastResponse: UnifiedChatResponse | null
+  /** Diner selection ("cooking for") persisted per session, client-side */
+  dinersBySession: Record<string, SessionDiners>
   sessionsLoading: boolean
   messagesLoading: boolean
   loadingMoreMessages: boolean
@@ -35,6 +44,7 @@ export const useFoodChatStore = defineStore('foodchat', {
     mealPlans: [],
     weeklyMealPlans: [],
     lastResponse: null,
+    dinersBySession: {},
     sessionsLoading: false,
     messagesLoading: false,
     loadingMoreMessages: false,
@@ -117,11 +127,14 @@ export const useFoodChatStore = defineStore('foodchat', {
       }
     },
 
-    async createSession(memberId: string) {
+    async createSession(memberId: string, cookingFor?: string[]) {
       this.error = null
       try {
-        const session = await foodchatApi.createSession(memberId)
+        const session = await foodchatApi.createSession(memberId, cookingFor)
         this.sessions.unshift(session)
+        if (cookingFor?.length) {
+          this.dinersBySession[session.session_id] = { cooking_for: cookingFor, cooking_for_names: [] }
+        }
         await this.selectSession(session.session_id, memberId)
         return session
       } catch (err: any) {
@@ -135,6 +148,7 @@ export const useFoodChatStore = defineStore('foodchat', {
       try {
         await foodchatApi.deleteSession(sessionId)
         this.sessions = this.sessions.filter(s => s.session_id !== sessionId)
+        delete this.dinersBySession[sessionId]
         if (this.activeSessionId === sessionId) {
           this.activeSessionId = null
           this.messages = []
@@ -223,11 +237,17 @@ export const useFoodChatStore = defineStore('foodchat', {
         // Re-fetch conversation for ground truth
         await this.fetchConversation(sessionId, memberId)
 
-        // Attribution is not persisted server-side, so carry it from the live
-        // response onto the just-fetched assistant message (client-side only)
-        if (response.attribution) {
+        // Attribution and memory suggestions are not persisted server-side, so
+        // carry them from the live response onto the just-fetched assistant
+        // message (client-side only)
+        if (response.attribution || response.memory_suggestions?.length) {
           const lastAssistant = [...this.messages].reverse().find(m => m.role === 'assistant')
-          if (lastAssistant) lastAssistant.attribution = response.attribution
+          if (lastAssistant) {
+            if (response.attribution) lastAssistant.attribution = response.attribution
+            if (response.memory_suggestions?.length) {
+              lastAssistant.memory_suggestions = response.memory_suggestions
+            }
+          }
         }
 
         // Always refresh both plan lists so stale plans don't hide the new type
@@ -254,6 +274,39 @@ export const useFoodChatStore = defineStore('foodchat', {
       } finally {
         this.sending = false
       }
+    },
+
+    // ----------------------------------------------------------------
+    // Memory suggestions
+    // ----------------------------------------------------------------
+    async submitMemoryDecision(
+      sessionId: string,
+      memberId: string,
+      decision: 'accept' | 'decline',
+      suggestion: MemorySuggestion
+    ): Promise<boolean> {
+      const res = await foodchatApi.submitMemoryDecision(sessionId, {
+        member_id: memberId,
+        decision,
+        suggestion
+      })
+      return res?.applied === true
+    },
+
+    // ----------------------------------------------------------------
+    // Diners ("cooking for")
+    // ----------------------------------------------------------------
+    async updateDiners(sessionId: string, memberId: string, cookingFor: string[]): Promise<SessionDinersResponse> {
+      const res = await foodchatApi.updateSessionDiners(sessionId, memberId, cookingFor)
+      this.dinersBySession[sessionId] = {
+        cooking_for: res.cooking_for ?? cookingFor,
+        cooking_for_names: res.cooking_for_names ?? []
+      }
+      return res
+    },
+
+    setLocalDiners(sessionId: string, cookingFor: string[], names: string[] = []) {
+      this.dinersBySession[sessionId] = { cooking_for: cookingFor, cooking_for_names: names }
     },
 
     // ----------------------------------------------------------------
@@ -288,6 +341,7 @@ export const useFoodChatStore = defineStore('foodchat', {
         mealPlans: [],
         weeklyMealPlans: [],
         lastResponse: null,
+        dinersBySession: {},
         sessionsLoading: false,
         messagesLoading: false,
         loadingMoreMessages: false,

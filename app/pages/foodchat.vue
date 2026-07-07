@@ -84,6 +84,30 @@
                 {{ t('foodChatHome.input.enterHint') }}
               </p>
             </div>
+
+            <!-- Diner picker (multi-member households only) -->
+            <div v-if="showDinerPicker" class="mt-3 px-1 flex items-center gap-2 flex-wrap">
+              <span class="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-zinc-500 shrink-0">
+                <UIcon name="i-lucide-users" class="w-3 h-3" />
+                {{ t('foodChatHome.diners.label') }}
+              </span>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <UTooltip v-for="member in householdMembers" :key="member.id" :text="dinerTooltip(member)">
+                  <button
+                    type="button"
+                    class="fc-diner-chip"
+                    :class="{ 'fc-diner-chip-active': isDinerSelected(member.id), 'fc-diner-chip-locked': member.id === currentMemberId }"
+                    :disabled="dinersUpdating && member.id !== currentMemberId"
+                    :aria-pressed="isDinerSelected(member.id)"
+                    @click="toggleDiner(member)"
+                  >
+                    <ProfileAvatar :avatar="getMemberAvatarForDisplay(member)" size="xs" />
+                    <span class="text-[10px] max-w-16 truncate">{{ member.name }}</span>
+                    <UIcon v-if="member.id === currentMemberId" name="i-lucide-lock" class="w-2.5 h-2.5 opacity-50" />
+                  </button>
+                </UTooltip>
+              </div>
+            </div>
           </div>
 
           <!-- Suggested questions -->
@@ -232,6 +256,49 @@
                       </NuxtLink>
                     </div>
 
+                    <!-- Memory nudges (only on live responses; not persisted) -->
+                    <div
+                      v-if="visibleMemorySuggestions(msg).length"
+                      class="mt-2 pt-2 border-t border-gray-100 dark:border-zinc-700/50 space-y-1.5"
+                    >
+                      <div
+                        v-for="sug in visibleMemorySuggestions(msg)"
+                        :key="sug.id"
+                        class="fc-memory-chip"
+                        :class="{ 'fc-memory-chip-warning': sug.kind === 'allergy_hint' }"
+                      >
+                        <template v-if="memoryChipState[sug.id] !== 'accepted'">
+                          <UIcon
+                            name="i-lucide-brain"
+                            class="w-3 h-3 shrink-0"
+                            :class="sug.kind === 'allergy_hint' ? 'text-amber-500 dark:text-amber-400' : 'text-brandp-400 dark:text-brandp-300'"
+                          />
+                          <span class="flex-1 min-w-0 text-[11px] font-light leading-snug">{{ sug.statement }}</span>
+                          <button
+                            class="fc-memory-btn fc-memory-btn-accept"
+                            :disabled="memoryChipState[sug.id] === 'pending'"
+                            @click="handleMemoryDecision(sug, 'accept')"
+                          >
+                            <UIcon v-if="memoryChipState[sug.id] === 'pending'" name="i-lucide-loader-2" class="w-3 h-3 animate-spin" />
+                            <template v-else>{{ t('foodChatHome.chat.memory.remember') }}</template>
+                          </button>
+                          <button
+                            class="fc-memory-btn"
+                            :disabled="memoryChipState[sug.id] === 'pending'"
+                            @click="handleMemoryDecision(sug, 'decline')"
+                          >
+                            {{ t('foodChatHome.chat.memory.noThanks') }}
+                          </button>
+                        </template>
+                        <template v-else>
+                          <UIcon name="i-lucide-check" class="w-3 h-3 text-emerald-500 shrink-0" />
+                          <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-light">
+                            {{ t('foodChatHome.chat.memory.saved') }}
+                          </span>
+                        </template>
+                      </div>
+                    </div>
+
                     <!-- Feedback row -->
                     <div v-if="msg.id" class="mt-2 flex items-center gap-1 transition-opacity" :class="feedbackSubmitted[msg.id] ? 'opacity-100' : 'opacity-0 group-hover/msg:opacity-100'">
                       <template v-if="!feedbackSubmitted[msg.id]">
@@ -290,6 +357,24 @@
 
           <!-- ── Chat input (pinned to bottom) ── -->
           <div class="fc-composer-wrap px-4 pb-4 pt-2">
+            <!-- Diner picker (multi-member households only) -->
+            <div v-if="showDinerPicker" class="mb-2 px-1 flex items-center gap-1.5 flex-wrap">
+              <UIcon name="i-lucide-users" class="w-3 h-3 text-gray-400 dark:text-zinc-500 shrink-0" />
+              <UTooltip v-for="member in householdMembers" :key="member.id" :text="dinerTooltip(member)">
+                <button
+                  type="button"
+                  class="fc-diner-chip fc-diner-chip-sm"
+                  :class="{ 'fc-diner-chip-active': isDinerSelected(member.id), 'fc-diner-chip-locked': member.id === currentMemberId }"
+                  :disabled="dinersUpdating && member.id !== currentMemberId"
+                  :aria-pressed="isDinerSelected(member.id)"
+                  @click="toggleDiner(member)"
+                >
+                  <ProfileAvatar :avatar="getMemberAvatarForDisplay(member)" size="xs" />
+                  <span class="text-[10px] max-w-14 truncate">{{ member.name }}</span>
+                  <UIcon v-if="member.id === currentMemberId" name="i-lucide-lock" class="w-2.5 h-2.5 opacity-50" />
+                </button>
+              </UTooltip>
+            </div>
             <div class="relative">
               <div class="chat-composer" :class="{ 'is-focused': sessionInputFocused }">
                 <div class="chat-composer-accent chat-composer-accent-left" />
@@ -326,6 +411,15 @@
 
         <!-- ── RIGHT: Canvas column ── -->
         <div class="fc-canvas-col flex flex-col overflow-y-auto">
+          <!-- "Cooking for" banner (when more than one diner) -->
+          <Transition name="chips-fade">
+            <div v-if="showCookingForBanner" class="px-4 sm:px-6 pt-3 shrink-0">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] rounded-full border border-brandp-100 dark:border-brandp-900/60 bg-brandp-50 dark:bg-brandp-950/40 text-brandp-600 dark:text-brandp-300">
+                <UIcon name="i-lucide-users" class="w-3 h-3" />
+                {{ t('foodChatHome.diners.cookingFor', { names: cookingForNames.join(', ') }) }}
+              </span>
+            </div>
+          </Transition>
           <div class="flex-1 p-4 sm:p-6 flex flex-col justify-center">
 
             <!-- Generating (fresh plan, nothing to show yet) -->
@@ -656,7 +750,7 @@ import DOMPurify from 'dompurify'
 import { useFoodChat } from '~/composables/useFoodChat'
 import { useHouseholdStore } from '~/stores/household'
 import { useRecipeStore } from '~/stores/recipe'
-import type { AttributionCitation, MealPlan, MealRecipe, WeeklyMealEntry } from '~/services/foodchatApi'
+import type { AttributionCitation, ChatMessage, MealPlan, MealRecipe, MemorySuggestion, WeeklyMealEntry } from '~/services/foodchatApi'
 import recipeApi from '~/services/recipeApi'
 import { today, getLocalTimeZone, type DateValue } from '@internationalized/date'
 import memberMealPlansApi, {
@@ -692,6 +786,9 @@ const {
   sendMessage,
   loadMoreMessages,
   submitMessageFeedback,
+  submitMemoryDecision,
+  activeDiners,
+  updateDiners,
   clearError
 } = useFoodChat()
 
@@ -751,6 +848,25 @@ const messageFeedback = reactive<Record<number, 'up' | 'down'>>({})
 const feedbackSubmitted = reactive<Record<number, boolean>>({})
 const selectedFeedbackReason = reactive<Record<number, string>>({})
 
+// ── Memory nudges ──
+const memoryChipState = reactive<Record<string, 'pending' | 'accepted' | 'declined'>>({})
+
+function visibleMemorySuggestions(msg: ChatMessage): MemorySuggestion[] {
+  return (msg.memory_suggestions ?? []).filter(s => memoryChipState[s.id] !== 'declined')
+}
+
+async function handleMemoryDecision(suggestion: MemorySuggestion, decision: 'accept' | 'decline') {
+  if (memoryChipState[suggestion.id]) return
+  memoryChipState[suggestion.id] = 'pending'
+  try {
+    await submitMemoryDecision(decision, suggestion)
+    // Accept → subtle confirmation; decline → dismiss silently
+    memoryChipState[suggestion.id] = decision === 'accept' ? 'accepted' : 'declined'
+  } catch {
+    delete memoryChipState[suggestion.id]
+  }
+}
+
 // ── Apply state ──
 const selectedApplyMemberIds = ref<string[]>([])
 const applyingMealPlan = ref(false)
@@ -807,6 +923,81 @@ async function handleSessionSwitch(sessionId: string | null) {
 }
 const householdMembers = computed(() => householdStore.householdMembers)
 const currentMemberId = computed(() => householdStore.currentMember?.id ?? null)
+
+// ── Diner picker ("cooking for") ──
+const selectedDinerIds = ref<string[]>([])
+const dinersUpdating = ref(false)
+
+// Hidden entirely for single-member households (guests)
+const showDinerPicker = computed(() => householdMembers.value.length > 1)
+
+function isDinerSelected(memberId: string): boolean {
+  return selectedDinerIds.value.includes(memberId)
+}
+
+function dinerTooltip(member: HouseholdMember): string {
+  return member.id === currentMemberId.value
+    ? t('foodChatHome.diners.you', { name: member.name })
+    : member.name
+}
+
+const cookingForNames = computed(() => {
+  const names = activeDiners.value?.cooking_for_names
+  if (names?.length) return names
+  return selectedDinerIds.value
+    .map(id => householdMembers.value.find(m => m.id === id)?.name)
+    .filter((n): n is string => !!n)
+})
+
+const showCookingForBanner = computed(() =>
+  showDinerPicker.value && selectedDinerIds.value.length > 1
+)
+
+// Keep the selection in sync with the active session (persisted per session
+// in the foodchat store) and the household roster; current member is always in.
+let lastDinerSessionId: string | null | undefined
+watch(
+  [() => activeSession.value?.session_id, currentMemberId, householdMembers, activeDiners],
+  () => {
+    const sessionId = activeSession.value?.session_id ?? null
+    const sessionChanged = sessionId !== lastDinerSessionId
+    lastDinerSessionId = sessionId
+    const validIds = new Set(householdMembers.value.map(m => m.id))
+    // Restore the per-session selection; on switching to a session without a
+    // stored selection, fall back to just the current member.
+    const base = activeDiners.value?.cooking_for ?? (sessionChanged ? [] : selectedDinerIds.value)
+    const next = base.filter(id => validIds.size === 0 || validIds.has(id))
+    if (currentMemberId.value && !next.includes(currentMemberId.value)) next.unshift(currentMemberId.value)
+    selectedDinerIds.value = next
+  },
+  { immediate: true }
+)
+
+async function toggleDiner(member: HouseholdMember) {
+  // Current member is always selected and locked
+  if (member.id === currentMemberId.value || dinersUpdating.value) return
+  const prev = [...selectedDinerIds.value]
+  const next = prev.includes(member.id)
+    ? prev.filter(id => id !== member.id)
+    : [...prev, member.id]
+  selectedDinerIds.value = next
+  // No session yet — the selection is sent as cooking_for on session creation
+  if (!activeSession.value) return
+  dinersUpdating.value = true
+  try {
+    await updateDiners(next)
+  } catch {
+    selectedDinerIds.value = prev
+  } finally {
+    dinersUpdating.value = false
+  }
+}
+
+function cookingForForNewSession(): string[] | undefined {
+  return showDinerPicker.value && selectedDinerIds.value.length > 1
+    ? [...selectedDinerIds.value]
+    : undefined
+}
 
 const activeDateLocale = computed(() => {
   if (locale.value === 'hu') return 'hu-HU'
@@ -1038,7 +1229,7 @@ async function ensureSessionAndSend(content: string) {
     hasSentFirstMessage.value = true
     await nextTick()
   }
-  if (!activeSession.value) await newSession()
+  if (!activeSession.value) await newSession(cookingForForNewSession())
   showEphemeralGenerating.value = true
   await sendMessage(content)
   scrollToBottom()
@@ -1063,7 +1254,7 @@ async function handleStartOver() {
   applyError.value = null
   applySuccess.value = null
   hasSentFirstMessage.value = false
-  await newSession()
+  await newSession(cookingForForNewSession())
 }
 
 function handleKeydown(e: KeyboardEvent) {
@@ -1556,6 +1747,139 @@ onMounted(async () => {
 }
 .dark .fc-feedback-active-down {
   background: rgb(69 10 10 / 0.5);
+}
+
+/* ── Memory nudge chips ── */
+.fc-memory-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 0.625rem;
+  border: 1px solid rgb(228 228 231 / 0.8);
+  background: rgb(250 250 250 / 0.8);
+  color: rgb(82 82 91);
+}
+.dark .fc-memory-chip {
+  border-color: rgb(63 63 70 / 0.6);
+  background: rgb(39 39 42 / 0.5);
+  color: rgb(212 212 216);
+}
+/* Allergy hints touch safety data — slightly more prominent */
+.fc-memory-chip-warning {
+  border-color: rgb(252 211 77 / 0.8);
+  background: rgb(255 251 235 / 0.9);
+  color: rgb(146 64 14);
+}
+.dark .fc-memory-chip-warning {
+  border-color: rgb(146 64 14 / 0.6);
+  background: rgb(69 39 3 / 0.35);
+  color: rgb(252 211 77);
+}
+.fc-memory-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(212 212 216 / 0.8);
+  font-size: 10px;
+  font-weight: 500;
+  color: rgb(113 113 122);
+  background: transparent;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.fc-memory-btn:hover:not(:disabled) {
+  color: rgb(63 63 70);
+  background: rgb(244 244 245 / 0.9);
+}
+.dark .fc-memory-btn {
+  border-color: rgb(82 82 91 / 0.7);
+  color: rgb(161 161 170);
+}
+.dark .fc-memory-btn:hover:not(:disabled) {
+  color: rgb(228 228 231);
+  background: rgb(63 63 70 / 0.5);
+}
+.fc-memory-btn:disabled {
+  opacity: 0.6;
+}
+.fc-memory-btn-accept {
+  border-color: var(--color-brandp-200, #ddd6fe);
+  color: var(--color-brandp-600, #7c3aed);
+}
+.fc-memory-btn-accept:hover:not(:disabled) {
+  color: var(--color-brandp-700, #6d28d9);
+  background: var(--color-brandp-50, #faf5ff);
+  border-color: var(--color-brandp-300, #c4b5fd);
+}
+.dark .fc-memory-btn-accept {
+  border-color: var(--color-brandp-800, #5b21b6);
+  color: var(--color-brandp-300, #c4b5fd);
+}
+.dark .fc-memory-btn-accept:hover:not(:disabled) {
+  color: var(--color-brandp-200, #ddd6fe);
+  background: var(--color-brandp-950, #2e1065);
+}
+.fc-memory-chip-warning .fc-memory-btn-accept {
+  border-color: rgb(252 211 77);
+  color: rgb(146 64 14);
+}
+.fc-memory-chip-warning .fc-memory-btn-accept:hover:not(:disabled) {
+  background: rgb(254 243 199 / 0.8);
+}
+.dark .fc-memory-chip-warning .fc-memory-btn-accept {
+  border-color: rgb(146 64 14);
+  color: rgb(252 211 77);
+}
+.dark .fc-memory-chip-warning .fc-memory-btn-accept:hover:not(:disabled) {
+  background: rgb(120 53 15 / 0.4);
+}
+
+/* ── Diner picker chips ── */
+.fc-diner-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.5rem 0.15rem 0.2rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(228 228 231 / 0.9);
+  background: white;
+  color: rgb(113 113 122);
+  transition: border-color 0.15s, background 0.15s, color 0.15s, opacity 0.15s;
+}
+.dark .fc-diner-chip {
+  border-color: rgb(63 63 70 / 0.7);
+  background: rgb(39 39 42 / 0.6);
+  color: rgb(161 161 170);
+}
+.fc-diner-chip:not(.fc-diner-chip-active) {
+  opacity: 0.65;
+}
+.fc-diner-chip:hover:not(:disabled):not(.fc-diner-chip-locked) {
+  opacity: 1;
+  border-color: var(--color-brandp-300, #c4b5fd);
+}
+.fc-diner-chip-active {
+  border-color: var(--color-brandp-300, #c4b5fd);
+  background: var(--color-brandp-50, #faf5ff);
+  color: var(--color-brandp-700, #6d28d9);
+}
+.dark .fc-diner-chip-active {
+  border-color: var(--color-brandp-700, #6d28d9);
+  background: var(--color-brandp-950, #2e1065);
+  color: var(--color-brandp-200, #ddd6fe);
+}
+.fc-diner-chip-locked {
+  cursor: default;
+}
+.fc-diner-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.fc-diner-chip-sm {
+  padding: 0.1rem 0.45rem 0.1rem 0.15rem;
 }
 
 /* ── Session select cursor ── */

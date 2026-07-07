@@ -321,6 +321,58 @@
           </div>
         </UCard>
 
+        <!-- What WiseFood Remembers Card -->
+        <UCard data-flows="card-memory">
+          <template #header>
+            <div class="flex items-center gap-2">
+              <UIcon name="i-lucide-brain" class="w-5 h-5 text-purple-500" />
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.sections.memory') }}</h2>
+            </div>
+          </template>
+
+          <div v-if="memoryItems.length === 0" class="text-center py-6">
+            <UIcon name="i-lucide-brain" class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+            <p class="text-gray-500 dark:text-gray-400 text-sm">{{ t('myProfile.memory.empty') }}</p>
+          </div>
+
+          <div v-else class="space-y-2">
+            <div
+              v-for="item in memoryItems"
+              :key="item.key"
+              class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-gray-50 dark:bg-zinc-800/50"
+            >
+              <div class="flex items-center gap-3 min-w-0">
+                <div
+                  class="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center"
+                  :class="memoryKindStyle(item.entry.kind).bg"
+                >
+                  <UIcon
+                    :name="memoryKindStyle(item.entry.kind).icon"
+                    class="w-4 h-4"
+                    :class="memoryKindStyle(item.entry.kind).fg"
+                  />
+                </div>
+                <div class="min-w-0">
+                  <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ memoryValueLabel(item.entry) }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    {{ t('myProfile.memory.learnedInFoodChat') }}<template v-if="formatMemoryDate(item.entry.recorded_at)"> &middot; {{ formatMemoryDate(item.entry.recorded_at) }}</template>
+                  </p>
+                </div>
+              </div>
+              <UButton
+                variant="ghost"
+                color="error"
+                icon="i-lucide-trash-2"
+                size="xs"
+                :loading="forgettingMemoryKey === item.key"
+                :disabled="!!forgettingMemoryKey"
+                :aria-label="t('myProfile.memory.forget')"
+                @click="forgetMemory(item)"
+              />
+            </div>
+          </div>
+        </UCard>
+
         <!-- Danger Zone -->
         <UCard
           :ui="{
@@ -832,6 +884,138 @@ const foodDislikes = computed(() => {
 const allergies = computed(() => {
   return memberProfile.value?.allergies || []
 })
+
+// ── FoodChat memory (properties.memory_log / standing_seeds) ──
+interface MemoryLogEntry {
+  kind: string
+  value: string
+  source?: string
+  session_id?: string
+  recorded_at?: string
+}
+
+interface StandingSeed {
+  name: string
+}
+
+interface MemoryItem {
+  key: string
+  entry: MemoryLogEntry
+}
+
+const memoryLog = computed<MemoryLogEntry[]>(() => {
+  const raw = memberProfile.value?.properties?.memory_log
+  return Array.isArray(raw) ? (raw as MemoryLogEntry[]) : []
+})
+
+const standingSeeds = computed<StandingSeed[]>(() => {
+  const raw = memberProfile.value?.properties?.standing_seeds
+  return Array.isArray(raw) ? (raw as StandingSeed[]) : []
+})
+
+// Standing seeds that have no corresponding memory_log entry still get listed
+const memoryItems = computed<MemoryItem[]>(() => {
+  const items: MemoryItem[] = memoryLog.value.map((entry, i) => ({
+    key: `log-${i}-${entry.kind}-${entry.value}`,
+    entry
+  }))
+  for (const seed of standingSeeds.value) {
+    if (!memoryLog.value.some(e => e.kind === 'standing_seed' && e.value === seed.name)) {
+      items.push({ key: `seed-${seed.name}`, entry: { kind: 'standing_seed', value: seed.name } })
+    }
+  }
+  return items
+})
+
+const forgettingMemoryKey = ref<string | null>(null)
+
+function memoryKindStyle(kind: string): { icon: string, bg: string, fg: string } {
+  switch (kind) {
+    case 'like':
+      return { icon: 'i-lucide-heart', bg: 'bg-pink-100 dark:bg-pink-900/30', fg: 'text-pink-600 dark:text-pink-400' }
+    case 'dislike':
+      return { icon: 'i-lucide-thumbs-down', bg: 'bg-orange-100 dark:bg-orange-900/30', fg: 'text-orange-600 dark:text-orange-400' }
+    case 'cuisine':
+      return { icon: 'i-lucide-globe', bg: 'bg-sky-100 dark:bg-sky-900/30', fg: 'text-sky-600 dark:text-sky-400' }
+    case 'constraint':
+      return { icon: 'i-lucide-sliders-horizontal', bg: 'bg-gray-100 dark:bg-zinc-800', fg: 'text-gray-600 dark:text-gray-400' }
+    case 'allergy_hint':
+      return { icon: 'i-lucide-alert-triangle', bg: 'bg-red-100 dark:bg-red-900/30', fg: 'text-red-600 dark:text-red-400' }
+    case 'standing_seed':
+      return { icon: 'i-lucide-sprout', bg: 'bg-green-100 dark:bg-green-900/30', fg: 'text-green-600 dark:text-green-400' }
+    default:
+      return { icon: 'i-lucide-brain', bg: 'bg-purple-100 dark:bg-purple-900/30', fg: 'text-purple-600 dark:text-purple-400' }
+  }
+}
+
+function memoryValueLabel(entry: MemoryLogEntry): string {
+  if (entry.kind === 'like' || entry.kind === 'dislike' || entry.kind === 'cuisine') return getFoodName(entry.value)
+  if (entry.kind === 'allergy_hint') return getAllergyLabel(entry.value)
+  return entry.value
+}
+
+function formatMemoryDate(dateStr?: string): string {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return ''
+  const days = Math.floor((Date.now() - date.getTime()) / 86400000)
+  if (days <= 0) return t('myProfile.memory.today')
+  if (days === 1) return t('myProfile.memory.yesterday')
+  if (days < 7) return t('myProfile.memory.daysAgo', { count: days })
+  return date.toLocaleDateString(dateLocale.value, { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+async function forgetMemory(item: MemoryItem) {
+  if (!currentMember.value || forgettingMemoryKey.value) return
+
+  const snapshot = memberProfile.value
+    ? (JSON.parse(JSON.stringify(memberProfile.value)) as MemberProfile)
+    : null
+  forgettingMemoryKey.value = item.key
+
+  const entry = item.entry
+  const nutPrefs: NutritionalPreferences = { ...memberProfile.value?.nutritional_preferences }
+  let newAllergies = [...allergies.value]
+  const props: Record<string, unknown> = { ...(memberProfile.value?.properties || {}) }
+
+  // Remove the value from the field the memory was applied to
+  if (entry.kind === 'like' || entry.kind === 'cuisine') {
+    nutPrefs.food_likes = (nutPrefs.food_likes || []).filter(v => v !== entry.value)
+  } else if (entry.kind === 'dislike') {
+    nutPrefs.food_dislikes = (nutPrefs.food_dislikes || []).filter(v => v !== entry.value)
+  } else if (entry.kind === 'allergy_hint') {
+    newAllergies = newAllergies.filter(a => a !== entry.value)
+  } else if (entry.kind === 'standing_seed') {
+    props.standing_seeds = standingSeeds.value.filter(s => s.name !== entry.value)
+  }
+
+  // And drop its entry from the memory log
+  props.memory_log = memoryLog.value.filter(
+    e => !(e.kind === entry.kind && e.value === entry.value && e.recorded_at === entry.recorded_at)
+  )
+
+  // Optimistic update, reverted on failure
+  memberProfile.value = {
+    ...memberProfile.value,
+    nutritional_preferences: nutPrefs,
+    allergies: newAllergies,
+    properties: props
+  }
+
+  try {
+    const payload = buildProfilePayload({
+      nutritional_preferences: nutPrefs,
+      allergies: newAllergies,
+      properties: props
+    })
+    await householdStore.updateMemberProfile(currentMember.value.id, payload)
+  } catch (err) {
+    console.error('Failed to forget memory:', err)
+    memberProfile.value = snapshot
+  } finally {
+    forgettingMemoryKey.value = null
+  }
+}
 
 const memberAvatarConfig = computed(() => {
   if (!currentMember.value?.image_url) return null

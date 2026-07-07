@@ -37,6 +37,29 @@ export interface ChatAttribution {
   learn_more_url?: string | null
 }
 
+/** A single memory nudge the assistant proposes to remember about the member */
+export interface MemorySuggestion {
+  id: string
+  kind: 'like' | 'dislike' | 'cuisine' | 'constraint' | 'allergy_hint' | 'standing_seed' | string
+  value: string
+  statement: string
+}
+
+export interface MemoryDecisionRequest {
+  member_id: string
+  decision: 'accept' | 'decline'
+  suggestion: MemorySuggestion
+}
+
+export interface MemoryDecisionResponse {
+  applied: boolean
+}
+
+export interface SessionDinersResponse {
+  cooking_for: string[]
+  cooking_for_names: string[]
+}
+
 export interface ChatMessage {
   id?: number
   role: 'user' | 'assistant'
@@ -45,6 +68,8 @@ export interface ChatMessage {
   timestamp: string
   /** Client-side only — not persisted; absent on messages reloaded via getConversation() */
   attribution?: ChatAttribution
+  /** Client-side only — grafted from the live response like attribution */
+  memory_suggestions?: MemorySuggestion[]
 }
 
 export interface MealRecipe {
@@ -105,6 +130,7 @@ export interface UnifiedChatResponse {
   plan_version?: number
   plan_parent_id?: string
   attribution?: ChatAttribution
+  memory_suggestions?: MemorySuggestion[]
 }
 
 export interface ConversationResponse {
@@ -141,11 +167,11 @@ class FoodChatApiService {
     return this.fetchWithTimeout<FoodChatStatus>(`${this.basePath}/status`, 'GET')
   }
 
-  async createSession(memberId: string): Promise<ChatSession> {
+  async createSession(memberId: string, cookingFor?: string[]): Promise<ChatSession> {
     return this.fetchWithTimeout<ChatSession>(
       `${this.basePath}/sessions`,
       'POST',
-      { member_id: memberId }
+      cookingFor?.length ? { member_id: memberId, cooking_for: cookingFor } : { member_id: memberId }
     )
   }
 
@@ -236,6 +262,31 @@ class FoodChatApiService {
     }
   }
 
+  /** Accept or decline a memory suggestion surfaced in a chat response */
+  async submitMemoryDecision(
+    sessionId: string,
+    req: MemoryDecisionRequest
+  ): Promise<MemoryDecisionResponse> {
+    return this.fetchWithTimeout<MemoryDecisionResponse>(
+      `${this.basePath}/sessions/${sessionId}/memory`,
+      'POST',
+      req
+    )
+  }
+
+  /** Update who this session is cooking for (household member ids) */
+  async updateSessionDiners(
+    sessionId: string,
+    memberId: string,
+    cookingFor: string[]
+  ): Promise<SessionDinersResponse> {
+    return this.fetchWithTimeout<SessionDinersResponse>(
+      `${this.basePath}/sessions/${sessionId}/diners`,
+      'PUT',
+      { member_id: memberId, cooking_for: cookingFor }
+    )
+  }
+
   async submitMessageFeedback(
     sessionId: string,
     messageId: number,
@@ -254,7 +305,7 @@ class FoodChatApiService {
 
   private async fetchWithTimeout<T>(
     endpoint: string,
-    method: 'GET' | 'POST' | 'DELETE',
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
     data?: unknown,
     timeoutMs: number = DEFAULT_TIMEOUT
   ): Promise<T> {

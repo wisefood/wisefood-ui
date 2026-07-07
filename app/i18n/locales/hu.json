@@ -1029,7 +1029,16 @@
       "foodLikes": "Kedvelt ételek",
       "foodDislikes": "Nem kedvelt ételek",
       "allergiesAndIntolerances": "Allergiák és intoleranciák",
+      "memory": "Amit a WiseFood megjegyzett",
       "dangerZone": "Veszélyzóna"
+    },
+    "memory": {
+      "learnedInFoodChat": "A FoodChatből tanulta",
+      "forget": "Elfelejtés",
+      "empty": "Még nincs itt semmi — beszélgess a FoodChattel, és menet közben megjegyzi az ízlésed.",
+      "today": "ma",
+      "yesterday": "tegnap",
+      "daysAgo": "{count} napja"
     },
     "fields": {
       "name": "Név",
@@ -1302,7 +1311,17 @@
         "answeredWith": "Answered with FoodScholar",
         "learnMore": "Learn more in FoodScholar",
         "confidence": "Confidence"
+      },
+      "memory": {
+        "remember": "Jegyezd meg",
+        "noThanks": "Köszönöm, nem",
+        "saved": "Elmentve a profilodba"
       }
+    },
+    "diners": {
+      "label": "Kinek főzünk",
+      "you": "{name} (te)",
+      "cookingFor": "Főzünk nekik: {names}"
     },
     "feedback": {
       "tooGeneric": "Túl általános",
@@ -1362,5 +1381,10 @@
       "bad": "Elégedetlen",
       "awful": "Nagyon elégedetlen"
     }
+  },
+  "consent": {
+    "message": "Sütiket használunk, és személyes adatait kizárólag a WiseFood szolgáltatás nyújtása érdekében kezeljük.",
+    "privacyPolicy": "Adatvédelmi irányelvek",
+    "accept": "Elfogadom"
   }
 }

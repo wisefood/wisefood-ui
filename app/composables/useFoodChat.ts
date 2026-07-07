@@ -1,6 +1,7 @@
 import { computed } from 'vue'
 import { useFoodChatStore } from '~/stores/foodchat'
 import { useHouseholdStore } from '~/stores/household'
+import type { MemorySuggestion } from '~/services/foodchatApi'
 
 export function useFoodChat() {
   const store = useFoodChatStore()
@@ -38,9 +39,9 @@ export function useFoodChat() {
     }
   }
 
-  async function newSession() {
+  async function newSession(cookingFor?: string[]) {
     if (!memberId.value) return
-    return store.createSession(memberId.value)
+    return store.createSession(memberId.value, cookingFor)
   }
 
   async function selectSession(sessionId: string) {
@@ -70,6 +71,25 @@ export function useFoodChat() {
       rating,
       comment
     })
+  }
+
+  async function submitMemoryDecision(decision: 'accept' | 'decline', suggestion: MemorySuggestion) {
+    if (!store.activeSessionId || !memberId.value) return false
+    return store.submitMemoryDecision(store.activeSessionId, memberId.value, decision, suggestion)
+  }
+
+  const activeDiners = computed(() =>
+    store.activeSessionId ? store.dinersBySession[store.activeSessionId] ?? null : null
+  )
+
+  async function updateDiners(cookingFor: string[]) {
+    if (!store.activeSessionId || !memberId.value) return null
+    return store.updateDiners(store.activeSessionId, memberId.value, cookingFor)
+  }
+
+  function setLocalDiners(cookingFor: string[], names: string[] = []) {
+    if (!store.activeSessionId) return
+    store.setLocalDiners(store.activeSessionId, cookingFor, names)
   }
 
   function clearError() {
@@ -102,6 +122,10 @@ export function useFoodChat() {
     sendMessage,
     loadMoreMessages,
     submitMessageFeedback,
+    submitMemoryDecision,
+    activeDiners,
+    updateDiners,
+    setLocalDiners,
     clearError
   }
 }

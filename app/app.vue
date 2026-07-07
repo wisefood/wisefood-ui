@@ -4,6 +4,7 @@
   </NuxtLayout>
   <ReportBugButton />
   <FeedbackButton />
+  <ConsentBar />
 
   <!-- Flows.js floating blocks (interactive walkthroughs) -->
   <flows-floating-blocks />
