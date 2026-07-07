@@ -237,15 +237,18 @@ export const useFoodChatStore = defineStore('foodchat', {
         // Re-fetch conversation for ground truth
         await this.fetchConversation(sessionId, memberId)
 
-        // Attribution and memory suggestions are not persisted server-side, so
-        // carry them from the live response onto the just-fetched assistant
-        // message (client-side only)
-        if (response.attribution || response.memory_suggestions?.length) {
+        // Attribution, memory suggestions and changed-slot proofs are not
+        // persisted server-side, so carry them from the live response onto the
+        // just-fetched assistant message (client-side only)
+        if (response.attribution || response.memory_suggestions?.length || response.changed_slots?.length) {
           const lastAssistant = [...this.messages].reverse().find(m => m.role === 'assistant')
           if (lastAssistant) {
             if (response.attribution) lastAssistant.attribution = response.attribution
             if (response.memory_suggestions?.length) {
               lastAssistant.memory_suggestions = response.memory_suggestions
+            }
+            if (response.changed_slots?.length) {
+              lastAssistant.changed_slots = response.changed_slots
             }
           }
         }

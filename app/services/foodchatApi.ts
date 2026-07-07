@@ -70,6 +70,32 @@ export interface ChatMessage {
   attribution?: ChatAttribution
   /** Client-side only — grafted from the live response like attribution */
   memory_suggestions?: MemorySuggestion[]
+  /** Client-side only — grafted from the live response like attribution */
+  changed_slots?: ChangedSlot[]
+}
+
+/** Per-course nutrition summary (M4 transparency) */
+export interface MealNutrition {
+  kcal: number
+  protein_g: number
+  carbs_g: number
+  fat_g: number
+  nutri_score_label: string
+}
+
+export type MatchReasonKind =
+  | 'pinned'
+  | 'favorite'
+  | 'memory'
+  | 'profile'
+  | 'feedback'
+  | 'diner'
+  | 'guideline'
+
+/** Why a course was selected for this member (M4 transparency) */
+export interface MatchReason {
+  kind: MatchReasonKind
+  label: string
 }
 
 export interface MealRecipe {
@@ -77,6 +103,35 @@ export interface MealRecipe {
   title: string
   ingredients: string
   directions: string
+  nutrition?: MealNutrition | null
+  image_url?: string | null
+  match_reasons?: MatchReason[]
+}
+
+/** A constraint the planner applied when building a daily plan */
+export interface ConstraintApplied {
+  constraint: string
+  type: 'hard' | 'soft'
+  status: string
+  source: string
+}
+
+/** Counts of personalization signals used to build a plan */
+export interface PersonalizationSummary {
+  memories_used: number
+  favorites_used: number
+  feedback_signals: number
+  diners: number
+}
+
+/** Proof of an edit applied by a refine turn (M4 transparency) */
+export interface ChangedSlot {
+  meal_type: string
+  day: number | null
+  old: { title: string; kcal: number | null }
+  new: { title: string; kcal: number | null }
+  directive: string
+  verified: boolean
 }
 
 export interface MealPlan {
@@ -96,6 +151,8 @@ export interface MealPlan {
   diversity_llm_reasoning?: string
   guideline_adherence_score?: number
   guideline_adherence_reasoning?: string
+  constraints_applied?: ConstraintApplied[]
+  personalization_summary?: PersonalizationSummary | null
 }
 
 export interface WeeklyMealEntry {
@@ -131,6 +188,7 @@ export interface UnifiedChatResponse {
   plan_parent_id?: string
   attribution?: ChatAttribution
   memory_suggestions?: MemorySuggestion[]
+  changed_slots?: ChangedSlot[]
 }
 
 export interface ConversationResponse {

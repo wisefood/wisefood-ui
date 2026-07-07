@@ -1315,7 +1315,38 @@
     },
     "mealCard": {
       "viewRecipe": "View recipe",
-      "loadingNutrition": "Loading nutrition..."
+      "loadingNutrition": "Loading nutrition...",
+      "nutritionSummary": "{kcal} kcal · {protein}g protein",
+      "kcal": "{kcal} kcal",
+      "nutriScore": "Nutri-Score {label}",
+      "reasons": {
+        "pinned": "Pinned by you",
+        "favorite": "One of your favorites",
+        "memory": "From your memories",
+        "profile": "From your profile",
+        "feedback": "Based on your feedback",
+        "diner": "Chosen for your diners",
+        "guideline": "Dietary guideline"
+      }
+    },
+    "constraints": {
+      "label": "Constraints",
+      "hardTooltip": "Hard constraint · Source: {source}",
+      "softTooltip": "Soft constraint · Source: {source}"
+    },
+    "personalization": {
+      "prefix": "Personalized with",
+      "memories": "{count} memories",
+      "favorites": "{count} favorites",
+      "feedback": "{count} feedback signals"
+    },
+    "quality": {
+      "title": "Plan quality",
+      "llmMatch": "LLM match",
+      "variety": "Variety",
+      "varietyValue": "{count} ingredients",
+      "diversity": "Diversity",
+      "guidelines": "Guidelines"
     },
     "canvas": {
       "placeholderTitle": "Your meal plan will appear here",
@@ -1338,6 +1369,10 @@
         "remember": "Remember",
         "noThanks": "No thanks",
         "saved": "Saved to your profile"
+      },
+      "changedSlots": {
+        "verified": "verified",
+        "day": "Day {day}"
       }
     },
     "diners": {

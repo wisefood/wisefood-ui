@@ -1293,7 +1293,38 @@
     },
     "mealCard": {
       "viewRecipe": "Recept megnyitása",
-      "loadingNutrition": "Tápérték betöltése..."
+      "loadingNutrition": "Tápérték betöltése...",
+      "nutritionSummary": "{kcal} kcal · {protein} g fehérje",
+      "kcal": "{kcal} kcal",
+      "nutriScore": "Nutri-Score: {label}",
+      "reasons": {
+        "pinned": "Általad kitűzve",
+        "favorite": "Az egyik kedvenced",
+        "memory": "Az emlékeid alapján",
+        "profile": "A profilod alapján",
+        "feedback": "A visszajelzéseid alapján",
+        "diner": "Az étkezőknek választva",
+        "guideline": "Táplálkozási irányelv"
+      }
+    },
+    "constraints": {
+      "label": "Feltételek",
+      "hardTooltip": "Kötelező feltétel · Forrás: {source}",
+      "softTooltip": "Rugalmas feltétel · Forrás: {source}"
+    },
+    "personalization": {
+      "prefix": "Személyre szabva:",
+      "memories": "{count} emlék",
+      "favorites": "{count} kedvenc",
+      "feedback": "{count} visszajelzés"
+    },
+    "quality": {
+      "title": "Terv minősége",
+      "llmMatch": "LLM egyezés",
+      "variety": "Változatosság",
+      "varietyValue": "{count} hozzávaló",
+      "diversity": "Sokféleség",
+      "guidelines": "Irányelvek"
     },
     "canvas": {
       "placeholderTitle": "A menüterved itt fog megjelenni",
@@ -1316,6 +1347,10 @@
         "remember": "Jegyezd meg",
         "noThanks": "Köszönöm, nem",
         "saved": "Elmentve a profilodba"
+      },
+      "changedSlots": {
+        "verified": "ellenőrizve",
+        "day": "{day}. nap"
       }
     },
     "diners": {

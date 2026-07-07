@@ -55,6 +55,29 @@
       <h3 v-else class="flex-1 min-w-0 font-medium text-sm sm:text-base text-gray-900 dark:text-white leading-snug">{{ recipe.title }}</h3>
     </div>
 
+    <!-- Nutrition summary + Nutri-Score (M4 transparency) -->
+    <div v-if="recipe.nutrition" class="flex items-center gap-1.5 flex-wrap pr-16 -mt-1">
+      <span class="inline-flex items-center px-2 py-0.5 text-[10px] rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-300 font-light">
+        {{ nutritionSummary }}
+      </span>
+      <span
+        v-if="nutriScoreGrade"
+        class="inline-flex items-center justify-center w-[18px] h-[18px] rounded text-[10px] font-bold leading-none"
+        :class="nutriScoreClass"
+        :title="t('foodChatHome.mealCard.nutriScore', { label: nutriScoreGrade })"
+      >{{ nutriScoreGrade }}</span>
+    </div>
+
+    <!-- Match-reason chips (M4 transparency) -->
+    <div v-if="recipe.match_reasons?.length" class="flex flex-wrap gap-1 pr-14">
+      <UTooltip v-for="(reason, rIdx) in recipe.match_reasons" :key="rIdx" :text="reasonTooltip(reason.kind)">
+        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] rounded-full border border-gray-200/80 dark:border-zinc-700/70 text-gray-400 dark:text-zinc-500 font-light">
+          <UIcon :name="reasonIcon(reason.kind)" class="w-2.5 h-2.5 shrink-0" />
+          <span class="max-w-24 truncate">{{ reason.label }}</span>
+        </span>
+      </UTooltip>
+    </div>
+
     <!-- Nutrient donut — bottom right corner -->
     <div
       class="absolute bottom-4 right-4 cursor-help"
@@ -122,7 +145,8 @@ const toggleFavorite = () => {
 
 const nutritionData = ref<Recipe | null>(null)
 const nutritionLoading = ref(false)
-const recipeImage = ref<string | null>(null)
+// Prefer the image the plan already carries; fall back to the fetched recipe
+const recipeImage = ref<string | null>(props.recipe.image_url ?? null)
 const hoveredSegment = ref<string | null>(null)
 
 onMounted(async () => {
@@ -131,13 +155,63 @@ onMounted(async () => {
   try {
     const r = await recipeApi.getRecipe(props.recipe.recipe_id)
     nutritionData.value = r
-    recipeImage.value = r.image_url ?? null
+    if (!recipeImage.value) recipeImage.value = r.image_url ?? null
   } catch {
     // non-critical
   } finally {
     nutritionLoading.value = false
   }
 })
+
+// ── M4 transparency: nutrition chips, Nutri-Score badge, reason chips ──
+const nutritionSummary = computed(() => {
+  const n = props.recipe.nutrition
+  if (!n) return ''
+  return t('foodChatHome.mealCard.nutritionSummary', {
+    kcal: Math.round(n.kcal),
+    protein: Math.round(n.protein_g)
+  })
+})
+
+const nutriScoreGrade = computed(() => {
+  const label = props.recipe.nutrition?.nutri_score_label?.trim().toUpperCase()
+  if (!label) return null
+  if (/^[A-E]$/.test(label)) return label
+  const last = label.slice(-1)
+  return /^[A-E]$/.test(last) ? last : null
+})
+
+const NUTRI_SCORE_CLASSES: Record<string, string> = {
+  A: 'bg-[#038141] text-white',
+  B: 'bg-[#85BB2F] text-white',
+  C: 'bg-[#FECB02] text-gray-900',
+  D: 'bg-[#EE8100] text-white',
+  E: 'bg-[#E63E11] text-white'
+}
+
+const nutriScoreClass = computed(() =>
+  nutriScoreGrade.value ? NUTRI_SCORE_CLASSES[nutriScoreGrade.value] ?? 'bg-gray-400 text-white' : ''
+)
+
+const REASON_ICONS: Record<string, string> = {
+  pinned: 'i-lucide-pin',
+  favorite: 'i-lucide-heart',
+  memory: 'i-lucide-brain',
+  profile: 'i-lucide-user',
+  feedback: 'i-lucide-thumbs-up',
+  diner: 'i-lucide-users',
+  guideline: 'i-lucide-book-open'
+}
+
+function reasonIcon(kind: string): string {
+  return REASON_ICONS[kind] ?? 'i-lucide-sparkles'
+}
+
+function reasonTooltip(kind: string): string {
+  return kind in REASON_ICONS
+    ? t(`foodChatHome.mealCard.reasons.${kind}`)
+    : kind
+}
 
 // Brand palette colours (matching main.css vars)
 // brandp-300 #a25ece  protein

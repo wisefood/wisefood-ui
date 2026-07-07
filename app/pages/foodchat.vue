@@ -256,6 +256,34 @@
                       </NuxtLink>
                     </div>
 
+                    <!-- Changed-slot proof (only on live responses; not persisted) -->
+                    <div v-if="msg.changed_slots?.length" class="mt-2 pt-2 border-t border-gray-100 dark:border-zinc-700/50 space-y-1">
+                      <div
+                        v-for="(changedSlot, sIdx) in msg.changed_slots"
+                        :key="sIdx"
+                        class="flex items-start gap-1.5 px-2 py-1 rounded-lg border border-gray-100 dark:border-zinc-700/60 bg-gray-50/80 dark:bg-zinc-800/40"
+                      >
+                        <UIcon name="i-lucide-replace" class="w-3 h-3 mt-0.5 text-brandp-400 dark:text-brandp-300 shrink-0" />
+                        <span class="flex-1 min-w-0 text-[11px] font-light leading-snug text-gray-600 dark:text-zinc-300">
+                          <span class="font-medium">{{ changedSlotLabel(changedSlot) }}:</span>
+                          <span class="line-through opacity-60"> {{ changedSlot.old.title }}</span>
+                          <span> → </span>
+                          <span class="font-medium">{{ changedSlot.new.title }}</span>
+                          <span v-if="changedSlot.old.kcal != null && changedSlot.new.kcal != null" class="text-gray-400 dark:text-zinc-500">
+                            · {{ Math.round(changedSlot.old.kcal) }} → {{ Math.round(changedSlot.new.kcal) }} kcal
+                          </span>
+                        </span>
+                        <span
+                          v-if="changedSlot.verified"
+                          class="inline-flex items-center gap-0.5 mt-0.5 text-[10px] text-emerald-600 dark:text-emerald-400 shrink-0"
+                          :title="changedSlot.directive"
+                        >
+                          <UIcon name="i-lucide-check" class="w-3 h-3" />
+                          {{ t('foodChatHome.chat.changedSlots.verified') }}
+                        </span>
+                      </div>
+                    </div>
+
                     <!-- Memory nudges (only on live responses; not persisted) -->
                     <div
                       v-if="visibleMemorySuggestions(msg).length"
@@ -526,6 +554,29 @@
 
                 <!-- ── Daily plan content ── -->
                 <template v-if="canvasMode === 'daily' && displayedMealPlan">
+                  <!-- Constraint ledger -->
+                  <div v-if="displayedMealPlan.constraints_applied?.length" class="mb-3 px-1 flex items-center gap-1.5 flex-wrap">
+                    <span class="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 shrink-0">
+                      <UIcon name="i-lucide-sliders-horizontal" class="w-3 h-3" />
+                      {{ t('foodChatHome.constraints.label') }}
+                    </span>
+                    <UTooltip
+                      v-for="(constraint, cIdx) in displayedMealPlan.constraints_applied"
+                      :key="cIdx"
+                      :text="constraintTooltip(constraint)"
+                    >
+                      <span
+                        class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full border cursor-help"
+                        :class="constraint.type === 'hard'
+                          ? 'border-brandp-200 dark:border-brandp-800/70 bg-brandp-50 dark:bg-brandp-950/40 text-brandp-600 dark:text-brandp-300 ring-1 ring-brandp-200/60 dark:ring-brandp-800/40'
+                          : 'border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400'"
+                      >
+                        <UIcon v-if="constraint.type === 'hard'" name="i-lucide-shield-check" class="w-3 h-3 shrink-0" />
+                        {{ constraint.constraint }}
+                      </span>
+                    </UTooltip>
+                  </div>
+
                   <div
                     class="rounded-2xl overflow-hidden mb-4"
                     :class="mealGridCols(displayedMealPlan)"
@@ -536,6 +587,7 @@
                       time="08:00"
                       icon="i-lucide-coffee"
                       :recipe="displayedMealPlan.breakfast"
+                      :class="{ 'fc-slot-flash': highlightedSlots.has('breakfast') }"
                     />
                     <FoodchatMealScheduleCard
                       v-if="displayedMealPlan.lunch"
@@ -543,6 +595,7 @@
                       time="13:00"
                       icon="i-lucide-utensils"
                       :recipe="displayedMealPlan.lunch"
+                      :class="{ 'fc-slot-flash': highlightedSlots.has('lunch') }"
                     />
                     <FoodchatMealScheduleCard
                       v-if="displayedMealPlan.dinner"
@@ -550,12 +603,59 @@
                       time="19:30"
                       icon="i-lucide-moon"
                       :recipe="displayedMealPlan.dinner"
+                      :class="{ 'fc-slot-flash': highlightedSlots.has('dinner') }"
                     />
                   </div>
 
                   <div v-if="displayedMealPlan.reasoning" class="flex items-start gap-2 mb-4 px-1">
                     <UIcon name="i-lucide-lightbulb" class="w-3.5 h-3.5 text-brandp-400 mt-0.5 shrink-0" />
                     <p class="text-xs text-gray-500 dark:text-gray-400 font-light leading-relaxed">{{ displayedMealPlan.reasoning }}</p>
+                  </div>
+
+                  <!-- Personalization line -->
+                  <div v-if="personalizationParts.length" class="mb-4 px-1">
+                    <NuxtLink
+                      to="/my-profile"
+                      class="inline-flex items-center gap-1.5 text-[11px] font-light text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:underline transition-colors"
+                    >
+                      <UIcon name="i-lucide-sparkles" class="w-3 h-3 shrink-0" />
+                      {{ t('foodChatHome.personalization.prefix') }} {{ personalizationParts.join(' · ') }}
+                    </NuxtLink>
+                  </div>
+
+                  <!-- Plan quality panel -->
+                  <div v-if="qualityMetrics.length" class="mb-4 rounded-xl border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-800/40 overflow-hidden">
+                    <button
+                      class="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-colors"
+                      @click="qualityOpen = !qualityOpen"
+                    >
+                      <span class="inline-flex items-center gap-1.5">
+                        <UIcon name="i-lucide-gauge" class="w-3.5 h-3.5 text-brandp-400" />
+                        {{ t('foodChatHome.quality.title') }}
+                      </span>
+                      <UIcon :name="qualityOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3.5 h-3.5" />
+                    </button>
+                    <div v-show="qualityOpen" class="px-3 pb-3 pt-1 space-y-2">
+                      <div v-for="metric in qualityMetrics" :key="metric.key" class="flex items-center gap-2">
+                        <span class="w-24 shrink-0 text-[11px] font-light text-gray-500 dark:text-zinc-400">{{ metric.label }}</span>
+                        <template v-if="metric.max != null">
+                          <div class="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-zinc-700 overflow-hidden">
+                            <div
+                              class="h-full rounded-full bg-brandp-400 dark:bg-brandp-500 transition-all"
+                              :style="{ width: `${Math.min(Math.max(metric.value / metric.max, 0), 1) * 100}%` }"
+                            />
+                          </div>
+                          <span class="w-9 shrink-0 text-right text-[11px] font-medium text-gray-700 dark:text-zinc-200">{{ metric.value }}/{{ metric.max }}</span>
+                        </template>
+                        <span v-else class="flex-1 text-right text-[11px] font-medium text-gray-700 dark:text-zinc-200">
+                          {{ t('foodChatHome.quality.varietyValue', { count: metric.value }) }}
+                        </span>
+                        <UTooltip v-if="metric.reasoning" :text="metric.reasoning">
+                          <UIcon name="i-lucide-info" class="w-3 h-3 text-gray-300 dark:text-zinc-600 cursor-help shrink-0" />
+                        </UTooltip>
+                        <span v-else class="w-3 shrink-0" />
+                      </div>
+                    </div>
                   </div>
 
                   <!-- Plan vote -->
@@ -676,6 +776,12 @@
                           <p v-else class="text-[11px] font-medium text-gray-800 dark:text-gray-200 leading-tight line-clamp-2 pr-7">
                             {{ getWeeklyRecipeTitle(day.entries.find(e => e.meal_type === mealType)) }}
                           </p>
+                          <span
+                            v-if="getWeeklyEntryKcal(day.entries.find(e => e.meal_type === mealType)) != null"
+                            class="mt-auto pr-8 text-[8px] text-gray-400 dark:text-zinc-500 leading-none"
+                          >
+                            {{ t('foodChatHome.mealCard.kcal', { kcal: getWeeklyEntryKcal(day.entries.find(e => e.meal_type === mealType)) }) }}
+                          </span>
                           <!-- Nutrient donut — bottom right -->
                           <div
                             v-if="getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)) && getWeeklySegments(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType))).length"
@@ -750,7 +856,7 @@ import DOMPurify from 'dompurify'
 import { useFoodChat } from '~/composables/useFoodChat'
 import { useHouseholdStore } from '~/stores/household'
 import { useRecipeStore } from '~/stores/recipe'
-import type { AttributionCitation, ChatMessage, MealPlan, MealRecipe, MemorySuggestion, WeeklyMealEntry } from '~/services/foodchatApi'
+import type { AttributionCitation, ChangedSlot, ChatMessage, ConstraintApplied, MealPlan, MealRecipe, MemorySuggestion, WeeklyMealEntry } from '~/services/foodchatApi'
 import recipeApi from '~/services/recipeApi'
 import { today, getLocalTimeZone, type DateValue } from '@internationalized/date'
 import memberMealPlansApi, {
@@ -1162,6 +1268,85 @@ function mealTypeIcon(type: string): string {
   return 'i-lucide-utensils'
 }
 
+// ── M4 transparency: changed slots, constraints, personalization, quality ──
+const KNOWN_MEAL_TYPES = ['breakfast', 'lunch', 'dinner'] as const
+
+function changedSlotLabel(slot: ChangedSlot): string {
+  const mealKey = slot.meal_type?.toLowerCase()
+  const mealName = (KNOWN_MEAL_TYPES as readonly string[]).includes(mealKey)
+    ? t(`foodChatHome.meals.${mealKey}`)
+    : slot.meal_type
+  return slot.day != null
+    ? `${t('foodChatHome.chat.changedSlots.day', { day: slot.day + 1 })} · ${mealName}`
+    : mealName
+}
+
+// Briefly highlight swapped daily cards in the canvas
+const highlightedSlots = ref<Set<string>>(new Set())
+let slotFlashTimer: ReturnType<typeof setTimeout> | null = null
+
+function flashChangedSlots(slots?: ChangedSlot[]) {
+  const dailySlots = (slots ?? [])
+    .filter(s => s.day == null)
+    .map(s => s.meal_type?.toLowerCase())
+    .filter((m): m is string => !!m)
+  if (!dailySlots.length) return
+  highlightedSlots.value = new Set(dailySlots)
+  if (slotFlashTimer) clearTimeout(slotFlashTimer)
+  slotFlashTimer = setTimeout(() => { highlightedSlots.value = new Set() }, 2600)
+}
+
+function constraintTooltip(constraint: ConstraintApplied): string {
+  return constraint.type === 'hard'
+    ? t('foodChatHome.constraints.hardTooltip', { source: constraint.source })
+    : t('foodChatHome.constraints.softTooltip', { source: constraint.source })
+}
+
+const personalizationParts = computed(() => {
+  const summary = displayedMealPlan.value?.personalization_summary
+  if (!summary) return []
+  const parts: string[] = []
+  if (summary.memories_used > 0) parts.push(t('foodChatHome.personalization.memories', { count: summary.memories_used }))
+  if (summary.favorites_used > 0) parts.push(t('foodChatHome.personalization.favorites', { count: summary.favorites_used }))
+  if (summary.feedback_signals > 0) parts.push(t('foodChatHome.personalization.feedback', { count: summary.feedback_signals }))
+  return parts
+})
+
+const qualityOpen = ref(false)
+
+interface QualityMetric {
+  key: string
+  label: string
+  value: number
+  max?: number
+  reasoning?: string
+}
+
+const qualityMetrics = computed<QualityMetric[]>(() => {
+  const plan = displayedMealPlan.value
+  if (!plan) return []
+  const metrics: QualityMetric[] = []
+  if (plan.llm_score != null) {
+    metrics.push({ key: 'llm', label: t('foodChatHome.quality.llmMatch'), value: plan.llm_score, max: 5, reasoning: plan.llm_reasoning })
+  }
+  if (plan.fvs_count != null) {
+    metrics.push({ key: 'variety', label: t('foodChatHome.quality.variety'), value: plan.fvs_count, reasoning: plan.fvs_reasoning })
+  }
+  if (plan.diversity_llm_score != null) {
+    metrics.push({ key: 'diversity', label: t('foodChatHome.quality.diversity'), value: plan.diversity_llm_score, max: 5, reasoning: plan.diversity_llm_reasoning })
+  }
+  if (plan.guideline_adherence_score != null) {
+    metrics.push({ key: 'guidelines', label: t('foodChatHome.quality.guidelines'), value: plan.guideline_adherence_score, max: 5, reasoning: plan.guideline_adherence_reasoning })
+  }
+  return metrics
+})
+
+function getWeeklyEntryKcal(entry: WeeklyMealEntry | undefined): number | null {
+  if (!entry) return null
+  const nutrition = (entry.recipe as Record<string, unknown>)?.nutrition as { kcal?: number } | null | undefined
+  return typeof nutrition?.kcal === 'number' ? Math.round(nutrition.kcal) : null
+}
+
 // ── FoodScholar attribution ──
 function citationLabel(citation: AttributionCitation): string {
   const text = citation.label || citation.title
@@ -1231,7 +1416,8 @@ async function ensureSessionAndSend(content: string) {
   }
   if (!activeSession.value) await newSession(cookingForForNewSession())
   showEphemeralGenerating.value = true
-  await sendMessage(content)
+  const response = await sendMessage(content)
+  flashChangedSlots(response?.changed_slots)
   scrollToBottom()
 }
 
@@ -1916,6 +2102,16 @@ onMounted(async () => {
 /* ── Canvas plan card ── */
 .plan-card {
   animation: card-appear 0.6s ease-out both;
+}
+
+/* ── Changed-slot flash (brief highlight on swapped meal cards) ── */
+.fc-slot-flash {
+  animation: fc-slot-flash 2.6s ease-out both;
+}
+@keyframes fc-slot-flash {
+  0%   { box-shadow: inset 0 0 0 2px var(--color-brandp-400, #a78bfa); }
+  60%  { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-brandp-400, #a78bfa) 60%, transparent); }
+  100% { box-shadow: inset 0 0 0 2px transparent; }
 }
 @keyframes card-appear {
   from { opacity: 0; transform: translateY(24px) scale(0.98); }

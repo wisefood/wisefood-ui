@@ -1293,7 +1293,38 @@
     },
     "mealCard": {
       "viewRecipe": "Prikaži recept",
-      "loadingNutrition": "Nalaganje hranilnih vrednosti..."
+      "loadingNutrition": "Nalaganje hranilnih vrednosti...",
+      "nutritionSummary": "{kcal} kcal · {protein} g beljakovin",
+      "kcal": "{kcal} kcal",
+      "nutriScore": "Nutri-Score: {label}",
+      "reasons": {
+        "pinned": "Pripeto s tvoje strani",
+        "favorite": "Ena tvojih priljubljenih jedi",
+        "memory": "Iz tvojih spominov",
+        "profile": "Iz tvojega profila",
+        "feedback": "Na podlagi tvojih povratnih informacij",
+        "diner": "Izbrano za tvoje jedce",
+        "guideline": "Prehranska smernica"
+      }
+    },
+    "constraints": {
+      "label": "Omejitve",
+      "hardTooltip": "Stroga omejitev · Vir: {source}",
+      "softTooltip": "Mehka omejitev · Vir: {source}"
+    },
+    "personalization": {
+      "prefix": "Prilagojeno na podlagi:",
+      "memories": "{count} spominov",
+      "favorites": "{count} priljubljenih",
+      "feedback": "{count} povratnih informacij"
+    },
+    "quality": {
+      "title": "Kakovost načrta",
+      "llmMatch": "LLM ujemanje",
+      "variety": "Raznolikost",
+      "varietyValue": "{count} sestavin",
+      "diversity": "Pestrost",
+      "guidelines": "Smernice"
     },
     "canvas": {
       "placeholderTitle": "Tvoj jedilnik se bo pojavil tukaj",
@@ -1316,6 +1347,10 @@
         "remember": "Zapomni si",
         "noThanks": "Ne, hvala",
         "saved": "Shranjeno v tvoj profil"
+      },
+      "changedSlots": {
+        "verified": "preverjeno",
+        "day": "{day}. dan"
       }
     },
     "diners": {
