@@ -111,9 +111,6 @@ export interface ApiError {
   code?: string
 }
 
-// Legacy for backwards compat
-export type SendMessageResponse = UnifiedChatResponse
-
 // ============================================================================
 // FoodChat API Service
 // ============================================================================
@@ -229,26 +226,6 @@ class FoodChatApiService {
       `${this.basePath}/sessions/${sessionId}/messages/${messageId}/feedback`,
       'POST',
       req
-    )
-  }
-
-  // Legacy — kept for backwards compat with existing store
-  async sendMessage(sessionId: string, content: string, memberId?: string): Promise<UnifiedChatResponse> {
-    if (memberId) {
-      return this.unifiedChat(sessionId, { content, member_id: memberId })
-    }
-    return this.fetchWithTimeout<UnifiedChatResponse>(
-      `${this.basePath}/sessions/${sessionId}/messages`,
-      'POST',
-      { content },
-      MESSAGE_TIMEOUT
-    )
-  }
-
-  async getMessages(sessionId: string): Promise<ChatMessage[]> {
-    return this.fetchWithTimeout<ChatMessage[]>(
-      `${this.basePath}/sessions/${sessionId}/messages`,
-      'GET'
     )
   }
 

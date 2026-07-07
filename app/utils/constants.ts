@@ -13,11 +13,6 @@ export const MICROCOPY = {
     evening: 'Good evening',
     defaultEncouragement: "Here's your food wellness snapshot.",
   },
-  quickActions: {
-    scholar: 'Ask FoodScholar',
-    analyze: 'Analyze Recipe',
-    mealPlan: 'Generate Meal Plan',
-  },
   sustainability: {
     explore: 'Explore swaps',
     learnMore: 'Learn more',
