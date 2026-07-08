@@ -912,11 +912,7 @@ const nutriBreakdown = computed<NutriBreakdown | null>(() => {
   if (!raw || typeof raw !== 'object') return null
   return raw as NutriBreakdown
 })
-const nutriScoreGrade = computed(() => {
-  const score = recipe.value?.nutri_score
-  if (score === null || score === undefined || score === '') return null
-  return getNutriScoreGrade(toNumber(score))
-})
+const nutriScoreGrade = computed(() => getNutriScoreGrade(recipe.value?.nutri_score))
 const formatPer100 = (value: number, unit: string): string => {
   const safe = Number.isFinite(value) ? value : 0
   const digits = unit === 'kJ' || unit === 'mg' ? 0 : 1
@@ -1411,14 +1407,6 @@ const formatNutritionSourceLabel = (source?: unknown): string => {
     return 'USDA Nutrients (AI Generated (LLM Fallback))'
   }
   return text.replace(/groq\s+llm\s+fallback/gi, 'AI Generated (LLM Fallback)')
-}
-
-const getNutriScoreGrade = (score: number): string => {
-  if (score <= 0) return 'A'
-  if (score <= 2) return 'B'
-  if (score <= 10) return 'C'
-  if (score <= 18) return 'D'
-  return 'E'
 }
 
 const getNutriScoreColorBg = (grade: string): string => {

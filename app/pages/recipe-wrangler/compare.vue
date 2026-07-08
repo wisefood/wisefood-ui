@@ -446,15 +446,7 @@ const maxFiber = computed(() =>
 // ============================================================================
 // Methods
 // ============================================================================
-const getNutriScoreGrade = (score: number): string => {
-  if (score <= 0) return 'A'
-  if (score <= 2) return 'B'
-  if (score <= 10) return 'C'
-  if (score <= 18) return 'D'
-  return 'E'
-}
-
-const getNutriScoreColorBg = (grade: string): string => {
+const getNutriScoreColorBg = (grade: string | null): string => {
   const colors = {
     A: 'bg-[#038141]',
     B: 'bg-[#85BB2F]',

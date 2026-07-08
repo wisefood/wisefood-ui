@@ -205,14 +205,6 @@ const toggleCompare = (event: Event) => {
   recipeStore.toggleCompare(effectiveRecipeId.value)
 }
 
-const getNutriScoreGrade = (score: number): string => {
-  if (score <= 0) return 'A'
-  if (score <= 2) return 'B'
-  if (score <= 10) return 'C'
-  if (score <= 18) return 'D'
-  return 'E'
-}
-
 const getNutriScoreColorBg = (grade: string): string => {
   const colors = {
     'A': 'bg-[#038141]',  // Dark green (official Nutri-Score color)
