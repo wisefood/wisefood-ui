@@ -94,6 +94,16 @@ export interface QaAskResult {
   generated_at?: string
   cache_hit?: boolean
   request_id?: string
+  memory_suggestions?: QaMemorySuggestion[] | null
+}
+
+/** Consent nudge for a durable preference expressed in the question —
+ *  same shape as FoodChat's MemorySuggestion so the UI treats both alike. */
+export interface QaMemorySuggestion {
+  id: string
+  kind: 'like' | 'dislike' | 'cuisine' | 'allergy_hint'
+  value: string
+  statement: string
 }
 
 export interface QaQuestionsResult {
@@ -152,6 +162,18 @@ class FoodScholarApiService {
 
   async listQuestions(): Promise<QaQuestionsResult> {
     return wisefoodRestApi.get<QaQuestionsResult>(`${this.basePath}/questions`)
+  }
+
+  async submitMemoryDecision(
+    memberId: string,
+    suggestion: QaMemorySuggestion,
+    decision: 'accept' | 'decline'
+  ): Promise<{ applied: boolean, decision: string }> {
+    return wisefoodRestApi.post(`${this.basePath}/memory`, {
+      member_id: memberId,
+      suggestion,
+      decision
+    })
   }
 
   async listTips(memberId?: string | null): Promise<QaTipsResult> {

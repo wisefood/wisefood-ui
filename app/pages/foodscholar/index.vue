@@ -510,6 +510,45 @@
             </div>
           </div>
 
+          <!-- Memory nudges: consent-first, same pattern as FoodChat's chips.
+               Writes happen only on "Remember" (source: foodscholar). -->
+          <div v-if="visibleMemorySuggestions.length" class="chat-flow-bubble chat-flow-bubble-muted space-y-1.5">
+            <div
+              v-for="sug in visibleMemorySuggestions"
+              :key="sug.id"
+              class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-700 dark:text-gray-200"
+              :class="sug.kind === 'allergy_hint' ? 'bg-amber-50 dark:bg-amber-900/20' : 'bg-gray-50 dark:bg-zinc-800/60'"
+            >
+              <template v-if="memoryChipState[sug.id] !== 'accepted'">
+                <UIcon
+                  name="i-lucide-brain"
+                  class="w-3.5 h-3.5 shrink-0"
+                  :class="sug.kind === 'allergy_hint' ? 'text-amber-500 dark:text-amber-400' : 'text-brand-500 dark:text-brand-300'"
+                />
+                <span class="flex-1 min-w-0 text-xs font-light leading-snug">{{ sug.statement }}</span>
+                <button
+                  type="button"
+                  class="px-2.5 py-1 text-[11px] font-medium rounded-full bg-brand-500 text-white hover:bg-brand-600 transition-colors disabled:opacity-50"
+                  :disabled="memoryChipState[sug.id] === 'pending'"
+                  @click="handleMemoryDecision(sug, 'accept')"
+                >
+                  <UIcon v-if="memoryChipState[sug.id] === 'pending'" name="i-lucide-loader-2" class="w-3 h-3 animate-spin" />
+                  <template v-else>{{ t('foodChatHome.chat.memory.remember') }}</template>
+                </button>
+                <button
+                  type="button"
+                  class="px-2.5 py-1 text-[11px] rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors disabled:opacity-50"
+                  :disabled="memoryChipState[sug.id] === 'pending'"
+                  @click="handleMemoryDecision(sug, 'decline')"
+                >{{ t('foodChatHome.chat.memory.noThanks') }}</button>
+              </template>
+              <template v-else>
+                <UIcon name="i-lucide-check" class="w-3.5 h-3.5 shrink-0 text-green-500" />
+                <span class="flex-1 min-w-0 text-xs font-light leading-snug">{{ t('foodChatHome.chat.memory.saved') }}</span>
+              </template>
+            </div>
+          </div>
+
           <!-- Follow-up suggestions -->
           <div v-if="qaResult.follow_up_suggestions?.length" class="chat-flow-bubble chat-flow-bubble-muted">
             <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">{{ t('foodScholarHome.qa.followUpSuggestions') }}</h4>
@@ -1035,6 +1074,7 @@ import foodscholarApi, {
   type QaCitation,
   type QaClarification,
   type QaClarificationResponse,
+  type QaMemorySuggestion,
   type QaRetriever
 } from '~/services/foodscholarApi'
 import { useAuthStore } from '~/stores/auth'
@@ -1755,6 +1795,26 @@ const replayFigTilt = () => {
 const asking = ref(false)
 const qaError = ref<string | null>(null)
 const qaResult = ref<QaAskResult | null>(null)
+
+// ── Memory nudges (consent-first; mirrors FoodChat's chips) ──
+const memoryChipState = reactive<Record<string, 'pending' | 'accepted' | 'declined'>>({})
+
+const visibleMemorySuggestions = computed<QaMemorySuggestion[]>(() =>
+  (qaResult.value?.memory_suggestions ?? []).filter(s => memoryChipState[s.id] !== 'declined')
+)
+
+const handleMemoryDecision = async (suggestion: QaMemorySuggestion, decision: 'accept' | 'decline') => {
+  const memberId = householdStore.currentMember?.id
+  if (!memberId || memoryChipState[suggestion.id]) return
+  memoryChipState[suggestion.id] = 'pending'
+  try {
+    await foodscholarApi.submitMemoryDecision(memberId, suggestion, decision)
+    // Accept → subtle confirmation; decline → dismiss silently
+    memoryChipState[suggestion.id] = decision === 'accept' ? 'accepted' : 'declined'
+  } catch {
+    delete memoryChipState[suggestion.id]
+  }
+}
 
 // clarification state
 const pendingClarification = ref<QaClarification | null>(null)
