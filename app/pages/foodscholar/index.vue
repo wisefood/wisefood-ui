@@ -423,7 +423,7 @@
               >Skip</button>
               <button
                 type="button"
-                :disabled="clarificationSelectedValues.length === 0 && !clarificationFreeText.trim()"
+                :disabled="clarificationSelectedValues.length === 0 && !String(clarificationFreeText ?? '').trim()"
                 class="px-4 py-1.5 text-sm font-medium rounded-full bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 @click="submitClarification"
               >Continue</button>
@@ -1822,7 +1822,8 @@ const qaThreadId = ref<string | null>(null)
 const pendingQuestion = ref<string>('')
 const pendingPayload = ref<QaAskRequest | null>(null)
 const clarificationSelectedValues = ref<string[]>([])
-const clarificationFreeText = ref<string>('')
+// number when the clarification input is type="number" (v-model coerces)
+const clarificationFreeText = ref<string | number>('')
 const qaMode = ref<'simple' | 'advanced'>('simple')
 const retrievalMode = ref<QaRetrievalMode>('rag')
 const ragEnabled = computed({
@@ -2367,7 +2368,7 @@ const submitClarification = async () => {
     const clarificationResponse: QaClarificationResponse = {
       question_id: clarif.id,
       selected_values: [...clarificationSelectedValues.value],
-      free_text: clarificationFreeText.value.trim() || null
+      free_text: String(clarificationFreeText.value ?? '').trim() || null
     }
 
     const payload: QaAskRequest = {
