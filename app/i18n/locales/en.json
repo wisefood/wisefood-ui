@@ -1036,7 +1036,7 @@
     "memory": {
       "learnedInFoodChat": "Learned in FoodChat",
       "forget": "Forget this",
-      "empty": "Nothing here yet — chat with FoodChat and it will remember your tastes as you go.",
+      "empty": "Nothing here yet — as you plan meals or ask nutrition questions in FoodChat, it will offer to remember your tastes (only with your OK).",
       "today": "today",
       "yesterday": "yesterday",
       "daysAgo": "{count} days ago"

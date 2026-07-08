@@ -1035,7 +1035,7 @@
     "memory": {
       "learnedInFoodChat": "Naučeno v FoodChatu",
       "forget": "Pozabi",
-      "empty": "Tukaj še ni ničesar — pogovarjaj se s FoodChatom in sproti si bo zapomnil tvoj okus.",
+      "empty": "Tukaj še ni ničesar — ko v FoodChatu načrtuješ obroke ali postavljaš prehranska vprašanja, ti bo ponudil, da si zapomni tvoj okus (samo s tvojim soglasjem).",
       "today": "danes",
       "yesterday": "včeraj",
       "daysAgo": "pred {count} dnevi"

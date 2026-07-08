@@ -1035,7 +1035,7 @@
     "memory": {
       "learnedInFoodChat": "A FoodChatből tanulta",
       "forget": "Elfelejtés",
-      "empty": "Még nincs itt semmi — beszélgess a FoodChattel, és menet közben megjegyzi az ízlésed.",
+      "empty": "Még nincs itt semmi — ha étkezéseket tervezel vagy táplálkozási kérdéseket teszel fel a FoodChatben, felajánlja, hogy megjegyzi az ízlésed (csak a beleegyezéseddel).",
       "today": "ma",
       "yesterday": "tegnap",
       "daysAgo": "{count} napja"
