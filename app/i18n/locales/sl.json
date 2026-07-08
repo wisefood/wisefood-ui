@@ -1033,9 +1033,9 @@
       "dangerZone": "Nevarno območje"
     },
     "memory": {
-      "learnedInFoodChat": "Naučeno v FoodChatu",
+      "learnedIn": "Naučeno v aplikaciji {app}",
       "forget": "Pozabi",
-      "empty": "Tukaj še ni ničesar — ko v FoodChatu načrtuješ obroke ali postavljaš prehranska vprašanja, ti bo ponudil, da si zapomni tvoj okus (samo s tvojim soglasjem).",
+      "empty": "Tukaj še ni ničesar — WiseFood ponudi, da si zapomni tvoj okus iz pogovorov v FoodChatu in FoodScholarju (samo s tvojim soglasjem).",
       "today": "danes",
       "yesterday": "včeraj",
       "daysAgo": "pred {count} dnevi"

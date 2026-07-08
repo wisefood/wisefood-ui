@@ -154,8 +154,12 @@ class FoodScholarApiService {
     return wisefoodRestApi.get<QaQuestionsResult>(`${this.basePath}/questions`)
   }
 
-  async listTips(): Promise<QaTipsResult> {
-    return wisefoodRestApi.get<QaTipsResult>(`${this.basePath}/tips`)
+  async listTips(memberId?: string | null): Promise<QaTipsResult> {
+    // member_id personalizes tips to the member's accumulated profile;
+    // without it FoodScholar serves the shared generic daily tips.
+    return wisefoodRestApi.get<QaTipsResult>(`${this.basePath}/tips`, {
+      params: memberId ? { member_id: memberId } : undefined
+    })
   }
 }
 

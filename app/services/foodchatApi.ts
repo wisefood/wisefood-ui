@@ -171,6 +171,17 @@ export interface WeeklyMealPlan {
   entries: WeeklyMealEntry[]
 }
 
+/** Latest saved plan canvases for a member across all their sessions.
+ *  FoodChat plans are versioned canvases (daily/weekly), not date-scheduled
+ *  entries — this is what the dashboard renders as "Recent Meal Plans". */
+export interface MemberCurrentPlans {
+  session_id: string | null
+  plan_type: 'daily' | 'weekly' | null
+  meal_plan: MealPlan | null
+  weekly_meal_plan: WeeklyMealPlan | null
+  cooking_for: string[]
+}
+
 export interface UnifiedChatRequest {
   content: string
   member_id: string
@@ -236,6 +247,13 @@ class FoodChatApiService {
   async getSessions(memberId: string): Promise<ChatSession[]> {
     return this.fetchWithTimeout<ChatSession[]>(
       `${this.basePath}/members/${memberId}/sessions`,
+      'GET'
+    )
+  }
+
+  async getMemberCurrentPlans(memberId: string): Promise<MemberCurrentPlans> {
+    return this.fetchWithTimeout<MemberCurrentPlans>(
+      `${this.basePath}/members/${memberId}/current-plans`,
       'GET'
     )
   }

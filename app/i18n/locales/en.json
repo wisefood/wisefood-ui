@@ -1034,9 +1034,9 @@
       "dangerZone": "Danger Zone"
     },
     "memory": {
-      "learnedInFoodChat": "Learned in FoodChat",
+      "learnedIn": "Learned in {app}",
       "forget": "Forget this",
-      "empty": "Nothing here yet — as you plan meals or ask nutrition questions in FoodChat, it will offer to remember your tastes (only with your OK).",
+      "empty": "Nothing here yet — WiseFood offers to remember tastes it picks up in your FoodChat and FoodScholar conversations (only with your OK).",
       "today": "today",
       "yesterday": "yesterday",
       "daysAgo": "{count} days ago"

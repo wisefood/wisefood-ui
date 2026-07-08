@@ -355,7 +355,7 @@
                 <div class="min-w-0">
                   <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ memoryValueLabel(item.entry) }}</p>
                   <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                    {{ t('myProfile.memory.learnedInFoodChat') }}<template v-if="formatMemoryDate(item.entry.recorded_at)"> &middot; {{ formatMemoryDate(item.entry.recorded_at) }}</template>
+                    {{ t('myProfile.memory.learnedIn', { app: memorySourceLabel(item.entry) }) }}<template v-if="formatMemoryDate(item.entry.recorded_at)"> &middot; {{ formatMemoryDate(item.entry.recorded_at) }}</template>
                   </p>
                 </div>
               </div>
@@ -926,6 +926,18 @@ const memoryItems = computed<MemoryItem[]>(() => {
   }
   return items
 })
+
+// Memories carry provenance (memory_log.source) — label by the app that
+// learned them. Entries predating the source field came from FoodChat.
+const MEMORY_SOURCE_LABELS: Record<string, string> = {
+  foodchat: 'FoodChat',
+  foodscholar: 'FoodScholar'
+}
+
+const memorySourceLabel = (entry: MemoryLogEntry): string => {
+  const source = (entry.source ?? 'foodchat').toLowerCase()
+  return MEMORY_SOURCE_LABELS[source] ?? 'FoodChat'
+}
 
 const forgettingMemoryKey = ref<string | null>(null)
 

@@ -1033,9 +1033,9 @@
       "dangerZone": "Veszélyzóna"
     },
     "memory": {
-      "learnedInFoodChat": "A FoodChatből tanulta",
+      "learnedIn": "Innen tanulta: {app}",
       "forget": "Elfelejtés",
-      "empty": "Még nincs itt semmi — ha étkezéseket tervezel vagy táplálkozási kérdéseket teszel fel a FoodChatben, felajánlja, hogy megjegyzi az ízlésed (csak a beleegyezéseddel).",
+      "empty": "Még nincs itt semmi — a WiseFood felajánlja, hogy megjegyzi az ízlésed, amit a FoodChat- és FoodScholar-beszélgetéseidből tanul (csak a beleegyezéseddel).",
       "today": "ma",
       "yesterday": "tegnap",
       "daysAgo": "{count} napja"

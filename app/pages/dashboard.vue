@@ -329,8 +329,7 @@ import { useHouseholdStore } from '@/stores/household'
 import foodscholarApi, { type QaTipsResult } from '~/services/foodscholarApi'
 import catalogApi from '~/services/catalogApi'
 import recipeApi, { type RecipeSearchResult } from '~/services/recipeApi'
-import memberMealPlansApi, { extractMealPlanFromMemberMealPlanResponse } from '~/services/memberMealPlansApi'
-import type { MealPlan, MealRecipe } from '~/services/foodchatApi'
+import foodchatApi, { type MealPlan, type MealRecipe, type MemberCurrentPlans } from '~/services/foodchatApi'
 import type { HouseholdMember } from '~/services/householdsApi'
 import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
 import { buildGuideDetailPath } from '~/utils/guidesCatalog'
@@ -551,13 +550,6 @@ const currentMemberId = computed(() => householdStore.currentMember?.id ?? null)
 const householdMembers = computed(() => householdStore.householdMembers)
 const memberMealPlansById = ref<Record<string, MealPlan | null>>({})
 
-const formatDateForApi = (date: Date): string => {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
 const mealDescriptionFromRecipe = (recipe: MealRecipe | undefined, fallback: string): string => {
   if (!recipe) return fallback
   if (recipe.title?.trim()) return recipe.title.trim()
@@ -610,18 +602,61 @@ const membersByMealType = computed<Record<'breakfast' | 'lunch' | 'dinner', Hous
   return byType
 })
 
+/**
+ * Today's meals from a member's latest FoodChat plan canvas.
+ *
+ * FoodChat plans are saved canvases (daily or weekly), not date-scheduled
+ * entries — the old per-date member meal-plan store is a leftover mechanism
+ * nothing populates anymore. A daily canvas maps directly; a weekly canvas
+ * (Day 1–7, not calendar-anchored) is treated as Monday-anchored so "today"
+ * shows the matching day's meals.
+ */
+// Weekly planner entries store action-space keys (recipe_title, ...) rather
+// than the daily-plan MealRecipe shape — normalize for shared rendering.
+const weeklyRecipeToMealRecipe = (recipe: Record<string, unknown>): MealRecipe => ({
+  recipe_id: String(recipe.recipe_id ?? ''),
+  title: String(recipe.recipe_title ?? recipe.title ?? recipe.name ?? ''),
+  ingredients: String(recipe.recipe_ingredients ?? recipe.ingredients ?? ''),
+  directions: String(recipe.recipe_directions ?? recipe.directions ?? ''),
+  nutrition: (recipe.nutrition ?? null) as MealRecipe['nutrition'],
+  image_url: (recipe.image_url ?? null) as MealRecipe['image_url']
+})
+
+const extractTodayPlan = (plans: MemberCurrentPlans): MealPlan | null => {
+  if (plans.plan_type === 'weekly' && plans.weekly_meal_plan) {
+    const jsDay = new Date().getDay() // 0=Sun .. 6=Sat
+    const planDay = jsDay === 0 ? 7 : jsDay // Day 1=Mon .. 7=Sun
+    const bySlot: Partial<Record<'breakfast' | 'lunch' | 'dinner', MealRecipe>> = {}
+    for (const entry of plans.weekly_meal_plan.entries) {
+      if (entry.day !== planDay) continue
+      if (entry.meal_type === 'breakfast' || entry.meal_type === 'lunch' || entry.meal_type === 'dinner') {
+        bySlot[entry.meal_type] = weeklyRecipeToMealRecipe(entry.recipe as Record<string, unknown>)
+      }
+    }
+    if (bySlot.breakfast || bySlot.lunch || bySlot.dinner) {
+      return {
+        id: plans.weekly_meal_plan.id,
+        created_at: plans.weekly_meal_plan.created_at,
+        breakfast: bySlot.breakfast,
+        lunch: bySlot.lunch,
+        dinner: bySlot.dinner
+      }
+    }
+  }
+  return plans.meal_plan ?? null
+}
+
 const loadHouseholdMealPlans = async () => {
   if (!householdMembers.value.length) {
     memberMealPlansById.value = {}
     return
   }
 
-  const targetDate = formatDateForApi(new Date())
   const entries = await Promise.all(
     householdMembers.value.map(async (member) => {
       try {
-        const response = await memberMealPlansApi.getMealPlan(member.id, targetDate)
-        return [member.id, extractMealPlanFromMemberMealPlanResponse(response)] as const
+        const plans = await foodchatApi.getMemberCurrentPlans(member.id)
+        return [member.id, extractTodayPlan(plans)] as const
       } catch {
         return [member.id, null] as const
       }
@@ -810,7 +845,9 @@ const resolveGuideEvidencePaths = async (slides: InsightSlide[]): Promise<Insigh
 
 const loadFoodScholarInsights = async () => {
   try {
-    const response = await foodscholarApi.listTips()
+    // Personalized to the active member's accumulated profile when one
+    // exists; FoodScholar falls back to generic daily tips otherwise.
+    const response = await foodscholarApi.listTips(currentMemberId.value)
     const slides = normalizeInsightSlides(response)
     insightSlides.value = await resolveGuideEvidencePaths(slides)
   } catch (err) {
@@ -821,6 +858,11 @@ const loadFoodScholarInsights = async () => {
     restartInsightRotation()
   }
 }
+
+// Tips are member-contextual — refresh when the active member switches.
+watch(currentMemberId, () => {
+  void loadFoodScholarInsights()
+})
 
 onMounted(() => {
   const observerOptions = {
