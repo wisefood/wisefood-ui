@@ -443,11 +443,19 @@
               <span>{{ t('recipeWrangler.compare') }} ({{ recipeStore.compareCount }})</span>
             </button>
             <button
-              v-if="recipeStore.favorites.length > 0"
-              @click="() => {}"
-              class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-sm"
+              v-if="recipeStore.favorites.length > 0 || showFavoritesView"
+              @click="toggleFavoritesView"
+              :class="[
+                'flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors text-sm',
+                showFavoritesView
+                  ? 'bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300'
+                  : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700'
+              ]"
             >
-              <UIcon name="i-lucide-heart" class="w-4 h-4 text-red-500" />
+              <UIcon
+                :name="favoritesViewLoading ? 'i-lucide-loader-2' : 'i-lucide-heart'"
+                :class="['w-4 h-4 text-red-500', favoritesViewLoading ? 'animate-spin' : '']"
+              />
               <span class="hidden sm:inline">{{ recipeStore.favorites.length }}</span>
             </button>
           </div>
@@ -492,7 +500,7 @@
 
         <!-- Empty State -->
         <div
-          v-else-if="hasSearchAttempted && !hasRecipes"
+          v-else-if="!showFavoritesView && hasSearchAttempted && !hasRecipes"
           class="text-center py-12"
         >
           <UIcon name="i-lucide-search-x" class="w-16 h-16 text-zinc-400 mx-auto mb-4" />
@@ -506,11 +514,11 @@
 
         <!-- Recipe Cards Grid -->
         <div
-          v-else-if="hasSearchAttempted"
+          v-else-if="showFavoritesView || hasSearchAttempted"
           class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
         >
           <div
-            v-for="(recipe, index) in paginatedRecipes"
+            v-for="(recipe, index) in displayedRecipes"
             :key="recipe.recipe_id || recipe.id || `recipe-${index}`"
             :class="[
               'rounded-xl transition-all',
@@ -678,6 +686,9 @@ const searchMode = ref<'nl' | 'params'>('nl')
 const lastParamSearch = ref<RecipeParamSearchParams | null>(null)
 const activeTab = ref<'search' | 'analyze'>('search')
 const hasSearchAttempted = ref(false)
+const showFavoritesView = ref(false)
+const favoriteRecipes = ref<RecipeSearchResult[]>([])
+const favoritesViewLoading = ref(false)
 const hasUserTriggeredSearch = ref(false)
 const analysisInput = ref('')
 const ANALYSIS_REGIONS = ['IE', 'HU', 'US'] as const
@@ -709,6 +720,7 @@ const categories = computed(() => [
 const recipesCount = computed(() => recipes.value?.length || 0)
 
 const totalResultsDisplay = computed(() => {
+  if (showFavoritesView.value) return favoriteRecipes.value.length
   if (searchMode.value === 'params' && paramSearchTotal.value > 0) return paramSearchTotal.value
   return recipesCount.value
 })
@@ -730,6 +742,12 @@ const paginatedRecipes = computed(() => {
   return recipes.value.slice(start, end)
 })
 
+// What the results grid renders: the favorites view when toggled, else the
+// current page of search results.
+const displayedRecipes = computed(() =>
+  showFavoritesView.value ? favoriteRecipes.value : paginatedRecipes.value
+)
+
 const visiblePages = computed(() => {
   if (totalPages.value === 0) return []
   const window = 2
@@ -741,6 +759,7 @@ const visiblePages = computed(() => {
 })
 
 const showPagination = computed(() => {
+  if (showFavoritesView.value) return false
   if (!hasRecipes.value) return false
   return totalPages.value > 1 || (searchMode.value === 'params' && (currentPage.value > 1 || hasMore.value))
 })
@@ -925,8 +944,8 @@ const handleSearchArrowDown = () => {
     return
   }
 
-  if (paginatedRecipes.value.length > 0) {
-    activeRecipeResultIndex.value = activeRecipeResultIndex.value < paginatedRecipes.value.length - 1
+  if (displayedRecipes.value.length > 0) {
+    activeRecipeResultIndex.value = activeRecipeResultIndex.value < displayedRecipes.value.length - 1
       ? activeRecipeResultIndex.value + 1
       : 0
   }
@@ -940,10 +959,10 @@ const handleSearchArrowUp = () => {
     return
   }
 
-  if (paginatedRecipes.value.length > 0) {
+  if (displayedRecipes.value.length > 0) {
     activeRecipeResultIndex.value = activeRecipeResultIndex.value > 0
       ? activeRecipeResultIndex.value - 1
-      : paginatedRecipes.value.length - 1
+      : displayedRecipes.value.length - 1
   }
 }
 
@@ -959,7 +978,7 @@ const handleSearchEnter = () => {
     }
   }
 
-  const nextRecipe = paginatedRecipes.value[activeRecipeResultIndex.value]
+  const nextRecipe = displayedRecipes.value[activeRecipeResultIndex.value]
   if (nextRecipe) {
     void openRecipeResult(nextRecipe)
     return
@@ -1074,6 +1093,53 @@ const resetPagination = () => {
   currentPage.value = 1
   activeRecipeResultIndex.value = -1
 }
+
+/**
+ * Load the favorited recipes as cards via the batch details endpoint,
+ * preserving the store's favorites order.
+ */
+const loadFavoriteRecipes = async () => {
+  favoritesViewLoading.value = true
+  try {
+    const detailsById = await recipeApi.getRecipeDetailsBatch(recipeStore.favorites)
+    favoriteRecipes.value = recipeStore.favorites
+      .map(recipeId => detailsById[recipeId])
+      .filter((card): card is NonNullable<typeof card> => Boolean(card))
+      .map(card => ({
+        recipe_id: card.recipe_id,
+        title: card.title || t('recipeWrangler.recipe.untitled'),
+        image_url: card.image_url ?? null,
+        duration: card.duration ?? null,
+        dish_types: card.dish_types ?? []
+      }))
+  } catch (e) {
+    console.error('[RecipeWrangler] Failed to load favorite recipes:', e)
+    favoriteRecipes.value = []
+  } finally {
+    favoritesViewLoading.value = false
+  }
+}
+
+/**
+ * Toggle between search results and the favorites view
+ */
+const toggleFavoritesView = async () => {
+  showFavoritesView.value = !showFavoritesView.value
+  activeRecipeResultIndex.value = -1
+  if (showFavoritesView.value) {
+    await loadFavoriteRecipes()
+  }
+}
+
+// Un-favoriting from within the favorites view removes the card immediately;
+// leaving the view with zero favorites falls back to the results grid.
+watch(() => [...recipeStore.favorites], (ids) => {
+  if (!showFavoritesView.value) return
+  favoriteRecipes.value = favoriteRecipes.value.filter(
+    recipe => recipe.recipe_id && ids.includes(recipe.recipe_id)
+  )
+  if (ids.length === 0) showFavoritesView.value = false
+})
 
 /**
  * Change page — for param_search mode re-fetches from server with offset
@@ -1212,7 +1278,7 @@ const clearCompareSelection = () => {
   recipeStore.clearCompareList()
 }
 
-watch(() => paginatedRecipes.value.length, (nextLength) => {
+watch(() => displayedRecipes.value.length, (nextLength) => {
   if (nextLength === 0) {
     activeRecipeResultIndex.value = -1
     return

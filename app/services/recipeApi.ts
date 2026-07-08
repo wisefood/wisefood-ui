@@ -114,6 +114,22 @@ export interface RecipeParamSearchParams {
   include_facets?: boolean
 }
 
+/** Slim recipe card returned by the batch `/details` endpoint. */
+export interface RecipeCardDetails {
+  recipe_id: string
+  title?: string | null
+  image_url?: string | null
+  duration?: number | null
+  tags?: string[]
+  dish_types?: string[]
+  allergens?: string[]
+  kcal_per_serving?: number | null
+  protein_g_per_serving?: number | null
+  carbs_g_per_serving?: number | null
+  fat_g_per_serving?: number | null
+  nutri_score_label?: string | null
+}
+
 export interface CreateRecipeRequest {
   title: string
   ingredients: string[]
@@ -498,6 +514,37 @@ class RecipeApiService {
       return { results, facets: {}, total: results.length }
     } catch (error) {
       throw this.handleError(error, 'Failed to search recipes')
+    }
+  }
+
+  /**
+   * Batch-fetch slim recipe cards by id via `/details`.
+   * The endpoint accepts at most 30 ids per call, so larger sets are chunked.
+   * Unknown ids are simply absent from the returned map.
+   */
+  async getRecipeDetailsBatch(recipeIds: string[], region?: string): Promise<Record<string, RecipeCardDetails>> {
+    const ids = [...new Set(recipeIds.filter(Boolean))]
+    if (ids.length === 0) return {}
+
+    const transport = this.resolveTransport()
+    const chunks: string[][] = []
+    for (let i = 0; i < ids.length; i += 30) chunks.push(ids.slice(i, i + 30))
+
+    try {
+      const responses = await Promise.all(chunks.map(chunk =>
+        this.fetchWithTimeout<{ results?: Record<string, RecipeCardDetails> }>(
+          `${this.getRecipeBasePath(transport)}/details`,
+          'POST',
+          { recipe_ids: chunk, ...(region ? { region } : {}) },
+          SEARCH_TIMEOUT,
+          transport
+        )
+      ))
+      const merged: Record<string, RecipeCardDetails> = {}
+      for (const response of responses) Object.assign(merged, response?.results ?? {})
+      return merged
+    } catch (error) {
+      throw this.handleError(error, 'Failed to fetch recipe details')
     }
   }
 

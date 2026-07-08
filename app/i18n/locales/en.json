@@ -424,7 +424,8 @@
       "addToComparison": "Add to comparison",
       "removeFromComparison": "Remove from comparison",
       "addToFavorites": "Add to favorites",
-      "removeFromFavorites": "Remove from favorites"
+      "removeFromFavorites": "Remove from favorites",
+      "untitled": "Untitled recipe"
     },
     "categories": {
       "title": "Browse by Category",
