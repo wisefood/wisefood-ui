@@ -3169,11 +3169,11 @@ onUnmounted(() => {
 }
 
 /* Dark mode: deeper brand tones, lower lift, so it stays subtle on dark. */
-:global(.dark) .grainient-intro {
+:global(.dark .grainient-intro) {
   opacity: 0.4;
 }
 
-:global(.dark) .grainient-intro__mesh {
+:global(.dark .grainient-intro__mesh) {
   background:
     radial-gradient(42% 48% at 36% 42%, var(--color-brand-600, #aa2944) 0%, transparent 64%),
     radial-gradient(38% 44% at 60% 36%, var(--color-brandg-700, #646d1a) 0%, transparent 66%),
@@ -3192,7 +3192,7 @@ onUnmounted(() => {
   mix-blend-mode: overlay;
 }
 
-:global(.dark) .grainient-intro__grain {
+:global(.dark .grainient-intro__grain) {
   opacity: 0.26;
 }
 
