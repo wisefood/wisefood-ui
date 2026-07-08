@@ -91,6 +91,28 @@
         </div>
 
         <div class="flex shrink-0 items-center gap-2">
+          <UBadge
+            v-if="recipe && isRecipeDisabled"
+            color="error"
+            variant="soft"
+            size="sm"
+            :title="recipe.disabled_reason ? `Reason: ${recipe.disabled_reason}` : undefined"
+          >
+            Disabled{{ recipe.disabled_reason ? ` — ${recipe.disabled_reason}` : '' }}
+          </UBadge>
+          <UButton
+            v-if="recipe"
+            type="button"
+            :color="isRecipeDisabled ? 'success' : 'error'"
+            variant="outline"
+            :icon="isRecipeDisabled ? 'i-lucide-rotate-ccw' : 'i-lucide-eye-off'"
+            size="sm"
+            :loading="statusPatchPending"
+            :disabled="statusPatchPending"
+            @click="isRecipeDisabled ? enableRecipe() : (disableModalOpen = true)"
+          >
+            {{ isRecipeDisabled ? 'Enable Recipe' : 'Disable Recipe' }}
+          </UButton>
           <UButton
             v-if="recipe"
             type="button"
@@ -521,6 +543,57 @@
         </template>
       </UPageBody>
     </UPage>
+
+    <UModal v-model:open="disableModalOpen">
+      <template #content>
+        <UCard>
+          <template #header>
+            <div class="flex items-center gap-2">
+              <UIcon name="i-lucide-eye-off" class="h-5 w-5 text-rose-500" />
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                Disable recipe
+              </h3>
+            </div>
+          </template>
+
+          <p class="text-sm text-gray-600 dark:text-gray-300">
+            <span class="font-medium text-gray-900 dark:text-white">{{ recipe?.title }}</span>
+            will stop appearing in search, meal plans, and every consumer app.
+            The recipe data is kept and it can be re-enabled at any time.
+          </p>
+
+          <UFormField label="Reason (optional)" class="mt-4">
+            <UInput
+              v-model="disableReasonInput"
+              placeholder="e.g. duplicate, quality issue, wrong nutrition"
+              maxlength="500"
+              class="w-full"
+            />
+          </UFormField>
+
+          <template #footer>
+            <div class="flex justify-end gap-2">
+              <UButton
+                color="neutral"
+                variant="ghost"
+                :disabled="statusPatchPending"
+                @click="disableModalOpen = false"
+              >
+                Cancel
+              </UButton>
+              <UButton
+                color="error"
+                icon="i-lucide-eye-off"
+                :loading="statusPatchPending"
+                @click="disableRecipe"
+              >
+                Disable recipe
+              </UButton>
+            </div>
+          </template>
+        </UCard>
+      </template>
+    </UModal>
   </div>
 </template>
 
@@ -576,6 +649,13 @@ const expertRecipeInput = ref(false)
 const showExpertRecipeReminder = ref(false)
 const expertRecipeReminderDismissed = ref(false)
 const expertPatchPending = ref(false)
+const statusPatchPending = ref(false)
+const disableModalOpen = ref(false)
+const disableReasonInput = ref('')
+
+const isRecipeDisabled = computed(() =>
+  String(recipe.value?.status || 'active').toLowerCase() === 'disabled'
+)
 
 const recipeId = computed(() => {
   const raw = String(route.params.id || '')
@@ -828,6 +908,58 @@ async function toggleExpertRecipe() {
   }
 }
 
+async function disableRecipe() {
+  if (!recipe.value) return
+  statusPatchPending.value = true
+  try {
+    await recipeApi.disableManagedRecipe(recipe.value.recipe_id, disableReasonInput.value || undefined)
+    recipe.value.status = 'disabled'
+    recipe.value.disabled_reason = disableReasonInput.value.trim() || null
+    disableModalOpen.value = false
+    disableReasonInput.value = ''
+    toast.add({
+      title: 'Recipe disabled',
+      description: 'It is no longer served in search, meal plans, or consumer apps.',
+      color: 'success',
+      icon: 'i-lucide-eye-off'
+    })
+  } catch (error) {
+    toast.add({
+      title: 'Failed to disable recipe',
+      description: resolveConsoleRecipeErrorMessage(error, 'Please try again.'),
+      color: 'error',
+      icon: 'i-lucide-alert-circle'
+    })
+  } finally {
+    statusPatchPending.value = false
+  }
+}
+
+async function enableRecipe() {
+  if (!recipe.value) return
+  statusPatchPending.value = true
+  try {
+    await recipeApi.enableManagedRecipe(recipe.value.recipe_id)
+    recipe.value.status = 'active'
+    recipe.value.disabled_reason = null
+    toast.add({
+      title: 'Recipe enabled',
+      description: 'The recipe is served again everywhere.',
+      color: 'success',
+      icon: 'i-lucide-rotate-ccw'
+    })
+  } catch (error) {
+    toast.add({
+      title: 'Failed to enable recipe',
+      description: resolveConsoleRecipeErrorMessage(error, 'Please try again.'),
+      color: 'error',
+      icon: 'i-lucide-alert-circle'
+    })
+  } finally {
+    statusPatchPending.value = false
+  }
+}
+
 function resetWorkingCopy() {
   editableInstructions.value = recipe.value?.instructions?.length
     ? [...recipe.value.instructions]
@@ -856,7 +988,9 @@ async function loadRecipe() {
   loadError.value = null
 
   try {
-    const managedRecipe = await recipeApi.getManagedRecipe(recipeId.value)
+    // include_disabled: the console must open soft-deleted recipes so they
+    // can be inspected and re-enabled.
+    const managedRecipe = await recipeApi.getManagedRecipe(recipeId.value, { include_disabled: true })
     recipe.value = managedRecipe
     resetWorkingCopy()
   } catch (error) {

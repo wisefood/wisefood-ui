@@ -224,7 +224,7 @@
                   </div>
                 </div>
 
-                <!-- Sort By -->
+                <!-- Sort By + Visibility -->
                 <div>
                   <h3 class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">
                     <UIcon name="i-lucide-arrow-up-down" class="h-3.5 w-3.5 text-blue-500" />
@@ -247,6 +247,24 @@
                       {{ option.label }}
                     </button>
                   </div>
+
+                  <h3 class="mb-2 mt-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">
+                    <UIcon name="i-lucide-eye-off" class="h-3.5 w-3.5 text-rose-500" />
+                    Visibility
+                  </h3>
+                  <button
+                    type="button"
+                    :class="[
+                      'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition-all duration-200',
+                      filters.includeDisabled
+                        ? 'bg-rose-100 text-rose-700 ring-2 ring-rose-400 dark:bg-rose-900/30 dark:text-rose-400 dark:ring-rose-600'
+                        : 'bg-white text-gray-700 hover:bg-gray-100 dark:bg-zinc-800 dark:text-gray-300 dark:hover:bg-zinc-700'
+                    ]"
+                    @click="toggleIncludeDisabled"
+                  >
+                    <UIcon name="i-lucide-eye-off" class="h-3 w-3" />
+                    Include disabled
+                  </button>
                 </div>
               </div>
             </div>
@@ -308,6 +326,16 @@
                 </UBadge>
               </template>
 
+              <template #status-cell="{ row }">
+                <UBadge
+                  :color="isRecipeDisabled(row.original) ? 'error' : 'success'"
+                  variant="soft"
+                  size="sm"
+                >
+                  {{ isRecipeDisabled(row.original) ? 'Disabled' : 'Active' }}
+                </UBadge>
+              </template>
+
               <template #actions-cell="{ row }">
                 <div class="flex justify-end gap-2">
                   <UBadge
@@ -317,6 +345,30 @@
                   >
                     Selected
                   </UBadge>
+                  <UButton
+                    v-if="isRecipeDisabled(row.original)"
+                    color="success"
+                    variant="ghost"
+                    size="xs"
+                    icon="i-lucide-rotate-ccw"
+                    :loading="statusPendingRecipeId === resolveRecipeIdentifier(row.original)"
+                    :disabled="!resolveRecipeIdentifier(row.original)"
+                    @click.stop="enableRecipeRow(row.original)"
+                  >
+                    Enable
+                  </UButton>
+                  <UButton
+                    v-else
+                    color="error"
+                    variant="ghost"
+                    size="xs"
+                    icon="i-lucide-eye-off"
+                    :loading="statusPendingRecipeId === resolveRecipeIdentifier(row.original)"
+                    :disabled="!resolveRecipeIdentifier(row.original)"
+                    @click.stop="openDisableConfirm(row.original)"
+                  >
+                    Disable
+                  </UButton>
                   <UButton
                     :color="isActiveRecipeRow(row.original) ? 'primary' : 'neutral'"
                     variant="ghost"
@@ -408,6 +460,57 @@
         </UCard>
       </UPageBody>
     </UPage>
+
+    <UModal v-model:open="disableConfirmOpen">
+      <template #content>
+        <UCard>
+          <template #header>
+            <div class="flex items-center gap-2">
+              <UIcon name="i-lucide-eye-off" class="h-5 w-5 text-rose-500" />
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                Disable recipe
+              </h3>
+            </div>
+          </template>
+
+          <p class="text-sm text-gray-600 dark:text-gray-300">
+            <span class="font-medium text-gray-900 dark:text-white">{{ disableTarget?.title }}</span>
+            will stop appearing in search, meal plans, and every consumer app.
+            The recipe data is kept and it can be re-enabled at any time.
+          </p>
+
+          <UFormField label="Reason (optional)" class="mt-4">
+            <UInput
+              v-model="disableReason"
+              placeholder="e.g. duplicate, quality issue, wrong nutrition"
+              maxlength="500"
+              class="w-full"
+            />
+          </UFormField>
+
+          <template #footer>
+            <div class="flex justify-end gap-2">
+              <UButton
+                color="neutral"
+                variant="ghost"
+                :disabled="disablePending"
+                @click="disableConfirmOpen = false"
+              >
+                Cancel
+              </UButton>
+              <UButton
+                color="error"
+                icon="i-lucide-eye-off"
+                :loading="disablePending"
+                @click="confirmDisableRecipe"
+              >
+                Disable recipe
+              </UButton>
+            </div>
+          </template>
+        </UCard>
+      </template>
+    </UModal>
 
     <UModal
       v-model:open="createModalOpen"
@@ -1058,7 +1161,8 @@ const filters = reactive({
   excludeAllergens: [] as string[],
   sources: [] as RecipeSource[],
   dishTypes: [] as RecipeDishType[],
-  sortBy: null as RecipeParamSortBy | null
+  sortBy: null as RecipeParamSortBy | null,
+  includeDisabled: false
 })
 
 const showFacetPanel = ref(true)
@@ -1144,8 +1248,14 @@ const activeFacetCount = computed(() =>
   filters.excludeAllergens.length +
   filters.sources.length +
   filters.dishTypes.length +
-  (filters.sortBy ? 1 : 0)
+  (filters.sortBy ? 1 : 0) +
+  (filters.includeDisabled ? 1 : 0)
 )
+
+function toggleIncludeDisabled() {
+  filters.includeDisabled = !filters.includeDisabled
+  void applyFilters()
+}
 
 const itemsPerPage = 25
 const currentPage = ref(1)
@@ -1199,6 +1309,7 @@ const recipeColumns = [
   { accessorKey: 'duration', header: 'Duration' },
   { accessorKey: 'serves', header: 'Serves' },
   { accessorKey: 'nutri_score', header: 'Nutri-Score' },
+  { accessorKey: 'status', header: 'Status', enableSorting: false },
   { id: 'actions', header: '', enableSorting: false }
 ]
 
@@ -1781,7 +1892,8 @@ async function loadRecipes(page = currentPage.value) {
         exclude_allergens: filters.excludeAllergens.length ? [...filters.excludeAllergens] : undefined,
         sources: filters.sources.length ? [...filters.sources] : undefined,
         dish_types: filters.dishTypes.length ? [...filters.dishTypes] : undefined,
-        sort_by: filters.sortBy ?? undefined
+        sort_by: filters.sortBy ?? undefined,
+        include_disabled: filters.includeDisabled || undefined
       }
     )
     recipes.value = results
@@ -1809,6 +1921,82 @@ async function goToPage(page: number) {
   await loadRecipes(page)
 }
 
+// --- Recipe status (disable / enable) -------------------------------------
+
+const statusPendingRecipeId = ref<string | null>(null)
+const disableConfirmOpen = ref(false)
+const disablePending = ref(false)
+const disableReason = ref('')
+const disableTarget = ref<RecipeSearchResult | null>(null)
+
+function isRecipeDisabled(recipe: RecipeSearchResult): boolean {
+  return String(recipe.status || 'active').toLowerCase() === 'disabled'
+}
+
+function openDisableConfirm(recipe: RecipeSearchResult) {
+  disableTarget.value = recipe
+  disableReason.value = ''
+  disableConfirmOpen.value = true
+}
+
+async function confirmDisableRecipe() {
+  const target = disableTarget.value
+  const recipeId = target ? resolveRecipeIdentifier(target) : null
+  if (!target || !recipeId) return
+
+  disablePending.value = true
+  statusPendingRecipeId.value = recipeId
+  try {
+    await recipeApi.disableManagedRecipe(recipeId, disableReason.value || undefined)
+    target.status = 'disabled'
+    disableConfirmOpen.value = false
+    toast.add({
+      title: 'Recipe disabled',
+      description: `"${target.title}" is no longer served anywhere.`,
+      color: 'success',
+      icon: 'i-lucide-eye-off'
+    })
+    // Disabled rows drop out of the default (active-only) listing.
+    if (!filters.includeDisabled) await loadRecipes()
+  } catch (error) {
+    toast.add({
+      title: 'Failed to disable recipe',
+      description: resolveConsoleRecipeErrorMessage(error, 'Please try again.'),
+      color: 'error',
+      icon: 'i-lucide-alert-circle'
+    })
+  } finally {
+    disablePending.value = false
+    statusPendingRecipeId.value = null
+  }
+}
+
+async function enableRecipeRow(recipe: RecipeSearchResult) {
+  const recipeId = resolveRecipeIdentifier(recipe)
+  if (!recipeId) return
+
+  statusPendingRecipeId.value = recipeId
+  try {
+    await recipeApi.enableManagedRecipe(recipeId)
+    recipe.status = 'active'
+    toast.add({
+      title: 'Recipe enabled',
+      description: `"${recipe.title}" is served again.`,
+      color: 'success',
+      icon: 'i-lucide-rotate-ccw'
+    })
+  } catch (error) {
+    toast.add({
+      title: 'Failed to enable recipe',
+      description: resolveConsoleRecipeErrorMessage(error, 'Please try again.'),
+      color: 'error',
+      icon: 'i-lucide-alert-circle'
+    })
+  } finally {
+    statusPendingRecipeId.value = null
+  }
+}
+
 function refreshRecipes() {
   clearAutocomplete()
   return loadRecipes()
@@ -1826,6 +2014,7 @@ function resetFilters() {
   filters.sources = []
   filters.dishTypes = []
   filters.sortBy = null
+  filters.includeDisabled = false
   currentPage.value = 1
   clearAutocomplete()
   return loadRecipes(1)
