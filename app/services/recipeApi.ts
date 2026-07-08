@@ -39,12 +39,16 @@ export interface RecipeNutritionProfilingDetail {
   similarity?: number | string | null
 }
 
+export type RecipeStatus = 'active' | 'disabled'
+
 export interface Recipe {
   recipe_id: string
   title: string
   source?: string | null
   source_id?: string | null
   expert_recipe?: boolean | null
+  status?: RecipeStatus | string | null
+  disabled_reason?: string | null
   region?: string | null
   image_url: string | null
   tags?: Array<string | null> | null
@@ -86,6 +90,7 @@ export interface RecipeSearchResult {
   nutri_score_color?: string | null
   sust_score?: number | null
   expert_recipe?: boolean | null
+  status?: RecipeStatus | string | null
   dish_types?: string[] | null
 }
 
@@ -112,6 +117,17 @@ export interface RecipeParamSearchParams {
   offset?: number
   sort_by?: RecipeParamSortBy
   include_facets?: boolean
+  /** Console/admin only — surfaces disabled (soft-deleted) recipes. */
+  include_disabled?: boolean
+}
+
+export interface RecipeStatusResult {
+  status: RecipeStatus
+  requested: number
+  updated: number
+  recipe_ids: string[]
+  es_sync: Record<string, Record<string, number>>
+  message: string
 }
 
 /** Slim recipe card returned by the batch `/details` endpoint. */
@@ -173,6 +189,8 @@ export interface RecipeCollectionSuggestion {
 export interface GetRecipeOptions {
   region?: 'US' | 'IE' | 'HU'
   slim?: boolean
+  /** Console/admin only — resolve the recipe even if disabled. */
+  include_disabled?: boolean
 }
 
 export interface UploadedRecipeImage {
@@ -357,6 +375,7 @@ class RecipeApiService {
     const params = new URLSearchParams()
     if (options?.region) params.set('region', options.region)
     if (options?.slim === true) params.set('slim', 'true')
+    if (options?.include_disabled === true) params.set('include_disabled', 'true')
     const qs = params.toString()
     return `${this.restBasePath}/${encodeURIComponent(recipeId)}${qs ? `?${qs}` : ''}`
   }
@@ -474,7 +493,7 @@ class RecipeApiService {
     query: string,
     limit: number = 25,
     offset: number = 0,
-    filters: Pick<RecipeParamSearchParams, 'exclude_allergens' | 'sources' | 'dish_types' | 'sort_by'> = {}
+    filters: Pick<RecipeParamSearchParams, 'exclude_allergens' | 'sources' | 'dish_types' | 'sort_by' | 'include_disabled'> = {}
   ): Promise<RecipeParamSearchResult> {
     const safeLimit = Math.max(1, Math.trunc(limit || 25))
     const safeOffset = Math.max(0, Math.trunc(offset || 0))
@@ -485,6 +504,7 @@ class RecipeApiService {
     if (filters.sources?.length) filterPayload.sources = filters.sources
     if (filters.dish_types?.length) filterPayload.dish_types = filters.dish_types
     if (filters.sort_by) filterPayload.sort_by = filters.sort_by
+    if (filters.include_disabled) filterPayload.include_disabled = true
 
     try {
       if (!normalizedQuery) {
@@ -765,9 +785,79 @@ class RecipeApiService {
         DEFAULT_TIMEOUT,
         'wisefood-rest'
       )
-      return await this.getManagedRecipe(recipeId)
+      // Console flow: the refetch must also resolve disabled recipes.
+      return await this.getManagedRecipe(recipeId, { include_disabled: true })
     } catch (error) {
       throw this.handleError(error, 'Failed to update recipe')
+    }
+  }
+
+  /**
+   * Disable (soft-delete) a recipe so it stops being served everywhere.
+   * Reversible via enableManagedRecipe. Admin/expert only.
+   */
+  async disableManagedRecipe(recipeId: string, reason?: string): Promise<RecipeStatusResult> {
+    try {
+      return await this.fetchWithTimeout<RecipeStatusResult>(
+        `${this.restBasePath}/${encodeURIComponent(recipeId)}/disable`,
+        'POST',
+        { reason: reason?.trim() || null },
+        DEFAULT_TIMEOUT,
+        'wisefood-rest'
+      )
+    } catch (error) {
+      throw this.handleError(error, 'Failed to disable recipe')
+    }
+  }
+
+  /**
+   * Re-enable a previously disabled recipe. Admin/expert only.
+   */
+  async enableManagedRecipe(recipeId: string): Promise<RecipeStatusResult> {
+    try {
+      return await this.fetchWithTimeout<RecipeStatusResult>(
+        `${this.restBasePath}/${encodeURIComponent(recipeId)}/enable`,
+        'POST',
+        {},
+        DEFAULT_TIMEOUT,
+        'wisefood-rest'
+      )
+    } catch (error) {
+      throw this.handleError(error, 'Failed to enable recipe')
+    }
+  }
+
+  /**
+   * Bulk disable recipes by explicit IDs. Admin/expert only.
+   */
+  async disableManagedRecipes(recipeIds: string[], reason?: string): Promise<RecipeStatusResult> {
+    try {
+      return await this.fetchWithTimeout<RecipeStatusResult>(
+        `${this.restBasePath}/disable`,
+        'POST',
+        { recipe_ids: recipeIds, reason: reason?.trim() || null },
+        SEARCH_TIMEOUT,
+        'wisefood-rest'
+      )
+    } catch (error) {
+      throw this.handleError(error, 'Failed to disable recipes')
+    }
+  }
+
+  /**
+   * Bulk re-enable recipes by explicit IDs. Admin/expert only.
+   */
+  async enableManagedRecipes(recipeIds: string[]): Promise<RecipeStatusResult> {
+    try {
+      return await this.fetchWithTimeout<RecipeStatusResult>(
+        `${this.restBasePath}/enable`,
+        'POST',
+        { recipe_ids: recipeIds },
+        SEARCH_TIMEOUT,
+        'wisefood-rest'
+      )
+    } catch (error) {
+      throw this.handleError(error, 'Failed to enable recipes')
     }
   }
 
