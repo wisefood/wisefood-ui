@@ -947,9 +947,16 @@ class RecipeApiService {
       if (!response.ok) {
         let errorData: unknown
         try {
-          errorData = await response.json()
+          // Read the body once as text, then attempt JSON — calling .text()
+          // after a failed .json() throws "body stream already read".
+          const rawBody = await response.text()
+          try {
+            errorData = JSON.parse(rawBody)
+          } catch {
+            errorData = rawBody
+          }
         } catch {
-          errorData = await response.text()
+          errorData = null
         }
 
         if (response.status === 401) {
@@ -1035,9 +1042,16 @@ class RecipeApiService {
       if (!response.ok) {
         let errorData: unknown
         try {
-          errorData = await response.json()
+          // Read the body once as text, then attempt JSON — calling .text()
+          // after a failed .json() throws "body stream already read".
+          const rawBody = await response.text()
+          try {
+            errorData = JSON.parse(rawBody)
+          } catch {
+            errorData = rawBody
+          }
         } catch {
-          errorData = await response.text()
+          errorData = null
         }
 
         // Handle 401 authentication errors (after retry attempt above)
