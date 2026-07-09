@@ -7,6 +7,7 @@ import { getRecipeWranglerMode, getWisefoodApiUrl, getWisefoodRestApiUrl } from 
 const DEFAULT_TIMEOUT = 30000 // 30 seconds
 const SEARCH_TIMEOUT = 60000 // 60 seconds for search operations (can be slow)
 const PROFILE_TIMEOUT = 120000 // 120 seconds for profiling pipeline
+const BULK_STATUS_TIMEOUT = 300000 // 5 minutes — by-query disable can touch large ID sets
 
 // ============================================================================
 // Type Definitions - Based on API Response Schema
@@ -858,6 +859,28 @@ class RecipeApiService {
       )
     } catch (error) {
       throw this.handleError(error, 'Failed to enable recipes')
+    }
+  }
+
+  /**
+   * Bulk disable every recipe matching the given param_search filters.
+   * The backend refuses an unconstrained query, so pass at least one filter.
+   * Admin/expert only.
+   */
+  async disableManagedRecipesByQuery(
+    filters: Pick<RecipeParamSearchParams, 'include_ingredients' | 'exclude_ingredients' | 'exclude_allergens' | 'diet_tags' | 'sources' | 'dish_types' | 'max_duration_minutes'>,
+    reason?: string
+  ): Promise<RecipeStatusResult> {
+    try {
+      return await this.fetchWithTimeout<RecipeStatusResult>(
+        `${this.restBasePath}/disable-by-query`,
+        'POST',
+        { ...filters, reason: reason?.trim() || null },
+        BULK_STATUS_TIMEOUT,
+        'wisefood-rest'
+      )
+    } catch (error) {
+      throw this.handleError(error, 'Failed to disable matching recipes')
     }
   }
 

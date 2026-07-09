@@ -279,6 +279,66 @@
             class="mx-5 mt-5 sm:mx-6"
           />
 
+          <div
+            v-if="selectedRecipeIds.length > 0 || canDisableByQuery"
+            class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200/70 bg-gray-50/60 px-5 py-2.5 dark:border-white/10 dark:bg-white/5 sm:px-6"
+          >
+            <p class="text-sm text-gray-600 dark:text-gray-300">
+              <template v-if="selectedRecipeIds.length > 0">
+                <span class="font-semibold text-gray-900 dark:text-white">{{ selectedRecipeIds.length }}</span>
+                recipe{{ selectedRecipeIds.length === 1 ? '' : 's' }} selected
+              </template>
+              <template v-else>
+                Bulk actions apply to every recipe matching the current filters.
+              </template>
+            </p>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <template v-if="selectedRecipeIds.length > 0">
+                <UButton
+                  color="error"
+                  variant="soft"
+                  size="xs"
+                  icon="i-lucide-eye-off"
+                  :loading="bulkStatusPending"
+                  @click="openSelectedDisableConfirm"
+                >
+                  Disable selected
+                </UButton>
+                <UButton
+                  v-if="filters.includeDisabled"
+                  color="success"
+                  variant="soft"
+                  size="xs"
+                  icon="i-lucide-rotate-ccw"
+                  :loading="bulkStatusPending"
+                  @click="enableSelectedRecipes"
+                >
+                  Enable selected
+                </UButton>
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  @click="clearRowSelection"
+                >
+                  Clear
+                </UButton>
+              </template>
+              <UButton
+                v-if="canDisableByQuery"
+                color="error"
+                variant="outline"
+                size="xs"
+                icon="i-lucide-filter-x"
+                :loading="bulkStatusPending"
+                @click="openQueryDisableConfirm"
+              >
+                Disable all {{ totalCount }} matching
+              </UButton>
+            </div>
+          </div>
+
           <div class="overflow-x-auto">
             <UTable
               :data="recipes"
@@ -289,6 +349,28 @@
               :ui="recipeTableUi"
               class="min-h-[28rem] min-w-[52rem]"
             >
+              <template #select-header>
+                <div @click.stop>
+                  <UCheckbox
+                    :model-value="allPageRowsSelected"
+                    :disabled="pageRecipeIds.length === 0"
+                    aria-label="Select all recipes on this page"
+                    @update:model-value="toggleSelectAllPage"
+                  />
+                </div>
+              </template>
+
+              <template #select-cell="{ row }">
+                <div @click.stop>
+                  <UCheckbox
+                    :model-value="isRowSelected(row.original)"
+                    :disabled="!resolveRecipeIdentifier(row.original)"
+                    :aria-label="`Select ${row.original.title}`"
+                    @update:model-value="toggleRowSelected(row.original)"
+                  />
+                </div>
+              </template>
+
               <template #title-cell="{ row }">
                 <div
                   class="w-[30rem] max-w-[30rem] rounded-md px-1.5 py-0.5 transition-colors"
@@ -468,16 +550,25 @@
             <div class="flex items-center gap-2">
               <UIcon name="i-lucide-eye-off" class="h-5 w-5 text-rose-500" />
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                Disable recipe
+                {{ disableMode === 'single' ? 'Disable recipe' : 'Disable recipes' }}
               </h3>
             </div>
           </template>
 
           <p class="text-sm text-gray-600 dark:text-gray-300">
-            <span class="font-medium text-gray-900 dark:text-white">{{ disableTarget?.title }}</span>
+            <span class="font-medium text-gray-900 dark:text-white">{{ disableModalSummary }}</span>
             will stop appearing in search, meal plans, and every consumer app.
             The recipe data is kept and it can be re-enabled at any time.
           </p>
+
+          <UAlert
+            v-if="disableMode === 'query'"
+            color="warning"
+            variant="soft"
+            icon="i-lucide-triangle-alert"
+            class="mt-3"
+            :title="`This disables every recipe matching the current filters (${queryDisableFilterSummary}), not just the visible page.`"
+          />
 
           <UFormField label="Reason (optional)" class="mt-4">
             <UInput
@@ -504,7 +595,7 @@
                 :loading="disablePending"
                 @click="confirmDisableRecipe"
               >
-                Disable recipe
+                {{ disableMode === 'single' ? 'Disable recipe' : 'Disable recipes' }}
               </UButton>
             </div>
           </template>
@@ -1305,6 +1396,7 @@ const createForm = reactive({
 })
 
 const recipeColumns = [
+  { id: 'select', header: '', enableSorting: false },
   { accessorKey: 'title', header: 'Recipe' },
   { accessorKey: 'duration', header: 'Duration' },
   { accessorKey: 'serves', header: 'Serves' },
@@ -1923,23 +2015,145 @@ async function goToPage(page: number) {
 
 // --- Recipe status (disable / enable) -------------------------------------
 
+type DisableMode = 'single' | 'selected' | 'query'
+
 const statusPendingRecipeId = ref<string | null>(null)
 const disableConfirmOpen = ref(false)
 const disablePending = ref(false)
 const disableReason = ref('')
 const disableTarget = ref<RecipeSearchResult | null>(null)
+const disableMode = ref<DisableMode>('single')
+const bulkStatusPending = ref(false)
+const selectedRecipeIds = ref<string[]>([])
 
 function isRecipeDisabled(recipe: RecipeSearchResult): boolean {
   return String(recipe.status || 'active').toLowerCase() === 'disabled'
 }
 
+const pageRecipeIds = computed(() =>
+  recipes.value
+    .map(recipe => resolveRecipeIdentifier(recipe))
+    .filter((id): id is string => Boolean(id))
+)
+
+const allPageRowsSelected = computed(() =>
+  pageRecipeIds.value.length > 0
+  && pageRecipeIds.value.every(id => selectedRecipeIds.value.includes(id))
+)
+
+// The natural-language /search path has no by-query equivalent, so the
+// filter-scoped bulk action only appears for facet-filtered param_search.
+const canDisableByQuery = computed(() =>
+  !isNlSearch.value
+  && !filters.q.trim()
+  && totalCount.value > 0
+  && !filters.includeDisabled
+  && (filters.excludeAllergens.length > 0 || filters.sources.length > 0 || filters.dishTypes.length > 0)
+)
+
+const queryDisableFilterSummary = computed(() => {
+  const parts: string[] = []
+  if (filters.sources.length) parts.push(`sources: ${filters.sources.join(', ')}`)
+  if (filters.dishTypes.length) parts.push(`dish types: ${filters.dishTypes.join(', ')}`)
+  if (filters.excludeAllergens.length) parts.push(`without allergens: ${filters.excludeAllergens.join(', ')}`)
+  return parts.join(' · ')
+})
+
+const disableModalSummary = computed(() => {
+  if (disableMode.value === 'selected') {
+    return `${selectedRecipeIds.value.length} selected recipe${selectedRecipeIds.value.length === 1 ? '' : 's'}`
+  }
+  if (disableMode.value === 'query') {
+    return `All ${totalCount.value} recipes matching the current filters`
+  }
+  return disableTarget.value?.title || 'This recipe'
+})
+
+function isRowSelected(recipe: RecipeSearchResult): boolean {
+  const id = resolveRecipeIdentifier(recipe)
+  return id ? selectedRecipeIds.value.includes(id) : false
+}
+
+function toggleRowSelected(recipe: RecipeSearchResult) {
+  const id = resolveRecipeIdentifier(recipe)
+  if (!id) return
+  const idx = selectedRecipeIds.value.indexOf(id)
+  if (idx >= 0) selectedRecipeIds.value.splice(idx, 1)
+  else selectedRecipeIds.value.push(id)
+}
+
+function toggleSelectAllPage() {
+  if (allPageRowsSelected.value) {
+    selectedRecipeIds.value = selectedRecipeIds.value.filter(id => !pageRecipeIds.value.includes(id))
+  } else {
+    selectedRecipeIds.value = [...new Set([...selectedRecipeIds.value, ...pageRecipeIds.value])]
+  }
+}
+
+function clearRowSelection() {
+  selectedRecipeIds.value = []
+}
+
 function openDisableConfirm(recipe: RecipeSearchResult) {
+  disableMode.value = 'single'
   disableTarget.value = recipe
   disableReason.value = ''
   disableConfirmOpen.value = true
 }
 
+function openSelectedDisableConfirm() {
+  if (!selectedRecipeIds.value.length) return
+  disableMode.value = 'selected'
+  disableTarget.value = null
+  disableReason.value = ''
+  disableConfirmOpen.value = true
+}
+
+function openQueryDisableConfirm() {
+  if (!canDisableByQuery.value) return
+  disableMode.value = 'query'
+  disableTarget.value = null
+  disableReason.value = ''
+  disableConfirmOpen.value = true
+}
+
 async function confirmDisableRecipe() {
+  if (disableMode.value === 'single') return confirmDisableSingle()
+
+  disablePending.value = true
+  bulkStatusPending.value = true
+  try {
+    const reason = disableReason.value || undefined
+    const result = disableMode.value === 'selected'
+      ? await recipeApi.disableManagedRecipes([...selectedRecipeIds.value], reason)
+      : await recipeApi.disableManagedRecipesByQuery({
+          exclude_allergens: filters.excludeAllergens.length ? [...filters.excludeAllergens] : undefined,
+          sources: filters.sources.length ? [...filters.sources] : undefined,
+          dish_types: filters.dishTypes.length ? [...filters.dishTypes] : undefined
+        }, reason)
+    disableConfirmOpen.value = false
+    clearRowSelection()
+    toast.add({
+      title: 'Recipes disabled',
+      description: `${result.updated} recipe${result.updated === 1 ? '' : 's'} are no longer served anywhere.`,
+      color: 'success',
+      icon: 'i-lucide-eye-off'
+    })
+    await loadRecipes()
+  } catch (error) {
+    toast.add({
+      title: 'Failed to disable recipes',
+      description: resolveConsoleRecipeErrorMessage(error, 'Please try again.'),
+      color: 'error',
+      icon: 'i-lucide-alert-circle'
+    })
+  } finally {
+    disablePending.value = false
+    bulkStatusPending.value = false
+  }
+}
+
+async function confirmDisableSingle() {
   const target = disableTarget.value
   const recipeId = target ? resolveRecipeIdentifier(target) : null
   if (!target || !recipeId) return
@@ -1968,6 +2182,31 @@ async function confirmDisableRecipe() {
   } finally {
     disablePending.value = false
     statusPendingRecipeId.value = null
+  }
+}
+
+async function enableSelectedRecipes() {
+  if (!selectedRecipeIds.value.length) return
+  bulkStatusPending.value = true
+  try {
+    const result = await recipeApi.enableManagedRecipes([...selectedRecipeIds.value])
+    clearRowSelection()
+    toast.add({
+      title: 'Recipes enabled',
+      description: `${result.updated} recipe${result.updated === 1 ? '' : 's'} are served again.`,
+      color: 'success',
+      icon: 'i-lucide-rotate-ccw'
+    })
+    await loadRecipes()
+  } catch (error) {
+    toast.add({
+      title: 'Failed to enable recipes',
+      description: resolveConsoleRecipeErrorMessage(error, 'Please try again.'),
+      color: 'error',
+      icon: 'i-lucide-alert-circle'
+    })
+  } finally {
+    bulkStatusPending.value = false
   }
 }
 
@@ -2005,6 +2244,8 @@ function refreshRecipes() {
 function applyFilters() {
   currentPage.value = 1
   clearAutocomplete()
+  // Selection survives pagination but not a change of filter scope.
+  clearRowSelection()
   return loadRecipes(1)
 }
 
@@ -2017,6 +2258,7 @@ function resetFilters() {
   filters.includeDisabled = false
   currentPage.value = 1
   clearAutocomplete()
+  clearRowSelection()
   return loadRecipes(1)
 }
 
