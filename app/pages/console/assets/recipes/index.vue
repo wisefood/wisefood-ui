@@ -2117,6 +2117,24 @@ function openQueryDisableConfirm() {
   disableConfirmOpen.value = true
 }
 
+// By-query disabling returns 202 and runs server-side — refresh the list
+// every few seconds until the matching count settles so the console shows
+// the count draining without manual reloads.
+let disablePollToken = 0
+onBeforeUnmount(() => { disablePollToken++ })
+
+async function pollQueryDisableProgress() {
+  const token = ++disablePollToken
+  let lastCount = totalCount.value
+  for (let attempt = 0; attempt < 12; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, 5000))
+    if (token !== disablePollToken) return
+    await loadRecipes()
+    if (totalCount.value === lastCount) return
+    lastCount = totalCount.value
+  }
+}
+
 async function confirmDisableRecipe() {
   if (disableMode.value === 'single') return confirmDisableSingle()
 
@@ -2124,21 +2142,32 @@ async function confirmDisableRecipe() {
   bulkStatusPending.value = true
   try {
     const reason = disableReason.value || undefined
-    const result = disableMode.value === 'selected'
-      ? await recipeApi.disableManagedRecipes([...selectedRecipeIds.value], reason)
-      : await recipeApi.disableManagedRecipesByQuery({
+    const isQueryMode = disableMode.value === 'query'
+    const result = isQueryMode
+      ? await recipeApi.disableManagedRecipesByQuery({
           exclude_allergens: filters.excludeAllergens.length ? [...filters.excludeAllergens] : undefined,
           sources: filters.sources.length ? [...filters.sources] : undefined,
           dish_types: filters.dishTypes.length ? [...filters.dishTypes] : undefined
         }, reason)
+      : await recipeApi.disableManagedRecipes([...selectedRecipeIds.value], reason)
     disableConfirmOpen.value = false
     clearRowSelection()
-    toast.add({
-      title: 'Recipes disabled',
-      description: `${result.updated} recipe${result.updated === 1 ? '' : 's'} are no longer served anywhere.`,
-      color: 'success',
-      icon: 'i-lucide-eye-off'
-    })
+    if (isQueryMode) {
+      toast.add({
+        title: 'Bulk disable started',
+        description: `${result.requested} matching recipe${result.requested === 1 ? '' : 's'} are being disabled in the background.`,
+        color: 'success',
+        icon: 'i-lucide-eye-off'
+      })
+      void pollQueryDisableProgress()
+    } else {
+      toast.add({
+        title: 'Recipes disabled',
+        description: `${result.updated} recipe${result.updated === 1 ? '' : 's'} are no longer served anywhere.`,
+        color: 'success',
+        icon: 'i-lucide-eye-off'
+      })
+    }
     await loadRecipes()
   } catch (error) {
     toast.add({
