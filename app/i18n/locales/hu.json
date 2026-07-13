@@ -477,6 +477,68 @@
       "nutrientChart": {
         "reset": "Visszaállítás",
         "minSelectionWarning": "A diagram megjelenítéséhez válassz legalább 3 tápanyagot"
+      },
+      "substitution": {
+        "title": "Hozzávaló helyettesítése",
+        "subtitle": "Intelligens csere-javaslat ehhez a recepthez",
+        "action": "Helyettesítő keresése",
+        "loading": "A legjobb helyettesítő keresése…",
+        "error": "Ehhez a hozzávalóhoz nem található helyettesítő.",
+        "retry": "Próbáld újra",
+        "original": "Eredeti",
+        "substitute": "Helyettesítő",
+        "sourceCurated": "Gondozott helyettesítés",
+        "sourceTaxonomy": "Élelmiszer-taxonómiai egyezés",
+        "nutritionImpact": "Tápértékhatás",
+        "perServingNote": "Adagonként, a csere után.",
+        "nutriScore": "Nutri-Score",
+        "profilingUnavailable": "A csere utáni tápértékek nem számíthatók ki.",
+        "otherOptions": "További lehetőségek",
+        "note": "A helyettesítő az eredeti mennyiséget használja — ízlés szerint módosítsd."
+      },
+      "adaptation": {
+        "improve": "Javítás",
+        "action": "Intelligens javaslatok a recept javításához",
+        "title": "Recept javítása",
+        "subtitle": "Rangsorolt hozzávaló-javaslatok táplálkozási és fenntarthatósági adatok alapján",
+        "modeNutrition": "Táplálkozás",
+        "modeSustainability": "Fenntarthatóság",
+        "modeReduce": "Kevesebb mennyiség",
+        "loading": "A recept elemzése…",
+        "error": "Ehhez a recepthez nincsenek elérhető javaslatok.",
+        "retry": "Próbáld újra",
+        "empty": "Nem található javaslat ehhez a célhoz.",
+        "contextNutrition": "A(z) {ingredient} adja a recept {nutrient}-tartalmának {pct}%-át.",
+        "contextSustainability": "A(z) {ingredient} adja a recept szénlábnyomának {pct}%-át.",
+        "targetFallback": "cél-tápanyag",
+        "currentScore": "Jelenlegi Nutri-Score:",
+        "newScore": "Új értékelés",
+        "points": "pont",
+        "flavorMatch": "ízegyezés",
+        "allergenWarning": "Allergéneket ad hozzá:",
+        "note": "A javaslatok a hozzávaló-adatokon alapuló becslések — főzés közben használd a saját ítélőképességed.",
+        "nudgeTitle": "Ez a recept egészségesebb is lehetne",
+        "nudgeSubtitle": "Tudd meg, hogyan javítható ez a recept intelligens hozzávaló-javaslatokkal.",
+        "nudgeSuggestion": "{headline} — elérhetné a(z) {grade} Nutri-Score értékelést.",
+        "nudgeCta": "Mutasd, hogyan",
+        "adaptedSuffix": "(módosított)",
+        "save": "Módosított recept mentése",
+        "saveHint": "A személyes verziódat menti — csak te láthatod.",
+        "saveHintReplace": "A mentés lecseréli a recept jelenlegi módosított verzióját.",
+        "saveError": "A módosított recept mentése nem sikerült.",
+        "savedBanner": "Mentettél egy módosított verziót:",
+        "savedNote": "A FoodChat a módosított verziódat használja az étkezések tervezésénél.",
+        "remove": "Eltávolítás"
+      },
+      "sustainability": {
+        "label": "Fenntarthatóság",
+        "perServing": "{value} kg CO₂e adagonként",
+        "levels": {
+          "excellent": "Kiváló",
+          "good": "Jó",
+          "moderate": "Közepes",
+          "high": "Magas lábnyom"
+        }
       }
     },
     "comparePage": {

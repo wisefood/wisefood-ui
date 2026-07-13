@@ -478,6 +478,68 @@
       "nutrientChart": {
         "reset": "Reset",
         "minSelectionWarning": "Select at least 3 nutrients to display the chart"
+      },
+      "substitution": {
+        "title": "Ingredient Substitution",
+        "subtitle": "Smart swap suggestion for this recipe",
+        "action": "Find a substitute",
+        "loading": "Finding the best substitute…",
+        "error": "No substitute could be found for this ingredient.",
+        "retry": "Try again",
+        "original": "Original",
+        "substitute": "Substitute",
+        "sourceCurated": "Curated substitution",
+        "sourceTaxonomy": "Food taxonomy match",
+        "nutritionImpact": "Nutrition impact",
+        "perServingNote": "Per serving, after swapping.",
+        "nutriScore": "Nutri-Score",
+        "profilingUnavailable": "Updated nutrition values could not be calculated for this swap.",
+        "otherOptions": "Other options",
+        "note": "Substitutes keep the original quantity — adjust to taste."
+      },
+      "adaptation": {
+        "improve": "Improve",
+        "action": "Get smart suggestions to improve this recipe",
+        "title": "Improve This Recipe",
+        "subtitle": "Ranked ingredient suggestions based on nutrition and sustainability data",
+        "modeNutrition": "Nutrition",
+        "modeSustainability": "Sustainability",
+        "modeReduce": "Use less",
+        "loading": "Analyzing the recipe…",
+        "error": "No suggestions are available for this recipe.",
+        "retry": "Try again",
+        "empty": "No suggestions found for this goal.",
+        "contextNutrition": "{ingredient} contributes {pct}% of this recipe's {nutrient}.",
+        "contextSustainability": "{ingredient} contributes {pct}% of this recipe's carbon footprint.",
+        "targetFallback": "target nutrient",
+        "currentScore": "Current Nutri-Score:",
+        "newScore": "New score",
+        "points": "pts",
+        "flavorMatch": "flavor match",
+        "allergenWarning": "Adds allergens:",
+        "note": "Suggestions are estimates based on ingredient data — use your judgement when cooking.",
+        "nudgeTitle": "This recipe could be healthier",
+        "nudgeSubtitle": "Learn how to improve this recipe with smart ingredient suggestions.",
+        "nudgeSuggestion": "{headline} — could reach Nutri-Score {grade}.",
+        "nudgeCta": "See how",
+        "adaptedSuffix": "(adapted)",
+        "save": "Save adapted recipe",
+        "saveHint": "Saves your personal version — only you can see it.",
+        "saveHintReplace": "Saving replaces your current adapted version of this recipe.",
+        "saveError": "Could not save the adapted recipe.",
+        "savedBanner": "You saved an adapted version:",
+        "savedNote": "FoodChat will use your adapted version when planning meals.",
+        "remove": "Remove"
+      },
+      "sustainability": {
+        "label": "Sustainability",
+        "perServing": "{value} kg CO₂e per serving",
+        "levels": {
+          "excellent": "Excellent",
+          "good": "Good",
+          "moderate": "Moderate",
+          "high": "High impact"
+        }
       }
     },
     "comparePage": {

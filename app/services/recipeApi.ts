@@ -71,8 +71,15 @@ export interface Recipe {
   total_nutrients_per_serving?: Record<string, unknown> | null
   nutri_score: number | null
   nutri_score_raw?: string | null
+  /** Authoritative letter grade from the backend (e.g. "Nutriscore_B" or "B").
+   *  Prefer this over the numeric nutri_score, whose scale is ambiguous. */
+  nutri_score_label?: string | null
   nutri_score_breakdown?: Record<string, unknown> | null
   nutrition_source?: string | null
+  /** Carbon footprint: kg CO2e for the whole recipe / per serving / per kg of food. */
+  total_sustainability?: number | null
+  total_sustainability_per_serving?: number | null
+  sustainability_per_kg?: number | null
   nutrients?: RecipeNutrient[] | null
   nutrition_profiling_details?: RecipeNutritionProfilingDetail[] | null
   nutrition_profiling_debug?: Record<string, unknown> | null
@@ -294,6 +301,91 @@ export interface RecipeProfileResult {
   message?: string
   tags?: string[]
   allergens?: string[]
+}
+
+export type RecipeAdaptMode = 'nutrition' | 'sustainability' | 'reduce_quantity'
+
+export interface RecipeAdaptExplanation {
+  headline: string
+  reason: string
+  warning?: string | null
+}
+
+export interface RecipeAdaptSuggestion {
+  rank: number
+  action: 'swap' | 'reduce'
+  original_ingredient: string
+  substitute_name?: string | null
+  source?: string | null
+  category_distance?: string | null
+  flavor_similarity?: number | null
+  introduces_allergen?: boolean
+  new_allergens?: string[]
+  explanation: RecipeAdaptExplanation
+  llm_justification?: string | null
+  reduced_from_weight_g?: number | null
+  reduced_to_weight_g?: number | null
+  reduction_pct?: number | null
+  simulated_nutri_score?: string | null
+  nutri_score_points_saved?: number | null
+  relative_improvement?: number | null
+  nutrient_delta_per_serving?: Record<string, number> | null
+  simulated_co2e_per_serving_kg?: number | null
+  co2e_reduction_per_serving_kg?: number | null
+  co2e_reduction_pct?: number | null
+}
+
+export interface RecipeAdaptSuggestionsResult {
+  recipe_id: string
+  region: string
+  mode: RecipeAdaptMode
+  offending_ingredient?: string | null
+  offending_ingredient_contribution_pct?: number | null
+  current_nutri_score?: string | null
+  target_nutrient?: string | null
+  target_nutrient_label?: string | null
+  current_co2e_per_serving_kg?: number | null
+  suggestions: RecipeAdaptSuggestion[]
+  llm_used?: boolean
+  llm_model?: string | null
+  llm_rejected?: Array<{ substitute_name: string, reason?: string | null }>
+}
+
+export interface RecipeAdaptSuggestionsOptions {
+  region?: string
+  mode?: RecipeAdaptMode
+  maxSwaps?: number
+  useLlm?: boolean
+}
+
+export interface RecipeAdaptSimulateOptions {
+  region?: string
+  originalIngredient: string
+  substituteIngredient: string
+  weightG?: number | null
+}
+
+export interface RecipeAdaptSimulateResult {
+  recipe_id: string
+  region: string
+  original_nutri_score?: string | null
+  simulated_nutri_score?: string | null
+  nutri_score_points_delta?: number | null
+  simulated_total_nutrients_per_serving?: Record<string, number>
+  original_total_nutrients_per_serving?: Record<string, number>
+  simulated_co2e_per_serving_kg?: number | null
+  co2e_reduction_per_serving_kg?: number | null
+  [key: string]: unknown
+}
+
+export interface RecipeSubstituteResult {
+  original_ingredient: string
+  substitute: string
+  substitution_source: 'graph_direct' | 'foodon_taxonomy' | string
+  candidates: string[]
+  /** Full re-profiled recipe (RecipeProfileResult shape) or a
+   *  `{status: 'profiling_unavailable', ...}` fallback when profiling failed. */
+  modified_recipe_profile: Record<string, unknown>
 }
 
 type RecipeSearchPayload =
@@ -754,6 +846,104 @@ class RecipeApiService {
       )
     } catch (error) {
       throw this.handleError(error, 'Failed to analyze recipe')
+    }
+  }
+
+  /**
+   * Find the best substitute for an ingredient in a recipe and re-profile the result.
+   */
+  async substituteIngredient(
+    recipeId: string,
+    ingredient: string,
+    region: string = 'IE'
+  ): Promise<RecipeSubstituteResult> {
+    const name = String(ingredient || '').trim()
+    if (!name) {
+      throw new Error('Ingredient name is required for substitution')
+    }
+    const normalizedRegion = String(region || 'IE').trim().toUpperCase()
+    const safeRegion = (normalizedRegion === 'IE' || normalizedRegion === 'HU' || normalizedRegion === 'US')
+      ? normalizedRegion
+      : 'IE'
+    try {
+      const transport = this.resolveTransport()
+      return await this.fetchWithTimeout<RecipeSubstituteResult>(
+        `${this.getRecipeBasePath(transport)}/${encodeURIComponent(recipeId)}/substitute`,
+        'POST',
+        { ingredient: name, region: safeRegion },
+        PROFILE_TIMEOUT,
+        transport
+      )
+    } catch (error) {
+      throw this.handleError(error, 'Failed to find a substitute for this ingredient')
+    }
+  }
+
+  /**
+   * Get ranked ingredient-swap suggestions to improve a recipe's Nutri-Score,
+   * carbon footprint, or portion size of its worst contributor.
+   */
+  async getAdaptSuggestions(
+    recipeId: string,
+    options: RecipeAdaptSuggestionsOptions = {}
+  ): Promise<RecipeAdaptSuggestionsResult> {
+    const normalizedRegion = String(options.region || 'IE').trim().toUpperCase()
+    const safeRegion = (normalizedRegion === 'IE' || normalizedRegion === 'HU' || normalizedRegion === 'US')
+      ? normalizedRegion
+      : 'IE'
+    try {
+      const transport = this.resolveTransport()
+      return await this.fetchWithTimeout<RecipeAdaptSuggestionsResult>(
+        `${this.getRecipeBasePath(transport)}/${encodeURIComponent(recipeId)}/adapt/suggestions`,
+        'POST',
+        {
+          region: safeRegion,
+          mode: options.mode || 'nutrition',
+          max_swaps: Math.min(Math.max(options.maxSwaps ?? 3, 1), 3),
+          use_llm: options.useLlm ?? true
+        },
+        PROFILE_TIMEOUT,
+        transport
+      )
+    } catch (error) {
+      throw this.handleError(error, 'Failed to load improvement suggestions')
+    }
+  }
+
+  /**
+   * Simulate one specific ingredient swap and return the full nutrition deltas.
+   */
+  async adaptSimulate(
+    recipeId: string,
+    options: RecipeAdaptSimulateOptions
+  ): Promise<RecipeAdaptSimulateResult> {
+    const original = String(options.originalIngredient || '').trim()
+    const substitute = String(options.substituteIngredient || '').trim()
+    if (!original || !substitute) {
+      throw new Error('Both the original and substitute ingredients are required')
+    }
+    const normalizedRegion = String(options.region || 'IE').trim().toUpperCase()
+    const safeRegion = (normalizedRegion === 'IE' || normalizedRegion === 'HU' || normalizedRegion === 'US')
+      ? normalizedRegion
+      : 'IE'
+    try {
+      const transport = this.resolveTransport()
+      return await this.fetchWithTimeout<RecipeAdaptSimulateResult>(
+        `${this.getRecipeBasePath(transport)}/${encodeURIComponent(recipeId)}/adapt/simulate`,
+        'POST',
+        {
+          region: safeRegion,
+          swap: {
+            original_ingredient: original,
+            substitute_ingredient: substitute,
+            weight_g: options.weightG ?? null
+          }
+        },
+        PROFILE_TIMEOUT,
+        transport
+      )
+    } catch (error) {
+      throw this.handleError(error, 'Failed to simulate the ingredient swap')
     }
   }
 

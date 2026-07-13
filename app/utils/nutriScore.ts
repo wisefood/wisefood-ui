@@ -25,7 +25,8 @@ export const getNutriScoreGrade = (score: unknown): string | null => {
 }
 
 const gradeFromPoints = (points: number): string => {
-  if (points <= 0) return 'A'
+  // Official food thresholds: A ≤ -1, B 0-2, C 3-10, D 11-18, E ≥ 19.
+  if (points < 0) return 'A'
   if (points <= 2) return 'B'
   if (points <= 10) return 'C'
   if (points <= 18) return 'D'

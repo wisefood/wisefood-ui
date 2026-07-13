@@ -477,6 +477,68 @@
       "nutrientChart": {
         "reset": "Ponastavi",
         "minSelectionWarning": "Za prikaz grafa izberi vsaj 3 hranila"
+      },
+      "substitution": {
+        "title": "Zamenjava sestavine",
+        "subtitle": "Pametni predlog zamenjave za ta recept",
+        "action": "Poišči nadomestek",
+        "loading": "Iskanje najboljšega nadomestka…",
+        "error": "Za to sestavino ni bilo mogoče najti nadomestka.",
+        "retry": "Poskusi znova",
+        "original": "Izvirna sestavina",
+        "substitute": "Nadomestek",
+        "sourceCurated": "Kurirana zamenjava",
+        "sourceTaxonomy": "Ujemanje taksonomije živil",
+        "nutritionImpact": "Vpliv na hranilno vrednost",
+        "perServingNote": "Na porcijo, po zamenjavi.",
+        "nutriScore": "Nutri-Score",
+        "profilingUnavailable": "Posodobljenih hranilnih vrednosti za to zamenjavo ni bilo mogoče izračunati.",
+        "otherOptions": "Druge možnosti",
+        "note": "Nadomestek ohrani prvotno količino — prilagodi po okusu."
+      },
+      "adaptation": {
+        "improve": "Izboljšaj",
+        "action": "Pametni predlogi za izboljšanje tega recepta",
+        "title": "Izboljšaj ta recept",
+        "subtitle": "Rangirani predlogi sestavin na podlagi prehranskih in trajnostnih podatkov",
+        "modeNutrition": "Prehrana",
+        "modeSustainability": "Trajnost",
+        "modeReduce": "Manjša količina",
+        "loading": "Analiziranje recepta…",
+        "error": "Za ta recept ni na voljo predlogov.",
+        "retry": "Poskusi znova",
+        "empty": "Za ta cilj ni najdenih predlogov.",
+        "contextNutrition": "Sestavina {ingredient} prispeva {pct} % k vsebnosti hranila »{nutrient}« v receptu.",
+        "contextSustainability": "Sestavina {ingredient} prispeva {pct} % k ogljičnemu odtisu recepta.",
+        "targetFallback": "ciljno hranilo",
+        "currentScore": "Trenutni Nutri-Score:",
+        "newScore": "Nova ocena",
+        "points": "točk",
+        "flavorMatch": "ujemanje okusa",
+        "allergenWarning": "Doda alergene:",
+        "note": "Predlogi so ocene na podlagi podatkov o sestavinah — pri kuhanju uporabi lastno presojo.",
+        "nudgeTitle": "Ta recept bi lahko bil bolj zdrav",
+        "nudgeSubtitle": "Izvedi, kako izboljšati ta recept s pametnimi predlogi sestavin.",
+        "nudgeSuggestion": "{headline} — lahko bi dosegel Nutri-Score {grade}.",
+        "nudgeCta": "Poglej, kako",
+        "adaptedSuffix": "(prilagojeno)",
+        "save": "Shrani prilagojeni recept",
+        "saveHint": "Shrani tvojo osebno različico — vidiš jo samo ti.",
+        "saveHintReplace": "Shranjevanje nadomesti tvojo trenutno prilagojeno različico tega recepta.",
+        "saveError": "Prilagojenega recepta ni bilo mogoče shraniti.",
+        "savedBanner": "Shranil/-a si prilagojeno različico:",
+        "savedNote": "FoodChat bo pri načrtovanju obrokov uporabil tvojo prilagojeno različico.",
+        "remove": "Odstrani"
+      },
+      "sustainability": {
+        "label": "Trajnost",
+        "perServing": "{value} kg CO₂e na porcijo",
+        "levels": {
+          "excellent": "Odlično",
+          "good": "Dobro",
+          "moderate": "Zmerno",
+          "high": "Velik odtis"
+        }
       }
     },
     "comparePage": {
