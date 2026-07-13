@@ -1414,6 +1414,28 @@
       "changedSlots": {
         "verified": "ellenőrizve",
         "day": "{day}. nap"
+      },
+      "planParams": {
+        "title": "Terv finomhangolása",
+        "optional": "opcionális",
+        "dismiss": "Elvetés",
+        "apply": "Alkalmaz",
+        "applying": "Frissítés…",
+        "touchedHint": "{n} beállítás módosítva",
+        "params": {
+          "cooking_time": "Főzési idő",
+          "difficulty": "Nehézség",
+          "goal": "Cél"
+        },
+        "options": {
+          "easy": "Könnyű",
+          "medium": "Közepes",
+          "hard": "Igényes",
+          "weight_loss": "Fogyás",
+          "balanced": "Kiegyensúlyozott",
+          "high_protein": "Fehérjedús",
+          "energy": "Energizáló"
+        }
       }
     },
     "diners": {

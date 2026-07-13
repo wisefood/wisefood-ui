@@ -8,6 +8,7 @@ import type {
   UnifiedChatResponse,
   ConversationResponse,
   MemorySuggestion,
+  PlanParameterValues,
   SessionDinersResponse
 } from '~/services/foodchatApi'
 
@@ -232,47 +233,86 @@ export const useFoodChatStore = defineStore('foodchat', {
 
       try {
         const response = await foodchatApi.unifiedChat(sessionId, { content, member_id: memberId })
-        this.lastResponse = response
-
-        // Re-fetch conversation for ground truth
-        await this.fetchConversation(sessionId, memberId)
-
-        // Attribution, memory suggestions and changed-slot proofs are not
-        // persisted server-side, so carry them from the live response onto the
-        // just-fetched assistant message (client-side only)
-        if (response.attribution || response.memory_suggestions?.length || response.changed_slots?.length) {
-          const lastAssistant = [...this.messages].reverse().find(m => m.role === 'assistant')
-          if (lastAssistant) {
-            if (response.attribution) lastAssistant.attribution = response.attribution
-            if (response.memory_suggestions?.length) {
-              lastAssistant.memory_suggestions = response.memory_suggestions
-            }
-            if (response.changed_slots?.length) {
-              lastAssistant.changed_slots = response.changed_slots
-            }
-          }
-        }
-
-        // Always refresh both plan lists so stale plans don't hide the new type
-        await Promise.all([
-          this.fetchMealPlans(sessionId, memberId),
-          this.fetchWeeklyMealPlans(sessionId, memberId)
-        ])
-
-        // Refresh session metadata
-        const idx = this.sessions.findIndex(s => s.session_id === sessionId)
-        if (idx !== -1) {
-          try {
-            const updated = await foodchatApi.getSession(sessionId, memberId)
-            this.sessions[idx] = updated
-          } catch { /* non-critical */ }
-        }
-
+        await this.ingestTurnResponse(sessionId, memberId, response)
         return response
       } catch (err: any) {
         // Rollback optimistic message
         this.messages = this.messages.filter(m => m !== optimistic)
         this.error = err.message || 'Failed to send message'
+        throw err
+      } finally {
+        this.sending = false
+      }
+    },
+
+    /** Shared post-processing for turn-shaped responses (chat + plan-parameters) */
+    async ingestTurnResponse(sessionId: string, memberId: string, response: UnifiedChatResponse) {
+      this.lastResponse = response
+
+      // Re-fetch conversation for ground truth
+      await this.fetchConversation(sessionId, memberId)
+
+      // Attribution, memory suggestions, changed-slot proofs and the
+      // plan-parameter card are not persisted server-side, so carry them from
+      // the live response onto the just-fetched assistant message (client-side only)
+      if (
+        response.attribution
+        || response.memory_suggestions?.length
+        || response.changed_slots?.length
+        || response.plan_parameters
+      ) {
+        const lastAssistant = [...this.messages].reverse().find(m => m.role === 'assistant')
+        if (lastAssistant) {
+          if (response.attribution) lastAssistant.attribution = response.attribution
+          if (response.memory_suggestions?.length) {
+            lastAssistant.memory_suggestions = response.memory_suggestions
+          }
+          if (response.changed_slots?.length) {
+            lastAssistant.changed_slots = response.changed_slots
+          }
+          if (response.plan_parameters) {
+            lastAssistant.plan_parameters = response.plan_parameters
+          }
+        }
+      }
+
+      // Always refresh both plan lists so stale plans don't hide the new type
+      await Promise.all([
+        this.fetchMealPlans(sessionId, memberId),
+        this.fetchWeeklyMealPlans(sessionId, memberId)
+      ])
+
+      // Refresh session metadata
+      const idx = this.sessions.findIndex(s => s.session_id === sessionId)
+      if (idx !== -1) {
+        try {
+          const updated = await foodchatApi.getSession(sessionId, memberId)
+          this.sessions[idx] = updated
+        } catch { /* non-critical */ }
+      }
+    },
+
+    // ----------------------------------------------------------------
+    // Plan parameters (interactive slider card)
+    // ----------------------------------------------------------------
+    async applyPlanParameters(
+      sessionId: string,
+      memberId: string,
+      values: PlanParameterValues
+    ) {
+      this.sending = true
+      this.error = null
+      try {
+        const response = await foodchatApi.applyPlanParameters(sessionId, {
+          member_id: memberId,
+          values
+        })
+        // The canonical user message is added server-side; the conversation
+        // refetch inside ingestTurnResponse picks it up
+        await this.ingestTurnResponse(sessionId, memberId, response)
+        return response
+      } catch (err: any) {
+        this.error = err.message || 'Failed to apply plan settings'
         throw err
       } finally {
         this.sending = false

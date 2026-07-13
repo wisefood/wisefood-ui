@@ -327,6 +327,15 @@
                       </div>
                     </div>
 
+                    <!-- Interactive plan-parameter sliders (only on live responses; not persisted) -->
+                    <FoodchatPlanParameterCard
+                      v-if="msg.plan_parameters && isActiveParamCard(msg)"
+                      :card="msg.plan_parameters"
+                      :busy="sending"
+                      @apply="handleApplyPlanParameters"
+                      @dismiss="dismissParamCard(msg)"
+                    />
+
                     <!-- Feedback row -->
                     <div v-if="msg.id" class="mt-2 flex items-center gap-1 transition-opacity" :class="feedbackSubmitted[msg.id] ? 'opacity-100' : 'opacity-0 group-hover/msg:opacity-100'">
                       <template v-if="!feedbackSubmitted[msg.id]">
@@ -856,7 +865,7 @@ import DOMPurify from 'dompurify'
 import { useFoodChat } from '~/composables/useFoodChat'
 import { useHouseholdStore } from '~/stores/household'
 import { useRecipeStore } from '~/stores/recipe'
-import type { AttributionCitation, ChangedSlot, ChatMessage, ConstraintApplied, MealPlan, MealRecipe, MemorySuggestion, WeeklyMealEntry } from '~/services/foodchatApi'
+import type { AttributionCitation, ChangedSlot, ChatMessage, ConstraintApplied, MealPlan, MealRecipe, MemorySuggestion, PlanParameterValues, WeeklyMealEntry } from '~/services/foodchatApi'
 import recipeApi from '~/services/recipeApi'
 import { today, getLocalTimeZone, type DateValue } from '@internationalized/date'
 import memberMealPlansApi, {
@@ -893,6 +902,7 @@ const {
   loadMoreMessages,
   submitMessageFeedback,
   submitMemoryDecision,
+  applyPlanParameters,
   activeDiners,
   updateDiners,
   clearError
@@ -953,6 +963,40 @@ function getMessageIdForPlanIdx(idx: number): number | null {
 const messageFeedback = reactive<Record<number, 'up' | 'down'>>({})
 const feedbackSubmitted = reactive<Record<number, boolean>>({})
 const selectedFeedbackReason = reactive<Record<number, string>>({})
+
+// ── Plan-parameter card ──
+// Only the newest card stays interactive (a fresh plan or an apply response
+// re-attaches a card with updated values, superseding older ones)
+const dismissedParamCards = ref(new Set<string>())
+
+function messageKey(msg: ChatMessage): string {
+  return String(msg.id ?? msg.timestamp)
+}
+
+const latestParamCardKey = computed(() => {
+  const withCard = [...messages.value].reverse()
+    .find(m => m.role === 'assistant' && m.plan_parameters)
+  return withCard ? messageKey(withCard) : null
+})
+
+function isActiveParamCard(msg: ChatMessage): boolean {
+  const key = messageKey(msg)
+  return key === latestParamCardKey.value && !dismissedParamCards.value.has(key)
+}
+
+function dismissParamCard(msg: ChatMessage) {
+  dismissedParamCards.value = new Set([...dismissedParamCards.value, messageKey(msg)])
+}
+
+async function handleApplyPlanParameters(values: PlanParameterValues) {
+  showEphemeralGenerating.value = true
+  try {
+    await applyPlanParameters(values)
+    scrollToBottom()
+  } catch {
+    showEphemeralGenerating.value = false
+  }
+}
 
 // ── Memory nudges ──
 const memoryChipState = reactive<Record<string, 'pending' | 'accepted' | 'declined'>>({})

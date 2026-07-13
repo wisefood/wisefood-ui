@@ -1436,6 +1436,28 @@
       "changedSlots": {
         "verified": "verified",
         "day": "Day {day}"
+      },
+      "planParams": {
+        "title": "Fine-tune this plan",
+        "optional": "optional",
+        "dismiss": "Dismiss",
+        "apply": "Apply",
+        "applying": "Updating…",
+        "touchedHint": "{n} setting adjusted | {n} settings adjusted",
+        "params": {
+          "cooking_time": "Cooking time",
+          "difficulty": "Difficulty",
+          "goal": "Goal"
+        },
+        "options": {
+          "easy": "Easy",
+          "medium": "Medium",
+          "hard": "Elaborate",
+          "weight_loss": "Lose weight",
+          "balanced": "Balanced",
+          "high_protein": "High protein",
+          "energy": "Energy boost"
+        }
       }
     },
     "diners": {

@@ -1414,6 +1414,28 @@
       "changedSlots": {
         "verified": "preverjeno",
         "day": "{day}. dan"
+      },
+      "planParams": {
+        "title": "Prilagodi ta načrt",
+        "optional": "neobvezno",
+        "dismiss": "Opusti",
+        "apply": "Uporabi",
+        "applying": "Posodabljanje…",
+        "touchedHint": "Prilagojene nastavitve: {n}",
+        "params": {
+          "cooking_time": "Čas kuhanja",
+          "difficulty": "Zahtevnost",
+          "goal": "Cilj"
+        },
+        "options": {
+          "easy": "Enostavno",
+          "medium": "Srednje",
+          "hard": "Zahtevno",
+          "weight_loss": "Hujšanje",
+          "balanced": "Uravnoteženo",
+          "high_protein": "Veliko beljakovin",
+          "energy": "Energijsko"
+        }
       }
     },
     "diners": {

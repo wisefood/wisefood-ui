@@ -60,6 +60,39 @@ export interface SessionDinersResponse {
   cooking_for_names: string[]
 }
 
+/** One knob on the interactive plan-parameter card */
+export interface PlanParameterOption {
+  value: string
+  label: string
+}
+
+export interface PlanParameter {
+  key: string
+  label: string
+  kind: 'scale' | 'choice'
+  min?: number | null
+  max?: number | null
+  step?: number | null
+  unit?: string | null
+  options?: PlanParameterOption[] | null
+  default?: number | string | null
+  /** Currently applied value, if the member has set this knob before */
+  value?: number | string | null
+}
+
+/** Optional slider card attached to fresh daily plans — replaces the old
+ *  textual questions about time budget / difficulty / goal */
+export interface PlanParameterCard {
+  parameters: PlanParameter[]
+}
+
+export type PlanParameterValues = Record<string, number | string>
+
+export interface PlanParametersRequest {
+  member_id: string
+  values: PlanParameterValues
+}
+
 export interface ChatMessage {
   id?: number
   role: 'user' | 'assistant'
@@ -72,6 +105,8 @@ export interface ChatMessage {
   memory_suggestions?: MemorySuggestion[]
   /** Client-side only — grafted from the live response like attribution */
   changed_slots?: ChangedSlot[]
+  /** Client-side only — grafted from the live response like attribution */
+  plan_parameters?: PlanParameterCard
 }
 
 /** Per-course nutrition summary (M4 transparency) */
@@ -200,6 +235,7 @@ export interface UnifiedChatResponse {
   attribution?: ChatAttribution
   memory_suggestions?: MemorySuggestion[]
   changed_slots?: ChangedSlot[]
+  plan_parameters?: PlanParameterCard
 }
 
 export interface ConversationResponse {
@@ -336,6 +372,20 @@ class FoodChatApiService {
     } catch {
       return null
     }
+  }
+
+  /** Apply values from the interactive plan-parameter card — refines the
+   *  active daily plan (or generates a fresh one), like a chat turn */
+  async applyPlanParameters(
+    sessionId: string,
+    req: PlanParametersRequest
+  ): Promise<UnifiedChatResponse> {
+    return this.fetchWithTimeout<UnifiedChatResponse>(
+      `${this.basePath}/sessions/${sessionId}/plan-parameters`,
+      'POST',
+      req,
+      MESSAGE_TIMEOUT
+    )
   }
 
   /** Accept or decline a memory suggestion surfaced in a chat response */

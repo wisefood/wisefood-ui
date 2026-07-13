@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useFoodChatStore } from '~/stores/foodchat'
 import { useHouseholdStore } from '~/stores/household'
-import type { MemorySuggestion } from '~/services/foodchatApi'
+import type { MemorySuggestion, PlanParameterValues } from '~/services/foodchatApi'
 
 export function useFoodChat() {
   const store = useFoodChatStore()
@@ -78,6 +78,11 @@ export function useFoodChat() {
     return store.submitMemoryDecision(store.activeSessionId, memberId.value, decision, suggestion)
   }
 
+  async function applyPlanParameters(values: PlanParameterValues) {
+    if (!store.activeSessionId || !memberId.value) return
+    return store.applyPlanParameters(store.activeSessionId, memberId.value, values)
+  }
+
   const activeDiners = computed(() =>
     store.activeSessionId ? store.dinersBySession[store.activeSessionId] ?? null : null
   )
@@ -123,6 +128,7 @@ export function useFoodChat() {
     loadMoreMessages,
     submitMessageFeedback,
     submitMemoryDecision,
+    applyPlanParameters,
     activeDiners,
     updateDiners,
     setLocalDiners,
