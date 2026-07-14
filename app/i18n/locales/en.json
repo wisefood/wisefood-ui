@@ -441,6 +441,10 @@
     "detail": {
       "nutritionalInfo": "Nutritional Information",
       "perServing": "per serving",
+      "profilePending": {
+        "message": "The nutrition profile for this recipe is still being generated. This usually takes a minute.",
+        "reload": "Check again"
+      },
       "ingredients": "Ingredients",
       "instructions": "Instructions",
       "environmentalImpact": "Environmental Impact",
@@ -1102,7 +1106,21 @@
       "empty": "Nothing here yet — WiseFood offers to remember tastes it picks up in your FoodChat and FoodScholar conversations (only with your OK).",
       "today": "today",
       "yesterday": "yesterday",
-      "daysAgo": "{count} days ago"
+      "daysAgo": "{count} days ago",
+      "goals": {
+        "reduce_fat": "Less saturated fat",
+        "reduce_sugar": "Less sugar",
+        "reduce_sodium": "Less salt",
+        "reduce_calories": "Fewer calories",
+        "reduce_carbs": "Fewer carbs",
+        "increase_protein": "More protein",
+        "increase_fiber": "More fiber",
+        "increase_hydration": "More hydration",
+        "lose_weight": "Lose weight",
+        "gain_weight": "Gain weight",
+        "gain_muscle": "Build muscle",
+        "maintain_weight": "Maintain weight"
+      }
     },
     "fields": {
       "name": "Name",

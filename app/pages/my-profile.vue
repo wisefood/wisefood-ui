@@ -955,6 +955,12 @@ function memoryKindStyle(kind: string): { icon: string, bg: string, fg: string }
       return { icon: 'i-lucide-alert-triangle', bg: 'bg-red-100 dark:bg-red-900/30', fg: 'text-red-600 dark:text-red-400' }
     case 'standing_seed':
       return { icon: 'i-lucide-sprout', bg: 'bg-green-100 dark:bg-green-900/30', fg: 'text-green-600 dark:text-green-400' }
+    // FoodScholar writes kind "goal"; FoodChat writes "dietary_goal" — same concept
+    case 'goal':
+    case 'dietary_goal':
+      return { icon: 'i-lucide-target', bg: 'bg-indigo-100 dark:bg-indigo-900/30', fg: 'text-indigo-600 dark:text-indigo-400' }
+    case 'dietary_pattern':
+      return { icon: 'i-lucide-leaf', bg: 'bg-emerald-100 dark:bg-emerald-900/30', fg: 'text-emerald-600 dark:text-emerald-400' }
     default:
       return { icon: 'i-lucide-brain', bg: 'bg-purple-100 dark:bg-purple-900/30', fg: 'text-purple-600 dark:text-purple-400' }
   }
@@ -963,7 +969,20 @@ function memoryKindStyle(kind: string): { icon: string, bg: string, fg: string }
 function memoryValueLabel(entry: MemoryLogEntry): string {
   if (entry.kind === 'like' || entry.kind === 'dislike' || entry.kind === 'cuisine') return getFoodName(entry.value)
   if (entry.kind === 'allergy_hint') return getAllergyLabel(entry.value)
+  if (entry.kind === 'goal' || entry.kind === 'dietary_goal') {
+    // Goal values are canonical planner slugs (reduce_fat) — show the human label
+    const key = `myProfile.memory.goals.${entry.value}`
+    const translated = t(key)
+    if (translated !== key) return translated
+    return humanizeSlug(entry.value)
+  }
+  if (entry.kind === 'dietary_pattern') return humanizeSlug(entry.value)
   return entry.value
+}
+
+function humanizeSlug(value: string): string {
+  const text = String(value || '').replace(/_/g, ' ')
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
 function formatMemoryDate(dateStr?: string): string {
@@ -988,6 +1007,7 @@ async function forgetMemory(item: MemoryItem) {
   const entry = item.entry
   const nutPrefs: NutritionalPreferences = { ...memberProfile.value?.nutritional_preferences }
   let newAllergies = [...allergies.value]
+  let newDietaryGroups = [...(memberProfile.value?.dietary_groups || [])]
   const props: Record<string, unknown> = { ...(memberProfile.value?.properties || {}) }
 
   // Remove the value from the field the memory was applied to
@@ -999,6 +1019,13 @@ async function forgetMemory(item: MemoryItem) {
     newAllergies = newAllergies.filter(a => a !== entry.value)
   } else if (entry.kind === 'standing_seed') {
     props.standing_seeds = standingSeeds.value.filter(s => s.name !== entry.value)
+  } else if (entry.kind === 'goal' || entry.kind === 'dietary_goal') {
+    // Goals live in properties.dietary_goals [{slug, label}] and steer the
+    // planner — forgetting must remove the slug, not just the log entry
+    const goals = (props.dietary_goals as Array<{ slug?: string }> | undefined) || []
+    props.dietary_goals = goals.filter(g => String(g?.slug || '').toLowerCase() !== entry.value)
+  } else if (entry.kind === 'dietary_pattern') {
+    newDietaryGroups = newDietaryGroups.filter(g => String(g).toLowerCase() !== entry.value)
   }
 
   // And drop its entry from the memory log
@@ -1011,6 +1038,7 @@ async function forgetMemory(item: MemoryItem) {
     ...memberProfile.value,
     nutritional_preferences: nutPrefs,
     allergies: newAllergies,
+    dietary_groups: newDietaryGroups,
     properties: props
   }
 
@@ -1018,6 +1046,7 @@ async function forgetMemory(item: MemoryItem) {
     const payload = buildProfilePayload({
       nutritional_preferences: nutPrefs,
       allergies: newAllergies,
+      dietary_groups: newDietaryGroups,
       properties: props
     })
     await householdStore.updateMemberProfile(currentMember.value.id, payload)

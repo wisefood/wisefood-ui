@@ -440,6 +440,10 @@
     "detail": {
       "nutritionalInfo": "Tápérték információ",
       "perServing": "adagonként",
+      "profilePending": {
+        "message": "A recept tápanyagprofilja még készül. Ez általában egy percet vesz igénybe.",
+        "reload": "Frissítés"
+      },
       "ingredients": "Hozzávalók",
       "instructions": "Elkészítés",
       "environmentalImpact": "Környezeti hatás",
@@ -1101,7 +1105,21 @@
       "empty": "Még nincs itt semmi — a WiseFood felajánlja, hogy megjegyzi az ízlésed, amit a FoodChat- és FoodScholar-beszélgetéseidből tanul (csak a beleegyezéseddel).",
       "today": "ma",
       "yesterday": "tegnap",
-      "daysAgo": "{count} napja"
+      "daysAgo": "{count} napja",
+      "goals": {
+        "reduce_fat": "Kevesebb telített zsír",
+        "reduce_sugar": "Kevesebb cukor",
+        "reduce_sodium": "Kevesebb só",
+        "reduce_calories": "Kevesebb kalória",
+        "reduce_carbs": "Kevesebb szénhidrát",
+        "increase_protein": "Több fehérje",
+        "increase_fiber": "Több rost",
+        "increase_hydration": "Több folyadék",
+        "lose_weight": "Fogyás",
+        "gain_weight": "Súlygyarapodás",
+        "gain_muscle": "Izomépítés",
+        "maintain_weight": "Súlymegtartás"
+      }
     },
     "fields": {
       "name": "Név",

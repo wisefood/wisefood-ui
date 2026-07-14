@@ -440,6 +440,10 @@
     "detail": {
       "nutritionalInfo": "Prehranske informacije",
       "perServing": "na porcijo",
+      "profilePending": {
+        "message": "Prehranski profil tega recepta se še pripravlja. To običajno traja minuto.",
+        "reload": "Preveri znova"
+      },
       "ingredients": "Sestavine",
       "instructions": "Navodila",
       "environmentalImpact": "Vpliv na okolje",
@@ -1101,7 +1105,21 @@
       "empty": "Tukaj še ni ničesar — WiseFood ponudi, da si zapomni tvoj okus iz pogovorov v FoodChatu in FoodScholarju (samo s tvojim soglasjem).",
       "today": "danes",
       "yesterday": "včeraj",
-      "daysAgo": "pred {count} dnevi"
+      "daysAgo": "pred {count} dnevi",
+      "goals": {
+        "reduce_fat": "Manj nasičenih maščob",
+        "reduce_sugar": "Manj sladkorja",
+        "reduce_sodium": "Manj soli",
+        "reduce_calories": "Manj kalorij",
+        "reduce_carbs": "Manj ogljikovih hidratov",
+        "increase_protein": "Več beljakovin",
+        "increase_fiber": "Več vlaknin",
+        "increase_hydration": "Več tekočine",
+        "lose_weight": "Hujšanje",
+        "gain_weight": "Pridobivanje teže",
+        "gain_muscle": "Gradnja mišic",
+        "maintain_weight": "Ohranjanje teže"
+      }
     },
     "fields": {
       "name": "Ime",
