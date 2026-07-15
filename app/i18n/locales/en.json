@@ -412,6 +412,7 @@
       "loading": "Loading recipes...",
       "noResults": "No recipes found",
       "noResultsMessage": "Try adjusting your search or browse our categories below",
+      "noResultsPersonalizedHint": "Personalized filters (allergies) are on — turning the Personalized chip off may broaden results",
       "tryAgain": "Try Again"
     },
     "recipe": {

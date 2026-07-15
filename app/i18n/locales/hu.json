@@ -411,6 +411,7 @@
       "loading": "Receptek betöltése...",
       "noResults": "Nem található recept",
       "noResultsMessage": "Próbáld módosítani a keresést, vagy böngéssz a kategóriák között",
+      "noResultsPersonalizedHint": "A személyre szabott szűrők (allergiák) aktívak — a Személyre szabott gomb kikapcsolása bővítheti a találatokat",
       "tryAgain": "Próbáld újra"
     },
     "recipe": {

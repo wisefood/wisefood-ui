@@ -108,7 +108,7 @@ export interface RecipeSearchResult {
 export interface RecipeSearchParams {
   question: string
   exclude_allergens?: string[]
-  /** Hard diet filters derived from the member profile (e.g. ['vegan']). */
+  /** Member dietary groups (e.g. ['vegan']) — soft ranking boosts, never hard filters. */
   diet_tags?: string[]
   /** Soft preference boosts — reorder results, never filter them out. */
   preferred_ingredients?: string[]

@@ -524,6 +524,12 @@
           <p class="text-zinc-500 dark:text-zinc-400 mb-6">
             {{ t('recipeWrangler.results.noResultsMessage') }}
           </p>
+          <p
+            v-if="personalizedSearch && householdStore.currentMember"
+            class="text-xs text-zinc-400 dark:text-zinc-500 -mt-4 mb-6"
+          >
+            {{ t('recipeWrangler.results.noResultsPersonalizedHint') }}
+          </p>
         </div>
 
         <!-- Recipe Cards Grid -->
@@ -1068,9 +1074,10 @@ const getMatchSourceStyle = (matchType?: string | null): string => {
  */
 // --- Personalized search -----------------------------------------------
 // When enabled, NL searches carry constraints derived from the selected
-// member's profile: allergies become hard excludes, dietary groups map to
-// index diet tags (hard filters), and liked ingredients become soft ranking
-// boosts. Toggled via the "Personalized" chip; persisted per browser.
+// member's profile: allergies become hard excludes, while dietary groups
+// and liked ingredients become soft ranking boosts (never hard filters —
+// tag coverage in the index is too sparse for that). Toggled via the
+// "Personalized" chip; persisted per browser.
 const personalizedSearch = ref(true)
 if (import.meta.client) {
   personalizedSearch.value = localStorage.getItem('recipe-personalized-search') !== 'off'

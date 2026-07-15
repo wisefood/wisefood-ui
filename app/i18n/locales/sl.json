@@ -411,6 +411,7 @@
       "loading": "Nalaganje receptov...",
       "noResults": "Ni najdenih receptov",
       "noResultsMessage": "Poskusi prilagoditi iskanje ali pobrskaj po spodnjih kategorijah",
+      "noResultsPersonalizedHint": "Prilagojeni filtri (alergije) so vklopljeni — izklop gumba Prilagojeno lahko razširi rezultate",
       "tryAgain": "Poskusi znova"
     },
     "recipe": {
