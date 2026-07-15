@@ -1370,9 +1370,8 @@ const qualityMetrics = computed<QualityMetric[]>(() => {
   const plan = displayedMealPlan.value
   if (!plan) return []
   const metrics: QualityMetric[] = []
-  if (plan.llm_score != null) {
-    metrics.push({ key: 'llm', label: t('foodChatHome.quality.llmMatch'), value: plan.llm_score, max: 5, reasoning: plan.llm_reasoning })
-  }
+  // llm_score ("LLM match") is an internal grader signal, not a
+  // member-meaningful quality — deliberately not displayed.
   if (plan.fvs_count != null) {
     metrics.push({ key: 'variety', label: t('foodChatHome.quality.variety'), value: plan.fvs_count, reasoning: plan.fvs_reasoning })
   }
