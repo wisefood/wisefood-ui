@@ -304,7 +304,9 @@
       "placeholder": "Kérj recepteket (pl. 'tésztareceptek', 'gyors vegán ételek')...",
       "button": "Keresés",
       "searching": "Keresés...",
-      "recentSearches": "Legutóbbi keresések:"
+      "recentSearches": "Legutóbbi keresések:",
+      "personalized": "Személyre szabott",
+      "personalizedHint": "A kiválasztott tag allergiái, étrendje és preferenciái alapján szűri és rangsorolja a találatokat"
     },
     "analyzer": {
       "title": "MI receptelemző",
@@ -502,6 +504,7 @@
       },
       "adaptation": {
         "improve": "Javítás",
+        "unavailable": "A tápanyagprofil elkészülte után érhető el — nézd meg a fenti tápanyag dobozt",
         "action": "Intelligens javaslatok a recept javításához",
         "title": "Recept javítása",
         "subtitle": "Rangsorolt hozzávaló-javaslatok táplálkozási és fenntarthatósági adatok alapján",
@@ -512,6 +515,7 @@
         "error": "Ehhez a recepthez nincsenek elérhető javaslatok.",
         "retry": "Próbáld újra",
         "empty": "Nem található javaslat ehhez a célhoz.",
+        "alreadyOptimal": "Ez a recept már kiváló tápértékprofillal rendelkezik — nincs mit javítani!",
         "contextNutrition": "A(z) {ingredient} adja a recept {nutrient}-tartalmának {pct}%-át.",
         "contextSustainability": "A(z) {ingredient} adja a recept szénlábnyomának {pct}%-át.",
         "targetFallback": "cél-tápanyag",

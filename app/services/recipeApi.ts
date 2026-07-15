@@ -83,6 +83,9 @@ export interface Recipe {
   nutrients?: RecipeNutrient[] | null
   nutrition_profiling_details?: RecipeNutritionProfilingDetail[] | null
   nutrition_profiling_debug?: Record<string, unknown> | null
+  /** "pending" while the backend is still computing the nutrition profile
+   *  in the background; nutrition fields are null until it completes. */
+  profiling_status?: string | null
 }
 
 export interface RecipeSearchResult {
@@ -105,6 +108,12 @@ export interface RecipeSearchResult {
 export interface RecipeSearchParams {
   question: string
   exclude_allergens?: string[]
+  /** Hard diet filters derived from the member profile (e.g. ['vegan']). */
+  diet_tags?: string[]
+  /** Soft preference boosts — reorder results, never filter them out. */
+  preferred_ingredients?: string[]
+  /** Region whose nutri-score the result cards carry: US, IE, HU. */
+  region?: string
 }
 
 export type RecipeParamSortBy = 'title_asc' | 'title_desc' | 'time_asc' | 'time_desc' | 'random'
@@ -339,6 +348,9 @@ export interface RecipeAdaptSuggestionsResult {
   recipe_id: string
   region: string
   mode: RecipeAdaptMode
+  /** 'already_optimal': nothing to improve — a success, not an error. */
+  status?: 'ok' | 'already_optimal' | string
+  message?: string | null
   offending_ingredient?: string | null
   offending_ingredient_contribution_pct?: number | null
   current_nutri_score?: string | null
@@ -356,6 +368,8 @@ export interface RecipeAdaptSuggestionsOptions {
   mode?: RecipeAdaptMode
   maxSwaps?: number
   useLlm?: boolean
+  /** Member dietary-goal slugs (e.g. 'reduce_fat') biasing the targeted nutrient. */
+  goalNutrients?: string[]
 }
 
 export interface RecipeAdaptSimulateOptions {
@@ -900,7 +914,8 @@ class RecipeApiService {
           region: safeRegion,
           mode: options.mode || 'nutrition',
           max_swaps: Math.min(Math.max(options.maxSwaps ?? 3, 1), 3),
-          use_llm: options.useLlm ?? true
+          use_llm: options.useLlm ?? true,
+          ...(options.goalNutrients?.length ? { goal_nutrients: options.goalNutrients } : {})
         },
         PROFILE_TIMEOUT,
         transport

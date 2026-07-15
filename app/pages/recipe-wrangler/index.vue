@@ -392,6 +392,20 @@
               class="w-4 h-4"
             />
           </button>
+          <button
+            type="button"
+            @click="togglePersonalizedSearch"
+            :title="t('recipeWrangler.search.personalizedHint')"
+            :class="[
+              'flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors text-sm',
+              personalizedSearch
+                ? 'bg-brandg-500 border-brandg-500 text-white'
+                : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700'
+            ]"
+          >
+            <UIcon name="i-lucide-user-check" class="w-4 h-4" />
+            <span>{{ t('recipeWrangler.search.personalized') }}</span>
+          </button>
         </div>
 
         <!-- Filters Component -->
@@ -1052,6 +1066,98 @@ const getMatchSourceStyle = (matchType?: string | null): string => {
 /**
  * Search recipes with natural language query
  */
+// --- Personalized search -----------------------------------------------
+// When enabled, NL searches carry constraints derived from the selected
+// member's profile: allergies become hard excludes, dietary groups map to
+// index diet tags (hard filters), and liked ingredients become soft ranking
+// boosts. Toggled via the "Personalized" chip; persisted per browser.
+const personalizedSearch = ref(true)
+if (import.meta.client) {
+  personalizedSearch.value = localStorage.getItem('recipe-personalized-search') !== 'off'
+}
+
+const togglePersonalizedSearch = () => {
+  personalizedSearch.value = !personalizedSearch.value
+  if (import.meta.client) {
+    localStorage.setItem('recipe-personalized-search', personalizedSearch.value ? 'on' : 'off')
+  }
+}
+
+// Profile dietary groups → recipes_v2 diet tags (the index only carries the
+// tags on the right side; unmapped groups like halal/kosher have no tag yet).
+const DIETARY_GROUP_TO_DIET_TAG: Record<string, string> = {
+  vegan: 'vegan',
+  raw_vegan: 'vegan',
+  vegetarian: 'vegetarian',
+  lacto_vegetarian: 'vegetarian',
+  ovo_vegetarian: 'vegetarian',
+  lacto_ovo_vegetarian: 'vegetarian',
+  buddhist_vegetarian: 'vegetarian',
+  plant_based: 'vegetarian',
+  pescatarian: 'pescatarian',
+  gluten_free: 'gluten_free',
+  nut_free: 'nut_free',
+  peanut_free: 'nut_free',
+  dairy_free: 'dairy_free'
+}
+
+const memberProfileCache = ref<{ memberId: string, profile: Record<string, unknown> } | null>(null)
+
+interface SearchPersonalization {
+  allergens?: string[]
+  dietTags?: string[]
+  preferredIngredients?: string[]
+  region?: string
+}
+
+const buildSearchPersonalization = async (): Promise<SearchPersonalization> => {
+  if (!personalizedSearch.value) return {}
+  const memberId = householdStore.currentMember?.id
+  if (!memberId) return {}
+  try {
+    if (memberProfileCache.value?.memberId !== memberId) {
+      const profile = await householdStore.getMemberProfile(memberId)
+      memberProfileCache.value = { memberId, profile: profile || {} }
+    }
+    const profile = memberProfileCache.value?.profile as Record<string, unknown>
+    if (!profile) return {}
+
+    const allergens = (Array.isArray(profile.allergies) ? profile.allergies : [])
+      .map(item => String(item || '').trim())
+      .filter(Boolean)
+
+    const dietTags = [...new Set(
+      (Array.isArray(profile.dietary_groups) ? profile.dietary_groups : [])
+        .map(group => DIETARY_GROUP_TO_DIET_TAG[String(group || '').trim()])
+        .filter((tag): tag is string => Boolean(tag))
+    )]
+
+    // nutritional_preferences.dietary_preferences is a free-form
+    // {category: items} dict; flatten string items into soft boosts.
+    const preferredIngredients: string[] = []
+    const prefs = (profile.nutritional_preferences as Record<string, unknown> | undefined)?.dietary_preferences
+    if (prefs && typeof prefs === 'object') {
+      for (const items of Object.values(prefs as Record<string, unknown>)) {
+        for (const item of Array.isArray(items) ? items : []) {
+          const name = String(item || '').trim()
+          if (name) preferredIngredients.push(name)
+        }
+      }
+    }
+
+    const region = String(householdStore.currentHousehold?.region || '').trim().toUpperCase()
+    return {
+      allergens,
+      dietTags,
+      preferredIngredients: preferredIngredients.slice(0, 10),
+      region: ['US', 'IE', 'HU'].includes(region) ? region : undefined
+    }
+  } catch (err) {
+    console.warn('Personalized search: profile unavailable, searching unpersonalized', err)
+    return {}
+  }
+}
+
 const performSearch = async (options: { openFirstResult?: boolean } = {}) => {
   if (!searchQuery.value || searchQuery.value.trim() === '') return
   clearAutocomplete()
@@ -1064,11 +1170,18 @@ const performSearch = async (options: { openFirstResult?: boolean } = {}) => {
     resetPagination()
     searchMode.value = 'nl'
     lastParamSearch.value = null
-    const excludeAllergens = recipeStore.excludedAllergens
+    const personalization = await buildSearchPersonalization()
+    const excludeAllergens = [...new Set([
+      ...recipeStore.excludedAllergens,
+      ...(personalization.allergens || [])
+    ])]
 
     await searchRecipes({
       question: searchQuery.value,
-      exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined
+      exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined,
+      diet_tags: personalization.dietTags?.length ? personalization.dietTags : undefined,
+      preferred_ingredients: personalization.preferredIngredients?.length ? personalization.preferredIngredients : undefined,
+      region: personalization.region
     }, false)
 
     recipeStore.addSearchQuery(searchQuery.value)
@@ -1250,9 +1363,17 @@ const handleQuickFilter = async (filterType: string) => {
     searchQuery.value = query
     searchMode.value = 'nl'
     lastParamSearch.value = null
+    const personalization = await buildSearchPersonalization()
+    const mergedAllergens = [...new Set([
+      ...excludeAllergens,
+      ...(personalization.allergens || [])
+    ])]
     await searchRecipes({
       question: query,
-      exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined
+      exclude_allergens: mergedAllergens.length > 0 ? mergedAllergens : undefined,
+      diet_tags: personalization.dietTags?.length ? personalization.dietTags : undefined,
+      preferred_ingredients: personalization.preferredIngredients?.length ? personalization.preferredIngredients : undefined,
+      region: personalization.region
     }, false)
   } catch (err) {
     console.error('Quick filter failed:', err)

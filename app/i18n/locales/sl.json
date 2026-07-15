@@ -304,7 +304,9 @@
       "placeholder": "Vprašaj za recepte (npr. 'testenine', 'hitri veganski obroki')...",
       "button": "Išči",
       "searching": "Iskanje...",
-      "recentSearches": "Nedavna iskanja:"
+      "recentSearches": "Nedavna iskanja:",
+      "personalized": "Prilagojeno",
+      "personalizedHint": "Uporabi alergije, prehrano in preference izbranega člana za filtriranje in razvrščanje rezultatov"
     },
     "analyzer": {
       "title": "AI analizator receptov",
@@ -502,6 +504,7 @@
       },
       "adaptation": {
         "improve": "Izboljšaj",
+        "unavailable": "Na voljo, ko bo prehranski profil pripravljen — preveri polje s hranili zgoraj",
         "action": "Pametni predlogi za izboljšanje tega recepta",
         "title": "Izboljšaj ta recept",
         "subtitle": "Rangirani predlogi sestavin na podlagi prehranskih in trajnostnih podatkov",
@@ -512,6 +515,7 @@
         "error": "Za ta recept ni na voljo predlogov.",
         "retry": "Poskusi znova",
         "empty": "Za ta cilj ni najdenih predlogov.",
+        "alreadyOptimal": "Ta recept ima že odličen prehranski profil — ni kaj izboljšati!",
         "contextNutrition": "Sestavina {ingredient} prispeva {pct} % k vsebnosti hranila »{nutrient}« v receptu.",
         "contextSustainability": "Sestavina {ingredient} prispeva {pct} % k ogljičnemu odtisu recepta.",
         "targetFallback": "ciljno hranilo",

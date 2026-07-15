@@ -152,6 +152,7 @@ import { useI18n } from 'vue-i18n'
 import { useRecipeStore } from '~/stores/recipe'
 import type { RecipeSearchResult } from '~/services/recipeApi'
 import { formatDishTypeLabel, getDishTypeIcon, normalizeDishTypes } from '~/utils/dishTypes'
+import { getRecipeWranglerMode, getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 
 // ============================================================================
 // Props & Emits
@@ -168,6 +169,20 @@ const { t } = useI18n()
 // ============================================================================
 const recipeStore = useRecipeStore()
 const imageLoadFailed = ref(false)
+const previewFailed = ref(false)
+
+// Card images render at a few hundred px but external origins serve 1-2MB
+// photos, often slowly. In gateway mode, request a downscaled cached preview
+// from wisefood-api; on preview failure fall back to the original URL, and
+// only after THAT fails show the placeholder.
+const CARD_PREVIEW_WIDTH = 480
+
+const previewImageUrl = (url: string): string => {
+  if (getRecipeWranglerMode() === 'local' || (import.meta.dev && getRecipeWranglerMode() !== 'rest')) {
+    return url
+  }
+  return `${getWisefoodRestApiUrl()}/images/preview?src=${encodeURIComponent(url)}&w=${CARD_PREVIEW_WIDTH}`
+}
 
 // ============================================================================
 // Computed
@@ -176,10 +191,13 @@ const effectiveRecipeId = computed(() => props.recipe.recipe_id || props.recipe.
 const recipeImageUrl = computed(() => {
   const imageUrl = String(props.recipe.image_url || '').trim()
   if (!imageUrl || imageLoadFailed.value) return null
-  if (imageUrl.startsWith('http://')) {
-    return `https://${imageUrl.slice('http://'.length)}`
+  const normalized = imageUrl.startsWith('http://')
+    ? `https://${imageUrl.slice('http://'.length)}`
+    : imageUrl
+  if (previewFailed.value || !/^https:\/\//.test(normalized)) {
+    return normalized
   }
-  return imageUrl
+  return previewImageUrl(normalized)
 })
 const isFavorite = computed(() => effectiveRecipeId.value ? recipeStore.isFavorite(effectiveRecipeId.value) : false)
 const isInCompare = computed(() => effectiveRecipeId.value ? recipeStore.isInCompareList(effectiveRecipeId.value) : false)
@@ -193,6 +211,7 @@ const dishTypeChips = computed(() =>
 
 watch(() => effectiveRecipeId.value, () => {
   imageLoadFailed.value = false
+  previewFailed.value = false
 })
 
 // ============================================================================
@@ -225,6 +244,11 @@ const toggleFavorite = (event: Event) => {
 
 const handleImageError = (event: Event) => {
   event.preventDefault()
+  if (!previewFailed.value && recipeImageUrl.value?.includes('/images/preview?')) {
+    // Preview proxy failed — retry once with the original image URL.
+    previewFailed.value = true
+    return
+  }
   imageLoadFailed.value = true
 }
 </script>

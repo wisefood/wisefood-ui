@@ -305,7 +305,9 @@
       "placeholder": "Ask for recipes (e.g., 'pasta recipes', 'quick vegan meals')...",
       "button": "Search",
       "searching": "Searching...",
-      "recentSearches": "Recent searches:"
+      "recentSearches": "Recent searches:",
+      "personalized": "Personalized",
+      "personalizedHint": "Use the selected member's allergies, diet and preferences to filter and rank results"
     },
     "analyzer": {
       "title": "AI Recipe Analyzer",
@@ -503,6 +505,7 @@
       },
       "adaptation": {
         "improve": "Improve",
+        "unavailable": "Available once the nutrition profile is ready — check the nutrients box above",
         "action": "Get smart suggestions to improve this recipe",
         "title": "Improve This Recipe",
         "subtitle": "Ranked ingredient suggestions based on nutrition and sustainability data",
@@ -513,6 +516,7 @@
         "error": "No suggestions are available for this recipe.",
         "retry": "Try again",
         "empty": "No suggestions found for this goal.",
+        "alreadyOptimal": "This recipe already has a great nutritional profile — nothing to improve!",
         "contextNutrition": "{ingredient} contributes {pct}% of this recipe's {nutrient}.",
         "contextSustainability": "{ingredient} contributes {pct}% of this recipe's carbon footprint.",
         "targetFallback": "target nutrient",

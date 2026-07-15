@@ -294,8 +294,28 @@
                   : 'Based on the USDA Food Composition Table'
             }}</span></p>
 
+            <!-- Profile still being computed in the background -->
+            <div
+              v-if="profilePending"
+              class="rounded-xl bg-zinc-50 dark:bg-white/4 p-6 flex flex-col items-start gap-4"
+            >
+              <div class="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
+                <UIcon name="i-lucide-loader-2" class="w-4 h-4 animate-spin text-brandg-600 dark:text-brandg-400" />
+                <span>{{ t('recipeWrangler.detail.profilePending.message') }}</span>
+              </div>
+              <button
+                type="button"
+                @click="reloadProfile"
+                :disabled="profileReloading"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-brandg-600 hover:bg-brandg-700 text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <UIcon name="i-lucide-rotate-cw" :class="['w-4 h-4', profileReloading ? 'animate-spin' : '']" />
+                {{ t('recipeWrangler.detail.profilePending.reload') }}
+              </button>
+            </div>
+
             <!-- Animated Container for View Switching -->
-            <div class="relative overflow-hidden">
+            <div v-else class="relative overflow-hidden">
               <!-- Grid View -->
               <Transition
                 enter-active-class="transition-all duration-500 ease-out"
@@ -474,7 +494,7 @@
               </Transition>
             </div>
 
-            <div class="mt-6">
+            <div v-if="!profilePending" class="mt-6">
               <button
                 v-if="(!showProfilingDetails || profilingLoading) && profilingDetailRows.length === 0"
                 type="button"
@@ -551,11 +571,12 @@
                 <UIcon name="i-lucide-shopping-basket" class="w-7 h-7 text-brandg-600 dark:text-brandg-400" />
                 {{ t('recipeWrangler.detail.ingredients') }}
               </h2>
-              <UTooltip :text="t('recipeWrangler.detail.adaptation.action')">
+              <UTooltip :text="adaptAvailable ? t('recipeWrangler.detail.adaptation.action') : t('recipeWrangler.detail.adaptation.unavailable')">
                 <button
                   type="button"
+                  :disabled="!adaptAvailable"
                   @click="openAdaptModal"
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-brandg-50 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300 border border-brandg-200 dark:border-brandg-700 hover:bg-brandg-100 dark:hover:bg-brandg-900/50 transition-colors"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-brandg-50 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300 border border-brandg-200 dark:border-brandg-700 hover:bg-brandg-100 dark:hover:bg-brandg-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <UIcon name="i-lucide-sparkles" class="w-3.5 h-3.5" />
                   {{ t('recipeWrangler.detail.adaptation.improve') }}
@@ -1026,7 +1047,7 @@
 
       <UModal v-model:open="showAdaptModal" :ui="{ content: 'max-w-2xl' }">
         <template #content>
-          <div class="p-6 sm:p-7 bg-white dark:bg-zinc-900">
+          <div class="p-6 sm:p-7 bg-white dark:bg-zinc-900 max-h-[85vh] overflow-y-auto">
             <div class="mb-5">
               <h3 class="text-xl font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
                 <UIcon name="i-lucide-sparkles" class="w-5 h-5 text-brandg-600 dark:text-brandg-400" />
@@ -1098,8 +1119,16 @@
                 </p>
               </div>
 
+              <!-- Already optimal: a success state, not a failure -->
+              <div v-if="adaptResult.status === 'already_optimal'" class="py-6 text-center space-y-2">
+                <UIcon name="i-lucide-badge-check" class="w-8 h-8 text-brandg-500 mx-auto" />
+                <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                  {{ t('recipeWrangler.detail.adaptation.alreadyOptimal') }}
+                </p>
+              </div>
+
               <!-- Empty -->
-              <div v-if="!adaptResult.suggestions.length" class="py-6 text-center">
+              <div v-else-if="!adaptResult.suggestions.length" class="py-6 text-center">
                 <p class="text-sm text-zinc-500 dark:text-zinc-400">
                   {{ t('recipeWrangler.detail.adaptation.empty') }}
                 </p>
@@ -1310,6 +1339,7 @@ const expandedIngredient = ref<number | null>(null)
 const profilingLoading = ref(false)
 const profilingError = ref<string | null>(null)
 const regionReloading = ref(false)
+const profileReloading = ref(false)
 const profilingResult = ref<RecipeProfileResult | null>(null)
 const imageLoadFailed = ref(false)
 
@@ -1801,6 +1831,22 @@ const changeRegion = async (region: SupportedRegion) => {
   }
 }
 
+// The backend profiles unprofiled recipes in the background and flags the
+// response with profiling_status="pending" meanwhile. The reload button
+// re-fetches the recipe; the nutrients box and per-ingredient profiling all
+// derive from `recipe`, so one fetch refreshes both.
+const profilePending = computed(() => recipe.value?.profiling_status === 'pending')
+
+const reloadProfile = async () => {
+  if (profileReloading.value) return
+  profileReloading.value = true
+  try {
+    await loadRecipe()
+  } finally {
+    profileReloading.value = false
+  }
+}
+
 const buildRecipeProfilingInput = (value: Recipe): string => {
   const title = value.title ? `${value.title}\n` : ''
   const ingredients = (value.ingredients || [])
@@ -1954,17 +2000,42 @@ const adaptContextLine = computed(() => {
   })
 })
 
+// Dietary goals recorded on the member's profile (e.g. FoodScholar writes
+// properties.dietary_goals like "reduce_fat") bias which nutrient the
+// adaptation targets. Loaded once per member, best-effort.
+const memberGoalNutrients = ref<string[]>([])
+const memberGoalsLoadedFor = ref<string | null>(null)
+
+const loadMemberGoalNutrients = async () => {
+  const memberId = householdStore.currentMember?.id
+  if (!memberId || memberGoalsLoadedFor.value === memberId) return
+  memberGoalsLoadedFor.value = memberId
+  try {
+    const profile = await householdStore.getMemberProfile(memberId)
+    const goals = (profile?.properties as Record<string, unknown> | undefined)?.dietary_goals
+    memberGoalNutrients.value = Array.isArray(goals)
+      ? goals
+          .map(goal => String((goal as Record<string, unknown>)?.slug || goal || '').trim())
+          .filter(Boolean)
+      : []
+  } catch {
+    memberGoalNutrients.value = []
+  }
+}
+
 const loadAdaptSuggestions = async () => {
-  if (!recipe.value) return
+  if (!recipe.value || !adaptAvailable.value) return
   const mode = adaptMode.value
   adaptLoading.value = true
   adaptError.value = null
   try {
+    await loadMemberGoalNutrients()
     const result = await recipeApi.getAdaptSuggestions(recipe.value.recipe_id, {
       region: selectedRegion.value,
       mode,
       maxSwaps: 3,
-      useLlm: true
+      useLlm: true,
+      goalNutrients: memberGoalNutrients.value
     })
     adaptResults.value = { ...adaptResults.value, [mode]: result }
   } catch (err: unknown) {
@@ -1977,7 +2048,15 @@ const loadAdaptSuggestions = async () => {
   }
 }
 
+// Adaptation needs a persisted profiling trace (per-ingredient details) —
+// exactly what the backgrounded profiling job produces. Until it lands, the
+// adapt endpoints 404, so keep every adaptation entry point gated.
+const adaptAvailable = computed(() =>
+  !profilePending.value && (recipe.value?.nutrition_profiling_details?.length ?? 0) > 0
+)
+
 const openAdaptModal = () => {
+  if (!adaptAvailable.value) return
   showAdaptModal.value = true
   if (!adaptResult.value && !adaptLoading.value) void loadAdaptSuggestions()
 }
@@ -1991,7 +2070,7 @@ const setAdaptMode = (mode: RecipeAdaptMode) => {
 
 // --- Improve nudge (low Nutri-Score recipes) ---
 const showImproveNudge = computed(() =>
-  nutriScoreGrade.value === 'D' || nutriScoreGrade.value === 'E'
+  adaptAvailable.value && (nutriScoreGrade.value === 'D' || nutriScoreGrade.value === 'E')
 )
 
 const nudgeTopSuggestion = computed(() => {
