@@ -348,8 +348,8 @@ export interface RecipeAdaptSuggestionsResult {
   recipe_id: string
   region: string
   mode: RecipeAdaptMode
-  /** 'already_optimal': nothing to improve — a success, not an error. */
-  status?: 'ok' | 'already_optimal' | string
+  /** 'already_optimal': nothing to improve; 'no_suggestions': no viable swap found. Both successes. */
+  status?: 'ok' | 'already_optimal' | 'no_suggestions' | string
   message?: string | null
   offending_ingredient?: string | null
   offending_ingredient_contribution_pct?: number | null
