@@ -99,7 +99,7 @@ export interface ChatMessage {
   content: string
   intent?: string
   timestamp: string
-  /** Client-side only — not persisted; absent on messages reloaded via getConversation() */
+  /** FoodScholar provenance — persisted server-side, present on reloads too */
   attribution?: ChatAttribution
   /** Client-side only — grafted from the live response like attribution */
   memory_suggestions?: MemorySuggestion[]

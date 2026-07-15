@@ -209,7 +209,7 @@
                   <div v-else class="fc-bubble fc-bubble-assistant group/msg">
                     <div class="fc-md text-gray-800 dark:text-gray-200" v-html="renderMarkdown(msg.content)" />
 
-                    <!-- FoodScholar attribution (only on live responses; not persisted) -->
+                    <!-- FoodScholar attribution (persisted with the message; survives reloads) -->
                     <div v-if="msg.attribution?.source === 'foodscholar'" class="mt-2 pt-2 border-t border-gray-100 dark:border-zinc-700/50">
                       <div class="flex items-center gap-1.5 flex-wrap">
                         <span
