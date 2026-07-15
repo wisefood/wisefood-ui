@@ -988,14 +988,18 @@ const handleSearchArrowUp = () => {
 
 const handleSearchEnter = () => {
   if (showAutocomplete.value && autocompleteSuggestions.value.length > 0) {
-    const nextSuggestion = autocompleteSuggestions.value[
-      activeAutocompleteIndex.value >= 0 ? activeAutocompleteIndex.value : 0
-    ]
-
-    if (nextSuggestion) {
-      void selectSuggestion(nextSuggestion)
-      return
+    // Only visit a suggestion the user explicitly highlighted with the
+    // arrow keys. A plain Enter while the dropdown is merely open submits
+    // the typed query to the NL search instead of hijacking it.
+    if (activeAutocompleteIndex.value >= 0) {
+      const nextSuggestion = autocompleteSuggestions.value[activeAutocompleteIndex.value]
+      if (nextSuggestion) {
+        void selectSuggestion(nextSuggestion)
+        return
+      }
     }
+    void performSearch()
+    return
   }
 
   const nextRecipe = displayedRecipes.value[activeRecipeResultIndex.value]
