@@ -16,7 +16,7 @@
       <div
         v-if="!hasSentFirstMessage"
         key="idle"
-        class="flex-1 flex flex-col items-center justify-center px-4 pt-36 pb-4"
+        class="flex-1 flex flex-col items-center justify-center px-4 pt-8 pb-4"
       >
         <div class="w-full max-w-2xl">
           <!-- Welcome heading -->
