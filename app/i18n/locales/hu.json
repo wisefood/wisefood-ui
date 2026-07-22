@@ -294,6 +294,7 @@
     "title": "RecipeWrangler",
     "subtitle": "Fedezz fel személyre szabott recepteket a táplálkozási céljaid és környezeti hatás alapján",
     "backToDashboard": "Vissza az irányítópultra",
+    "backToCompare": "Vissza az összehasonlításhoz",
     "backToRecipes": "Vissza a receptekhez",
     "compare": "Összehasonlítás",
     "loadingHint": "Ez akár 60 másodpercig is eltarthat",
@@ -1529,5 +1530,26 @@
     "message": "Sütiket használunk, és személyes adatait kizárólag a WiseFood szolgáltatás nyújtása érdekében kezeljük.",
     "privacyPolicy": "Adatvédelmi irányelvek",
     "accept": "Elfogadom"
+  },
+  "featureGate": {
+    "loading": "Betöltés...",
+    "features": {
+      "foodchat": "FoodChat"
+    },
+    "needs-household": {
+      "title": "Először állítsa be a háztartását",
+      "description": "A(z) {feature} a háztartásához igazodik. Hozzon létre egyet a kezdéshez.",
+      "cta": "Háztartás beállítása"
+    },
+    "needs-member": {
+      "title": "A folytatáshoz adjon hozzá egy profilt",
+      "description": "Adjon hozzá legalább egy profilt a háztartásához, hogy a(z) {feature} tudja, kinek főz.",
+      "cta": "Profil hozzáadása"
+    },
+    "needs-selection": {
+      "title": "Válasszon profilt",
+      "description": "Válassza ki, melyik profilt használja a(z) {feature} ebben a munkamenetben.",
+      "cta": "Profil kiválasztása"
+    }
   }
 }

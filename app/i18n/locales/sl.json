@@ -294,6 +294,7 @@
     "title": "RecipeWrangler",
     "subtitle": "Odkrij personalizirane recepte glede na tvoje prehranske cilje in vpliv na okolje",
     "backToDashboard": "Nazaj na nadzorno ploščo",
+    "backToCompare": "Nazaj na primerjavo",
     "backToRecipes": "Nazaj na recepte",
     "compare": "Primerjaj",
     "loadingHint": "To lahko traja do 60 sekund",
@@ -1529,5 +1530,26 @@
     "message": "Piškotke uporabljamo in vaše osebne podatke obdelujemo izključno za zagotavljanje storitve WiseFood.",
     "privacyPolicy": "Politika zasebnosti",
     "accept": "Sprejmi"
+  },
+  "featureGate": {
+    "loading": "Nalaganje ...",
+    "features": {
+      "foodchat": "FoodChat"
+    },
+    "needs-household": {
+      "title": "Najprej nastavite svoje gospodinjstvo",
+      "description": "{feature} je prilagojen vašemu gospodinjstvu. Ustvarite ga za začetek.",
+      "cta": "Nastavi gospodinjstvo"
+    },
+    "needs-member": {
+      "title": "Za nadaljevanje dodajte profil",
+      "description": "Dodajte vsaj en profil v svoje gospodinjstvo, da bo {feature} vedel, za koga kuha.",
+      "cta": "Dodaj profil"
+    },
+    "needs-selection": {
+      "title": "Izberite profil",
+      "description": "Izberite, čigav profil naj {feature} uporabi v tej seji.",
+      "cta": "Izberi profil"
+    }
   }
 }
