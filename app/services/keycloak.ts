@@ -24,6 +24,28 @@ const warn = (...args: unknown[]) => {
   }
 }
 
+// Locales the Nuxt app offers; kept in step with app/plugins/i18n.ts. The realm
+// must also list these in supportedLocales or Keycloak ignores the hint.
+const SUPPORTED_LOCALES = ['en', 'hu', 'sl']
+
+/**
+ * The language the user picked in the app, read from the same cookie the i18n
+ * plugin writes.
+ *
+ * Without this Keycloak picks its own language from Accept-Language or the
+ * realm default, so choosing Slovenščina in the app and then hitting Register
+ * lands you on an English registration form.
+ */
+const getUiLocale = (): string | undefined => {
+  if (typeof document === 'undefined') return undefined
+
+  const match = document.cookie.match(/(?:^|;\s*)wisefood_locale=([^;]*)/)
+  if (!match?.[1]) return undefined
+
+  const locale = decodeURIComponent(match[1]).trim()
+  return SUPPORTED_LOCALES.includes(locale) ? locale : undefined
+}
+
 class KeycloakAuthService {
   private keycloak: Keycloak | null = null
   private initPromise: Promise<boolean> | null = null
@@ -202,10 +224,12 @@ class KeycloakAuthService {
       ? this.getAbsoluteUrl(redirectUri)
       : this.getAbsoluteUrl('/profiles')
 
-    log('[Keycloak] Login with redirect:', absoluteUrl)
+    const locale = getUiLocale()
+    log('[Keycloak] Login with redirect:', absoluteUrl, 'locale:', locale ?? '(realm default)')
 
     this.getKeycloak().login({
       redirectUri: absoluteUrl,
+      ...(locale ? { locale } : {}),
     })
   }
 
@@ -226,11 +250,13 @@ class KeycloakAuthService {
       ? this.getAbsoluteUrl(redirectUri)
       : this.getAbsoluteUrl('/profiles')
 
-    log('[Keycloak] Register with redirect:', absoluteUrl)
+    const locale = getUiLocale()
+    log('[Keycloak] Register with redirect:', absoluteUrl, 'locale:', locale ?? '(realm default)')
 
     const kc = this.getKeycloak()
     kc.register({
       redirectUri: absoluteUrl,
+      ...(locale ? { locale } : {}),
     })
   }
 
