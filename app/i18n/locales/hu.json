@@ -117,7 +117,8 @@
       "myProfile": "Saját profil",
       "switchProfile": "Profilváltás",
       "accountSettings": "Fiókbeállítások",
-      "signOut": "Kijelentkezés"
+      "signOut": "Kijelentkezés",
+      "myLibrary": "Könyvtáram"
     }
   },
   "auth": {
@@ -585,6 +586,17 @@
         "simmering": "Türelmesen mélyítjük az ízeket"
       }
     }
+  },
+  "library": {
+    "backToDashboard": "Vissza az irányítópultra",
+    "emptyCta": "Receptek böngészése",
+    "emptyDescription": "Koppintson a szív ikonra bármelyik receptnél, hogy ide mentse későbbre.",
+    "emptyTitle": "Még nincs mentett elem",
+    "loadFailed": "Nem sikerült betölteni a mentett recepteket.",
+    "savedRecipes": "Mentett receptek",
+    "subtitle": "Minden mentett elem egy helyen.",
+    "title": "Könyvtáram",
+    "tryAgain": "Újrapróbálkozás"
   },
   "foodChat": {
     "title": "FoodChat",
@@ -1534,7 +1546,8 @@
   "featureGate": {
     "loading": "Betöltés...",
     "features": {
-      "foodchat": "FoodChat"
+      "foodchat": "FoodChat",
+      "library": "Könyvtáram"
     },
     "needs-household": {
       "title": "Először állítsa be a háztartását",

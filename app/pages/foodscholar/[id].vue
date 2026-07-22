@@ -445,11 +445,14 @@
             <div class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.4s">
               <h3 class="font-semibold text-gray-900 dark:text-white mb-4">{{ t('foodScholarArticle.sections.share') }}</h3>
               <div class="flex gap-2">
+                <!--
+                  A "Save" button lived here but was never wired to anything —
+                  no click handler, no backend. Saving literature needs a
+                  user-owned saved-items store (typed URN references); until
+                  that exists, don't show a control that silently does nothing.
+                -->
                 <UButton variant="outline" size="sm" icon="i-lucide-link" class="flex-1 cursor-pointer" @click="copyLink">
                   {{ copied ? t('foodScholarArticle.actions.copied') : t('foodScholarArticle.actions.copyLink') }}
-                </UButton>
-                <UButton variant="outline" size="sm" icon="i-lucide-bookmark" class="cursor-pointer">
-                  {{ t('foodScholarArticle.actions.save') }}
                 </UButton>
               </div>
               <UButton

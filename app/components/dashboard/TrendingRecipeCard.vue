@@ -1,42 +1,29 @@
 <!-- Image-first recipe card with badges and save toggle -->
 <script setup lang="ts">
+import { computed } from 'vue'
 import { MICROCOPY } from '@/utils/constants'
+import { useRecipeStore } from '~/stores/recipe'
 
 const props = defineProps<{
-  id: number
+  id: number | string
   title: string
   thumb: string
   healthy: boolean
   sustainable: boolean
 }>()
 
-const STORAGE_KEY = 'wisefood-saved-recipes'
+// This used to keep its own list in localStorage under 'wisefood-saved-recipes',
+// which never reached the server and so disagreed with the hearts everywhere
+// else. Favorites live in the recipe store, which syncs per member.
+const recipeStore = useRecipeStore()
 
-const isSaved = ref(false)
+// Favorites are keyed by the opaque RecipeWrangler id (a string).
+const recipeId = computed(() => String(props.id))
 
-onMounted(() => {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    const savedIds = saved ? JSON.parse(saved) : []
-    isSaved.value = savedIds.includes(props.id)
-  }
-})
+const isSaved = computed(() => recipeStore.isFavorite(recipeId.value))
 
 const toggleSave = () => {
-  if (typeof window === 'undefined') return
-
-  const saved = localStorage.getItem(STORAGE_KEY)
-  const savedIds = saved ? JSON.parse(saved) : []
-
-  if (isSaved.value) {
-    const filtered = savedIds.filter((id: number) => id !== props.id)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered))
-    isSaved.value = false
-  } else {
-    savedIds.push(props.id)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedIds))
-    isSaved.value = true
-  }
+  recipeStore.toggleFavorite(recipeId.value)
 }
 </script>
 

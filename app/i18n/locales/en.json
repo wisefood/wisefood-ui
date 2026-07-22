@@ -117,7 +117,8 @@
       "myProfile": "My Profile",
       "switchProfile": "Switch Profile",
       "accountSettings": "Account Settings",
-      "signOut": "Sign out"
+      "signOut": "Sign out",
+      "myLibrary": "My Library"
     }
   },
   "auth": {
@@ -585,6 +586,17 @@
         "simmering": "Patiently developing depth"
       }
     }
+  },
+  "library": {
+    "backToDashboard": "Back to Dashboard",
+    "emptyCta": "Browse recipes",
+    "emptyDescription": "Tap the heart on any recipe to save it here for later.",
+    "emptyTitle": "Nothing saved yet",
+    "loadFailed": "We couldn't load your saved recipes.",
+    "savedRecipes": "Saved recipes",
+    "subtitle": "Everything you've saved, in one place.",
+    "title": "My Library",
+    "tryAgain": "Try again"
   },
   "foodChat": {
     "title": "FoodChat",
@@ -1305,7 +1317,8 @@
   "featureGate": {
     "loading": "Loading...",
     "features": {
-      "foodchat": "FoodChat"
+      "foodchat": "FoodChat",
+      "library": "My Library"
     },
     "needs-household": {
       "title": "Set up your household first",

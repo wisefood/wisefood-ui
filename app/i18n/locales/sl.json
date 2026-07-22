@@ -117,7 +117,8 @@
       "myProfile": "Moj profil",
       "switchProfile": "Zamenjaj profil",
       "accountSettings": "Nastavitve računa",
-      "signOut": "Odjava"
+      "signOut": "Odjava",
+      "myLibrary": "Moja knjižnica"
     }
   },
   "auth": {
@@ -585,6 +586,17 @@
         "simmering": "Potrpežljivo razvijamo globino okusa"
       }
     }
+  },
+  "library": {
+    "backToDashboard": "Nazaj na nadzorno ploščo",
+    "emptyCta": "Prebrskaj recepte",
+    "emptyDescription": "Dotaknite se srčka pri katerem koli receptu, da ga shranite sem za pozneje.",
+    "emptyTitle": "Ničesar še niste shranili",
+    "loadFailed": "Vaših shranjenih receptov ni bilo mogoče naložiti.",
+    "savedRecipes": "Shranjeni recepti",
+    "subtitle": "Vse, kar ste shranili, na enem mestu.",
+    "title": "Moja knjižnica",
+    "tryAgain": "Poskusi znova"
   },
   "foodChat": {
     "title": "FoodChat",
@@ -1534,7 +1546,8 @@
   "featureGate": {
     "loading": "Nalaganje ...",
     "features": {
-      "foodchat": "FoodChat"
+      "foodchat": "FoodChat",
+      "library": "Moja knjižnica"
     },
     "needs-household": {
       "title": "Najprej nastavite svoje gospodinjstvo",

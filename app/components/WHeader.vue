@@ -204,6 +204,12 @@ const userMenuItems = computed<DropdownMenuItem[]>(() => [
     onSelect: () => navigateTo('/my-profile')
   },
   {
+    label: t('header.menu.myLibrary'),
+    icon: 'i-lucide-heart',
+    disabled: !householdStore.currentMember,
+    onSelect: () => navigateTo('/library')
+  },
+  {
     label: t('header.menu.switchProfile'),
     icon: 'i-lucide-users',
     onSelect: () => {
