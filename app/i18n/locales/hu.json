@@ -1461,6 +1461,8 @@
       "feedback": "{count} visszajelzés"
     },
     "weekly": {
+      "expandAll": "Összes nap kibontása",
+      "collapseAll": "Összes nap összecsukása",
       "glanceTitle": "A hét egy pillantásra",
       "dailyAverage": "≈ {kcal} kcal naponta",
       "budgetUsed": "a kalóriakereted {pct}%-a"

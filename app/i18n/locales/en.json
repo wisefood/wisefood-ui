@@ -1483,6 +1483,8 @@
       "feedback": "{count} feedback signals"
     },
     "weekly": {
+      "expandAll": "Expand all days",
+      "collapseAll": "Collapse all days",
       "glanceTitle": "Week at a glance",
       "dailyAverage": "≈ {kcal} kcal per day",
       "budgetUsed": "{pct}% of your calorie budget"

@@ -1461,6 +1461,8 @@
       "feedback": "{count} povratnih informacij"
     },
     "weekly": {
+      "expandAll": "Razširi vse dni",
+      "collapseAll": "Strni vse dni",
       "glanceTitle": "Teden na prvi pogled",
       "dailyAverage": "≈ {kcal} kcal na dan",
       "budgetUsed": "{pct} % tvojega kaloričnega proračuna"

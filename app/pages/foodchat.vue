@@ -737,7 +737,16 @@
                     </UTooltip>
                   </div>
 
-                  <!-- Day accordion — one row per day, expand for the meals -->
+                  <!-- Collapsible days — one row per day, meals reviewable inline -->
+                  <div class="flex justify-end mb-1.5 px-1">
+                    <button
+                      class="inline-flex items-center gap-1 text-[10px] text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 transition-colors"
+                      @click="toggleAllWeeklyDays"
+                    >
+                      <UIcon :name="allWeeklyDaysExpanded ? 'i-lucide-chevrons-down-up' : 'i-lucide-chevrons-up-down'" class="w-3 h-3" />
+                      {{ allWeeklyDaysExpanded ? t('foodChatHome.weekly.collapseAll') : t('foodChatHome.weekly.expandAll') }}
+                    </button>
+                  </div>
                   <div class="space-y-1.5 mb-4">
                     <div
                       v-for="day in weeklyDays"
@@ -768,12 +777,12 @@
                           </span>
                         </span>
                         <UIcon
-                          :name="expandedWeeklyDay === day.dayIndex ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+                          :name="expandedWeeklyDays.has(day.dayIndex) ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
                           class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0"
                         />
                       </button>
 
-                      <div v-show="expandedWeeklyDay === day.dayIndex" class="px-2 pb-2">
+                      <div v-show="expandedWeeklyDays.has(day.dayIndex)" class="px-2 pb-2">
                         <div class="grid sm:grid-cols-3 gap-1.5">
                           <div
                             v-for="mealType in ['breakfast', 'lunch', 'dinner']"
@@ -1328,18 +1337,35 @@ function weeklyEntry(day: { entries: WeeklyMealEntry[] }, mealType: string): Wee
   return day.entries.find(e => e.meal_type === mealType)
 }
 
-// ── Weekly explainability (M7 — day accordion, measured ledger, metrics) ──
-const expandedWeeklyDay = ref<number | null>(null)
+// ── Weekly explainability (M7 — collapsible days, measured ledger, metrics) ──
+const expandedWeeklyDays = ref<Set<number>>(new Set())
 const weekGlanceOpen = ref(false)
 
 function toggleWeeklyDay(dayIndex: number) {
-  expandedWeeklyDay.value = expandedWeeklyDay.value === dayIndex ? null : dayIndex
+  const next = new Set(expandedWeeklyDays.value)
+  if (next.has(dayIndex)) next.delete(dayIndex)
+  else next.add(dayIndex)
+  expandedWeeklyDays.value = next
 }
 
-// A new plan (or plan switch) starts collapsed — the headlines ARE the overview
+const allWeeklyDaysExpanded = computed(() =>
+  weeklyDays.value.length > 0
+  && weeklyDays.value.every(d => expandedWeeklyDays.value.has(d.dayIndex))
+)
+
+function toggleAllWeeklyDays() {
+  expandedWeeklyDays.value = allWeeklyDaysExpanded.value
+    ? new Set()
+    : new Set(weeklyDays.value.map(d => d.dayIndex))
+}
+
+// A new plan (or plan switch) starts fully expanded — meals are there to
+// review; collapsing to the headline row is the reader's choice
 watch(displayedWeeklyPlan, (now, prev) => {
-  if (now?.id !== prev?.id) { expandedWeeklyDay.value = null }
-})
+  if (now?.id !== prev?.id) {
+    expandedWeeklyDays.value = new Set(weeklyDays.value.map(d => d.dayIndex))
+  }
+}, { immediate: true })
 
 const weeklyLedger = computed(() => displayedWeeklyPlan.value?.constraints_applied ?? [])
 
