@@ -98,6 +98,10 @@
               <span class="text-gray-600 dark:text-gray-400">{{ t('myProfile.fields.ageGroup') }}</span>
               <span class="font-medium text-gray-900 dark:text-white">{{ ageGroupLabel }}</span>
             </div>
+            <div class="flex items-center justify-between py-2 border-b border-gray-100 dark:border-zinc-800">
+              <span class="text-gray-600 dark:text-gray-400">{{ t('myProfile.fields.gender') }}</span>
+              <span class="font-medium text-gray-900 dark:text-white">{{ genderLabel }}</span>
+            </div>
             <div class="flex items-center justify-between py-2">
               <span class="text-gray-600 dark:text-gray-400">{{ t('myProfile.fields.memberSince') }}</span>
               <span class="font-medium text-gray-900 dark:text-white">{{ memberSince }}</span>
@@ -468,6 +472,16 @@
                   v-model="editAgeGroup"
                   :items="ageGroupOptions"
                   :placeholder="t('myProfile.fields.selectAgeGroup')"
+                  size="lg"
+                  value-key="value"
+                />
+              </UFormField>
+
+              <UFormField :label="t('myProfile.fields.gender')">
+                <USelectMenu
+                  v-model="editGender"
+                  :items="genderOptions"
+                  :placeholder="t('myProfile.fields.selectGender')"
                   size="lg"
                   value-key="value"
                 />
@@ -852,6 +866,7 @@ const showDeleteConfirm = ref(false)
 // Edit form states
 const editName = ref('')
 const editAgeGroup = ref<string | undefined>(undefined)
+const editGender = ref<string | undefined>(undefined)
 const editAvatarIndex = ref(0)
 const selectedNewDiet = ref<string | null>(null)
 const selectedNewAllergy = ref<string | null>(null)
@@ -1070,6 +1085,13 @@ const ageGroupOptions = computed(() => [
   { label: t('profileSelection.ageGroups.senior'), value: 'senior' }
 ])
 
+const genderOptions = computed(() => [
+  { label: t('profileSelection.genders.female'), value: 'female' },
+  { label: t('profileSelection.genders.male'), value: 'male' },
+  { label: t('profileSelection.genders.other'), value: 'other' },
+  { label: t('profileSelection.genders.prefer_not_to_say'), value: 'prefer_not_to_say' }
+])
+
 const dietaryOptions = computed(() => [
   {
     value: 'omnivore',
@@ -1153,6 +1175,14 @@ const ageGroupLabel = computed(() => {
   if (!currentMember.value?.age_group) return t('myProfile.values.notSpecified')
   const option = ageGroupOptions.value.find(o => o.value === currentMember.value?.age_group)
   return option?.label || currentMember.value.age_group
+})
+
+// Gender rides in the profile's nutritional_preferences blob, not on the member.
+const genderLabel = computed(() => {
+  const gender = memberProfile.value?.nutritional_preferences?.gender
+  if (!gender) return t('myProfile.values.notSpecified')
+  const option = genderOptions.value.find(o => o.value === gender)
+  return option?.label || gender
 })
 
 const dateLocale = computed(() => {
@@ -1240,6 +1270,7 @@ watch(currentMember, (member) => {
   if (member) {
     editName.value = member.name
     editAgeGroup.value = member.age_group
+    editGender.value = memberProfile.value?.nutritional_preferences?.gender
     if (member.image_url?.startsWith('avatar:')) {
       const idx = parseInt(member.image_url.slice(7), 10)
       if (!isNaN(idx) && idx >= 0 && idx < avatarPresets.length) {
@@ -1270,6 +1301,8 @@ async function loadMemberProfile() {
     const response = await householdStore.getMemberProfile(currentMember.value.id)
     if (response) {
       memberProfile.value = response as MemberProfile
+      // Seed the edit form now the profile (where gender lives) is loaded.
+      editGender.value = memberProfile.value?.nutritional_preferences?.gender
     }
   } catch {
     // Profile might not exist yet
@@ -1306,6 +1339,21 @@ async function saveDetails() {
       name: editName.value.trim(),
       age_group: editAgeGroup.value as 'child' | 'teen' | 'adult' | 'senior' | undefined
     })
+
+    // Gender lives in the profile's nutritional_preferences blob, not on the
+    // member, so it's a separate write — only made when it actually changed.
+    const currentGender = memberProfile.value?.nutritional_preferences?.gender
+    if (editGender.value !== currentGender) {
+      const nutPrefs: NutritionalPreferences = {
+        ...memberProfile.value?.nutritional_preferences,
+        gender: (editGender.value as NutritionalPreferences['gender']) || undefined
+      }
+      if (!editGender.value) delete nutPrefs.gender
+      const payload = buildProfilePayload({ nutritional_preferences: nutPrefs })
+      await householdStore.updateMemberProfile(currentMember.value.id, payload)
+      memberProfile.value = { ...memberProfile.value, nutritional_preferences: nutPrefs }
+    }
+
     showEditDetails.value = false
   } catch (err) {
     console.error('Failed to save details:', err)

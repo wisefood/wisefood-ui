@@ -848,6 +848,12 @@
       "adult": "Odrasel (20-64)",
       "senior": "Starejši (65+)"
     },
+    "genders": {
+      "female": "Ženski",
+      "male": "Moški",
+      "other": "Drugo",
+      "prefer_not_to_say": "Ne želim navesti"
+    },
     "errors": {
       "createProfileFailed": "Ustvarjanje profila ni uspelo. Poskusi znova.",
       "deleteProfileFailed": "Brisanje profila ni uspelo. Poskusi znova."
@@ -880,7 +886,9 @@
         "profileNameLabel": "Ime profila",
         "profileNamePlaceholder": "npr. Janez, Mama, Oče",
         "ageGroupOptionalLabel": "Starostna skupina (neobvezno)",
-        "selectAgeGroupPlaceholder": "Izberi starostno skupino"
+        "genderOptionalLabel": "Spol (neobvezno)",
+        "selectAgeGroupPlaceholder": "Izberi starostno skupino",
+        "selectGenderPlaceholder": "Izberi spol"
       },
       "step3": {
         "titlePrefix": "Prehranske",
@@ -1143,9 +1151,11 @@
     "fields": {
       "name": "Ime",
       "ageGroup": "Starostna skupina",
+      "gender": "Spol",
       "memberSince": "Član od",
       "profileNamePlaceholder": "Ime profila",
-      "selectAgeGroup": "Izberi starostno skupino"
+      "selectAgeGroup": "Izberi starostno skupino",
+      "selectGender": "Izberi spol"
     },
     "values": {
       "notSpecified": "Ni določeno",

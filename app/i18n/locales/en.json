@@ -848,6 +848,12 @@
       "adult": "Adult (20-64)",
       "senior": "Senior (65+)"
     },
+    "genders": {
+      "female": "Female",
+      "male": "Male",
+      "other": "Other",
+      "prefer_not_to_say": "Prefer not to say"
+    },
     "errors": {
       "createProfileFailed": "Failed to create profile. Please try again.",
       "deleteProfileFailed": "Failed to delete profile. Please try again."
@@ -880,7 +886,9 @@
         "profileNameLabel": "Profile Name",
         "profileNamePlaceholder": "e.g., John, Mom, Dad",
         "ageGroupOptionalLabel": "Age Group (optional)",
-        "selectAgeGroupPlaceholder": "Select age group"
+        "genderOptionalLabel": "Gender (optional)",
+        "selectAgeGroupPlaceholder": "Select age group",
+        "selectGenderPlaceholder": "Select gender"
       },
       "step3": {
         "titlePrefix": "Dietary",
@@ -1143,9 +1151,11 @@
     "fields": {
       "name": "Name",
       "ageGroup": "Age Group",
+      "gender": "Gender",
       "memberSince": "Member Since",
       "profileNamePlaceholder": "Profile name",
-      "selectAgeGroup": "Select age group"
+      "selectAgeGroup": "Select age group",
+      "selectGender": "Select gender"
     },
     "values": {
       "notSpecified": "Not specified",

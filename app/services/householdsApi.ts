@@ -22,6 +22,8 @@ export interface HouseholdMember {
   updated_at?: string
 }
 
+export type Gender = 'female' | 'male' | 'other' | 'prefer_not_to_say'
+
 export interface NutritionalPreferences {
   fat?: number
   carbs?: number
@@ -29,6 +31,9 @@ export interface NutritionalPreferences {
   calories?: number
   food_likes?: string[]
   food_dislikes?: string[]
+  // Stored in the JSONB blob rather than as a column; FoodScholar reads this
+  // key to tailor nutrition guidance. Optional — members may skip it.
+  gender?: Gender
 }
 
 export interface MemberProfile {

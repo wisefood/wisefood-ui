@@ -848,6 +848,12 @@
       "adult": "Felnőtt (20-64)",
       "senior": "Idős (65+)"
     },
+    "genders": {
+      "female": "Nő",
+      "male": "Férfi",
+      "other": "Egyéb",
+      "prefer_not_to_say": "Nem kívánom megadni"
+    },
     "errors": {
       "createProfileFailed": "A profil létrehozása sikertelen. Próbáld újra.",
       "deleteProfileFailed": "A profil törlése sikertelen. Próbáld újra."
@@ -880,7 +886,9 @@
         "profileNameLabel": "Profil neve",
         "profileNamePlaceholder": "pl. János, Anya, Apa",
         "ageGroupOptionalLabel": "Korosztály (opcionális)",
-        "selectAgeGroupPlaceholder": "Korosztály kiválasztása"
+        "genderOptionalLabel": "Nem (opcionális)",
+        "selectAgeGroupPlaceholder": "Korosztály kiválasztása",
+        "selectGenderPlaceholder": "Válasszon nemet"
       },
       "step3": {
         "titlePrefix": "Étrendi",
@@ -1143,9 +1151,11 @@
     "fields": {
       "name": "Név",
       "ageGroup": "Korosztály",
+      "gender": "Nem",
       "memberSince": "Tag mióta",
       "profileNamePlaceholder": "Profil neve",
-      "selectAgeGroup": "Korosztály kiválasztása"
+      "selectAgeGroup": "Korosztály kiválasztása",
+      "selectGender": "Válasszon nemet"
     },
     "values": {
       "notSpecified": "Nincs megadva",

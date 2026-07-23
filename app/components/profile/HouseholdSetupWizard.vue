@@ -107,6 +107,17 @@
             />
           </UFormField>
 
+          <UFormField :label="t('profileSelection.setupWizard.step2.genderOptionalLabel')">
+            <USelectMenu
+              v-model="memberGender"
+              :items="genderOptions"
+              :placeholder="t('profileSelection.setupWizard.step2.selectGenderPlaceholder')"
+              size="lg"
+              value-key="value"
+              :disabled="isSubmitting"
+            />
+          </UFormField>
+
           <ProfileAvatarSelector v-model="selectedAvatarIndex" />
         </div>
 
@@ -185,6 +196,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useHouseholdStore } from '~/stores/household'
+import type { Gender } from '~/services/householdsApi'
 
 interface Emits {
   (e: 'complete'): void
@@ -208,6 +220,7 @@ const householdRegion = ref<string | undefined>(undefined)
 // Step 2: Member data
 const memberName = ref('')
 const memberAgeGroup = ref<string | undefined>(undefined)
+const memberGender = ref<Gender | undefined>(undefined)
 const selectedAvatarIndex = ref(0)
 
 // Step 3: Dietary preferences
@@ -218,6 +231,13 @@ const ageGroupOptions = computed(() => [
   { label: t('profileSelection.ageGroups.teen'), value: 'teen' },
   { label: t('profileSelection.ageGroups.adult'), value: 'adult' },
   { label: t('profileSelection.ageGroups.senior'), value: 'senior' }
+])
+
+const genderOptions = computed(() => [
+  { label: t('profileSelection.genders.female'), value: 'female' },
+  { label: t('profileSelection.genders.male'), value: 'male' },
+  { label: t('profileSelection.genders.other'), value: 'other' },
+  { label: t('profileSelection.genders.prefer_not_to_say'), value: 'prefer_not_to_say' }
 ])
 
 const dietaryOptions = computed(() => [
@@ -298,7 +318,9 @@ async function handleNext() {
       image_url: `avatar:${selectedAvatarIndex.value}`,
       profile: {
         dietary_groups: [selectedDiet.value as 'omnivore' | 'vegetarian' | 'vegan' | 'pescatarian' | 'flexitarian'],
-        nutritional_preferences: {},
+        // Gender rides in the nutritional_preferences blob (no dedicated column);
+        // only include it when the member actually picked one.
+        nutritional_preferences: memberGender.value ? { gender: memberGender.value } : {},
         properties: {}
       }
     })
