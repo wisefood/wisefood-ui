@@ -581,6 +581,18 @@
                           </button>
                         </div>
                         <div v-if="draftPickerOpen === draftSlotKey(group.day, mealType)" class="mt-2">
+                          <!-- Favorites first — one tap, no typing -->
+                          <div v-if="draftFavorites.length" class="mb-1.5 flex flex-wrap gap-1">
+                            <button
+                              v-for="fav in draftFavorites"
+                              :key="fav.recipe_id"
+                              class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full border border-brandp-100 dark:border-brandp-900/50 bg-brandp-50/60 dark:bg-brandp-950/30 text-brandp-600 dark:text-brandp-300 hover:bg-brandp-100 dark:hover:bg-brandp-900/40 transition-colors"
+                              @click="pickDraftRecipe(draftSlotKey(group.day, mealType), fav)"
+                            >
+                              <UIcon name="i-lucide-heart" class="w-2.5 h-2.5" />
+                              {{ fav.title }}
+                            </button>
+                          </div>
                           <input
                             v-model="draftQuery"
                             type="text"
@@ -1118,6 +1130,63 @@
                       </div>
                     </div>
                   </div>
+
+                  <!-- Personalization line -->
+                  <div v-if="weeklyPersonalizationParts.length" class="mb-4 px-1">
+                    <NuxtLink
+                      to="/my-profile"
+                      class="inline-flex items-center gap-1.5 text-[11px] font-light text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:underline transition-colors"
+                    >
+                      <UIcon name="i-lucide-sparkles" class="w-3 h-3 shrink-0" />
+                      {{ t('foodChatHome.personalization.prefix') }} {{ weeklyPersonalizationParts.join(' · ') }}
+                    </NuxtLink>
+                  </div>
+
+                  <!-- Plan vote -->
+                  <div class="mb-5 px-1">
+                    <div class="flex items-center gap-2">
+                      <template v-if="!planFeedbackSubmitted[displayedWeeklyPlan.id]">
+                        <span class="text-xs text-gray-400">{{ t('foodChatHome.canvas.rateThisPlan') }}</span>
+                        <UTooltip :text="t('foodChatHome.tooltips.planWorksWell')">
+                          <button
+                            :class="['fc-feedback-btn', planVotes[displayedWeeklyPlan.id] === 'up' ? 'fc-feedback-active-up' : '']"
+                            @click="votePlan(displayedWeeklyPlan.id, 'up', getMessageIdForPlanIdx(selectedWeeklyPlanIdx))"
+                          >
+                            <UIcon name="i-lucide-thumbs-up" class="w-3.5 h-3.5" />
+                          </button>
+                        </UTooltip>
+                        <UTooltip :text="t('foodChatHome.tooltips.needsImprovement')">
+                          <button
+                            :class="['fc-feedback-btn', planVotes[displayedWeeklyPlan.id] === 'down' ? 'fc-feedback-active-down' : '']"
+                            @click="votePlan(displayedWeeklyPlan.id, 'down', getMessageIdForPlanIdx(selectedWeeklyPlanIdx))"
+                          >
+                            <UIcon name="i-lucide-thumbs-down" class="w-3.5 h-3.5" />
+                          </button>
+                        </UTooltip>
+                      </template>
+                      <span v-else class="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <UIcon name="i-lucide-check" class="w-3 h-3" />
+                        {{ t('foodChatHome.chat.feedbackSaved') }}
+                      </span>
+                    </div>
+                    <Transition name="chips-fade">
+                      <div v-if="planVotes[displayedWeeklyPlan.id] === 'down' && !planFeedbackSubmitted[displayedWeeklyPlan.id]" class="mt-2 flex items-center gap-2">
+                        <input
+                          v-model="planFeedbackComments[displayedWeeklyPlan.id]"
+                          type="text"
+                          :placeholder="t('foodChatHome.canvas.feedbackCommentPlaceholder')"
+                          class="flex-1 text-xs px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:border-brandp-400"
+                          @keydown.enter="submitPlanComment(displayedWeeklyPlan.id, getMessageIdForPlanIdx(selectedWeeklyPlanIdx))"
+                        />
+                        <button
+                          class="text-xs px-3 py-1.5 rounded-lg bg-brandp-500 text-white hover:bg-brandp-600 transition-colors"
+                          @click="submitPlanComment(displayedWeeklyPlan.id, getMessageIdForPlanIdx(selectedWeeklyPlanIdx))"
+                        >
+                          {{ t('foodChatHome.canvas.feedbackCommentSend') }}
+                        </button>
+                      </div>
+                    </Transition>
+                  </div>
                 </template>
 
               </div>
@@ -1338,9 +1407,27 @@ const draftPickCount = computed(() =>
     .length
 )
 
+// Favorites shortlist for the pickers — loaded once per draft session
+const draftFavorites = ref<Array<{ recipe_id: string, title: string }>>([])
+const draftFavoritesLoaded = ref(false)
+
+async function loadDraftFavorites() {
+  if (draftFavoritesLoaded.value) return
+  draftFavoritesLoaded.value = true
+  const ids = recipeStore.favorites.slice(0, 6)
+  if (!ids.length) return
+  try {
+    const details = await recipeApi.getRecipeDetailsBatch(ids)
+    draftFavorites.value = ids
+      .map(id => ({ recipe_id: id, title: details[id]?.title || '' }))
+      .filter(f => f.title)
+  } catch { /* shortlist is optional — search still works */ }
+}
+
 function enterDraftMode() {
   draftMode.value = true
   if (!hasSentFirstMessage.value) hasSentFirstMessage.value = true
+  loadDraftFavorites()
 }
 
 function exitDraftMode() {
@@ -1856,6 +1943,16 @@ function constraintTooltip(constraint: ConstraintApplied): string {
 
 const personalizationParts = computed(() => {
   const summary = displayedMealPlan.value?.personalization_summary
+  if (!summary) return []
+  const parts: string[] = []
+  if (summary.memories_used > 0) parts.push(t('foodChatHome.personalization.memories', { count: summary.memories_used }))
+  if (summary.favorites_used > 0) parts.push(t('foodChatHome.personalization.favorites', { count: summary.favorites_used }))
+  if (summary.feedback_signals > 0) parts.push(t('foodChatHome.personalization.feedback', { count: summary.feedback_signals }))
+  return parts
+})
+
+const weeklyPersonalizationParts = computed(() => {
+  const summary = displayedWeeklyPlan.value?.personalization_summary
   if (!summary) return []
   const parts: string[] = []
   if (summary.memories_used > 0) parts.push(t('foodChatHome.personalization.memories', { count: summary.memories_used }))
