@@ -618,6 +618,9 @@
     "emptyTitle": "Ničesar še niste shranili",
     "loadFailed": "Vaših shranjenih receptov ni bilo mogoče naložiti.",
     "savedRecipes": "Shranjeni recepti",
+    "savedArticles": "Shranjeni članki",
+    "savedGuides": "Shranjeni vodniki",
+    "savedTextbooks": "Shranjeni učbeniki",
     "subtitle": "Vse, kar ste shranili, na enem mestu.",
     "title": "Moja knjižnica",
     "tryAgain": "Poskusi znova",
@@ -1456,6 +1459,11 @@
       "memories": "{count} spominov",
       "favorites": "{count} priljubljenih",
       "feedback": "{count} povratnih informacij"
+    },
+    "weekly": {
+      "glanceTitle": "Teden na prvi pogled",
+      "dailyAverage": "≈ {kcal} kcal na dan",
+      "budgetUsed": "{pct} % tvojega kaloričnega proračuna"
     },
     "quality": {
       "title": "Kakovost načrta",

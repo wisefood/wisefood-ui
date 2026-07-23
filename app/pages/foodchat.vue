@@ -716,109 +716,218 @@
 
                 <!-- ── Weekly plan content ── -->
                 <template v-else-if="canvasMode === 'weekly' && displayedWeeklyPlan">
-                  <div class="overflow-x-auto">
-                    <div class="grid grid-cols-7 gap-1 min-w-[560px]">
-                      <!-- Day headers -->
-                      <div
-                        v-for="day in weeklyDays"
-                        :key="day.dayIndex"
-                        class="text-center text-[10px] font-semibold text-gray-500 dark:text-zinc-400 uppercase tracking-wide pb-1"
+                  <!-- Measured constraint ledger (weekly rows can be relaxed/violated) -->
+                  <div v-if="weeklyLedger.length" class="mb-3 px-1 flex items-center gap-1.5 flex-wrap">
+                    <span class="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 shrink-0">
+                      <UIcon name="i-lucide-sliders-horizontal" class="w-3 h-3" />
+                      {{ t('foodChatHome.constraints.label') }}
+                    </span>
+                    <UTooltip
+                      v-for="(constraint, cIdx) in weeklyLedger"
+                      :key="cIdx"
+                      :text="constraint.detail || constraintTooltip(constraint)"
+                    >
+                      <span
+                        class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full border cursor-help"
+                        :class="weeklyLedgerClass(constraint)"
                       >
-                        {{ day.label }}
-                      </div>
-                      <!-- Meal cells: breakfast, lunch, dinner rows -->
-                      <template v-for="mealType in ['breakfast', 'lunch', 'dinner']" :key="mealType">
-                        <div
-                          v-for="day in weeklyDays"
-                          :key="`${day.dayIndex}-${mealType}`"
-                          class="relative rounded-lg border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-800/40 p-1.5 min-h-[130px] flex flex-col gap-1"
-                        >
-                          <div class="flex items-center gap-1">
-                            <UIcon :name="mealTypeIcon(mealType)" class="w-2.5 h-2.5 text-brandp-400 shrink-0" />
-                            <span class="text-[9px] text-gray-400 dark:text-zinc-500 capitalize">{{ mealType }}</span>
-                            <button
-                              v-if="getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType))"
-                              type="button"
-                              class="ml-auto flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 hover:scale-110 transition-all duration-200 shrink-0"
-                              :aria-label="isRecipeFavorite(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType))) ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
-                              @click.prevent.stop="toggleRecipeFavorite(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)))"
-                            >
-                              <UIcon
-                                name="i-lucide-heart"
-                                :class="[
-                                  'w-3 h-3 transition-colors duration-200',
-                                  isRecipeFavorite(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)))
-                                    ? 'text-red-500 fill-red-500'
-                                    : 'text-gray-300 dark:text-zinc-600'
-                                ]"
-                              />
-                            </button>
-                          </div>
-                          <!-- Circular image bubble -->
-                          <NuxtLink
-                            :to="getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)) ? `/recipe-wrangler/${getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType))}` : ''"
-                            :target="getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)) ? '_blank' : undefined"
-                            class="w-8 h-8 rounded-full overflow-hidden bg-gray-100 dark:bg-zinc-700 shrink-0 transition-transform duration-200 hover:scale-150 cursor-pointer block"
+                        <UIcon v-if="weeklyLedgerIcon(constraint)" :name="weeklyLedgerIcon(constraint)!" class="w-3 h-3 shrink-0" />
+                        {{ constraint.constraint }}
+                      </span>
+                    </UTooltip>
+                  </div>
+
+                  <!-- Day accordion — one row per day, expand for the meals -->
+                  <div class="space-y-1.5 mb-4">
+                    <div
+                      v-for="day in weeklyDays"
+                      :key="day.dayIndex"
+                      class="rounded-xl border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-800/40 overflow-hidden"
+                    >
+                      <button
+                        class="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-colors"
+                        @click="toggleWeeklyDay(day.dayIndex)"
+                      >
+                        <span class="w-20 shrink-0 text-xs font-semibold text-gray-700 dark:text-zinc-200">{{ weeklyDayLabel(day) }}</span>
+                        <span class="flex-1 min-w-0 truncate text-[11px] font-light text-gray-500 dark:text-zinc-400">{{ weeklyDaySummary(day.dayIndex) }}</span>
+                        <span v-if="weeklyDayKcal(day.dayIndex) != null" class="shrink-0 text-[10px] text-gray-400 dark:text-zinc-500 tabular-nums">
+                          {{ t('foodChatHome.mealCard.kcal', { kcal: Math.round(weeklyDayKcal(day.dayIndex)!) }) }}
+                        </span>
+                        <span class="flex -space-x-1.5 shrink-0">
+                          <span
+                            v-for="entry in day.entries"
+                            :key="entry.meal_idx"
+                            class="w-5 h-5 rounded-full ring-1 ring-white dark:ring-zinc-900 overflow-hidden bg-gray-100 dark:bg-zinc-700"
                           >
                             <img
-                              v-if="getRecipeImage(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)))"
-                              :src="getRecipeImage(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)))"
+                              v-if="getRecipeImage(getWeeklyRecipeId(entry))"
+                              :src="getRecipeImage(getWeeklyRecipeId(entry))!"
                               class="w-full h-full object-cover"
                               loading="lazy"
-                            />
-                            <div
-                              v-else-if="isRecipeImagePending(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)))"
-                              class="w-full h-full animate-pulse"
-                            />
-                            <div v-else class="w-full h-full flex items-center justify-center">
-                              <UIcon name="i-lucide-utensils" class="w-3 h-3 text-gray-300 dark:text-zinc-600" />
-                            </div>
-                          </NuxtLink>
-                          <NuxtLink
-                            v-if="getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType))"
-                            :to="`/recipe-wrangler/${getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType))}`"
-                            target="_blank"
-                            class="text-[11px] font-medium text-brandp-600 dark:text-brandp-400 leading-tight line-clamp-2 hover:underline pr-7"
-                          >
-                            {{ getWeeklyRecipeTitle(day.entries.find(e => e.meal_type === mealType)) }}
-                          </NuxtLink>
-                          <p v-else class="text-[11px] font-medium text-gray-800 dark:text-gray-200 leading-tight line-clamp-2 pr-7">
-                            {{ getWeeklyRecipeTitle(day.entries.find(e => e.meal_type === mealType)) }}
-                          </p>
-                          <span
-                            v-if="getWeeklyEntryKcal(day.entries.find(e => e.meal_type === mealType)) != null"
-                            class="mt-auto pr-8 text-[8px] text-gray-400 dark:text-zinc-500 leading-none"
-                          >
-                            {{ t('foodChatHome.mealCard.kcal', { kcal: getWeeklyEntryKcal(day.entries.find(e => e.meal_type === mealType)) }) }}
+                            >
                           </span>
-                          <!-- Nutrient donut — bottom right -->
+                        </span>
+                        <UIcon
+                          :name="expandedWeeklyDay === day.dayIndex ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+                          class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0"
+                        />
+                      </button>
+
+                      <div v-show="expandedWeeklyDay === day.dayIndex" class="px-2 pb-2">
+                        <div class="grid sm:grid-cols-3 gap-1.5">
                           <div
-                            v-if="getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)) && getWeeklySegments(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType))).length"
-                            class="absolute bottom-1 right-1 cursor-help"
-                            @mouseleave="weeklyHovered[`${day.dayIndex}-${mealType}`] = null"
+                            v-for="mealType in ['breakfast', 'lunch', 'dinner']"
+                            :key="`${day.dayIndex}-${mealType}`"
+                            class="relative rounded-lg border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/30 p-2 flex flex-col gap-1.5"
                           >
-                            <svg width="28" height="28" viewBox="0 0 28 28" style="transform:rotate(-90deg)">
-                              <circle cx="14" cy="14" r="11" stroke="#e5e7eb" stroke-width="3.5" fill="none" />
-                              <circle
-                                v-for="seg in getWeeklySegments(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)))"
-                                :key="seg.key"
-                                cx="14" cy="14" r="11"
-                                :stroke="seg.color"
-                                stroke-width="3.5"
-                                fill="none"
-                                :stroke-dasharray="`${seg.dash} ${weeklyCircumference}`"
-                                :stroke-dashoffset="-seg.offset"
-                                stroke-linecap="butt"
-                                :style="{ opacity: weeklyHovered[`${day.dayIndex}-${mealType}`] && weeklyHovered[`${day.dayIndex}-${mealType}`] !== seg.key ? 0.25 : 1, transition: 'opacity 0.15s' }"
-                                @mouseenter="weeklyHovered[`${day.dayIndex}-${mealType}`] = seg.key"
-                              />
-                            </svg>
-                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                              <span class="text-[7px] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ getWeeklyCenterValue(getWeeklyRecipeId(day.entries.find(e => e.meal_type === mealType)), `${day.dayIndex}-${mealType}`) }}</span>
+                            <div class="flex items-center gap-1">
+                              <UIcon :name="mealTypeIcon(mealType)" class="w-3 h-3 text-brandp-400 shrink-0" />
+                              <span class="text-[10px] text-gray-400 dark:text-zinc-500 capitalize">{{ mealType }}</span>
+                              <button
+                                v-if="getWeeklyRecipeId(weeklyEntry(day, mealType))"
+                                type="button"
+                                class="ml-auto flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 hover:scale-110 transition-all duration-200 shrink-0"
+                                :aria-label="isRecipeFavorite(getWeeklyRecipeId(weeklyEntry(day, mealType))) ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
+                                @click.prevent.stop="toggleRecipeFavorite(getWeeklyRecipeId(weeklyEntry(day, mealType)))"
+                              >
+                                <UIcon
+                                  name="i-lucide-heart"
+                                  :class="[
+                                    'w-3 h-3 transition-colors duration-200',
+                                    isRecipeFavorite(getWeeklyRecipeId(weeklyEntry(day, mealType)))
+                                      ? 'text-red-500 fill-red-500'
+                                      : 'text-gray-300 dark:text-zinc-600'
+                                  ]"
+                                />
+                              </button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                              <NuxtLink
+                                :to="getWeeklyRecipeId(weeklyEntry(day, mealType)) ? `/recipe-wrangler/${getWeeklyRecipeId(weeklyEntry(day, mealType))}` : ''"
+                                :target="getWeeklyRecipeId(weeklyEntry(day, mealType)) ? '_blank' : undefined"
+                                class="w-9 h-9 rounded-full overflow-hidden bg-gray-100 dark:bg-zinc-700 shrink-0 transition-transform duration-200 hover:scale-150 cursor-pointer block"
+                              >
+                                <img
+                                  v-if="getRecipeImage(getWeeklyRecipeId(weeklyEntry(day, mealType)))"
+                                  :src="getRecipeImage(getWeeklyRecipeId(weeklyEntry(day, mealType)))!"
+                                  class="w-full h-full object-cover"
+                                  loading="lazy"
+                                >
+                                <div
+                                  v-else-if="isRecipeImagePending(getWeeklyRecipeId(weeklyEntry(day, mealType)))"
+                                  class="w-full h-full animate-pulse"
+                                />
+                                <div v-else class="w-full h-full flex items-center justify-center">
+                                  <UIcon name="i-lucide-utensils" class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600" />
+                                </div>
+                              </NuxtLink>
+                              <div class="flex-1 min-w-0">
+                                <NuxtLink
+                                  v-if="getWeeklyRecipeId(weeklyEntry(day, mealType))"
+                                  :to="`/recipe-wrangler/${getWeeklyRecipeId(weeklyEntry(day, mealType))}`"
+                                  target="_blank"
+                                  class="text-[11px] font-medium text-brandp-600 dark:text-brandp-400 leading-tight line-clamp-2 hover:underline"
+                                >
+                                  {{ getWeeklyRecipeTitle(weeklyEntry(day, mealType)) }}
+                                </NuxtLink>
+                                <p v-else class="text-[11px] font-medium text-gray-800 dark:text-gray-200 leading-tight line-clamp-2">
+                                  {{ getWeeklyRecipeTitle(weeklyEntry(day, mealType)) }}
+                                </p>
+                                <span
+                                  v-if="getWeeklyEntryKcal(weeklyEntry(day, mealType)) != null"
+                                  class="text-[9px] text-gray-400 dark:text-zinc-500 leading-none"
+                                >
+                                  {{ t('foodChatHome.mealCard.kcal', { kcal: getWeeklyEntryKcal(weeklyEntry(day, mealType)) }) }}
+                                </span>
+                              </div>
+                              <!-- Nutrient donut -->
+                              <div
+                                v-if="getWeeklyRecipeId(weeklyEntry(day, mealType)) && getWeeklySegments(getWeeklyRecipeId(weeklyEntry(day, mealType))).length"
+                                class="shrink-0 relative cursor-help"
+                                @mouseleave="weeklyHovered[`${day.dayIndex}-${mealType}`] = null"
+                              >
+                                <svg width="28" height="28" viewBox="0 0 28 28" style="transform:rotate(-90deg)">
+                                  <circle cx="14" cy="14" r="11" stroke="#e5e7eb" stroke-width="3.5" fill="none" />
+                                  <circle
+                                    v-for="seg in getWeeklySegments(getWeeklyRecipeId(weeklyEntry(day, mealType)))"
+                                    :key="seg.key"
+                                    cx="14" cy="14" r="11"
+                                    :stroke="seg.color"
+                                    stroke-width="3.5"
+                                    fill="none"
+                                    :stroke-dasharray="`${seg.dash} ${weeklyCircumference}`"
+                                    :stroke-dashoffset="-seg.offset"
+                                    stroke-linecap="butt"
+                                    :style="{ opacity: weeklyHovered[`${day.dayIndex}-${mealType}`] && weeklyHovered[`${day.dayIndex}-${mealType}`] !== seg.key ? 0.25 : 1, transition: 'opacity 0.15s' }"
+                                    @mouseenter="weeklyHovered[`${day.dayIndex}-${mealType}`] = seg.key"
+                                  />
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                  <span class="text-[7px] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ getWeeklyCenterValue(getWeeklyRecipeId(weeklyEntry(day, mealType))!, `${day.dayIndex}-${mealType}`) }}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <!-- Why this meal — transparency chips -->
+                            <div v-if="weeklyEntryReasons(weeklyEntry(day, mealType)).length" class="flex flex-wrap gap-1">
+                              <span
+                                v-for="(reason, rIdx) in weeklyEntryReasons(weeklyEntry(day, mealType))"
+                                :key="rIdx"
+                                class="px-1.5 py-0.5 text-[9px] rounded-full border border-brandp-100 dark:border-brandp-900/50 bg-brandp-50/60 dark:bg-brandp-950/30 text-brandp-600 dark:text-brandp-300"
+                              >
+                                {{ reason.label }}
+                              </span>
                             </div>
                           </div>
                         </div>
-                      </template>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Whole-week justification -->
+                  <div v-if="displayedWeeklyPlan.reasoning" class="flex items-start gap-2 mb-4 px-1">
+                    <UIcon name="i-lucide-lightbulb" class="w-3.5 h-3.5 text-brandp-400 mt-0.5 shrink-0" />
+                    <p class="text-xs text-gray-500 dark:text-gray-400 font-light leading-relaxed">{{ displayedWeeklyPlan.reasoning }}</p>
+                  </div>
+
+                  <!-- Week at a glance: guideline checklist, variety, nutrition -->
+                  <div
+                    v-if="weeklyChecklist.length || weeklyVariety || weeklyNutrition"
+                    class="mb-4 rounded-xl border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-800/40 overflow-hidden"
+                  >
+                    <button
+                      class="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-colors"
+                      @click="weekGlanceOpen = !weekGlanceOpen"
+                    >
+                      <span class="inline-flex items-center gap-1.5">
+                        <UIcon name="i-lucide-gauge" class="w-3.5 h-3.5 text-brandp-400" />
+                        {{ t('foodChatHome.weekly.glanceTitle') }}
+                      </span>
+                      <UIcon :name="weekGlanceOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3.5 h-3.5" />
+                    </button>
+                    <div v-show="weekGlanceOpen" class="px-3 pb-3 pt-1 space-y-2">
+                      <div v-for="check in weeklyChecklist" :key="check.rule" class="flex items-center gap-2">
+                        <UIcon
+                          :name="check.met ? 'i-lucide-check-circle-2' : 'i-lucide-alert-circle'"
+                          :class="check.met ? 'text-emerald-500' : 'text-amber-500'"
+                          class="w-3.5 h-3.5 shrink-0"
+                        />
+                        <span class="flex-1 text-[11px] font-light text-gray-500 dark:text-zinc-400">{{ check.rule }}</span>
+                        <span class="shrink-0 text-[11px] font-medium text-gray-700 dark:text-zinc-200 tabular-nums">{{ check.actual }} · {{ check.target }}</span>
+                      </div>
+                      <div v-if="weeklyVariety?.reasoning" class="flex items-start gap-2 pt-1.5 border-t border-gray-100 dark:border-zinc-800">
+                        <UIcon name="i-lucide-shuffle" class="w-3.5 h-3.5 text-brandp-400 mt-0.5 shrink-0" />
+                        <span class="text-[11px] font-light text-gray-500 dark:text-zinc-400 leading-relaxed">{{ weeklyVariety.reasoning }}</span>
+                      </div>
+                      <div v-if="weeklyNutrition?.daily_average_kcal != null" class="flex items-start gap-2">
+                        <UIcon name="i-lucide-flame" class="w-3.5 h-3.5 text-brandp-400 mt-0.5 shrink-0" />
+                        <span class="text-[11px] font-light text-gray-500 dark:text-zinc-400 leading-relaxed">
+                          {{ t('foodChatHome.weekly.dailyAverage', { kcal: Math.round(weeklyNutrition.daily_average_kcal) }) }}
+                          <template v-if="weeklyNutrition.budget_used_pct != null">
+                            · {{ t('foodChatHome.weekly.budgetUsed', { pct: weeklyNutrition.budget_used_pct }) }}
+                          </template>
+                          <span v-if="weeklyNutrition.note" class="text-gray-400 dark:text-zinc-500"> ({{ weeklyNutrition.note }})</span>
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </template>
@@ -865,7 +974,7 @@ import DOMPurify from 'dompurify'
 import { useFoodChat } from '~/composables/useFoodChat'
 import { useHouseholdStore } from '~/stores/household'
 import { useRecipeStore } from '~/stores/recipe'
-import type { AttributionCitation, ChangedSlot, ChatMessage, ConstraintApplied, MealPlan, MealRecipe, MemorySuggestion, PlanParameterValues, WeeklyMealEntry } from '~/services/foodchatApi'
+import type { AttributionCitation, ChangedSlot, ChatMessage, ConstraintApplied, MealPlan, MealRecipe, MemorySuggestion, PlanParameterValues, WeeklyDayBreakdown, WeeklyMealEntry } from '~/services/foodchatApi'
 import recipeApi from '~/services/recipeApi'
 import { today, getLocalTimeZone, type DateValue } from '@internationalized/date'
 import memberMealPlansApi, {
@@ -1214,6 +1323,72 @@ const weeklyDays = computed(() => {
       entries: entries.sort((a, b) => a.meal_idx - b.meal_idx)
     }))
 })
+
+function weeklyEntry(day: { entries: WeeklyMealEntry[] }, mealType: string): WeeklyMealEntry | undefined {
+  return day.entries.find(e => e.meal_type === mealType)
+}
+
+// ── Weekly explainability (M7 — day accordion, measured ledger, metrics) ──
+const expandedWeeklyDay = ref<number | null>(null)
+const weekGlanceOpen = ref(false)
+
+function toggleWeeklyDay(dayIndex: number) {
+  expandedWeeklyDay.value = expandedWeeklyDay.value === dayIndex ? null : dayIndex
+}
+
+// A new plan (or plan switch) starts collapsed — the headlines ARE the overview
+watch(displayedWeeklyPlan, (now, prev) => {
+  if (now?.id !== prev?.id) { expandedWeeklyDay.value = null }
+})
+
+const weeklyLedger = computed(() => displayedWeeklyPlan.value?.constraints_applied ?? [])
+
+function weeklyLedgerClass(row: ConstraintApplied): string {
+  if (row.status === 'violated') {
+    return 'border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-300'
+  }
+  if (row.status === 'relaxed') {
+    return 'border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-300'
+  }
+  return row.type === 'hard'
+    ? 'border-brandp-200 dark:border-brandp-800/70 bg-brandp-50 dark:bg-brandp-950/40 text-brandp-600 dark:text-brandp-300 ring-1 ring-brandp-200/60 dark:ring-brandp-800/40'
+    : 'border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400'
+}
+
+function weeklyLedgerIcon(row: ConstraintApplied): string | null {
+  if (row.status === 'violated') return 'i-lucide-alert-triangle'
+  if (row.status === 'relaxed') return 'i-lucide-alert-circle'
+  return row.type === 'hard' ? 'i-lucide-shield-check' : null
+}
+
+const weeklyMetrics = computed(() => displayedWeeklyPlan.value?.metrics ?? {})
+const weeklyChecklist = computed(() => weeklyMetrics.value.guideline_checklist ?? [])
+const weeklyVariety = computed(() => weeklyMetrics.value.variety)
+const weeklyNutrition = computed(() => weeklyMetrics.value.nutrition)
+
+function weeklyDayInfo(dayIndex: number): WeeklyDayBreakdown | undefined {
+  return (weeklyMetrics.value.days ?? []).find(d => d.day === dayIndex)
+}
+
+function weeklyDayLabel(day: { dayIndex: number }): string {
+  return weeklyDayInfo(day.dayIndex)?.name || `Day ${day.dayIndex}`
+}
+
+function weeklyDaySummary(dayIndex: number): string {
+  // day_summaries keys arrive as strings after the JSON round-trip
+  const summaries = displayedWeeklyPlan.value?.day_summaries
+  return weeklyDayInfo(dayIndex)?.summary
+    || summaries?.[dayIndex] || summaries?.[String(dayIndex)] || ''
+}
+
+function weeklyDayKcal(dayIndex: number): number | null {
+  return weeklyDayInfo(dayIndex)?.kcal ?? null
+}
+
+function weeklyEntryReasons(entry: WeeklyMealEntry | undefined): Array<{ kind: string, label: string }> {
+  const r = entry?.recipe as Record<string, unknown> | undefined
+  return (r?.match_reasons as Array<{ kind: string, label: string }> | undefined) ?? []
+}
 
 function getWeeklyRecipeTitle(entry: WeeklyMealEntry | undefined): string {
   if (!entry) return '—'

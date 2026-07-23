@@ -143,12 +143,15 @@ export interface MealRecipe {
   match_reasons?: MatchReason[]
 }
 
-/** A constraint the planner applied when building a daily plan */
+/** A constraint the planner applied when building a plan. Daily rows only
+ *  ever say "satisfied"; weekly rows are MEASURED and may say "relaxed" or
+ *  "violated", with an optional detail string ("3 of 3 meat meals used"). */
 export interface ConstraintApplied {
   constraint: string
   type: 'hard' | 'soft'
   status: string
   source: string
+  detail?: string | null
 }
 
 /** Counts of personalization signals used to build a plan */
@@ -198,12 +201,58 @@ export interface WeeklyMealEntry {
   reward: number
 }
 
+/** One weekly guideline frequency rule, checked against the final plan */
+export interface WeeklyGuidelineCheck {
+  rule: string
+  target: string
+  actual: number
+  met: boolean
+}
+
+/** Per-day justification row from the weekly explainability metrics */
+export interface WeeklyDayBreakdown {
+  day: number
+  name: string
+  summary: string
+  kcal: number | null
+  meals_with_data: number
+  highlights: string[]
+}
+
+/** Deterministic weekly explainability metrics (empty for pre-M7 plans) */
+export interface WeeklyPlanMetrics {
+  variety?: {
+    distinct_recipes: number
+    total_meals: number
+    unique_ingredients: number
+    category_distribution: Record<string, number>
+    reasoning: string
+  }
+  guideline_checklist?: WeeklyGuidelineCheck[]
+  nutrition?: {
+    weekly_totals: Record<string, number>
+    daily_average_kcal: number | null
+    weekly_targets: Record<string, number>
+    budget_used_pct: number | null
+    coverage: { meals_with_data: number, total_meals: number }
+    note: string
+  }
+  days?: WeeklyDayBreakdown[]
+  selection_events?: unknown[]
+}
+
 export interface WeeklyMealPlan {
   id: string
   created_at: string
   version?: number
   parent_id?: string
   entries: WeeklyMealEntry[]
+  /** {day (1-7) → headline}; JSON round-trips keys as strings */
+  day_summaries?: Record<string | number, string>
+  constraints_applied?: ConstraintApplied[]
+  personalization_summary?: PersonalizationSummary | null
+  metrics?: WeeklyPlanMetrics
+  reasoning?: string
 }
 
 /** Latest saved plan canvases for a member across all their sessions.

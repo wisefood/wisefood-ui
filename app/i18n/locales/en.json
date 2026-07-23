@@ -618,6 +618,9 @@
     "emptyTitle": "Nothing saved yet",
     "loadFailed": "We couldn't load your saved recipes.",
     "savedRecipes": "Saved recipes",
+    "savedArticles": "Saved articles",
+    "savedGuides": "Saved guides",
+    "savedTextbooks": "Saved textbooks",
     "subtitle": "Everything you've saved, in one place.",
     "title": "My Library",
     "tryAgain": "Try again",
@@ -1478,6 +1481,11 @@
       "memories": "{count} memories",
       "favorites": "{count} favorites",
       "feedback": "{count} feedback signals"
+    },
+    "weekly": {
+      "glanceTitle": "Week at a glance",
+      "dailyAverage": "≈ {kcal} kcal per day",
+      "budgetUsed": "{pct}% of your calorie budget"
     },
     "quality": {
       "title": "Plan quality",

@@ -618,6 +618,9 @@
     "emptyTitle": "Még nincs mentett elem",
     "loadFailed": "Nem sikerült betölteni a mentett recepteket.",
     "savedRecipes": "Mentett receptek",
+    "savedArticles": "Mentett cikkek",
+    "savedGuides": "Mentett útmutatók",
+    "savedTextbooks": "Mentett tankönyvek",
     "subtitle": "Minden mentett elem egy helyen.",
     "title": "Könyvtáram",
     "tryAgain": "Újrapróbálkozás",
@@ -1456,6 +1459,11 @@
       "memories": "{count} emlék",
       "favorites": "{count} kedvenc",
       "feedback": "{count} visszajelzés"
+    },
+    "weekly": {
+      "glanceTitle": "A hét egy pillantásra",
+      "dailyAverage": "≈ {kcal} kcal naponta",
+      "budgetUsed": "a kalóriakereted {pct}%-a"
     },
     "quality": {
       "title": "Terv minősége",
