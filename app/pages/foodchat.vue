@@ -755,6 +755,7 @@
                     >
                       <button
                         class="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-colors"
+                        :aria-expanded="expandedWeeklyDays.has(day.dayIndex)"
                         @click="toggleWeeklyDay(day.dayIndex)"
                       >
                         <span class="w-20 shrink-0 text-xs font-semibold text-gray-700 dark:text-zinc-200">{{ weeklyDayLabel(day) }}</span>
@@ -788,6 +789,7 @@
                             v-for="mealType in ['breakfast', 'lunch', 'dinner']"
                             :key="`${day.dayIndex}-${mealType}`"
                             class="relative rounded-lg border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/30 p-2 flex flex-col gap-1.5"
+                            :class="{ 'fc-slot-flash': highlightedSlots.has(`${day.dayIndex}-${mealType}`) }"
                           >
                             <div class="flex items-center gap-1">
                               <UIcon :name="mealTypeIcon(mealType)" class="w-3 h-3 text-brandp-400 shrink-0" />
@@ -910,6 +912,13 @@
                       <span class="inline-flex items-center gap-1.5">
                         <UIcon name="i-lucide-gauge" class="w-3.5 h-3.5 text-brandp-400" />
                         {{ t('foodChatHome.weekly.glanceTitle') }}
+                        <span
+                          v-if="weeklyChecklist.length"
+                          class="px-1.5 py-0.5 text-[9px] rounded-full font-medium tabular-nums"
+                          :class="weeklyChecklistMet === weeklyChecklist.length
+                            ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400'"
+                        >{{ weeklyChecklistMet }}/{{ weeklyChecklist.length }}</span>
                       </span>
                       <UIcon :name="weekGlanceOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3.5 h-3.5" />
                     </button>
@@ -1315,8 +1324,6 @@ const negativeFeedbackReasons = [
 ]
 
 // ── Weekly plan helpers ──
-const DAY_NAMES = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7']
-
 const weeklyDays = computed(() => {
   if (!displayedWeeklyPlan.value) return []
   const grouped: Record<number, WeeklyMealEntry[]> = {}
@@ -1328,7 +1335,6 @@ const weeklyDays = computed(() => {
     .sort(([a], [b]) => Number(a) - Number(b))
     .map(([day, entries]) => ({
       dayIndex: Number(day),
-      label: DAY_NAMES[Number(day)] ?? `Day ${day}`,
       entries: entries.sort((a, b) => a.meal_idx - b.meal_idx)
     }))
 })
@@ -1389,6 +1395,7 @@ function weeklyLedgerIcon(row: ConstraintApplied): string | null {
 
 const weeklyMetrics = computed(() => displayedWeeklyPlan.value?.metrics ?? {})
 const weeklyChecklist = computed(() => weeklyMetrics.value.guideline_checklist ?? [])
+const weeklyChecklistMet = computed(() => weeklyChecklist.value.filter(c => c.met).length)
 const weeklyVariety = computed(() => weeklyMetrics.value.variety)
 const weeklyNutrition = computed(() => weeklyMetrics.value.nutrition)
 
@@ -1531,12 +1538,25 @@ const highlightedSlots = ref<Set<string>>(new Set())
 let slotFlashTimer: ReturnType<typeof setTimeout> | null = null
 
 function flashChangedSlots(slots?: ChangedSlot[]) {
-  const dailySlots = (slots ?? [])
-    .filter(s => s.day == null)
-    .map(s => s.meal_type?.toLowerCase())
-    .filter((m): m is string => !!m)
-  if (!dailySlots.length) return
-  highlightedSlots.value = new Set(dailySlots)
+  // Daily slots key by meal_type; weekly slots by "day-meal_type" (and the
+  // affected day is forced open so the proof is never hidden by a collapse)
+  const keys: string[] = []
+  const weeklyDaysToOpen: number[] = []
+  for (const s of slots ?? []) {
+    const meal = s.meal_type?.toLowerCase()
+    if (!meal) continue
+    if (s.day == null) {
+      keys.push(meal)
+    } else {
+      keys.push(`${s.day}-${meal}`)
+      weeklyDaysToOpen.push(s.day)
+    }
+  }
+  if (!keys.length) return
+  if (weeklyDaysToOpen.length) {
+    expandedWeeklyDays.value = new Set([...expandedWeeklyDays.value, ...weeklyDaysToOpen])
+  }
+  highlightedSlots.value = new Set(keys)
   if (slotFlashTimer) clearTimeout(slotFlashTimer)
   slotFlashTimer = setTimeout(() => { highlightedSlots.value = new Set() }, 2600)
 }
