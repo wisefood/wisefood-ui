@@ -1485,6 +1485,7 @@
     "manual": {
       "entry": "or compose it yourself, meal by meal",
       "title": "Compose your day",
+      "day": "Day {n}",
       "addRecipe": "Add a recipe",
       "searchPlaceholder": "Search recipes…",
       "noMatches": "No matching recipes",

@@ -300,6 +300,7 @@ export const useFoodChatStore = defineStore('foodchat', {
       sessionId: string,
       memberId: string,
       picks: ComposePick[],
+      planType: 'daily' | 'weekly' = 'daily',
       message?: string
     ) {
       this.sending = true
@@ -308,6 +309,7 @@ export const useFoodChatStore = defineStore('foodchat', {
         const response = await foodchatApi.composePlan(sessionId, {
           member_id: memberId,
           picks,
+          plan_type: planType,
           message: message || null
         })
         await this.ingestTurnResponse(sessionId, memberId, response)

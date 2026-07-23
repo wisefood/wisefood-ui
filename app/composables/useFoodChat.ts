@@ -83,9 +83,13 @@ export function useFoodChat() {
     return store.applyPlanParameters(store.activeSessionId, memberId.value, values)
   }
 
-  async function composePlan(picks: ComposePick[], message?: string) {
+  async function composePlan(
+    picks: ComposePick[],
+    planType: 'daily' | 'weekly' = 'daily',
+    message?: string
+  ) {
     if (!store.activeSessionId || !memberId.value) return
-    return store.composePlan(store.activeSessionId, memberId.value, picks, message)
+    return store.composePlan(store.activeSessionId, memberId.value, picks, planType, message)
   }
 
   const activeDiners = computed(() =>

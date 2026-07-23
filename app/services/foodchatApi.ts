@@ -98,11 +98,14 @@ export interface ComposePick {
   meal_type: 'breakfast' | 'lunch' | 'dinner'
   recipe_id: string
   title?: string
+  /** 1-7, weekly plans only */
+  day?: number | null
 }
 
 export interface ComposeRequest {
   member_id: string
   picks: ComposePick[]
+  plan_type?: 'daily' | 'weekly'
   /** Optional chat text sent alongside ("fill out the rest, keep it light") */
   message?: string | null
 }

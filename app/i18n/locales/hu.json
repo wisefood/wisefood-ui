@@ -1463,6 +1463,7 @@
     "manual": {
       "entry": "vagy állítsd össze magad, étkezésenként",
       "title": "Állítsd össze a napod",
+      "day": "{n}. nap",
       "addRecipe": "Recept hozzáadása",
       "searchPlaceholder": "Recept keresése…",
       "noMatches": "Nincs találat",

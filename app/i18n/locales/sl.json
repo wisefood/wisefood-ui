@@ -1463,6 +1463,7 @@
     "manual": {
       "entry": "ali pa ga sestavi sam, obrok za obrokom",
       "title": "Sestavi svoj dan",
+      "day": "{n}. dan",
       "addRecipe": "Dodaj recept",
       "searchPlaceholder": "Išči recepte…",
       "noMatches": "Ni zadetkov",

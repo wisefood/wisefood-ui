@@ -535,62 +535,81 @@
                   </button>
                 </div>
 
-                <div class="space-y-2 mb-4">
+                <!-- Day / Week toggle -->
+                <div class="flex rounded-lg border border-gray-200 dark:border-zinc-700 overflow-hidden text-xs w-fit mb-3">
+                  <button
+                    :class="['px-3 py-1.5 transition-colors', draftPlanType === 'daily' ? 'bg-brandp-500 text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800']"
+                    @click="draftPlanType = 'daily'"
+                  >{{ t('foodChatHome.planHeader.dailyPlan') }}</button>
+                  <button
+                    :class="['px-3 py-1.5 transition-colors', draftPlanType === 'weekly' ? 'bg-brandp-500 text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800']"
+                    @click="draftPlanType = 'weekly'"
+                  >{{ t('foodChatHome.planHeader.weeklyPlan') }}</button>
+                </div>
+
+                <div class="space-y-2 mb-4 max-h-[46vh] overflow-y-auto pr-1">
                   <div
-                    v-for="mealType in DRAFT_MEAL_TYPES"
-                    :key="mealType"
+                    v-for="group in draftGroups"
+                    :key="group.day ?? 'daily'"
                     class="rounded-xl border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-800/40 p-3"
                   >
-                    <div class="flex items-center gap-2.5">
-                      <UIcon :name="mealTypeIcon(mealType)" class="w-4 h-4 text-brandp-400 shrink-0" />
-                      <span class="w-20 shrink-0 text-xs text-gray-500 dark:text-zinc-400 capitalize">{{ t(`foodChatHome.meals.${mealType}`) }}</span>
-                      <template v-if="draftPicks[mealType]">
-                        <span class="flex-1 min-w-0 truncate text-sm font-medium text-gray-800 dark:text-gray-200">{{ draftPicks[mealType]!.title }}</span>
-                        <span class="shrink-0 px-1.5 py-0.5 text-[9px] rounded-full bg-brandp-50 dark:bg-brandp-950/40 text-brandp-500 dark:text-brandp-300">{{ t('foodChatHome.manual.yourPick') }}</span>
-                        <button
-                          class="shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
-                          @click="draftPicks[mealType] = null"
-                        >
-                          <UIcon name="i-lucide-x" class="w-3 h-3" />
-                        </button>
-                      </template>
-                      <button
-                        v-else-if="draftPickerOpen !== mealType"
-                        class="inline-flex items-center gap-1 px-2 py-1 text-[11px] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-brandp-300 hover:text-brandp-500 transition-colors"
-                        @click="openDraftPicker(mealType)"
-                      >
-                        <UIcon name="i-lucide-plus" class="w-3 h-3" />
-                        {{ t('foodChatHome.manual.addRecipe') }}
-                      </button>
-                    </div>
-                    <div v-if="draftPickerOpen === mealType" class="mt-2">
-                      <input
-                        v-model="draftQuery"
-                        type="text"
-                        :placeholder="t('foodChatHome.manual.searchPlaceholder')"
-                        class="w-full text-xs px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:border-brandp-400"
-                        @input="onDraftQuery"
-                        @keydown.escape="draftPickerOpen = null"
-                      >
-                      <div
-                        v-if="draftSuggestions.length"
-                        class="mt-1 rounded-lg border border-gray-100 dark:border-zinc-800 divide-y divide-gray-50 dark:divide-zinc-800 max-h-44 overflow-y-auto bg-white dark:bg-zinc-900"
-                      >
-                        <button
-                          v-for="suggestion in draftSuggestions"
-                          :key="suggestion.recipe_id ?? suggestion.title"
-                          class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
-                          @click="pickDraftRecipe(mealType, suggestion)"
-                        >
-                          {{ suggestion.title }}
-                        </button>
+                    <p v-if="group.day" class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-zinc-500 mb-2">
+                      {{ t('foodChatHome.manual.day', { n: group.day }) }}
+                    </p>
+                    <div class="space-y-2">
+                      <div v-for="mealType in DRAFT_MEAL_TYPES" :key="draftSlotKey(group.day, mealType)">
+                        <div class="flex items-center gap-2.5">
+                          <UIcon :name="mealTypeIcon(mealType)" class="w-4 h-4 text-brandp-400 shrink-0" />
+                          <span class="w-20 shrink-0 text-xs text-gray-500 dark:text-zinc-400 capitalize">{{ t(`foodChatHome.meals.${mealType}`) }}</span>
+                          <template v-if="draftPicks[draftSlotKey(group.day, mealType)]">
+                            <span class="flex-1 min-w-0 truncate text-sm font-medium text-gray-800 dark:text-gray-200">{{ draftPicks[draftSlotKey(group.day, mealType)]!.title }}</span>
+                            <span class="shrink-0 px-1.5 py-0.5 text-[9px] rounded-full bg-brandp-50 dark:bg-brandp-950/40 text-brandp-500 dark:text-brandp-300">{{ t('foodChatHome.manual.yourPick') }}</span>
+                            <button
+                              class="shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+                              @click="draftPicks[draftSlotKey(group.day, mealType)] = null"
+                            >
+                              <UIcon name="i-lucide-x" class="w-3 h-3" />
+                            </button>
+                          </template>
+                          <button
+                            v-else-if="draftPickerOpen !== draftSlotKey(group.day, mealType)"
+                            class="inline-flex items-center gap-1 px-2 py-1 text-[11px] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-brandp-300 hover:text-brandp-500 transition-colors"
+                            @click="openDraftPicker(draftSlotKey(group.day, mealType))"
+                          >
+                            <UIcon name="i-lucide-plus" class="w-3 h-3" />
+                            {{ t('foodChatHome.manual.addRecipe') }}
+                          </button>
+                        </div>
+                        <div v-if="draftPickerOpen === draftSlotKey(group.day, mealType)" class="mt-2">
+                          <input
+                            v-model="draftQuery"
+                            type="text"
+                            :placeholder="t('foodChatHome.manual.searchPlaceholder')"
+                            class="w-full text-xs px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:border-brandp-400"
+                            @input="onDraftQuery"
+                            @keydown.escape="draftPickerOpen = null"
+                          >
+                          <div
+                            v-if="draftSuggestions.length"
+                            class="mt-1 rounded-lg border border-gray-100 dark:border-zinc-800 divide-y divide-gray-50 dark:divide-zinc-800 max-h-44 overflow-y-auto bg-white dark:bg-zinc-900"
+                          >
+                            <button
+                              v-for="suggestion in draftSuggestions"
+                              :key="suggestion.recipe_id ?? suggestion.title"
+                              class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
+                              @click="pickDraftRecipe(draftSlotKey(group.day, mealType), suggestion)"
+                            >
+                              {{ suggestion.title }}
+                            </button>
+                          </div>
+                          <p
+                            v-else-if="draftQuery.trim().length >= 3 && !draftSearching"
+                            class="mt-1 text-[11px] text-gray-400 dark:text-zinc-500"
+                          >
+                            {{ t('foodChatHome.manual.noMatches') }}
+                          </p>
+                        </div>
                       </div>
-                      <p
-                        v-else-if="draftQuery.trim().length >= 3 && !draftSearching"
-                        class="mt-1 text-[11px] text-gray-400 dark:text-zinc-500"
-                      >
-                        {{ t('foodChatHome.manual.noMatches') }}
-                      </p>
                     </div>
                   </div>
                 </div>
@@ -1238,16 +1257,37 @@ async function handleApplyPlanParameters(values: PlanParameterValues) {
 // ── Manual mode: blank canvas, hand-picked slots, FoodChat fills the rest ──
 const DRAFT_MEAL_TYPES = ['breakfast', 'lunch', 'dinner'] as const
 const draftMode = ref(false)
-const draftPicks = reactive<Record<string, { recipe_id: string, title: string } | null>>({
-  breakfast: null, lunch: null, dinner: null
-})
+const draftPlanType = ref<'daily' | 'weekly'>('daily')
+// Picks keyed by slot: daily → "0-breakfast", weekly → "3-dinner" (day 1-7).
+// The two keyspaces don't collide, so toggling plan type loses nothing.
+const draftPicks = reactive<Record<string, { recipe_id: string, title: string } | null>>({})
 const draftPickerOpen = ref<string | null>(null)
 const draftQuery = ref('')
 const draftSuggestions = ref<RecipeAutocompleteSuggestion[]>([])
 const draftSearching = ref(false)
 let draftSearchTimer: ReturnType<typeof setTimeout> | null = null
 
-const draftPickCount = computed(() => Object.values(draftPicks).filter(Boolean).length)
+function draftSlotKey(day: number | null, mealType: string): string {
+  return `${day ?? 0}-${mealType}`
+}
+
+// Day groups the draft card renders: one anonymous group for daily,
+// seven labeled days for weekly
+const draftGroups = computed(() =>
+  draftPlanType.value === 'daily'
+    ? [{ day: null as number | null }]
+    : Array.from({ length: 7 }, (_, i) => ({ day: (i + 1) as number | null }))
+)
+
+function isDraftKeyForCurrentType(key: string): boolean {
+  return draftPlanType.value === 'daily' ? key.startsWith('0-') : !key.startsWith('0-')
+}
+
+const draftPickCount = computed(() =>
+  Object.entries(draftPicks)
+    .filter(([key, pick]) => pick && isDraftKeyForCurrentType(key))
+    .length
+)
 
 function enterDraftMode() {
   draftMode.value = true
@@ -1259,11 +1299,11 @@ function exitDraftMode() {
   draftPickerOpen.value = null
   draftQuery.value = ''
   draftSuggestions.value = []
-  for (const meal of DRAFT_MEAL_TYPES) draftPicks[meal] = null
+  for (const key of Object.keys(draftPicks)) draftPicks[key] = null
 }
 
-function openDraftPicker(mealType: string) {
-  draftPickerOpen.value = mealType
+function openDraftPicker(slotKey: string) {
+  draftPickerOpen.value = slotKey
   draftQuery.value = ''
   draftSuggestions.value = []
 }
@@ -1288,9 +1328,9 @@ function onDraftQuery() {
   }, 250)
 }
 
-function pickDraftRecipe(mealType: string, suggestion: RecipeAutocompleteSuggestion) {
+function pickDraftRecipe(slotKey: string, suggestion: RecipeAutocompleteSuggestion) {
   if (!suggestion.recipe_id) return
-  draftPicks[mealType] = { recipe_id: suggestion.recipe_id, title: suggestion.title }
+  draftPicks[slotKey] = { recipe_id: suggestion.recipe_id, title: suggestion.title }
   draftPickerOpen.value = null
   draftQuery.value = ''
   draftSuggestions.value = []
@@ -1300,15 +1340,20 @@ async function submitDraft(message?: string) {
   if (!draftPickCount.value || sending.value) return
   if (!activeSession.value) await newSession(cookingForForNewSession())
   const picks = Object.entries(draftPicks)
-    .filter((e): e is [string, { recipe_id: string, title: string }] => !!e[1])
-    .map(([meal_type, pick]) => ({
-      meal_type: meal_type as 'breakfast' | 'lunch' | 'dinner',
-      recipe_id: pick.recipe_id,
-      title: pick.title
-    }))
+    .filter((e): e is [string, { recipe_id: string, title: string }] =>
+      !!e[1] && isDraftKeyForCurrentType(e[0]))
+    .map(([key, pick]) => {
+      const [day, meal_type] = [Number(key.split('-')[0]), key.split('-')[1]]
+      return {
+        meal_type: meal_type as 'breakfast' | 'lunch' | 'dinner',
+        recipe_id: pick.recipe_id,
+        title: pick.title,
+        day: day > 0 ? day : null
+      }
+    })
   showEphemeralGenerating.value = true
   try {
-    await composePlan(picks, message)
+    await composePlan(picks, draftPlanType.value, message)
     exitDraftMode()
     scrollToBottom()
   } catch {
