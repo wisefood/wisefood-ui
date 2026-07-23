@@ -1460,6 +1460,17 @@
       "favorites": "{count} priljubljenih",
       "feedback": "{count} povratnih informacij"
     },
+    "manual": {
+      "entry": "ali pa ga sestavi sam, obrok za obrokom",
+      "title": "Sestavi svoj dan",
+      "addRecipe": "Dodaj recept",
+      "searchPlaceholder": "Išči recepte…",
+      "noMatches": "Ni zadetkov",
+      "fillRest": "Naj FoodChat dopolni ostalo",
+      "yourPick": "tvoja izbira",
+      "discard": "Zavrzi izbrano",
+      "hint": "Izberi obroke, ki jih že poznaš — FoodChat načrtuje okoli njih. Lahko tudi napišeš v klepet: »dopolni ostalo«."
+    },
     "weekly": {
       "expandAll": "Razširi vse dni",
       "collapseAll": "Strni vse dni",

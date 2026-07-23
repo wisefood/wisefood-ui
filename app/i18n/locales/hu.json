@@ -1460,6 +1460,17 @@
       "favorites": "{count} kedvenc",
       "feedback": "{count} visszajelzés"
     },
+    "manual": {
+      "entry": "vagy állítsd össze magad, étkezésenként",
+      "title": "Állítsd össze a napod",
+      "addRecipe": "Recept hozzáadása",
+      "searchPlaceholder": "Recept keresése…",
+      "noMatches": "Nincs találat",
+      "fillRest": "A többit kitölti a FoodChat",
+      "yourPick": "te választottad",
+      "discard": "Kiválasztás elvetése",
+      "hint": "Válaszd ki, amit már tudsz — a FoodChat köréjük tervez. A chatben is kérheted: „töltsd ki a többit”."
+    },
     "weekly": {
       "expandAll": "Összes nap kibontása",
       "collapseAll": "Összes nap összecsukása",

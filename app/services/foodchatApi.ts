@@ -93,6 +93,20 @@ export interface PlanParametersRequest {
   values: PlanParameterValues
 }
 
+/** One hand-picked recipe on the manual-mode canvas */
+export interface ComposePick {
+  meal_type: 'breakfast' | 'lunch' | 'dinner'
+  recipe_id: string
+  title?: string
+}
+
+export interface ComposeRequest {
+  member_id: string
+  picks: ComposePick[]
+  /** Optional chat text sent alongside ("fill out the rest, keep it light") */
+  message?: string | null
+}
+
 export interface ChatMessage {
   id?: number
   role: 'user' | 'assistant'
@@ -421,6 +435,20 @@ class FoodChatApiService {
     } catch {
       return null
     }
+  }
+
+  /** Manual mode: pin hand-picked recipes and let FoodChat fill the rest —
+   *  generates like a chat turn */
+  async composePlan(
+    sessionId: string,
+    req: ComposeRequest
+  ): Promise<UnifiedChatResponse> {
+    return this.fetchWithTimeout<UnifiedChatResponse>(
+      `${this.basePath}/sessions/${sessionId}/compose`,
+      'POST',
+      req,
+      MESSAGE_TIMEOUT
+    )
   }
 
   /** Apply values from the interactive plan-parameter card — refines the

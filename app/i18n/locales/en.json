@@ -1482,6 +1482,17 @@
       "favorites": "{count} favorites",
       "feedback": "{count} feedback signals"
     },
+    "manual": {
+      "entry": "or compose it yourself, meal by meal",
+      "title": "Compose your day",
+      "addRecipe": "Add a recipe",
+      "searchPlaceholder": "Search recipes…",
+      "noMatches": "No matching recipes",
+      "fillRest": "Fill out the rest",
+      "yourPick": "your pick",
+      "discard": "Discard picks",
+      "hint": "Pick the meals you already know — FoodChat plans around them. You can also just say “fill out the rest” in the chat."
+    },
     "weekly": {
       "expandAll": "Expand all days",
       "collapseAll": "Collapse all days",

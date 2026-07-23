@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useFoodChatStore } from '~/stores/foodchat'
 import { useHouseholdStore } from '~/stores/household'
-import type { MemorySuggestion, PlanParameterValues } from '~/services/foodchatApi'
+import type { ComposePick, MemorySuggestion, PlanParameterValues } from '~/services/foodchatApi'
 
 export function useFoodChat() {
   const store = useFoodChatStore()
@@ -83,6 +83,11 @@ export function useFoodChat() {
     return store.applyPlanParameters(store.activeSessionId, memberId.value, values)
   }
 
+  async function composePlan(picks: ComposePick[], message?: string) {
+    if (!store.activeSessionId || !memberId.value) return
+    return store.composePlan(store.activeSessionId, memberId.value, picks, message)
+  }
+
   const activeDiners = computed(() =>
     store.activeSessionId ? store.dinersBySession[store.activeSessionId] ?? null : null
   )
@@ -129,6 +134,7 @@ export function useFoodChat() {
     submitMessageFeedback,
     submitMemoryDecision,
     applyPlanParameters,
+    composePlan,
     activeDiners,
     updateDiners,
     setLocalDiners,

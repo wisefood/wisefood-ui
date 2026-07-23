@@ -29,6 +29,13 @@
             <p class="text-sm text-gray-500 dark:text-gray-400 font-light">
               {{ t('foodChatHome.welcomeSubtitle') }}
             </p>
+            <button
+              class="mt-3 inline-flex items-center gap-1.5 text-xs text-brandp-500 dark:text-brandp-400 hover:underline transition-colors"
+              @click="enterDraftMode"
+            >
+              <UIcon name="i-lucide-list-plus" class="w-3.5 h-3.5" />
+              {{ t('foodChatHome.manual.entry') }}
+            </button>
           </div>
 
           <!-- Central chat input -->
@@ -499,13 +506,115 @@
                 </div>
                 <p class="text-base font-light text-gray-400 dark:text-zinc-500 mb-1">{{ t('foodChatHome.canvas.placeholderTitle') }}</p>
                 <p class="text-xs text-gray-300 dark:text-zinc-600">{{ t('foodChatHome.canvas.placeholderSubtitle') }}</p>
+                <button
+                  class="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full border border-brandp-200 dark:border-brandp-800/60 text-brandp-500 dark:text-brandp-400 hover:bg-brandp-50 dark:hover:bg-brandp-950/40 transition-colors"
+                  @click="enterDraftMode"
+                >
+                  <UIcon name="i-lucide-list-plus" class="w-3.5 h-3.5" />
+                  {{ t('foodChatHome.manual.entry') }}
+                </button>
+              </div>
+            </Transition>
+
+            <!-- Manual mode: blank plan, hand-picked slots -->
+            <Transition name="plan-reveal">
+              <div v-if="draftMode && !sending" class="plan-card relative">
+                <div class="flex items-center justify-between mb-4">
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-brandp-50 dark:bg-brandp-950/40 flex items-center justify-center">
+                      <UIcon name="i-lucide-list-plus" class="w-4 h-4 text-brandp-500" />
+                    </div>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ t('foodChatHome.manual.title') }}</span>
+                  </div>
+                  <button
+                    class="flex items-center justify-center w-6 h-6 rounded-full text-gray-400 dark:text-zinc-500 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                    :aria-label="t('foodChatHome.manual.discard')"
+                    @click="exitDraftMode"
+                  >
+                    <UIcon name="i-lucide-x" class="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div class="space-y-2 mb-4">
+                  <div
+                    v-for="mealType in DRAFT_MEAL_TYPES"
+                    :key="mealType"
+                    class="rounded-xl border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-800/40 p-3"
+                  >
+                    <div class="flex items-center gap-2.5">
+                      <UIcon :name="mealTypeIcon(mealType)" class="w-4 h-4 text-brandp-400 shrink-0" />
+                      <span class="w-20 shrink-0 text-xs text-gray-500 dark:text-zinc-400 capitalize">{{ t(`foodChatHome.meals.${mealType}`) }}</span>
+                      <template v-if="draftPicks[mealType]">
+                        <span class="flex-1 min-w-0 truncate text-sm font-medium text-gray-800 dark:text-gray-200">{{ draftPicks[mealType]!.title }}</span>
+                        <span class="shrink-0 px-1.5 py-0.5 text-[9px] rounded-full bg-brandp-50 dark:bg-brandp-950/40 text-brandp-500 dark:text-brandp-300">{{ t('foodChatHome.manual.yourPick') }}</span>
+                        <button
+                          class="shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+                          @click="draftPicks[mealType] = null"
+                        >
+                          <UIcon name="i-lucide-x" class="w-3 h-3" />
+                        </button>
+                      </template>
+                      <button
+                        v-else-if="draftPickerOpen !== mealType"
+                        class="inline-flex items-center gap-1 px-2 py-1 text-[11px] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-brandp-300 hover:text-brandp-500 transition-colors"
+                        @click="openDraftPicker(mealType)"
+                      >
+                        <UIcon name="i-lucide-plus" class="w-3 h-3" />
+                        {{ t('foodChatHome.manual.addRecipe') }}
+                      </button>
+                    </div>
+                    <div v-if="draftPickerOpen === mealType" class="mt-2">
+                      <input
+                        v-model="draftQuery"
+                        type="text"
+                        :placeholder="t('foodChatHome.manual.searchPlaceholder')"
+                        class="w-full text-xs px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-300 placeholder-gray-400 focus:outline-none focus:border-brandp-400"
+                        @input="onDraftQuery"
+                        @keydown.escape="draftPickerOpen = null"
+                      >
+                      <div
+                        v-if="draftSuggestions.length"
+                        class="mt-1 rounded-lg border border-gray-100 dark:border-zinc-800 divide-y divide-gray-50 dark:divide-zinc-800 max-h-44 overflow-y-auto bg-white dark:bg-zinc-900"
+                      >
+                        <button
+                          v-for="suggestion in draftSuggestions"
+                          :key="suggestion.recipe_id ?? suggestion.title"
+                          class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
+                          @click="pickDraftRecipe(mealType, suggestion)"
+                        >
+                          {{ suggestion.title }}
+                        </button>
+                      </div>
+                      <p
+                        v-else-if="draftQuery.trim().length >= 3 && !draftSearching"
+                        class="mt-1 text-[11px] text-gray-400 dark:text-zinc-500"
+                      >
+                        {{ t('foodChatHome.manual.noMatches') }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-3">
+                  <p class="flex-1 text-[11px] font-light text-gray-400 dark:text-zinc-500 leading-snug">{{ t('foodChatHome.manual.hint') }}</p>
+                  <button
+                    class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full font-medium transition-colors
+                           bg-brandp-500 text-white hover:bg-brandp-600
+                           disabled:bg-gray-200 disabled:text-gray-400 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-500"
+                    :disabled="!draftPickCount || sending"
+                    @click="submitDraft()"
+                  >
+                    <UIcon name="i-lucide-wand-sparkles" class="w-3.5 h-3.5" />
+                    {{ t('foodChatHome.manual.fillRest') }}
+                  </button>
+                </div>
               </div>
             </Transition>
 
             <!-- Plan canvas — visible whenever a plan exists (idle, refining,
                  or awaiting clarification after a prior plan). -->
             <Transition name="plan-reveal">
-              <div v-if="hasAnyPlan" class="plan-card relative">
+              <div v-if="hasAnyPlan && !draftMode" class="plan-card relative">
                 <div v-if="sending" class="fc-refining-overlay">
                   <div class="fc-refining-pill">
                     <UIcon name="i-lucide-loader-2" class="w-3.5 h-3.5 animate-spin" />
@@ -1030,6 +1139,7 @@ const {
   submitMessageFeedback,
   submitMemoryDecision,
   applyPlanParameters,
+  composePlan,
   activeDiners,
   updateDiners,
   clearError
@@ -1069,7 +1179,7 @@ const showPausedPanel = computed(() =>
   !sending.value && clarificationPending.value && !hasAnyPlan.value
 )
 const showIdlePlaceholder = computed(() =>
-  !hasAnyPlan.value && !showCookingAnimation.value && !showPausedPanel.value
+  !hasAnyPlan.value && !showCookingAnimation.value && !showPausedPanel.value && !draftMode.value
 )
 
 // ── Plan votes ──
@@ -1119,6 +1229,87 @@ async function handleApplyPlanParameters(values: PlanParameterValues) {
   showEphemeralGenerating.value = true
   try {
     await applyPlanParameters(values)
+    scrollToBottom()
+  } catch {
+    showEphemeralGenerating.value = false
+  }
+}
+
+// ── Manual mode: blank canvas, hand-picked slots, FoodChat fills the rest ──
+const DRAFT_MEAL_TYPES = ['breakfast', 'lunch', 'dinner'] as const
+const draftMode = ref(false)
+const draftPicks = reactive<Record<string, { recipe_id: string, title: string } | null>>({
+  breakfast: null, lunch: null, dinner: null
+})
+const draftPickerOpen = ref<string | null>(null)
+const draftQuery = ref('')
+const draftSuggestions = ref<RecipeAutocompleteSuggestion[]>([])
+const draftSearching = ref(false)
+let draftSearchTimer: ReturnType<typeof setTimeout> | null = null
+
+const draftPickCount = computed(() => Object.values(draftPicks).filter(Boolean).length)
+
+function enterDraftMode() {
+  draftMode.value = true
+  if (!hasSentFirstMessage.value) hasSentFirstMessage.value = true
+}
+
+function exitDraftMode() {
+  draftMode.value = false
+  draftPickerOpen.value = null
+  draftQuery.value = ''
+  draftSuggestions.value = []
+  for (const meal of DRAFT_MEAL_TYPES) draftPicks[meal] = null
+}
+
+function openDraftPicker(mealType: string) {
+  draftPickerOpen.value = mealType
+  draftQuery.value = ''
+  draftSuggestions.value = []
+}
+
+function onDraftQuery() {
+  if (draftSearchTimer) clearTimeout(draftSearchTimer)
+  const query = draftQuery.value.trim()
+  if (query.length < 3) { draftSuggestions.value = []; return }
+  draftSearchTimer = setTimeout(async () => {
+    draftSearching.value = true
+    try {
+      const results = await recipeApi.autocompleteRecipes(query, 8)
+      // Stale-response guard: only apply if the query hasn't moved on
+      if (draftQuery.value.trim() === query) {
+        draftSuggestions.value = results.filter(s => s.recipe_id)
+      }
+    } catch {
+      draftSuggestions.value = []
+    } finally {
+      draftSearching.value = false
+    }
+  }, 250)
+}
+
+function pickDraftRecipe(mealType: string, suggestion: RecipeAutocompleteSuggestion) {
+  if (!suggestion.recipe_id) return
+  draftPicks[mealType] = { recipe_id: suggestion.recipe_id, title: suggestion.title }
+  draftPickerOpen.value = null
+  draftQuery.value = ''
+  draftSuggestions.value = []
+}
+
+async function submitDraft(message?: string) {
+  if (!draftPickCount.value || sending.value) return
+  if (!activeSession.value) await newSession(cookingForForNewSession())
+  const picks = Object.entries(draftPicks)
+    .filter((e): e is [string, { recipe_id: string, title: string }] => !!e[1])
+    .map(([meal_type, pick]) => ({
+      meal_type: meal_type as 'breakfast' | 'lunch' | 'dinner',
+      recipe_id: pick.recipe_id,
+      title: pick.title
+    }))
+  showEphemeralGenerating.value = true
+  try {
+    await composePlan(picks, message)
+    exitDraftMode()
     scrollToBottom()
   } catch {
     showEphemeralGenerating.value = false
@@ -1436,7 +1627,7 @@ function getWeeklyRecipeId(entry: WeeklyMealEntry | undefined): string | null {
 }
 
 // ── Recipe cache (recipe_id → Recipe | null, absent = pending) ──
-import type { Recipe as RecipeData } from '~/services/recipeApi'
+import type { Recipe as RecipeData, RecipeAutocompleteSuggestion } from '~/services/recipeApi'
 const recipeCache = reactive<Record<string, RecipeData | null>>({})
 
 function getRecipeImage(id: string | null): string | null {
@@ -1674,6 +1865,12 @@ async function handleLoadMore() {
 
 // ── Sending ──
 async function ensureSessionAndSend(content: string) {
+  // Manual mode: staged picks ride with the message ("fill out the rest")
+  // through the compose endpoint instead of the classifier
+  if (draftMode.value && draftPickCount.value > 0) {
+    await submitDraft(content)
+    return
+  }
   if (!hasSentFirstMessage.value) {
     hasSentFirstMessage.value = true
     await nextTick()

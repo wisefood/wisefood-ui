@@ -6,6 +6,7 @@ import type {
   MealPlan,
   WeeklyMealPlan,
   UnifiedChatResponse,
+  ComposePick,
   ConversationResponse,
   MemorySuggestion,
   PlanParameterValues,
@@ -289,6 +290,33 @@ export const useFoodChatStore = defineStore('foodchat', {
           const updated = await foodchatApi.getSession(sessionId, memberId)
           this.sessions[idx] = updated
         } catch { /* non-critical */ }
+      }
+    },
+
+    // ----------------------------------------------------------------
+    // Manual mode (hand-picked recipes → FoodChat fills the rest)
+    // ----------------------------------------------------------------
+    async composePlan(
+      sessionId: string,
+      memberId: string,
+      picks: ComposePick[],
+      message?: string
+    ) {
+      this.sending = true
+      this.error = null
+      try {
+        const response = await foodchatApi.composePlan(sessionId, {
+          member_id: memberId,
+          picks,
+          message: message || null
+        })
+        await this.ingestTurnResponse(sessionId, memberId, response)
+        return response
+      } catch (err: any) {
+        this.error = err.message || 'Failed to compose plan'
+        throw err
+      } finally {
+        this.sending = false
       }
     },
 
