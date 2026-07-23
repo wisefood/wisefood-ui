@@ -1341,18 +1341,20 @@ async function saveDetails() {
     })
 
     // Gender lives in the profile's nutritional_preferences blob, not on the
-    // member, so it's a separate write — only made when it actually changed.
-    const currentGender = memberProfile.value?.nutritional_preferences?.gender
-    if (editGender.value !== currentGender) {
-      const nutPrefs: NutritionalPreferences = {
-        ...memberProfile.value?.nutritional_preferences,
-        gender: (editGender.value as NutritionalPreferences['gender']) || undefined
-      }
-      if (!editGender.value) delete nutPrefs.gender
-      const payload = buildProfilePayload({ nutritional_preferences: nutPrefs })
-      await householdStore.updateMemberProfile(currentMember.value.id, payload)
-      memberProfile.value = { ...memberProfile.value, nutritional_preferences: nutPrefs }
+    // member, so it's always a second write. Send it every save rather than
+    // diffing against a possibly-stale local copy — the earlier change-guard
+    // silently dropped the write when the loaded profile hadn't populated yet.
+    const nutPrefs: NutritionalPreferences = {
+      ...memberProfile.value?.nutritional_preferences
     }
+    if (editGender.value) {
+      nutPrefs.gender = editGender.value as NutritionalPreferences['gender']
+    } else {
+      delete nutPrefs.gender
+    }
+    const payload = buildProfilePayload({ nutritional_preferences: nutPrefs })
+    await householdStore.updateMemberProfile(currentMember.value.id, payload)
+    memberProfile.value = { ...memberProfile.value, nutritional_preferences: nutPrefs }
 
     showEditDetails.value = false
   } catch (err) {
