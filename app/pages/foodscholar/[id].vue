@@ -10,30 +10,48 @@
     />
 
     <!-- Loading State -->
-    <div v-if="loading" class="flex justify-center items-center py-24">
+    <div
+      v-if="loading"
+      class="flex justify-center items-center py-24"
+    >
       <div class="text-center">
-        <div class="w-16 h-16 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p class="text-gray-600 dark:text-gray-400">{{ t('foodScholarArticle.loading') }}</p>
+        <div class="w-16 h-16 border-4 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p class="text-gray-600 dark:text-gray-400">
+          {{ t('foodScholarArticle.loading') }}
+        </p>
       </div>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="max-w-2xl mx-auto px-4 py-20">
+    <div
+      v-else-if="error"
+      class="max-w-2xl mx-auto px-4 py-20"
+    >
       <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6">
         <div class="flex items-start gap-4">
           <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center shrink-0">
-            <UIcon name="i-lucide-alert-circle" class="w-5 h-5 text-red-600 dark:text-red-400" />
+            <UIcon
+              name="i-lucide-alert-circle"
+              class="w-5 h-5 text-red-600 dark:text-red-400"
+            />
           </div>
           <div class="flex-1">
-            <h3 class="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">{{ t('foodScholarArticle.errors.failedToLoad') }}</h3>
-            <p class="text-red-700 dark:text-red-300">{{ error }}</p>
+            <h3 class="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">
+              {{ t('foodScholarArticle.errors.failedToLoad') }}
+            </h3>
+            <p class="text-red-700 dark:text-red-300">
+              {{ error }}
+            </p>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Main Content -->
-    <main v-else-if="article" class="max-w-7xl mx-auto px-4 py-12">
+    <main
+      v-else-if="article"
+      class="max-w-7xl mx-auto px-4 py-12"
+    >
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Article Content (Left 2/3) -->
         <div class="lg:col-span-2 space-y-8">
@@ -41,15 +59,36 @@
           <div class="scroll-fade-in">
             <!-- Badges Row -->
             <div class="flex flex-wrap items-center gap-3 mb-4">
-              <UBadge color="primary" variant="subtle">{{ displayCategory }}</UBadge>
-              <UTooltip v-if="displayTopic" :text="topicsTooltip">
-                <UBadge variant="outline" class="text-gray-600 dark:text-gray-400 cursor-help">
-                  <UIcon name="i-lucide-layers" class="w-3 h-3 mr-1" />
+              <UBadge
+                color="primary"
+                variant="subtle"
+              >
+                {{ displayCategory }}
+              </UBadge>
+              <UTooltip
+                v-if="displayTopic"
+                :text="topicsTooltip"
+              >
+                <UBadge
+                  variant="outline"
+                  class="text-gray-600 dark:text-gray-400 cursor-help"
+                >
+                  <UIcon
+                    name="i-lucide-layers"
+                    class="w-3 h-3 mr-1"
+                  />
                   {{ displayTopic }}
                 </UBadge>
               </UTooltip>
-              <UBadge v-if="displayStudyType" variant="outline" class="text-gray-600 dark:text-gray-400">
-                <UIcon name="i-lucide-flask-conical" class="w-3 h-3 mr-1" />
+              <UBadge
+                v-if="displayStudyType"
+                variant="outline"
+                class="text-gray-600 dark:text-gray-400"
+              >
+                <UIcon
+                  name="i-lucide-flask-conical"
+                  class="w-3 h-3 mr-1"
+                />
                 {{ displayStudyType }}
               </UBadge>
             </div>
@@ -60,56 +99,103 @@
 
             <!-- Audience / Confidence -->
             <div class="flex flex-wrap items-center gap-4 mb-4 text-sm text-gray-600 dark:text-gray-400">
-              <div v-if="displayPopulationGroup" class="flex items-center gap-2">
-                <UIcon name="i-lucide-target" class="w-4 h-4 text-brand-500" />
+              <div
+                v-if="displayPopulationGroup"
+                class="flex items-center gap-2"
+              >
+                <UIcon
+                  name="i-lucide-target"
+                  class="w-4 h-4 text-brand-500"
+                />
                 <span><strong>{{ t('foodScholarArticle.labels.population') }}:</strong> {{ displayPopulationGroup }}</span>
               </div>
-              <div v-if="displayReaderGroup" class="flex items-center gap-2">
-                <UIcon name="i-lucide-users" class="w-4 h-4 text-brand-500" />
+              <div
+                v-if="displayReaderGroup"
+                class="flex items-center gap-2"
+              >
+                <UIcon
+                  name="i-lucide-users"
+                  class="w-4 h-4 text-brand-500"
+                />
                 <span><strong>{{ t('foodScholarArticle.labels.readerGroup') }}:</strong> {{ displayReaderGroup }}</span>
               </div>
-              <UBadge v-if="annotationConfidenceLabel" color="primary" variant="subtle" class="text-xs">
-                <UIcon name="i-lucide-badge-check" class="w-3 h-3 mr-1" />
+              <UBadge
+                v-if="annotationConfidenceLabel"
+                color="primary"
+                variant="subtle"
+                class="text-xs"
+              >
+                <UIcon
+                  name="i-lucide-badge-check"
+                  class="w-3 h-3 mr-1"
+                />
                 {{ t('foodScholarArticle.labels.confidence', { value: annotationConfidenceLabel }) }}
               </UBadge>
             </div>
 
             <!-- Publication Info -->
             <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
-              <div v-if="article.publication_year" class="flex items-center gap-2">
-                <UIcon name="i-lucide-calendar" class="w-4 h-4" />
+              <div
+                v-if="article.publication_year"
+                class="flex items-center gap-2"
+              >
+                <UIcon
+                  name="i-lucide-calendar"
+                  class="w-4 h-4"
+                />
                 <span>{{ article.publication_year.split('-')[0] }}</span>
               </div>
-              <div v-if="article.venue" class="flex items-center gap-2">
-                <UIcon name="i-lucide-book-open" class="w-4 h-4" />
+              <div
+                v-if="article.venue"
+                class="flex items-center gap-2"
+              >
+                <UIcon
+                  name="i-lucide-book-open"
+                  class="w-4 h-4"
+                />
                 <span>{{ article.venue }}</span>
               </div>
-              <div v-if="article.doi" class="flex items-center gap-2">
+              <div
+                v-if="article.doi"
+                class="flex items-center gap-2"
+              >
                 <a
                   :href="formatDoiUrl(article.doi)"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="inline-flex items-center gap-1 text-brand-600 dark:text-brand-400 hover:underline"
                 >
-                  <UIcon name="i-lucide-external-link" class="w-4 h-4" />
+                  <UIcon
+                    name="i-lucide-external-link"
+                    class="w-4 h-4"
+                  />
                   <span>DOI</span>
                 </a>
               </div>
-              <div v-if="semanticScholarUrl" class="flex items-center gap-2">
+              <div
+                v-if="semanticScholarUrl"
+                class="flex items-center gap-2"
+              >
                 <a
                   :href="semanticScholarUrl"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="inline-flex items-center gap-1 text-brand-600 dark:text-brand-400 hover:underline"
                 >
-                  <UIcon name="i-lucide-external-link" class="w-4 h-4" />
+                  <UIcon
+                    name="i-lucide-external-link"
+                    class="w-4 h-4"
+                  />
                   <span>Semantic Scholar</span>
                 </a>
               </div>
             </div>
 
             <!-- Authors -->
-            <div v-if="article.authors && article.authors.length > 0" class="mb-6">
+            <div
+              v-if="article.authors && article.authors.length > 0"
+              class="mb-6"
+            >
               <div class="flex flex-wrap gap-2">
                 <span
                   v-for="(author, index) in visibleAuthors"
@@ -131,22 +217,28 @@
           </div>
 
           <!-- Abstract Section with Magic Simplify -->
-          <div class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700" style="--delay: 0.1s">
+          <div
+            class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700"
+            style="--delay: 0.1s"
+          >
             <div class="flex items-center justify-between mb-4">
               <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <UIcon name="i-lucide-file-text" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
+                <UIcon
+                  name="i-lucide-file-text"
+                  class="w-5 h-5 text-brand-600 dark:text-brand-400"
+                />
                 {{ t('foodScholarArticle.sections.abstract') }}
               </h2>
               <!-- Magic Simplify Button -->
               <button
                 v-if="hasSimplifiedAbstract"
-                @click="toggleSimplified"
                 :class="[
                   'flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-300',
                   isSimplified
                     ? 'bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300'
                     : 'bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-gray-300 hover:bg-brand-50 dark:hover:bg-brand-900/20'
                 ]"
+                @click="toggleSimplified"
               >
                 <UIcon
                   name="i-lucide-sparkles"
@@ -162,19 +254,36 @@
               class="text-gray-700 dark:text-gray-300 leading-relaxed transition-opacity duration-300"
               :class="{ 'opacity-50': isSimplifying }"
             >
-              <p v-if="isSimplified" class="font-light">
+              <p
+                v-if="isSimplified"
+                class="font-light"
+              >
                 {{ simplifiedAbstract }}
               </p>
-              <p v-else v-html="abstractWithTooltips" class="font-light abstract-content"></p>
+              <p
+                v-else
+                class="font-light abstract-content"
+                v-html="abstractWithTooltips"
+              />
             </div>
           </div>
 
           <!-- Key Takeaways -->
-          <div v-if="displayTakeaways.length > 0" class="scroll-fade-in p-6 rounded-2xl bg-brand-50 dark:bg-brand-900/20 border border-brand-200 dark:border-brand-800" style="--delay: 0.2s">
+          <div
+            v-if="displayTakeaways.length > 0"
+            class="scroll-fade-in p-6 rounded-2xl bg-brand-50 dark:bg-brand-900/20 border border-brand-200 dark:border-brand-800"
+            style="--delay: 0.2s"
+          >
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <UIcon name="i-lucide-lightbulb" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
+              <UIcon
+                name="i-lucide-lightbulb"
+                class="w-5 h-5 text-brand-600 dark:text-brand-400"
+              />
               {{ t('foodScholarArticle.sections.keyTakeaways') }}
-              <span v-if="!article.key_takeaways || article.key_takeaways.length === 0" class="text-xs font-normal text-gray-500 dark:text-gray-400">({{ t('foodScholarArticle.aiGenerated') }})</span>
+              <span
+                v-if="!article.key_takeaways || article.key_takeaways.length === 0"
+                class="text-xs font-normal text-gray-500 dark:text-gray-400"
+              >({{ t('foodScholarArticle.aiGenerated') }})</span>
             </h2>
             <ul class="space-y-3">
               <li
@@ -182,23 +291,38 @@
                 :key="index"
                 class="flex items-start gap-3 text-gray-700 dark:text-gray-300"
               >
-                <UIcon name="i-lucide-check-circle" class="w-5 h-5 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
+                <UIcon
+                  name="i-lucide-check-circle"
+                  class="w-5 h-5 text-brand-600 dark:text-brand-400 shrink-0 mt-0.5"
+                />
                 <span class="font-light">{{ takeaway }}</span>
               </li>
             </ul>
           </div>
 
           <!-- Evaluation Section -->
-          <div v-if="article.extras?.evaluation" class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700" style="--delay: 0.3s">
+          <div
+            v-if="article.extras?.evaluation"
+            class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700"
+            style="--delay: 0.3s"
+          >
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <UIcon name="i-lucide-gauge" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
+              <UIcon
+                name="i-lucide-gauge"
+                class="w-5 h-5 text-brand-600 dark:text-brand-400"
+              />
               {{ t('foodScholarArticle.sections.studyEvaluation') }}
             </h2>
 
             <!-- Scores -->
             <div class="grid grid-cols-2 gap-4 mb-6">
-              <div v-if="article.extras.evaluation.actionability_score" class="p-4 rounded-xl bg-gray-50 dark:bg-zinc-700/50">
-                <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('foodScholarArticle.evaluation.actionability') }}</div>
+              <div
+                v-if="article.extras.evaluation.actionability_score"
+                class="p-4 rounded-xl bg-gray-50 dark:bg-zinc-700/50"
+              >
+                <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                  {{ t('foodScholarArticle.evaluation.actionability') }}
+                </div>
                 <div class="flex items-center gap-2">
                   <div class="flex gap-1">
                     <div
@@ -210,15 +334,20 @@
                           ? 'bg-brand-500'
                           : 'bg-gray-200 dark:bg-zinc-600'
                       ]"
-                    ></div>
+                    />
                   </div>
                   <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
                     {{ article.extras.evaluation.actionability_score }}/5
                   </span>
                 </div>
               </div>
-              <div v-if="article.extras.evaluation.user_value_score" class="p-4 rounded-xl bg-gray-50 dark:bg-zinc-700/50">
-                <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ t('foodScholarArticle.evaluation.userValue') }}</div>
+              <div
+                v-if="article.extras.evaluation.user_value_score"
+                class="p-4 rounded-xl bg-gray-50 dark:bg-zinc-700/50"
+              >
+                <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                  {{ t('foodScholarArticle.evaluation.userValue') }}
+                </div>
                 <div class="flex items-center gap-2">
                   <div class="flex gap-1">
                     <div
@@ -230,7 +359,7 @@
                           ? 'bg-green-500'
                           : 'bg-gray-200 dark:bg-zinc-600'
                       ]"
-                    ></div>
+                    />
                   </div>
                   <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
                     {{ article.extras.evaluation.user_value_score }}/5
@@ -240,21 +369,33 @@
             </div>
 
             <!-- Safety Badge -->
-            <div v-if="article.extras.evaluation.safety_sensitivity" class="mb-4">
+            <div
+              v-if="article.extras.evaluation.safety_sensitivity"
+              class="mb-4"
+            >
               <UBadge
                 :color="getSafetyColor(article.extras.evaluation.safety_sensitivity)"
                 variant="subtle"
                 class="text-sm"
               >
-                <UIcon name="i-lucide-shield" class="w-3 h-3 mr-1" />
+                <UIcon
+                  name="i-lucide-shield"
+                  class="w-3 h-3 mr-1"
+                />
                 {{ article.extras.evaluation.safety_sensitivity }}
               </UBadge>
             </div>
 
             <!-- Recommended Framing -->
-            <div v-if="article.extras.evaluation.recommended_user_framing" class="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+            <div
+              v-if="article.extras.evaluation.recommended_user_framing"
+              class="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
+            >
               <div class="flex items-start gap-3">
-                <UIcon name="i-lucide-info" class="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                <UIcon
+                  name="i-lucide-info"
+                  class="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5"
+                />
                 <p class="text-sm text-blue-800 dark:text-blue-200">
                   {{ article.extras.evaluation.recommended_user_framing }}
                 </p>
@@ -263,9 +404,16 @@
           </div>
 
           <!-- Q&A Sections -->
-          <div v-if="hasQASections" class="scroll-fade-in space-y-4" style="--delay: 0.4s">
+          <div
+            v-if="hasQASections"
+            class="scroll-fade-in space-y-4"
+            style="--delay: 0.4s"
+          >
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <UIcon name="i-lucide-message-circle-question" class="w-5 h-5 text-brand-600 dark:text-brand-400" />
+              <UIcon
+                name="i-lucide-message-circle-question"
+                class="w-5 h-5 text-brand-600 dark:text-brand-400"
+              />
               {{ t('foodScholarArticle.sections.qa') }}
             </h2>
 
@@ -274,13 +422,13 @@
               <button
                 v-for="tab in availableQATabs"
                 :key="tab.key"
-                @click="activeQATab = tab.key"
                 :class="[
                   'px-4 py-2 rounded-full text-sm font-medium transition-all',
                   activeQATab === tab.key
                     ? 'bg-brand-500 text-white'
                     : 'bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-600'
                 ]"
+                @click="activeQATab = tab.key"
               >
                 {{ tab.label }}
               </button>
@@ -294,11 +442,19 @@
                 class="p-4 rounded-xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700"
               >
                 <h4 class="font-medium text-gray-900 dark:text-white mb-2 flex items-start gap-2">
-                  <UIcon name="i-lucide-help-circle" class="w-5 h-5 text-brand-500 shrink-0 mt-0.5" />
+                  <UIcon
+                    name="i-lucide-help-circle"
+                    class="w-5 h-5 text-brand-500 shrink-0 mt-0.5"
+                  />
                   {{ qa.question }}
                 </h4>
-                <p class="text-gray-600 dark:text-gray-300 ml-7 mb-2">{{ qa.answer }}</p>
-                <p v-if="qa.grounding" class="text-xs text-gray-500 dark:text-gray-400 ml-7 italic border-l-2 border-gray-200 dark:border-zinc-600 pl-3">
+                <p class="text-gray-600 dark:text-gray-300 ml-7 mb-2">
+                  {{ qa.answer }}
+                </p>
+                <p
+                  v-if="qa.grounding"
+                  class="text-xs text-gray-500 dark:text-gray-400 ml-7 italic border-l-2 border-gray-200 dark:border-zinc-600 pl-3"
+                >
                   {{ qa.grounding }}
                 </p>
               </div>
@@ -310,13 +466,23 @@
         <aside class="lg:col-span-1">
           <div class="sticky top-24 space-y-6">
             <!-- Metrics -->
-            <div v-if="hasCitationInfo || hasAccessInfo" class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.05s">
+            <div
+              v-if="hasCitationInfo || hasAccessInfo"
+              class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+              style="--delay: 0.05s"
+            >
               <h3 class="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <UIcon name="i-lucide-bar-chart-3" class="w-5 h-5" />
+                <UIcon
+                  name="i-lucide-bar-chart-3"
+                  class="w-5 h-5"
+                />
                 {{ t('foodScholarArticle.metrics.title') }}
               </h3>
 
-              <div v-if="hasCitationInfo" class="flex items-center gap-4 mb-5">
+              <div
+                v-if="hasCitationInfo"
+                class="flex items-center gap-4 mb-5"
+              >
                 <RingMetric
                   v-if="article.citation_count !== null && article.citation_count !== undefined"
                   :label="t('foodScholarArticle.metrics.citations')"
@@ -326,19 +492,25 @@
                   :size="60"
                 />
                 <div class="flex-1 min-w-0 space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                  <div v-if="article.influential_citation_count !== null && article.influential_citation_count !== undefined" class="flex items-center justify-between gap-3">
+                  <div
+                    v-if="article.influential_citation_count !== null && article.influential_citation_count !== undefined"
+                    class="flex items-center justify-between gap-3"
+                  >
                     <UTooltip :text="t('foodScholarArticle.metrics.influentialTooltip')">
                       <span class="inline-flex items-center gap-2 cursor-help">
-                        <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                        <span class="w-2 h-2 rounded-full bg-purple-500" />
                         {{ t('foodScholarArticle.metrics.influential') }}
                       </span>
                     </UTooltip>
                     <span class="font-medium tabular-nums">{{ formatNumber(article.influential_citation_count) }}</span>
                   </div>
-                  <div v-if="article.reference_count !== null && article.reference_count !== undefined" class="flex items-center justify-between gap-3">
+                  <div
+                    v-if="article.reference_count !== null && article.reference_count !== undefined"
+                    class="flex items-center justify-between gap-3"
+                  >
                     <UTooltip :text="t('foodScholarArticle.metrics.referencesTooltip')">
                       <span class="inline-flex items-center gap-2 cursor-help">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-500" />
                         {{ t('foodScholarArticle.metrics.references') }}
                       </span>
                     </UTooltip>
@@ -347,28 +519,51 @@
                 </div>
               </div>
 
-              <div v-if="hasAccessInfo" class="flex flex-wrap items-center gap-2">
+              <div
+                v-if="hasAccessInfo"
+                class="flex flex-wrap items-center gap-2"
+              >
                 <UBadge
                   v-if="article.open_access !== null && article.open_access !== undefined"
                   :color="article.open_access ? 'success' : 'neutral'"
                   variant="subtle"
                 >
-                  <UIcon :name="article.open_access ? 'i-lucide-unlock' : 'i-lucide-lock'" class="w-3 h-3 mr-1" />
+                  <UIcon
+                    :name="article.open_access ? 'i-lucide-unlock' : 'i-lucide-lock'"
+                    class="w-3 h-3 mr-1"
+                  />
                   {{ article.open_access ? t('foodScholarArticle.access.open') : t('foodScholarArticle.access.closed') }}
                 </UBadge>
-                <UBadge v-if="meaningfulString(article.license)" variant="outline" class="text-gray-600 dark:text-gray-300">
-                  <UIcon name="i-lucide-scale" class="w-3 h-3 mr-1" />
+                <UBadge
+                  v-if="meaningfulString(article.license)"
+                  variant="outline"
+                  class="text-gray-600 dark:text-gray-300"
+                >
+                  <UIcon
+                    name="i-lucide-scale"
+                    class="w-3 h-3 mr-1"
+                  />
                   {{ article.license }}
                 </UBadge>
               </div>
             </div>
 
             <!-- Tags -->
-            <div v-if="displayTags.length > 0" class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.1s">
+            <div
+              v-if="displayTags.length > 0"
+              class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+              style="--delay: 0.1s"
+            >
               <h3 class="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <UIcon name="i-lucide-tags" class="w-5 h-5" />
+                <UIcon
+                  name="i-lucide-tags"
+                  class="w-5 h-5"
+                />
                 {{ t('foodScholarArticle.sections.tags') }}
-                <span v-if="!article.tags || article.tags.length === 0" class="text-xs font-normal text-gray-500 dark:text-gray-400">({{ t('foodScholarArticle.ai') }})</span>
+                <span
+                  v-if="!article.tags || article.tags.length === 0"
+                  class="text-xs font-normal text-gray-500 dark:text-gray-400"
+                >({{ t('foodScholarArticle.ai') }})</span>
               </h3>
               <div class="flex flex-wrap gap-2">
                 <span
@@ -382,9 +577,16 @@
             </div>
 
             <!-- Keywords -->
-            <div v-if="displayKeywords.length > 0" class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.15s">
+            <div
+              v-if="displayKeywords.length > 0"
+              class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+              style="--delay: 0.15s"
+            >
               <h3 class="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <UIcon name="i-lucide-key" class="w-5 h-5" />
+                <UIcon
+                  name="i-lucide-key"
+                  class="w-5 h-5"
+                />
                 {{ t('foodScholarArticle.sections.keywords') }}
               </h3>
               <div class="flex flex-wrap gap-2">
@@ -406,25 +608,52 @@
             </div>
 
             <!-- Glossary -->
-            <div v-if="glossaryTerms.length > 0" class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.2s">
+            <div
+              v-if="glossaryTerms.length > 0"
+              class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+              style="--delay: 0.2s"
+            >
               <h3 class="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <UIcon name="i-lucide-book-a" class="w-5 h-5" />
+                <UIcon
+                  name="i-lucide-book-a"
+                  class="w-5 h-5"
+                />
                 {{ t('foodScholarArticle.sections.glossary') }}
               </h3>
               <div class="space-y-3">
-                <div v-for="term in glossaryTerms" :key="term.term" class="text-sm">
-                  <dt class="font-medium text-gray-800 dark:text-gray-200">{{ term.term }}</dt>
-                  <dd class="text-gray-600 dark:text-gray-400 mt-0.5">{{ term.definition }}</dd>
+                <div
+                  v-for="term in glossaryTerms"
+                  :key="term.term"
+                  class="text-sm"
+                >
+                  <dt class="font-medium text-gray-800 dark:text-gray-200">
+                    {{ term.term }}
+                  </dt>
+                  <dd class="text-gray-600 dark:text-gray-400 mt-0.5">
+                    {{ term.definition }}
+                  </dd>
                 </div>
               </div>
             </div>
 
             <!-- Article Info -->
-            <div class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.3s">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-4">{{ t('foodScholarArticle.sections.articleInfo') }}</h3>
+            <div
+              class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+              style="--delay: 0.3s"
+            >
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-4">
+                {{ t('foodScholarArticle.sections.articleInfo') }}
+              </h3>
               <div class="space-y-3 text-sm text-gray-600 dark:text-gray-400">
-                <div v-for="item in visibleInfoItems" :key="item.label" class="flex items-start gap-2">
-                  <UIcon :name="item.icon" class="w-4 h-4 mt-0.5 shrink-0" />
+                <div
+                  v-for="item in visibleInfoItems"
+                  :key="item.label"
+                  class="flex items-start gap-2"
+                >
+                  <UIcon
+                    :name="item.icon"
+                    class="w-4 h-4 mt-0.5 shrink-0"
+                  />
                   <div class="min-w-0">
                     <span class="text-gray-500 dark:text-gray-500">{{ item.label }}:</span>
                     <span class="ml-1 break-words">{{ item.value }}</span>
@@ -442,17 +671,34 @@
             </div>
 
             <!-- Share -->
-            <div class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700" style="--delay: 0.4s">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-4">{{ t('foodScholarArticle.sections.share') }}</h3>
+            <div
+              class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
+              style="--delay: 0.4s"
+            >
+              <h3 class="font-semibold text-gray-900 dark:text-white mb-4">
+                {{ t('foodScholarArticle.sections.share') }}
+              </h3>
               <div class="flex gap-2">
-                <!--
-                  A "Save" button lived here but was never wired to anything —
-                  no click handler, no backend. Saving literature needs a
-                  user-owned saved-items store (typed URN references); until
-                  that exists, don't show a control that silently does nothing.
-                -->
-                <UButton variant="outline" size="sm" icon="i-lucide-link" class="flex-1 cursor-pointer" @click="copyLink">
+                <UButton
+                  variant="outline"
+                  size="sm"
+                  icon="i-lucide-link"
+                  class="flex-1 cursor-pointer"
+                  @click="copyLink"
+                >
                   {{ copied ? t('foodScholarArticle.actions.copied') : t('foodScholarArticle.actions.copyLink') }}
+                </UButton>
+                <UButton
+                  v-if="savedItemType"
+                  variant="outline"
+                  size="sm"
+                  :icon="isSaved ? 'i-lucide-bookmark-check' : 'i-lucide-bookmark'"
+                  :loading="saveLoading"
+                  :disabled="!householdStore.currentMember"
+                  :class="isSaved ? 'text-brandg-600 dark:text-brandg-400 cursor-pointer' : 'cursor-pointer'"
+                  @click="toggleSaved"
+                >
+                  {{ isSaved ? t('foodScholarArticle.actions.saved') : t('foodScholarArticle.actions.save') }}
                 </UButton>
               </div>
               <UButton
@@ -472,12 +718,25 @@
     </main>
 
     <!-- Article Not Found -->
-    <div v-else class="flex items-center justify-center py-20">
+    <div
+      v-else
+      class="flex items-center justify-center py-20"
+    >
       <div class="text-center">
-        <UIcon name="i-lucide-file-question" class="w-16 h-16 text-gray-400 mx-auto mb-4" />
-        <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">{{ t('foodScholarArticle.notFound.title') }}</h2>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">{{ t('foodScholarArticle.notFound.subtitle') }}</p>
-        <UButton to="/foodscholar/catalog" color="primary">
+        <UIcon
+          name="i-lucide-file-question"
+          class="w-16 h-16 text-gray-400 mx-auto mb-4"
+        />
+        <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+          {{ t('foodScholarArticle.notFound.title') }}
+        </h2>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">
+          {{ t('foodScholarArticle.notFound.subtitle') }}
+        </p>
+        <UButton
+          to="/foodscholar/catalog"
+          color="primary"
+        >
           {{ t('foodScholarArticle.backToCatalog') }}
         </UButton>
       </div>
@@ -491,8 +750,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useArticles } from '~/composables/useArticles'
 import { useAuthStore } from '~/stores/auth'
+import { useHouseholdStore } from '~/stores/household'
 import { formatDoiUrl } from '~/utils/articleHelpers'
 import type { GlossaryTerm, QAItem } from '~/services/articlesApi'
+import memberSavedItemsApi, { type SavedItemType } from '~/services/memberSavedItemsApi'
 
 definePageMeta({
   middleware: 'auth'
@@ -517,6 +778,71 @@ const backLink = computed(() => {
 
 const { currentArticle: article, loading, error, fetchArticle } = useArticles()
 const authStore = useAuthStore()
+const householdStore = useHouseholdStore()
+
+// ---- Save to library ----
+// The saved-items library is typed; derive the type from the URN prefix
+// (urn:article:… / urn:guide:… / urn:textbook:…). Anything else is not a
+// saveable literature asset, so the button is hidden.
+const SAVEABLE_URN_TYPES: Record<string, SavedItemType> = {
+  article: 'article',
+  guide: 'guide',
+  textbook: 'textbook'
+}
+const savedItemType = computed<SavedItemType | null>(() => {
+  const value = article.value?.urn || urn.value
+  const segment = typeof value === 'string' ? value.split(':')[1] : undefined
+  return (segment && SAVEABLE_URN_TYPES[segment]) || null
+})
+const savedItemRef = computed(() => article.value?.urn || urn.value)
+
+const isSaved = ref(false)
+const saveLoading = ref(false)
+
+const refreshSavedState = async () => {
+  const memberId = householdStore.currentMember?.id
+  const type = savedItemType.value
+  if (!memberId || !type) {
+    isSaved.value = false
+    return
+  }
+  try {
+    const items = await memberSavedItemsApi.listSavedItems(memberId, type)
+    isSaved.value = items.some(i => i.item_ref === savedItemRef.value)
+  } catch (e) {
+    console.error('[FoodScholar] Failed to check saved state:', e)
+  }
+}
+
+const toggleSaved = async () => {
+  const memberId = householdStore.currentMember?.id
+  const type = savedItemType.value
+  const ref_ = savedItemRef.value
+  if (!memberId || !type || !ref_) return
+
+  saveLoading.value = true
+  const wasSaved = isSaved.value
+  // Optimistic; revert on failure.
+  isSaved.value = !wasSaved
+  try {
+    if (wasSaved) {
+      await memberSavedItemsApi.removeSavedItem(memberId, type, ref_)
+    } else {
+      await memberSavedItemsApi.addSavedItem(memberId, type, ref_)
+    }
+  } catch (e) {
+    console.error('[FoodScholar] Failed to toggle saved item:', e)
+    isSaved.value = wasSaved
+  } finally {
+    saveLoading.value = false
+  }
+}
+
+watch(
+  [() => article.value?.urn, () => householdStore.currentMember?.id],
+  () => { refreshSavedState() },
+  { immediate: true }
+)
 
 // State
 const isSimplified = ref(false)

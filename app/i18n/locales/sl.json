@@ -1052,7 +1052,8 @@
       "copyLink": "Kopiraj povezavo",
       "copied": "Kopirano!",
       "editInConsole": "Uredi v konzoli",
-      "save": "Shrani"
+      "save": "Shrani",
+      "saved": "Shranjeno"
     },
     "evaluation": {
       "actionability": "Uporabnost",

@@ -1052,7 +1052,8 @@
       "copyLink": "Link másolása",
       "copied": "Másolva!",
       "editInConsole": "Szerkesztés a konzolon",
-      "save": "Mentés"
+      "save": "Mentés",
+      "saved": "Mentve"
     },
     "evaluation": {
       "actionability": "Gyakorlati hasznosság",
