@@ -124,6 +124,12 @@
             </div>
           </div>
           <div class="flex shrink-0 items-center gap-2 pt-0.5">
+            <LibrarySaveToLibraryButton
+              v-if="selectedGuide?.urn"
+              :item-ref="selectedGuide.urn"
+              variant="ghost"
+              size="xs"
+            />
             <UButton
               v-if="selectedGuide?.urn && authStore.hasAnyRole(['expert', 'admin'])"
               :to="`/console/assets/guides/${encodeURIComponent(selectedGuide.urn)}`"

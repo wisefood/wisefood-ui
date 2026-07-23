@@ -86,6 +86,11 @@
             <UIcon name="i-lucide-external-link" class="w-4 h-4 text-brand-600 dark:text-brand-400" />
             <span class="text-sm font-medium text-brand-700 dark:text-brand-300">Open URL</span>
           </a>
+          <LibrarySaveToLibraryButton
+            v-if="textbook.urn"
+            :item-ref="textbook.urn"
+            item-type="textbook"
+          />
         </div>
       </div>
 

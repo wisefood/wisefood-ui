@@ -596,7 +596,10 @@
     "savedRecipes": "Mentett receptek",
     "subtitle": "Minden mentett elem egy helyen.",
     "title": "Könyvtáram",
-    "tryAgain": "Újrapróbálkozás"
+    "tryAgain": "Újrapróbálkozás",
+    "save": "Mentés",
+    "saved": "Mentve",
+    "signInToSave": "Válasszon profilt a mentéshez"
   },
   "foodChat": {
     "title": "FoodChat",

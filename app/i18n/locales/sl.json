@@ -596,7 +596,10 @@
     "savedRecipes": "Shranjeni recepti",
     "subtitle": "Vse, kar ste shranili, na enem mestu.",
     "title": "Moja knjižnica",
-    "tryAgain": "Poskusi znova"
+    "tryAgain": "Poskusi znova",
+    "save": "Shrani",
+    "saved": "Shranjeno",
+    "signInToSave": "Za shranjevanje izberi profil"
   },
   "foodChat": {
     "title": "FoodChat",

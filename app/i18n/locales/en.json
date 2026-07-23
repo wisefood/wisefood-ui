@@ -596,7 +596,10 @@
     "savedRecipes": "Saved recipes",
     "subtitle": "Everything you've saved, in one place.",
     "title": "My Library",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "save": "Save",
+    "saved": "Saved",
+    "signInToSave": "Select a profile to save this"
   },
   "foodChat": {
     "title": "FoodChat",

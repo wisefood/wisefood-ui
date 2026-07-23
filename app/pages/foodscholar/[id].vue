@@ -688,18 +688,7 @@
                 >
                   {{ copied ? t('foodScholarArticle.actions.copied') : t('foodScholarArticle.actions.copyLink') }}
                 </UButton>
-                <UButton
-                  v-if="savedItemType"
-                  variant="outline"
-                  size="sm"
-                  :icon="isSaved ? 'i-lucide-bookmark-check' : 'i-lucide-bookmark'"
-                  :loading="saveLoading"
-                  :disabled="!householdStore.currentMember"
-                  :class="isSaved ? 'text-brandg-600 dark:text-brandg-400 cursor-pointer' : 'cursor-pointer'"
-                  @click="toggleSaved"
-                >
-                  {{ isSaved ? t('foodScholarArticle.actions.saved') : t('foodScholarArticle.actions.save') }}
-                </UButton>
+                <LibrarySaveToLibraryButton :item-ref="article?.urn || urn" />
               </div>
               <UButton
                 v-if="article?.urn && authStore.hasAnyRole(['expert', 'admin'])"
@@ -750,10 +739,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useArticles } from '~/composables/useArticles'
 import { useAuthStore } from '~/stores/auth'
-import { useHouseholdStore } from '~/stores/household'
 import { formatDoiUrl } from '~/utils/articleHelpers'
 import type { GlossaryTerm, QAItem } from '~/services/articlesApi'
-import memberSavedItemsApi, { type SavedItemType } from '~/services/memberSavedItemsApi'
 
 definePageMeta({
   middleware: 'auth'
@@ -778,71 +765,6 @@ const backLink = computed(() => {
 
 const { currentArticle: article, loading, error, fetchArticle } = useArticles()
 const authStore = useAuthStore()
-const householdStore = useHouseholdStore()
-
-// ---- Save to library ----
-// The saved-items library is typed; derive the type from the URN prefix
-// (urn:article:… / urn:guide:… / urn:textbook:…). Anything else is not a
-// saveable literature asset, so the button is hidden.
-const SAVEABLE_URN_TYPES: Record<string, SavedItemType> = {
-  article: 'article',
-  guide: 'guide',
-  textbook: 'textbook'
-}
-const savedItemType = computed<SavedItemType | null>(() => {
-  const value = article.value?.urn || urn.value
-  const segment = typeof value === 'string' ? value.split(':')[1] : undefined
-  return (segment && SAVEABLE_URN_TYPES[segment]) || null
-})
-const savedItemRef = computed(() => article.value?.urn || urn.value)
-
-const isSaved = ref(false)
-const saveLoading = ref(false)
-
-const refreshSavedState = async () => {
-  const memberId = householdStore.currentMember?.id
-  const type = savedItemType.value
-  if (!memberId || !type) {
-    isSaved.value = false
-    return
-  }
-  try {
-    const items = await memberSavedItemsApi.listSavedItems(memberId, type)
-    isSaved.value = items.some(i => i.item_ref === savedItemRef.value)
-  } catch (e) {
-    console.error('[FoodScholar] Failed to check saved state:', e)
-  }
-}
-
-const toggleSaved = async () => {
-  const memberId = householdStore.currentMember?.id
-  const type = savedItemType.value
-  const ref_ = savedItemRef.value
-  if (!memberId || !type || !ref_) return
-
-  saveLoading.value = true
-  const wasSaved = isSaved.value
-  // Optimistic; revert on failure.
-  isSaved.value = !wasSaved
-  try {
-    if (wasSaved) {
-      await memberSavedItemsApi.removeSavedItem(memberId, type, ref_)
-    } else {
-      await memberSavedItemsApi.addSavedItem(memberId, type, ref_)
-    }
-  } catch (e) {
-    console.error('[FoodScholar] Failed to toggle saved item:', e)
-    isSaved.value = wasSaved
-  } finally {
-    saveLoading.value = false
-  }
-}
-
-watch(
-  [() => article.value?.urn, () => householdStore.currentMember?.id],
-  () => { refreshSavedState() },
-  { immediate: true }
-)
 
 // State
 const isSimplified = ref(false)
