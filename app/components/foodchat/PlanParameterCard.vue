@@ -85,13 +85,13 @@ import { reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { PlanParameter, PlanParameterCard, PlanParameterOption, PlanParameterValues } from '~/services/foodchatApi'
 
-defineProps<{
+const props = defineProps<{
   card: PlanParameterCard
   busy?: boolean
 }>()
 
 const emit = defineEmits<{
-  apply: [values: PlanParameterValues]
+  apply: [values: PlanParameterValues, planType?: 'daily' | 'weekly']
   dismiss: []
 }>()
 
@@ -132,7 +132,9 @@ function apply() {
     const value = local[key]
     if (value !== undefined) values[key] = value
   }
-  if (Object.keys(values).length) emit('apply', values)
+  // Send the card's own plan_type back so the values refine the plan this
+  // card belongs to, even if another plan has been created since
+  if (Object.keys(values).length) emit('apply', values, props.card.plan_type)
 }
 
 // Labels come from the backend in English; prefer a translation when the

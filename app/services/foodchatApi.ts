@@ -80,10 +80,13 @@ export interface PlanParameter {
   value?: number | string | null
 }
 
-/** Optional slider card attached to fresh daily plans — replaces the old
- *  textual questions about time budget / difficulty / goal */
+/** Optional slider card attached to fresh plans — replaces the old textual
+ *  questions about time budget / difficulty / goal. `plan_type` is the
+ *  card's address: echo it back on apply so the values refine the plan the
+ *  card was rendered with, not whichever canvas is newest by then. */
 export interface PlanParameterCard {
   parameters: PlanParameter[]
+  plan_type?: 'daily' | 'weekly'
 }
 
 export type PlanParameterValues = Record<string, number | string>
@@ -91,6 +94,7 @@ export type PlanParameterValues = Record<string, number | string>
 export interface PlanParametersRequest {
   member_id: string
   values: PlanParameterValues
+  plan_type?: 'daily' | 'weekly'
 }
 
 /** One hand-picked recipe on the manual-mode canvas */

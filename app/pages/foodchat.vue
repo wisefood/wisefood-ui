@@ -1362,10 +1362,15 @@ function dismissParamCard(msg: ChatMessage) {
   dismissedParamCards.value = new Set([...dismissedParamCards.value, messageKey(msg)])
 }
 
-async function handleApplyPlanParameters(values: PlanParameterValues) {
+async function handleApplyPlanParameters(
+  values: PlanParameterValues,
+  planType?: 'daily' | 'weekly'
+) {
   showEphemeralGenerating.value = true
   try {
-    await applyPlanParameters(values)
+    // planType is the card's own address — without it the backend would
+    // refine whichever canvas is newest, which may not be this card's plan
+    await applyPlanParameters(values, planType)
     scrollToBottom()
   } catch {
     showEphemeralGenerating.value = false

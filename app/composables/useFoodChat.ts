@@ -78,9 +78,12 @@ export function useFoodChat() {
     return store.submitMemoryDecision(store.activeSessionId, memberId.value, decision, suggestion)
   }
 
-  async function applyPlanParameters(values: PlanParameterValues) {
+  async function applyPlanParameters(
+    values: PlanParameterValues,
+    planType?: 'daily' | 'weekly'
+  ) {
     if (!store.activeSessionId || !memberId.value) return
-    return store.applyPlanParameters(store.activeSessionId, memberId.value, values)
+    return store.applyPlanParameters(store.activeSessionId, memberId.value, values, planType)
   }
 
   async function composePlan(

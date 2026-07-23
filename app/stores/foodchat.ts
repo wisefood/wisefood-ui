@@ -328,14 +328,16 @@ export const useFoodChatStore = defineStore('foodchat', {
     async applyPlanParameters(
       sessionId: string,
       memberId: string,
-      values: PlanParameterValues
+      values: PlanParameterValues,
+      planType?: 'daily' | 'weekly'
     ) {
       this.sending = true
       this.error = null
       try {
         const response = await foodchatApi.applyPlanParameters(sessionId, {
           member_id: memberId,
-          values
+          values,
+          plan_type: planType
         })
         // The canonical user message is added server-side; the conversation
         // refetch inside ingestTurnResponse picks it up
