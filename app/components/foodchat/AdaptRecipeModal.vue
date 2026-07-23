@@ -119,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import recipeApi, { type Recipe, type RecipeAdaptSuggestion, type RecipeAdaptSuggestionsResult, type RecipeIngredient } from '~/services/recipeApi'
 import memberAdaptedRecipesApi, { type AdaptedRecipeNutrition } from '~/services/memberAdaptedRecipesApi'
@@ -152,6 +152,13 @@ function suggestionFallbackLine(s: RecipeAdaptSuggestion): string {
   if (s.action === 'reduce') return t('foodChatHome.adaptModal.reduceLine', { ingredient: s.original_ingredient })
   return t('foodChatHome.adaptModal.swapLine', { from: s.original_ingredient, to: s.substitute_name || '' })
 }
+
+function onKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') emit('close')
+}
+
+onMounted(() => document.addEventListener('keydown', onKeydown))
+onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 
 onMounted(async () => {
   try {
