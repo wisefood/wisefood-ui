@@ -1,49 +1,94 @@
 <template>
   <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
     <!-- Backdrop -->
-    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="emit('close')" />
+    <div
+      class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+      @click="emit('close')"
+    />
 
     <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 shadow-2xl overflow-hidden">
       <!-- Header -->
       <div class="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100 dark:border-zinc-800">
         <div class="w-8 h-8 rounded-lg bg-brandp-50 dark:bg-brandp-950/40 flex items-center justify-center shrink-0">
-          <UIcon name="i-lucide-wand-sparkles" class="w-4 h-4 text-brandp-500" />
+          <UIcon
+            name="i-lucide-wand-sparkles"
+            class="w-4 h-4 text-brandp-500"
+          />
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ t('foodChatHome.adaptModal.title') }}</p>
-          <p class="text-[11px] text-gray-400 dark:text-zinc-500 truncate">{{ recipe?.title || '…' }}</p>
+          <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+            {{ t('foodChatHome.adaptModal.title') }}
+          </p>
+          <p class="text-[11px] text-gray-400 dark:text-zinc-500 truncate">
+            {{ recipe?.title || '…' }}
+          </p>
         </div>
         <button
           class="flex items-center justify-center w-7 h-7 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
           :aria-label="t('foodChatHome.adaptModal.close')"
           @click="emit('close')"
         >
-          <UIcon name="i-lucide-x" class="w-4 h-4" />
+          <UIcon
+            name="i-lucide-x"
+            class="w-4 h-4"
+          />
         </button>
       </div>
 
       <div class="px-4 py-3 max-h-[60vh] overflow-y-auto">
         <!-- Loading -->
-        <div v-if="loading" class="py-8 text-center">
-          <UIcon name="i-lucide-loader-2" class="w-6 h-6 text-brandp-400 animate-spin mx-auto mb-2" />
-          <p class="text-xs text-gray-400 dark:text-zinc-500">{{ t('foodChatHome.adaptModal.loading') }}</p>
+        <div
+          v-if="loading"
+          class="py-8 text-center"
+        >
+          <UIcon
+            name="i-lucide-loader-2"
+            class="w-6 h-6 text-brandp-400 animate-spin mx-auto mb-2"
+          />
+          <p class="text-xs text-gray-400 dark:text-zinc-500">
+            {{ t('foodChatHome.adaptModal.loading') }}
+          </p>
         </div>
 
         <!-- Error -->
-        <div v-else-if="error" class="py-6 text-center space-y-2">
-          <UIcon name="i-lucide-alert-circle" class="w-6 h-6 text-amber-500 mx-auto" />
-          <p class="text-xs text-gray-500 dark:text-zinc-400">{{ error }}</p>
+        <div
+          v-else-if="error"
+          class="py-6 text-center space-y-2"
+        >
+          <UIcon
+            name="i-lucide-alert-circle"
+            class="w-6 h-6 text-amber-500 mx-auto"
+          />
+          <p class="text-xs text-gray-500 dark:text-zinc-400">
+            {{ error }}
+          </p>
         </div>
 
         <!-- Already optimal -->
-        <div v-else-if="result?.status === 'already_optimal' || (result && !suggestions.length)" class="py-6 text-center space-y-2">
-          <UIcon name="i-lucide-badge-check" class="w-7 h-7 text-emerald-500 mx-auto" />
-          <p class="text-sm font-medium text-gray-700 dark:text-zinc-200">{{ t('foodChatHome.adaptModal.alreadyOptimal') }}</p>
-          <p v-if="currentGrade" class="text-[11px] text-gray-400 dark:text-zinc-500">Nutri-Score {{ currentGrade }}</p>
+        <div
+          v-else-if="result?.status === 'already_optimal' || (result && !suggestions.length)"
+          class="py-6 text-center space-y-2"
+        >
+          <UIcon
+            name="i-lucide-badge-check"
+            class="w-7 h-7 text-emerald-500 mx-auto"
+          />
+          <p class="text-sm font-medium text-gray-700 dark:text-zinc-200">
+            {{ t('foodChatHome.adaptModal.alreadyOptimal') }}
+          </p>
+          <p
+            v-if="currentGrade"
+            class="text-[11px] text-gray-400 dark:text-zinc-500"
+          >
+            Nutri-Score {{ currentGrade }}
+          </p>
         </div>
 
         <!-- Suggestions -->
-        <div v-else class="space-y-2">
+        <div
+          v-else
+          class="space-y-2"
+        >
           <div
             v-for="suggestion in suggestions"
             :key="suggestion.rank"
@@ -54,7 +99,10 @@
                 <p class="text-xs font-medium text-gray-800 dark:text-gray-200 leading-snug">
                   {{ suggestion.explanation?.headline || suggestionFallbackLine(suggestion) }}
                 </p>
-                <p v-if="suggestion.explanation?.reason" class="mt-0.5 text-[11px] font-light text-gray-500 dark:text-zinc-400 leading-snug">
+                <p
+                  v-if="suggestion.explanation?.reason"
+                  class="mt-0.5 text-[11px] font-light text-gray-500 dark:text-zinc-400 leading-snug"
+                >
                   {{ suggestion.explanation.reason }}
                 </p>
               </div>
@@ -69,12 +117,21 @@
               v-if="suggestion.introduces_allergen && suggestion.new_allergens?.length"
               class="flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400"
             >
-              <UIcon name="i-lucide-alert-triangle" class="w-3 h-3 shrink-0" />
+              <UIcon
+                name="i-lucide-alert-triangle"
+                class="w-3 h-3 shrink-0"
+              />
               {{ t('foodChatHome.adaptModal.allergenWarning', { list: suggestion.new_allergens.join(', ') }) }}
             </p>
             <div class="flex justify-end">
-              <span v-if="savedRank === suggestion.rank" class="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
-                <UIcon name="i-lucide-check" class="w-3 h-3" />
+              <span
+                v-if="savedRank === suggestion.rank"
+                class="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400"
+              >
+                <UIcon
+                  name="i-lucide-check"
+                  class="w-3 h-3"
+                />
                 {{ t('foodChatHome.adaptModal.saved') }}
               </span>
               <button
@@ -85,13 +142,25 @@
                 :disabled="savingRank !== null || savedRank !== null"
                 @click="save(suggestion)"
               >
-                <UIcon v-if="savingRank === suggestion.rank" name="i-lucide-loader-2" class="w-3 h-3 animate-spin" />
+                <UIcon
+                  v-if="savingRank === suggestion.rank"
+                  name="i-lucide-loader-2"
+                  class="w-3 h-3 animate-spin"
+                />
                 {{ t('foodChatHome.adaptModal.save') }}
               </button>
             </div>
           </div>
-          <p v-if="saveError" class="text-[11px] text-red-500 dark:text-red-400">{{ saveError }}</p>
-          <p v-if="savedRank !== null" class="text-[11px] font-light text-gray-400 dark:text-zinc-500 leading-snug">
+          <p
+            v-if="saveError"
+            class="text-[11px] text-red-500 dark:text-red-400"
+          >
+            {{ saveError }}
+          </p>
+          <p
+            v-if="savedRank !== null"
+            class="text-[11px] font-light text-gray-400 dark:text-zinc-500 leading-snug"
+          >
             {{ t('foodChatHome.adaptModal.savedHint') }}
           </p>
         </div>
@@ -105,7 +174,10 @@
           class="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:underline transition-colors"
         >
           {{ t('foodChatHome.adaptModal.openFull') }}
-          <UIcon name="i-lucide-arrow-up-right" class="w-3 h-3" />
+          <UIcon
+            name="i-lucide-arrow-up-right"
+            class="w-3 h-3"
+          />
         </NuxtLink>
         <button
           class="text-[11px] text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors"
