@@ -54,7 +54,10 @@
           :title="t('dashboard.apps.foodScholar.title')"
           :description="t('dashboard.apps.foodScholar.description')"
           glow-color="#d53355"
+          has-about
+          :about-label="t('dashboard.about.trigger', { app: t('dashboard.apps.foodScholar.title') })"
           class="bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/20 dark:to-brand-800/20"
+          @about="openAbout('foodScholar')"
         />
         <DashboardAppNavCard
           to="/recipe-wrangler"
@@ -63,7 +66,10 @@
           :title="t('dashboard.apps.recipeWrangler.title')"
           :description="t('dashboard.apps.recipeWrangler.description')"
           glow-color="#a6b52b"
+          has-about
+          :about-label="t('dashboard.about.trigger', { app: t('dashboard.apps.recipeWrangler.title') })"
           class="bg-gradient-to-br from-brandg-50 to-brandg-200 dark:from-brandg-900/20 dark:to-brandg-800/20"
+          @about="openAbout('recipeWrangler')"
         />
         <DashboardAppNavCard
           to="/foodchat"
@@ -72,9 +78,48 @@
           :title="t('dashboard.apps.foodChat.title')"
           :description="t('dashboard.apps.foodChat.description')"
           glow-color="#a35ece"
+          has-about
+          :about-label="t('dashboard.about.trigger', { app: t('dashboard.apps.foodChat.title') })"
           class="bg-gradient-to-br from-brandp-50 to-brandp-100 dark:from-brandp-600/20 dark:to-brandp-600/20"
+          @about="openAbout('foodChat')"
         />
       </div>
+
+      <!-- "About this app" modals. Stats are passed only for apps that have a
+           real source; FoodChat passes none, so its modal shows no stats block. -->
+      <DashboardAppAboutModal
+        :open="aboutModalApp === 'foodScholar'"
+        :title="t('dashboard.apps.foodScholar.title')"
+        :tagline="t('dashboard.apps.foodScholar.description')"
+        icon="i-lucide-graduation-cap"
+        icon-class="text-brand-600 dark:text-brand-400"
+        :description="t('dashboard.about.foodScholar.description')"
+        to="/foodscholar"
+        :stats="foodScholarStats"
+        :footnote="t('dashboard.about.foodScholar.footnote')"
+        @update:open="(v: boolean) => { if (!v) aboutModalApp = null }"
+      />
+      <DashboardAppAboutModal
+        :open="aboutModalApp === 'recipeWrangler'"
+        :title="t('dashboard.apps.recipeWrangler.title')"
+        :tagline="t('dashboard.apps.recipeWrangler.description')"
+        icon="i-lucide-chef-hat"
+        icon-class="text-brandg-600 dark:text-brandg-400"
+        :description="t('dashboard.about.recipeWrangler.description')"
+        to="/recipe-wrangler"
+        :stats="recipeWranglerStats"
+        @update:open="(v: boolean) => { if (!v) aboutModalApp = null }"
+      />
+      <DashboardAppAboutModal
+        :open="aboutModalApp === 'foodChat'"
+        :title="t('dashboard.apps.foodChat.title')"
+        :tagline="t('dashboard.apps.foodChat.description')"
+        icon="i-lucide-message-circle"
+        icon-class="text-brandp-400 dark:text-brandp-400"
+        :description="t('dashboard.about.foodChat.description')"
+        to="/foodchat"
+        @update:open="(v: boolean) => { if (!v) aboutModalApp = null }"
+      />
 
       <!-- Today's Spotlight & Meal Schedule -->
       <div class="mb-12 scroll-fade-in grid grid-cols-1 lg:grid-cols-3 gap-6" style="--delay: 0.2s">
@@ -350,6 +395,49 @@ useSeoMeta({
 
 const authStore = useAuthStore()
 const householdStore = useHouseholdStore()
+
+// --- "About this app" modals ---------------------------------------------
+// Which app's about-modal is open (null = none). Stats are fetched lazily and
+// shown only when real numbers exist; apps without a stats source show no stats.
+type AboutAppKey = 'foodScholar' | 'recipeWrangler' | 'foodChat'
+const aboutModalApp = ref<AboutAppKey | null>(null)
+
+interface AppAboutStat { label: string, value: number }
+const foodScholarStats = ref<AppAboutStat[]>([])
+const recipeWranglerStats = ref<AppAboutStat[]>([])
+
+const openAbout = (app: AboutAppKey) => {
+  aboutModalApp.value = app
+}
+
+// FoodScholar corpus counts from the catalog stats aggregator (one call, per
+// entity, already degrades gracefully with a -1 sentinel). We surface the
+// content types that back the assistant's answers.
+const loadFoodScholarStats = async () => {
+  try {
+    const stats = await catalogApi.fetchCatalogStats()
+    const totalFor = (key: string) => stats.entities.find(e => e.key === key)?.total ?? -1
+    foodScholarStats.value = [
+      { label: t('dashboard.about.foodScholar.stats.articles'), value: totalFor('articles') },
+      { label: t('dashboard.about.foodScholar.stats.guidelines'), value: totalFor('guidelines') },
+      { label: t('dashboard.about.foodScholar.stats.guides'), value: totalFor('guides') }
+    ]
+  } catch {
+    // No stats endpoint / failure → show the about copy without numbers.
+    foodScholarStats.value = []
+  }
+}
+
+const loadRecipeWranglerStats = async () => {
+  try {
+    const count = await recipeApi.getRecipeCount()
+    recipeWranglerStats.value = [
+      { label: t('dashboard.about.recipeWrangler.stats.recipes'), value: count }
+    ]
+  } catch {
+    recipeWranglerStats.value = []
+  }
+}
 
 const userGreeting = computed(() => {
   // First priority: selected member name from household
@@ -894,6 +982,8 @@ onMounted(() => {
 
   loadFoodScholarInsights()
   void loadRecommendedRecipes()
+  void loadFoodScholarStats()
+  void loadRecipeWranglerStats()
 })
 
 onUnmounted(() => {

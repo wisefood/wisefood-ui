@@ -103,7 +103,31 @@
     "sustainability": {
       "title": "Fenntartható választás"
     },
-    "friend": "Barát"
+    "friend": "Barát",
+    "about": {
+      "close": "Bezárás",
+      "openApp": "Alkalmazás megnyitása",
+      "statsHeading": "Mit tartalmaz",
+      "trigger": "A(z) {app} alkalmazásról",
+      "foodScholar": {
+        "description": "A FoodScholar hétköznapi táplálkozási és élelmiszer-tudományi kérdésekre válaszol egyszerű nyelven, tudományos bizonyítékokra támaszkodva, nem pedig webes találgatásra.\n\nHogyan működik: átkutat egy gondosan összeállított korpuszt, amely szakmailag lektorált tudományos cikkek kivonatait és hivatalos táplálkozási irányelvek szabályait tartalmazza, majd tömör választ ír, amely minden állításhoz megjelöli a pontos forrást. Ha általános tudásra támaszkodik forrás helyett, azt jelzi.\n\nHatókör: táplálkozástudomány, élelmiszer-összetétel, egészséges étkezési tanácsok és élelmiszer-biztonság — ahol lehetséges, az országához és kezdő vagy haladó szinthez igazítva. Nem állít fel diagnózist, nem ír fel kezelést, és nem ad személyre szabott orvosi vagy étrend-kiegészítő adagolási tanácsot; biztonsági szempontból érzékeny helyzetekben szakemberhez irányít.\n\nElérhető angol, szlovén és magyar nyelven.",
+        "footnote": "A válaszok a korpusz bizonyítékait tükrözik, és hiányosak vagy elavultak lehetnek — fontos döntéseknél ellenőrizze a forrásokat.",
+        "stats": {
+          "articles": "Cikkek",
+          "guidelines": "Irányelvek",
+          "guides": "Útmutatók"
+        }
+      },
+      "recipeWrangler": {
+        "description": "A RecipeWrangler segít recepteket találni és azokat ahhoz igazítani, amid van és amire szükséged van — hozzávalók cseréje, adagok méretezése és étrendi preferenciák illesztése.\n\nEgy receptgráfra támaszkodik, amelyben hozzávalók, konyha és megkötések szerint kereshetsz.",
+        "stats": {
+          "recipes": "Receptek"
+        }
+      },
+      "foodChat": {
+        "description": "A FoodChat beszélgetés során tervez személyre szabott étkezéseket — a háztartás tagjai, preferenciái és táplálkozási céljai köré épít étrendeket, és menet közben finomítja azokat."
+      }
+    }
   },
   "nav": {
     "signIn": "Bejelentkezés",

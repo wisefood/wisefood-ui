@@ -8,6 +8,9 @@ interface FoodScholarQaState {
   question: string
   result: QaAskResult | null
   expertiseLevel: string
+  // Active conversation thread id, so free-form follow-ups keep their context
+  // across navigation (backend carries a running summary keyed by this id).
+  qaThreadId: string | null
   savedAt: number | null
 }
 
@@ -15,6 +18,7 @@ interface SavedThread {
   question: string
   result: QaAskResult
   expertiseLevel: string
+  qaThreadId?: string | null
 }
 
 export const useFoodScholarQaStore = defineStore('foodscholarQa', {
@@ -22,6 +26,7 @@ export const useFoodScholarQaStore = defineStore('foodscholarQa', {
     question: '',
     result: null,
     expertiseLevel: 'beginner',
+    qaThreadId: null,
     savedAt: null
   }),
 
@@ -30,6 +35,7 @@ export const useFoodScholarQaStore = defineStore('foodscholarQa', {
       this.question = thread.question
       this.result = thread.result
       this.expertiseLevel = thread.expertiseLevel
+      this.qaThreadId = thread.qaThreadId ?? null
       this.savedAt = Date.now()
     },
 
@@ -44,13 +50,15 @@ export const useFoodScholarQaStore = defineStore('foodscholarQa', {
       return {
         question: this.question,
         result: this.result,
-        expertiseLevel: this.expertiseLevel
+        expertiseLevel: this.expertiseLevel,
+        qaThreadId: this.qaThreadId
       }
     },
 
     clear() {
       this.question = ''
       this.result = null
+      this.qaThreadId = null
       this.savedAt = null
     }
   }

@@ -556,7 +556,7 @@
               <button
                 v-for="suggestion in qaResult.follow_up_suggestions" :key="suggestion" type="button"
                 class="px-3 py-1.5 text-xs rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-200 hover:bg-brand-100 dark:hover:bg-brand-900/40 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
-                @click="askScholarQA(suggestion)"
+                @click="askScholarFollowUp(suggestion)"
               >{{ suggestion }}</button>
             </div>
           </div>
@@ -2232,7 +2232,7 @@ const loadQaModels = async () => {
 
 const loadQaQuestions = async () => {
   try {
-    const result = await foodscholarApi.listQuestions()
+    const result = await foodscholarApi.listQuestions(locale.value || 'en')
     quickQuestions.value = normalizeQuestionList(result)
   } catch (err) {
     console.warn('Failed to fetch QA suggested questions', err)
@@ -2245,20 +2245,26 @@ const buildBasePayload = (question: string): QaAskRequest => {
     question,
     mode: qaMode.value,
     rag_enabled: ragEnabled.value,
-    language: 'en'
+    // Pass the app locale so answers, follow-ups, clarifications, and starter
+    // questions come back in the user's language. Backend accepts ISO 639-1
+    // (supported app locales en|hu|sl are already valid codes).
+    language: locale.value || 'en'
   }
 
   if (ragEnabled.value) {
     payload.retriever = selectedRetriever.value
   }
 
+  // Always honour the chosen expertise level — including in simple mode, whose
+  // default is 'beginner'. (Previously simple mode overrode it to 'intermediate',
+  // making the beginner/expert choice unreachable for non-advanced users.)
+  payload.expertise_level = expertiseLevel.value || 'beginner'
+
   if (isAdvancedMode.value) {
-    payload.expertise_level = expertiseLevel.value || 'intermediate'
     if (ragEnabled.value) {
       payload.top_k = selectedTopKOption.value.value
     }
   } else {
-    payload.expertise_level = 'intermediate'
     if (ragEnabled.value) {
       payload.top_k = 5
     }
@@ -2274,6 +2280,12 @@ const buildBasePayload = (question: string): QaAskRequest => {
 
   if (householdStore.currentMember?.id) {
     payload.member_id = householdStore.currentMember.id
+  }
+
+  // Continue an existing conversation thread when one is active, so free-form
+  // follow-ups carry the running summary. Cleared on a deliberate new question.
+  if (qaThreadId.value) {
+    payload.qa_thread_id = qaThreadId.value
   }
 
   return payload
@@ -2313,20 +2325,38 @@ const handleQaResponse = (result: QaAskResult, basePayload: QaAskRequest) => {
     qaResult.value = null
   } else {
     pendingClarification.value = null
-    qaThreadId.value = null
+    // Keep the thread id returned with every answer so the next question in this
+    // session continues the conversation (free-form follow-ups + thread summary).
+    // A deliberate new question resets it in askScholarQA().
+    qaThreadId.value = result.qa_thread_id ?? qaThreadId.value ?? null
     pendingPayload.value = null
     qaResult.value = normalizeQaResult(result)
     qaStore.save({
       question: pendingQuestion.value,
       result: qaResult.value,
-      expertiseLevel: expertiseLevel.value
+      expertiseLevel: expertiseLevel.value,
+      qaThreadId: qaThreadId.value
     })
   }
 }
 
-const askScholarQA = async (questionOverride?: string) => {
+// continueThread: keep the active qa_thread_id so the backend treats this as a
+// free-form follow-up (carrying the running conversation summary). Defaults to
+// auto: a submit from within an active session (the in-session composer or a
+// follow-up suggestion) continues the thread; the idle composer and starter
+// questions (which pass forceNew) start a fresh conversation. This keeps the
+// existing layout — no new controls — while enabling threaded follow-ups.
+const askScholarQA = async (
+  questionOverride?: string,
+  options?: { continueThread?: boolean, forceNew?: boolean }
+) => {
   const question = (questionOverride ?? chatQuery.value).trim()
   if (!question || asking.value) return
+
+  const autoContinue = hasActiveSession.value && !!qaThreadId.value
+  const continueThread = options?.forceNew === true
+    ? false
+    : (options?.continueThread ?? autoContinue)
 
   if (questionOverride) {
     chatQuery.value = question
@@ -2336,7 +2366,11 @@ const askScholarQA = async (questionOverride?: string) => {
   qaResult.value = null
   qaError.value = null
   pendingClarification.value = null
-  qaThreadId.value = null
+  // Preserve the thread id for a follow-up; drop it to start a new conversation.
+  if (!continueThread) {
+    qaThreadId.value = null
+    qaStore.clear()
+  }
   pendingPayload.value = null
   selectedPreferredAnswer.value = null
   singleAnswerFeedbackSubmitted.value = false
@@ -2355,6 +2389,11 @@ const askScholarQA = async (questionOverride?: string) => {
     asking.value = false
     chatQuery.value = ''
   }
+}
+
+// The in-session composer submits a free-form follow-up on the current thread.
+const askScholarFollowUp = (questionOverride?: string) => {
+  askScholarQA(questionOverride, { continueThread: true })
 }
 
 const submitClarification = async () => {
@@ -2470,7 +2509,8 @@ const submitNegativeFeedback = async () => {
 
 const askQuickQuestion = (question: string) => {
   chatQuery.value = question
-  askScholarQA(question)
+  // Starter questions always begin a fresh conversation.
+  askScholarQA(question, { forceNew: true })
 }
 
 const normalizeQuestionList = (result: { questions?: unknown } | string[] | null | undefined): string[] => {
@@ -2783,6 +2823,8 @@ onMounted(async () => {
       qaResult.value = saved.result
       pendingQuestion.value = saved.question
       expertiseLevel.value = saved.expertiseLevel
+      // Rehydrate the thread so a follow-up after navigation stays in-context.
+      qaThreadId.value = saved.qaThreadId ?? null
     }
   }
 

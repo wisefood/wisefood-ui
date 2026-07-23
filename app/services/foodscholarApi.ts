@@ -160,8 +160,11 @@ class FoodScholarApiService {
     return wisefoodRestApi.get<string[] | Record<string, unknown>>(`${this.basePath}/models`)
   }
 
-  async listQuestions(): Promise<QaQuestionsResult> {
-    return wisefoodRestApi.get<QaQuestionsResult>(`${this.basePath}/questions`)
+  async listQuestions(language?: string | null): Promise<QaQuestionsResult> {
+    // language returns starter questions localized to the user's app locale.
+    return wisefoodRestApi.get<QaQuestionsResult>(`${this.basePath}/questions`, {
+      params: language ? { language } : undefined
+    })
   }
 
   async submitMemoryDecision(

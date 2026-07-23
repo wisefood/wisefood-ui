@@ -103,7 +103,31 @@
     "sustainability": {
       "title": "Sustainable Choice"
     },
-    "friend": "Friend"
+    "friend": "Friend",
+    "about": {
+      "close": "Close",
+      "openApp": "Open app",
+      "statsHeading": "What’s inside",
+      "trigger": "About {app}",
+      "foodScholar": {
+        "description": "FoodScholar answers everyday nutrition and food-science questions in plain language, grounded in scientific evidence rather than open-web guesswork.\n\nHow it works: it searches a curated corpus of peer-reviewed scientific article abstracts and official dietary-guideline rules, then writes a concise answer that cites the exact sources behind each claim. When it relies on general knowledge instead of a retrieved source, it says so.\n\nScope: nutrition science, food composition, healthy-eating guidance, and food safety — adapted where possible to your country and to a beginner or expert reading level. It does not diagnose, prescribe treatment, or give personalised medical or supplement-dosage advice; for safety-sensitive situations it points you to a professional.\n\nAvailable in English, Slovenian, and Hungarian.",
+        "footnote": "Answers reflect the evidence in the corpus and can be incomplete or out of date — check citations for high-stakes decisions.",
+        "stats": {
+          "articles": "Articles",
+          "guidelines": "Guidelines",
+          "guides": "Guides"
+        }
+      },
+      "recipeWrangler": {
+        "description": "RecipeWrangler helps you find recipes and adapt them to what you have and what you need — swapping ingredients, scaling portions, and matching dietary preferences.\n\nIt draws on a graph of recipes you can search by ingredients, cuisine, and constraints.",
+        "stats": {
+          "recipes": "Recipes"
+        }
+      },
+      "foodChat": {
+        "description": "FoodChat plans personalised meals through a conversation — building meal plans around your household’s members, preferences, and nutrition goals, and refining them as you chat."
+      }
+    }
   },
   "nav": {
     "signIn": "Sign In",

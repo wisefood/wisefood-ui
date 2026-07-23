@@ -103,7 +103,31 @@
     "sustainability": {
       "title": "Trajnostna izbira"
     },
-    "friend": "Prijatelj"
+    "friend": "Prijatelj",
+    "about": {
+      "close": "Zapri",
+      "openApp": "Odpri aplikacijo",
+      "statsHeading": "Kaj vsebuje",
+      "trigger": "O aplikaciji {app}",
+      "foodScholar": {
+        "description": "FoodScholar odgovarja na vsakdanja vprašanja o prehrani in znanosti o hrani v preprostem jeziku, na podlagi znanstvenih dokazov a ne ugibanja s spleta.\n\nKako deluje: preišče skrbno izbran nabor povzetkov recenziranih znanstvenih člankov in uradnih pravil prehranskih smernic, nato pa napiše jedrnat odgovor, ki navaja točne vire za vsako trditev. Kadar se opira na splošno znanje namesto na najden vir, to pove.\n\nObseg: znanost o prehrani, sestava živil, nasveti za zdravo prehranjevanje in varnost hrane — kjer je mogoče prilagojeno vaši državi in začetni ali napredni ravni. Ne postavlja diagnoz, ne predpisuje zdravljenja in ne daje osebnih zdravstvenih nasvetov ali odmerkov dopolnil; v varnostno občutljivih primerih vas napoti k strokovnjaku.\n\nNa voljo v angleščini, slovenščini in madžarščini.",
+        "footnote": "Odgovori odražajo dokaze v naboru virov in so lahko nepopolni ali zastareli — pri pomembnih odločitvah preverite navedene vire.",
+        "stats": {
+          "articles": "Članki",
+          "guidelines": "Smernice",
+          "guides": "Vodniki"
+        }
+      },
+      "recipeWrangler": {
+        "description": "RecipeWrangler vam pomaga najti recepte in jih prilagoditi temu, kar imate in kar potrebujete — zamenjava sestavin, prilagajanje količin in usklajevanje s prehranskimi željami.\n\nTemelji na zbirki receptov, ki jih lahko iščete po sestavinah, kuhinji in omejitvah.",
+        "stats": {
+          "recipes": "Recepti"
+        }
+      },
+      "foodChat": {
+        "description": "FoodChat načrtuje personalizirane obroke prek pogovora — gradi jedilnike glede na člane gospodinjstva, želje in prehranske cilje ter jih sproti izboljšuje."
+      }
+    }
   },
   "nav": {
     "signIn": "Prijava",
