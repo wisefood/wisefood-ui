@@ -623,7 +623,9 @@
     "tryAgain": "Poskusi znova",
     "save": "Shrani",
     "saved": "Shranjeno",
-    "signInToSave": "Za shranjevanje izberi profil"
+    "signInToSave": "Za shranjevanje izberi profil",
+    "unresolvedTitle": "Shranjenih receptov ni bilo mogoče naložiti",
+    "unresolvedDescription": "Shranjenih imaš {count}, a njihovih podrobnosti trenutno ni bilo mogoče pridobiti. Poskusi znova čez trenutek."
   },
   "foodChat": {
     "title": "FoodChat",

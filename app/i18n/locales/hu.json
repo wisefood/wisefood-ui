@@ -623,7 +623,9 @@
     "tryAgain": "Újrapróbálkozás",
     "save": "Mentés",
     "saved": "Mentve",
-    "signInToSave": "Válasszon profilt a mentéshez"
+    "signInToSave": "Válasszon profilt a mentéshez",
+    "unresolvedTitle": "Nem sikerült betölteni a mentett recepteket",
+    "unresolvedDescription": "{count} mentett recepted van, de a részleteiket most nem sikerült lekérni. Próbáld újra egy pillanat múlva."
   },
   "foodChat": {
     "title": "FoodChat",

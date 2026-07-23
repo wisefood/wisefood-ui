@@ -73,6 +73,32 @@
             </UButton>
           </div>
 
+          <!-- Saved, but none could be resolved into cards (stale ids or a
+               details lookup that returned nothing) — distinct from "you have
+               saved nothing", so we don't tell the user their saves vanished. -->
+          <div
+            v-else-if="savedRecipes.length === 0 && recipeStore.favorites.length > 0"
+            class="rounded-xl border border-dashed border-amber-300 dark:border-amber-700 p-10 text-center"
+          >
+            <UIcon
+              name="i-lucide-unlink"
+              class="w-12 h-12 text-amber-400 dark:text-amber-500 mx-auto mb-4"
+            />
+            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-2">
+              {{ t('library.unresolvedTitle') }}
+            </h3>
+            <p class="text-zinc-600 dark:text-zinc-400 mb-6 max-w-md mx-auto">
+              {{ t('library.unresolvedDescription', { count: recipeStore.favorites.length }) }}
+            </p>
+            <UButton
+              color="primary"
+              icon="i-lucide-refresh-cw"
+              @click="loadSavedRecipes"
+            >
+              {{ t('library.tryAgain') }}
+            </UButton>
+          </div>
+
           <!-- Empty -->
           <div
             v-else-if="savedRecipes.length === 0"

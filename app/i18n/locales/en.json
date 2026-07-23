@@ -623,7 +623,9 @@
     "tryAgain": "Try again",
     "save": "Save",
     "saved": "Saved",
-    "signInToSave": "Select a profile to save this"
+    "signInToSave": "Select a profile to save this",
+    "unresolvedTitle": "We couldn't load your saved recipes",
+    "unresolvedDescription": "You have {count} saved, but we couldn't fetch their details right now. Try again in a moment."
   },
   "foodChat": {
     "title": "FoodChat",
