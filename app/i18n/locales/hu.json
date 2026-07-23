@@ -1434,6 +1434,10 @@
       "differentDinner": "Javasolj másik vacsorát"
     },
     "mealCard": {
+      "menu": "Étkezés menü",
+      "replace": "Csere…",
+      "adapt": "Recept átalakítása",
+      "replacePrefill": "Cseréld le a {meal} valami könnyebbre",
       "viewRecipe": "Recept megnyitása",
       "loadingNutrition": "Tápérték betöltése...",
       "nutritionSummary": "{kcal} kcal · {protein} g fehérje",

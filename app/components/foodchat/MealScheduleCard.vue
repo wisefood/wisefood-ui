@@ -23,6 +23,42 @@
           />
         </button>
         <span class="text-xs text-gray-400 font-light">{{ time }}</span>
+        <!-- Slot menu: replace via chat, adapt in RecipeWrangler -->
+        <div class="relative" @mouseleave="menuOpen = false">
+          <button
+            type="button"
+            class="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+            :aria-label="t('foodChatHome.mealCard.menu')"
+            :aria-expanded="menuOpen"
+            @click.prevent.stop="menuOpen = !menuOpen"
+          >
+            <UIcon name="i-lucide-more-vertical" class="w-4 h-4 text-gray-400 dark:text-zinc-500" />
+          </button>
+          <Transition name="chips-fade">
+            <div
+              v-if="menuOpen"
+              class="absolute right-0 top-7 z-20 w-40 rounded-xl border border-gray-100 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-lg overflow-hidden"
+            >
+              <button
+                type="button"
+                class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
+                @click.prevent.stop="onMenuAction('replace')"
+              >
+                <UIcon name="i-lucide-replace" class="w-3.5 h-3.5 text-brandp-400" />
+                {{ t('foodChatHome.mealCard.replace') }}
+              </button>
+              <button
+                v-if="recipe.recipe_id"
+                type="button"
+                class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
+                @click.prevent.stop="onMenuAction('adapt')"
+              >
+                <UIcon name="i-lucide-wand-sparkles" class="w-3.5 h-3.5 text-brandp-400" />
+                {{ t('foodChatHome.mealCard.adapt') }}
+              </button>
+            </div>
+          </Transition>
+        </div>
       </div>
     </div>
 
@@ -132,7 +168,21 @@ const props = defineProps<{
   icon: string
   recipe: MealRecipe
 }>()
+
+const emit = defineEmits<{
+  replace: []
+  adapt: []
+}>()
+
 const { t } = useI18n()
+
+// ── Slot menu (replace / adapt) ──
+const menuOpen = ref(false)
+
+function onMenuAction(action: 'replace' | 'adapt') {
+  menuOpen.value = false
+  emit(action)
+}
 
 const recipeStore = useRecipeStore()
 

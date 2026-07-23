@@ -1456,6 +1456,10 @@
       "differentDinner": "Suggest a different dinner"
     },
     "mealCard": {
+      "menu": "Meal options",
+      "replace": "Replace…",
+      "adapt": "Adapt recipe",
+      "replacePrefill": "Swap the {meal} for something lighter",
       "viewRecipe": "View recipe",
       "loadingNutrition": "Loading nutrition...",
       "nutritionSummary": "{kcal} kcal · {protein}g protein",

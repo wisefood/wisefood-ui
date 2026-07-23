@@ -725,6 +725,8 @@
                       icon="i-lucide-coffee"
                       :recipe="displayedMealPlan.breakfast"
                       :class="{ 'fc-slot-flash': highlightedSlots.has('breakfast') }"
+                      @replace="prefillSlotReplace('breakfast')"
+                      @adapt="openAdaptRecipe(displayedMealPlan.breakfast.recipe_id)"
                     />
                     <FoodchatMealScheduleCard
                       v-if="displayedMealPlan.lunch"
@@ -733,6 +735,8 @@
                       icon="i-lucide-utensils"
                       :recipe="displayedMealPlan.lunch"
                       :class="{ 'fc-slot-flash': highlightedSlots.has('lunch') }"
+                      @replace="prefillSlotReplace('lunch')"
+                      @adapt="openAdaptRecipe(displayedMealPlan.lunch.recipe_id)"
                     />
                     <FoodchatMealScheduleCard
                       v-if="displayedMealPlan.dinner"
@@ -741,6 +745,8 @@
                       icon="i-lucide-moon"
                       :recipe="displayedMealPlan.dinner"
                       :class="{ 'fc-slot-flash': highlightedSlots.has('dinner') }"
+                      @replace="prefillSlotReplace('dinner')"
+                      @adapt="openAdaptRecipe(displayedMealPlan.dinner.recipe_id)"
                     />
                   </div>
 
@@ -1906,6 +1912,25 @@ async function handleLoadMore() {
     // Maintain scroll position after prepend
     el.scrollTop = el.scrollHeight - prevScrollHeight
   })
+}
+
+// ── Slot menu actions (meal-card ⋮ menu) ──
+function prefillSlotReplace(slot: 'breakfast' | 'lunch' | 'dinner') {
+  // Prefill the verified-edit phrasing; the user tweaks the directive and
+  // sends — the edit flow swaps exactly this slot with before/after proof
+  inputText.value = t('foodChatHome.mealCard.replacePrefill', {
+    meal: t(`foodChatHome.meals.${slot}`).toLowerCase()
+  })
+  nextTick(() => {
+    const el = sessionInputRef.value ?? idleInputRef.value
+    el?.focus()
+    el?.setSelectionRange(el.value.length, el.value.length)
+  })
+}
+
+function openAdaptRecipe(recipeId?: string | null) {
+  if (!recipeId) return
+  navigateTo(`/recipe-wrangler/${recipeId}`, { open: { target: '_blank' } })
 }
 
 // ── Sending ──

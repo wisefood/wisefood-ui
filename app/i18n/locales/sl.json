@@ -1434,6 +1434,10 @@
       "differentDinner": "Predlagaj drugačno večerjo"
     },
     "mealCard": {
+      "menu": "Možnosti obroka",
+      "replace": "Zamenjaj…",
+      "adapt": "Prilagodi recept",
+      "replacePrefill": "Zamenjaj {meal} za kaj lažjega",
       "viewRecipe": "Prikaži recept",
       "loadingNutrition": "Nalaganje hranilnih vrednosti...",
       "nutritionSummary": "{kcal} kcal · {protein} g beljakovin",
