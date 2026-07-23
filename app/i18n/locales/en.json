@@ -1460,6 +1460,7 @@
       "replace": "Replace…",
       "adapt": "Adapt recipe",
       "replacePrefill": "Swap the {meal} for something lighter",
+      "replacePrefillWeekly": "Swap the {meal} on {day} for something lighter",
       "viewRecipe": "View recipe",
       "loadingNutrition": "Loading nutrition...",
       "nutritionSummary": "{kcal} kcal · {protein}g protein",
@@ -1485,6 +1486,20 @@
       "memories": "{count} memories",
       "favorites": "{count} favorites",
       "feedback": "{count} feedback signals"
+    },
+    "adaptModal": {
+      "title": "Adapt this recipe",
+      "close": "Close",
+      "loading": "Looking for healthier tweaks…",
+      "error": "Could not load suggestions. Please try again.",
+      "alreadyOptimal": "This recipe is already in great shape.",
+      "save": "Save adapted version",
+      "saved": "Saved",
+      "savedHint": "Your plans will use this version from now on — regenerate or refine the plan to apply it.",
+      "allergenWarning": "Careful — introduces {list}",
+      "openFull": "Open in RecipeWrangler",
+      "swapLine": "Swap {from} for {to}",
+      "reduceLine": "Use less {ingredient}"
     },
     "manual": {
       "entry": "or compose it yourself, meal by meal",

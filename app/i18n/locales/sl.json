@@ -1438,6 +1438,7 @@
       "replace": "Zamenjaj…",
       "adapt": "Prilagodi recept",
       "replacePrefill": "Zamenjaj {meal} za kaj lažjega",
+      "replacePrefillWeekly": "Zamenjaj {meal} v {day} za kaj lažjega",
       "viewRecipe": "Prikaži recept",
       "loadingNutrition": "Nalaganje hranilnih vrednosti...",
       "nutritionSummary": "{kcal} kcal · {protein} g beljakovin",
@@ -1463,6 +1464,20 @@
       "memories": "{count} spominov",
       "favorites": "{count} priljubljenih",
       "feedback": "{count} povratnih informacij"
+    },
+    "adaptModal": {
+      "title": "Prilagodi ta recept",
+      "close": "Zapri",
+      "loading": "Iskanje bolj zdravih prilagoditev…",
+      "error": "Predlogov ni bilo mogoče naložiti. Poskusi znova.",
+      "alreadyOptimal": "Ta recept je že odličen.",
+      "save": "Shrani prilagojeno različico",
+      "saved": "Shranjeno",
+      "savedHint": "Tvoji načrti bodo odslej uporabljali to različico — znova ustvari ali izpopolni načrt, da se uveljavi.",
+      "allergenWarning": "Pozor — vnese {list}",
+      "openFull": "Odpri v RecipeWranglerju",
+      "swapLine": "Zamenjaj {from} z {to}",
+      "reduceLine": "Manj sestavine {ingredient}"
     },
     "manual": {
       "entry": "ali pa ga sestavi sam, obrok za obrokom",

@@ -1438,6 +1438,7 @@
       "replace": "Csere…",
       "adapt": "Recept átalakítása",
       "replacePrefill": "Cseréld le a {meal} valami könnyebbre",
+      "replacePrefillWeekly": "Cseréld le a {meal} étkezést ({day}) valami könnyebbre",
       "viewRecipe": "Recept megnyitása",
       "loadingNutrition": "Tápérték betöltése...",
       "nutritionSummary": "{kcal} kcal · {protein} g fehérje",
@@ -1463,6 +1464,20 @@
       "memories": "{count} emlék",
       "favorites": "{count} kedvenc",
       "feedback": "{count} visszajelzés"
+    },
+    "adaptModal": {
+      "title": "Recept átalakítása",
+      "close": "Bezárás",
+      "loading": "Egészségesebb módosítások keresése…",
+      "error": "A javaslatok betöltése nem sikerült. Próbáld újra.",
+      "alreadyOptimal": "Ez a recept már így is remek.",
+      "save": "Átalakított változat mentése",
+      "saved": "Elmentve",
+      "savedHint": "A terveid mostantól ezt a változatot használják — generáld újra vagy finomítsd a tervet az alkalmazásához.",
+      "allergenWarning": "Vigyázat — a következőt viszi be: {list}",
+      "openFull": "Megnyitás a RecipeWranglerben",
+      "swapLine": "{from} cseréje erre: {to}",
+      "reduceLine": "Kevesebb {ingredient}"
     },
     "manual": {
       "entry": "vagy állítsd össze magad, étkezésenként",

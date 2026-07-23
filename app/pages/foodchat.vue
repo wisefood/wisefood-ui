@@ -554,7 +554,7 @@
                     class="rounded-xl border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-800/40 p-3"
                   >
                     <p v-if="group.day" class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-zinc-500 mb-2">
-                      {{ t('foodChatHome.manual.day', { n: group.day }) }}
+                      {{ weekdayName(group.day) }}
                     </p>
                     <div class="space-y-2">
                       <div v-for="mealType in DRAFT_MEAL_TYPES" :key="draftSlotKey(group.day, mealType)">
@@ -945,6 +945,42 @@
                                   ]"
                                 />
                               </button>
+                              <!-- Slot menu: replace via chat, adapt in the popup -->
+                              <div class="relative shrink-0" :class="{ 'ml-auto': !getWeeklyRecipeId(weeklyEntry(day, mealType)) }" @mouseleave="weeklySlotMenu = null">
+                                <button
+                                  type="button"
+                                  class="flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+                                  :aria-label="t('foodChatHome.mealCard.menu')"
+                                  :aria-expanded="weeklySlotMenu === `${day.dayIndex}-${mealType}`"
+                                  @click.prevent.stop="weeklySlotMenu = weeklySlotMenu === `${day.dayIndex}-${mealType}` ? null : `${day.dayIndex}-${mealType}`"
+                                >
+                                  <UIcon name="i-lucide-more-vertical" class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
+                                </button>
+                                <Transition name="chips-fade">
+                                  <div
+                                    v-if="weeklySlotMenu === `${day.dayIndex}-${mealType}`"
+                                    class="absolute right-0 top-6 z-20 w-40 rounded-xl border border-gray-100 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-lg overflow-hidden"
+                                  >
+                                    <button
+                                      type="button"
+                                      class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
+                                      @click.prevent.stop="prefillWeeklySlotReplace(day.dayIndex, mealType)"
+                                    >
+                                      <UIcon name="i-lucide-replace" class="w-3.5 h-3.5 text-brandp-400" />
+                                      {{ t('foodChatHome.mealCard.replace') }}
+                                    </button>
+                                    <button
+                                      v-if="getWeeklyRecipeId(weeklyEntry(day, mealType))"
+                                      type="button"
+                                      class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
+                                      @click.prevent.stop="openAdaptRecipe(getWeeklyRecipeId(weeklyEntry(day, mealType)))"
+                                    >
+                                      <UIcon name="i-lucide-wand-sparkles" class="w-3.5 h-3.5 text-brandp-400" />
+                                      {{ t('foodChatHome.mealCard.adapt') }}
+                                    </button>
+                                  </div>
+                                </Transition>
+                              </div>
                             </div>
                             <div class="flex items-center gap-2">
                               <NuxtLink
@@ -1093,6 +1129,13 @@
         </div><!-- end fc-split-wrap -->
       </div>
     </Transition>
+
+    <!-- Adapt popup -->
+    <FoodchatAdaptRecipeModal
+      v-if="adaptRecipeId"
+      :recipe-id="adaptRecipeId"
+      @close="adaptRecipeId = null"
+    />
 
     <!-- Disclaimer -->
     <div class="pb-4 text-center">
@@ -1646,7 +1689,9 @@ function weeklyDayInfo(dayIndex: number): WeeklyDayBreakdown | undefined {
 }
 
 function weeklyDayLabel(day: { dayIndex: number }): string {
-  return weeklyDayInfo(day.dayIndex)?.name || `Day ${day.dayIndex}`
+  // Localized weekday from the 1-based day index — never the backend's
+  // English name, and never the old off-by-one "Day N" array
+  return weekdayName(day.dayIndex)
 }
 
 function weeklyDaySummary(dayIndex: number): string {
@@ -1914,13 +1959,17 @@ async function handleLoadMore() {
   })
 }
 
+// ── Localized weekday names (entries are 1-based: 1=Monday … 7=Sunday) ──
+const WEEKDAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
+
+function weekdayName(dayIndex: number): string {
+  const key = WEEKDAY_KEYS[dayIndex - 1]
+  return key ? t(`dashboard.schedule.days.${key}`) : `Day ${dayIndex}`
+}
+
 // ── Slot menu actions (meal-card ⋮ menu) ──
-function prefillSlotReplace(slot: 'breakfast' | 'lunch' | 'dinner') {
-  // Prefill the verified-edit phrasing; the user tweaks the directive and
-  // sends — the edit flow swaps exactly this slot with before/after proof
-  inputText.value = t('foodChatHome.mealCard.replacePrefill', {
-    meal: t(`foodChatHome.meals.${slot}`).toLowerCase()
-  })
+function focusChatInputWith(text: string) {
+  inputText.value = text
   nextTick(() => {
     const el = sessionInputRef.value ?? idleInputRef.value
     el?.focus()
@@ -1928,9 +1977,30 @@ function prefillSlotReplace(slot: 'breakfast' | 'lunch' | 'dinner') {
   })
 }
 
+function prefillSlotReplace(slot: 'breakfast' | 'lunch' | 'dinner') {
+  // Prefill the verified-edit phrasing; the user tweaks the directive and
+  // sends — the edit flow swaps exactly this slot with before/after proof
+  focusChatInputWith(t('foodChatHome.mealCard.replacePrefill', {
+    meal: t(`foodChatHome.meals.${slot}`).toLowerCase()
+  }))
+}
+
+function prefillWeeklySlotReplace(dayIndex: number, slot: string) {
+  weeklySlotMenu.value = null
+  focusChatInputWith(t('foodChatHome.mealCard.replacePrefillWeekly', {
+    meal: t(`foodChatHome.meals.${slot}`).toLowerCase(),
+    day: weekdayName(dayIndex)
+  }))
+}
+
+// ── Adapt popup (RecipeWrangler's assistant, without leaving FoodChat) ──
+const adaptRecipeId = ref<string | null>(null)
+const weeklySlotMenu = ref<string | null>(null)
+
 function openAdaptRecipe(recipeId?: string | null) {
+  weeklySlotMenu.value = null
   if (!recipeId) return
-  navigateTo(`/recipe-wrangler/${recipeId}`, { open: { target: '_blank' } })
+  adaptRecipeId.value = recipeId
 }
 
 // ── Sending ──
