@@ -543,8 +543,17 @@ class FoodChatApiService {
       clearTimeout(timeoutId)
 
       if (!response.ok) {
-        let errorData: unknown
-        try { errorData = await response.json() } catch { errorData = await response.text() }
+        // Read the body ONCE as text, then try to parse it. Calling
+        // response.json() first and falling back to response.text() double-reads
+        // a locked stream — non-JSON errors (a 504 nginx page) then surface as a
+        // misleading "body stream already read" TypeError instead of the real status.
+        const bodyText = await response.text().catch(() => '')
+        let errorData: unknown = bodyText
+        try {
+          errorData = bodyText ? JSON.parse(bodyText) : null
+        } catch {
+          // Non-JSON body (e.g. an nginx 504 page) — keep the raw text
+        }
 
         if (response.status === 401) {
           const refreshed = await authStore.refreshToken()
@@ -552,7 +561,11 @@ class FoodChatApiService {
           throw new Error('Authentication failed. Please log in again.')
         }
 
-        throw { message: `API request failed with status ${response.status}`, status: response.status, data: errorData }
+        const gatewayTimeout = response.status === 502 || response.status === 503 || response.status === 504
+        const message = gatewayTimeout
+          ? 'The plan is taking longer than usual to generate. Please try again in a moment.'
+          : `API request failed with status ${response.status}`
+        throw { message, status: response.status, data: errorData }
       }
 
       const contentType = response.headers.get('content-type')
