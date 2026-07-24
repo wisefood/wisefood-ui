@@ -877,7 +877,7 @@
                         class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full border cursor-help"
                         :class="weeklyLedgerClass(constraint)"
                       >
-                        <UIcon v-if="weeklyLedgerIcon(constraint)" :name="weeklyLedgerIcon(constraint)!" class="w-3 h-3 shrink-0" />
+                        <UIcon v-if="weeklyLedgerIcon(constraint)" :name="weeklyLedgerIcon(constraint) || ''" class="w-3 h-3 shrink-0" />
                         {{ constraint.constraint }}
                       </span>
                     </UTooltip>
@@ -917,7 +917,7 @@
                           >
                             <img
                               v-if="getRecipeImage(getWeeklyRecipeId(entry))"
-                              :src="getRecipeImage(getWeeklyRecipeId(entry))!"
+                              :src="getRecipeImage(getWeeklyRecipeId(entry)) || ''"
                               class="w-full h-full object-cover"
                               loading="lazy"
                             >
@@ -1002,7 +1002,7 @@
                               >
                                 <img
                                   v-if="getRecipeImage(getWeeklyRecipeId(weeklyEntry(day, mealType)))"
-                                  :src="getRecipeImage(getWeeklyRecipeId(weeklyEntry(day, mealType)))!"
+                                  :src="getRecipeImage(getWeeklyRecipeId(weeklyEntry(day, mealType))) || ''"
                                   class="w-full h-full object-cover"
                                   loading="lazy"
                                 >
