@@ -1267,6 +1267,10 @@ function toggleSelectAll() {
 
 // Initialize edit forms when member changes
 watch(currentMember, (member) => {
+  // Don't re-seed the edit form while it's open: saving changes currentMember
+  // (updateMember swaps selectedMember), and re-seeding mid-save reverts the
+  // user's in-progress choices — notably gender, written after that point.
+  if (showEditDetails.value) return
   if (member) {
     editName.value = member.name
     editAgeGroup.value = member.age_group
@@ -1334,8 +1338,14 @@ async function saveDetails() {
   if (!currentMember.value || !editName.value.trim()) return
 
   isSaving.value = true
+  // Snapshot the form values BEFORE the first write. updateMember() changes
+  // currentMember, which fires watch(currentMember) and re-seeds editGender
+  // from the not-yet-updated profile — reading editGender after that point
+  // silently reverts the user's choice, so gender never persisted.
+  const memberId = currentMember.value.id
+  const chosenGender = editGender.value
   try {
-    await householdStore.updateMember(currentMember.value.id, {
+    await householdStore.updateMember(memberId, {
       name: editName.value.trim(),
       age_group: editAgeGroup.value as 'child' | 'teen' | 'adult' | 'senior' | undefined
     })
@@ -1347,18 +1357,20 @@ async function saveDetails() {
     const nutPrefs: NutritionalPreferences = {
       ...memberProfile.value?.nutritional_preferences
     }
-    if (editGender.value) {
-      nutPrefs.gender = editGender.value as NutritionalPreferences['gender']
+    if (chosenGender) {
+      nutPrefs.gender = chosenGender as NutritionalPreferences['gender']
     } else {
       delete nutPrefs.gender
     }
     const payload = buildProfilePayload({ nutritional_preferences: nutPrefs })
-    await householdStore.updateMemberProfile(currentMember.value.id, payload)
+    await householdStore.updateMemberProfile(memberId, payload)
     memberProfile.value = { ...memberProfile.value, nutritional_preferences: nutPrefs }
+    // Re-seed the form: the watcher may have reverted editGender mid-save.
+    editGender.value = chosenGender
 
     showEditDetails.value = false
   } catch (err) {
-    console.error('Failed to save details:', err)
+    console.error('[saveDetails] failed:', err)
   } finally {
     isSaving.value = false
   }
