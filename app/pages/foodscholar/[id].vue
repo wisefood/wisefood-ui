@@ -738,6 +738,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useArticles } from '~/composables/useArticles'
+import { useReaderVisibility } from '~/composables/useReaderVisibility'
 import { useAuthStore } from '~/stores/auth'
 import { formatDoiUrl } from '~/utils/articleHelpers'
 import type { GlossaryTerm, QAItem } from '~/services/articlesApi'
@@ -764,6 +765,7 @@ const backLink = computed(() => {
 })
 
 const { currentArticle: article, loading, error, fetchArticle } = useArticles()
+const { canRead } = useReaderVisibility()
 const authStore = useAuthStore()
 
 // State
@@ -1097,6 +1099,15 @@ let observer: IntersectionObserver | null = null
 
 onMounted(async () => {
   await fetchArticle(urn.value)
+
+  // The catalog listing already filters these out, but a direct link would
+  // otherwise walk straight past it.
+  if (article.value && !canRead(article.value)) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: t('foodScholarArticle.notFound', 'Article not found')
+    })
+  }
 
   if (highlightText.value) {
     isSimplified.value = false

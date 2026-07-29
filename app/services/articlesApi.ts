@@ -57,6 +57,80 @@ export interface GeographicContext {
   income_setting?: string | null
 }
 
+/**
+ * Which readers an article reaches. Distinct from `visibility`, which gates
+ * staff/API access — this is about the end reader.
+ *
+ * Articles indexed before the field existed return it as undefined, which every
+ * consumer must treat as 'public'.
+ */
+export type ReaderVisibility = 'public' | 'expert_only' | 'hidden'
+
+/**
+ * Retrieval priority. 'prime' is above anything the enrichment agent can assign,
+ * so it always means a deliberate editorial promotion; 'do_not_index' keeps the
+ * article in the catalog but out of retrieval.
+ */
+export type IndexingTier
+  = | 'prime'
+    | 'core'
+    | 'supportive'
+    | 'specialized'
+    | 'archive_only'
+    | 'do_not_index'
+
+export const READER_VISIBILITIES: ReaderVisibility[] = ['public', 'expert_only', 'hidden']
+
+export const INDEXING_TIERS: IndexingTier[] = [
+  'prime',
+  'core',
+  'supportive',
+  'specialized',
+  'archive_only',
+  'do_not_index'
+]
+
+export const READER_VISIBILITY_LABELS: Record<ReaderVisibility, string> = {
+  public: 'All readers',
+  expert_only: 'Experts only',
+  hidden: 'Hidden'
+}
+
+export const READER_VISIBILITY_HINTS: Record<ReaderVisibility, string> = {
+  public: 'Everyone can read this article and it can be cited in any answer.',
+  expert_only:
+    'Hidden from beginner and intermediate readers, and never cited in their answers. Experts still see it.',
+  hidden: 'Hidden from every reader. Still visible here in the console.'
+}
+
+export const INDEXING_TIER_LABELS: Record<IndexingTier, string> = {
+  prime: 'Prime',
+  core: 'Core',
+  supportive: 'Supportive',
+  specialized: 'Specialized',
+  archive_only: 'Archive only',
+  do_not_index: 'Do not index'
+}
+
+export const INDEXING_TIER_HINTS: Record<IndexingTier, string> = {
+  prime: 'Influential work — surfaced ahead of better-matching but ordinary articles.',
+  core: 'Strong evidence, favoured in retrieval.',
+  supportive: 'Neutral: ranked purely on relevance.',
+  specialized: 'Narrow relevance, slightly de-prioritised.',
+  archive_only: 'Kept for completeness, rarely surfaced.',
+  do_not_index: 'Never used as evidence.'
+}
+
+/** An absent reader_visibility means the article predates the field. */
+export function effectiveReaderVisibility(article: Partial<Article>): ReaderVisibility {
+  return article.reader_visibility ?? 'public'
+}
+
+/** The editor's tier wins; otherwise the agent's proposal, if any. */
+export function effectiveIndexingTier(article: Partial<Article>): IndexingTier | null {
+  return article.indexing_tier ?? article.ai_indexing_tier ?? null
+}
+
 export interface Article {
   // Base fields (from BaseSchema)
   id: string | number // Backend id may be UUID string
@@ -111,9 +185,16 @@ export interface Article {
   hard_exclusion_flags?: string[] | null
   annotation_confidence?: number | null
 
+  // Editorial controls (human-authoritative, set from the console)
+  // Undefined on articles indexed before these fields existed: treat
+  // reader_visibility as 'public' and indexing_tier as unset.
+  reader_visibility?: ReaderVisibility | null
+  indexing_tier?: IndexingTier | null
+
   // AI-derived classification (read-only)
   ai_tags: string[]
   ai_category?: string | null
+  ai_indexing_tier?: IndexingTier | null
   key_takeaways: string[]
   ai_key_takeaways: string[]
 
@@ -251,6 +332,54 @@ export interface UpdateArticleRequest {
   reference_count?: number | null
   influential_citation_count?: number | null
   type?: string | null
+  reader_visibility?: ReaderVisibility | null
+  indexing_tier?: IndexingTier | null
+}
+
+/**
+ * Batch edit of reader visibility and/or indexing tier.
+ *
+ * Selection uses the same semantics as `searchArticles`, so the console can
+ * apply a change to exactly the result set the editor is browsing: pass `urns`
+ * for an explicit selection, `q`/`fq` for a query, or both. At least one
+ * selector is required — the API rejects a change with no selection rather than
+ * applying it to the whole corpus.
+ */
+export interface ArticlePolicyRequest {
+  urns?: string[]
+  q?: string | null
+  fq?: string[] | null
+  reader_visibility?: ReaderVisibility
+  indexing_tier?: IndexingTier
+  /** Drop the editorial tier so the agent's ai_indexing_tier applies again. */
+  clear_indexing_tier?: boolean
+  /** Cap on documents to update. The API's hard cap is 10000. */
+  max_docs?: number
+  /** Report what would change without writing anything. */
+  dry_run?: boolean
+}
+
+export interface ArticlePolicySample {
+  urn: string
+  title?: string
+  reader_visibility?: ReaderVisibility | null
+  indexing_tier?: IndexingTier | null
+  ai_indexing_tier?: IndexingTier | null
+}
+
+export interface ArticlePolicyResult {
+  dry_run: boolean
+  /** Articles the selection matched. */
+  matched: number
+  /** Articles actually changed (0 for a dry run). */
+  updated: number
+  /** True when `matched` exceeded `max_docs` and the update was truncated. */
+  capped: boolean
+  max_docs: number
+  version_conflicts?: number
+  failures?: unknown[]
+  /** First page of matched articles, for the confirmation dialog. */
+  sample: ArticlePolicySample[]
 }
 
 class ArticlesApiService {
@@ -319,6 +448,28 @@ class ArticlesApiService {
    */
   async searchArticles(searchParams: ArticleSearchParams): Promise<ArticleListResponse> {
     return wisefoodApi.post<ArticleListResponse>('/v1/articles/search', searchParams)
+  }
+
+  /**
+   * POST /api/v1/articles/policy
+   * Batch-edit reader visibility and/or indexing tier.
+   *
+   * Always preview first with `dry_run: true` when selecting by query — the
+   * result reports how many articles would change and samples them.
+   */
+  async setArticlePolicy(request: ArticlePolicyRequest): Promise<ArticlePolicyResult> {
+    const response = await wisefoodApi.post<{ result: ArticlePolicyResult }>(
+      '/v1/articles/policy',
+      request
+    )
+    return response.result
+  }
+
+  /**
+   * Convenience: preview a batch policy change without writing.
+   */
+  async previewArticlePolicy(request: ArticlePolicyRequest): Promise<ArticlePolicyResult> {
+    return this.setArticlePolicy({ ...request, dry_run: true })
   }
 
   /**

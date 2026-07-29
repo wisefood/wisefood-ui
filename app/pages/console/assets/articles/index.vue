@@ -24,6 +24,15 @@
       </div>
 
       <UPageBody class="space-y-6">
+        <ConsoleArticlesEnrichmentWorkerCard
+          :status="workerStatus"
+          :worker-loading="workerLoading"
+          :pause-pending="pausePending"
+          @refresh="loadWorkerStatus()"
+          @pause="toggleSweeper(true)"
+          @resume="toggleSweeper(false)"
+        />
+
         <UCard
           :ui="{ body: 'p-0', header: 'p-5 sm:p-6', footer: 'p-4 sm:px-6 sm:py-4' }"
           class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
@@ -49,6 +58,27 @@
                 </div>
 
                 <div class="ml-auto flex flex-wrap gap-2">
+                  <UButton
+                    color="primary"
+                    variant="soft"
+                    size="sm"
+                    icon="i-lucide-sparkles"
+                    :disabled="!selectedUrns.length || bulkEnrichPending"
+                    :loading="bulkEnrichPending"
+                    @click="enrichSelected"
+                  >
+                    {{ bulkEnrichLabel }}
+                  </UButton>
+                  <UButton
+                    color="neutral"
+                    variant="soft"
+                    size="sm"
+                    icon="i-lucide-shield-check"
+                    :disabled="!canEditPolicy"
+                    @click="policyModalOpen = true"
+                  >
+                    {{ policyButtonLabel }}
+                  </UButton>
                   <UButton
                     color="neutral"
                     variant="outline"
@@ -142,6 +172,15 @@
             class="mx-5 mt-5 sm:mx-6"
           />
 
+          <UAlert
+            v-if="enrichmentError"
+            color="warning"
+            variant="soft"
+            icon="i-lucide-alert-circle"
+            :title="enrichmentError"
+            class="mx-5 mt-5 sm:mx-6"
+          />
+
           <div class="overflow-x-auto">
             <UTable
               :data="articles"
@@ -151,61 +190,142 @@
               :on-select="handleArticleRowSelect"
               class="min-h-[32rem] min-w-[56rem]"
             >
-            <template #title-cell="{ row }">
-              <div class="w-[34rem] max-w-[34rem] py-0.5">
-                <p class="truncate font-medium text-gray-900 dark:text-white">
-                  {{ row.original.title }}
-                </p>
-                <p class="mt-0.5 truncate text-[11px] text-gray-500 dark:text-gray-400">
-                  {{ compactArticleMeta(row.original) }}
-                </p>
-              </div>
-            </template>
-
-            <template #updated_at-cell="{ row }">
-              <span class="text-sm text-gray-600 dark:text-gray-300">
-                {{ formatDate(row.original.updated_at) }}
-              </span>
-            </template>
-
-            <template #actions-cell="{ row }">
-              <div class="flex justify-end gap-2">
-                <UButton
-                  color="error"
-                  variant="ghost"
-                  size="sm"
-                  icon="i-lucide-trash-2"
-                  :loading="deletePending && articlePendingDeletion?.urn === row.original.urn"
-                  @click.stop="promptDeleteArticle(row.original)"
-                >
-                  Delete
-                </UButton>
-                <UButton
-                  color="neutral"
-                  variant="ghost"
-                  size="sm"
-                  trailing-icon="i-lucide-arrow-right"
-                  @click.stop="openArticle(row.original)"
-                >
-                  Open
-                </UButton>
-              </div>
-            </template>
-
-            <template #empty>
-              <div class="flex flex-col items-center justify-center px-6 py-16 text-center">
-                <UIcon
-                  name="i-lucide-flask-conical-off"
-                  class="h-8 w-8 text-gray-400"
+              <template #select-header>
+                <UCheckbox
+                  :model-value="selectAllState"
+                  aria-label="Select all articles on this page"
+                  @update:model-value="toggleSelectAll"
+                  @click.stop
                 />
-                <p class="mt-4 text-sm font-medium text-gray-900 dark:text-white">
-                  No articles match the current search.
-                </p>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Adjust the filters or broaden the search query to see more catalog records.
-                </p>
-              </div>
-            </template>
+              </template>
+
+              <template #select-cell="{ row }">
+                <UCheckbox
+                  :model-value="isSelected(row.original.urn)"
+                  :aria-label="`Select ${row.original.title}`"
+                  @update:model-value="toggleSelected(row.original.urn)"
+                  @click.stop
+                />
+              </template>
+
+              <template #title-cell="{ row }">
+                <div class="w-[30rem] max-w-[30rem] py-0.5">
+                  <div class="flex items-center gap-2">
+                    <p class="truncate font-medium text-gray-900 dark:text-white">
+                      {{ row.original.title }}
+                    </p>
+                    <UBadge
+                      v-if="readerVisibilityBadge(row.original)"
+                      :color="readerVisibilityBadge(row.original)!.color"
+                      variant="soft"
+                      size="sm"
+                      class="shrink-0 whitespace-nowrap"
+                    >
+                      <UIcon
+                        :name="readerVisibilityBadge(row.original)!.icon"
+                        class="mr-1 h-3 w-3"
+                      />
+                      {{ readerVisibilityBadge(row.original)!.label }}
+                    </UBadge>
+                    <UBadge
+                      v-if="indexingTierBadge(row.original)"
+                      :color="indexingTierBadge(row.original)!.color"
+                      :variant="indexingTierBadge(row.original)!.editorial ? 'soft' : 'outline'"
+                      size="sm"
+                      class="shrink-0 whitespace-nowrap"
+                    >
+                      <UIcon
+                        v-if="indexingTierBadge(row.original)!.icon"
+                        :name="indexingTierBadge(row.original)!.icon!"
+                        class="mr-1 h-3 w-3"
+                      />
+                      {{ indexingTierBadge(row.original)!.label }}
+                    </UBadge>
+                  </div>
+                  <p class="mt-0.5 truncate text-[11px] text-gray-500 dark:text-gray-400">
+                    {{ compactArticleMeta(row.original) }}
+                  </p>
+                </div>
+              </template>
+
+              <template #enrichment-cell="{ row }">
+                <div class="flex flex-col items-start gap-1">
+                  <UBadge
+                    :color="rowEnrichment(row.original).color"
+                    variant="soft"
+                    class="whitespace-nowrap"
+                  >
+                    <UIcon
+                      :name="rowEnrichment(row.original).icon"
+                      class="mr-1 h-3 w-3"
+                      :class="{ 'animate-spin': rowEnrichment(row.original).active }"
+                    />
+                    {{ rowEnrichment(row.original).label }}
+                  </UBadge>
+                  <span
+                    v-if="rowEnrichedAt(row.original)"
+                    class="text-[11px] text-gray-500 dark:text-gray-400"
+                  >
+                    {{ formatEnrichmentTimestamp(rowEnrichedAt(row.original)) }}
+                  </span>
+                </div>
+              </template>
+
+              <template #updated_at-cell="{ row }">
+                <span class="text-sm text-gray-600 dark:text-gray-300">
+                  {{ formatDate(row.original.updated_at) }}
+                </span>
+              </template>
+
+              <template #actions-cell="{ row }">
+                <div class="flex justify-end gap-2">
+                  <UButton
+                    color="primary"
+                    variant="ghost"
+                    size="sm"
+                    icon="i-lucide-sparkles"
+                    :loading="isEnrichPending(row.original.urn)"
+                    :disabled="rowEnrichment(row.original).active"
+                    @click.stop="enrichRow(row.original)"
+                  >
+                    {{ rowEnrichActionLabel(row.original) }}
+                  </UButton>
+                  <UButton
+                    color="error"
+                    variant="ghost"
+                    size="sm"
+                    icon="i-lucide-trash-2"
+                    :loading="deletePending && articlePendingDeletion?.urn === row.original.urn"
+                    @click.stop="promptDeleteArticle(row.original)"
+                  >
+                    Delete
+                  </UButton>
+                  <UButton
+                    color="neutral"
+                    variant="ghost"
+                    size="sm"
+                    trailing-icon="i-lucide-arrow-right"
+                    @click.stop="openArticle(row.original)"
+                  >
+                    Open
+                  </UButton>
+                </div>
+              </template>
+
+              <template #empty>
+                <div class="flex flex-col items-center justify-center px-6 py-16 text-center">
+                  <UIcon
+                    name="i-lucide-flask-conical-off"
+                    class="h-8 w-8 text-gray-400"
+                  />
+                  <p class="mt-4 text-sm font-medium text-gray-900 dark:text-white">
+                    No articles match the current search.
+                  </p>
+                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Adjust the filters or broaden the search query to see more catalog records.
+                  </p>
+                </div>
+              </template>
             </UTable>
           </div>
 
@@ -238,6 +358,15 @@
         </UCard>
       </UPageBody>
     </UPage>
+
+    <ConsoleArticlesArticlePolicyModal
+      v-model:open="policyModalOpen"
+      :selected-urns="selectedUrns"
+      :query="filters.q.trim() || null"
+      :filters="buildSearchFilters()"
+      :query-total="totalArticles"
+      @applied="onPolicyApplied"
+    />
 
     <UModal
       v-model:open="deleteModalOpen"
@@ -468,9 +597,15 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import type { Article, CreateArticleRequest } from '~/services/articlesApi'
-import articlesApi from '~/services/articlesApi'
+import type { Article, ArticlePolicyResult, CreateArticleRequest } from '~/services/articlesApi'
+import articlesApi, {
+  INDEXING_TIER_LABELS,
+  READER_VISIBILITY_LABELS,
+  effectiveIndexingTier,
+  effectiveReaderVisibility
+} from '~/services/articlesApi'
 import { navigableTotal } from '~/composables/useArticles'
+import { useArticleEnrichment } from '~/composables/useArticleEnrichment'
 import {
   articleSortOptions,
   buildArticleRoutePath,
@@ -480,6 +615,11 @@ import {
   normalizeFacetBuckets,
   slugifyArticleUrn
 } from '~/utils/consoleArticles'
+import {
+  enrichmentBadge,
+  formatEnrichmentTimestamp,
+  hasEnrichmentOnRecord
+} from '~/utils/consoleEnrichment'
 import { formatConsoleDate as formatDate } from '~/utils/consoleGuideCatalog'
 
 definePageMeta({
@@ -554,10 +694,208 @@ const createForm = reactive({
 })
 
 const articleColumns = [
+  { id: 'select', header: '', enableSorting: false },
   { accessorKey: 'title', header: 'Article' },
+  { id: 'enrichment', header: 'Enrichment', enableSorting: false },
   { accessorKey: 'updated_at', header: 'Updated' },
   { id: 'actions', header: '', enableSorting: false }
 ]
+
+// --------------------------------------------------------------------------- #
+// Selective enrichment
+// --------------------------------------------------------------------------- #
+
+const {
+  workerStatus,
+  workerLoading,
+  pausePending,
+  error: enrichmentError,
+  statusFor,
+  isPending: isEnrichPending,
+  loadStatuses,
+  loadWorkerStatus,
+  setSweeperPaused,
+  enrichArticle,
+  enrichArticles
+} = useArticleEnrichment()
+
+const selectedUrns = ref<string[]>([])
+const bulkEnrichPending = ref(false)
+
+const policyModalOpen = ref(false)
+
+// Policy can be applied to ticked rows, or to everything the current search
+// matches. With neither, there is nothing to scope a change to.
+const canEditPolicy = computed(
+  () => selectedUrns.value.length > 0 || Boolean(filters.q.trim()) || buildSearchFilters().length > 0
+)
+
+const policyButtonLabel = computed(() =>
+  selectedUrns.value.length
+    ? `Policy for ${selectedUrns.value.length} selected`
+    : 'Editorial policy'
+)
+
+function onPolicyApplied(result: ArticlePolicyResult) {
+  toast.add({
+    title: `Editorial policy updated for ${result.updated} article${result.updated === 1 ? '' : 's'}`,
+    description: result.capped
+      ? `Capped at ${result.max_docs}; ${result.matched - result.updated} matching articles were left unchanged.`
+      : undefined,
+    color: result.capped ? 'warning' : 'success'
+  })
+  selectedUrns.value = []
+  refreshArticles()
+}
+
+function readerVisibilityBadge(article: Article) {
+  const visibility = effectiveReaderVisibility(article)
+  if (visibility === 'public') return null
+  return {
+    label: READER_VISIBILITY_LABELS[visibility],
+    color: visibility === 'hidden' ? 'error' as const : 'warning' as const,
+    icon: visibility === 'hidden' ? 'i-lucide-eye-off' : 'i-lucide-graduation-cap'
+  }
+}
+
+function indexingTierBadge(article: Article) {
+  const tier = effectiveIndexingTier(article)
+  if (!tier || tier === 'supportive') return null
+  const editorial = Boolean(article.indexing_tier)
+  return {
+    label: INDEXING_TIER_LABELS[tier],
+    // Only an editor's choice is highlighted; an agent proposal stays quiet.
+    color: tier === 'prime' && editorial ? 'primary' as const : 'neutral' as const,
+    icon: tier === 'prime' ? 'i-lucide-star' : undefined,
+    editorial
+  }
+}
+
+const bulkEnrichLabel = computed(() =>
+  selectedUrns.value.length
+    ? `Enrich ${selectedUrns.value.length} selected`
+    : 'Enrich selected'
+)
+
+// Tri-state header checkbox: 'indeterminate' when only some rows are picked.
+const selectAllState = computed<boolean | 'indeterminate'>(() => {
+  if (!articles.value.length) return false
+  const selectedOnPage = articles.value.filter(article => selectedUrns.value.includes(article.urn))
+  if (!selectedOnPage.length) return false
+  return selectedOnPage.length === articles.value.length ? true : 'indeterminate'
+})
+
+function isSelected(urn: string) {
+  return selectedUrns.value.includes(urn)
+}
+
+function toggleSelected(urn: string) {
+  selectedUrns.value = isSelected(urn)
+    ? selectedUrns.value.filter(entry => entry !== urn)
+    : [...selectedUrns.value, urn]
+}
+
+function toggleSelectAll() {
+  const pageUrns = articles.value.map(article => article.urn)
+  selectedUrns.value = selectAllState.value === true
+    ? selectedUrns.value.filter(urn => !pageUrns.includes(urn))
+    : Array.from(new Set([...selectedUrns.value, ...pageUrns]))
+}
+
+function rowEnrichedAt(article: Article) {
+  return statusFor(article.urn)?.result?.enriched_at || article.extras?.enriched_at || null
+}
+
+function rowEnrichment(article: Article) {
+  const status = statusFor(article.urn)
+
+  // Redis job records expire; `extras.enriched_at` is the durable evidence, so
+  // an article the console has never queued still reads as enriched.
+  if (!status || status.status === 'not_found') {
+    return hasEnrichmentOnRecord(status, article.extras?.enriched_at)
+      ? enrichmentBadge('succeeded')
+      : enrichmentBadge('not_found')
+  }
+
+  return enrichmentBadge(status.status)
+}
+
+function rowEnrichActionLabel(article: Article) {
+  return hasEnrichmentOnRecord(statusFor(article.urn), article.extras?.enriched_at)
+    ? 'Re-enrich'
+    : 'Enrich'
+}
+
+async function refreshEnrichmentStatuses() {
+  const urns = articles.value.map(article => article.urn).filter(Boolean)
+  if (!urns.length) return
+  await loadStatuses(urns, { silent: true })
+}
+
+async function enrichRow(article: Article) {
+  // Re-running an already-enriched article needs force, or the sweeper's
+  // processed set makes it a no-op.
+  const force = hasEnrichmentOnRecord(statusFor(article.urn), article.extras?.enriched_at)
+
+  try {
+    await enrichArticle(article.urn, force)
+    toast.add({
+      title: force ? 'Re-enrichment queued' : 'Enrichment queued',
+      description: `${article.title} was handed to FoodScholar.`,
+      color: 'success'
+    })
+  } catch {
+    toast.add({
+      title: 'Could not queue enrichment',
+      description: enrichmentError.value || 'FoodScholar rejected the request.',
+      color: 'error'
+    })
+  }
+}
+
+async function enrichSelected() {
+  if (!selectedUrns.value.length) return
+
+  bulkEnrichPending.value = true
+  try {
+    const targets = [...selectedUrns.value]
+    const response = await enrichArticles(targets, true)
+    toast.add({
+      title: 'Enrichment queued',
+      description: `${response.total} article${response.total === 1 ? '' : 's'} handed to FoodScholar.`,
+      color: 'success'
+    })
+    selectedUrns.value = []
+    void loadWorkerStatus({ silent: true })
+  } catch {
+    toast.add({
+      title: 'Could not queue enrichment',
+      description: enrichmentError.value || 'FoodScholar rejected the request.',
+      color: 'error'
+    })
+  } finally {
+    bulkEnrichPending.value = false
+  }
+}
+
+async function toggleSweeper(paused: boolean) {
+  try {
+    await setSweeperPaused(paused)
+    toast.add({
+      title: paused ? 'Sweeper paused' : 'Sweeper resumed',
+      description: paused
+        ? 'Automatic catalog enrichment is stopped. Selective enrichment still works.'
+        : 'FoodScholar resumed its automatic pass over the catalog.',
+      color: paused ? 'warning' : 'success'
+    })
+  } catch {
+    toast.add({
+      title: 'Could not change the sweeper',
+      description: enrichmentError.value || 'FoodScholar rejected the request.',
+      color: 'error'
+    })
+  }
+}
 
 const breadcrumbItems = [
   {
@@ -802,7 +1140,15 @@ async function loadArticles() {
         'key_takeaways',
         'description',
         'abstract',
-        'updated_at'
+        'updated_at',
+        // Editorial controls. Absent on articles indexed before these fields
+        // existed, which the badge helpers read as "public, untiered".
+        'reader_visibility',
+        'indexing_tier',
+        'ai_indexing_tier',
+        // Carries `enriched_at`, which is the durable record of a past
+        // enrichment even after the Redis job record has expired.
+        'extras'
       ]
     })
 
@@ -813,6 +1159,8 @@ async function loadArticles() {
     if (Object.keys(facets.value).length === 0 && response.result.facets) {
       facets.value = response.result.facets
     }
+
+    void refreshEnrichmentStatuses()
   } catch (error) {
     articles.value = []
     totalArticles.value = 0
@@ -1004,5 +1352,6 @@ watch(page, () => {
 onMounted(async () => {
   await loadFacets()
   await loadArticles()
+  void loadWorkerStatus()
 })
 </script>

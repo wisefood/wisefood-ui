@@ -610,6 +610,7 @@
 import { ref, computed, watch, onMounted, onUnmounted, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useArticles, navigableTotal } from '~/composables/useArticles'
+import { useReaderVisibility } from '~/composables/useReaderVisibility'
 import { useAuthStore } from '~/stores/auth'
 import articlesApi, { type Article } from '~/services/articlesApi'
 import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
@@ -643,6 +644,9 @@ const {
   searchArticles,
   clearError
 } = useArticles()
+
+// Honours the editorial `reader_visibility` set from the console.
+const { withReaderFilter } = useReaderVisibility()
 
 // Facets from API
 const facets = ref<Record<string, Array<{ value: any, count: number }>>>({})
@@ -1388,7 +1392,7 @@ const loadFacets = async () => {
       limit: FACET_BOOTSTRAP_LIMIT,
       offset: 0,
       sort: FACET_BOOTSTRAP_SORT,
-      fq: null as string[] | null,
+      fq: withReaderFilter(null),
       fields: FACET_FIELDS,
       facet_limit: 200
     }
@@ -1498,7 +1502,9 @@ const loadArticles = async () => {
       offset,
       sort: sortBy.value,
       fl: ['urn', 'title', 'authors', 'tags', 'ai_tags', 'topics', 'abstract', 'description', 'venue', 'publication_year', 'category', 'ai_category'],
-      fq: fq.length > 0 ? fq : null,
+      // Editorially restricted articles never reach a reader who should not
+      // see them. Absent `reader_visibility` (the legacy corpus) reads as public.
+      fq: withReaderFilter(fq.length > 0 ? fq : null),
       fields: [], // Don't request facets here since we get them separately
     })
 
