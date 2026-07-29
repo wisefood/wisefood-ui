@@ -520,6 +520,114 @@
                 class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
               >
                 <template #header>
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                      <UIcon
+                        name="i-lucide-sparkles"
+                        class="h-4 w-4 text-brand-500 dark:text-brand-300"
+                      />
+                      <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                        FoodScholar Enrichment
+                      </h2>
+                    </div>
+
+                    <UBadge
+                      :color="enrichmentState.color"
+                      variant="soft"
+                    >
+                      <UIcon
+                        :name="enrichmentState.icon"
+                        class="mr-1 h-3 w-3"
+                        :class="{ 'animate-spin': enrichmentState.active }"
+                      />
+                      {{ enrichmentState.label }}
+                    </UBadge>
+                  </div>
+                </template>
+
+                <div class="space-y-4">
+                  <p class="text-sm text-gray-600 dark:text-gray-300">
+                    Run the enrichment agent against this article on demand. This works
+                    even while the automatic catalog sweeper is paused or stopped.
+                  </p>
+
+                  <UAlert
+                    v-if="enrichmentJob?.error"
+                    color="error"
+                    variant="soft"
+                    icon="i-lucide-alert-circle"
+                    title="Last enrichment run failed"
+                    :description="enrichmentJob.error"
+                  />
+
+                  <UAlert
+                    v-else-if="enrichmentError"
+                    color="warning"
+                    variant="soft"
+                    icon="i-lucide-alert-circle"
+                    :title="enrichmentError"
+                  />
+
+                  <div class="space-y-2 text-sm">
+                    <div
+                      v-for="item in enrichmentFacts"
+                      :key="item.label"
+                      class="flex items-center justify-between gap-3"
+                    >
+                      <span class="text-gray-500 dark:text-gray-400">{{ item.label }}</span>
+                      <span class="text-right font-medium text-gray-900 dark:text-white">
+                        {{ item.value }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-wrap gap-2">
+                    <UButton
+                      color="primary"
+                      icon="i-lucide-sparkles"
+                      :loading="enrichPending"
+                      :disabled="enrichmentState.active || !selectedArticle"
+                      @click="runEnrichment"
+                    >
+                      {{ hasEnrichment ? 'Re-enrich' : 'Enrich now' }}
+                    </UButton>
+
+                    <UButton
+                      color="neutral"
+                      variant="outline"
+                      icon="i-lucide-refresh-cw"
+                      :loading="enrichmentStatusLoading"
+                      @click="refreshEnrichmentStatus"
+                    >
+                      Refresh
+                    </UButton>
+
+                    <UButton
+                      v-if="hasEnrichment"
+                      color="neutral"
+                      variant="ghost"
+                      icon="i-lucide-rotate-ccw"
+                      :loading="enrichmentResetPending"
+                      @click="clearEnrichmentState"
+                    >
+                      Clear worker state
+                    </UButton>
+                  </div>
+
+                  <p
+                    v-if="enrichmentState.active"
+                    class="text-xs text-gray-500 dark:text-gray-400"
+                  >
+                    This page refreshes the article automatically once the run finishes.
+                  </p>
+                </div>
+              </UCard>
+
+              <UCard
+                :ui="{ body: 'p-5 sm:p-6' }"
+                class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
+              >
+                <template #header>
                   <h2 class="text-base font-semibold text-gray-900 dark:text-white">
                     Publication &amp; Access
                   </h2>
@@ -1186,9 +1294,15 @@ import {
   resolveArticleRouteParam
 } from '~/utils/consoleArticles'
 import {
+  enrichmentBadge,
+  formatEnrichmentTimestamp,
+  hasEnrichmentOnRecord
+} from '~/utils/consoleEnrichment'
+import {
   formatConsoleBytes as formatBytes,
   formatConsoleDate as formatDate
 } from '~/utils/consoleGuideCatalog'
+import { useArticleEnrichment } from '~/composables/useArticleEnrichment'
 
 definePageMeta({
   layout: 'default'
@@ -2350,8 +2464,129 @@ async function saveArticle() {
   }
 }
 
+// --------------------------------------------------------------------------- #
+// Selective enrichment
+// --------------------------------------------------------------------------- #
+
+const {
+  statusLoading: enrichmentStatusLoading,
+  error: enrichmentError,
+  statusFor,
+  isPending: isEnrichPending,
+  loadArticleStatus,
+  enrichArticle,
+  resetArticle: resetArticleEnrichment
+} = useArticleEnrichment()
+
+const enrichmentResetPending = ref(false)
+
+const enrichmentJob = computed(() => statusFor(resolvedArticleUrn.value) || null)
+
+const enrichPending = computed(() => isEnrichPending(resolvedArticleUrn.value))
+
+const hasEnrichment = computed(() =>
+  hasEnrichmentOnRecord(enrichmentJob.value, selectedArticle.value?.extras?.enriched_at)
+)
+
+const enrichmentState = computed(() => {
+  const job = enrichmentJob.value
+
+  // The Redis job record expires; `extras.enriched_at` is the durable proof, so
+  // an article enriched long ago still reads as enriched rather than untouched.
+  if (!job || job.status === 'not_found') {
+    return hasEnrichment.value ? enrichmentBadge('succeeded') : enrichmentBadge('not_found')
+  }
+
+  return enrichmentBadge(job.status)
+})
+
+const lastEnrichedAt = computed(() =>
+  enrichmentJob.value?.result?.enriched_at || selectedArticle.value?.extras?.enriched_at || null
+)
+
+const enrichmentFacts = computed(() => {
+  const job = enrichmentJob.value
+  const facts: Array<{ label: string, value: string }> = [
+    { label: 'Last enriched', value: formatEnrichmentTimestamp(lastEnrichedAt.value) }
+  ]
+
+  if (job?.status === 'queued' && job.enqueued_at) {
+    facts.push({ label: 'Queued', value: formatEnrichmentTimestamp(job.enqueued_at) })
+  }
+
+  if (job?.status === 'running' && job.started_at) {
+    facts.push({ label: 'Started', value: formatEnrichmentTimestamp(job.started_at) })
+  }
+
+  const agent = selectedArticle.value?.extras?.enhance_agent
+  if (agent) {
+    facts.push({ label: 'Agent', value: agent })
+  }
+
+  if (job?.permanently_failed) {
+    facts.push({ label: 'Sweeper', value: 'Gave up after max retries' })
+  }
+
+  return facts
+})
+
+async function refreshEnrichmentStatus() {
+  if (!resolvedArticleUrn.value) return
+  await loadArticleStatus(resolvedArticleUrn.value)
+}
+
+async function runEnrichment() {
+  if (!selectedArticle.value) return
+
+  const force = hasEnrichment.value
+
+  try {
+    await enrichArticle(resolvedArticleUrn.value, force)
+    toast.add({
+      title: force ? 'Re-enrichment queued' : 'Enrichment queued',
+      description: 'FoodScholar will write the results back to this article.',
+      color: 'success'
+    })
+  } catch {
+    toast.add({
+      title: 'Could not queue enrichment',
+      description: enrichmentError.value || 'FoodScholar rejected the request.',
+      color: 'error'
+    })
+  }
+}
+
+async function clearEnrichmentState() {
+  enrichmentResetPending.value = true
+  try {
+    await resetArticleEnrichment(resolvedArticleUrn.value)
+    toast.add({
+      title: 'Worker state cleared',
+      description: 'The sweeper will consider this article again on its next pass.',
+      color: 'success'
+    })
+  } catch {
+    toast.add({
+      title: 'Could not clear worker state',
+      description: enrichmentError.value || 'FoodScholar rejected the request.',
+      color: 'error'
+    })
+  } finally {
+    enrichmentResetPending.value = false
+  }
+}
+
+// Reload the article once a run finishes so the enrichment panels below show the
+// values FoodScholar just wrote, rather than the pre-run snapshot.
+watch(() => enrichmentJob.value?.status, (next, previous) => {
+  if (previous && previous !== next && next === 'succeeded') {
+    void loadArticle()
+  }
+})
+
 onMounted(() => {
   void loadArticle()
+  void refreshEnrichmentStatus()
 })
 
 onBeforeUnmount(() => {
@@ -2361,6 +2596,7 @@ onBeforeUnmount(() => {
 watch(resolvedArticleUrn, (nextUrn, previousUrn) => {
   if (nextUrn && nextUrn !== previousUrn) {
     void loadArticle()
+    void refreshEnrichmentStatus()
   }
 })
 

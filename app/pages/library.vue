@@ -135,6 +135,77 @@
             />
           </div>
         </section>
+
+        <!-- Saved articles -->
+        <section
+          v-if="lit.savedCounts.value.article > 0 || lit.articles.value.length > 0"
+          class="mt-10"
+        >
+          <div class="flex items-center gap-2 mb-4">
+            <UIcon name="i-lucide-file-text" class="w-5 h-5 text-brand-500" />
+            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
+              {{ t('library.savedArticles') }}
+            </h2>
+            <span class="text-sm text-zinc-500 dark:text-zinc-400">
+              ({{ lit.savedCounts.value.article }})
+            </span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <FoodscholarArticleCard
+              v-for="(article, i) in lit.articles.value"
+              :key="article.urn"
+              :article="article"
+              :index="i"
+            />
+          </div>
+        </section>
+
+        <!-- Saved guides -->
+        <section
+          v-if="lit.savedCounts.value.guide > 0 || lit.guides.value.length > 0"
+          class="mt-10"
+        >
+          <div class="flex items-center gap-2 mb-4">
+            <UIcon name="i-lucide-compass" class="w-5 h-5 text-brand-500" />
+            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
+              {{ t('library.savedGuides') }}
+            </h2>
+            <span class="text-sm text-zinc-500 dark:text-zinc-400">
+              ({{ lit.savedCounts.value.guide }})
+            </span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <FoodscholarGuidesGuideCard
+              v-for="guide in lit.guides.value"
+              :key="guide.urn"
+              :guide="guide"
+            />
+          </div>
+        </section>
+
+        <!-- Saved textbooks -->
+        <section
+          v-if="lit.savedCounts.value.textbook > 0 || lit.textbooks.value.length > 0"
+          class="mt-10"
+        >
+          <div class="flex items-center gap-2 mb-4">
+            <UIcon name="i-lucide-book" class="w-5 h-5 text-brand-500" />
+            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
+              {{ t('library.savedTextbooks') }}
+            </h2>
+            <span class="text-sm text-zinc-500 dark:text-zinc-400">
+              ({{ lit.savedCounts.value.textbook }})
+            </span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <FoodscholarTextbookCard
+              v-for="(textbook, i) in lit.textbooks.value"
+              :key="textbook.urn"
+              :textbook="textbook"
+              :index="i"
+            />
+          </div>
+        </section>
       </main>
     </AppFeatureGate>
   </div>
@@ -145,9 +216,19 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import recipeApi, { type RecipeSearchResult } from '~/services/recipeApi'
 import { useRecipeStore } from '~/stores/recipe'
+import { useHouseholdStore } from '~/stores/household'
+import { useSavedLibrary } from '~/composables/useSavedLibrary'
+import ArticleCard from '~/components/foodscholar/ArticleCard.vue'
+import GuideCard from '~/components/foodscholar/guides/GuideCard.vue'
+import TextbookCard from '~/components/foodscholar/TextbookCard.vue'
 
 const { t } = useI18n()
 const recipeStore = useRecipeStore()
+const householdStore = useHouseholdStore()
+
+// Saved literature (articles / guides / textbooks). Recipes stay on the recipe
+// store above; this covers everything else the typed library can hold.
+const lit = useSavedLibrary()
 
 const savedRecipes = ref<RecipeSearchResult[]>([])
 const loading = ref(false)
@@ -207,6 +288,14 @@ watch(
     }
     loadSavedRecipes()
   },
+  { immediate: true }
+)
+
+// Literature has no boot-time store; load it for the current member and
+// whenever the member changes.
+watch(
+  () => householdStore.currentMember?.id,
+  () => { lit.load() },
   { immediate: true }
 )
 </script>
