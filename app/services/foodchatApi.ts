@@ -21,6 +21,17 @@ export interface ChatSession {
   updated_at?: string
 }
 
+/** A plan the member saved — it outlives the conversation that made it. */
+export interface SavedPlan {
+  plan_id: string
+  session_id: string
+  plan_type: 'daily' | 'weekly'
+  saved_title?: string | null
+  saved_at?: string | null
+  created_at?: string | null
+  plan: Record<string, unknown>
+}
+
 export interface AttributionCitation {
   title: string
   source_type: 'article' | 'guideline'
@@ -428,6 +439,36 @@ class FoodChatApiService {
     return this.fetchWithTimeout<void>(
       `${this.basePath}/sessions/${sessionId}`,
       'DELETE'
+    )
+  }
+
+  async renameSession(sessionId: string, memberId: string, title: string): Promise<ChatSession> {
+    return this.fetchWithTimeout<ChatSession>(
+      `${this.basePath}/sessions/${sessionId}`,
+      'PATCH',
+      { member_id: memberId, title }
+    )
+  }
+
+  /** Save (or unsave) a plan so it outlives its conversation. */
+  async savePlan(
+    sessionId: string,
+    planId: string,
+    memberId: string,
+    saved: boolean,
+    title?: string
+  ): Promise<void> {
+    return this.fetchWithTimeout<void>(
+      `${this.basePath}/sessions/${sessionId}/meal-plans/${planId}/save`,
+      'POST',
+      { member_id: memberId, saved, title }
+    )
+  }
+
+  async getSavedPlans(memberId: string): Promise<SavedPlan[]> {
+    return this.fetchWithTimeout<SavedPlan[]>(
+      `${this.basePath}/members/${memberId}/saved-plans`,
+      'GET'
     )
   }
 

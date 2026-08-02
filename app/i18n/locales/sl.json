@@ -1381,7 +1381,9 @@
     "startFresh": "Začni znova",
     "planHeader": {
       "dailyPlan": "Dnevni plan",
-      "weeklyPlan": "Tedenski plan"
+      "weeklyPlan": "Tedenski plan",
+      "savePlan": "Shrani načrt",
+      "unsavePlan": "Odstrani iz shranjenih"
     },
     "apply": {
       "title": "Uporabi ta načrt za člane",
@@ -1548,7 +1550,8 @@
         "params": {
           "cooking_time": "Čas kuhanja",
           "difficulty": "Zahtevnost",
-          "goal": "Cilj"
+          "goal": "Cilj",
+          "food_waste": "Zavržena hrana"
         },
         "options": {
           "easy": "Enostavno",
@@ -1557,9 +1560,14 @@
           "weight_loss": "Hujšanje",
           "balanced": "Uravnoteženo",
           "high_protein": "Veliko beljakovin",
-          "energy": "Energijsko"
+          "energy": "Energijsko",
+          "off": "Izklopljeno",
+          "reuse": "Ponovna uporaba sestavin",
+          "strict": "Minimalen nakup"
         }
-      }
+      },
+      "renameSession": "Preimenuj sejo",
+      "renameSessionPrompt": "Poimenujte to sejo načrtovanja:"
     },
     "diners": {
       "label": "Kuhamo za",

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import foodchatApi from '~/services/foodchatApi'
 import type {
+  SavedPlan,
   ChatSession,
   ChatMessage,
   MealPlan,
@@ -29,6 +30,9 @@ interface FoodChatState {
   lastResponse: UnifiedChatResponse | null
   /** Diner selection ("cooking for") persisted per session, client-side */
   dinersBySession: Record<string, SessionDiners>
+  /** Plans the member saved — outlive their conversations */
+  savedPlans: SavedPlan[]
+  savedPlanIds: string[]
   sessionsLoading: boolean
   messagesLoading: boolean
   loadingMoreMessages: boolean
@@ -43,6 +47,8 @@ export const useFoodChatStore = defineStore('foodchat', {
     messages: [],
     hasMoreMessages: false,
     nextBeforeId: null,
+    savedPlans: [],
+    savedPlanIds: [],
     mealPlans: [],
     weeklyMealPlans: [],
     lastResponse: null,
@@ -142,6 +148,51 @@ export const useFoodChatStore = defineStore('foodchat', {
       } catch (err: any) {
         this.error = err.message || 'Failed to create session'
         throw err
+      }
+    },
+
+    async renameSession(sessionId: string, memberId: string, title: string) {
+      this.error = null
+      try {
+        const updated = await foodchatApi.renameSession(sessionId, memberId, title)
+        this.sessions = this.sessions.map(s =>
+          s.session_id === sessionId ? { ...s, title: updated.title } : s
+        )
+      } catch (err: any) {
+        this.error = err.message || 'Failed to rename session'
+        throw err
+      }
+    },
+
+    /** Save (or unsave) a plan so it outlives its conversation. */
+    async savePlan(
+      sessionId: string,
+      planId: string,
+      memberId: string,
+      saved: boolean,
+      title?: string
+    ) {
+      this.error = null
+      try {
+        await foodchatApi.savePlan(sessionId, planId, memberId, saved, title)
+        this.savedPlanIds = saved
+          ? [...new Set([...this.savedPlanIds, planId])]
+          : this.savedPlanIds.filter(id => id !== planId)
+      } catch (err: any) {
+        this.error = err.message || 'Failed to save plan'
+        throw err
+      }
+    },
+
+    async loadSavedPlans(memberId: string) {
+      try {
+        const saved = await foodchatApi.getSavedPlans(memberId)
+        this.savedPlans = saved
+        this.savedPlanIds = saved.map(p => p.plan_id)
+      } catch {
+        // A saved-plans listing that fails to load must not poison the chat
+        // UI — the member can still plan; the bookmark states self-correct
+        // on the next successful load.
       }
     },
 

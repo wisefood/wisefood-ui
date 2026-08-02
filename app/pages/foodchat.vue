@@ -141,7 +141,7 @@
         key="split"
         class="flex-1 flex justify-center px-4 sm:px-6 py-6 pt-12 min-h-0"
       >
-        <div class="fc-split-wrap flex w-full max-w-7xl min-h-0">
+        <div class="fc-split-wrap flex w-full max-w-7xl 2xl:max-w-[100rem] min-h-0">
 
         <!-- ── LEFT: Chat column (FoodScholar-style floating) ── -->
         <div class="fc-chat-col flex flex-col min-w-0 relative">
@@ -161,6 +161,14 @@
               class="flex-1 min-w-0 fc-session-select"
               @update:model-value="handleSessionSwitch"
             />
+            <button
+              v-if="activeSession"
+              class="shrink-0 h-6 w-6 flex items-center justify-center rounded-md text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
+              :title="t('foodChatHome.chat.renameSession')"
+              @click="handleRenameSession"
+            >
+              <UIcon name="i-lucide-pencil" class="w-3 h-3" />
+            </button>
             <button
               class="shrink-0 h-6 w-6 flex items-center justify-center rounded-md text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
               :title="t('foodChatHome.chat.startFresh')"
@@ -455,6 +463,15 @@
 
         <!-- ── RIGHT: Canvas column ── -->
         <div class="fc-canvas-col flex flex-col overflow-y-auto">
+          <!-- Plan settings ribbon: the parameter card's controls, living on
+               the plan itself. Shown once a plan exists; each control
+               applies on interaction. -->
+          <FoodchatPlanSettingsRibbon
+            v-if="latestParamCard && hasAnyPlan"
+            :card="latestParamCard"
+            :busy="sending || showEphemeralGenerating"
+            @apply="handleApplyPlanParameters"
+          />
           <!-- "Cooking for" banner (when more than one diner) -->
           <Transition name="chips-fade">
             <div v-if="showCookingForBanner" class="px-4 sm:px-6 pt-3 shrink-0">
@@ -673,6 +690,20 @@
                     </div>
                     <span class="text-sm font-medium text-gray-900 dark:text-white">{{ canvasMode === 'weekly' ? t('foodChatHome.planHeader.weeklyPlan') : t('foodChatHome.planHeader.dailyPlan') }}</span>
                   </div>
+
+                  <!-- Save: this plan outlives the conversation -->
+                  <button
+                    v-if="displayedPlanId"
+                    class="shrink-0 h-6 w-6 flex items-center justify-center rounded-md transition-colors"
+                    :class="displayedPlanSaved
+                      ? 'text-brandp-500 hover:text-brandp-600'
+                      : 'text-gray-400 dark:text-zinc-500 hover:text-brandp-500'"
+                    :title="displayedPlanSaved ? t('foodChatHome.planHeader.unsavePlan') : t('foodChatHome.planHeader.savePlan')"
+                    :disabled="sending"
+                    @click="handleTogglePlanSaved"
+                  >
+                    <UIcon :name="displayedPlanSaved ? 'i-lucide-bookmark-check' : 'i-lucide-bookmark'" class="w-4 h-4" />
+                  </button>
 
                   <!-- Plan history dropdown -->
                   <USelect
@@ -1302,6 +1333,10 @@ const {
   submitMessageFeedback,
   submitMemoryDecision,
   applyPlanParameters,
+  renameSession,
+  savePlan,
+  loadSavedPlans,
+  savedPlanIds,
   composePlan,
   activeDiners,
   updateDiners,
@@ -1377,6 +1412,16 @@ const latestParamCardKey = computed(() => {
   const withCard = [...messages.value].reverse()
     .find(m => m.role === 'assistant' && m.plan_parameters)
   return withCard ? messageKey(withCard) : null
+})
+
+// The newest card object itself — the ribbon renders it on the canvas.
+// Deliberately ignores dismissal: dismissing the in-chat card says "stop
+// interrupting the conversation", not "remove my settings"; the ribbon is
+// where those settings permanently live.
+const latestParamCard = computed(() => {
+  const withCard = [...messages.value].reverse()
+    .find(m => m.role === 'assistant' && m.plan_parameters)
+  return withCard?.plan_parameters ?? null
 })
 
 function isActiveParamCard(msg: ChatMessage): boolean {
@@ -1589,10 +1634,46 @@ const sessionItems = computed(() =>
 )
 
 function formatSessionLabel(s: typeof sessions.value[0]): string {
+  // A member-given name beats a timestamp; the timestamp is the fallback
+  // identity for sessions nobody bothered to name.
+  if (s.title) return s.title
   const date = new Date(s.created_at)
   const dateStr = date.toLocaleDateString(activeDateLocale.value, { month: 'short', day: 'numeric' })
   const timeStr = date.toLocaleTimeString(activeDateLocale.value, { hour: '2-digit', minute: '2-digit' })
   return `${dateStr} · ${timeStr}`
+}
+
+async function handleRenameSession() {
+  if (!activeSession.value) return
+  const current = activeSession.value.title
+    ?? formatSessionLabel(activeSession.value)
+  // window.prompt over a modal on purpose: renaming is a two-second act and
+  // the session bar has no room for an inline editor at this density.
+  const title = window.prompt(t('foodChatHome.chat.renameSessionPrompt'), current)
+  if (title === null) return
+  const trimmed = title.trim()
+  if (!trimmed || trimmed === current) return
+  await renameSession(activeSession.value.session_id, trimmed)
+}
+
+// ── Saved plans ──
+const displayedPlanId = computed(() =>
+  canvasMode.value === 'weekly'
+    ? displayedWeeklyPlan.value?.id ?? null
+    : displayedMealPlan.value?.id ?? null
+)
+
+const displayedPlanSaved = computed(() =>
+  displayedPlanId.value ? savedPlanIds.value.includes(displayedPlanId.value) : false
+)
+
+async function handleTogglePlanSaved() {
+  if (!displayedPlanId.value) return
+  const saving = !displayedPlanSaved.value
+  // The session title doubles as the plan name — the member has already
+  // named this planning conversation, and re-asking is friction.
+  const title = saving ? (activeSession.value?.title ?? undefined) : undefined
+  await savePlan(displayedPlanId.value, saving, title)
 }
 
 async function handleSessionSwitch(sessionId: string | null) {
@@ -2443,6 +2524,9 @@ watch(messagesScrollRef, (el) => { if (el) scrollToBottom(false) })
 onMounted(async () => {
   recipeStore.initialize()
   await loadSessions()
+  // Bookmark states on the canvas need the saved-plan ids; fire-and-forget,
+  // the store treats a failed load as "no bookmarks yet".
+  loadSavedPlans()
   if (messages.value.length > 0 || hasAnyPlan.value) {
     hasSentFirstMessage.value = true
     nextTick(() => scrollToBottom(false))
@@ -2462,7 +2546,10 @@ onMounted(async () => {
 
 /* ── Layout ── */
 .fc-split-wrap {
-  height: clamp(440px, 68vh, 720px);
+  /* Let the workspace use the screen it is on. The old 720px ceiling left a
+     third of a 1440p monitor empty while the plan scrolled inside a short
+     box; the viewport minus header is the honest bound. */
+  height: clamp(480px, 78vh, 1080px);
   min-height: 0;
   border-radius: 1.25rem;
   overflow: hidden;
@@ -2474,7 +2561,7 @@ onMounted(async () => {
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.2);
 }
 .fc-chat-col {
-  width: clamp(260px, 34%, 400px);
+  width: clamp(300px, 34%, 460px);
   background: white;
   display: flex;
   flex-direction: column;

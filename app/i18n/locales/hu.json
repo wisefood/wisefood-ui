@@ -1381,7 +1381,9 @@
     "startFresh": "Újrakezdés",
     "planHeader": {
       "dailyPlan": "Napi terv",
-      "weeklyPlan": "Heti terv"
+      "weeklyPlan": "Heti terv",
+      "savePlan": "Terv mentése",
+      "unsavePlan": "Eltávolítás a mentettek közül"
     },
     "apply": {
       "title": "Alkalmazd ezt a tervet a tagokra",
@@ -1548,7 +1550,8 @@
         "params": {
           "cooking_time": "Főzési idő",
           "difficulty": "Nehézség",
-          "goal": "Cél"
+          "goal": "Cél",
+          "food_waste": "Élelmiszer-pazarlás"
         },
         "options": {
           "easy": "Könnyű",
@@ -1557,9 +1560,14 @@
           "weight_loss": "Fogyás",
           "balanced": "Kiegyensúlyozott",
           "high_protein": "Fehérjedús",
-          "energy": "Energizáló"
+          "energy": "Energizáló",
+          "off": "Ki",
+          "reuse": "Hozzávalók újrafelhasználása",
+          "strict": "Minimális bevásárlás"
         }
-      }
+      },
+      "renameSession": "Munkamenet átnevezése",
+      "renameSessionPrompt": "Nevezze el ezt a tervezési munkamenetet:"
     },
     "diners": {
       "label": "Kinek főzünk",

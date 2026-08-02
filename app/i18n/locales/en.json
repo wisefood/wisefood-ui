@@ -1403,7 +1403,9 @@
     "startFresh": "Start fresh",
     "planHeader": {
       "dailyPlan": "Daily Plan",
-      "weeklyPlan": "Weekly Plan"
+      "weeklyPlan": "Weekly Plan",
+      "savePlan": "Save this plan",
+      "unsavePlan": "Remove from saved plans"
     },
     "apply": {
       "title": "Apply this plan to members",
@@ -1570,7 +1572,8 @@
         "params": {
           "cooking_time": "Cooking time",
           "difficulty": "Difficulty",
-          "goal": "Goal"
+          "goal": "Goal",
+          "food_waste": "Food waste"
         },
         "options": {
           "easy": "Easy",
@@ -1579,9 +1582,14 @@
           "weight_loss": "Lose weight",
           "balanced": "Balanced",
           "high_protein": "High protein",
-          "energy": "Energy boost"
+          "energy": "Energy boost",
+          "off": "Off",
+          "reuse": "Reuse ingredients",
+          "strict": "Minimal shopping"
         }
-      }
+      },
+      "renameSession": "Rename this session",
+      "renameSessionPrompt": "Name this planning session:"
     },
     "diners": {
       "label": "Cooking for",

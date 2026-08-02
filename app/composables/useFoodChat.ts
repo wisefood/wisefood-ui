@@ -53,6 +53,22 @@ export function useFoodChat() {
     await store.deleteSession(sessionId)
   }
 
+  async function renameSession(sessionId: string, title: string) {
+    if (!memberId.value) return
+    await store.renameSession(sessionId, memberId.value, title)
+  }
+
+  /** Save (or unsave) a plan so it outlives its conversation. */
+  async function savePlan(planId: string, saved: boolean, title?: string) {
+    if (!store.activeSessionId || !memberId.value) return
+    await store.savePlan(store.activeSessionId, planId, memberId.value, saved, title)
+  }
+
+  async function loadSavedPlans() {
+    if (!memberId.value) return
+    await store.loadSavedPlans(memberId.value)
+  }
+
   async function sendMessage(content: string) {
     if (!store.activeSessionId || !memberId.value) return
     return store.sendMessage(store.activeSessionId, content, memberId.value)
@@ -136,6 +152,11 @@ export function useFoodChat() {
     newSession,
     selectSession,
     deleteSession,
+    renameSession,
+    savePlan,
+    loadSavedPlans,
+    savedPlans: computed(() => store.savedPlans),
+    savedPlanIds: computed(() => store.savedPlanIds),
     sendMessage,
     loadMoreMessages,
     submitMessageFeedback,
