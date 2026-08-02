@@ -201,18 +201,29 @@ export function planNutritionTotal(plan: MealPlan | null | undefined): {
   if (meals.length === 0) return null
 
   let complete = true
+  let contributed = 0
   const totals = { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
   for (const meal of meals) {
     const nutrition = meal.recipe.nutrition
-    if (!nutrition) {
+    if (!nutrition || typeof nutrition.kcal !== 'number') {
       complete = false
       continue
     }
+    contributed += 1
     totals.calories += nutrition.kcal ?? 0
     totals.protein_g += nutrition.protein_g ?? 0
     totals.carbs_g += nutrition.carbs_g ?? 0
     totals.fat_g += nutrition.fat_g ?? 0
   }
+
+  // Nothing contributed — show no total rather than a row of zeros.
+  //
+  // A plan whose meals carry no macros rendered as "0 kcal · 0g protein ·
+  // partial", which reads as a measurement rather than as an absence: zero
+  // calories is a claim, and a wrong one. This happens against a backend that
+  // predates carried macros, so it is a real state, not a transient.
+  if (contributed === 0) return null
+
   return { ...totals, complete }
 }
 

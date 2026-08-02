@@ -4,7 +4,7 @@ import {
   type Article,
   type ReaderVisibility
 } from '~/services/articlesApi'
-import { useFoodscholarQaStore } from '~/stores/foodscholarQa'
+import { useFoodScholarQaStore } from '~/stores/foodscholarQa'
 
 /**
  * Reader-facing enforcement of an article's `reader_visibility`.
@@ -54,7 +54,7 @@ export function isArticleVisibleToReader(
 }
 
 export function useReaderVisibility() {
-  const qaStore = useFoodscholarQaStore()
+  const qaStore = useFoodScholarQaStore()
 
   const readerLevel = computed(() => qaStore.expertiseLevel || 'beginner')
   const isExpert = computed(() => isExpertReader(readerLevel.value))
