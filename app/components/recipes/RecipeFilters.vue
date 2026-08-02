@@ -66,6 +66,48 @@
       </p>
     </div>
 
+    <!-- Discovery facets: cuisine, mood, flavour, food group.
+         Placed directly after Dish Type so "what kind of dish is this"
+         questions sit together, above the dietary and time constraints which
+         are narrowing rather than exploratory. Each renders only when the
+         search returned that facet, so they appear as the corpus gains them. -->
+    <RecipeFacetSection
+      title="Cuisine"
+      icon="i-lucide-globe"
+      :bucket="cuisinesBucket"
+      :selected="recipeStore.selectedCuisines"
+      :emojis="CUISINE_EMOJI"
+      :collapsed-limit="12"
+      @toggle="onToggleCuisine"
+    />
+
+    <RecipeFacetSection
+      title="Mood"
+      icon="i-lucide-heart"
+      :bucket="moodsBucket"
+      :selected="recipeStore.selectedMoods"
+      :emojis="MOOD_EMOJI"
+      @toggle="onToggleMood"
+    />
+
+    <RecipeFacetSection
+      title="Flavour"
+      icon="i-lucide-flame"
+      :bucket="flavorProfilesBucket"
+      :selected="recipeStore.selectedFlavorProfiles"
+      :emojis="FLAVOR_EMOJI"
+      @toggle="onToggleFlavorProfile"
+    />
+
+    <RecipeFacetSection
+      title="Food Groups"
+      icon="i-lucide-apple"
+      :bucket="foodGroupsBucket"
+      :selected="recipeStore.selectedFoodGroups"
+      :emojis="FOOD_GROUP_EMOJI"
+      @toggle="onToggleFoodGroup"
+    />
+
     <!-- Source Filters -->
     <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
       <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
@@ -206,6 +248,13 @@ import { useI18n } from 'vue-i18n'
 import { useRecipeStore } from '~/stores/recipe'
 import type { RecipeDishType, RecipeFacetMap, RecipeParamSortBy, RecipeSource } from '~/services/recipeApi'
 import { formatDishTypeLabel, getDishTypeIcon } from '~/utils/dishTypes'
+import {
+  CUISINE_EMOJI,
+  FLAVOR_EMOJI,
+  FOOD_GROUP_EMOJI,
+  MOOD_EMOJI
+} from '~/utils/facetPresentation'
+import RecipeFacetSection from '~/components/recipes/RecipeFacetSection.vue'
 
 // ============================================================================
 // Props & Emits
@@ -330,12 +379,31 @@ const sortOptions: { value: RecipeParamSortBy; label: string; icon: string }[] =
 // Computed
 // ============================================================================
 const sortBy = computed(() => recipeStore.sortBy)
-const hasActiveFilters = computed(() =>
-  recipeStore.excludedAllergens.length > 0 ||
-  recipeStore.selectedSources.length > 0 ||
-  recipeStore.selectedDishTypes.length > 0 ||
-  recipeStore.selectedDietTags.length > 0
-)
+// Facet buckets, narrowed here rather than in the template.
+//
+// A `Type | undefined` cast inside a template expression is parsed as a Vue 2
+// filter by the template compiler's lint rules — the `|` is ambiguous there.
+// Keeping the cast in script is both correct and the only place TypeScript
+// really reads it.
+type FacetBucket = Record<string, number> | undefined
+const cuisinesBucket = computed(() => props.facets?.cuisines as FacetBucket)
+const moodsBucket = computed(() => props.facets?.moods as FacetBucket)
+const flavorProfilesBucket = computed(() => props.facets?.flavor_profiles as FacetBucket)
+const foodGroupsBucket = computed(() => props.facets?.food_groups as FacetBucket)
+
+// Every filter array the panel can populate. A "Clear all" button that misses
+// one leaves the user with a filter they can neither see nor remove, so this
+// list and `clearAllFilters` below have to stay in step.
+const hasActiveFilters = computed(() => [
+  recipeStore.excludedAllergens,
+  recipeStore.selectedSources,
+  recipeStore.selectedDishTypes,
+  recipeStore.selectedDietTags,
+  recipeStore.selectedCuisines,
+  recipeStore.selectedMoods,
+  recipeStore.selectedFlavorProfiles,
+  recipeStore.selectedFoodGroups
+].some(values => values.length > 0))
 
 // ============================================================================
 // Methods
@@ -360,6 +428,29 @@ const toggleDishType = (dishType: RecipeDishType) => {
   emit('filterChange')
 }
 
+// Discovery facets. Each mirrors toggleDishType: mutate the store, then emit so
+// the page re-runs the search — which returns fresh counts for every other
+// facet, since they are all conditioned on the current result set.
+const onToggleCuisine = (value: string) => {
+  recipeStore.toggleCuisine(value)
+  emit('filterChange')
+}
+
+const onToggleMood = (value: string) => {
+  recipeStore.toggleMood(value)
+  emit('filterChange')
+}
+
+const onToggleFlavorProfile = (value: string) => {
+  recipeStore.toggleFlavorProfile(value)
+  emit('filterChange')
+}
+
+const onToggleFoodGroup = (value: string) => {
+  recipeStore.toggleFoodGroup(value)
+  emit('filterChange')
+}
+
 const toggleDietTag = (tag: string) => {
   recipeStore.toggleDietTag(tag)
   emit('filterChange')
@@ -375,6 +466,7 @@ const clearAllFilters = () => {
   recipeStore.clearSourceFilters()
   recipeStore.clearDishTypeFilters()
   recipeStore.clearDietTagFilters()
+  recipeStore.clearAnnotationFilters()
   selectedQuickFilter.value = null
   emit('filterChange')
 }

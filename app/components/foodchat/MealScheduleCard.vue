@@ -3,8 +3,17 @@
     <!-- Meal type + time -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2.5">
-        <UIcon :name="icon" class="w-5 h-5 text-brandp-500" />
+        <UIcon
+          :name="icon"
+          class="w-5 h-5 text-brandp-500"
+        />
         <span class="text-xs font-semibold uppercase tracking-wider text-brandp-600 dark:text-brandp-400">{{ type }}</span>
+        <!-- Which plate of the meal this is. Shown only for multi-course meals,
+             where two cards otherwise share a heading and look like a bug. -->
+        <span
+          v-if="courseLabel"
+          class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-brandp-50 dark:bg-brandp-900/30 text-brandp-600 dark:text-brandp-400"
+        >{{ courseLabel }}</span>
       </div>
       <div class="flex items-center gap-1.5">
         <button
@@ -22,9 +31,15 @@
             ]"
           />
         </button>
-        <span class="text-xs text-gray-400 font-light">{{ time }}</span>
+        <span
+          v-if="time"
+          class="text-xs text-gray-400 font-light"
+        >{{ time }}</span>
         <!-- Slot menu: replace via chat, adapt in RecipeWrangler -->
-        <div class="relative" @mouseleave="menuOpen = false">
+        <div
+          class="relative"
+          @mouseleave="menuOpen = false"
+        >
           <button
             type="button"
             class="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
@@ -32,7 +47,10 @@
             :aria-expanded="menuOpen"
             @click.prevent.stop="menuOpen = !menuOpen"
           >
-            <UIcon name="i-lucide-more-vertical" class="w-4 h-4 text-gray-400 dark:text-zinc-500" />
+            <UIcon
+              name="i-lucide-more-vertical"
+              class="w-4 h-4 text-gray-400 dark:text-zinc-500"
+            />
           </button>
           <Transition name="chips-fade">
             <div
@@ -44,7 +62,10 @@
                 class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
                 @click.prevent.stop="onMenuAction('replace')"
               >
-                <UIcon name="i-lucide-replace" class="w-3.5 h-3.5 text-brandp-400" />
+                <UIcon
+                  name="i-lucide-replace"
+                  class="w-3.5 h-3.5 text-brandp-400"
+                />
                 {{ t('foodChatHome.mealCard.replace') }}
               </button>
               <button
@@ -53,7 +74,10 @@
                 class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
                 @click.prevent.stop="onMenuAction('adapt')"
               >
-                <UIcon name="i-lucide-wand-sparkles" class="w-3.5 h-3.5 text-brandp-400" />
+                <UIcon
+                  name="i-lucide-wand-sparkles"
+                  class="w-3.5 h-3.5 text-brandp-400"
+                />
                 {{ t('foodChatHome.mealCard.adapt') }}
               </button>
             </div>
@@ -75,10 +99,19 @@
           :src="recipeImage"
           class="w-full h-full object-cover"
           loading="lazy"
+        >
+        <div
+          v-else-if="nutritionLoading"
+          class="w-full h-full animate-pulse bg-gray-200 dark:bg-zinc-600"
         />
-        <div v-else-if="nutritionLoading" class="w-full h-full animate-pulse bg-gray-200 dark:bg-zinc-600" />
-        <div v-else class="w-full h-full flex items-center justify-center">
-          <UIcon name="i-lucide-utensils" class="w-4 h-4 text-gray-300 dark:text-zinc-600" />
+        <div
+          v-else
+          class="w-full h-full flex items-center justify-center"
+        >
+          <UIcon
+            name="i-lucide-utensils"
+            class="w-4 h-4 text-gray-300 dark:text-zinc-600"
+          />
         </div>
       </NuxtLink>
 
@@ -88,14 +121,26 @@
         target="_blank"
         class="flex-1 min-w-0 font-medium text-sm sm:text-base text-gray-900 dark:text-white leading-snug hover:text-brandp-500 dark:hover:text-brandp-300 transition-colors"
       >{{ recipe.title }}</NuxtLink>
-      <h3 v-else class="flex-1 min-w-0 font-medium text-sm sm:text-base text-gray-900 dark:text-white leading-snug">{{ recipe.title }}</h3>
+      <h3
+        v-else
+        class="flex-1 min-w-0 font-medium text-sm sm:text-base text-gray-900 dark:text-white leading-snug"
+      >
+        {{ recipe.title }}
+      </h3>
     </div>
 
     <!-- Nutrition summary + Nutri-Score (M4 transparency) -->
-    <div v-if="recipe.nutrition" class="flex items-center gap-1.5 flex-wrap pr-16 -mt-1">
+    <div
+      v-if="recipe.nutrition"
+      class="flex items-center gap-1.5 flex-wrap pr-16 -mt-1"
+    >
       <span class="inline-flex items-center px-2 py-0.5 text-[10px] rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-300 font-light">
         {{ nutritionSummary }}
       </span>
+      <span
+        v-if="macroSummary"
+        class="inline-flex items-center px-2 py-0.5 text-[10px] rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-300 font-light"
+      >{{ macroSummary }}</span>
       <span
         v-if="nutriScoreGrade"
         class="inline-flex items-center justify-center w-[18px] h-[18px] rounded text-[10px] font-bold leading-none"
@@ -105,10 +150,20 @@
     </div>
 
     <!-- Match-reason chips (M4 transparency) -->
-    <div v-if="recipe.match_reasons?.length" class="flex flex-wrap gap-1 pr-14">
-      <UTooltip v-for="(reason, rIdx) in recipe.match_reasons" :key="rIdx" :text="reasonTooltip(reason.kind)">
+    <div
+      v-if="recipe.match_reasons?.length"
+      class="flex flex-wrap gap-1 pr-14"
+    >
+      <UTooltip
+        v-for="(reason, rIdx) in recipe.match_reasons"
+        :key="rIdx"
+        :text="reasonTooltip(reason.kind)"
+      >
         <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] rounded-full border border-gray-200/80 dark:border-zinc-700/70 text-gray-400 dark:text-zinc-500 font-light">
-          <UIcon :name="reasonIcon(reason.kind)" class="w-2.5 h-2.5 shrink-0" />
+          <UIcon
+            :name="reasonIcon(reason.kind)"
+            class="w-2.5 h-2.5 shrink-0"
+          />
           <span class="max-w-24 truncate">{{ reason.label }}</span>
         </span>
       </UTooltip>
@@ -120,16 +175,28 @@
       @mouseleave="hoveredSegment = null"
     >
       <svg
-        width="60" height="60" viewBox="0 0 60 60"
+        width="60"
+        height="60"
+        viewBox="0 0 60 60"
         style="transform: rotate(-90deg)"
       >
         <!-- Track -->
-        <circle cx="30" cy="30" r="23" stroke="#e5e7eb" stroke-width="6" fill="none" class="dark:stroke-zinc-700" />
+        <circle
+          cx="30"
+          cy="30"
+          r="23"
+          stroke="#e5e7eb"
+          stroke-width="6"
+          fill="none"
+          class="dark:stroke-zinc-700"
+        />
         <!-- Segments -->
         <circle
           v-for="seg in segments"
           :key="seg.key"
-          cx="30" cy="30" r="23"
+          cx="30"
+          cy="30"
+          r="23"
           :stroke="seg.color"
           stroke-width="6"
           fill="none"
@@ -142,15 +209,20 @@
       </svg>
       <!-- Center label -->
       <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-        <span v-if="nutritionLoading" class="text-[9px] text-gray-400">···</span>
+        <span
+          v-if="nutritionLoading"
+          class="text-[9px] text-gray-400"
+        >···</span>
         <template v-else-if="nutritionData">
           <span class="text-[10px] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ centerValue }}</span>
           <span class="text-[8px] text-gray-400 dark:text-zinc-500 leading-none mt-0.5">{{ centerLabel }}</span>
         </template>
-        <span v-else class="text-[9px] text-gray-300">—</span>
+        <span
+          v-else
+          class="text-[9px] text-gray-300"
+        >—</span>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -164,8 +236,11 @@ import { useRecipeStore } from '~/stores/recipe'
 
 const props = defineProps<{
   type: string
+  /** Suggested clock time. Empty for slots with no sensible default. */
   time: string
   icon: string
+  /** "Main Dish" / "Salad" — set only when a meal has several plates. */
+  courseLabel?: string
   recipe: MealRecipe
 }>()
 
@@ -199,12 +274,27 @@ const nutritionLoading = ref(false)
 const recipeImage = ref<string | null>(props.recipe.image_url ?? null)
 const hoveredSegment = ref<string | null>(null)
 
+/**
+ * Fetch the full recipe only when the plan did not already carry what we need.
+ *
+ * Every card used to do this unconditionally, to fill a macro donut from
+ * `total_*_g_per_serving` — data the plan response now carries per meal. On a
+ * weekly plan that was 21 extra requests for numbers already in hand.
+ *
+ * Still fetched when the plan predates carried macros, or when it has no image,
+ * so old stored plans render exactly as before.
+ */
 onMounted(async () => {
   if (!props.recipe.recipe_id) return
+
+  const nutrition = props.recipe.nutrition
+  const hasMacros = Boolean(nutrition && typeof nutrition.protein_g === 'number')
+  if (hasMacros && recipeImage.value) return
+
   nutritionLoading.value = true
   try {
     const r = await recipeApi.getRecipe(props.recipe.recipe_id)
-    nutritionData.value = r
+    if (!hasMacros) nutritionData.value = r
     if (!recipeImage.value) recipeImage.value = r.image_url ?? null
   } catch {
     // non-critical
@@ -220,6 +310,21 @@ const nutritionSummary = computed(() => {
   return t('foodChatHome.mealCard.nutritionSummary', {
     kcal: Math.round(n.kcal),
     protein: Math.round(n.protein_g)
+  })
+})
+
+/**
+ * Carbs and fat, which the plan has always carried and nothing ever read.
+ *
+ * Kept as a second chip rather than folded into `nutritionSummary` so the
+ * existing kcal/protein line keeps its wording and its translation.
+ */
+const macroSummary = computed(() => {
+  const n = props.recipe.nutrition
+  if (!n || typeof n.carbs_g !== 'number') return ''
+  return t('foodChatHome.mealCard.macroSummary', {
+    carbs: Math.round(n.carbs_g),
+    fat: Math.round(n.fat_g ?? 0)
   })
 })
 
@@ -269,22 +374,33 @@ function reasonTooltip(kind: string): string {
 // brandg-400  #b8c455  fiber
 // earth-2     #CAD5B2  carbs
 const SEGMENT_DEFS = [
-  { key: 'protein', label: 'prot',  color: '#a25ece' },
-  { key: 'carbs',   label: 'carbs', color: '#CAD5B2' },
-  { key: 'fat',     label: 'fat',   color: '#D98A6B' },
-  { key: 'fiber',   label: 'fiber', color: '#b8c455' },
+  { key: 'protein', label: 'prot', color: '#a25ece' },
+  { key: 'carbs', label: 'carbs', color: '#CAD5B2' },
+  { key: 'fat', label: 'fat', color: '#D98A6B' },
+  { key: 'fiber', label: 'fiber', color: '#b8c455' }
 ]
 
 const circumference = 2 * Math.PI * 23
 
 const macros = computed(() => {
+  // The plan's own per-serving macros, when it carries them. Same numbers, same
+  // source (the recipe's Postgres profile) — just already delivered.
+  const n = props.recipe.nutrition
+  if (n && typeof n.protein_g === 'number') {
+    return {
+      protein: Math.max(n.protein_g ?? 0, 0),
+      carbs: Math.max(n.carbs_g ?? 0, 0),
+      fat: Math.max(n.fat_g ?? 0, 0),
+      fiber: Math.max(n.fiber_g ?? 0, 0)
+    }
+  }
   const d = nutritionData.value
   if (!d) return null
   return {
     protein: Math.max(d.total_protein_g_per_serving ?? 0, 0),
-    carbs:   Math.max(d.total_carbs_g_per_serving   ?? 0, 0),
-    fat:     Math.max(d.total_fat_g_per_serving     ?? 0, 0),
-    fiber:   Math.max(d.total_fiber_g_per_serving   ?? 0, 0),
+    carbs: Math.max(d.total_carbs_g_per_serving ?? 0, 0),
+    fat: Math.max(d.total_fat_g_per_serving ?? 0, 0),
+    fiber: Math.max(d.total_fiber_g_per_serving ?? 0, 0)
   }
 })
 
@@ -294,7 +410,7 @@ const segments = computed(() => {
   const values: Record<string, number> = { protein: m.protein, carbs: m.carbs, fat: m.fat, fiber: m.fiber }
   const total = Object.values(values).reduce((s, v) => s + v, 0) || 1
   let offset = 0
-  return SEGMENT_DEFS.map(d => {
+  return SEGMENT_DEFS.map((d) => {
     const dash = (values[d.key] / total) * circumference
     const seg = { ...d, dash, offset }
     offset += dash

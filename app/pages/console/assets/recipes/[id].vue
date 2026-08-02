@@ -993,6 +993,23 @@ async function loadRecipe() {
     const managedRecipe = await recipeApi.getManagedRecipe(recipeId.value, { include_disabled: true })
     recipe.value = managedRecipe
     resetWorkingCopy()
+
+    // Course and annotations come from the catalog index, which owns them.
+    // The detail endpoint computes `dish_types` but `RecipeDetailResponse`
+    // drops it, so without this the console shows a recipe's course only as an
+    // entry in its tag list. Not awaited, and null on failure: the console must
+    // still open a recipe when the catalog is unreachable.
+    void recipeApi.getCatalogRecipe(managedRecipe.recipe_id || recipeId.value).then((document) => {
+      if (!document) return
+      if (recipe.value?.recipe_id !== managedRecipe.recipe_id) return
+      recipe.value = {
+        ...recipe.value,
+        ...recipeApi.extractAnnotations(document),
+        dish_types: recipe.value.dish_types?.length
+          ? recipe.value.dish_types
+          : recipeApi.extractCourseTypes(document)
+      }
+    })
   } catch (error) {
     recipe.value = null
     loadError.value = resolveConsoleRecipeErrorMessage(error, 'Failed to load recipe')

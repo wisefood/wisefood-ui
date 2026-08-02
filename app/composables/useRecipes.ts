@@ -60,21 +60,32 @@ export function useRecipes() {
       )
 
       if (cachedResults) {
-        recipes.value = cachedResults
-        totalResults.value = cachedResults.length
-        return cachedResults
+        recipes.value = cachedResults.results
+        totalResults.value = cachedResults.total
+        // Restored with the results, not left over from the previous search —
+        // the cache key covers every active filter, so these describe exactly
+        // the set being shown.
+        paramSearchFacets.value = cachedResults.facets
+        paramSearchTotal.value = cachedResults.total
+        return cachedResults.results
       }
     }
 
     loading.value = true
 
     try {
-      const results = await recipeApi.searchRecipes({
+      const { results, facets, total } = await recipeApi.searchRecipes({
         ...params,
         question: normalizedQuestion
       })
       recipes.value = results
-      totalResults.value = results.length
+      totalResults.value = total || results.length
+      // The filter panel reads these. Refreshing them on the question path as
+      // well keeps the chip counts describing the results actually on screen;
+      // leaving the previous search's facets in place made them describe a set
+      // the user could no longer see.
+      paramSearchFacets.value = facets ?? {}
+      paramSearchTotal.value = total || results.length
 
       // Cache the results
       if (import.meta.client) {
@@ -83,7 +94,9 @@ export function useRecipes() {
         recipeStore.cacheSearchResults(
           normalizedQuestion,
           params.exclude_allergens || [],
-          results
+          results,
+          facets ?? {},
+          total
         )
       }
 
@@ -142,7 +155,21 @@ export function useRecipes() {
   }
 
   /**
-   * Fetch a single recipe by ID with full details
+   * Fetch a single recipe by ID with full details.
+   *
+   * Two reads, because one recipe lives in two stores. The detail record comes
+   * from the Neo4j-backed endpoint — ingredients, instructions, nutrition — and
+   * the annotation facets (cuisine, mood, flavour, food group) are
+   * Elasticsearch-owned and reachable only through the catalog contract. The
+   * detail record has never carried them, which is why the recipe page could
+   * not show a cuisine the pipeline had already assigned.
+   *
+   * The catalog read is supplementary and deliberately not awaited: the page
+   * paints as soon as the detail record lands, and the annotation chips appear
+   * when the second read completes. Awaiting it would put a second round-trip
+   * in front of every recipe page for four chips. `getCatalogRecipe` resolves
+   * to `null` on failure rather than throwing, so a catalog outage costs the
+   * chips and nothing else.
    */
   const fetchRecipe = async (recipeId: string, options?: GetRecipeOptions) => {
     loading.value = true
@@ -151,6 +178,32 @@ export function useRecipes() {
     try {
       const recipe = await recipeApi.getRecipe(recipeId, options)
       currentRecipe.value = recipe
+
+      // Resolved id, not the requested one: a recipe can be addressed by either
+      // `recipe_id` or `id`, and the catalog is keyed by the canonical one.
+      const canonicalId = recipe.recipe_id || recipeId
+      void recipeApi.getCatalogRecipe(canonicalId).then((document) => {
+        if (!document) return
+        // The user can navigate away while this is in flight; without the
+        // guard a late response stamps one recipe's cuisine onto another.
+        if (currentRecipe.value?.recipe_id !== recipe.recipe_id) return
+
+        // The detail record wins when it has a course, so a backend fix that
+        // starts populating `dish_types` takes effect without a change here.
+        // Today it never does: the endpoint computes the value and
+        // `RecipeDetailResponse` drops it, leaving the course visible only as
+        // an entry in the generic `tags` array.
+        const courseTypes = currentRecipe.value.dish_types?.length
+          ? currentRecipe.value.dish_types
+          : recipeApi.extractCourseTypes(document)
+
+        currentRecipe.value = {
+          ...currentRecipe.value,
+          ...recipeApi.extractAnnotations(document),
+          dish_types: courseTypes
+        }
+      })
+
       return recipe
     } catch (err) {
       const apiError = err as ApiError
@@ -181,9 +234,10 @@ export function useRecipes() {
       const cachedResults = recipeStore.getCachedSearch(query, excludeAllergens || [])
 
       if (cachedResults) {
-        recipes.value = cachedResults
-        totalResults.value = cachedResults.length
-        return cachedResults
+        recipes.value = cachedResults.results
+        totalResults.value = cachedResults.total
+        paramSearchFacets.value = cachedResults.facets
+        return cachedResults.results
       }
     }
 

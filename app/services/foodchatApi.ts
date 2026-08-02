@@ -136,6 +136,8 @@ export interface MealNutrition {
   protein_g: number
   carbs_g: number
   fat_g: number
+  /** Fourth macro-donut segment. Absent on plans built before it was carried. */
+  fiber_g?: number | null
   nutri_score_label: string
 }
 
@@ -159,6 +161,8 @@ export interface MealRecipe {
   title: string
   ingredients: string
   directions: string
+  /** Which plate of its meal this is: main | side | dessert | drink. */
+  role?: string | null
   nutrition?: MealNutrition | null
   image_url?: string | null
   match_reasons?: MatchReason[]
@@ -193,14 +197,62 @@ export interface ChangedSlot {
   verified: boolean
 }
 
+/**
+ * One meal, as FoodChat serialises it: a slot and its ordered plates.
+ *
+ * This mirrors the backend's `Meal` dataclass exactly (`meal_type` + `plates`),
+ * because the shape on the wire is the shape the session store persists. An
+ * invented client-side shape would have to be translated somewhere, and that
+ * somewhere is where a plate goes missing.
+ *
+ * `meal_type` is a free string, not a union: the slot vocabulary is
+ * backend-owned and grows without a frontend release, so a slot the UI has no
+ * label for renders as its own name rather than disappearing.
+ */
+export interface PlanMeal {
+  meal_type: string
+  plates: MealRecipe[]
+}
+
+/** One day of a plan. Present only on multi-day or multi-plate plans. */
+export interface PlanDay {
+  day: number
+  meals: PlanMeal[]
+}
+
+/** Per-day macro totals, summed server-side across every plate. */
+export interface PlanNutritionTotal {
+  calories?: number | null
+  protein_g?: number | null
+  carbs_g?: number | null
+  fat_g?: number | null
+  fiber_g?: number | null
+  /** False when a plate contributed nothing — the total omits a meal. */
+  complete?: boolean
+}
+
 export interface MealPlan {
   id: string
   created_at: string
   version?: number
   parent_id?: string
+  /**
+   * The three original fields. Kept because every stored plan and every
+   * current backend response uses them, and dropping them would strand plan
+   * history. `planMeals()` below reads either shape.
+   */
   breakfast?: MealRecipe
   lunch?: MealRecipe
   dinner?: MealRecipe
+  /**
+   * The flexible shape: any days, any meals, any plates per meal.
+   *
+   * Additive — a legacy plan omits it entirely, so its payload is unchanged.
+   * When present it wins over the three scalar fields, which the backend still
+   * populates from day 1's main plates for readers that address them by name.
+   */
+  days?: PlanDay[] | null
+  nutrition_total?: PlanNutritionTotal | null
   reasoning?: string
   llm_score?: number
   llm_reasoning?: string

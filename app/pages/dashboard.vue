@@ -375,6 +375,7 @@ import foodscholarApi, { type QaTipsResult } from '~/services/foodscholarApi'
 import catalogApi from '~/services/catalogApi'
 import recipeApi, { type RecipeSearchResult } from '~/services/recipeApi'
 import foodchatApi, { type MealPlan, type MealRecipe, type MemberCurrentPlans } from '~/services/foodchatApi'
+import { humaniseSlot, planMeals } from '~/utils/planMeals'
 import type { HouseholdMember } from '~/services/householdsApi'
 import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
 import { buildGuideDetailPath } from '~/utils/guidesCatalog'
@@ -714,17 +715,34 @@ const extractTodayPlan = (plans: MemberCurrentPlans): MealPlan | null => {
   if (plans.plan_type === 'weekly' && plans.weekly_meal_plan) {
     const jsDay = new Date().getDay() // 0=Sun .. 6=Sat
     const planDay = jsDay === 0 ? 7 : jsDay // Day 1=Mon .. 7=Sun
-    const bySlot: Partial<Record<'breakfast' | 'lunch' | 'dinner', MealRecipe>> = {}
-    for (const entry of plans.weekly_meal_plan.entries) {
-      if (entry.day !== planDay) continue
-      if (entry.meal_type === 'breakfast' || entry.meal_type === 'lunch' || entry.meal_type === 'dinner') {
-        bySlot[entry.meal_type] = weeklyRecipeToMealRecipe(entry.recipe as Record<string, unknown>)
+
+    // Every meal for today, whatever its slot. This used to keep only
+    // breakfast/lunch/dinner and drop the rest on the floor — a member whose
+    // weekly plan included a snack or a dessert saw a day that was quietly
+    // missing meals, with nothing to say so.
+    const meals = plans.weekly_meal_plan.entries
+      .filter(entry => entry.day === planDay && entry.meal_type)
+      .sort((a, b) => a.meal_idx - b.meal_idx)
+      .map(entry => ({
+        slot: String(entry.meal_type),
+        recipe: weeklyRecipeToMealRecipe(entry.recipe as Record<string, unknown>)
+      }))
+      .filter(meal => meal.recipe.recipe_id)
+
+    if (meals.length > 0) {
+      // The three legacy keys are still populated for anything that reads them
+      // directly; `meals` carries the full set. `planMeals()` prefers `meals`,
+      // so nothing renders twice.
+      const bySlot: Partial<Record<'breakfast' | 'lunch' | 'dinner', MealRecipe>> = {}
+      for (const meal of meals) {
+        if (meal.slot === 'breakfast' || meal.slot === 'lunch' || meal.slot === 'dinner') {
+          bySlot[meal.slot] = meal.recipe
+        }
       }
-    }
-    if (bySlot.breakfast || bySlot.lunch || bySlot.dinner) {
       return {
         id: plans.weekly_meal_plan.id,
         created_at: plans.weekly_meal_plan.created_at,
+        meals,
         breakfast: bySlot.breakfast,
         lunch: bySlot.lunch,
         dinner: bySlot.dinner
@@ -807,7 +825,7 @@ const upcomingMeals = computed(() => {
     }
   ]
 
-  return meals.map(meal => ({
+  const rendered = meals.map(meal => ({
     id: meal.id,
     name: meal.name,
     time: meal.time,
@@ -817,6 +835,27 @@ const upcomingMeals = computed(() => {
     members: membersByMealType.value[meal.mealType],
     isNow: currentTimeInMinutes >= meal.timeInMinutes && currentTimeInMinutes < meal.timeInMinutes + 60
   }))
+
+  // Anything the plan has beyond the three canonical slots — a snack, a
+  // dessert, the second plate of a two-course dinner. The three above are kept
+  // as fixed rows so the widget still shows a schedule when nothing is planned;
+  // these are appended only when they exist, and were previously dropped
+  // entirely, so a member's snack simply never appeared on their dashboard.
+  const canonical = new Set(['breakfast', 'lunch', 'dinner'])
+  const extras = planMeals(todayMealPlan.value)
+    .filter(meal => !canonical.has(meal.slot))
+    .map((meal, index) => ({
+      id: `${meal.slot}-${index}`,
+      name: humaniseSlot(meal.slot),
+      time: meal.time ?? '',
+      icon: meal.icon,
+      recipeId: meal.recipe.recipe_id || null,
+      description: mealDescriptionFromRecipe(meal.recipe, ''),
+      members: [] as HouseholdMember[],
+      isNow: false
+    }))
+
+  return [...rendered, ...extras].sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'))
 })
 
 let timeInterval: NodeJS.Timeout | null = null

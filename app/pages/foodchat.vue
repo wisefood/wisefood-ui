@@ -726,40 +726,56 @@
                     </UTooltip>
                   </div>
 
+                  <!-- One card per meal, from `planMeals`, which reads both the
+                       legacy breakfast/lunch/dinner shape and the flexible
+                       `meals` array. Three hardcoded blocks lived here, so a
+                       plan with a snack or a two-course dinner lost the extra
+                       plates silently at the template. -->
                   <div
                     class="rounded-2xl overflow-hidden mb-4"
                     :class="mealGridCols(displayedMealPlan)"
                   >
                     <FoodchatMealScheduleCard
-                      v-if="displayedMealPlan.breakfast"
-                      :type="t('foodChatHome.meals.breakfast')"
-                      time="08:00"
-                      icon="i-lucide-coffee"
-                      :recipe="displayedMealPlan.breakfast"
-                      :class="{ 'fc-slot-flash': highlightedSlots.has('breakfast') }"
-                      @replace="prefillSlotReplace('breakfast')"
-                      @adapt="openAdaptRecipe(displayedMealPlan.breakfast.recipe_id)"
+                      v-for="meal in displayedPlanMeals"
+                      :key="meal.key"
+                      :type="slotLabel(meal.slot)"
+                      :time="meal.time || ''"
+                      :icon="meal.icon"
+                      :course-label="meal.partOfMultiCourse ? humaniseSlot(meal.role) : ''"
+                      :recipe="meal.recipe"
+                      :class="{ 'fc-slot-flash': highlightedSlots.has(meal.slot) }"
+                      @replace="prefillSlotReplace(meal.slot)"
+                      @adapt="openAdaptRecipe(meal.recipe.recipe_id)"
                     />
-                    <FoodchatMealScheduleCard
-                      v-if="displayedMealPlan.lunch"
-                      :type="t('foodChatHome.meals.lunch')"
-                      time="13:00"
-                      icon="i-lucide-utensils"
-                      :recipe="displayedMealPlan.lunch"
-                      :class="{ 'fc-slot-flash': highlightedSlots.has('lunch') }"
-                      @replace="prefillSlotReplace('lunch')"
-                      @adapt="openAdaptRecipe(displayedMealPlan.lunch.recipe_id)"
+                  </div>
+
+                  <!-- Day totals. The planner sums every plate server-side, so
+                       this is the whole day rather than the meals that happen to
+                       fit on screen. `complete: false` means a plate contributed
+                       nothing, which is worth saying rather than hiding. -->
+                  <div
+                    v-if="displayedPlanTotals"
+                    class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-gray-50 dark:bg-zinc-800/50 px-3 py-2"
+                  >
+                    <UIcon
+                      name="i-lucide-flame"
+                      class="w-3.5 h-3.5 text-brandp-400 shrink-0"
                     />
-                    <FoodchatMealScheduleCard
-                      v-if="displayedMealPlan.dinner"
-                      :type="t('foodChatHome.meals.dinner')"
-                      time="19:30"
-                      icon="i-lucide-moon"
-                      :recipe="displayedMealPlan.dinner"
-                      :class="{ 'fc-slot-flash': highlightedSlots.has('dinner') }"
-                      @replace="prefillSlotReplace('dinner')"
-                      @adapt="openAdaptRecipe(displayedMealPlan.dinner.recipe_id)"
-                    />
+                    <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
+                      {{ t('foodChatHome.dayTotal.label') }}
+                    </span>
+                    <span class="text-xs text-gray-600 dark:text-gray-400 tabular-nums">
+                      {{ t('foodChatHome.dayTotal.macros', {
+                        kcal: Math.round(displayedPlanTotals.calories),
+                        protein: Math.round(displayedPlanTotals.protein_g),
+                        carbs: Math.round(displayedPlanTotals.carbs_g),
+                        fat: Math.round(displayedPlanTotals.fat_g)
+                      }) }}
+                    </span>
+                    <span
+                      v-if="!displayedPlanTotals.complete"
+                      class="text-[10px] text-amber-600 dark:text-amber-400"
+                    >{{ t('foodChatHome.dayTotal.partial') }}</span>
                   </div>
 
                   <div v-if="displayedMealPlan.reasoning" class="flex items-start gap-2 mb-4 px-1">
@@ -930,16 +946,19 @@
                       </button>
 
                       <div v-show="expandedWeeklyDays.has(day.dayIndex)" class="px-2 pb-2">
-                        <div class="grid sm:grid-cols-3 gap-1.5">
+                        <div
+                          class="gap-1.5"
+                          :class="mealGridColumns(day.mealTypes.length)"
+                        >
                           <div
-                            v-for="mealType in ['breakfast', 'lunch', 'dinner']"
+                            v-for="mealType in day.mealTypes"
                             :key="`${day.dayIndex}-${mealType}`"
                             class="relative rounded-lg border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/30 p-2 flex flex-col gap-1.5"
                             :class="{ 'fc-slot-flash': highlightedSlots.has(`${day.dayIndex}-${mealType}`) }"
                           >
                             <div class="flex items-center gap-1">
                               <UIcon :name="mealTypeIcon(mealType)" class="w-3 h-3 text-brandp-400 shrink-0" />
-                              <span class="text-[10px] text-gray-400 dark:text-zinc-500 capitalize">{{ mealType }}</span>
+                              <span class="text-[10px] text-gray-400 dark:text-zinc-500">{{ slotLabel(mealType) }}</span>
                               <button
                                 v-if="getWeeklyRecipeId(weeklyEntry(day, mealType))"
                                 type="button"
@@ -1240,6 +1259,13 @@ import { useHouseholdStore } from '~/stores/household'
 import { useRecipeStore } from '~/stores/recipe'
 import type { AttributionCitation, ChangedSlot, ChatMessage, ConstraintApplied, MealPlan, MealRecipe, MemorySuggestion, PlanParameterValues, WeeklyDayBreakdown, WeeklyMealEntry } from '~/services/foodchatApi'
 import recipeApi from '~/services/recipeApi'
+import {
+  humaniseSlot,
+  mealGridColumns,
+  planMeals,
+  planNutritionTotal,
+  slotIcon
+} from '~/utils/planMeals'
 import { today, getLocalTimeZone, type DateValue } from '@internationalized/date'
 import memberMealPlansApi, {
   extractSourceMealPlanIdFromMemberMealPlanResponse,
@@ -1710,10 +1736,23 @@ const weeklyDays = computed(() => {
   }
   return Object.entries(grouped)
     .sort(([a], [b]) => Number(a) - Number(b))
-    .map(([day, entries]) => ({
-      dayIndex: Number(day),
-      entries: entries.sort((a, b) => a.meal_idx - b.meal_idx)
-    }))
+    .map(([day, entries]) => {
+      const sorted = entries.sort((a, b) => a.meal_idx - b.meal_idx)
+      // The meal types this day actually has, in planner order. The template
+      // used to loop a literal ['breakfast','lunch','dinner'], so a weekly plan
+      // with a snack or a dessert fetched it, grouped it, and then rendered
+      // three slots regardless — `meal_type` has always been a free string here.
+      const mealTypes: string[] = []
+      for (const entry of sorted) {
+        const type = String(entry.meal_type || '').trim()
+        if (type && !mealTypes.includes(type)) mealTypes.push(type)
+      }
+      return {
+        dayIndex: Number(day),
+        entries: sorted,
+        mealTypes: mealTypes.length > 0 ? mealTypes : ['breakfast', 'lunch', 'dinner']
+      }
+    })
 })
 
 function weeklyEntry(day: { entries: WeeklyMealEntry[] }, mealType: string): WeeklyMealEntry | undefined {
@@ -1891,22 +1930,17 @@ async function prefetchWeeklyRecipes(plan: typeof displayedWeeklyPlan.value) {
 
 watch(displayedWeeklyPlan, (plan) => { if (plan) prefetchWeeklyRecipes(plan) }, { immediate: true })
 
-function mealTypeIcon(type: string): string {
-  const t = type?.toLowerCase() ?? ''
-  if (t.includes('breakfast')) return 'i-lucide-coffee'
-  if (t.includes('lunch')) return 'i-lucide-utensils'
-  if (t.includes('dinner') || t.includes('supper')) return 'i-lucide-moon'
-  return 'i-lucide-utensils'
-}
+// Shared with the daily canvas so both surfaces agree on a slot's icon, and
+// so a slot added backend-side gets one without touching this file.
+const mealTypeIcon = slotIcon
 
 // ── M4 transparency: changed slots, constraints, personalization, quality ──
-const KNOWN_MEAL_TYPES = ['breakfast', 'lunch', 'dinner'] as const
 
 function changedSlotLabel(slot: ChangedSlot): string {
-  const mealKey = slot.meal_type?.toLowerCase()
-  const mealName = (KNOWN_MEAL_TYPES as readonly string[]).includes(mealKey)
-    ? t(`foodChatHome.meals.${mealKey}`)
-    : slot.meal_type
+  // `slotLabel` translates where a key exists and humanises where it does not,
+  // so this no longer needs a whitelist of the three slots that happen to have
+  // translations — an unlisted slot showed its raw backend string before.
+  const mealName = slot.meal_type ? slotLabel(slot.meal_type.toLowerCase()) : ''
   return slot.day != null
     ? `${t('foodChatHome.chat.changedSlots.day', { day: slot.day + 1 })} · ${mealName}`
     : mealName
@@ -2259,12 +2293,38 @@ function getMemberAvatarForDisplay(member: HouseholdMember): AvatarConfig {
   return getMemberAvatar(member) || stringToAvatarConfig(member.id)
 }
 
+/** Grid width for however many meals the plan turned out to have.
+ *  Previously derived from a literal `[breakfast, lunch, dinner]` triple, so a
+ *  four-meal day was laid out as if it had three. */
 function mealGridCols(plan: MealPlan): string {
-  const count = [plan.breakfast, plan.lunch, plan.dinner].filter(Boolean).length
-  if (count <= 1) return 'grid grid-cols-1'
-  if (count === 2) return 'grid grid-cols-1 sm:grid-cols-2'
-  return 'grid grid-cols-1 sm:grid-cols-3'
+  return mealGridColumns(planMeals(plan).length)
 }
+
+/** The plan's meals, whichever shape the backend sent. */
+const displayedPlanMeals = computed(() => planMeals(displayedMealPlan.value))
+
+/** Day macro totals — server-computed when present, summed locally otherwise. */
+const displayedPlanTotals = computed(() => planNutritionTotal(displayedMealPlan.value))
+
+/**
+ * A slot's display name.
+ *
+ * Translated where a translation exists, humanised from the slot name where it
+ * does not. The slot vocabulary is backend-owned and grows without a frontend
+ * release, so a missing key must degrade to "Second Breakfast" rather than to a
+ * blank heading or a raw `foodChatHome.meals.brunch` key.
+ */
+function slotLabel(slot: string): string {
+  const key = `foodChatHome.meals.${slot}`
+  const translated = t(key)
+  return translated === key ? humaniseSlot(slot) : translated
+}
+
+// The plate's role — "Main", "Side", "Dessert" — is what distinguishes two
+// cards that share a meal heading. Rendered from the role rather than the
+// course type because the role is what FoodChat persists and what the
+// nutrition weighting is keyed by; the course type is RecipeWrangler's
+// vocabulary and stops at the client boundary.
 
 function formatPlanDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString(activeDateLocale.value, {

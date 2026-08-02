@@ -212,6 +212,47 @@
         </div>
       </div>
 
+      <!-- Annotation facets: cuisine, mood, flavour, food group.
+           Its own block rather than more chips in the hero strip, which
+           already carries dish type, tags, Nutri-Score and sustainability —
+           a recipe with four flavours and six food groups would push the
+           score out of view.
+
+           The whole block and each row inside it disappear when the recipe
+           carries no annotations, so a recipe the pipeline has not classified
+           reads as "not applicable" rather than as a broken empty panel.
+
+           Chips are deliberately not links to a pre-filtered catalog. The
+           catalog list is served by `/param_search`, which ignores the
+           annotation filters entirely, so "other Thai recipes" would land on
+           an unfiltered list — worse than no affordance at all. Make them
+           links once that endpoint honours `cuisines` and friends. -->
+      <div
+        v-if="annotationGroups.length"
+        class="mb-6 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4 sm:p-5"
+      >
+        <div class="flex flex-col gap-3">
+          <div
+            v-for="group in annotationGroups"
+            :key="group.key"
+            class="flex flex-wrap items-center gap-2"
+          >
+            <span class="inline-flex items-center gap-1.5 w-28 flex-shrink-0 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              <UIcon :name="group.icon" class="w-3.5 h-3.5 text-brandg-500" />
+              {{ group.title }}
+            </span>
+            <span
+              v-for="chip in group.chips"
+              :key="`${group.key}-${chip.value}`"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-600"
+            >
+              <span v-if="chip.emoji" aria-hidden="true">{{ chip.emoji }}</span>
+              {{ chip.label }}
+            </span>
+          </div>
+        </div>
+      </div>
+
       <!-- Improve nudge for low Nutri-Score recipes -->
       <div
         v-if="showImproveNudge"
@@ -1287,6 +1328,7 @@ import type {
 } from '~/services/recipeApi'
 import type { AdaptedRecipeNutrition, MemberAdaptedRecipe } from '~/services/memberAdaptedRecipesApi'
 import { formatDishTypeLabel, getDishTypeIcon, normalizeDishTypes } from '~/utils/dishTypes'
+import { ANNOTATION_FACETS, humanizeFacet } from '~/utils/facetPresentation'
 
 definePageMeta({
   middleware: ['auth', 'profile']
@@ -1512,24 +1554,69 @@ const toFriendlyTagLabel = (tag: string): string => {
     .map((part) => part ? `${part[0]?.toUpperCase() || ''}${part.slice(1)}` : part)
     .join(' ')
 }
+const dishTypes = computed(() => normalizeDishTypes(recipe.value?.dish_types))
+
+/**
+ * Free-form tags, minus anything already shown as a course.
+ *
+ * The course is a Neo4j tag with `category: 'dish-type'`, and `tags` carries
+ * every tag regardless of category — so without this filter a main dish reads
+ * "Dish: Main Dish" and then "Tags: main-dish" two chips later, which looks
+ * like the page cannot decide what it knows.
+ */
 const recipeTags = computed<string[]>(() => {
   const raw = recipe.value?.tags
   if (!Array.isArray(raw)) return []
+  const courses = new Set(dishTypes.value)
   const unique = new Set<string>()
   for (const tag of raw) {
     const text = String(tag || '').trim()
-    if (!text) continue
+    if (!text || courses.has(text.toLowerCase())) continue
     unique.add(text)
   }
   return Array.from(unique)
 })
 const dishTypeChips = computed(() =>
-  normalizeDishTypes(recipe.value?.dish_types).map(value => ({
+  dishTypes.value.map(value => ({
     value,
     label: formatDishTypeLabel(value),
     icon: getDishTypeIcon(value)
   }))
 )
+/**
+ * Annotation facets present on this recipe, grouped for display.
+ *
+ * Driven off `ANNOTATION_FACETS` rather than four hand-written computeds so a
+ * fifth facet is a line of config, and so the detail page cannot label a value
+ * differently from the card or the filter panel.
+ *
+ * Values are filtered to non-empty strings: the backend emits `[]` for an
+ * unclassified facet but a partially-projected document can carry nulls, and a
+ * blank chip is indistinguishable from a rendering bug.
+ */
+const annotationGroups = computed(() => {
+  const source = recipe.value as Record<string, unknown> | null
+  if (!source) return []
+
+  return ANNOTATION_FACETS.map((facet) => {
+    const raw = source[facet.key]
+    const values = Array.isArray(raw)
+      ? raw.filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+      : []
+
+    return {
+      key: facet.key,
+      title: facet.title,
+      icon: facet.icon,
+      chips: values.map(value => ({
+        value,
+        label: humanizeFacet(value),
+        emoji: facet.emojis[value] ?? ''
+      }))
+    }
+  }).filter(group => group.chips.length > 0)
+})
+
 const displayRecipeTags = computed<Array<{ raw: string; label: string }>>(() => {
   return recipeTags.value.map((raw) => ({
     raw,

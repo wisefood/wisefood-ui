@@ -1187,8 +1187,21 @@ const performSearch = async (options: { openFirstResult?: boolean } = {}) => {
       ...(personalization.allergens || [])
     ])]
 
+    // The sidebar selections go out with the question. `buildFilterParams`
+    // supplies them, minus the two fields the question path owns itself:
+    // `diet_tags` here are the member's profile groups used as soft boosts, and
+    // `sort_by` is decided by relevance rather than by the sort control.
+    const {
+      diet_tags: sidebarDietTags,
+      sort_by: _sortBy,
+      exclude_allergens: _sidebarAllergens,
+      ...facetFilters
+    } = buildFilterParams()
+
     await searchRecipes({
       question: searchQuery.value,
+      ...facetFilters,
+      require_diet_tags: sidebarDietTags,
       exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined,
       diet_tags: personalization.dietTags?.length ? personalization.dietTags : undefined,
       preferred_ingredients: personalization.preferredIngredients?.length ? personalization.preferredIngredients : undefined,
@@ -1305,23 +1318,41 @@ const browseCategory = async (category: { name: string; query: string }) => {
 /**
  * Handle filter changes
  */
+/**
+ * The filter half of a param_search payload, read from the store.
+ *
+ * Both call sites (initial load and re-filter) need exactly this, and they had
+ * already drifted apart once. Every filter must appear here or it silently
+ * stops reaching the API — which is how the annotation facets can be selected
+ * in the UI and have no effect on results.
+ *
+ * Empty arrays become `undefined` rather than `[]`: the backend treats an empty
+ * list as "no constraint", but sending it still widens the request body and
+ * shows up in logs as a filter that was applied.
+ */
+const buildFilterParams = () => {
+  const omitEmpty = (values: string[]) => (values.length > 0 ? values : undefined)
+  return {
+    exclude_allergens: omitEmpty(recipeStore.excludedAllergens),
+    sources: omitEmpty(recipeStore.selectedSources),
+    dish_types: omitEmpty(recipeStore.selectedDishTypes),
+    diet_tags: omitEmpty(recipeStore.selectedDietTags),
+    cuisines: omitEmpty(recipeStore.selectedCuisines),
+    moods: omitEmpty(recipeStore.selectedMoods),
+    flavor_profiles: omitEmpty(recipeStore.selectedFlavorProfiles),
+    food_groups: omitEmpty(recipeStore.selectedFoodGroups),
+    sort_by: recipeStore.sortBy ?? undefined
+  }
+}
+
 const handleFilterChange = async () => {
   resetPagination()
   if (searchQuery.value) {
     await performSearch()
   } else {
-    const excludeAllergens = recipeStore.excludedAllergens
-    const sources = recipeStore.selectedSources
-    const dishTypes = recipeStore.selectedDishTypes
-    const dietTags = recipeStore.selectedDietTags
-    const sortBy = recipeStore.sortBy
     const updatedParams = {
       ...(lastParamSearch.value ?? {}),
-      exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined,
-      sources: sources.length > 0 ? sources : undefined,
-      dish_types: dishTypes.length > 0 ? dishTypes : undefined,
-      diet_tags: dietTags.length > 0 ? dietTags : undefined,
-      sort_by: sortBy ?? undefined,
+      ...buildFilterParams(),
       offset: 0
     }
     searchMode.value = 'params'
@@ -1449,17 +1480,8 @@ onMounted(async () => {
   try {
     clearError()
     resetPagination()
-    const excludeAllergens = recipeStore.excludedAllergens
-    const sources = recipeStore.selectedSources
-    const dishTypes = recipeStore.selectedDishTypes
-    const dietTags = recipeStore.selectedDietTags
-    const sortBy = recipeStore.sortBy
     const initialParams = {
-      exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined,
-      sources: sources.length > 0 ? sources : undefined,
-      dish_types: dishTypes.length > 0 ? dishTypes : undefined,
-      diet_tags: dietTags.length > 0 ? dietTags : undefined,
-      sort_by: sortBy ?? undefined,
+      ...buildFilterParams(),
       limit: itemsPerPage,
       offset: 0
     }

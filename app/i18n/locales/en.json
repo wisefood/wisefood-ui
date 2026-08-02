@@ -1435,7 +1435,12 @@
     "meals": {
       "breakfast": "Breakfast",
       "lunch": "Lunch",
-      "dinner": "Dinner"
+      "dinner": "Dinner",
+      "brunch": "Brunch",
+      "snack": "Snack",
+      "dessert": "Dessert",
+      "side": "Side",
+      "drink": "Drink"
     },
     "errors": {
       "failedToApply": "Failed to apply meal plan.",
@@ -1474,7 +1479,8 @@
         "feedback": "Based on your feedback",
         "diner": "Chosen for your diners",
         "guideline": "Dietary guideline"
-      }
+      },
+      "macroSummary": "{carbs}g carbs · {fat}g fat"
     },
     "constraints": {
       "label": "Constraints",
@@ -1606,6 +1612,11 @@
         "sauteing": "Dancing with calories and macros",
         "simmering": "Patiently building your daily menu"
       }
+    },
+    "dayTotal": {
+      "label": "Day total",
+      "macros": "{kcal} kcal · {protein}g protein · {carbs}g carbs · {fat}g fat",
+      "partial": "partial — some meals have no nutrition data"
     }
   },
   "a11y": {

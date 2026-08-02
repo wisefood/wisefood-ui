@@ -54,6 +54,19 @@ export interface Recipe {
   image_url: string | null
   tags?: Array<string | null> | null
   dish_types?: string[] | null
+  /**
+   * Annotation facets, mirroring `RecipeSearchResult`.
+   *
+   * These are Elasticsearch-owned fields (`ES_OWNED_FIELDS` in the backend's
+   * catalog projection); the recipe detail record itself is read from Neo4j,
+   * which has never held them. They are optional here because the detail
+   * endpoint only carries them once it enriches from the catalog index — every
+   * surface that renders them must degrade to showing nothing.
+   */
+  cuisines?: string[] | null
+  moods?: string[] | null
+  flavor_profiles?: string[] | null
+  food_groups?: string[] | null
   allergens?: Array<string | null> | null
   ingredients: RecipeIngredient[]
   instructions: string[]
@@ -103,6 +116,15 @@ export interface RecipeSearchResult {
   expert_recipe?: boolean | null
   status?: RecipeStatus | string | null
   dish_types?: string[] | null
+  course_types?: string[] | null
+  /**
+   * Annotation facets carried on the card, so a result can show what matched.
+   * Absent or empty on recipes the annotation pass has not reached.
+   */
+  cuisines?: string[] | null
+  moods?: string[] | null
+  flavor_profiles?: string[] | null
+  food_groups?: string[] | null
 }
 
 export interface RecipeSearchParams {
@@ -114,6 +136,25 @@ export interface RecipeSearchParams {
   preferred_ingredients?: string[]
   /** Region whose nutri-score the result cards carry: US, IE, HU. */
   region?: string
+  /**
+   * Sidebar facet selections, sent alongside the question.
+   *
+   * Hard filters, and the backend gives them precedence over anything it infers
+   * from the question text. Sending them is what makes the filter panel work
+   * while a search term is active — previously the question path dropped every
+   * filter but allergens.
+   */
+  dish_types?: RecipeDishType[]
+  sources?: RecipeSource[]
+  cuisines?: string[]
+  moods?: string[]
+  flavor_profiles?: string[]
+  food_groups?: string[]
+  /**
+   * Diet groups the recipe must carry. Distinct from `diet_tags` above, which
+   * are the member's profile preferences and only reorder results.
+   */
+  require_diet_tags?: string[]
 }
 
 export type RecipeParamSortBy = 'title_asc' | 'title_desc' | 'time_asc' | 'time_desc' | 'random'
@@ -129,6 +170,15 @@ export interface RecipeParamSearchParams {
   diet_tags?: string[]
   sources?: RecipeSource[]
   dish_types?: RecipeDishType[]
+  /**
+   * Annotation facets. Closed vocabularies owned by the backend
+   * (`catalog/vocabularies.py`); the UI only ever sends values it received in
+   * a facet, so it cannot ask for one the corpus does not classify.
+   */
+  cuisines?: string[]
+  moods?: string[]
+  flavor_profiles?: string[]
+  food_groups?: string[]
   max_duration_minutes?: number
   limit?: number
   offset?: number
@@ -236,6 +286,60 @@ export interface RecipeParamSearchResult {
   results: RecipeSearchResult[]
   facets: RecipeFacetMap
   total: number
+}
+
+/**
+ * The four annotation facets a catalog document carries.
+ *
+ * Elasticsearch-owned fields: the Neo4j-backed recipe endpoints have never
+ * held them, so this is the only shape they arrive in.
+ */
+export interface RecipeAnnotations {
+  cuisines: string[]
+  moods: string[]
+  flavor_profiles: string[]
+  food_groups: string[]
+}
+
+/**
+ * A raw catalog document. Deliberately loose — the catalog contract returns
+ * the whole indexed document and its field set grows with the index, so
+ * naming every field here would mean editing this type each time the
+ * annotation pipeline learns something new.
+ */
+export type RecipeCatalogDocument = Record<string, unknown>
+
+/**
+ * Read a string list off a catalog document.
+ *
+ * Values are filtered to non-empty strings: an unclassified field comes back
+ * as `[]`, but a partially projected document can carry nulls, and a blank
+ * chip is indistinguishable from a rendering bug.
+ */
+const readStringArray = (document: RecipeCatalogDocument | null, key: string): string[] => {
+  const raw = document?.[key]
+  if (!Array.isArray(raw)) return []
+  return raw.filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+}
+
+export interface RecipeCatalogSearchParams {
+  q?: string
+  fq?: string[]
+  fl?: string[]
+  sort?: string[]
+  facets?: string[]
+  facet_limit?: number
+  limit?: number
+  offset?: number
+  include_inactive?: boolean
+  highlight?: string[]
+}
+
+export interface RecipeCatalogSearchResult {
+  results: RecipeCatalogDocument[]
+  facets: RecipeFacetMap
+  total: number
+  max_result_window?: number
 }
 
 export interface RecipeAutocompleteResponse {
@@ -417,6 +521,21 @@ class RecipeApiService {
   private readonly localBasePath = '/recipes'
   private readonly restBasePath = '/recipewrangler/recipes'
 
+  /**
+   * Catalog contract (RecipeWrangler `/api/v2/recipes`, gateway
+   * `/recipewrangler/catalog`).
+   *
+   * Separate from the recipe base paths above because it is a different
+   * backing store, not a different route on the same one: the v1 recipe
+   * endpoints read Neo4j, the catalog reads Elasticsearch. The annotation
+   * facets exist only on the latter.
+   *
+   * The local path is prefixed `v2/` for the Nuxt proxy to rewrite — see
+   * `server/api/rw/[...path].ts`.
+   */
+  private readonly localCatalogBasePath = '/v2/recipes'
+  private readonly restCatalogBasePath = '/recipewrangler/catalog'
+
   private readonly uploadedImagesBasePath = '/images'
 
   private async ensureAuthToken(authStore: ReturnType<typeof useAuthStore>): Promise<string> {
@@ -474,6 +593,10 @@ class RecipeApiService {
     return transport === 'local-proxy' ? this.localBasePath : this.restBasePath
   }
 
+  private getCatalogBasePath(transport: RecipeApiTransport): string {
+    return transport === 'local-proxy' ? this.localCatalogBasePath : this.restCatalogBasePath
+  }
+
   private getRecipeEndpoint(recipeId: string, transport: RecipeApiTransport, options?: GetRecipeOptions): string {
     if (transport === 'local-proxy') {
       return `${this.localBasePath}/by-id?recipe_id=${encodeURIComponent(recipeId)}`
@@ -521,6 +644,149 @@ class RecipeApiService {
   }
 
   /**
+   * Fetch a recipe's catalog document (the Elasticsearch-backed view).
+   *
+   * Distinct from `getRecipe`, which reads the Neo4j-backed detail record.
+   * The two describe the same recipe from different stores and neither is a
+   * superset of the other — the catalog carries the annotation facets and
+   * review metadata, the detail record carries ingredients and nutrition.
+   *
+   * Returns `null` rather than throwing when the document is absent or the
+   * lookup fails. Every caller so far uses this to *enrich* a recipe it has
+   * already loaded, so a catalog outage should cost the annotations, not the
+   * page.
+   */
+  async getCatalogRecipe(recipeId: string): Promise<RecipeCatalogDocument | null> {
+    const rawId = String(recipeId || '').trim()
+    if (!rawId) return null
+
+    let normalizedId = rawId
+    try {
+      normalizedId = decodeURIComponent(rawId)
+    } catch {
+      normalizedId = rawId
+    }
+
+    try {
+      const transport = this.resolveTransport()
+      const data = await this.fetchWithTimeout<unknown>(
+        `${this.getCatalogBasePath(transport)}/${encodeURIComponent(normalizedId)}`,
+        'GET',
+        undefined,
+        DEFAULT_TIMEOUT,
+        transport
+      )
+      return this.unwrapCatalogDocument(data)
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Search the catalog index.
+   *
+   * `q` ranks and `fq` filters — there is no LLM in this request path, unlike
+   * `searchRecipes`, where a bare noun can come back with no constraints and
+   * match the whole corpus.
+   */
+  async searchCatalog(params: RecipeCatalogSearchParams = {}): Promise<RecipeCatalogSearchResult> {
+    try {
+      const transport = this.resolveTransport()
+      const data = await this.fetchWithTimeout<Record<string, unknown>>(
+        `${this.getCatalogBasePath(transport)}/search`,
+        'POST',
+        params,
+        SEARCH_TIMEOUT,
+        transport
+      )
+
+      const envelope = (this.unwrapCatalogDocument(data) ?? {}) as Record<string, unknown>
+      const results = Array.isArray(envelope['results'])
+        ? (envelope['results'] as RecipeCatalogDocument[])
+        : []
+      return {
+        results,
+        facets: (envelope['facets'] ?? {}) as RecipeFacetMap,
+        // The index reports the true match count; `results.length` is a page.
+        total: typeof envelope['total'] === 'number' ? envelope['total'] as number : results.length,
+        ...(typeof envelope['max_result_window'] === 'number'
+          ? { max_result_window: envelope['max_result_window'] as number }
+          : {})
+      }
+    } catch (error) {
+      throw this.handleError(error, 'Failed to search the recipe catalog')
+    }
+  }
+
+  /**
+   * The closed vocabularies the catalog classifies against.
+   *
+   * Returns `null` on failure: callers use this to label or offer values they
+   * can also render without it.
+   */
+  async getCatalogVocabulary(): Promise<Record<string, unknown> | null> {
+    try {
+      const transport = this.resolveTransport()
+      const data = await this.fetchWithTimeout<unknown>(
+        `${this.getCatalogBasePath(transport)}/vocabulary`,
+        'GET',
+        undefined,
+        DEFAULT_TIMEOUT,
+        transport
+      )
+      return this.unwrapCatalogDocument(data)
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * The gateway wraps responses in `{help, success, result}`; a direct
+   * RecipeWrangler call does not. Unwrapping here keeps both transports
+   * returning the same shape to callers.
+   */
+  private unwrapCatalogDocument(payload: unknown): RecipeCatalogDocument | null {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null
+    const record = payload as Record<string, unknown>
+    const result = record['result']
+    if (result && typeof result === 'object' && !Array.isArray(result)) {
+      return result as RecipeCatalogDocument
+    }
+    return record
+  }
+
+  /**
+   * Pull the annotation facets out of a catalog document.
+   */
+  extractAnnotations(document: RecipeCatalogDocument | null): RecipeAnnotations {
+    return {
+      cuisines: readStringArray(document, 'cuisines'),
+      moods: readStringArray(document, 'moods'),
+      flavor_profiles: readStringArray(document, 'flavor_profiles'),
+      food_groups: readStringArray(document, 'food_groups')
+    }
+  }
+
+  /**
+   * The recipe's course classification, from the catalog document.
+   *
+   * The catalog owns this field (`course_types` is an ES-owned field, like the
+   * annotation facets). Neo4j's `dish-type` tags are the older path and the one
+   * the detail endpoint reads — but `RecipeDetailResponse` does not declare
+   * `dish_types`, so the value it computes is dropped in serialization and the
+   * course survives only inside the generic `tags` array. Reading it here goes
+   * to the owner rather than working around that.
+   *
+   * `dish_types` is accepted as a fallback because the two names are the same
+   * concept under different indices (recipes_v2 vs. the catalog alias), and
+   * which one a document carries depends on what is behind the alias.
+   */
+  extractCourseTypes(document: RecipeCatalogDocument | null): string[] {
+    const courseTypes = readStringArray(document, 'course_types')
+    return courseTypes.length ? courseTypes : readStringArray(document, 'dish_types')
+  }
+
+  /**
    * Get a specific recipe from the WiseFood REST API for internal management flows.
    * @param options - Optional region selector and slim flag
    */
@@ -537,7 +803,16 @@ class RecipeApiService {
    * @param params - Search parameters including question and allergen exclusions
    * @returns List of matching recipes
    */
-  async searchRecipes(params: RecipeSearchParams): Promise<RecipeSearchResult[]> {
+  /**
+   * Natural-language recipe search.
+   *
+   * Returns the full `{results, facets, total}` envelope rather than a bare
+   * array, matching `searchRecipesByParams`. The facets are what let the filter
+   * panel show counts for the *current* result set: before this, a question
+   * search left the chips displaying whatever the last parameter search
+   * produced, so "Italian 1175" could return nine recipes when clicked.
+   */
+  async searchRecipes(params: RecipeSearchParams): Promise<RecipeParamSearchResult> {
     try {
       const normalizedQuestion = String(params.question || '').trim()
 
@@ -546,8 +821,7 @@ class RecipeApiService {
         if (params.exclude_allergens?.length) {
           paramSearchParams.exclude_allergens = params.exclude_allergens
         }
-        const fallback = await this.searchRecipesByParams({ ...paramSearchParams, limit: paramSearchParams.limit ?? 12 })
-        return fallback.results
+        return await this.searchRecipesByParams({ ...paramSearchParams, limit: paramSearchParams.limit ?? 12 })
       }
 
       const transport = this.resolveTransport()
@@ -563,7 +837,7 @@ class RecipeApiService {
         transport
       )
 
-      return this.normalizeSearchResults(data)
+      return this.normalizeParamSearchResult(data)
     } catch (error) {
       throw this.handleError(error, 'Failed to search recipes')
     }
@@ -592,15 +866,21 @@ class RecipeApiService {
 
   /**
    * Search recipes against the WiseFood REST API for console management.
-   * For filtered param_search calls this returns the full `{ results, facets, total }` shape;
-   * the natural-language `/search` path has no filtered total, so facets are empty and total
-   * falls back to the number of returned results.
+   *
+   * Both branches now return the full `{ results, facets, total }` shape — the
+   * natural-language path gained a filtered total and aggregations, so the
+   * console's counts and facet chips no longer go blank the moment someone
+   * types in the search box.
    */
   async searchManagedRecipes(
     query: string,
     limit: number = 25,
     offset: number = 0,
-    filters: Pick<RecipeParamSearchParams, 'exclude_allergens' | 'sources' | 'dish_types' | 'sort_by' | 'include_disabled'> = {}
+    filters: Pick<
+      RecipeParamSearchParams,
+      'exclude_allergens' | 'sources' | 'dish_types' | 'sort_by' | 'include_disabled'
+      | 'diet_tags' | 'cuisines' | 'moods' | 'flavor_profiles' | 'food_groups'
+    > = {}
   ): Promise<RecipeParamSearchResult> {
     const safeLimit = Math.max(1, Math.trunc(limit || 25))
     const safeOffset = Math.max(0, Math.trunc(offset || 0))
@@ -610,6 +890,11 @@ class RecipeApiService {
     if (filters.exclude_allergens?.length) filterPayload.exclude_allergens = filters.exclude_allergens
     if (filters.sources?.length) filterPayload.sources = filters.sources
     if (filters.dish_types?.length) filterPayload.dish_types = filters.dish_types
+    if (filters.diet_tags?.length) filterPayload.diet_tags = filters.diet_tags
+    if (filters.cuisines?.length) filterPayload.cuisines = filters.cuisines
+    if (filters.moods?.length) filterPayload.moods = filters.moods
+    if (filters.flavor_profiles?.length) filterPayload.flavor_profiles = filters.flavor_profiles
+    if (filters.food_groups?.length) filterPayload.food_groups = filters.food_groups
     if (filters.sort_by) filterPayload.sort_by = filters.sort_by
     if (filters.include_disabled) filterPayload.include_disabled = true
 
@@ -631,14 +916,27 @@ class RecipeApiService {
         'POST',
         {
           question: normalizedQuery,
-          ...(filterPayload.exclude_allergens ? { exclude_allergens: filterPayload.exclude_allergens } : {})
+          ...(filterPayload.exclude_allergens ? { exclude_allergens: filterPayload.exclude_allergens } : {}),
+          // The question path accepts the same filters as param_search, so the
+          // console's sidebar keeps working once a query is typed. `diet_tags`
+          // maps to `require_diet_tags` because on this endpoint `diet_tags`
+          // means soft preference boosts, not a filter.
+          ...(filterPayload.dish_types ? { dish_types: filterPayload.dish_types } : {}),
+          ...(filterPayload.sources ? { sources: filterPayload.sources } : {}),
+          ...(filterPayload.cuisines ? { cuisines: filterPayload.cuisines } : {}),
+          ...(filterPayload.moods ? { moods: filterPayload.moods } : {}),
+          ...(filterPayload.flavor_profiles ? { flavor_profiles: filterPayload.flavor_profiles } : {}),
+          ...(filterPayload.food_groups ? { food_groups: filterPayload.food_groups } : {}),
+          ...(filterPayload.diet_tags ? { require_diet_tags: filterPayload.diet_tags } : {}),
+          // Without this an expert could not find a withdrawn recipe by name —
+          // only by browsing the unfiltered list until it appeared.
+          ...(filterPayload.include_disabled ? { include_disabled: true } : {})
         },
         SEARCH_TIMEOUT,
         'wisefood-rest'
       )
 
-      const results = this.normalizeSearchResults(data)
-      return { results, facets: {}, total: results.length }
+      return this.normalizeParamSearchResult(data)
     } catch (error) {
       throw this.handleError(error, 'Failed to search recipes')
     }
@@ -774,10 +1072,11 @@ class RecipeApiService {
     category: string,
     excludeAllergens?: string[]
   ): Promise<RecipeSearchResult[]> {
-    return this.searchRecipes({
+    const { results } = await this.searchRecipes({
       question: `${category} recipes`,
       exclude_allergens: excludeAllergens
     })
+    return results
   }
 
   /**
@@ -789,10 +1088,11 @@ class RecipeApiService {
     ingredient: string,
     excludeAllergens?: string[]
   ): Promise<RecipeSearchResult[]> {
-    return this.searchRecipes({
+    const { results } = await this.searchRecipes({
       question: `recipes with ${ingredient}`,
       exclude_allergens: excludeAllergens
     })
+    return results
   }
 
   /**
@@ -804,10 +1104,11 @@ class RecipeApiService {
     maxDuration: number = 30,
     excludeAllergens?: string[]
   ): Promise<RecipeSearchResult[]> {
-    return this.searchRecipes({
+    const { results } = await this.searchRecipes({
       question: `quick recipes under ${maxDuration} minutes`,
       exclude_allergens: excludeAllergens
     })
+    return results
   }
 
   private normalizeSearchResults(data: RecipeSearchPayload): RecipeSearchResult[] {

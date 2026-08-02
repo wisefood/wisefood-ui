@@ -196,9 +196,49 @@
                     </button>
                   </div>
                   <p v-else class="text-xs text-gray-400 dark:text-gray-500">
-                    {{ isNlSearch ? 'Not available for text search.' : 'Run a search to see available dish types.' }}
+                    Run a search to see available dish types.
                   </p>
                 </div>
+
+                <!-- Cuisine / mood / flavour / food group.
+                     Same component the member-facing filter panel uses, so the
+                     two cannot drift in behaviour. Each renders only when the
+                     search returned that facet. -->
+                <RecipeFacetSection
+                  title="Cuisine"
+                  icon="i-lucide-globe"
+                  :bucket="cuisinesBucket"
+                  :selected="filters.cuisines"
+                  :emojis="CUISINE_EMOJI"
+                  @toggle="value => toggleAnnotationFacet('cuisines', value)"
+                />
+
+                <RecipeFacetSection
+                  title="Mood"
+                  icon="i-lucide-heart"
+                  :bucket="moodsBucket"
+                  :selected="filters.moods"
+                  :emojis="MOOD_EMOJI"
+                  @toggle="value => toggleAnnotationFacet('moods', value)"
+                />
+
+                <RecipeFacetSection
+                  title="Flavour"
+                  icon="i-lucide-flame"
+                  :bucket="flavorProfilesBucket"
+                  :selected="filters.flavorProfiles"
+                  :emojis="FLAVOR_EMOJI"
+                  @toggle="value => toggleAnnotationFacet('flavorProfiles', value)"
+                />
+
+                <RecipeFacetSection
+                  title="Food Groups"
+                  icon="i-lucide-apple"
+                  :bucket="foodGroupsBucket"
+                  :selected="filters.foodGroups"
+                  :emojis="FOOD_GROUP_EMOJI"
+                  @toggle="value => toggleAnnotationFacet('foodGroups', value)"
+                />
 
                 <!-- Source -->
                 <div>
@@ -487,8 +527,10 @@
                 {{ resultSummary }}
               </p>
 
-              <!-- Pagination (param_search mode only) -->
-              <nav v-if="!isNlSearch && (currentPage > 1 || hasMore)" class="flex items-center gap-1">
+              <!-- Pagination. Both search paths return a filtered total and
+                   accept an offset, so this is no longer restricted to
+                   param_search. -->
+              <nav v-if="currentPage > 1 || hasMore" class="flex items-center gap-1">
                 <UButton
                   color="neutral"
                   variant="outline"
@@ -1212,6 +1254,13 @@ import {
   resolveRecipeIdentifier
 } from '~/utils/consoleRecipes'
 import { formatDishTypeLabel, getDishTypeIcon } from '~/utils/dishTypes'
+import {
+  CUISINE_EMOJI,
+  FLAVOR_EMOJI,
+  FOOD_GROUP_EMOJI,
+  MOOD_EMOJI
+} from '~/utils/facetPresentation'
+import RecipeFacetSection from '~/components/recipes/RecipeFacetSection.vue'
 
 type EditableIngredient = {
   name: string
@@ -1252,9 +1301,28 @@ const filters = reactive({
   excludeAllergens: [] as string[],
   sources: [] as RecipeSource[],
   dishTypes: [] as RecipeDishType[],
+  // Annotation facets. Same closed vocabularies the member-facing library
+  // uses — the console filters the same corpus and should not need a second,
+  // divergent set of controls to reach the same recipes.
+  cuisines: [] as string[],
+  moods: [] as string[],
+  flavorProfiles: [] as string[],
+  foodGroups: [] as string[],
   sortBy: null as RecipeParamSortBy | null,
   includeDisabled: false
 })
+
+/** Toggle a value in one of the annotation-facet arrays, then re-search. */
+function toggleAnnotationFacet(
+  key: 'cuisines' | 'moods' | 'flavorProfiles' | 'foodGroups',
+  value: string
+) {
+  const list = filters[key]
+  const index = list.indexOf(value)
+  if (index >= 0) list.splice(index, 1)
+  else list.push(value)
+  applyFilters()
+}
 
 const showFacetPanel = ref(true)
 
@@ -1335,13 +1403,29 @@ function setSortBy(value: RecipeParamSortBy) {
   void applyFilters()
 }
 
-const activeFacetCount = computed(() =>
-  filters.excludeAllergens.length +
-  filters.sources.length +
-  filters.dishTypes.length +
-  (filters.sortBy ? 1 : 0) +
-  (filters.includeDisabled ? 1 : 0)
-)
+// Facet buckets, narrowed in script rather than in the template: a
+// `Type | undefined` cast inside a template expression is read as a Vue 2
+// filter by the template compiler, because `|` is ambiguous there.
+type FacetBucket = Record<string, number> | undefined
+const cuisinesBucket = computed(() => paramSearchFacets.value?.cuisines as FacetBucket)
+const moodsBucket = computed(() => paramSearchFacets.value?.moods as FacetBucket)
+const flavorProfilesBucket = computed(() => paramSearchFacets.value?.flavor_profiles as FacetBucket)
+const foodGroupsBucket = computed(() => paramSearchFacets.value?.food_groups as FacetBucket)
+
+// How many filters are narrowing the current view. Drives the badge on the
+// facet-panel toggle, so it has to count every filter the panel can set —
+// including the ones a collapsed panel is hiding.
+const activeFacetCount = computed(() => [
+  filters.excludeAllergens,
+  filters.sources,
+  filters.dishTypes,
+  filters.cuisines,
+  filters.moods,
+  filters.flavorProfiles,
+  filters.foodGroups
+].reduce((total, values) => total + values.length, 0)
+  + (filters.sortBy ? 1 : 0)
+  + (filters.includeDisabled ? 1 : 0))
 
 function toggleIncludeDisabled() {
   filters.includeDisabled = !filters.includeDisabled
@@ -1446,7 +1530,7 @@ const breadcrumbItems = [
 const hasActiveFilters = computed(() => Boolean(filters.q.trim()) || activeFacetCount.value > 0)
 
 const totalPages = computed(() => {
-  if (isNlSearch.value || totalCount.value === 0) return 0
+  if (totalCount.value === 0) return 0
   return Math.ceil(totalCount.value / itemsPerPage)
 })
 
@@ -1461,7 +1545,7 @@ const visiblePages = computed(() => {
 })
 
 const resultCountLabel = computed(() => {
-  if (totalCount.value > 0 && !isNlSearch.value) {
+  if (totalCount.value > 0) {
     return `${totalCount.value.toLocaleString()} recipes`
   }
   return recipes.value.length === 1 ? '1 recipe shown' : `${recipes.value.length.toLocaleString()} recipes shown`
@@ -1470,10 +1554,6 @@ const resultCountLabel = computed(() => {
 const resultSummary = computed(() => {
   if (recipesLoading.value) return 'Loading recipes...'
   if (!recipes.value.length) return 'No recipes are currently visible in the library view.'
-
-  if (isNlSearch.value) {
-    return `Showing ${recipes.value.length.toLocaleString()} results for "${filters.q.trim()}".`
-  }
 
   const offset = (currentPage.value - 1) * itemsPerPage
   const from = offset + 1
@@ -1979,11 +2059,17 @@ async function loadRecipes(page = currentPage.value) {
     const { results, facets, total } = await recipeApi.searchManagedRecipes(
       query,
       itemsPerPage,
-      query ? 0 : offset,
+      // The question path takes an offset now, so a text search pages like a
+      // filtered one instead of being pinned to its first page.
+      offset,
       {
         exclude_allergens: filters.excludeAllergens.length ? [...filters.excludeAllergens] : undefined,
         sources: filters.sources.length ? [...filters.sources] : undefined,
         dish_types: filters.dishTypes.length ? [...filters.dishTypes] : undefined,
+        cuisines: filters.cuisines.length ? [...filters.cuisines] : undefined,
+        moods: filters.moods.length ? [...filters.moods] : undefined,
+        flavor_profiles: filters.flavorProfiles.length ? [...filters.flavorProfiles] : undefined,
+        food_groups: filters.foodGroups.length ? [...filters.foodGroups] : undefined,
         sort_by: filters.sortBy ?? undefined,
         include_disabled: filters.includeDisabled || undefined
       }
@@ -1991,13 +2077,11 @@ async function loadRecipes(page = currentPage.value) {
     recipes.value = results
     paramSearchFacets.value = facets
     isNlSearch.value = Boolean(query)
-    if (query) {
-      totalCount.value = results.length
-      hasMore.value = false
-    } else {
-      totalCount.value = total
-      hasMore.value = offset + results.length < total
-    }
+    // One branch: both paths report a real filtered total. Previously the
+    // question path fell back to the page size, so the console showed "12
+    // recipes" for a search matching hundreds and offered no way to reach them.
+    totalCount.value = total
+    hasMore.value = offset + results.length < total
   } catch (error) {
     recipes.value = []
     hasMore.value = false
@@ -2283,6 +2367,10 @@ function resetFilters() {
   filters.excludeAllergens = []
   filters.sources = []
   filters.dishTypes = []
+  filters.cuisines = []
+  filters.moods = []
+  filters.flavorProfiles = []
+  filters.foodGroups = []
   filters.sortBy = null
   filters.includeDisabled = false
   currentPage.value = 1

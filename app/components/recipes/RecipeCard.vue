@@ -123,6 +123,23 @@
         </span>
       </div>
 
+      <div
+        v-if="annotationChips.length"
+        class="mt-2 flex flex-wrap gap-1.5"
+      >
+        <span
+          v-for="chip in annotationChips"
+          :key="chip.key"
+          class="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:text-amber-300 border border-amber-100 dark:border-amber-800/60"
+        >
+          <span
+            v-if="chip.emoji"
+            aria-hidden="true"
+          >{{ chip.emoji }}</span>
+          {{ chip.label }}
+        </span>
+      </div>
+
       <div v-if="recipe.source" class="mt-2">
         <span class="inline-flex items-center rounded-full bg-zinc-100 dark:bg-zinc-700 px-2.5 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">
           Source: {{ recipe.source }}
@@ -152,6 +169,7 @@ import { useI18n } from 'vue-i18n'
 import { useRecipeStore } from '~/stores/recipe'
 import type { RecipeSearchResult } from '~/services/recipeApi'
 import { formatDishTypeLabel, getDishTypeIcon, normalizeDishTypes } from '~/utils/dishTypes'
+import { CUISINE_EMOJI, MOOD_EMOJI, humanizeFacet } from '~/utils/facetPresentation'
 import { getRecipeWranglerMode, getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 
 // ============================================================================
@@ -201,13 +219,38 @@ const recipeImageUrl = computed(() => {
 })
 const isFavorite = computed(() => effectiveRecipeId.value ? recipeStore.isFavorite(effectiveRecipeId.value) : false)
 const isInCompare = computed(() => effectiveRecipeId.value ? recipeStore.isInCompareList(effectiveRecipeId.value) : false)
+// `course_types` first, `dish_types` as the fallback.
+//
+// The search API canonicalizes the two into `course_types` and no longer
+// returns `dish_types` at all, so reading only the old name left every card's
+// course chip silently empty — the data was there, under a different key.
+// Both are read so the card also works against the older response shape.
 const dishTypeChips = computed(() =>
-  normalizeDishTypes(props.recipe.dish_types).map(value => ({
+  normalizeDishTypes(props.recipe.course_types ?? props.recipe.dish_types).map(value => ({
     value,
     label: formatDishTypeLabel(value),
     icon: getDishTypeIcon(value)
   }))
 )
+
+/**
+ * Cuisine and mood, as a short emoji strip.
+ *
+ * Capped at three: the card is a scanning surface, and a recipe annotated with
+ * four flavours and six food groups would push the price and score out of view.
+ * Cuisine leads because it is the most specific — "Italian" tells you more than
+ * "quick" — and the filter panel is where the full set lives.
+ */
+const annotationChips = computed(() => {
+  const chips: Array<{ key: string, emoji: string, label: string }> = []
+  for (const value of props.recipe.cuisines ?? []) {
+    chips.push({ key: `cuisine:${value}`, emoji: CUISINE_EMOJI[value] ?? '🍽️', label: humanizeFacet(value) })
+  }
+  for (const value of props.recipe.moods ?? []) {
+    chips.push({ key: `mood:${value}`, emoji: MOOD_EMOJI[value] ?? '', label: humanizeFacet(value) })
+  }
+  return chips.slice(0, 3)
+})
 
 watch(() => effectiveRecipeId.value, () => {
   imageLoadFailed.value = false

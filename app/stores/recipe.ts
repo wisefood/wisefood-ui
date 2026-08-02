@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { watch } from 'vue'
-import type { Recipe, RecipeDishType, RecipeParamSortBy, RecipeSearchResult, RecipeSource } from '~/services/recipeApi'
+import type { Recipe, RecipeDishType, RecipeFacetMap, RecipeParamSortBy, RecipeSearchResult, RecipeSource } from '~/services/recipeApi'
 import memberFavoritesApi from '~/services/memberFavoritesApi'
 import { useHouseholdStore } from '~/stores/household'
 
@@ -26,6 +26,13 @@ export const useRecipeStore = defineStore('recipe', {
     selectedSources: [] as RecipeSource[],
     selectedDishTypes: [] as RecipeDishType[],
     selectedDietTags: [] as string[],
+    // Annotation facets. Closed vocabularies owned by the backend
+    // (catalog/vocabularies.py) — the UI only ever echoes values it was
+    // given in a facet, so it cannot invent one the corpus lacks.
+    selectedCuisines: [] as string[],
+    selectedMoods: [] as string[],
+    selectedFlavorProfiles: [] as string[],
+    selectedFoodGroups: [] as string[],
     compareList: [] as string[], // Recipe IDs for comparison
 
     // UI preferences
@@ -39,6 +46,11 @@ export const useRecipeStore = defineStore('recipe', {
     // Search results cache - stores results by query hash
     searchCache: new Map<string, {
       results: RecipeSearchResult[]
+      // Cached alongside the results because the filter panel and the paginator
+      // read them. A cache hit that restored only the results left the chip
+      // counts and the total describing the previous search.
+      facets: RecipeFacetMap
+      total: number
       timestamp: number
       query: string
       allergens: string[]
@@ -417,6 +429,30 @@ export const useRecipeStore = defineStore('recipe', {
       this.persistDishTypes()
     },
 
+    toggleCuisine(value: string) {
+      const idx = this.selectedCuisines.indexOf(value)
+      if (idx >= 0) this.selectedCuisines.splice(idx, 1)
+      else this.selectedCuisines.push(value)
+    },
+
+    toggleMood(value: string) {
+      const idx = this.selectedMoods.indexOf(value)
+      if (idx >= 0) this.selectedMoods.splice(idx, 1)
+      else this.selectedMoods.push(value)
+    },
+
+    toggleFlavorProfile(value: string) {
+      const idx = this.selectedFlavorProfiles.indexOf(value)
+      if (idx >= 0) this.selectedFlavorProfiles.splice(idx, 1)
+      else this.selectedFlavorProfiles.push(value)
+    },
+
+    toggleFoodGroup(value: string) {
+      const idx = this.selectedFoodGroups.indexOf(value)
+      if (idx >= 0) this.selectedFoodGroups.splice(idx, 1)
+      else this.selectedFoodGroups.push(value)
+    },
+
     toggleDietTag(tag: string) {
       const idx = this.selectedDietTags.indexOf(tag)
       if (idx >= 0) this.selectedDietTags.splice(idx, 1)
@@ -440,6 +476,25 @@ export const useRecipeStore = defineStore('recipe', {
     },
 
     /**
+     * Clear the four annotation facets in one call.
+     *
+     * Grouped rather than one action each because "Clear all" is the only
+     * caller and it has to clear every one of them — a per-facet API makes it
+     * possible to add a fifth facet and forget to reset it, which strands a
+     * filter the user can no longer see or remove.
+     *
+     * Not persisted, unlike dish types and diet tags: these are exploratory
+     * choices made against one result set, and restoring them on the next visit
+     * would silently hide most of the corpus.
+     */
+    clearAnnotationFilters() {
+      this.selectedCuisines = []
+      this.selectedMoods = []
+      this.selectedFlavorProfiles = []
+      this.selectedFoodGroups = []
+    },
+
+    /**
      * Store last search results
      */
     setLastSearchResults(results: RecipeSearchResult[]) {
@@ -449,16 +504,41 @@ export const useRecipeStore = defineStore('recipe', {
     /**
      * Generate a cache key from search parameters
      */
+    /**
+     * Cache key covering everything that changes the result set.
+     *
+     * The question and allergens are not enough: the search now also carries
+     * the sidebar's dish types, sources and annotation facets, so keying on the
+     * question alone would serve the unfiltered "pasta" results the moment the
+     * user clicked a cuisine — the filter appearing to do nothing, which is the
+     * exact failure the facet filters were added to fix.
+     *
+     * Every list is sorted, so selecting Italian then Greek hits the same entry
+     * as Greek then Italian.
+     */
     generateSearchCacheKey(query: string, allergens: string[] = []): string {
       const normalizedQuery = query.toLowerCase().trim()
-      const sortedAllergens = [...allergens].sort().join(',')
-      return `${normalizedQuery}|${sortedAllergens}`
+      const part = (values: string[]) => [...values].sort().join(',')
+      return [
+        normalizedQuery,
+        part(allergens),
+        part(this.selectedDishTypes),
+        part(this.selectedSources),
+        part(this.selectedDietTags),
+        part(this.selectedCuisines),
+        part(this.selectedMoods),
+        part(this.selectedFlavorProfiles),
+        part(this.selectedFoodGroups)
+      ].join('|')
     },
 
     /**
      * Get cached search results if available and not expired
      */
-    getCachedSearch(query: string, allergens: string[] = []): RecipeSearchResult[] | null {
+    getCachedSearch(
+      query: string,
+      allergens: string[] = []
+    ): { results: RecipeSearchResult[], facets: RecipeFacetMap, total: number } | null {
       const cacheKey = this.generateSearchCacheKey(query, allergens)
       const cached = this.searchCache.get(cacheKey)
 
@@ -473,17 +553,29 @@ export const useRecipeStore = defineStore('recipe', {
         return null
       }
 
-      return cached.results
+      return {
+        results: cached.results,
+        facets: cached.facets ?? {},
+        total: cached.total ?? cached.results.length
+      }
     },
 
     /**
      * Cache search results
      */
-    cacheSearchResults(query: string, allergens: string[] = [], results: RecipeSearchResult[]) {
+    cacheSearchResults(
+      query: string,
+      allergens: string[] = [],
+      results: RecipeSearchResult[],
+      facets: RecipeFacetMap = {},
+      total?: number
+    ) {
       const cacheKey = this.generateSearchCacheKey(query, allergens)
 
       this.searchCache.set(cacheKey, {
         results,
+        facets,
+        total: total ?? results.length,
         timestamp: Date.now(),
         query,
         allergens: [...allergens]
@@ -598,6 +690,10 @@ export const useRecipeStore = defineStore('recipe', {
       this.selectedSources = []
       this.selectedDishTypes = []
       this.selectedDietTags = []
+      this.selectedCuisines = []
+      this.selectedMoods = []
+      this.selectedFlavorProfiles = []
+      this.selectedFoodGroups = []
       this.viewMode = 'grid'
       this.sortBy = null
       this.compareList = []
