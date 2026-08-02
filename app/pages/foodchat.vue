@@ -342,14 +342,11 @@
                       </div>
                     </div>
 
-                    <!-- Interactive plan-parameter sliders (only on live responses; not persisted) -->
-                    <FoodchatPlanParameterCard
-                      v-if="msg.plan_parameters && isActiveParamCard(msg)"
-                      :card="msg.plan_parameters"
-                      :busy="sending"
-                      @apply="handleApplyPlanParameters"
-                      @dismiss="dismissParamCard(msg)"
-                    />
+                    <!-- Plan settings live in ONE place: the ribbon on the
+                         canvas. The card used to render here too, so every
+                         fresh plan showed the same sliders twice — "too many
+                         places to input adjustments" is how that reads. -->
+
 
                     <!-- Feedback row -->
                     <div v-if="msg.id" class="mt-2 flex items-center gap-1 transition-opacity" :class="feedbackSubmitted[msg.id] ? 'opacity-100' : 'opacity-0 group-hover/msg:opacity-100'">
@@ -1664,6 +1661,19 @@ watch(currentPlanType, (type) => {
   else if (type === 'daily') { selectedDailyPlanIdx.value = 0; canvasMode.value = 'daily' }
 }, { immediate: true })
 
+// A new plan arriving dismisses the compose panel. Draft mode hid the plan
+// card outright (`hasAnyPlan && !draftMode`), so a member who opened compose
+// and then asked the chat for a plan got the plan generated, announced in the
+// conversation — and invisible, with the canvas still showing three empty
+// "Add a recipe" slots. Watching the plan count catches every arrival path:
+// chat, compose, parameter apply, session reload.
+watch(
+  () => mealPlans.value.length + weeklyMealPlans.value.length,
+  (count, previous) => {
+    if (count > (previous ?? 0) && draftMode.value) exitDraftMode()
+  }
+)
+
 const sessionItems = computed(() =>
   sessions.value.map(s => ({
     value: s.session_id,
@@ -2682,11 +2692,11 @@ onMounted(async () => {
 }
 
 /* ── Markdown in assistant bubbles ── */
-.fc-md p { margin: 0 0 0.5em; line-height: 1.6; font-size: 0.875rem; }
+.fc-md p { margin: 0 0 0.5em; line-height: 1.65; font-size: 0.9375rem; }
 .fc-md p:last-child { margin-bottom: 0; }
 .fc-md ul { list-style: disc; padding-left: 1.25rem; margin: 0.4em 0 0.6em; }
 .fc-md ol { list-style: decimal; padding-left: 1.25rem; margin: 0.4em 0 0.6em; }
-.fc-md li { margin: 0.2em 0; font-size: 0.875rem; line-height: 1.55; }
+.fc-md li { margin: 0.2em 0; font-size: 0.9375rem; line-height: 1.6; }
 .fc-md li > ul, .fc-md li > ol { margin: 0.2em 0; }
 .fc-md strong { font-weight: 600; }
 .fc-md em { font-style: italic; }

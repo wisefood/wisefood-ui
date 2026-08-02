@@ -9,7 +9,7 @@
     payload, so whichever surface the member reaches for, the values and the
     plan they refine stay consistent.
   -->
-  <div class="fc-ribbon flex items-center gap-2 px-4 sm:px-6 py-2 shrink-0 overflow-x-auto">
+  <div class="fc-ribbon flex items-center gap-3 px-4 sm:px-6 py-2.5 shrink-0 overflow-x-auto">
     <UIcon name="i-lucide-settings-2" class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0" />
 
     <template v-for="param in card.parameters" :key="param.key">
@@ -18,14 +18,14 @@
         v-if="param.kind === 'choice' && param.options"
         class="fc-ribbon-group flex items-center gap-1 shrink-0"
       >
-        <span class="text-[10px] text-gray-400 dark:text-zinc-500 font-light whitespace-nowrap">
+        <span class="text-xs text-gray-500 dark:text-zinc-400 font-light whitespace-nowrap">
           {{ paramLabel(param) }}
         </span>
         <div class="flex rounded-full border border-gray-200 dark:border-zinc-700 p-0.5 bg-white dark:bg-zinc-800">
           <button
             v-for="option in param.options"
             :key="option.value"
-            class="px-2 py-0.5 text-[10px] rounded-full whitespace-nowrap transition-colors"
+            class="px-2.5 py-1 text-xs rounded-full whitespace-nowrap transition-colors"
             :class="currentValue(param) === option.value
               ? 'bg-brandp-500 text-white font-medium'
               : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200'"
@@ -42,23 +42,23 @@
         v-else-if="param.kind === 'scale'"
         class="fc-ribbon-group flex items-center gap-1 shrink-0"
       >
-        <span class="text-[10px] text-gray-400 dark:text-zinc-500 font-light whitespace-nowrap">
+        <span class="text-xs text-gray-500 dark:text-zinc-400 font-light whitespace-nowrap">
           {{ paramLabel(param) }}
         </span>
         <div class="flex items-center rounded-full border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800">
           <button
-            class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-brandp-500 disabled:opacity-40"
+            class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-brandp-500 disabled:opacity-40"
             :disabled="busy || Number(currentValue(param)) <= (param.min ?? 0)"
             :aria-label="`${paramLabel(param)} −`"
             @click="step(param, -1)"
           >
             <UIcon name="i-lucide-minus" class="w-3 h-3" />
           </button>
-          <span class="text-[10px] font-medium tabular-nums text-gray-600 dark:text-zinc-300 min-w-12 text-center">
+          <span class="text-xs font-medium tabular-nums text-gray-600 dark:text-zinc-300 min-w-14 text-center">
             {{ currentValue(param) }} {{ param.unit ?? '' }}
           </span>
           <button
-            class="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-brandp-500 disabled:opacity-40"
+            class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-brandp-500 disabled:opacity-40"
             :disabled="busy || Number(currentValue(param)) >= (param.max ?? 100)"
             :aria-label="`${paramLabel(param)} +`"
             @click="step(param, 1)"

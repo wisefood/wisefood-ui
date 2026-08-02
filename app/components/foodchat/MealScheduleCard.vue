@@ -12,7 +12,7 @@
              where two cards otherwise share a heading and look like a bug. -->
         <span
           v-if="courseLabel"
-          class="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-brandp-50 dark:bg-brandp-900/30 text-brandp-600 dark:text-brandp-400"
+          class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-brandp-50 dark:bg-brandp-900/30 text-brandp-600 dark:text-brandp-400"
         >{{ courseLabel }}</span>
       </div>
       <div class="flex items-center gap-1.5">
@@ -119,11 +119,11 @@
         v-if="recipe.recipe_id"
         :to="`/recipe-wrangler/${recipe.recipe_id}`"
         target="_blank"
-        class="flex-1 min-w-0 font-medium text-sm sm:text-base text-gray-900 dark:text-white leading-snug hover:text-brandp-500 dark:hover:text-brandp-300 transition-colors"
+        class="flex-1 min-w-0 font-medium text-base sm:text-lg text-gray-900 dark:text-white leading-snug hover:text-brandp-500 dark:hover:text-brandp-300 transition-colors"
       >{{ recipe.title }}</NuxtLink>
       <h3
         v-else
-        class="flex-1 min-w-0 font-medium text-sm sm:text-base text-gray-900 dark:text-white leading-snug"
+        class="flex-1 min-w-0 font-medium text-base sm:text-lg text-gray-900 dark:text-white leading-snug"
       >
         {{ recipe.title }}
       </h3>
@@ -134,12 +134,12 @@
       v-if="recipe.nutrition"
       class="flex items-center gap-1.5 flex-wrap pr-16 -mt-1"
     >
-      <span class="inline-flex items-center px-2 py-0.5 text-[10px] rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-300 font-light">
+      <span class="inline-flex items-center px-2 py-1 text-[11px] rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-300 font-light">
         {{ nutritionSummary }}
       </span>
       <span
         v-if="macroSummary"
-        class="inline-flex items-center px-2 py-0.5 text-[10px] rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-300 font-light"
+        class="inline-flex items-center px-2 py-1 text-[11px] rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-300 font-light"
       >{{ macroSummary }}</span>
       <span
         v-if="nutriScoreGrade"
