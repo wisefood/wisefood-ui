@@ -197,7 +197,25 @@ export function planNutritionTotal(plan: MealPlan | null | undefined): {
     }
   }
 
-  const meals = planMeals(plan)
+  return mealsNutritionTotal(planMeals(plan))
+}
+
+/**
+ * Totals for one set of meals — one day's, in practice.
+ *
+ * Returns null when nothing contributed. A plan whose meals carry no macros
+ * rendered as "0 kcal · 0g protein · partial", which reads as a measurement
+ * rather than as an absence: zero calories is a claim, and a wrong one. This
+ * happens against a backend that predates carried macros, so it is a real
+ * state, not a transient.
+ */
+export function mealsNutritionTotal(meals: NormalisedMeal[]): {
+  calories: number
+  protein_g: number
+  carbs_g: number
+  fat_g: number
+  complete: boolean
+} | null {
   if (meals.length === 0) return null
 
   let complete = true
@@ -215,16 +233,35 @@ export function planNutritionTotal(plan: MealPlan | null | undefined): {
     totals.carbs_g += nutrition.carbs_g ?? 0
     totals.fat_g += nutrition.fat_g ?? 0
   }
-
-  // Nothing contributed — show no total rather than a row of zeros.
-  //
-  // A plan whose meals carry no macros rendered as "0 kcal · 0g protein ·
-  // partial", which reads as a measurement rather than as an absence: zero
-  // calories is a claim, and a wrong one. This happens against a backend that
-  // predates carried macros, so it is a real state, not a transient.
   if (contributed === 0) return null
 
   return { ...totals, complete }
+}
+
+/**
+ * Every day of a plan as its own group of normalised meals.
+ *
+ * `planMeals` answers "what is on the canvas today" and reads day 1 only —
+ * which silently amputated days 2..N of a multi-day plan at the last mile,
+ * after the backend, the serializer and the store had all faithfully carried
+ * them. Each group is produced by `planMeals` itself on a one-day shim, so
+ * per-day normalisation (roles, multi-course grouping, slot order) cannot
+ * drift from the single-day canvas.
+ */
+export function planDayGroups(plan: MealPlan | null | undefined): Array<{
+  day: number
+  meals: NormalisedMeal[]
+}> {
+  if (!plan?.days?.length) {
+    const meals = planMeals(plan)
+    return meals.length ? [{ day: 1, meals }] : []
+  }
+  return plan.days
+    .map(day => ({
+      day: day.day,
+      meals: planMeals({ ...plan, days: [day] })
+    }))
+    .filter(group => group.meals.length > 0)
 }
 
 /** Tailwind grid classes for however many meals a plan turned out to have. */

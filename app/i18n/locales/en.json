@@ -1405,7 +1405,8 @@
       "dailyPlan": "Daily Plan",
       "weeklyPlan": "Weekly Plan",
       "savePlan": "Save this plan",
-      "unsavePlan": "Remove from saved plans"
+      "unsavePlan": "Remove from saved plans",
+      "dayN": "Day {n}"
     },
     "apply": {
       "title": "Apply this plan to members",

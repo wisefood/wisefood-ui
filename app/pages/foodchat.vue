@@ -763,6 +763,7 @@
                        plan with a snack or a two-course dinner lost the extra
                        plates silently at the template. -->
                   <div
+                    v-if="displayedPlanDayGroups.length <= 1"
                     class="rounded-2xl overflow-hidden mb-4"
                     :class="mealGridCols(displayedMealPlan)"
                   >
@@ -780,12 +781,47 @@
                     />
                   </div>
 
+                  <!-- A plan that spans days renders every day. The backend,
+                       serializer and store all carried days 2..N faithfully;
+                       this template was the only place that dropped them. -->
+                  <div v-else class="space-y-5 mb-4">
+                    <section v-for="group in displayedPlanDayGroups" :key="group.day">
+                      <div class="flex items-center gap-2 mb-2 px-1">
+                        <span class="text-xs font-medium text-gray-700 dark:text-zinc-200">
+                          {{ t('foodChatHome.planHeader.dayN', { n: group.day }) }}
+                        </span>
+                        <span
+                          v-if="mealsNutritionTotal(group.meals)"
+                          class="text-[10px] text-gray-400 dark:text-zinc-500 tabular-nums"
+                        >
+                          {{ Math.round(mealsNutritionTotal(group.meals)!.calories) }} kcal
+                        </span>
+                      </div>
+                      <div
+                        class="rounded-2xl overflow-hidden"
+                        :class="mealGridColumns(group.meals.length)"
+                      >
+                        <FoodchatMealScheduleCard
+                          v-for="meal in group.meals"
+                          :key="`d${group.day}-${meal.key}`"
+                          :type="slotLabel(meal.slot)"
+                          :time="meal.time || ''"
+                          :icon="meal.icon"
+                          :course-label="meal.partOfMultiCourse ? humaniseSlot(meal.role) : ''"
+                          :recipe="meal.recipe"
+                          @replace="prefillSlotReplace(meal.slot)"
+                          @adapt="openAdaptRecipe(meal.recipe.recipe_id)"
+                        />
+                      </div>
+                    </section>
+                  </div>
+
                   <!-- Day totals. The planner sums every plate server-side, so
                        this is the whole day rather than the meals that happen to
                        fit on screen. `complete: false` means a plate contributed
                        nothing, which is worth saying rather than hiding. -->
                   <div
-                    v-if="displayedPlanTotals"
+                    v-if="displayedPlanTotals && displayedPlanDayGroups.length <= 1"
                     class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-gray-50 dark:bg-zinc-800/50 px-3 py-2"
                   >
                     <UIcon
@@ -1293,6 +1329,8 @@ import recipeApi from '~/services/recipeApi'
 import {
   humaniseSlot,
   mealGridColumns,
+  mealsNutritionTotal,
+  planDayGroups,
   planMeals,
   planNutritionTotal,
   slotIcon
@@ -2383,6 +2421,9 @@ function mealGridCols(plan: MealPlan): string {
 
 /** The plan's meals, whichever shape the backend sent. */
 const displayedPlanMeals = computed(() => planMeals(displayedMealPlan.value))
+// Every day of the displayed plan; length > 1 switches the canvas to day
+// sections. The single-day path keeps its exact existing markup.
+const displayedPlanDayGroups = computed(() => planDayGroups(displayedMealPlan.value))
 
 /** Day macro totals — server-computed when present, summed locally otherwise. */
 const displayedPlanTotals = computed(() => planNutritionTotal(displayedMealPlan.value))

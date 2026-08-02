@@ -1383,7 +1383,8 @@
       "dailyPlan": "Dnevni plan",
       "weeklyPlan": "Tedenski plan",
       "savePlan": "Shrani načrt",
-      "unsavePlan": "Odstrani iz shranjenih"
+      "unsavePlan": "Odstrani iz shranjenih",
+      "dayN": "{n}. dan"
     },
     "apply": {
       "title": "Uporabi ta načrt za člane",

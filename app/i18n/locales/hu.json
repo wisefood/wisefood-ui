@@ -1383,7 +1383,8 @@
       "dailyPlan": "Napi terv",
       "weeklyPlan": "Heti terv",
       "savePlan": "Terv mentése",
-      "unsavePlan": "Eltávolítás a mentettek közül"
+      "unsavePlan": "Eltávolítás a mentettek közül",
+      "dayN": "{n}. nap"
     },
     "apply": {
       "title": "Alkalmazd ezt a tervet a tagokra",
