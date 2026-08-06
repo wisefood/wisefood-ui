@@ -358,12 +358,36 @@
                           />
                         </UTooltip>
 
-                        <p
-                          class="whitespace-pre-wrap break-words text-sm font-medium leading-6"
-                          :class="guidelineTextClass(row.original)"
-                        >
-                          {{ row.original.rule_text }}
-                        </p>
+                        <div class="min-w-0 flex-1">
+                          <p
+                            class="whitespace-pre-wrap break-words text-sm font-medium leading-6"
+                            :class="guidelineTextClass(row.original)"
+                          >
+                            {{ row.original.rule_text }}
+                          </p>
+
+                          <div
+                            v-if="ruleChips(row.original).length"
+                            class="mt-1.5 flex flex-wrap items-center gap-1"
+                          >
+                            <span
+                              v-for="chip in ruleChips(row.original)"
+                              :key="`${chip.field}:${chip.value}`"
+                              class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-white/10 dark:text-gray-300"
+                              :title="chip.aiGenerated ? $t('guidelines.facets.aiSuggested') : chip.label"
+                            >
+                              <UIcon
+                                :name="chip.icon"
+                                class="h-2.5 w-2.5 shrink-0 opacity-70"
+                              />
+                              {{ chip.label }}
+                              <span
+                                v-if="chip.aiGenerated"
+                                class="h-1 w-1 rounded-full bg-primary-400"
+                              />
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </template>
@@ -414,12 +438,12 @@
                         No guidelines are mapped to page {{ currentPage }}.
                       </p>
                       <UButton
+                        v-if="!isGuideActive"
                         class="mt-4"
                         color="neutral"
                         variant="outline"
                         size="sm"
                         icon="i-lucide-plus"
-                        v-if="!isGuideActive"
                         :disabled="!canCreateGuideline"
                         @click="openCreateGuidelineModal"
                       >
@@ -686,6 +710,138 @@
                 </UFormField>
 
                 <UFormField
+                  label="Life Stage"
+                  class="w-full lg:col-span-2"
+                  help="Who the rule is for. Set by enrichment; editing takes ownership."
+                >
+                  <USelectMenu
+                    v-model="guidelineForm.life_stage"
+                    :items="guidelineLifeStageEditOptions"
+                    value-key="value"
+                    label-key="label"
+                    multiple
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <UFormField
+                  label="Age From (months)"
+                  class="w-full"
+                >
+                  <UInput
+                    v-model="guidelineForm.age_min_months"
+                    type="number"
+                    :min="0"
+                    placeholder="e.g. 12"
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <UFormField
+                  label="Age To (months)"
+                  class="w-full"
+                  :error="ageRangeError"
+                >
+                  <UInput
+                    v-model="guidelineForm.age_max_months"
+                    type="number"
+                    :min="0"
+                    placeholder="e.g. 48"
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <UFormField
+                  label="Setting"
+                  class="w-full lg:col-span-2"
+                >
+                  <USelectMenu
+                    v-model="guidelineForm.setting"
+                    :items="guidelineSettingEditOptions"
+                    value-key="value"
+                    label-key="label"
+                    multiple
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <UFormField
+                  label="Audience"
+                  class="w-full lg:col-span-2"
+                >
+                  <USelectMenu
+                    v-model="guidelineForm.audience"
+                    :items="guidelineAudienceEditOptions"
+                    value-key="value"
+                    label-key="label"
+                    multiple
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <UFormField
+                  label="Guidance Type"
+                  class="w-full"
+                >
+                  <USelectMenu
+                    v-model="guidelineForm.guideline_type"
+                    :items="guidelineTypeEditOptions"
+                    value-key="value"
+                    label-key="label"
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <UFormField
+                  label="Applicable Regions"
+                  class="w-full"
+                  help="ISO codes. Defaults to the guide's region."
+                >
+                  <ConsoleArticleTokenInput
+                    v-model="guidelineForm.applicable_regions"
+                    label="region"
+                    placeholder="e.g. IE"
+                    empty-text="Inherits the guide's region."
+                  />
+                </UFormField>
+
+                <UFormField
+                  label="Topics"
+                  class="w-full lg:col-span-2"
+                >
+                  <ConsoleArticleTokenInput
+                    v-model="guidelineForm.topic"
+                    label="topic"
+                    placeholder="Add a topic"
+                    empty-text="No topics."
+                  />
+                </UFormField>
+
+                <UFormField
+                  label="Nutrients"
+                  class="w-full lg:col-span-2"
+                >
+                  <ConsoleArticleTokenInput
+                    v-model="guidelineForm.nutrients"
+                    label="nutrient"
+                    placeholder="Add a nutrient"
+                    empty-text="No nutrients."
+                  />
+                </UFormField>
+
+                <UFormField
+                  label="Health Conditions"
+                  class="w-full lg:col-span-2"
+                >
+                  <ConsoleArticleTokenInput
+                    v-model="guidelineForm.health_conditions"
+                    label="condition"
+                    placeholder="Add a condition"
+                    empty-text="No conditions."
+                  />
+                </UFormField>
+
+                <UFormField
                   label="Quantity Operator"
                   class="w-full"
                 >
@@ -841,6 +997,10 @@ import type {
   CatalogGuidelineFrequency,
   CatalogGuidelineQuantity,
   CatalogGuidelineTargetPopulation,
+  CatalogGuidelineAudience,
+  CatalogGuidelineLifeStage,
+  CatalogGuidelineSetting,
+  CatalogGuidelineType,
   CatalogReviewStatus,
   CatalogStatus,
   CatalogVisibility,
@@ -848,6 +1008,7 @@ import type {
   GuidelineUpdatePayload
 } from '~/services/catalogApi'
 import catalogApi from '~/services/catalogApi'
+import { guidelineFacetChips } from '~/utils/guidelineFacets'
 import {
   buildGuideRoutePath,
   formatConsoleDate as formatDate,
@@ -863,8 +1024,14 @@ import {
   quantityOperatorEditOptions,
   resolveGuideRouteParam,
   reviewStatusColor,
-  statusColor
+  statusColor,
+  guidelineAudienceEditOptions,
+  guidelineLifeStageEditOptions,
+  guidelineSettingEditOptions,
+  guidelineTypeEditOptions
 } from '~/utils/consoleGuideCatalog'
+import ConsoleArticleTokenInput from '~/components/console/ArticleTokenInput.vue'
+import { assetSectionBreadcrumb, recordCrumb } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({
   layout: 'default'
@@ -950,7 +1117,28 @@ const guidelineForm = reactive({
   quantity_value: '',
   quantity_unit: '',
   quantity_period: '',
-  quantity_raw_text: ''
+  quantity_raw_text: '',
+  // Enrichment facets. Editable here so a curator can correct what the agent
+  // inferred; the catalog then marks the field human-owned and later
+  // enrichment passes leave it alone.
+  life_stage: [] as string[],
+  age_min_months: '',
+  age_max_months: '',
+  setting: [] as string[],
+  audience: [] as string[],
+  guideline_type: '',
+  applicable_regions: [] as string[],
+  topic: [] as string[],
+  nutrients: [] as string[],
+  health_conditions: [] as string[]
+})
+
+const ageRangeError = computed(() => {
+  const min = Number(guidelineForm.age_min_months)
+  const max = Number(guidelineForm.age_max_months)
+  if (!guidelineForm.age_min_months || !guidelineForm.age_max_months) return undefined
+  if (Number.isNaN(min) || Number.isNaN(max)) return undefined
+  return max < min ? 'Must be greater than or equal to the lower bound.' : undefined
 })
 
 const guidelineColumns = computed(() => {
@@ -979,32 +1167,16 @@ const guideDetailRoute = computed(() => ({
   path: buildGuideRoutePath(resolvedGuideUrn.value)
 }))
 
-const breadcrumbItems = computed(() => [
+const breadcrumbItems = computed(() => assetSectionBreadcrumb('guides', [
   {
-    label: 'Console',
-    icon: 'i-lucide-panel-top',
-    to: '/console'
-  },
-  {
-    label: 'Asset Manager',
-    icon: 'i-lucide-folder-open',
-    to: '/console/assets'
-  },
-  {
-    label: 'Dietary Guides',
-    icon: 'i-lucide-book-open-check',
-    to: '/console/assets/guides'
-  },
-  {
-    label: selectedGuide.value?.short_title || selectedGuide.value?.title || 'Guide',
-    icon: 'i-lucide-file-pen-line',
+    ...recordCrumb(selectedGuide.value?.short_title || selectedGuide.value?.title, 'Guide Workspace'),
     to: guideDetailRoute.value
   },
   {
     label: 'Guideline Review',
     icon: 'i-lucide-list-checks'
   }
-])
+]))
 
 const reviewArtifacts = computed(() =>
   guideArtifacts.value.filter(artifact =>
@@ -1319,6 +1491,13 @@ function normalizeNumber(value: string) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+function parseOptionalCount(value: string): number | null {
+  const trimmed = String(value ?? '').trim()
+  if (!trimmed) return null
+  const parsed = Number(trimmed)
+  return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed) : null
+}
+
 function buildGuidelineQuantityPayload(): CatalogGuidelineQuantity | null {
   const operator = normalizeNullable(guidelineForm.quantity_operator)
   const value = normalizeNumber(guidelineForm.quantity_value)
@@ -1362,6 +1541,16 @@ function resetGuidelineFormForCreate() {
   guidelineForm.quantity_unit = ''
   guidelineForm.quantity_period = ''
   guidelineForm.quantity_raw_text = ''
+  guidelineForm.life_stage = []
+  guidelineForm.age_min_months = ''
+  guidelineForm.age_max_months = ''
+  guidelineForm.setting = []
+  guidelineForm.audience = []
+  guidelineForm.guideline_type = ''
+  guidelineForm.applicable_regions = []
+  guidelineForm.topic = []
+  guidelineForm.nutrients = []
+  guidelineForm.health_conditions = []
 }
 
 function setGuidelineForm(guideline: CatalogGuideline) {
@@ -1382,6 +1571,16 @@ function setGuidelineForm(guideline: CatalogGuideline) {
   guidelineForm.quantity_unit = guideline.quantity?.unit || ''
   guidelineForm.quantity_period = guideline.quantity?.period || ''
   guidelineForm.quantity_raw_text = guideline.quantity?.raw_text || ''
+  guidelineForm.life_stage = [...(guideline.life_stage || [])]
+  guidelineForm.age_min_months = guideline.age_min_months?.toString() || ''
+  guidelineForm.age_max_months = guideline.age_max_months?.toString() || ''
+  guidelineForm.setting = [...(guideline.setting || [])]
+  guidelineForm.audience = [...(guideline.audiences || [])]
+  guidelineForm.guideline_type = guideline.guideline_type || ''
+  guidelineForm.applicable_regions = [...(guideline.applicable_regions || [])]
+  guidelineForm.topic = [...(guideline.topics || [])]
+  guidelineForm.nutrients = [...(guideline.nutrients || [])]
+  guidelineForm.health_conditions = [...(guideline.health_conditions || [])]
 }
 
 function mergeGuideline(updatedGuideline: CatalogGuideline) {
@@ -1652,7 +1851,20 @@ async function saveGuideline() {
       status: normalizeNullable(guidelineForm.status) as CatalogStatus | null,
       review_status: normalizeNullable(guidelineForm.review_status) as CatalogReviewStatus | null,
       visibility: normalizeNullable(guidelineForm.visibility) as CatalogVisibility | null,
-      applicability_status: normalizeNullable(guidelineForm.applicability_status) as CatalogApplicabilityStatus | null
+      applicability_status: normalizeNullable(guidelineForm.applicability_status) as CatalogApplicabilityStatus | null,
+      // Enrichment facets. Sent on every save so clearing one actually clears
+      // it; the catalog records the field as human-owned either way, which is
+      // what stops the next enrichment pass from putting the old value back.
+      life_stage: guidelineForm.life_stage as CatalogGuidelineLifeStage[],
+      age_min_months: parseOptionalCount(guidelineForm.age_min_months),
+      age_max_months: parseOptionalCount(guidelineForm.age_max_months),
+      setting: guidelineForm.setting as CatalogGuidelineSetting[],
+      audience: guidelineForm.audience as CatalogGuidelineAudience[],
+      guideline_type: normalizeNullable(guidelineForm.guideline_type) as CatalogGuidelineType | null,
+      applicable_regions: guidelineForm.applicable_regions,
+      topic: guidelineForm.topic,
+      nutrients: guidelineForm.nutrients,
+      health_conditions: guidelineForm.health_conditions
     }
 
     if (guidelineEditorMode.value === 'create') {
@@ -2023,7 +2235,7 @@ watch(guidelineTablePage, (page, previousPage) => {
   void loadPageGuidelines()
 })
 
-watch(guidelineDeleteOpen, isOpen => {
+watch(guidelineDeleteOpen, (isOpen) => {
   if (isOpen || guidelineDeletePending.value) {
     return
   }
@@ -2051,4 +2263,14 @@ onBeforeUnmount(() => {
 
 await loadGuideDetail(resolvedGuideUrn.value)
 await loadPageGuidelines()
+
+// Facet chips under each rule in the list. A curator needs to see what
+// enrichment assigned without opening the editor for every rule — that is the
+// only way to spot a wrong facet across a whole guide.
+function ruleChips(guideline: CatalogGuideline) {
+  return guidelineFacetChips(guideline, {
+    fields: ['life_stage', 'age_range', 'setting', 'guideline_type', 'nutrients'],
+    limit: 5
+  })
+}
 </script>

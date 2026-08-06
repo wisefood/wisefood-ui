@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import KeycloakAuthService from '~/services/keycloak'
-import { canAccessConsole, includesAnyRole, includesRole } from '~/utils/authRoles'
+import { canAccessConsole, includesAnyRole, includesRole, isAdmin } from '~/utils/authRoles'
 import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 
 const isDebugEnabled = (): boolean => {
@@ -110,6 +110,9 @@ export const useAuthStore = defineStore('auth', {
     hasRole: (state) => (role: string) => includesRole(state.user?.roles, role),
     hasAnyRole: (state) => (roles: string[]) => includesAnyRole(state.user?.roles, roles),
     canAccessConsole: (state) => canAccessConsole(state.user?.roles),
+    // Operational surfaces (index state, embedding backfills, reindexing) are
+    // admin-only; content curation stays open to experts.
+    isAdmin: (state) => isAdmin(state.user?.roles),
   },
 
   actions: {

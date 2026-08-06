@@ -45,7 +45,10 @@
           </template>
         </UAlert>
 
-        <div v-else class="space-y-6">
+        <div
+          v-else
+          class="space-y-6"
+        >
           <CatalogHeader
             v-model="queryText"
             badge="Country / Region Explorer"
@@ -63,13 +66,24 @@
               />
             </template>
             <template v-else>
-              <UBadge color="neutral" variant="outline">
+              <UBadge
+                color="neutral"
+                variant="outline"
+              >
                 {{ totalRegionGuides.toLocaleString() }} guides
               </UBadge>
-              <UBadge v-if="totalRegionGuidelines === null || totalRegionGuidelines > 0" color="neutral" variant="outline">
+              <UBadge
+                v-if="totalRegionGuidelines === null || totalRegionGuidelines > 0"
+                color="neutral"
+                variant="outline"
+              >
                 {{ totalRegionGuidelines === null ? 'Rules indexed live' : `${totalRegionGuidelines.toLocaleString()} rules` }}
               </UBadge>
-              <UBadge v-if="artifactTotal > 0" color="neutral" variant="outline">
+              <UBadge
+                v-if="artifactTotal > 0"
+                color="neutral"
+                variant="outline"
+              >
                 {{ artifactTotal.toLocaleString() }} artifacts
               </UBadge>
             </template>
@@ -92,8 +106,14 @@
                   :title="overviewError"
                 />
 
-                <div v-else class="space-y-6">
-                  <section v-if="bootstrapping || (overviewLoading && !regionGuidesAll.length)" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div
+                  v-else
+                  class="space-y-6"
+                >
+                  <section
+                    v-if="bootstrapping || (overviewLoading && !regionGuidesAll.length)"
+                    class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+                  >
                     <UCard
                       v-for="index in 4"
                       :key="`stat-loading-${index}`"
@@ -111,7 +131,10 @@
                     </UCard>
                   </section>
 
-                  <section v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <section
+                    v-else
+                    class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+                  >
                     <UCard
                       v-for="stat in regionStats"
                       :key="stat.label"
@@ -132,7 +155,10 @@
                         </div>
 
                         <div class="rounded-2xl bg-brand-50 p-3 text-brand-600 ring-1 ring-brand-200/70 dark:bg-brand-500/10 dark:text-brand-300 dark:ring-brand-500/20">
-                          <UIcon :name="stat.icon" class="h-5 w-5" />
+                          <UIcon
+                            :name="stat.icon"
+                            class="h-5 w-5"
+                          />
                         </div>
                       </div>
                     </UCard>
@@ -150,7 +176,10 @@
                       </div>
                     </div>
 
-                    <div v-if="overviewLoading && !featuredGuides.length" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div
+                      v-if="overviewLoading && !featuredGuides.length"
+                      class="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+                    >
                       <UCard
                         v-for="index in 3"
                         :key="`featured-loading-${index}`"
@@ -166,7 +195,10 @@
                       </UCard>
                     </div>
 
-                    <div v-else-if="featuredGuides.length" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div
+                      v-else-if="featuredGuides.length"
+                      class="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+                    >
                       <GuideCard
                         v-for="guide in featuredGuides"
                         :key="guide.urn"
@@ -217,7 +249,10 @@
                   :title="guidesError"
                 />
 
-                <div v-else-if="guidesLoading && !guides.length" class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div
+                  v-else-if="guidesLoading && !guides.length"
+                  class="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+                >
                   <UCard
                     v-for="index in 6"
                     :key="`guide-loading-${index}`"
@@ -233,8 +268,14 @@
                   </UCard>
                 </div>
 
-                <div v-else-if="!guides.length" class="rounded-2xl border border-dashed border-gray-300/80 bg-white/80 px-6 py-12 text-center dark:border-white/15 dark:bg-white/5">
-                  <UIcon name="i-lucide-book-x" class="mx-auto h-8 w-8 text-gray-400" />
+                <div
+                  v-else-if="!guides.length"
+                  class="rounded-2xl border border-dashed border-gray-300/80 bg-white/80 px-6 py-12 text-center dark:border-white/15 dark:bg-white/5"
+                >
+                  <UIcon
+                    name="i-lucide-book-x"
+                    class="mx-auto h-8 w-8 text-gray-400"
+                  />
                   <p class="mt-4 text-sm font-medium text-gray-900 dark:text-white">
                     No guides match the current search.
                   </p>
@@ -243,7 +284,10 @@
                   </p>
                 </div>
 
-                <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div
+                  v-else
+                  class="grid gap-4 md:grid-cols-2 xl:grid-cols-3"
+                >
                   <GuideCard
                     v-for="guide in guides"
                     :key="guide.urn"
@@ -286,6 +330,19 @@
                   @reset="resetGuidelineFilters"
                 />
 
+                <GuidelineFacetFilters
+                  :facets="guidelineOverviewFacets"
+                  :selections="facetSelections"
+                  :age-range="ageRange"
+                  :include-unstated-age="includeUnstatedAge"
+                  :age-spans="guidelineAgeSpans"
+                  @toggle="toggleFacetValue"
+                  @clear="clearFacetSelections"
+                  @clear-field="clearFacetField"
+                  @age-range="setAgeRange"
+                  @include-unstated-age="setIncludeUnstatedAge"
+                />
+
                 <UCard
                   :ui="{ body: 'p-4 sm:p-5' }"
                   class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
@@ -310,7 +367,10 @@
                   :title="guidelinesError"
                 />
 
-                <div v-else-if="guidelinesLoading && !guidelines.length" class="space-y-4">
+                <div
+                  v-else-if="guidelinesLoading && !guidelines.length"
+                  class="space-y-4"
+                >
                   <UCard
                     v-for="index in 4"
                     :key="`guideline-loading-${index}`"
@@ -325,8 +385,14 @@
                   </UCard>
                 </div>
 
-                <div v-else-if="!guidelines.length" class="rounded-2xl border border-dashed border-gray-300/80 bg-white/80 px-6 py-12 text-center dark:border-white/15 dark:bg-white/5">
-                  <UIcon name="i-lucide-list-x" class="mx-auto h-8 w-8 text-gray-400" />
+                <div
+                  v-else-if="!guidelines.length"
+                  class="rounded-2xl border border-dashed border-gray-300/80 bg-white/80 px-6 py-12 text-center dark:border-white/15 dark:bg-white/5"
+                >
+                  <UIcon
+                    name="i-lucide-list-x"
+                    class="mx-auto h-8 w-8 text-gray-400"
+                  />
                   <p class="mt-4 text-sm font-medium text-gray-900 dark:text-white">
                     No guideline rules match the current filters.
                   </p>
@@ -335,7 +401,10 @@
                   </p>
                 </div>
 
-                <div v-else class="space-y-4">
+                <div
+                  v-else
+                  class="space-y-4"
+                >
                   <GuidelineCard
                     v-for="guideline in guidelines"
                     :key="guideline.id"
@@ -372,7 +441,11 @@ import CatalogHeader from '~/components/foodscholar/guides/CatalogHeader.vue'
 import GuideCard from '~/components/foodscholar/guides/GuideCard.vue'
 import GuidelineCard from '~/components/foodscholar/guides/GuidelineCard.vue'
 import GuidelineFilters from '~/components/foodscholar/guides/GuidelineFilters.vue'
+import GuidelineFacetFilters from '~/components/foodscholar/guides/GuidelineFacetFilters.vue'
 import catalogApi from '~/services/catalogApi'
+import { buildGuidelineAgeFilter,
+  buildGuidelineFacetFilters,
+  type GuidelineAgeRange } from '~/utils/guidelineFacets'
 import {
   buildFacetSelectOptions,
   buildGuideDetailPath,
@@ -419,6 +492,15 @@ const guideTotal = ref(0)
 const guides = ref<CatalogGuide[]>([])
 const guidelineTotal = ref(0)
 const guidelines = ref<CatalogGuideline[]>([])
+
+// Age spans for the filter histogram. The country explorer pages its results,
+// so this reflects the current page — enough to show where coverage sits
+// without pulling the whole region's rule set down for a chart.
+const guidelineAgeSpans = computed(() =>
+  guidelines.value
+    .filter(rule => rule.age_min_months != null || rule.age_max_months != null)
+    .map(rule => ({ min: rule.age_min_months ?? null, max: rule.age_max_months ?? null }))
+)
 const totalRegionGuides = ref(0)
 const totalRegionGuidelines = ref<number | null>(null)
 const artifactTotal = ref(0)
@@ -523,7 +605,6 @@ const featuredGuides = computed(() => {
     })
     .slice(0, 3)
 })
-
 
 const regionStats = computed(() => {
   const latestYear = regionGuidesAll.value.reduce<number | null>((latest, guide) => {
@@ -689,7 +770,68 @@ function buildGuidelineFilters() {
     filters.push(`publication_year:${quoteCatalogFilterValue(selectedYear.value)}`)
   }
 
+  filters.push(...buildGuidelineFacetFilters(facetSelections.value))
+  filters.push(...buildGuidelineAgeFilter(ageRange.value, includeUnstatedAge.value))
+
   return filters
+}
+
+/**
+ * Multi-select enrichment facets (life stage, setting, nutrient, ...).
+ *
+ * Kept separate from the single-select dropdowns above because these are
+ * genuinely multi-valued: a reader narrowing to "school age" and "adolescence"
+ * wants the union, not one or the other.
+ */
+const facetSelections = ref<Record<string, string[]>>({})
+// Age is a range query rather than a term facet, so it is held separately.
+const ageRange = ref<GuidelineAgeRange | null>(null)
+const includeUnstatedAge = ref(true)
+
+function setAgeRange(range: GuidelineAgeRange | null) {
+  ageRange.value = range
+  guidelinePage.value = 1
+  void loadGuidelines()
+}
+
+function setIncludeUnstatedAge(include: boolean) {
+  includeUnstatedAge.value = include
+  guidelinePage.value = 1
+  if (ageRange.value) void loadGuidelines()
+}
+
+function clearFacetField(field: string) {
+  if (!facetSelections.value[field]) return
+  facetSelections.value = Object.fromEntries(
+    Object.entries(facetSelections.value).filter(([key]) => key !== field)
+  )
+  guidelinePage.value = 1
+  void loadGuidelines()
+}
+
+function toggleFacetValue(field: string, value: string) {
+  const current = facetSelections.value[field] || []
+  const next = current.includes(value)
+    ? current.filter(item => item !== value)
+    : [...current, value]
+
+  // Rebuilt rather than mutated: an emptied facet is dropped from the object
+  // so it never contributes a filter clause.
+  facetSelections.value = Object.fromEntries(
+    Object.entries({ ...facetSelections.value, [field]: next })
+      .filter(([, values]) => values.length > 0)
+  )
+
+  guidelinePage.value = 1
+  void loadGuidelines()
+}
+
+function clearFacetSelections() {
+  if (!Object.keys(facetSelections.value).length && !ageRange.value) return
+  facetSelections.value = {}
+  ageRange.value = null
+  guidelinePage.value = 1
+  void loadGuidelines()
 }
 
 function hydrateStateFromRoute() {
@@ -752,7 +894,20 @@ async function loadOverview() {
         limit: 1,
         offset: 0,
         fq: [buildGuidelineRegionFilter()].filter((v): v is string => Boolean(v)),
-        fields: ['guide_urn', 'topic', 'food_groups', 'audience', 'target_populations', 'publication_year'],
+        fields: [
+          'guide_urn',
+          'topic',
+          'food_groups',
+          'audience',
+          'target_populations',
+          'publication_year',
+          // Enrichment facets; absent until the enrichment pass has run, in
+          // which case the filter sections simply do not render.
+          'life_stage',
+          'setting',
+          'guideline_type',
+          'nutrients'
+        ],
         facet_limit: 100
       })
     ])
@@ -951,8 +1106,9 @@ function resetGuidelineFilters() {
   selectedGuide.value = 'all'
   selectedYear.value = 'all'
   guidelineSort.value = DEFAULT_GUIDELINE_SORT
+  facetSelections.value = {}
+  ageRange.value = null
 }
-
 
 watch(activeTab, () => {
   if (suppressWatcher) {

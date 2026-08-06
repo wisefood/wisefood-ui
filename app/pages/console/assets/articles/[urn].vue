@@ -253,12 +253,16 @@
                     />
                   </UFormField>
 
-                  <UFormField label="Authors">
-                    <UTextarea
+                  <UFormField
+                    label="Authors"
+                    help="Order is preserved. Paste a list to add several at once."
+                  >
+                    <ConsoleArticleTokenInput
                       v-model="articleForm.authors"
-                      :rows="4"
-                      placeholder="One author per line, or separate them with commas"
-                      class="w-full"
+                      label="author"
+                      ordered
+                      placeholder="Surname, Initials — then press Enter"
+                      empty-text="No authors recorded."
                     />
                   </UFormField>
 
@@ -300,6 +304,8 @@
                         <UInputMenu
                           v-model="articleForm.category"
                           :items="categoryOptions"
+                          value-key="value"
+                          label-key="label"
                           create-item="always"
                           leading
                           leading-icon="i-lucide-layers-3"
@@ -313,6 +319,8 @@
                         <UInputMenu
                           v-model="articleForm.studyType"
                           :items="studyTypeOptions"
+                          value-key="value"
+                          label-key="label"
                           create-item="always"
                           leading
                           leading-icon="i-lucide-flask-conical"
@@ -328,6 +336,8 @@
                         <UInputMenu
                           v-model="articleForm.readerGroup"
                           :items="readerGroupOptions"
+                          value-key="value"
+                          label-key="label"
                           create-item="always"
                           leading
                           leading-icon="i-lucide-users"
@@ -341,6 +351,8 @@
                         <UInputMenu
                           v-model="articleForm.ageGroup"
                           :items="ageGroupOptions"
+                          value-key="value"
+                          label-key="label"
                           create-item="always"
                           leading
                           leading-icon="i-lucide-baby"
@@ -354,6 +366,8 @@
                         <UInputMenu
                           v-model="articleForm.populationGroup"
                           :items="populationGroupOptions"
+                          value-key="value"
+                          label-key="label"
                           create-item="always"
                           leading
                           leading-icon="i-lucide-users"
@@ -369,6 +383,8 @@
                         <UInputMenu
                           v-model="articleForm.biologicalModel"
                           :items="biologicalModelOptions"
+                          value-key="value"
+                          label-key="label"
                           create-item="always"
                           leading
                           leading-icon="i-lucide-dna"
@@ -382,6 +398,8 @@
                         <UInputMenu
                           v-model="articleForm.region"
                           :items="regionOptions"
+                          value-key="value"
+                          label-key="label"
                           create-item="always"
                           leading
                           leading-icon="i-lucide-globe"
@@ -420,6 +438,8 @@
                         <UInputMenu
                           v-model="articleForm.incomeSetting"
                           :items="incomeSettingOptions"
+                          value-key="value"
+                          label-key="label"
                           create-item="always"
                           leading
                           leading-icon="i-lucide-briefcase"
@@ -443,51 +463,63 @@
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">
-                      <UFormField label="Tags">
-                        <UTextarea
+                      <UFormField
+                        label="Tags"
+                        help="Up to 50, case-insensitively unique."
+                      >
+                        <ConsoleArticleTokenInput
                           v-model="articleForm.tags"
-                          :rows="4"
-                          placeholder="Comma-separated or one tag per line"
-                          class="w-full"
+                          label="tag"
+                          :max="50"
+                          placeholder="Add a tag"
+                          empty-text="No tags yet."
                         />
                       </UFormField>
 
                       <UFormField label="Topics">
-                        <UTextarea
+                        <ConsoleArticleTokenInput
                           v-model="articleForm.topics"
-                          :rows="4"
-                          placeholder="Comma-separated or one topic per line"
-                          class="w-full"
+                          label="topic"
+                          :max="100"
+                          placeholder="Add a topic"
+                          empty-text="No topics yet."
                         />
                       </UFormField>
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">
                       <UFormField label="Keywords">
-                        <UTextarea
+                        <ConsoleArticleTokenInput
                           v-model="articleForm.keywords"
-                          :rows="4"
-                          placeholder="Comma-separated or one keyword per line"
-                          class="w-full"
+                          label="keyword"
+                          :max="250"
+                          placeholder="Add a keyword"
+                          empty-text="No keywords yet."
                         />
                       </UFormField>
 
                       <UFormField label="Exclusion Flags">
-                        <UTextarea
+                        <ConsoleArticleTokenInput
                           v-model="articleForm.hardExclusionFlags"
-                          :rows="4"
-                          placeholder="Comma-separated or one flag per line"
-                          class="w-full"
+                          label="flag"
+                          :max="50"
+                          placeholder="Add a flag"
+                          empty-text="No exclusion flags."
                         />
                       </UFormField>
                     </div>
 
-                    <UFormField label="Curator Takeaways">
-                      <UTextarea
+                    <UFormField
+                      label="Curator Takeaways"
+                      help="Up to 10. These are the editorial counterpart to the agent's suggestions."
+                    >
+                      <ConsoleArticleTokenInput
                         v-model="articleForm.keyTakeaways"
-                        :rows="5"
-                        placeholder="Prefer one takeaway per line"
-                        class="w-full"
+                        label="takeaway"
+                        ordered
+                        :max="10"
+                        placeholder="Add a takeaway"
+                        empty-text="No curator takeaways yet."
                       />
                     </UFormField>
                   </section>
@@ -660,6 +692,8 @@
                       <UInputMenu
                         v-model="articleForm.type"
                         :items="articleTypeOptions"
+                        value-key="value"
+                        label-key="label"
                         create-item="always"
                         leading
                         leading-icon="i-lucide-file-stack"
@@ -701,6 +735,8 @@
                       <UInputMenu
                         v-model="articleForm.license"
                         :items="licenseOptions"
+                        value-key="value"
+                        label-key="label"
                         create-item="always"
                         leading
                         leading-icon="i-lucide-badge-check"
@@ -1293,6 +1329,21 @@ import {
   formatConsolePublicationYear as formatPublicationYear,
   resolveArticleRouteParam
 } from '~/utils/consoleArticles'
+import ConsoleArticleTokenInput from '~/components/console/ArticleTokenInput.vue'
+import {
+  ageGroupOptions,
+  articleTypeOptions,
+  biologicalModelOptions,
+  categoryOptions,
+  incomeSettingOptions,
+  languageOptions,
+  licenseOptions,
+  openAccessOptions,
+  populationGroupOptions,
+  readerGroupOptions,
+  regionOptions,
+  studyTypeOptions
+} from '~/utils/consoleArticleVocabulary'
 import {
   enrichmentBadge,
   formatEnrichmentTimestamp,
@@ -1303,6 +1354,7 @@ import {
   formatConsoleDate as formatDate
 } from '~/utils/consoleGuideCatalog'
 import { useArticleEnrichment } from '~/composables/useArticleEnrichment'
+import { assetSectionBreadcrumb, recordCrumb } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({
   layout: 'default'
@@ -1362,12 +1414,15 @@ const articleForm = reactive({
   language: '',
   countryOrRegion: '',
   incomeSetting: '',
-  authors: '',
-  tags: '',
-  topics: '',
-  keywords: '',
-  hardExclusionFlags: '',
-  keyTakeaways: '',
+  // Held as arrays because the API types them as string[]; the old
+  // comma-separated strings had to be re-split on every save and broke on any
+  // value that legitimately contained a comma.
+  authors: [] as string[],
+  tags: [] as string[],
+  topics: [] as string[],
+  keywords: [] as string[],
+  hardExclusionFlags: [] as string[],
+  keyTakeaways: [] as string[],
   openAccess: 'unknown',
   license: '',
   annotationConfidence: '',
@@ -1385,12 +1440,6 @@ const artifactColumns = [
   { id: 'actions', header: '', enableSorting: false }
 ]
 
-const openAccessOptions = [
-  { label: 'Unknown', value: 'unknown' },
-  { label: 'Open access', value: 'true' },
-  { label: 'Closed access', value: 'false' }
-]
-
 const artifactFileTypeOptions = [
   { label: 'PDF document', value: 'application/pdf' },
   { label: 'Word document (.docx)', value: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
@@ -1405,124 +1454,10 @@ const artifactFileTypeOptions = [
   { label: 'Generic binary', value: 'application/octet-stream' }
 ]
 
-const articleTypeOptions = [
-  'Review',
-  'Systematic review',
-  'Meta-analysis',
-  'Randomized controlled trial',
-  'Clinical trial',
-  'Cohort study',
-  'Case-control study',
-  'Cross-sectional study',
-  'Guideline',
-  'Consensus statement',
-  'Narrative review',
-  'Umbrella review',
-  'Position paper',
-  'Preprint'
-]
-
-const categoryOptions = [
-  'Cardiometabolic Health',
-  'Gut Health',
-  'Nutrition Science',
-  'Preventive Health',
-  'Public Health',
-  'Food Systems',
-  'Exercise & Performance',
-  'Mental Health',
-  'Women\'s Health',
-  'Chronic Disease'
-]
-
-const studyTypeOptions = [
-  'Systematic review',
-  'Meta-analysis',
-  'Review',
-  'Randomized controlled trial',
-  'Clinical trial',
-  'Cohort study',
-  'Case-control study',
-  'Cross-sectional study',
-  'Guideline',
-  'Qualitative study'
-]
-
-const readerGroupOptions = [
-  'General public',
-  'Practitioners',
-  'Researchers',
-  'Policy makers',
-  'Students'
-]
-
-const ageGroupOptions = [
-  'Prenatal',
-  'Infants',
-  'Children',
-  'Adolescents',
-  'Adults',
-  'Older adults',
-  'Mixed'
-]
-
-const populationGroupOptions = [
-  'General population',
-  'Healthy adults',
-  'Adults with obesity',
-  'Pregnant individuals',
-  'Children',
-  'Athletes',
-  'Patients with chronic disease'
-]
-
-const biologicalModelOptions = [
-  'Human',
-  'Animal',
-  'In vitro',
-  'Computational',
-  'Mixed'
-]
-
-const regionOptions = [
-  'Global',
-  'Europe',
-  'North America',
-  'South America',
-  'Asia',
-  'Africa',
-  'Oceania',
-  'Middle East',
-  'Multinational'
-]
-
-const languageOptions = [
-  { label: 'English (en)', value: 'en' },
-  { label: 'Greek (el)', value: 'el' },
-  { label: 'German (de)', value: 'de' },
-  { label: 'French (fr)', value: 'fr' },
-  { label: 'Spanish (es)', value: 'es' },
-  { label: 'Italian (it)', value: 'it' },
-  { label: 'Portuguese (pt)', value: 'pt' },
-  { label: 'Dutch (nl)', value: 'nl' }
-]
-
-const incomeSettingOptions = [
-  'High income',
-  'Upper-middle income',
-  'Lower-middle income',
-  'Low income',
-  'Mixed'
-]
-
-const licenseOptions = [
-  'CC BY 4.0',
-  'CC BY-SA 4.0',
-  'CC BY-NC 4.0',
-  'CC BY-ND 4.0',
-  'CC0',
-  'All rights reserved'
-]
+// Vocabularies live in ~/utils/consoleArticleVocabulary so the create form and
+// this workspace offer the same options. `licenseOptions` in particular now
+// carries API-valid values: the previous local list sent display labels
+// ("CC BY 4.0") that the LicenseId enum rejects.
 
 const resolvedArticleUrn = computed(() => resolveArticleRouteParam(route.params.urn))
 const articleLibraryRoute = '/console/assets/articles'
@@ -1546,7 +1481,7 @@ const categoryPreviewLabel = computed(() => {
   return 'Unclassified'
 })
 
-const headerAuthors = computed(() => parseDelimitedList(articleForm.authors).slice(0, 8))
+const headerAuthors = computed(() => articleForm.authors.slice(0, 8))
 
 const annotationConfidenceLabel = computed(() => {
   const normalized = articleForm.annotationConfidence.trim()
@@ -1692,27 +1627,11 @@ const annotationSummaryItems = computed(() => {
   ].filter((item): item is { label: string, value: string, icon: string } => Boolean(item))
 })
 
-const breadcrumbItems = computed(() => [
-  {
-    label: 'Console',
-    icon: 'i-lucide-panel-top',
-    to: '/console'
-  },
-  {
-    label: 'Asset Manager',
-    icon: 'i-lucide-folder-open',
-    to: '/console/assets'
-  },
-  {
-    label: 'Scientific Articles',
-    icon: 'i-lucide-flask-conical',
-    to: articleLibraryRoute
-  },
-  {
-    label: truncateBreadcrumbLabel(pageTitle.value),
-    icon: 'i-lucide-file-pen-line'
-  }
-])
+const breadcrumbItems = computed(() => assetSectionBreadcrumb(
+  'articles',
+  [recordCrumb(pageTitle.value, 'Article Workspace')],
+  articleLibraryRoute
+))
 
 const extrasJsonValidationError = computed(() => {
   if (!articleForm.extrasJson.trim()) {
@@ -1862,42 +1781,6 @@ function inferArtifactFileType(file: File) {
   return mimeType || 'application/octet-stream'
 }
 
-function truncateBreadcrumbLabel(value: string, max = 38) {
-  const normalized = value.trim()
-
-  if (!normalized) {
-    return 'Article Workspace'
-  }
-
-  if (normalized.length <= max) {
-    return normalized
-  }
-
-  return `${normalized.slice(0, Math.max(0, max - 3)).trimEnd()}...`
-}
-
-function parseDelimitedList(value: string) {
-  const entries = value
-    .split(/[\n,]/)
-    .map(item => item.trim())
-    .filter(item => item.length > 0)
-
-  return Array.from(new Set(entries))
-}
-
-function parseLineList(value: string) {
-  const entries = value
-    .split('\n')
-    .map(item => item.trim())
-    .filter(item => item.length > 0)
-
-  return Array.from(new Set(entries))
-}
-
-function serializeDelimitedList(values: string[] | null | undefined) {
-  return (values || []).join('\n')
-}
-
 function serializeExtras(value: unknown) {
   if (!value || (typeof value === 'object' && !Array.isArray(value) && Object.keys(value as Record<string, unknown>).length === 0)) {
     return ''
@@ -2003,12 +1886,12 @@ function populateArticleForm(article: Article) {
   articleForm.language = article.language || ''
   articleForm.countryOrRegion = article.geographic_context?.country_or_region || ''
   articleForm.incomeSetting = article.geographic_context?.income_setting || ''
-  articleForm.authors = serializeDelimitedList(article.authors)
-  articleForm.tags = serializeDelimitedList(article.tags)
-  articleForm.topics = serializeDelimitedList(article.topics || [])
-  articleForm.keywords = serializeDelimitedList(article.keywords || [])
-  articleForm.hardExclusionFlags = serializeDelimitedList(article.hard_exclusion_flags || [])
-  articleForm.keyTakeaways = serializeDelimitedList(article.key_takeaways || [])
+  articleForm.authors = [...(article.authors || [])]
+  articleForm.tags = [...(article.tags || [])]
+  articleForm.topics = [...(article.topics || [])]
+  articleForm.keywords = [...(article.keywords || [])]
+  articleForm.hardExclusionFlags = [...(article.hard_exclusion_flags || [])]
+  articleForm.keyTakeaways = [...(article.key_takeaways || [])]
   articleForm.openAccess = article.open_access === true ? 'true' : article.open_access === false ? 'false' : 'unknown'
   articleForm.license = article.license || ''
   articleForm.annotationConfidence = article.annotation_confidence === null || article.annotation_confidence === undefined
@@ -2026,12 +1909,12 @@ function populateArticleForm(article: Article) {
 function buildArticleUpdatePayload(): UpdateArticleRequest {
   const title = normalizeNullable(articleForm.title)
   const venue = normalizeNullable(articleForm.venue)
-  const authors = parseDelimitedList(articleForm.authors)
-  const tags = parseDelimitedList(articleForm.tags)
-  const topics = parseDelimitedList(articleForm.topics)
-  const keywords = parseDelimitedList(articleForm.keywords)
-  const hardExclusionFlags = parseDelimitedList(articleForm.hardExclusionFlags)
-  const keyTakeaways = parseLineList(articleForm.keyTakeaways)
+  const authors = articleForm.authors
+  const tags = articleForm.tags
+  const topics = articleForm.topics
+  const keywords = articleForm.keywords
+  const hardExclusionFlags = articleForm.hardExclusionFlags
+  const keyTakeaways = articleForm.keyTakeaways
   const publicationYear = parsePublicationYearInput(articleForm.publicationYear)
   const extras = articleForm.extrasJson.trim() ? JSON.parse(articleForm.extrasJson) : null
   const countryOrRegion = normalizeNullable(articleForm.countryOrRegion)

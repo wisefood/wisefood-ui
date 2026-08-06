@@ -468,6 +468,11 @@ interface InsightSlide {
   evidenceUrn?: string | null
   evidencePassage?: string | null
   evidencePath?: string | null
+  // Carried so a guideline citation still resolves when the rule itself is no
+  // longer publicly readable — archived, still draft, or outside visibility.
+  evidenceGuideUrn?: string | null
+  evidencePageNo?: number | null
+  evidenceRegion?: string | null
 }
 
 const insightSlides = ref<InsightSlide[]>([])
@@ -517,7 +522,16 @@ const activeInsightArticleTarget = computed(() => {
   }
 
   if (urn.startsWith('urn:guideline:') || (!urn.startsWith('urn:') && urn.length > 0)) {
-    return { path: `/foodscholar/catalog/guidelines/${encodeURIComponent(urn)}` }
+    // The resolver prefers the live rule and falls back to these hints, so a tip
+    // whose rule has since been archived still opens its guide at the right page
+    // rather than a 404.
+    const query: Record<string, string> = {}
+    if (slide.evidenceGuideUrn) query.guide = slide.evidenceGuideUrn
+    if (slide.evidenceRegion) query.region = slide.evidenceRegion
+    if (slide.evidencePageNo) query.pdf_page = String(slide.evidencePageNo)
+
+    const path = `/foodscholar/catalog/guidelines/${encodeURIComponent(urn)}`
+    return Object.keys(query).length ? { path, query } : { path }
   }
 
   const passage = slide.evidencePassage?.trim() || ''
@@ -872,7 +886,7 @@ const normalizeTipText = (value: unknown): string[] => {
     .filter(Boolean)
 }
 
-const normalizeTipDetails = (value: unknown): Array<{ text: string, evidenceUrn: string | null, evidencePassage: string | null }> => {
+const normalizeTipDetails = (value: unknown): Array<{ text: string, evidenceUrn: string | null, evidencePassage: string | null, evidenceGuideUrn: string | null, evidencePageNo: number | null, evidenceRegion: string | null }> => {
   if (!Array.isArray(value)) return []
 
   return value
@@ -883,35 +897,42 @@ const normalizeTipDetails = (value: unknown): Array<{ text: string, evidenceUrn:
       const evidence = record.evidence
       const maybeUrn = evidence && typeof evidence === 'object' ? (evidence as Record<string, unknown>).urn : null
       const maybePassage = evidence && typeof evidence === 'object' ? (evidence as Record<string, unknown>).passage : null
+      const evidenceRecord = evidence && typeof evidence === 'object' ? evidence as Record<string, unknown> : {}
+      const maybeGuideUrn = evidenceRecord.guide_urn
+      const maybePageNo = evidenceRecord.page_no
+      const maybeRegion = evidenceRecord.region
 
       const text = typeof maybeText === 'string' ? maybeText.trim() : ''
       if (!text) return null
 
       const evidenceUrn = typeof maybeUrn === 'string' && maybeUrn.trim() ? maybeUrn.trim() : null
       const evidencePassage = typeof maybePassage === 'string' && maybePassage.trim() ? maybePassage.trim() : null
-      return { text, evidenceUrn, evidencePassage }
+      return {
+        text,
+        evidenceUrn,
+        evidencePassage,
+        evidenceGuideUrn: typeof maybeGuideUrn === 'string' && maybeGuideUrn.trim() ? maybeGuideUrn.trim() : null,
+        evidencePageNo: typeof maybePageNo === 'number' ? maybePageNo : null,
+        evidenceRegion: typeof maybeRegion === 'string' && maybeRegion.trim() ? maybeRegion.trim() : null
+      }
     })
-    .filter((item): item is { text: string, evidenceUrn: string | null, evidencePassage: string | null } => Boolean(item))
+    .filter((item): item is { text: string, evidenceUrn: string | null, evidencePassage: string | null, evidenceGuideUrn: string | null, evidencePageNo: number | null, evidenceRegion: string | null } => Boolean(item))
 }
 
 const normalizeInsightSlides = (result: QaTipsResult | null | undefined): InsightSlide[] => {
   const didYouKnowDetails = normalizeTipDetails(result?.did_you_know_detail)
   const tipsDetails = normalizeTipDetails(result?.tips_detail)
 
-  const didYouKnow = (didYouKnowDetails.length ? didYouKnowDetails : normalizeTipText(result?.did_you_know).map(text => ({ text, evidenceUrn: null, evidencePassage: null })))
-    .map(({ text, evidenceUrn, evidencePassage }) => ({
+  const didYouKnow = (didYouKnowDetails.length ? didYouKnowDetails : normalizeTipText(result?.did_you_know).map(text => ({ text, evidenceUrn: null, evidencePassage: null, evidenceGuideUrn: null, evidencePageNo: null, evidenceRegion: null })))
+    .map(detail => ({
       kind: 'did_you_know' as const,
-      text,
-      evidenceUrn,
-      evidencePassage
+      ...detail
     }))
 
-  const tips = (tipsDetails.length ? tipsDetails : normalizeTipText(result?.tips).map(text => ({ text, evidenceUrn: null, evidencePassage: null })))
-    .map(({ text, evidenceUrn, evidencePassage }) => ({
+  const tips = (tipsDetails.length ? tipsDetails : normalizeTipText(result?.tips).map(text => ({ text, evidenceUrn: null, evidencePassage: null, evidenceGuideUrn: null, evidencePageNo: null, evidenceRegion: null })))
+    .map(detail => ({
       kind: 'tip' as const,
-      text,
-      evidenceUrn,
-      evidencePassage
+      ...detail
     }))
 
   const merged: InsightSlide[] = []

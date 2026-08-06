@@ -13,15 +13,22 @@
       <!-- Guide title + metadata header -->
       <div
         v-if="selectedGuide"
-        class="shrink-0 bg-white/70 px-4 py-5 backdrop-blur-sm dark:bg-zinc-900/50 sm:px-6"
+        class="shrink-0 bg-white/70 px-4 backdrop-blur-sm transition-[padding] dark:bg-zinc-900/50 sm:px-6"
+        :class="headerExpanded ? 'py-5' : 'py-2.5'"
       >
         <div class="mx-auto flex max-w-6xl items-start justify-between gap-4">
-          <div class="min-w-0 space-y-2.5">
-            <h1 class="text-xl font-semibold leading-snug text-gray-900 dark:text-white sm:text-2xl">
+          <div
+            class="min-w-0"
+            :class="headerExpanded ? 'space-y-2.5' : 'space-y-1'"
+          >
+            <h1
+              class="font-semibold leading-snug text-gray-900 dark:text-white"
+              :class="headerExpanded ? 'text-xl sm:text-2xl' : 'truncate text-base'"
+            >
               {{ selectedGuide.title }}
             </h1>
             <p
-              v-if="selectedGuide.description"
+              v-if="selectedGuide.description && headerExpanded"
               class="text-sm leading-relaxed text-gray-500 dark:text-gray-400"
             >
               {{ selectedGuide.description }}
@@ -60,7 +67,10 @@
               </span>
             </div>
             <!-- Secondary metadata row -->
-            <div class="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-gray-400 dark:text-gray-500">
+            <div
+              v-if="headerExpanded"
+              class="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-gray-400 dark:text-gray-500"
+            >
               <span
                 v-if="selectedGuide.document_type"
                 class="inline-flex items-center gap-1.5"
@@ -124,6 +134,16 @@
             </div>
           </div>
           <div class="flex shrink-0 items-center gap-2 pt-0.5">
+            <UButton
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              :icon="headerExpanded ? 'i-lucide-chevrons-up' : 'i-lucide-chevrons-down'"
+              :title="headerExpanded ? 'Collapse guide details' : 'Show guide details'"
+              :aria-label="headerExpanded ? 'Collapse guide details' : 'Show guide details'"
+              :aria-expanded="headerExpanded"
+              @click="headerExpanded = !headerExpanded"
+            />
             <LibrarySaveToLibraryButton
               v-if="selectedGuide?.urn"
               :item-ref="selectedGuide.urn"
@@ -192,7 +212,7 @@
         v-else-if="selectedGuide"
         class="flex min-h-0 flex-1 justify-center"
       >
-        <div class="flex min-h-0 w-full max-w-6xl flex-1">
+        <div class="flex min-h-0 w-full max-w-[140rem] flex-1">
           <!-- LEFT: PDF viewer -->
           <div
             v-if="primaryPdfArtifact"
@@ -230,9 +250,37 @@
                   @click="currentPage = pdfTotalPages ? Math.min(pdfTotalPages, currentPage + 1) : currentPage + 1"
                 />
 
+                <span
+                  v-if="pdfTotalPages"
+                  class="mx-1 text-xs tabular-nums text-gray-500 dark:text-gray-400"
+                >
+                  {{ currentPage }} / {{ pdfTotalPages }}
+                </span>
+
                 <div class="mx-1 h-4 w-px bg-gray-200 dark:bg-white/10" />
 
-                <!-- Zoom -->
+                <!-- Fit mode: the comfortable default, rather than making the
+                     reader find a usable zoom on every document. -->
+                <UButton
+                  color="neutral"
+                  :variant="fitMode === 'width' && zoom === 1 ? 'soft' : 'ghost'"
+                  size="xs"
+                  icon="i-lucide-move-horizontal"
+                  title="Fit width"
+                  @click="setFit('width')"
+                />
+                <UButton
+                  color="neutral"
+                  :variant="fitMode === 'page' && zoom === 1 ? 'soft' : 'ghost'"
+                  size="xs"
+                  icon="i-lucide-scan"
+                  title="Fit whole page"
+                  @click="setFit('page')"
+                />
+
+                <div class="mx-1 h-4 w-px bg-gray-200 dark:bg-white/10" />
+
+                <!-- Zoom, relative to the current fit -->
                 <UButton
                   color="neutral"
                   variant="ghost"
@@ -241,7 +289,7 @@
                   :disabled="zoom <= 0.5"
                   @click="zoom = Math.max(0.5, parseFloat((zoom - 0.1).toFixed(1)))"
                 />
-                <span class="min-w-[2.5rem] text-center text-xs text-gray-600 dark:text-gray-300">
+                <span class="min-w-[2.5rem] text-center text-xs tabular-nums text-gray-600 dark:text-gray-300">
                   {{ Math.round(zoom * 100) }}%
                 </span>
                 <UButton
@@ -249,19 +297,36 @@
                   variant="ghost"
                   size="xs"
                   icon="i-lucide-zoom-in"
-                  :disabled="zoom >= 2"
-                  @click="zoom = Math.min(2, parseFloat((zoom + 0.1).toFixed(1)))"
+                  :disabled="zoom >= 3"
+                  @click="zoom = Math.min(3, parseFloat((zoom + 0.1).toFixed(1)))"
+                />
+
+                <div class="mx-1 h-4 w-px bg-gray-200 dark:bg-white/10" />
+
+                <!-- Collapse the rules pane when the document needs the room -->
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  :icon="rulesPaneOpen ? 'i-lucide-panel-right-close' : 'i-lucide-panel-right-open'"
+                  :title="rulesPaneOpen ? 'Hide rules' : 'Show rules'"
+                  :aria-label="rulesPaneOpen ? 'Hide rules panel' : 'Show rules panel'"
+                  :aria-expanded="rulesPaneOpen"
+                  class="hidden lg:flex"
+                  @click="rulesPaneOpen = !rulesPaneOpen"
                 />
               </div>
             </div>
 
-            <!-- PDF canvas area -->
-            <div class="flex-1 overflow-auto pb-8">
+            <!-- PDF canvas area. The viewport owns its own scrolling. -->
+            <div class="min-h-0 flex-1">
               <ClientOnly>
                 <ReviewPdfViewport
                   :artifact="primaryPdfArtifact"
                   :current-page="currentPage"
                   :zoom="zoom"
+                  :fit-mode="fitMode"
+                  scrollable
                   @navigate-page="handlePdfPageNavigation"
                   @status-change="handlePdfStatusChange"
                 />
@@ -295,7 +360,10 @@
           </div>
 
           <!-- RIGHT: Guidelines panel -->
-          <div class="flex w-[22rem] shrink-0 flex-col bg-white/60 dark:bg-zinc-900/50 xl:w-96">
+          <div
+            v-show="rulesPaneOpen"
+            class="flex w-[22rem] shrink-0 flex-col border-l border-gray-200/70 bg-white/60 dark:border-white/10 dark:bg-zinc-900/50 xl:w-[26rem]"
+          >
             <!-- Panel header -->
             <div class="shrink-0 px-4 pt-4 pb-3 space-y-3">
               <div class="flex items-center justify-between">
@@ -362,6 +430,47 @@
                   class="flex-1"
                 />
               </div>
+
+              <!-- Enrichment facets. Collapsed by default so the rules stay the
+                   focus of a narrow pane. -->
+              <UCollapsible v-if="hasGuidelineFacets">
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  size="xs"
+                  trailing-icon="i-lucide-chevron-down"
+                  class="-ml-1.5"
+                >
+                  {{ $t('guidelines.filters.title') }}
+                  <UBadge
+                    v-if="activeFacetCount"
+                    color="primary"
+                    variant="subtle"
+                    size="xs"
+                    class="ml-1"
+                  >
+                    {{ activeFacetCount }}
+                  </UBadge>
+                </UButton>
+
+                <template #content>
+                  <div class="mt-2 max-h-72 overflow-y-auto pr-1">
+                    <GuidelineFacetFilters
+                      :facets="guidelineOverviewFacets"
+                      :selections="facetSelections"
+                      :age-range="ageRange"
+                      :include-unstated-age="includeUnstatedAge"
+                      :age-spans="guidelineAgeSpans"
+                      :collapsed-limit="6"
+                      @toggle="toggleFacetValue"
+                      @clear="clearFacetSelections"
+                      @clear-field="clearFacetField"
+                      @age-range="setAgeRange"
+                      @include-unstated-age="setIncludeUnstatedAge"
+                    />
+                  </div>
+                </template>
+              </UCollapsible>
             </div>
 
             <!-- Guidelines list -->
@@ -407,12 +516,16 @@
                 <button
                   v-for="guideline in guidelines"
                   :key="guideline.id"
+                  :data-guideline-id="guideline.id"
                   type="button"
                   :class="[
-                    'group w-full px-4 py-3.5 text-left transition-colors duration-100',
+                    'group w-full scroll-mt-24 px-4 py-3.5 text-left transition-all duration-200',
                     activeGuidelineId === guideline.id
                       ? 'bg-brand-50/80 dark:bg-brand-900/20'
-                      : 'hover:bg-gray-50/80 dark:hover:bg-white/[0.03]'
+                      : 'hover:bg-gray-50/80 dark:hover:bg-white/[0.03]',
+                    highlightedGuidelineId === guideline.id
+                      ? 'ring-2 ring-inset ring-brand-400 dark:ring-brand-500'
+                      : ''
                   ]"
                   @click="selectGuideline(guideline)"
                 >
@@ -423,9 +536,27 @@
                         activeGuidelineId === guideline.id ? 'bg-brand-500' : 'bg-gray-300 group-hover:bg-gray-400 dark:bg-zinc-600'
                       ]"
                     />
-                    <p class="text-xs leading-5 text-gray-700 dark:text-gray-300">
-                      {{ guideline.rule_text }}
-                    </p>
+                    <div class="min-w-0 flex-1">
+                      <p class="text-xs leading-5 text-gray-700 dark:text-gray-300">
+                        {{ guideline.rule_text }}
+                      </p>
+                      <div
+                        v-if="guidelineChips(guideline).length"
+                        class="mt-1.5 flex flex-wrap items-center gap-1"
+                      >
+                        <span
+                          v-for="chip in guidelineChips(guideline)"
+                          :key="`${chip.field}:${chip.value}`"
+                          class="inline-flex items-center gap-0.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-white/5 dark:text-gray-400"
+                        >
+                          <UIcon
+                            :name="chip.icon"
+                            class="h-2.5 w-2.5 shrink-0 opacity-70"
+                          />
+                          {{ chip.label }}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </button>
               </div>
@@ -513,6 +644,12 @@ import {
   parsePositivePageQuery,
   quoteCatalogFilterValue
 } from '~/utils/guidesCatalog'
+import {
+  buildGuidelineAgeFilter,
+  buildGuidelineFacetFilters,
+  type GuidelineAgeRange,
+  guidelineFacetChips
+} from '~/utils/guidelineFacets'
 
 definePageMeta({
   middleware: ['auth', 'profile']
@@ -548,10 +685,37 @@ const guidelinePage = ref(1)
 const guidelines = ref<CatalogGuideline[]>([])
 const guidelineTotal = ref(0)
 const activeGuidelineId = ref<string | null>(null)
+// Transient: the rule a citation link just landed on, flashed so the reader
+// can find it. Distinct from activeGuidelineId, which persists as selection.
+const highlightedGuidelineId = ref<string | null>(null)
 
 // PDF state
 const currentPage = ref(1)
+// Zoom is a multiplier on top of the fit, so 100% means "exactly the fit"
+// rather than an arbitrary absolute scale.
 const zoom = ref(1)
+const fitMode = ref<'width' | 'page'>('width')
+// The rules pane can be collapsed to give a dense document the full width.
+const rulesPaneOpen = ref(true)
+
+/**
+ * Whether the guide metadata block is expanded.
+ *
+ * The page is a fixed-height document reader: the header, toolbar and PDF share
+ * one `100dvh` box, so every row the header keeps is a row the document loses.
+ * Fully expanded it runs to roughly 180px — enough to squeeze the PDF into a
+ * strip that needs its own scrollbars to show a single page.
+ *
+ * Readers arriving from a citation want the document immediately, and short
+ * viewports cannot afford the block at all, so both start collapsed. The title
+ * and primary metadata stay visible either way.
+ */
+const headerExpanded = ref(true)
+
+function setFit(mode: 'width' | 'page') {
+  fitMode.value = mode
+  zoom.value = 1
+}
 const pdfTotalPages = ref(0)
 const selectedArtifactId = ref<string>('')
 const syncToPdfPage = ref(true)
@@ -596,6 +760,15 @@ const pdfArtifactOptions = computed(() => {
 })
 
 const hasPageAssociations = computed(() => hasGuidePageAssociations(allGuideGuidelines.value))
+
+// Age spans for the filter histogram. Taken from the full guide set already
+// loaded for pagination, not the current page, so the distribution does not
+// change shape as the reader filters.
+const guidelineAgeSpans = computed(() =>
+  allGuideGuidelines.value
+    .filter(rule => rule.age_min_months != null || rule.age_max_months != null)
+    .map(rule => ({ min: rule.age_min_months ?? null, max: rule.age_max_months ?? null }))
+)
 
 const topicBuckets = computed(() => {
   return guidelineOverviewFacets.value.topic?.length
@@ -643,8 +816,101 @@ function selectGuideline(guideline: CatalogGuideline) {
   }
 }
 
+/**
+ * Scroll a rule into view and flash it.
+ *
+ * Arriving here from a citation in a FoodScholar answer, the reader needs to
+ * see *which* of the rules on screen is the one they clicked. The persistent
+ * `activeGuidelineId` tint is too quiet to find on a dense list, so the target
+ * also gets a ring that fades after a moment.
+ */
+const HIGHLIGHT_DURATION_MS = 2600
+let highlightTimeout: ReturnType<typeof setTimeout> | null = null
+
+async function revealGuideline(guidelineId: string) {
+  activeGuidelineId.value = guidelineId
+  highlightedGuidelineId.value = guidelineId
+
+  await nextTick()
+  if (typeof document !== 'undefined') {
+    const element = document.querySelector<HTMLElement>(
+      `[data-guideline-id="${CSS.escape(guidelineId)}"]`
+    )
+    element?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+
+  if (highlightTimeout) clearTimeout(highlightTimeout)
+  highlightTimeout = setTimeout(() => {
+    highlightedGuidelineId.value = null
+    highlightTimeout = null
+  }, HIGHLIGHT_DURATION_MS)
+}
+
+/**
+ * Bring a deep-linked rule onto screen, clearing filters if they hide it.
+ *
+ * A citation link has to land on its rule regardless of what the reader last
+ * filtered this guide by — otherwise the link silently does nothing.
+ */
+async function resolveDeepLinkedGuideline(
+  guidelineId: string,
+  fallbackPdfPage: number | null
+) {
+  let match = guidelines.value.find(g => g.id === guidelineId)
+
+  // Not on the loaded page. Two things can hide it, and both are worth one
+  // retry: a filter the reader left applied, or a page number that no longer
+  // matches (the list is paginated server-side, so an off-by-one page means the
+  // rule is simply absent from the response).
+  if (!match) {
+    if (hasActiveFilters.value) {
+      queryText.value = ''
+      selectedTopic.value = 'all'
+      selectedAudience.value = 'all'
+      selectedPageRef.value = 'all'
+      syncToPdfPage.value = false
+    }
+
+    const page = findGuidelinePaginationPage(guidelineId)
+    if (page && page !== guidelinePage.value) {
+      guidelinePage.value = page
+    }
+
+    await loadGuidelines()
+    match = guidelines.value.find(g => g.id === guidelineId)
+  }
+
+  if (match) {
+    if (pdfTotalPages.value > 0) {
+      selectGuideline(match)
+      await revealGuideline(match.id)
+    } else {
+      // The PDF is still loading; handlePdfStatusChange finishes the job.
+      pendingGuidelineId.value = guidelineId
+      pendingGuidelinePage.value = fallbackPdfPage
+      await revealGuideline(match.id)
+    }
+    return true
+  }
+
+  // The rule is not on this guide (or was removed); at least honour the page.
+  activeGuidelineId.value = guidelineId
+  if (fallbackPdfPage && pdfTotalPages.value > 0) {
+    currentPage.value = fallbackPdfPage
+  }
+  return false
+}
+
 function handlePdfPageNavigation(page: number) {
   currentPage.value = page
+}
+
+// The rules pane is narrow, so it shows only the most identifying facets.
+function guidelineChips(guideline: CatalogGuideline) {
+  return guidelineFacetChips(guideline, {
+    fields: ['life_stage', 'age_range', 'setting'],
+    limit: 3
+  })
 }
 
 function handlePdfStatusChange(status: { totalPages: number }) {
@@ -655,6 +921,7 @@ function handlePdfStatusChange(status: { totalPages: number }) {
     const match = guidelines.value.find(g => g.id === pendingGuidelineId.value)
     if (match) {
       selectGuideline(match)
+      void revealGuideline(match.id)
     } else if (pendingGuidelinePage.value) {
       currentPage.value = pendingGuidelinePage.value
     }
@@ -680,7 +947,80 @@ function buildGuidelineFilters() {
     filters.push(`page_no:${quoteCatalogFilterValue(selectedPageRef.value)}`)
   }
 
+  filters.push(...buildGuidelineFacetFilters(facetSelections.value))
+  filters.push(...buildGuidelineAgeFilter(ageRange.value, includeUnstatedAge.value))
+
   return filters
+}
+
+// Enrichment facets on this guide's rules. Held apart from the single-select
+// dropdowns above because they are genuinely multi-valued, and apart from age
+// because that is a range query rather than a term match.
+const facetSelections = ref<Record<string, string[]>>({})
+const ageRange = ref<GuidelineAgeRange | null>(null)
+const includeUnstatedAge = ref(true)
+
+function setAgeRange(range: GuidelineAgeRange | null) {
+  ageRange.value = range
+  guidelinePage.value = 1
+  void loadGuidelines()
+}
+
+function setIncludeUnstatedAge(include: boolean) {
+  includeUnstatedAge.value = include
+  guidelinePage.value = 1
+  if (ageRange.value) void loadGuidelines()
+}
+
+function clearFacetField(field: string) {
+  if (!facetSelections.value[field]) return
+  facetSelections.value = Object.fromEntries(
+    Object.entries(facetSelections.value).filter(([key]) => key !== field)
+  )
+  guidelinePage.value = 1
+  void loadGuidelines()
+}
+
+const hasFacetSelections = computed(
+  () => Object.keys(facetSelections.value).length > 0 || ageRange.value !== null
+)
+
+const activeFacetCount = computed(
+  () =>
+    Object.values(facetSelections.value).reduce(
+      (sum, values) => sum + values.length,
+      0
+    ) + (ageRange.value ? 1 : 0)
+)
+
+// Only offer the panel when this guide's rules actually carry facets.
+const hasGuidelineFacets = computed(() =>
+  ['life_stage', 'setting', 'guideline_type', 'nutrients', 'target_populations', 'food_groups']
+    .some(field => (guidelineOverviewFacets.value?.[field] || []).length > 0)
+)
+
+function toggleFacetValue(field: string, value: string) {
+  const current = facetSelections.value[field] || []
+  const next = current.includes(value)
+    ? current.filter(item => item !== value)
+    : [...current, value]
+
+  // Rebuilt rather than mutated: an emptied facet is dropped from the object
+  // so it never contributes a filter clause.
+  facetSelections.value = Object.fromEntries(
+    Object.entries({ ...facetSelections.value, [field]: next })
+      .filter(([, values]) => values.length > 0)
+  )
+  guidelinePage.value = 1
+  void loadGuidelines()
+}
+
+function clearFacetSelections() {
+  if (!hasFacetSelections.value) return
+  facetSelections.value = {}
+  ageRange.value = null
+  guidelinePage.value = 1
+  void loadGuidelines()
 }
 
 function buildRouteQuery() {
@@ -734,7 +1074,18 @@ async function loadGuidelineContext() {
       catalogApi.searchGuidelinesByGuide(selectedGuide.value.urn, {
         limit: 1,
         offset: 0,
-        fields: ['topic', 'food_groups', 'audience', 'target_populations', 'page_no'],
+        fields: [
+          'topic',
+          'food_groups',
+          'audience',
+          'target_populations',
+          'page_no',
+          'life_stage',
+          'setting',
+          'guideline_type',
+          'nutrients',
+          'health_conditions'
+        ],
         facet_limit: 100
       })
     ])
@@ -752,9 +1103,32 @@ async function loadGuidelineContext() {
   }
 }
 
+/**
+ * Which page of the rules list a given rule falls on.
+ *
+ * `allGuideGuidelines` comes from the collection endpoint, which sends no sort
+ * and therefore arrives in catalog default order. The list beside the PDF is
+ * paginated by the *search* endpoint under `sequence_no asc`. Indexing one
+ * ordering to page the other produced a page number for a list that was never
+ * displayed, so a deep-linked rule landed on the wrong page, `match` came back
+ * undefined, and both the highlight and the PDF jump were silently skipped.
+ *
+ * Sorting by `sequence_no` here reproduces the displayed order exactly — it is
+ * a plain numeric sort, not an approximation of server ranking — but only for
+ * the default sort, which is why the deep-link path forces it.
+ */
 function findGuidelinePaginationPage(guidelineId: string): number | null {
   if (!allGuideGuidelines.value.length) return null
-  const index = allGuideGuidelines.value.findIndex(g => g.id === guidelineId)
+
+  const ordered = [...allGuideGuidelines.value].sort((a, b) => {
+    const left = typeof a.sequence_no === 'number' ? a.sequence_no : Number.MAX_SAFE_INTEGER
+    const right = typeof b.sequence_no === 'number' ? b.sequence_no : Number.MAX_SAFE_INTEGER
+    if (left !== right) return left - right
+    // Stable tie-break so the order matches across reloads.
+    return String(a.id).localeCompare(String(b.id))
+  })
+
+  const index = ordered.findIndex(g => g.id === guidelineId)
   if (index < 0) return null
   return Math.floor(index / guidelinePageSize) + 1
 }
@@ -840,6 +1214,12 @@ async function loadGuideDetail() {
 
     if (targetGuidelineId) {
       syncToPdfPage.value = false
+      // Arriving from a citation: the reader came for one rule and its page in
+      // the document, so give the document the room the metadata block was using.
+      headerExpanded.value = false
+      // A citation must land on its rule regardless of the reader's last sort
+      // choice, and the page computation below is exact only in document order.
+      guidelineSort.value = DEFAULT_GUIDELINE_SORT
       const correctPage = findGuidelinePaginationPage(targetGuidelineId)
       if (correctPage) {
         guidelinePage.value = correctPage
@@ -851,16 +1231,7 @@ async function loadGuideDetail() {
     await loadGuidelines()
 
     if (targetGuidelineId) {
-      const match = guidelines.value.find(g => g.id === targetGuidelineId)
-      if (match) {
-        if (pdfTotalPages.value > 0) {
-          selectGuideline(match)
-        } else {
-          activeGuidelineId.value = match.id
-        }
-      } else {
-        activeGuidelineId.value = targetGuidelineId
-      }
+      await resolveDeepLinkedGuideline(targetGuidelineId, targetPdfPage)
     }
 
     await nextTick()
@@ -934,11 +1305,23 @@ watch([
   void loadGuideDetail()
 })
 
+const SHORT_VIEWPORT_PX = 900
+
 onMounted(async () => {
+  // On a laptop-height window the metadata block and the PDF cannot both have
+  // the room they need. Start collapsed there and let the reader open it.
+  if (typeof window !== 'undefined' && window.innerHeight < SHORT_VIEWPORT_PX) {
+    headerExpanded.value = false
+  }
+
   await loadGuideDetail()
 })
 
 onBeforeUnmount(() => {
   clearScheduledRefresh()
+  if (highlightTimeout) {
+    clearTimeout(highlightTimeout)
+    highlightTimeout = null
+  }
 })
 </script>

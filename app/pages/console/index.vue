@@ -16,7 +16,10 @@
 
       <UPageBody class="space-y-8">
         <section>
-          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div
+            class="grid gap-4"
+            :class="quickAccessGridClass"
+          >
             <UCard
               v-for="shortcut in quickAccessCards"
               :key="shortcut.title"
@@ -145,10 +148,14 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useConsoleStats } from '~/composables/useConsoleStats'
+import { useAuthStore } from '~/stores/auth'
+import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({
   layout: 'default'
 })
+
+const authStore = useAuthStore()
 
 const { catalog, recipeCount, obsStatus, llmCost, load } = useConsoleStats()
 onMounted(() => {
@@ -169,17 +176,10 @@ useSeoMeta({
   description: 'Wisefood Control Panel Console for expert and admin operations'
 })
 
-const breadcrumbItems = [
-  {
-    label: 'Console',
-    icon: 'i-lucide-panel-top',
-    to: '/console'
-  },
-  {
-    label: 'Overview',
-    icon: 'i-lucide-layout-dashboard'
-  }
-]
+const breadcrumbItems = consoleBreadcrumb({
+  label: 'Overview',
+  icon: 'i-lucide-layout-dashboard'
+})
 
 const kpis = computed(() => [
   {
@@ -236,7 +236,7 @@ const kpis = computed(() => [
   }
 ])
 
-const quickAccessCards = [
+const allQuickAccessCards = [
   {
     title: 'Asset Manager',
     description: 'Browse and curate articles, dietary guidelines, and knowledge assets.',
@@ -263,6 +263,30 @@ const quickAccessCards = [
     available: true,
     iconWrapperClass: 'bg-brand-50 dark:bg-brand-500/10',
     iconClass: 'text-brand-600 dark:text-brand-300'
+  },
+  {
+    title: 'Platform Operations',
+    description: 'Index state, embedding coverage, and corpus-wide maintenance.',
+    icon: 'i-lucide-server-cog',
+    to: '/console/system',
+    available: true,
+    adminOnly: true,
+    iconWrapperClass: 'bg-amber-50 dark:bg-amber-500/10',
+    iconClass: 'text-amber-600 dark:text-amber-300'
   }
 ]
+
+// Operational controls act on the whole corpus, so experts do not see the card
+// at all rather than finding a page that refuses them.
+const quickAccessCards = computed(() =>
+  allQuickAccessCards.filter(card => !card.adminOnly || authStore.isAdmin)
+)
+
+// Admins see a fourth card, so the column count follows the card count rather
+// than being fixed — otherwise one layout or the other ends with a dangling gap.
+const quickAccessGridClass = computed(() =>
+  quickAccessCards.value.length >= 4
+    ? 'sm:grid-cols-2 xl:grid-cols-4'
+    : 'md:grid-cols-2 xl:grid-cols-3'
+)
 </script>

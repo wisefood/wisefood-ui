@@ -42,6 +42,7 @@ export function useArticleEnrichment() {
   const statusLoading = ref(false)
   const workerLoading = ref(false)
   const pausePending = ref(false)
+  const restartPending = ref(false)
   const error = ref<string | null>(null)
 
   /** URNs with an enrich request in flight from this page (for button spinners). */
@@ -158,6 +159,30 @@ export function useArticleEnrichment() {
     }
   }
 
+  /**
+   * Force the workers back into a running state.
+   *
+   * Distinct from resume: it also rebuilds a thread that died. `start()` on the
+   * worker short-circuits on its own `running` flag, which survives the thread,
+   * so a crashed worker cannot be revived by pause/resume alone.
+   */
+  async function restartWorkers(
+    options: { sweeper?: boolean, jobs?: boolean, resume?: boolean } = {}
+  ) {
+    restartPending.value = true
+    try {
+      const response = await foodscholarEnrichmentApi.restartWorkers(options)
+      workerStatus.value = response.status
+      error.value = null
+      return response
+    } catch (err) {
+      error.value = resolveErrorMessage(err, 'Failed to restart the enrichment workers')
+      throw err
+    } finally {
+      restartPending.value = false
+    }
+  }
+
   function markPending(urns: string[], pending: boolean) {
     const next = new Set(pendingUrns.value)
     urns.forEach(urn => (pending ? next.add(urn) : next.delete(urn)))
@@ -229,6 +254,7 @@ export function useArticleEnrichment() {
     statusLoading,
     workerLoading,
     pausePending,
+    restartPending,
     error,
     hasActiveJobs,
     sweeperPaused,
@@ -241,6 +267,7 @@ export function useArticleEnrichment() {
     loadArticleStatus,
     loadWorkerStatus,
     setSweeperPaused,
+    restartWorkers,
     enrichArticle,
     enrichArticles,
     resetArticle,

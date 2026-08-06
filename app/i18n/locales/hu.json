@@ -1665,5 +1665,37 @@
       "description": "Válassza ki, melyik profilt használja a(z) {feature} ebben a munkamenetben.",
       "cta": "Profil kiválasztása"
     }
+  },
+  "guidelines": {
+    "facets": {
+      "aiSuggested": "MI-javaslat, még nem ellenőrzött"
+    },
+    "peek": {
+      "title": "Táplálkozási irányelv",
+      "loading": "Irányelv betöltése…",
+      "error": "Ezt az irányelvet nem sikerült betölteni.",
+      "openInGuide": "Megnyitás az útmutatóban"
+    },
+    "filters": {
+      "title": "Szűrők",
+      "clear": "Szűrők törlése",
+      "showMore": "Még {count} megjelenítése",
+      "showLess": "Kevesebb megjelenítése",
+      "lifeStage": "Életszakasz",
+      "setting": "Környezet",
+      "guidanceType": "Irányelv típusa",
+      "population": "Populáció",
+      "foodGroup": "Élelmiszercsoport",
+      "nutrient": "Tápanyag",
+      "age": "Érvényes ebben a korban",
+      "subtitle": "Szabályok szűkítése",
+      "active": "aktív",
+      "clearOne": "Törlés",
+      "birth": "Születés",
+      "includeUnstatedAge": "Korhatár nélküli szabályok is"
+    },
+    "context": {
+      "show": "Kontextus a forrásoldalról"
+    }
   }
 }

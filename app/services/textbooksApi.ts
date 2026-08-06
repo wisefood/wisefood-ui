@@ -61,19 +61,29 @@ export interface Textbook {
   artifacts: TextbookArtifact[]
 }
 
+/**
+ * A passage as the catalog actually stores it.
+ *
+ * Passages are produced by an external chunker and ingested wholesale, so the
+ * shape is positional (artifact, page, character span) rather than editorial —
+ * there is no title, chapter or tag list on a passage.
+ */
 export interface TextbookPassage {
   id: string
   textbook_urn: string
-  title: string | null
-  content: string
-  chapter: string | null
-  section: string | null
-  page_start: number | null
-  page_end: number | null
+  artifact_id: string | null
+  page_no: number | null
   sequence_no: number | null
-  tags: string[]
-  topics: string[]
-  language: string | null
+  /** The passage text itself. */
+  text: string
+  char_start: number | null
+  char_end: number | null
+  /** Node in the textbook's structure tree this passage belongs to. */
+  structure_node_id: string | null
+  /** Human-readable path to that node, e.g. ["Part I", "Chapter 3"]. */
+  structure_path: string[]
+  extractor_name: string | null
+  extractor_run_id: string | null
   creator: string | null
   created_at: string | null
   updated_at: string | null
@@ -189,21 +199,77 @@ const normalizeTextbook = (v: unknown): Textbook => {
   }
 }
 
+
+export interface TextbookCreatePayload {
+  urn: string
+  title: string
+  description?: string | null
+  authors?: string[] | null
+  publisher?: string | null
+  edition?: string | null
+  isbn13?: string | null
+  isbn10?: string | null
+  doi?: string | null
+  language?: string | null
+  publication_year?: number | null
+  topics?: string[] | null
+  keywords?: string[] | null
+  audience?: string | null
+  region?: string | null
+  license?: string | null
+  url?: string | null
+  status?: TextbookStatus | null
+  review_status?: TextbookReviewStatus | null
+  visibility?: TextbookVisibility | null
+}
+
+export type TextbookUpdatePayload = Partial<Omit<TextbookCreatePayload, 'urn'>>
+
+/** One externally-chunked passage, as the ingestion endpoint expects it. */
+export interface TextbookPassageInput {
+  page_no: number
+  sequence_no: number
+  text: string
+  char_start: number
+  char_end: number
+  structure_node_id?: string | null
+  structure_path?: string[]
+}
+
+export interface TextbookPassageReplacePayload {
+  artifact_id: string
+  passages: TextbookPassageInput[]
+  page_count?: number | null
+  structure_tree?: unknown
+  /** Which chunker produced these, and which run — kept for provenance. */
+  extractor_name?: string | null
+  extractor_run_id?: string | null
+}
+
+export interface TextbookPassageReplaceResult {
+  textbook_urn: string
+  artifact_id: string
+  replaced_count: number
+  deleted_count: number
+}
+
 const normalizePassage = (v: unknown): TextbookPassage => {
   const r = asRecord(v) || {}
   return {
     id: asString(r['id']) || '',
     textbook_urn: asString(r['textbook_urn']) || '',
-    title: asString(r['title']),
-    content: asString(r['content']) || '',
-    chapter: asString(r['chapter']),
-    section: asString(r['section']),
-    page_start: asNumber(r['page_start']),
-    page_end: asNumber(r['page_end']),
+    artifact_id: asString(r['artifact_id']),
+    page_no: asNumber(r['page_no']),
     sequence_no: asNumber(r['sequence_no']),
-    tags: asStringArray(r['tags']),
-    topics: asStringArray(r['topics']),
-    language: asString(r['language']),
+    // The API field is `text`. This previously read `content`, which the API
+    // never returns, so every passage rendered blank.
+    text: asString(r['text']) || '',
+    char_start: asNumber(r['char_start']),
+    char_end: asNumber(r['char_end']),
+    structure_node_id: asString(r['structure_node_id']),
+    structure_path: asStringArray(r['structure_path']),
+    extractor_name: asString(r['extractor_name']),
+    extractor_run_id: asString(r['extractor_run_id']),
     creator: asString(r['creator']),
     created_at: asString(r['created_at']),
     updated_at: asString(r['updated_at'])
@@ -312,6 +378,74 @@ const textbooksApi = {
           ? payload as unknown[]
           : []
     return items.map(normalizePassage)
+  },
+
+  // ------------------------------------------------------------------ //
+  // Console write paths
+  // ------------------------------------------------------------------ //
+
+  async createTextbook(payload: TextbookCreatePayload): Promise<Textbook> {
+    const res = await wisefoodApi.post<Record<string, unknown>>('/v1/textbooks', payload)
+    return normalizeTextbook(asRecord(res)?.['result'] ?? res)
+  },
+
+  async updateTextbook(urn: string, payload: TextbookUpdatePayload): Promise<Textbook> {
+    const res = await wisefoodApi.patch<Record<string, unknown>>(
+      `/v1/textbooks/${encodeURIComponent(urn)}`,
+      payload
+    )
+    return normalizeTextbook(asRecord(res)?.['result'] ?? res)
+  },
+
+  async deleteTextbook(urn: string): Promise<void> {
+    await wisefoodApi.delete(`/v1/textbooks/${encodeURIComponent(urn)}`)
+  },
+
+  async searchPassages(
+    textbookUrn: string,
+    params: { q?: string | null, limit?: number, offset?: number, fq?: string[] } = {}
+  ): Promise<{ passages: TextbookPassage[], total: number }> {
+    const payload = await wisefoodApi.post<unknown>(
+      `/v1/textbook-passages/by-textbook/${encodeURIComponent(textbookUrn)}/search`,
+      {
+        q: params.q || undefined,
+        limit: params.limit ?? 25,
+        offset: params.offset ?? 0,
+        fq: params.fq,
+        sort: 'sequence_no asc'
+      }
+    )
+    const result = asRecord(asRecord(payload)?.['result']) ?? {}
+    const items = Array.isArray(result['results']) ? result['results'] as unknown[] : []
+    return {
+      passages: items.map(normalizePassage),
+      total: asNumber(result['count']) ?? asNumber(result['total']) ?? items.length
+    }
+  },
+
+  /**
+   * Replace every passage for one artifact.
+   *
+   * Passages come from an external chunker, so ingestion is wholesale rather
+   * than incremental: this swaps the artifact\'s passage set atomically, which
+   * is what makes re-chunking a document safe to repeat.
+   */
+  async replacePassages(
+    textbookUrn: string,
+    payload: TextbookPassageReplacePayload
+  ): Promise<TextbookPassageReplaceResult> {
+    const res = await wisefoodApi.post<Record<string, unknown>>(
+      `/v1/textbook-passages/by-textbook/${encodeURIComponent(textbookUrn)}/replace`,
+      payload
+    )
+    const result = asRecord(res)?.['result'] ?? res
+    const r = asRecord(result) ?? {}
+    return {
+      textbook_urn: asString(r['textbook_urn']) || textbookUrn,
+      artifact_id: asString(r['artifact_id']) || payload.artifact_id,
+      replaced_count: asNumber(r['replaced_count']) ?? 0,
+      deleted_count: asNumber(r['deleted_count']) ?? 0
+    }
   }
 }
 

@@ -1054,6 +1054,16 @@
 
       </div>
     </template>
+
+    <GuidelineCitationPeek
+      :open="guidelinePeekOpen"
+      :guideline="guidelinePeek"
+      :loading="guidelinePeekLoading"
+      :error="guidelinePeekError"
+      :anchor-rect="guidelinePeekAnchorRect"
+      @close="closeGuidelinePeek"
+      @open="openGuidelineFromPeek"
+    />
   </div>
 </template>
 
@@ -1065,7 +1075,8 @@ import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import type { DropdownMenuItem } from '@nuxt/ui'
 import articlesApi, { type Article } from '~/services/articlesApi'
-import catalogApi, { type CatalogGuide } from '~/services/catalogApi'
+import catalogApi, { type CatalogGuide, type CatalogGuideline } from '~/services/catalogApi'
+import GuidelineCitationPeek from '~/components/foodscholar/GuidelineCitationPeek.vue'
 import textbooksApi, { type Textbook, type TextbookSuggestion } from '~/services/textbooksApi'
 import foodscholarApi, {
   type QaAskRequest,
@@ -1674,6 +1685,67 @@ const navigateToGuideline = async (guidelineId: string, extraQuery: Record<strin
   }
 }
 
+// ---------------------------------------------------------------------------
+// Guideline citation peek
+// ---------------------------------------------------------------------------
+
+const guidelinePeekOpen = ref(false)
+const guidelinePeekLoading = ref(false)
+const guidelinePeekError = ref(false)
+const guidelinePeek = ref<CatalogGuideline | null>(null)
+const guidelinePeekAnchorRect = ref<{ top: number, left: number, bottom: number, width: number } | null>(null)
+const guidelinePeekId = ref<string | null>(null)
+const guidelinePeekQuery = ref<Record<string, string>>({})
+
+const closeGuidelinePeek = () => {
+  guidelinePeekOpen.value = false
+  guidelinePeek.value = null
+  guidelinePeekError.value = false
+  guidelinePeekId.value = null
+}
+
+const openGuidelinePeek = async (
+  guidelineId: string,
+  anchor: HTMLElement,
+  query: Record<string, string> = {}
+) => {
+  const rect = anchor.getBoundingClientRect()
+  guidelinePeekAnchorRect.value = {
+    top: rect.top,
+    left: rect.left,
+    bottom: rect.bottom,
+    width: rect.width
+  }
+  guidelinePeekId.value = guidelineId
+  guidelinePeekQuery.value = query
+  guidelinePeekOpen.value = true
+  guidelinePeekError.value = false
+  guidelinePeek.value = null
+  guidelinePeekLoading.value = true
+
+  try {
+    const guideline = await catalogApi.getGuideline(guidelineId)
+    // A slower fetch must not overwrite a peek the reader has since replaced.
+    if (guidelinePeekId.value !== guidelineId) return
+    guidelinePeek.value = guideline
+  } catch {
+    if (guidelinePeekId.value !== guidelineId) return
+    guidelinePeekError.value = true
+  } finally {
+    if (guidelinePeekId.value === guidelineId) {
+      guidelinePeekLoading.value = false
+    }
+  }
+}
+
+const openGuidelineFromPeek = () => {
+  const guidelineId = guidelinePeekId.value
+  if (!guidelineId) return
+  const query = guidelinePeekQuery.value
+  closeGuidelinePeek()
+  void navigateToGuideline(guidelineId, query, true)
+}
+
 const resolveQaSourceHref = (href: string): { url: URL, urn: string, sourceType: QaEvidenceSourceType, path: string } | null => {
   const url = new URL(href, window.location.origin)
 
@@ -1757,7 +1829,13 @@ const handleMarkdownClick = (event: MouseEvent) => {
   const query = Object.fromEntries(url.searchParams.entries()) as Record<string, string>
 
   if (sourceType === 'guideline') {
-    void navigateToGuideline(targetUrn, query, true)
+    // A plain click previews the rule in place; a modifier click keeps the
+    // familiar "open in a new tab" behaviour for people who want the guide.
+    if (event.metaKey || event.ctrlKey || event.shiftKey) {
+      void navigateToGuideline(targetUrn, query, true)
+    } else {
+      void openGuidelinePeek(targetUrn, anchor, query)
+    }
   } else {
     if (!('section' in query) && citation?.section) query.section = String(citation.section)
     if (!('hl' in query) && citation?.quote) query.hl = String(citation.quote)

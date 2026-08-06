@@ -146,14 +146,15 @@
 import { onMounted, ref, watch } from 'vue'
 import { useConsoleStats } from '~/composables/useConsoleStats'
 import observabilityApi, { type DashboardData, type DashboardRange } from '~/services/observabilityApi'
+import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Analytics & Observability' })
 
-const breadcrumbItems = [
-  { label: 'Console', icon: 'i-lucide-panel-top', to: '/console' },
-  { label: 'Analytics', icon: 'i-lucide-chart-column' }
-]
+const breadcrumbItems = consoleBreadcrumb({
+  label: 'Analytics & Observability',
+  icon: 'i-lucide-chart-column'
+})
 
 const tabs = [
   { label: 'Content', value: 'content', slot: 'content', icon: 'i-lucide-folder-open' },

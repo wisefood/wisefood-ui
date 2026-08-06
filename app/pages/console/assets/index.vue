@@ -13,7 +13,7 @@
       />
 
       <UPageBody>
-        <div class="grid gap-4 lg:grid-cols-3">
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <UCard
             v-for="asset in assetSections"
             :key="asset.title"
@@ -76,6 +76,8 @@
 </template>
 
 <script setup lang="ts">
+import { assetBreadcrumb } from '~/utils/consoleBreadcrumbs'
+
 definePageMeta({
   layout: 'default'
 })
@@ -88,17 +90,7 @@ useSeoMeta({
   description: 'Wisefood asset manager switchboard for internal content operations'
 })
 
-const breadcrumbItems = [
-  {
-    label: 'Console',
-    icon: 'i-lucide-panel-top',
-    to: '/console'
-  },
-  {
-    label: 'Asset Manager',
-    icon: 'i-lucide-folder-open'
-  }
-]
+const breadcrumbItems = assetBreadcrumb()
 
 const assetSections = [
   {
@@ -130,6 +122,16 @@ const assetSections = [
     available: true,
     iconWrapperClass: 'bg-brandp-50 dark:bg-brandp-500/10',
     iconClass: 'text-brandp-500 dark:text-brandp-300'
+  },
+  {
+    title: 'Textbooks',
+    description: 'Curate reference textbooks and ingest the chunked passages FoodScholar retrieves from them.',
+    summary: '',
+    to: '/console/assets/textbooks',
+    icon: 'i-lucide-book-open',
+    available: true,
+    iconWrapperClass: 'bg-amber-50 dark:bg-amber-500/10',
+    iconClass: 'text-amber-600 dark:text-amber-300'
   }
 ]
 </script>

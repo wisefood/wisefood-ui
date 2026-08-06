@@ -237,3 +237,47 @@ export function reviewStatusColor(value: CatalogReviewStatus | null | undefined)
       return 'neutral'
   }
 }
+
+// --- Enrichment facets ------------------------------------------------------
+// Editable counterparts to the facets the enrichment agent proposes. Without
+// these an editor could see a wrong facet in the catalog but had no way to
+// correct it — which would make the catalog's no-clobber guard meaningless,
+// since that guard exists precisely to let a human edit win over the agent.
+
+export const guidelineLifeStageEditOptions: ConsoleGuideSelectOption[] = [
+  { label: 'Pregnancy', value: 'pregnancy' },
+  { label: 'Breastfeeding', value: 'lactation' },
+  { label: 'Infancy', value: 'infancy' },
+  { label: 'Early childhood', value: 'early_childhood' },
+  { label: 'School age', value: 'school_age' },
+  { label: 'Adolescence', value: 'adolescence' },
+  { label: 'Adulthood', value: 'adulthood' },
+  { label: 'Older adults', value: 'older_adulthood' }
+]
+
+export const guidelineSettingEditOptions: ConsoleGuideSelectOption[] = [
+  { label: 'School', value: 'school' },
+  { label: 'Home', value: 'home' },
+  { label: 'Clinical', value: 'clinical' },
+  { label: 'Community', value: 'community' },
+  { label: 'Workplace', value: 'workplace' },
+  { label: 'Retail', value: 'retail' },
+  { label: 'General', value: 'general' }
+]
+
+export const guidelineTypeEditOptions: ConsoleGuideSelectOption[] = [
+  { label: 'Unspecified', value: '' },
+  { label: 'Food-based', value: 'food_based' },
+  { label: 'Nutrient-based', value: 'nutrient_based' },
+  { label: 'Behavioural', value: 'behavioral' },
+  { label: 'Activity', value: 'activity' },
+  { label: 'Other', value: 'other' }
+]
+
+export const guidelineAudienceEditOptions: ConsoleGuideSelectOption[] = [
+  { label: 'Carers', value: 'caregiver' },
+  { label: 'Individuals', value: 'individual' },
+  { label: 'Health professionals', value: 'health_professional' },
+  { label: 'Policy makers', value: 'policy_maker' },
+  { label: 'Educators', value: 'educator' }
+]

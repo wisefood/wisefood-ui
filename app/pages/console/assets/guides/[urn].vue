@@ -269,6 +269,21 @@
             </div>
           </UCard>
 
+          <ConsoleGuidesExtractionContextPanel
+            :context="guidelineExtractionResult?.guide_context"
+            :document-profile="guidelineExtractionResult?.document_profile"
+            :processed-pages="guidelineExtractionResult?.processed_pages || []"
+            :continuation-pages="guidelineExtractionResult?.continuation_pages || []"
+            :schema-version="guidelineExtractionResult?.schema_version || 1"
+          />
+
+          <ConsoleGuidesGuidelineEnrichmentCard
+            v-if="resolvedGuideUrn"
+            :guide-urn="resolvedGuideUrn"
+            :progress="enrichmentProgress"
+            @enqueued="loadEnrichmentProgress"
+          />
+
           <UCard
             :ui="{ body: 'p-5 sm:p-6' }"
             class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
@@ -890,6 +905,7 @@
                       <p class="whitespace-normal break-words text-sm font-medium leading-6 text-gray-900 dark:text-white">
                         {{ row.original.rule_text }}
                       </p>
+
                     </div>
                   </template>
 
@@ -983,6 +999,7 @@ import type {
 } from '~/services/catalogApi'
 import catalogApi from '~/services/catalogApi'
 import foodscholarGuidelinesApi, {
+  type FoodScholarEnrichmentGuideProgress,
   type FoodScholarGuidelineExtractionStatus,
   type FoodScholarGuidelineImportResult
 } from '~/services/foodscholarGuidelinesApi'
@@ -996,6 +1013,7 @@ import {
   reviewStatusColor,
   statusColor
 } from '~/utils/consoleGuideCatalog'
+import { assetSectionBreadcrumb, recordCrumb } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({
   layout: 'default'
@@ -1011,6 +1029,29 @@ const detailError = ref<string | null>(null)
 const guideGuidelines = ref<CatalogGuideline[]>([])
 const guideArtifacts = ref<CatalogArtifact[]>([])
 const guidelineExtractionStatus = ref<FoodScholarGuidelineExtractionStatus | null>(null)
+
+// The completed extraction result, which carries the guide context the run
+// assembled and the per-page summaries it wrote.
+const guidelineExtractionResult = computed(
+  () => guidelineExtractionStatus.value?.result ?? null
+)
+
+// Per-guide enrichment progress, read from the shared status endpoint.
+const enrichmentProgress = ref<FoodScholarEnrichmentGuideProgress | null>(null)
+
+async function loadEnrichmentProgress() {
+  if (!resolvedGuideUrn.value) return
+  try {
+    const status = await foodscholarGuidelinesApi.getEnrichmentStatus()
+    if (typeof status === 'string') return
+    enrichmentProgress.value = status.guides.find(
+      guide => guide.guide_urn === resolvedGuideUrn.value
+    ) ?? null
+  } catch {
+    // Progress is informational; a failure here must not break the page.
+    enrichmentProgress.value = null
+  }
+}
 const guidelineExtractionLoading = ref(false)
 const guidelineExtractionError = ref<string | null>(null)
 const guidelineImportModalOpen = ref(false)
@@ -1121,27 +1162,11 @@ const guidelineExtractionArtifactLabel = computed(() => {
   return guidelineExtractionArtifact.value?.title || 'No PDF artifact available'
 })
 
-const breadcrumbItems = computed(() => [
-  {
-    label: 'Console',
-    icon: 'i-lucide-panel-top',
-    to: '/console'
-  },
-  {
-    label: 'Asset Manager',
-    icon: 'i-lucide-folder-open',
-    to: '/console/assets'
-  },
-  {
-    label: 'Dietary Guides',
-    icon: 'i-lucide-book-open-check',
-    to: guideLibraryRoute.value
-  },
-  {
-    label: pageTitle.value,
-    icon: 'i-lucide-file-pen-line'
-  }
-])
+const breadcrumbItems = computed(() => assetSectionBreadcrumb(
+  'guides',
+  [recordCrumb(pageTitle.value, 'Guide Workspace')],
+  guideLibraryRoute.value
+))
 
 const readyGuidelineCount = computed(() =>
   guideGuidelines.value.filter(
@@ -1914,6 +1939,7 @@ async function loadGuideDetail(urn: string) {
 async function refreshGuide() {
   await loadGuideDetail(resolvedGuideUrn.value)
   await refreshGuidelineExtractionStatus()
+  await loadEnrichmentProgress()
 }
 
 function openGuideEditor() {
@@ -2120,4 +2146,5 @@ void loadGuideDetail(resolvedGuideUrn.value)
 onBeforeUnmount(() => {
   clearGuidelineExtractionPoll()
 })
+
 </script>

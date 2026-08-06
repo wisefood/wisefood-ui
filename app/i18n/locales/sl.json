@@ -1665,5 +1665,37 @@
       "description": "Izberite, čigav profil naj {feature} uporabi v tej seji.",
       "cta": "Izberi profil"
     }
+  },
+  "guidelines": {
+    "facets": {
+      "aiSuggested": "Predlog UI, še ni pregledano"
+    },
+    "peek": {
+      "title": "Prehranska smernica",
+      "loading": "Nalaganje smernice…",
+      "error": "Te smernice ni bilo mogoče naložiti.",
+      "openInGuide": "Odpri v vodniku"
+    },
+    "filters": {
+      "title": "Filtri",
+      "clear": "Počisti filtre",
+      "showMore": "Prikaži še {count}",
+      "showLess": "Prikaži manj",
+      "lifeStage": "Življenjsko obdobje",
+      "setting": "Okolje",
+      "guidanceType": "Vrsta smernice",
+      "population": "Populacija",
+      "foodGroup": "Skupina živil",
+      "nutrient": "Hranilo",
+      "age": "Velja pri starosti",
+      "subtitle": "Zožite pravila",
+      "active": "aktivnih",
+      "clearOne": "Počisti",
+      "birth": "Rojstvo",
+      "includeUnstatedAge": "Vključi pravila brez navedenega starostnega razpona"
+    },
+    "context": {
+      "show": "Kontekst z izvorne strani"
+    }
   }
 }

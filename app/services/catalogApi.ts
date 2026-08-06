@@ -15,6 +15,14 @@ export type CatalogGuidelineFoodGroup = 'none' | 'fruits' | 'vegetables' | 'grai
 export type CatalogGuidelineFrequency = 'per_meal' | 'daily' | 'weekly' | 'monthly' | 'occasional'
 export type CatalogQuantityOperator = 'lt' | 'lte' | 'eq' | 'gte' | 'gt' | 'approx'
 
+export type CatalogGuidelineLifeStage = 'pregnancy' | 'lactation' | 'infancy' | 'early_childhood' | 'school_age' | 'adolescence' | 'adulthood' | 'older_adulthood'
+
+export type CatalogGuidelineSetting = 'school' | 'home' | 'clinical' | 'community' | 'workplace' | 'retail' | 'general'
+
+export type CatalogGuidelineType = 'food_based' | 'nutrient_based' | 'behavioral' | 'activity' | 'other'
+
+export type CatalogGuidelineAudience = 'caregiver' | 'individual' | 'health_professional' | 'policy_maker' | 'educator'
+
 export interface CatalogArtifact {
   id: string
   parent_urn: string
@@ -111,6 +119,12 @@ export interface CatalogGuideline {
   food_groups: CatalogGuidelineFoodGroup[]
   source_refs: CatalogGuidelineSourceReference[]
   notes: string | null
+  /**
+   * What the source page covered, captured during extraction. A rule sentence
+   * is short and context-free on its own; this is what surrounded it.
+   */
+  page_summary?: string | null
+  section_label?: string | null
   status: CatalogStatus | null
   review_status: CatalogReviewStatus | null
   visibility: CatalogVisibility | null
@@ -119,9 +133,40 @@ export interface CatalogGuideline {
   applicability_end_date: string | null
   region: string | null
   publication_year: number | null
+  /**
+   * Guide-level topic/audience. The enrichment facets below are per-rule and
+   * arrays; these two are the older guide-inherited singular values, which is
+   * why the catalog UI reads both.
+   */
   topic: string | null
   audience: string | null
   tags: string[]
+
+  /**
+   * Enrichment facets. Populated by the post-extraction enrichment pass, so
+   * they are absent on rules that predate it and on rules the agent could not
+   * support — always treat them as optional.
+   */
+  life_stage?: CatalogGuidelineLifeStage[] | null
+  age_min_months?: number | null
+  age_max_months?: number | null
+  setting?: CatalogGuidelineSetting[] | null
+  health_conditions?: string[] | null
+  nutrients?: string[] | null
+  guideline_type?: CatalogGuidelineType | null
+  topics?: string[] | null
+  audiences?: CatalogGuidelineAudience[] | null
+  applicable_regions?: string[] | null
+
+  /** Extraction and enrichment provenance. */
+  extractor_name?: string | null
+  extractor_run_id?: string | null
+  extraction_model?: string | null
+  enrichment_version?: number | null
+  enrichment_confidence?: number | null
+  /** Fields whose current value was machine-written rather than editor-set. */
+  ai_generated_fields?: string[] | null
+
   creator: string | null
   created_at: string | null
   updated_at: string | null
@@ -213,6 +258,18 @@ export interface GuidelineUpdatePayload {
   applicability_status?: CatalogApplicabilityStatus | null
   applicability_start_date?: string | null
   applicability_end_date?: string | null
+  life_stage?: CatalogGuidelineLifeStage[] | null
+  age_min_months?: number | null
+  age_max_months?: number | null
+  setting?: CatalogGuidelineSetting[] | null
+  audience?: CatalogGuidelineAudience[] | null
+  guideline_type?: CatalogGuidelineType | null
+  applicable_regions?: string[] | null
+  topic?: string[] | null
+  nutrients?: string[] | null
+  health_conditions?: string[] | null
+  page_summary?: string | null
+  section_label?: string | null
 }
 
 export interface GuidelineCreatePayload {
@@ -233,6 +290,16 @@ export interface GuidelineCreatePayload {
   applicability_status?: CatalogApplicabilityStatus | null
   applicability_start_date?: string | null
   applicability_end_date?: string | null
+  life_stage?: CatalogGuidelineLifeStage[] | null
+  age_min_months?: number | null
+  age_max_months?: number | null
+  setting?: CatalogGuidelineSetting[] | null
+  audience?: CatalogGuidelineAudience[] | null
+  guideline_type?: CatalogGuidelineType | null
+  applicable_regions?: string[] | null
+  topic?: string[] | null
+  nutrients?: string[] | null
+  health_conditions?: string[] | null
 }
 
 export interface ArtifactUpdatePayload {
@@ -678,6 +745,32 @@ const normalizeGuideline = (value: unknown): CatalogGuideline => {
     topic: asString(record['topic']),
     audience: asString(record['audience']),
     tags: asStringArray(record['tags']),
+
+    // Enrichment facets. These were declared on the interface but never mapped
+    // here, so every consumer saw `undefined` and the facet chips rendered
+    // empty however well the enrichment pass had run. Absent on rules that
+    // predate enrichment, hence the null-preserving helpers rather than
+    // defaults — an unset `age_min_months` must stay null, not become 0.
+    page_summary: asString(record['page_summary']),
+    section_label: asString(record['section_label']),
+    life_stage: asStringArray(record['life_stage']) as CatalogGuidelineLifeStage[],
+    age_min_months: asNumber(record['age_min_months']),
+    age_max_months: asNumber(record['age_max_months']),
+    setting: asStringArray(record['setting']) as CatalogGuidelineSetting[],
+    health_conditions: asStringArray(record['health_conditions']),
+    nutrients: asStringArray(record['nutrients']),
+    guideline_type: asString(record['guideline_type']) as CatalogGuidelineType | null,
+    topics: asStringArray(record['topics']),
+    audiences: asStringArray(record['audiences']) as CatalogGuidelineAudience[],
+    applicable_regions: asStringArray(record['applicable_regions']),
+
+    extractor_name: asString(record['extractor_name']),
+    extractor_run_id: asString(record['extractor_run_id']),
+    extraction_model: asString(record['extraction_model']),
+    enrichment_version: asNumber(record['enrichment_version']),
+    enrichment_confidence: asNumber(record['enrichment_confidence']),
+    ai_generated_fields: asStringArray(record['ai_generated_fields']),
+
     creator: asString(record['creator']),
     created_at: asString(record['created_at']),
     updated_at: asString(record['updated_at'])

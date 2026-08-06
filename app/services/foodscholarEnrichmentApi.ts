@@ -55,6 +55,10 @@ export interface EnrichmentResetResponse {
 export interface EnrichmentSweeperStatus {
   enabled: boolean
   running?: boolean
+  /** Whether the worker thread is actually alive. `running` is bookkeeping and
+   *  can outlive the thread; a running-but-not-alive worker has died. */
+  alive?: boolean
+  stalled?: boolean
   paused?: boolean | null
   processed?: number
   failed?: number
@@ -67,6 +71,8 @@ export interface EnrichmentSweeperStatus {
 export interface EnrichmentJobWorkerStatus {
   enabled: boolean
   running?: boolean
+  alive?: boolean
+  stalled?: boolean
   pending_jobs?: number | null
   processed?: number
   failed?: number
@@ -78,6 +84,21 @@ export interface EnrichmentJobWorkerStatus {
 export interface EnrichmentWorkerStatus {
   sweeper: EnrichmentSweeperStatus
   jobs: EnrichmentJobWorkerStatus
+}
+
+export interface EnrichmentWorkerRestartOutcome {
+  restarted: boolean
+  reason?: string
+  thread_was_alive?: boolean
+  pause_switch_was_set?: boolean | null
+  resumed?: boolean
+  running?: boolean
+}
+
+export interface EnrichmentWorkerRestartResponse {
+  sweeper: EnrichmentWorkerRestartOutcome | null
+  jobs: EnrichmentWorkerRestartOutcome | null
+  status: EnrichmentWorkerStatus
 }
 
 class FoodScholarEnrichmentApiService {
@@ -136,6 +157,26 @@ class FoodScholarEnrichmentApiService {
       `${this.basePath}/worker/pause`,
       { paused }
     )
+  }
+
+  /**
+   * Force the workers back into a running state.
+   *
+   * Resume alone is not always enough: the pause switch has no expiry so it
+   * survives deploys, and a thread that died leaves `running: true` behind,
+   * which makes the worker refuse to start again. Admin-only.
+   */
+  async restartWorkers(
+    options: { sweeper?: boolean, jobs?: boolean, resume?: boolean } = {}
+  ): Promise<EnrichmentWorkerRestartResponse> {
+    return wisefoodRestApi.post<
+      EnrichmentWorkerRestartResponse,
+      { sweeper: boolean, jobs: boolean, resume: boolean }
+    >(`${this.basePath}/worker/restart`, {
+      sweeper: options.sweeper ?? true,
+      jobs: options.jobs ?? true,
+      resume: options.resume ?? true
+    })
   }
 }
 

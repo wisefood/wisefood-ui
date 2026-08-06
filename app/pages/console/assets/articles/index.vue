@@ -24,15 +24,6 @@
       </div>
 
       <UPageBody class="space-y-6">
-        <ConsoleArticlesEnrichmentWorkerCard
-          :status="workerStatus"
-          :worker-loading="workerLoading"
-          :pause-pending="pausePending"
-          @refresh="loadWorkerStatus()"
-          @pause="toggleSweeper(true)"
-          @resume="toggleSweeper(false)"
-        />
-
         <UCard
           :ui="{ body: 'p-0', header: 'p-5 sm:p-6', footer: 'p-4 sm:px-6 sm:py-4' }"
           class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
@@ -356,6 +347,17 @@
             </div>
           </template>
         </UCard>
+
+        <ConsoleArticlesEnrichmentWorkerCard
+          :status="workerStatus"
+          :worker-loading="workerLoading"
+          :pause-pending="pausePending"
+          :restart-pending="restartPending"
+          @refresh="loadWorkerStatus()"
+          @pause="toggleSweeper(true)"
+          @resume="toggleSweeper(false)"
+          @restart="restartEnrichmentWorkers()"
+        />
       </UPageBody>
     </UPage>
 
@@ -464,110 +466,312 @@
               :title="createError"
             />
 
-            <div class="space-y-4">
+            <!-- Identity -->
+            <section class="space-y-4">
+              <h4 class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                Identity
+              </h4>
+
               <UFormField
-                label="Article Title"
+                label="Article title"
                 required
               >
                 <UInput
                   v-model="createForm.title"
                   placeholder="e.g. Mediterranean diet and cardiovascular outcomes"
                   class="w-full"
+                  autofocus
                 />
               </UFormField>
 
               <UFormField
-                label="URN"
+                label="URN slug"
                 required
+                :error="urnFieldError"
+                help="Lowercase letters, numbers and dashes. Generated from the title until you edit it."
               >
                 <UInput
                   v-model="createForm.urn"
-                  placeholder="e.g. mediterranean-diet-cardiovascular-outcomes"
+                  placeholder="mediterranean-diet-cardiovascular-outcomes"
                   class="w-full"
                   @update:model-value="markCreateUrnAsEdited"
-                />
-                <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
-                  Lowercase slug used by the catalog API. It auto-generates from the title until you edit it manually.
-                </p>
+                >
+                  <template #leading>
+                    <span class="text-xs text-gray-400 dark:text-gray-500">urn:article:</span>
+                  </template>
+                </UInput>
               </UFormField>
 
-              <UFormField
-                label="Venue"
-                required
-              >
-                <UInput
-                  v-model="createForm.venue"
-                  placeholder="e.g. The Lancet"
-                  class="w-full"
-                />
-              </UFormField>
+              <div class="grid gap-4 sm:grid-cols-2">
+                <UFormField
+                  label="Venue"
+                  required
+                  help="Journal, publisher or source."
+                >
+                  <UInputMenu
+                    v-model="createForm.venue"
+                    :items="venueOptions"
+                    value-key="value"
+                    label-key="label"
+                    create-item="always"
+                    placeholder="e.g. The Lancet"
+                    class="w-full"
+                    @create="createForm.venue = String($event).trim()"
+                  />
+                </UFormField>
 
-              <UFormField label="Publication Year">
-                <UInput
-                  v-model="createForm.publicationYear"
-                  type="number"
-                  placeholder="e.g. 2022"
-                  class="w-full"
-                />
-              </UFormField>
+                <UFormField
+                  label="Publication year"
+                  :error="publicationYearError"
+                >
+                  <UInput
+                    v-model="createForm.publicationYear"
+                    type="number"
+                    inputmode="numeric"
+                    :min="1500"
+                    :max="currentYear + 1"
+                    placeholder="e.g. 2022"
+                    class="w-full"
+                  />
+                </UFormField>
+              </div>
 
               <UFormField
                 label="Authors"
                 required
+                help="Order is preserved. Paste a comma- or newline-separated list to add several at once."
+              >
+                <ConsoleArticleTokenInput
+                  v-model="createForm.authors"
+                  label="author"
+                  ordered
+                  placeholder="Surname, Initials — then press Enter"
+                  empty-text="No authors added yet."
+                />
+              </UFormField>
+
+              <div class="grid gap-4 sm:grid-cols-2">
+                <UFormField
+                  label="Canonical URL"
+                  :error="urlFieldError"
+                >
+                  <UInput
+                    v-model="createForm.url"
+                    type="url"
+                    placeholder="https://..."
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <UFormField label="DOI">
+                  <UInput
+                    v-model="createForm.doi"
+                    placeholder="10.1016/j.example.2022.01.001"
+                    class="w-full"
+                  />
+                </UFormField>
+              </div>
+            </section>
+
+            <USeparator />
+
+            <!-- Content -->
+            <section class="space-y-4">
+              <h4 class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                Content
+              </h4>
+
+              <UFormField
+                label="Abstract"
+                required
+                :help="`${createForm.abstract.length.toLocaleString()} / 15,000 characters`"
               >
                 <UTextarea
-                  v-model="createForm.authors"
-                  :rows="4"
-                  placeholder="One author per line, or separate them with commas"
+                  v-model="createForm.abstract"
+                  :rows="5"
+                  :maxlength="15000"
+                  placeholder="Paste the article abstract — this seeds enrichment and retrieval."
                   class="w-full"
                 />
               </UFormField>
 
               <UFormField
-                label="Abstract"
-                required
+                label="Body text"
+                help="Optional. Falls back to the abstract when left empty."
               >
                 <UTextarea
-                  v-model="createForm.abstract"
-                  :rows="5"
-                  placeholder="Add the article abstract to seed the record"
-                  class="w-full"
-                />
-              </UFormField>
-
-              <UFormField label="Canonical URL">
-                <UInput
-                  v-model="createForm.url"
-                  placeholder="https://..."
-                  class="w-full"
-                />
-              </UFormField>
-
-              <UFormField label="Category">
-                <UInput
-                  v-model="createForm.category"
-                  placeholder="e.g. Cardiometabolic Health"
-                  class="w-full"
-                />
-              </UFormField>
-
-              <UFormField label="Tags">
-                <UInput
-                  v-model="createForm.tags"
-                  placeholder="Comma-separated"
-                  class="w-full"
-                />
-              </UFormField>
-
-              <UFormField label="Body Text">
-                <UTextarea
                   v-model="createForm.content"
-                  :rows="8"
-                  placeholder="Optional source body or notes for the first curation pass"
+                  :rows="6"
+                  placeholder="Full text or curation notes"
                   class="w-full"
                 />
               </UFormField>
-            </div>
+            </section>
+
+            <USeparator />
+
+            <!-- Classification -->
+            <section class="space-y-4">
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                  Classification
+                </h4>
+                <span class="text-xs text-gray-400 dark:text-gray-500">
+                  All optional — refine later in the workspace
+                </span>
+              </div>
+
+              <div class="grid gap-4 sm:grid-cols-2">
+                <UFormField label="Category">
+                  <UInputMenu
+                    v-model="createForm.category"
+                    :items="categorySelectOptions"
+                    value-key="value"
+                    label-key="label"
+                    create-item="always"
+                    placeholder="Select or type a category"
+                    class="w-full"
+                    @create="createForm.category = String($event).trim()"
+                  />
+                </UFormField>
+
+                <UFormField label="Study type">
+                  <UInputMenu
+                    v-model="createForm.studyType"
+                    :items="studyTypeSelectOptions"
+                    value-key="value"
+                    label-key="label"
+                    create-item="always"
+                    placeholder="Select or type a study type"
+                    class="w-full"
+                    @create="createForm.studyType = String($event).trim()"
+                  />
+                </UFormField>
+
+                <UFormField label="Reader group">
+                  <UInputMenu
+                    v-model="createForm.readerGroup"
+                    :items="readerGroupSelectOptions"
+                    value-key="value"
+                    label-key="label"
+                    create-item="always"
+                    placeholder="Who is this for?"
+                    class="w-full"
+                    @create="createForm.readerGroup = String($event).trim()"
+                  />
+                </UFormField>
+
+                <UFormField label="Age group">
+                  <UInputMenu
+                    v-model="createForm.ageGroup"
+                    :items="ageGroupSelectOptions"
+                    value-key="value"
+                    label-key="label"
+                    create-item="always"
+                    placeholder="Population age range"
+                    class="w-full"
+                    @create="createForm.ageGroup = String($event).trim()"
+                  />
+                </UFormField>
+
+                <UFormField label="Region">
+                  <UInputMenu
+                    v-model="createForm.region"
+                    :items="regionSelectOptions"
+                    value-key="value"
+                    label-key="label"
+                    create-item="always"
+                    placeholder="Geographic scope"
+                    class="w-full"
+                    @create="createForm.region = String($event).trim()"
+                  />
+                </UFormField>
+
+                <UFormField label="Language">
+                  <USelectMenu
+                    v-model="createForm.language"
+                    :items="languageOptions"
+                    value-key="value"
+                    label-key="label"
+                    placeholder="Language"
+                    class="w-full"
+                  />
+                </UFormField>
+              </div>
+
+              <UFormField
+                label="Tags"
+                help="Up to 50. Existing tags are suggested as you type."
+              >
+                <ConsoleArticleTokenInput
+                  v-model="createForm.tags"
+                  label="tag"
+                  :suggestions="tagSelectOptions"
+                  :max="50"
+                  placeholder="Add a tag"
+                  empty-text="No tags added yet."
+                />
+              </UFormField>
+
+              <UFormField
+                label="Topics"
+                help="Broader subject areas, used for browsing and retrieval."
+              >
+                <ConsoleArticleTokenInput
+                  v-model="createForm.topics"
+                  label="topic"
+                  :suggestions="topicSelectOptions"
+                  :max="100"
+                  placeholder="Add a topic"
+                  empty-text="No topics added yet."
+                />
+              </UFormField>
+            </section>
+
+            <USeparator />
+
+            <!-- Access -->
+            <section class="space-y-4">
+              <h4 class="text-xs font-semibold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                Access
+              </h4>
+
+              <div class="grid gap-4 sm:grid-cols-2">
+                <UFormField label="Licence">
+                  <USelectMenu
+                    v-model="createForm.license"
+                    :items="licenseOptions"
+                    value-key="value"
+                    label-key="label"
+                    placeholder="Select a licence"
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <UFormField label="Open access">
+                  <USelectMenu
+                    v-model="createForm.openAccess"
+                    :items="openAccessOptions"
+                    value-key="value"
+                    label-key="label"
+                    class="w-full"
+                  />
+                </UFormField>
+              </div>
+
+              <UFormField
+                label="Reader visibility"
+                help="Controls who can read this article once it is published."
+              >
+                <USelectMenu
+                  v-model="createForm.readerVisibility"
+                  :items="readerVisibilityOptions"
+                  value-key="value"
+                  label-key="label"
+                  class="w-full"
+                />
+              </UFormField>
+            </section>
           </div>
 
           <template #footer>
@@ -583,6 +787,7 @@
               <UButton
                 color="primary"
                 :loading="createPending"
+                :disabled="!createFormValid"
                 @click="createArticleRecord"
               >
                 Create Article
@@ -615,12 +820,29 @@ import {
   normalizeFacetBuckets,
   slugifyArticleUrn
 } from '~/utils/consoleArticles'
+import ConsoleArticleTokenInput from '~/components/console/ArticleTokenInput.vue'
+// Aliased as `*Vocabulary`: the identifiers without the suffix are already the
+// filter bar's "All categories"-style dropdown lists on this page, which are a
+// different thing from the curated suggestions offered when creating a record.
+import {
+  ageGroupOptions as ageGroupVocabulary,
+  categoryOptions as categoryVocabulary,
+  languageOptions,
+  licenseOptions,
+  mergeVocabularyWithFacet,
+  openAccessOptions,
+  readerGroupOptions as readerGroupVocabulary,
+  readerVisibilityOptions,
+  regionOptions as regionVocabulary,
+  studyTypeOptions as studyTypeVocabulary
+} from '~/utils/consoleArticleVocabulary'
 import {
   enrichmentBadge,
   formatEnrichmentTimestamp,
   hasEnrichmentOnRecord
 } from '~/utils/consoleEnrichment'
 import { formatConsoleDate as formatDate } from '~/utils/consoleGuideCatalog'
+import { assetSectionBreadcrumb } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({
   layout: 'default'
@@ -640,7 +862,20 @@ const toast = useToast()
 const router = useRouter()
 
 const pageSize = 20
-const facetFields = ['category', 'ai_category', 'study_type', 'reader_group', 'region']
+// Drives both the filter bar and the create form's suggestions, so the options
+// an editor is offered are the values the corpus actually contains.
+const facetFields = [
+  'category',
+  'ai_category',
+  'study_type',
+  'reader_group',
+  'region',
+  'age_group',
+  'venue',
+  'tags',
+  'ai_tags',
+  'topics'
+]
 
 const articles = ref<Article[]>([])
 const totalArticles = ref(0)
@@ -680,18 +915,113 @@ const createPending = ref(false)
 const createError = ref<string | null>(null)
 const createUrnEdited = ref(false)
 
+/**
+ * Create-form state.
+ *
+ * Array fields are held as arrays, not as comma-separated strings: the API
+ * types them as `string[]`, so keeping them as strings meant every save had to
+ * guess where one value ended and the next began.
+ */
 const createForm = reactive({
   title: '',
   urn: '',
   venue: '',
-  authors: '',
+  authors: [] as string[],
   publicationYear: '',
   abstract: '',
   content: '',
   url: '',
+  doi: '',
   category: '',
-  tags: ''
+  studyType: '',
+  readerGroup: '',
+  ageGroup: '',
+  region: '',
+  language: '',
+  license: '',
+  openAccess: 'unknown',
+  readerVisibility: 'public',
+  tags: [] as string[],
+  topics: [] as string[]
 })
+
+const currentYear = new Date().getFullYear()
+
+// --- Inline validation ------------------------------------------------------
+// Shown as the editor types, so an invalid value is caught before the request
+// rather than surfacing as a 422 alert at the top of the modal.
+
+const urnFieldError = computed(() => {
+  const value = createForm.urn.trim()
+  if (!value) return undefined
+  // Mirrors the API's SlugStr pattern.
+  return /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/.test(value)
+    ? undefined
+    : 'Use lowercase letters, numbers, dashes or underscores.'
+})
+
+const publicationYearError = computed(() => {
+  const value = createForm.publicationYear.trim()
+  if (!value) return undefined
+  const year = Number(value)
+  if (!/^\d{4}$/.test(value) || Number.isNaN(year)) return 'Enter a 4-digit year.'
+  if (year < 1500 || year > currentYear + 1) return `Enter a year between 1500 and ${currentYear + 1}.`
+  return undefined
+})
+
+const urlFieldError = computed(() => {
+  const value = createForm.url.trim()
+  if (!value) return undefined
+  try {
+    const parsed = new URL(value)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+      ? undefined
+      : 'Use an http or https URL.'
+  } catch {
+    return 'Enter a valid URL, including https://'
+  }
+})
+
+const createFormValid = computed(() =>
+  Boolean(createForm.title.trim())
+  && Boolean(createForm.urn.trim())
+  && Boolean(createForm.venue.trim())
+  && createForm.authors.length > 0
+  && Boolean(createForm.abstract.trim())
+  && !urnFieldError.value
+  && !publicationYearError.value
+  && !urlFieldError.value
+)
+
+// --- Option lists: curated vocabulary merged with what the corpus already uses
+
+const venueOptions = computed(() =>
+  mergeVocabularyWithFacet([], normalizeFacetBuckets(facets.value.venue))
+)
+const categorySelectOptions = computed(() =>
+  mergeVocabularyWithFacet(
+    categoryVocabulary,
+    mergeFacetBuckets(facets.value.category, facets.value.ai_category)
+  )
+)
+const studyTypeSelectOptions = computed(() =>
+  mergeVocabularyWithFacet(studyTypeVocabulary, normalizeFacetBuckets(facets.value.study_type))
+)
+const readerGroupSelectOptions = computed(() =>
+  mergeVocabularyWithFacet(readerGroupVocabulary, normalizeFacetBuckets(facets.value.reader_group))
+)
+const ageGroupSelectOptions = computed(() =>
+  mergeVocabularyWithFacet(ageGroupVocabulary, normalizeFacetBuckets(facets.value.age_group))
+)
+const regionSelectOptions = computed(() =>
+  mergeVocabularyWithFacet(regionVocabulary, normalizeFacetBuckets(facets.value.region))
+)
+const tagSelectOptions = computed(() =>
+  mergeVocabularyWithFacet([], mergeFacetBuckets(facets.value.tags, facets.value.ai_tags))
+)
+const topicSelectOptions = computed(() =>
+  mergeVocabularyWithFacet([], normalizeFacetBuckets(facets.value.topics))
+)
 
 const articleColumns = [
   { id: 'select', header: '', enableSorting: false },
@@ -709,12 +1039,14 @@ const {
   workerStatus,
   workerLoading,
   pausePending,
+  restartPending,
   error: enrichmentError,
   statusFor,
   isPending: isEnrichPending,
   loadStatuses,
   loadWorkerStatus,
   setSweeperPaused,
+  restartWorkers,
   enrichArticle,
   enrichArticles
 } = useArticleEnrichment()
@@ -897,22 +1229,51 @@ async function toggleSweeper(paused: boolean) {
   }
 }
 
-const breadcrumbItems = [
-  {
-    label: 'Console',
-    icon: 'i-lucide-panel-top',
-    to: '/console'
-  },
-  {
-    label: 'Asset Manager',
-    icon: 'i-lucide-folder-open',
-    to: '/console/assets'
-  },
-  {
-    label: 'Scientific Articles',
-    icon: 'i-lucide-flask-conical'
+/**
+ * Bring the workers back up.
+ *
+ * The report is deliberately specific about *what* was wrong — a stale pause
+ * and a dead thread need the same action but mean different things, and only
+ * the response can tell them apart after the fact.
+ */
+async function restartEnrichmentWorkers() {
+  try {
+    const response = await restartWorkers()
+    const notes: string[] = []
+
+    if (response.sweeper?.pause_switch_was_set) {
+      notes.push('cleared a stale pause')
+    }
+    if (response.sweeper?.thread_was_alive === false) {
+      notes.push('rebuilt the dead sweeper thread')
+    }
+    if (response.jobs?.thread_was_alive === false) {
+      notes.push('rebuilt the dead job worker thread')
+    }
+    if (response.sweeper?.reason) {
+      notes.push(response.sweeper.reason)
+    }
+    if (response.jobs?.reason) {
+      notes.push(response.jobs.reason)
+    }
+
+    toast.add({
+      title: 'Enrichment workers restarted',
+      description: notes.length
+        ? `FoodScholar ${notes.join(', ')}.`
+        : 'Both workers were already healthy and have been restarted anyway.',
+      color: 'success'
+    })
+  } catch {
+    toast.add({
+      title: 'Could not restart the workers',
+      description: enrichmentError.value || 'FoodScholar rejected the request.',
+      color: 'error'
+    })
   }
-]
+}
+
+const breadcrumbItems = assetSectionBreadcrumb('articles')
 
 const categoryOptions = computed(() => [
   { label: 'All categories', value: 'all' },
@@ -975,15 +1336,6 @@ const paginationSummary = computed(() => {
 function normalizeNullable(value: string) {
   const normalized = value.trim()
   return normalized.length ? normalized : null
-}
-
-function parseDelimitedList(value: string) {
-  const entries = value
-    .split(/[\n,]/)
-    .map(item => item.trim())
-    .filter(item => item.length > 0)
-
-  return Array.from(new Set(entries))
 }
 
 function buildPublicationYearDate(value: string) {
@@ -1251,13 +1603,23 @@ function resetCreateForm() {
   createForm.title = ''
   createForm.urn = ''
   createForm.venue = ''
-  createForm.authors = ''
+  createForm.authors = []
   createForm.publicationYear = ''
   createForm.abstract = ''
   createForm.content = ''
   createForm.url = ''
+  createForm.doi = ''
   createForm.category = ''
-  createForm.tags = ''
+  createForm.studyType = ''
+  createForm.readerGroup = ''
+  createForm.ageGroup = ''
+  createForm.region = ''
+  createForm.language = ''
+  createForm.license = ''
+  createForm.openAccess = 'unknown'
+  createForm.readerVisibility = 'public'
+  createForm.tags = []
+  createForm.topics = []
   createUrnEdited.value = false
   createError.value = null
 }
@@ -1286,7 +1648,7 @@ async function createArticleRecord() {
     const venue = normalizeNullable(createForm.venue)
     const abstract = normalizeNullable(createForm.abstract)
     const content = normalizeNullable(createForm.content) || abstract
-    const authors = parseDelimitedList(createForm.authors)
+    const authors = createForm.authors
 
     if (!title) {
       throw new Error('Article title is required.')
@@ -1315,10 +1677,36 @@ async function createArticleRecord() {
       authors,
       content: content || abstract,
       abstract: abstract || undefined,
-      url: normalizeNullable(createForm.url) || undefined,
-      category: normalizeNullable(createForm.category) || undefined,
-      tags: parseDelimitedList(createForm.tags),
       publication_year: buildPublicationYearDate(createForm.publicationYear)
+    }
+
+    // Optional fields are omitted rather than sent empty: the API is
+    // extra="forbid" with typed values, so an empty string where it expects an
+    // enum or a URL is a 422 rather than "unset".
+    const optionalStrings = {
+      url: createForm.url,
+      doi: createForm.doi,
+      category: createForm.category,
+      study_type: createForm.studyType,
+      reader_group: createForm.readerGroup,
+      age_group: createForm.ageGroup,
+      region: createForm.region,
+      language: createForm.language,
+      license: createForm.license
+    } as const
+
+    for (const [key, raw] of Object.entries(optionalStrings)) {
+      const value = normalizeNullable(raw)
+      if (value) (payload as unknown as Record<string, unknown>)[key] = value
+    }
+
+    if (createForm.tags.length) payload.tags = createForm.tags
+    if (createForm.topics.length) payload.topics = createForm.topics
+    if (createForm.openAccess !== 'unknown') {
+      payload.open_access = createForm.openAccess === 'true'
+    }
+    if (createForm.readerVisibility && createForm.readerVisibility !== 'public') {
+      ;(payload as unknown as Record<string, unknown>).reader_visibility = createForm.readerVisibility
     }
 
     const createdArticle = await articlesApi.createArticle(payload)

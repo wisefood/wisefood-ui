@@ -218,25 +218,20 @@
                   class="px-5 py-4"
                 >
                   <div class="flex items-start gap-2 mb-1">
-                    <span v-if="passage.chapter" class="text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wide">
-                      {{ passage.chapter }}
-                      <span v-if="passage.section"> · {{ passage.section }}</span>
-                    </span>
-                    <span v-if="passage.page_start != null" class="text-xs text-zinc-400 dark:text-zinc-500 ml-auto">
-                      p.{{ passage.page_start }}{{ passage.page_end && passage.page_end !== passage.page_start ? `–${passage.page_end}` : '' }}
-                    </span>
-                  </div>
-                  <p v-if="passage.title" class="text-sm font-semibold text-zinc-900 dark:text-white mb-1">{{ passage.title }}</p>
-                  <p class="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed line-clamp-4">{{ passage.content }}</p>
-                  <div v-if="passage.topics.length || passage.tags.length" class="mt-2 flex flex-wrap gap-1">
                     <span
-                      v-for="t in [...passage.topics, ...passage.tags].slice(0, 4)"
-                      :key="t"
-                      class="px-1.5 py-0.5 text-[10px] rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                      v-if="passage.structure_path.length"
+                      class="text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-400"
                     >
-                      {{ t }}
+                      {{ passage.structure_path.join(' · ') }}
+                    </span>
+                    <span
+                      v-if="passage.page_no != null"
+                      class="ml-auto text-xs text-zinc-400 dark:text-zinc-500"
+                    >
+                      p.{{ passage.page_no }}
                     </span>
                   </div>
+                  <p class="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300 line-clamp-4">{{ passage.text }}</p>
                 </li>
               </ul>
             </Transition>

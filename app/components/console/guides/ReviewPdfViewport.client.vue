@@ -1,7 +1,10 @@
 <template>
   <div
     ref="viewportInnerEl"
-    class="relative h-full min-h-[24rem] w-full"
+    :class="[
+      'relative w-full',
+      scrollable ? 'h-full overflow-auto' : 'h-full min-h-[24rem]'
+    ]"
   >
     <div
       v-if="loading || rendering"
@@ -43,7 +46,10 @@
 
     <div
       v-else
-      class="flex w-max min-w-full p-4"
+      :class="[
+        'flex min-w-full p-4',
+        overflowsHorizontally ? 'w-max' : 'w-full'
+      ]"
     >
       <div class="mx-auto flex items-start gap-4">
         <div
@@ -109,13 +115,27 @@ type PdfDocumentSource = {
 }
 type PdfEmbedSource = Uint8Array | { url: string }
 
-const props = defineProps<{
-  artifact: CatalogArtifact
-  currentPage: number
-  secondaryPage?: number | null
-  zoom: number
-  reloadToken?: number
-}>()
+const props = withDefaults(
+  defineProps<{
+    artifact: CatalogArtifact
+    currentPage: number
+    secondaryPage?: number | null
+    /** Multiplier applied on top of the fit. 1 = fit exactly. */
+    zoom: number
+    reloadToken?: number
+    /**
+     * How the page is sized to the pane.
+     *
+     * `width` fills the pane horizontally; `page` sizes so a whole page is
+     * visible without scrolling, which is what makes browsing a document feel
+     * like a reader rather than a cramped frame.
+     */
+    fitMode?: 'width' | 'page'
+    /** Let the viewport own its scrolling instead of an outer wrapper. */
+    scrollable?: boolean
+  }>(),
+  { fitMode: 'width', scrollable: false }
+)
 
 const emit = defineEmits<{
   'navigate-page': [page: number]
@@ -132,6 +152,11 @@ const loading = ref(true)
 const rendering = ref(false)
 const error = ref<string | null>(null)
 const viewportWidth = ref(0)
+const viewportHeight = ref(0)
+
+// A4-ish. Used only to estimate the height a page will occupy so fit-to-page
+// can pick a width; the real aspect ratio comes from the rendered page.
+const ASSUMED_PAGE_ASPECT = 1.414
 const documentRenderSeed = ref(0)
 
 const pendingPanelKeys = shallowRef<Set<PdfPanelKey>>(new Set())
@@ -182,13 +207,35 @@ const visiblePanels = computed(() => {
 })
 
 const resolvedPageWidth = computed(() => {
+  // 32px accounts for the p-4 padding on the row.
   const containerWidth = Math.max(viewportWidth.value - 32, 320)
   const interPageGap = visiblePanels.value.length > 1 ? 16 : 0
-  const fitWidth = visiblePanels.value.length > 1
+  let fitWidth = visiblePanels.value.length > 1
     ? Math.max((containerWidth - interPageGap) / 2, 240)
     : containerWidth
 
+  if (props.fitMode === 'page' && viewportHeight.value > 0) {
+    // Leave room for the page header strip above each panel.
+    const availableHeight = Math.max(viewportHeight.value - 96, 240)
+    fitWidth = Math.min(fitWidth, availableHeight / ASSUMED_PAGE_ASPECT)
+  }
+
   return Math.max(Math.floor(fitWidth * props.zoom), 240)
+})
+
+/**
+ * Whether the rendered row is wider than the pane.
+ *
+ * Only then should the row be allowed to exceed its container — otherwise it
+ * reports a horizontal scrollbar on a page that already fits, which is what
+ * made the viewer feel boxed in.
+ */
+const overflowsHorizontally = computed(() => {
+  if (!viewportWidth.value) return false
+  const gap = visiblePanels.value.length > 1 ? 16 : 0
+  const rowWidth
+    = resolvedPageWidth.value * visiblePanels.value.length + gap + 32
+  return rowWidth > viewportWidth.value + 1
 })
 
 const renderSignature = computed(() => {
@@ -259,8 +306,18 @@ function handlePanelRenderFailure(renderError: unknown) {
 
 function syncViewportWidth() {
   const element = viewportInnerEl.value
-  const scrollContainer = element?.parentElement ?? element
-  viewportWidth.value = scrollContainer ? Math.floor(scrollContainer.clientWidth) : 0
+  if (!element) {
+    viewportWidth.value = 0
+    viewportHeight.value = 0
+    return
+  }
+
+  // When this component owns the scrolling, its own box is the viewport.
+  // Otherwise the wrapper above it is, and measuring self would grow without
+  // bound as the content grows.
+  const box = props.scrollable ? element : (element.parentElement ?? element)
+  viewportWidth.value = Math.floor(box.clientWidth)
+  viewportHeight.value = Math.floor(box.clientHeight)
 }
 
 async function resolvePdfSource(artifact: CatalogArtifact, forceReload = false): Promise<PdfDocumentSource> {

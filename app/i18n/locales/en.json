@@ -1665,5 +1665,37 @@
     "message": "We use cookies and process your personal data solely to provide the WiseFood service.",
     "privacyPolicy": "Privacy Policy",
     "accept": "Accept"
+  },
+  "guidelines": {
+    "facets": {
+      "aiSuggested": "AI-suggested, not yet reviewed"
+    },
+    "peek": {
+      "title": "Dietary guideline",
+      "loading": "Loading guideline…",
+      "error": "This guideline could not be loaded.",
+      "openInGuide": "Open in guide"
+    },
+    "filters": {
+      "title": "Filters",
+      "clear": "Clear filters",
+      "showMore": "Show {count} more",
+      "showLess": "Show less",
+      "lifeStage": "Life stage",
+      "setting": "Setting",
+      "guidanceType": "Guidance type",
+      "population": "Population",
+      "foodGroup": "Food group",
+      "nutrient": "Nutrient",
+      "age": "Applies at age",
+      "subtitle": "Narrow the rules",
+      "active": "active",
+      "clearOne": "Clear",
+      "birth": "Birth",
+      "includeUnstatedAge": "Include rules that state no age range"
+    },
+    "context": {
+      "show": "Context from the source page"
+    }
   }
 }

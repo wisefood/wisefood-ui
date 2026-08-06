@@ -13,14 +13,23 @@
           :ui="{ root: 'relative py-0 border-b-0' }"
         />
 
-        <UButton
-          color="primary"
-          icon="i-lucide-plus"
-          class="self-start"
-          @click="openGuideWizard"
-        >
-          Add Guide
-        </UButton>
+        <div class="flex flex-wrap gap-2 self-start">
+          <UButton
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-sparkles"
+            to="/console/assets/guides/enrichment"
+          >
+            Enrichment
+          </UButton>
+          <UButton
+            color="primary"
+            icon="i-lucide-plus"
+            @click="openGuideWizard"
+          >
+            Add Guide
+          </UButton>
+        </div>
       </div>
 
       <UPageBody class="space-y-6">
@@ -847,6 +856,7 @@ import {
   reviewStatusColor,
   statusColor
 } from '~/utils/consoleGuideCatalog'
+import { assetSectionBreadcrumb } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({
   layout: 'default'
@@ -952,22 +962,7 @@ const guideWizardDialogOpen = computed({
   }
 })
 
-const breadcrumbItems = [
-  {
-    label: 'Console',
-    icon: 'i-lucide-panel-top',
-    to: '/console'
-  },
-  {
-    label: 'Asset Manager',
-    icon: 'i-lucide-folder-open',
-    to: '/console/assets'
-  },
-  {
-    label: 'Dietary Guides',
-    icon: 'i-lucide-book-open-check'
-  }
-]
+const breadcrumbItems = assetSectionBreadcrumb('guides')
 
 const guideColumns = [
   { accessorKey: 'title', header: 'Guide' },
@@ -1455,7 +1450,17 @@ async function startGuideWizardExtraction() {
   wizardExtractionMessage.value = null
 
   try {
-    const response = await foodscholarGuidelinesApi.enqueueExtraction(wizardUploadedArtifact.value.id)
+    // The guide URN is the whole point: FoodScholar injects the guide's title,
+    // region, audience and year into every page prompt, so a rule extracted
+    // from page 14 still knows who it is for. Without it the run falls back to
+    // reading the PDF's own opening pages.
+    const response = await foodscholarGuidelinesApi.enqueueExtraction(
+      wizardUploadedArtifact.value.id,
+      {
+        guide_id: wizardCreatedGuide.value?.urn,
+        profile_document: true
+      }
+    )
     wizardExtractionStarted.value = true
 
     if (typeof response === 'string') {

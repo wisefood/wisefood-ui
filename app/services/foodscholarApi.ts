@@ -122,6 +122,14 @@ export interface QaTipsResult {
       passage?: string
       title?: string
       publication_year?: string
+      /**
+       * Link hints. Present for guideline-sourced tips so the citation still
+       * resolves when the rule itself is no longer publicly readable.
+       */
+      source_type?: string | null
+      guide_urn?: string | null
+      page_no?: number | null
+      region?: string | null
     }
   }>
   tips_detail?: Array<{
@@ -131,6 +139,14 @@ export interface QaTipsResult {
       passage?: string
       title?: string
       publication_year?: string
+      /**
+       * Link hints. Present for guideline-sourced tips so the citation still
+       * resolves when the rule itself is no longer publicly readable.
+       */
+      source_type?: string | null
+      guide_urn?: string | null
+      page_no?: number | null
+      region?: string | null
     }
   }>
   generated_at?: string

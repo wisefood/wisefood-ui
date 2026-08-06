@@ -62,6 +62,18 @@
           >
             Pause sweeper
           </UButton>
+
+          <UButton
+            v-if="isAdmin"
+            :color="sweeperStalled || jobsStalled ? 'error' : 'neutral'"
+            variant="outline"
+            size="sm"
+            icon="i-lucide-rotate-ccw"
+            :loading="restartPending"
+            @click="$emit('restart')"
+          >
+            Restart workers
+          </UButton>
         </div>
       </div>
     </template>
@@ -73,7 +85,16 @@
         variant="soft"
         icon="i-lucide-power-off"
         title="Sweeper disabled on the API"
-        description="ENABLE_BACKGROUND_WORKER is off, so no automatic pass runs. Selective enrichment below still works."
+        description="ENABLE_BACKGROUND_WORKER is off, so no automatic pass runs. Selective enrichment from the library above still works."
+      />
+
+      <UAlert
+        v-if="sweeperStalled || jobsStalled"
+        color="error"
+        variant="soft"
+        icon="i-lucide-heart-crack"
+        title="A worker thread has died"
+        :description="stalledDescription"
       />
 
       <UAlert
@@ -82,7 +103,7 @@
         variant="soft"
         icon="i-lucide-pause"
         title="Automatic enrichment is paused"
-        description="No articles are being swept. Queue individual articles below, then resume when you are done."
+        description="No articles are being swept. The pause has no expiry and survives restarts, so it stays set until someone resumes it. Queue individual articles from the library above, then resume when you are done."
       />
 
       <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -113,18 +134,26 @@
 import { computed } from 'vue'
 import type { EnrichmentWorkerStatus } from '~/services/foodscholarEnrichmentApi'
 import { formatWorkerUptime } from '~/utils/consoleEnrichment'
+import { useAuthStore } from '~/stores/auth'
 
 const props = defineProps<{
   status: EnrichmentWorkerStatus | null
   workerLoading?: boolean
   pausePending?: boolean
+  restartPending?: boolean
 }>()
 
 defineEmits<{
   refresh: []
   pause: []
   resume: []
+  restart: []
 }>()
+
+const authStore = useAuthStore()
+// Restart rebuilds worker threads and clears a pause another operator may have
+// set on purpose, so it is admin-only — matching the gateway route.
+const isAdmin = computed(() => authStore.isAdmin)
 
 const sweeper = computed(() => props.status?.sweeper)
 const jobs = computed(() => props.status?.jobs)
@@ -132,9 +161,25 @@ const jobs = computed(() => props.status?.jobs)
 const sweeperEnabled = computed(() => Boolean(sweeper.value?.enabled))
 const sweeperPaused = computed(() => Boolean(sweeper.value?.paused))
 
+// `running` is bookkeeping the worker sets before spawning its thread; it stays
+// true if the thread later dies. `stalled` is the backend comparing the two, and
+// it is the state that most needs surfacing: the card would otherwise show a
+// healthy green "running" while nothing is being processed.
+const sweeperStalled = computed(() => Boolean(sweeper.value?.stalled))
+const jobsStalled = computed(() => Boolean(jobs.value?.stalled))
+
+const stalledDescription = computed(() => {
+  const dead = [
+    sweeperStalled.value ? 'the catalog sweeper' : null,
+    jobsStalled.value ? 'the on-demand job worker' : null
+  ].filter(Boolean).join(' and ')
+  return `Reported as running, but ${dead} is not alive — nothing is being processed. Restart workers to rebuild the thread.`
+})
+
 const sweeperBadge = computed(() => {
   if (!props.status) return { label: 'Unknown', color: 'neutral' as const }
   if (!sweeperEnabled.value) return { label: 'Sweeper disabled', color: 'neutral' as const }
+  if (sweeperStalled.value) return { label: 'Sweeper died', color: 'error' as const }
   if (sweeperPaused.value) return { label: 'Sweeper paused', color: 'warning' as const }
   if (sweeper.value?.running) return { label: 'Sweeper running', color: 'success' as const }
   return { label: 'Sweeper stopped', color: 'neutral' as const }

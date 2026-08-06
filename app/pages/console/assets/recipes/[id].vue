@@ -607,6 +607,7 @@ import {
   resolveConsoleRecipeErrorMessage
 } from '~/utils/consoleRecipes'
 import { formatDishTypeLabel, getDishTypeIcon, normalizeDishTypes } from '~/utils/dishTypes'
+import { assetSectionBreadcrumb, recordCrumb } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({
   layout: 'default'
@@ -676,27 +677,11 @@ useSeoMeta({
   description: 'Wisefood recipe editor for internal recipe management'
 })
 
-const breadcrumbItems = computed(() => [
-  {
-    label: 'Console',
-    icon: 'i-lucide-panel-top',
-    to: '/console'
-  },
-  {
-    label: 'Asset Manager',
-    icon: 'i-lucide-folder-open',
-    to: '/console/assets'
-  },
-  {
-    label: 'Recipes',
-    icon: 'i-lucide-utensils-crossed',
-    to: libraryRoute
-  },
-  {
-    label: recipe.value?.title || recipeId.value,
-    icon: 'i-lucide-file-pen-line'
-  }
-])
+const breadcrumbItems = computed(() => assetSectionBreadcrumb(
+  'recipes',
+  [recordCrumb(recipe.value?.title, recipeId.value)],
+  libraryRoute
+))
 
 const publicRecipeRoute = computed(() => `/recipe-wrangler/${encodeURIComponent(recipeId.value)}`)
 

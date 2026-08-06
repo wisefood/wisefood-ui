@@ -7,6 +7,52 @@
       {{ guideline.rule_text }}
     </p>
 
+    <div v-if="facetChips.length" class="mt-3 flex flex-wrap items-center gap-1.5">
+      <span
+        v-for="chip in facetChips"
+        :key="`${chip.field}:${chip.value}`"
+        class="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300"
+        :title="chip.aiGenerated ? $t('guidelines.facets.aiSuggested') : chip.label"
+      >
+        <UIcon :name="chip.icon" class="h-3 w-3 shrink-0 opacity-70" />
+        {{ chip.label }}
+        <span
+          v-if="chip.aiGenerated"
+          class="h-1 w-1 rounded-full bg-primary-400"
+          :aria-label="$t('guidelines.facets.aiSuggested')"
+        />
+      </span>
+    </div>
+
+    <UCollapsible
+      v-if="guideline.page_summary"
+      class="mt-3"
+    >
+      <UButton
+        color="neutral"
+        variant="ghost"
+        size="xs"
+        trailing-icon="i-lucide-chevron-down"
+        class="-ml-2"
+      >
+        {{ $t('guidelines.context.show') }}
+      </UButton>
+
+      <template #content>
+        <div class="mt-2 rounded-lg bg-gray-50 p-3 dark:bg-white/5">
+          <p
+            v-if="guideline.section_label"
+            class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+          >
+            {{ guideline.section_label }}
+          </p>
+          <p class="text-xs leading-5 text-gray-600 dark:text-gray-300">
+            {{ guideline.page_summary }}
+          </p>
+        </div>
+      </template>
+    </UCollapsible>
+
     <div
       v-if="hasProvenance"
       class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-gray-100 pt-3 text-xs text-gray-500 dark:border-white/10 dark:text-gray-400"
@@ -50,6 +96,7 @@ import {
   getGuidePublisher,
   normalizeMeaningfulString
 } from '~/utils/guidesCatalog'
+import { guidelineFacetChips } from '~/utils/guidelineFacets'
 
 interface Props {
   guideline: CatalogGuideline
@@ -59,6 +106,8 @@ interface Props {
   guideTo?: string | null
   showGuideLink?: boolean
   compact?: boolean
+  /** Hide the facet chip row, e.g. in dense list contexts. */
+  hideFacets?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -66,8 +115,17 @@ const props = withDefaults(defineProps<Props>(), {
   guideTitle: null,
   guideTo: null,
   showGuideLink: true,
-  compact: false
+  compact: false,
+  hideFacets: false
 })
+
+// A compact card gets fewer chips so the rule text stays the focus. Rules that
+// predate enrichment carry no facets and render no row at all.
+const facetChips = computed(() =>
+  props.hideFacets
+    ? []
+    : guidelineFacetChips(props.guideline, { limit: props.compact ? 3 : 6 })
+)
 
 const resolvedTitle = computed(() =>
   normalizeMeaningfulString(props.guideTitle)

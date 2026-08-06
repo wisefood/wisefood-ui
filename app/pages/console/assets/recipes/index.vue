@@ -1261,6 +1261,7 @@ import {
   MOOD_EMOJI
 } from '~/utils/facetPresentation'
 import RecipeFacetSection from '~/components/recipes/RecipeFacetSection.vue'
+import { assetSectionBreadcrumb } from '~/utils/consoleBreadcrumbs'
 
 type EditableIngredient = {
   name: string
@@ -1510,22 +1511,7 @@ const createWizardSteps = [
   }
 ]
 
-const breadcrumbItems = [
-  {
-    label: 'Console',
-    icon: 'i-lucide-panel-top',
-    to: '/console'
-  },
-  {
-    label: 'Asset Manager',
-    icon: 'i-lucide-folder-open',
-    to: '/console/assets'
-  },
-  {
-    label: 'Recipes',
-    icon: 'i-lucide-utensils-crossed'
-  }
-]
+const breadcrumbItems = assetSectionBreadcrumb('recipes')
 
 const hasActiveFilters = computed(() => Boolean(filters.q.trim()) || activeFacetCount.value > 0)
 
