@@ -214,9 +214,19 @@
                   <p class="mt-0.5 text-xs text-gray-600 dark:text-gray-300">
                     <template v-if="row.exists">
                       {{ formatCount(row.embedded) }} of {{ formatCount(row.total) }} embedded
-                      <template v-if="row.missing"> · {{ formatCount(row.missing) }} missing</template>
+                      <template v-if="row.missing">
+                        · {{ formatCount(row.missing) }} missing
+                      </template>
+                      <template v-if="row.stale">
+                        ·
+                        <span class="font-medium text-amber-600 dark:text-amber-400">
+                          {{ formatCount(row.stale) }} outdated
+                        </span>
+                      </template>
                     </template>
-                    <template v-else>Index does not exist</template>
+                    <template v-else>
+                      Index does not exist
+                    </template>
                   </p>
                 </div>
 
@@ -228,7 +238,7 @@
                     {{ formatCoverage(row.coverage) }}
                   </UBadge>
                   <UButton
-                    v-if="backfillable(row) && row.missing"
+                    v-if="backfillable(row) && needsBackfill(row)"
                     size="xs"
                     color="neutral"
                     variant="outline"
@@ -238,7 +248,7 @@
                     Preview
                   </UButton>
                   <UButton
-                    v-if="backfillable(row) && row.missing"
+                    v-if="backfillable(row) && needsBackfill(row)"
                     size="xs"
                     color="primary"
                     variant="soft"
@@ -250,20 +260,31 @@
                 </div>
               </div>
 
+              <!-- Two segments, because "embedded" and "trustworthy" are not
+                   the same thing: an outdated vector still counts toward
+                   coverage while matching text that is no longer there. -->
               <div
                 v-if="row.exists && row.total"
-                class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-white/10"
+                class="mt-3 flex h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-white/10"
               >
                 <div
-                  class="h-full rounded-full bg-primary-500 transition-all"
-                  :style="{ width: `${Math.round((row.coverage ?? 0) * 100)}%` }"
+                  class="h-full bg-primary-500 transition-all"
+                  :style="{ width: `${percentOfTotal(row, currentCount(row))}%` }"
+                  :title="`${formatCount(currentCount(row))} embedded and up to date`"
+                />
+                <div
+                  v-if="row.stale"
+                  class="h-full bg-amber-500 transition-all"
+                  :style="{ width: `${percentOfTotal(row, row.stale)}%` }"
+                  :title="`${formatCount(row.stale)} embedded from older text`"
                 />
               </div>
             </div>
 
             <p class="text-xs text-gray-500 dark:text-gray-400">
               Backfilling queues jobs for the embedding worker; it processes them in the background and the counts above update as it goes.
-              Only documents without a vector are queued, so running it twice is safe.
+              Documents that are already embedded <em>and</em> still match their current text are skipped, so running it twice is safe.
+              "Outdated" means the document was edited after it was embedded — its vector still describes the previous wording until it is re-queued.
             </p>
           </div>
         </UCard>
@@ -384,8 +405,33 @@ function formatCoverage(coverage?: number | null): string {
   return `${Math.round(coverage * 100)}%`
 }
 
+/**
+ * Embedded *and* still accurate.
+ *
+ * `stale` is absent when the measurement could not run, which is not the same
+ * as zero — fall back to the plain embedded count rather than inventing one.
+ */
+function currentCount(row: EmbeddingIndexState): number {
+  if (typeof row.current === 'number') return row.current
+  return row.embedded ?? 0
+}
+
+function percentOfTotal(row: EmbeddingIndexState, value?: number): number {
+  if (!row.total || !value) return 0
+  return Math.round((value / row.total) * 100)
+}
+
+/** Anything a backfill would now pick up: never embedded, or embedded from older text. */
+function needsBackfill(row: EmbeddingIndexState): boolean {
+  return Boolean(row.missing || row.stale)
+}
+
 function coverageColor(row: EmbeddingIndexState) {
   if (!row.exists || row.total === 0) return 'neutral'
+  // Outdated vectors count toward coverage but cannot be trusted, so an index
+  // at 100% with stale documents must not read as healthy — that green badge
+  // is exactly what would let silent retrieval drift go unnoticed.
+  if (row.stale) return 'warning'
   const coverage = row.coverage ?? 0
   if (coverage >= 0.99) return 'success'
   if (coverage >= 0.5) return 'warning'

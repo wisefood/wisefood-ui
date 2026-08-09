@@ -52,8 +52,18 @@ export interface EmbeddingIndexState {
   exists: boolean
   total?: number
   embedded?: number
-  /** How many documents a backfill would have to process. */
+  /** Never embedded. */
   missing?: number
+  /**
+   * Embedded, but edited since — the stored vector describes older text.
+   *
+   * Absent means "not measured" rather than zero: the count needs a scripted
+   * comparison of two date fields, which is issued as a separate request so a
+   * scripting failure costs only this column and not the whole report.
+   */
+  stale?: number
+  /** Embedded and still accurate: `embedded - stale`. */
+  current?: number
   coverage?: number | null
   error?: string
 }
