@@ -21,6 +21,19 @@
       >
         {{ t('auth.createAccount') || 'Create free account' }}
       </UButton>
+
+      <UButton
+        color="neutral"
+        variant="ghost"
+        size="xs"
+        icon="i-lucide-eraser"
+        class="cursor-pointer"
+        :loading="purging"
+        data-flows="guest-erase"
+        @click="handleEraseNow"
+      >
+        {{ t('auth.guestErase') || 'Erase my data now' }}
+      </UButton>
     </div>
   </div>
 </template>
@@ -62,5 +75,30 @@ const handleCreateAccount = () => {
   // to the real registration flow.
   authStore.clearGuestSession()
   KeycloakAuthService.register('/profiles')
+}
+
+const purging = ref(false)
+const toast = useToast()
+
+/**
+ * Erase now, rather than at expiry. This is the affordance a visitor at a booth
+ * needs: they typed real preferences into a shared laptop and want them gone
+ * before the next person sits down.
+ */
+const handleEraseNow = async () => {
+  if (purging.value) return
+  purging.value = true
+
+  const erased = await authStore.purgeGuestSession()
+  toast.add({
+    title: erased
+      ? (t('auth.guestErased') || 'Your guest data has been erased')
+      : (t('auth.guestEraseFailed') || 'We could not confirm the erase — it will still expire automatically'),
+    color: erased ? 'success' : 'warning',
+    icon: erased ? 'i-lucide-check' : 'i-lucide-alert-circle'
+  })
+
+  purging.value = false
+  await navigateTo('/login')
 }
 </script>

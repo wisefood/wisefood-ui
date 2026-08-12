@@ -172,7 +172,10 @@
     "guestStarting": "Tesztkörnyezet előkészítése...",
     "guestFailed": "A vendég hozzáférés jelenleg nem érhető el.",
     "guestBanner": "Vendégként böngészik — az adatai ideiglenesek",
-    "guestExpires": "lejár"
+    "guestExpires": "lejár",
+    "guestErase": "Adataim törlése most",
+    "guestErased": "A vendégadataid törölve lettek",
+    "guestEraseFailed": "A törlést nem tudtuk megerősíteni — automatikusan le fog járni"
   },
   "seo": {
     "title": "WiseFood – A személyre szabott táplálkozási utad",
@@ -837,7 +840,9 @@
           "toneStyle": "Nem megfelelő hangnem vagy stílus",
           "safetyLegal": "Biztonsági vagy jogi aggály"
         }
-      }
+      },
+      "confidenceExplainer": "A válaszoló modell saját megadott bizonyossága, nem kalibrált valószínűség. Minden állítás egy visszakeresett forrás szó szerinti idézetéhez kötődik; a beviteli javaslatoknál a nemzeti irányelvek elsőbbséget kapnak az egyedi tanulmányokkal szemben.",
+      "medicalBoundary": "Általános, publikált forrásokon alapuló táplálkozási információ — nem személyre szabott orvosi vagy dietetikai tanács. Saját egészségedet érintő döntésekhez fordulj szakemberhez."
     }
   },
   "profileSelection": {
@@ -1147,7 +1152,9 @@
       "saveChanges": "Változtatások mentése",
       "addPreference": "Preferencia hozzáadása",
       "addAllergy": "Allergia hozzáadása",
-      "deleteProfile": "Profil törlése"
+      "deleteProfile": "Profil törlése",
+      "deleteHousehold": "Háztartás törlése",
+      "deleteAccount": "Fiók törlése"
     },
     "sections": {
       "profileDetails": "Profil adatai",
@@ -1165,6 +1172,48 @@
       "today": "ma",
       "yesterday": "tegnap",
       "daysAgo": "{count} napja",
+      "why": {
+        "title": "Miért látom ezt?",
+        "learned": "Megtanulva",
+        "learnedValue": "A(z) {app} alkalmazásban, {when}",
+        "consent": "A te engedélyed",
+        "consentValue": "Te koppintottál a Megjegyzésre, amikor a WiseFood rákérdezett. Enélkül semmit nem tárolunk.",
+        "effectLabel": "Mit változtat",
+        "storedLabel": "Itt tároljuk",
+        "edited": "Javítva",
+        "editedValue": "Általad, {when}",
+        "unknownDate": "a dátum nincs rögzítve",
+        "control": "Javítsd, ha félreértettük, vagy felejtsd el — az ezután készült tervek már nem használják.",
+        "fromWhatYouSaid": "Amit mondtál",
+        "effect": {
+          "like": "A(z) {value} tartalmú receptek előrébb kerülnek. Ez preferencia, nem szűrő.",
+          "dislike": "A(z) {value} tartalmú receptek kimaradnak a terveidből.",
+          "allergy": "Kemény szűrő: egyetlen terv sem tartalmaz majd {value}-t.",
+          "seed": "A(z) {value} bekerül a heti terveidbe, amikor illik a többi étkezőhöz.",
+          "goal": "Az ételeknek illeszkedniük kell ehhez: „{value}”, és a rangsorolást is befolyásolja. Háztartáson belül a többi étkező céljaival és megkötéseivel együtt vesszük figyelembe — sosem írja felül őket.",
+          "pattern": "A terveid a(z) {value} étrendet követik.",
+          "other": "A(z) {value} jelzésként szolgál a tervek készítésekor."
+        },
+        "storedIn": {
+          "likes": "profil · kedvelt ételek",
+          "dislikes": "profil · nem kedvelt ételek",
+          "allergies": "profil · allergiák",
+          "seeds": "profil · állandó fogások",
+          "goals": "profil · étrendi célok",
+          "pattern": "profil · étrend típusa",
+          "other": "profil · memórianapló"
+        }
+      },
+      "edit": {
+        "action": "Emlék szerkesztése",
+        "title": "Emlék javítása",
+        "placeholder": "Mi legyen benne?",
+        "isLike": "Kedvelt dologként tárolva",
+        "isDislike": "Nem kedvelt dologként tárolva",
+        "flipHint": "Koppints a váltáshoz",
+        "save": "Mentés",
+        "cancel": "Mégse"
+      },
       "goals": {
         "reduce_fat": "Kevesebb telített zsír",
         "reduce_sugar": "Kevesebb cukor",
@@ -1209,7 +1258,12 @@
     },
     "dangerZone": {
       "deleteTitle": "Profil törlése",
-      "deleteDescription": "A törlés után ez a profil nem állítható vissza."
+      "deleteDescription": "A törlés után ez a profil nem állítható vissza.",
+      "deleteHouseholdTitle": "Háztartás törlése",
+      "deleteHouseholdDescription": "Törli a háztartást és a benne lévő mind a {count} profilt, azok terveivel és emlékeivel.",
+      "deleteAccountTitle": "Fiókom és minden adatom törlése",
+      "deleteAccountDescription": "A belépésed, a háztartásod, minden profil, terv, emlék és beszélgetés. Ez nem vonható vissza.",
+      "confirmPhrase": "fiókom törlése"
     },
     "modals": {
       "changeAvatar": "Avatar módosítása",
@@ -1217,7 +1271,14 @@
       "addDietaryPreference": "Étrendi preferencia hozzáadása",
       "addAllergyOrIntolerance": "Allergia vagy intolerancia hozzáadása",
       "deleteProfileTitle": "Profil törlése",
-      "deleteConfirm": "Biztosan törölni szeretnéd ezt a profilt: {name}? Ez a művelet nem vonható vissza."
+      "deleteConfirm": "Biztosan törölni szeretnéd ezt a profilt: {name}? Ez a művelet nem vonható vissza.",
+      "deleteHouseholdTitle": "Törlöd a háztartást?",
+      "deleteHouseholdConfirm": "Ez törli a háztartást és a benne lévő mind a {count} profilt, az étkezési tervekkel, kedvencekkel, emlékekkel és beszélgetésekkel együtt. Nem vonható vissza.",
+      "deleteAccountTitle": "Törlöd a fiókodat?",
+      "deleteAccountConfirm": "Ez törli a fiókodat és mindent, ami hozzá tartozik. Azonnal kiléptetünk, és nem tudsz többé belépni.",
+      "deleteAccountRemoved": "Törölve: a belépésed, a háztartás és a tagok, minden profil, preferencia és megjegyzett tény, étkezési tervek, kedvencek, mentett elemek és beszélgetések.",
+      "deleteAccountRetained": "Megtartva: a dátummal ellátott feljegyzés arról, hogy elfogadtad a feltételeket — ez a bizonyítékunk arra, hogy kezelhettük az adataidat, és törlés után már olyan azonosítóra utal, amely senkit sem azonosít. Egyelőre megmaradnak a megfigyelő rendszerünkben tárolt modellhívás-naplók is, amelyeket ez a törlés nem érint.",
+      "deleteAccountTypeToConfirm": "Írd be a megerősítéshez: „{phrase}”"
     },
     "foodPicker": {
       "addFoodsYouLike": "Kedvelt ételek hozzáadása",
@@ -1258,7 +1319,9 @@
       "fructose": "Fruktóz"
     },
     "errors": {
-      "deleteProfileFailed": "A profil törlése sikertelen. Próbáld újra."
+      "deleteProfileFailed": "A profil törlése sikertelen. Próbáld újra.",
+      "deleteHouseholdFailed": "Nem sikerült törölni a háztartást. Próbáld újra.",
+      "deleteAccountFailed": "Nem sikerült törölni a fiókodat. Semmi nem maradt félig törölve — próbáld újra, vagy vedd fel velünk a kapcsolatot."
     },
     "foodItems": {
       "chicken": "Csirke",
@@ -1355,6 +1418,38 @@
       "smoothies": "Turmixok",
       "wine": "Bor",
       "beer": "Sör"
+    },
+    "dataKept": {
+      "title": "Mit tárol a WiseFood",
+      "intro": "Minden, amit erről a profilról tárolunk, és ami eltávolítja.",
+      "notUsedForTraining": "Semmit nem használunk modellek tanításához. Egy profil, a háztartás vagy a fiókod törlése azonnal eltávolítja a hozzá tartozó adatokat.",
+      "privacyLink": "A teljes adatvédelmi tájékoztató",
+      "rows": {
+        "profile": {
+          "what": "Profiladatok",
+          "detail": "név, életkori csoport, étrendi csoportok, allergiák, kedvelt és nem kedvelt ételek, táplálkozási célok. Ezen az oldalon szerkeszthető vagy törölhető."
+        },
+        "memories": {
+          "what": "Megjegyzett tények",
+          "detail": "csak amit jóváhagytál, mindegyik az alkalmazással, az időponttal és azzal, amit mondtál. Fentebb egyenként szerkeszthető és törölhető."
+        },
+        "plans": {
+          "what": "Étkezési tervek és kedvencek",
+          "detail": "alkalmazott tervek, kedvelt receptek, átalakított receptek és mentett cikkek. A profillal együtt törlődnek."
+        },
+        "conversations": {
+          "what": "Beszélgetések",
+          "detail": "a FoodChat-beszélgetéseid és a hozzájuk csatolt tervek. A FoodScholar kérdés-válasz munkamenetek maguktól lejárnak."
+        },
+        "traces": {
+          "what": "Modellhívások naplója",
+          "detail": "minden nyelvi modellhez küldött kérést naplózunk hibakeresés és költségkövetés céljából, a tag-azonosítódhoz kötve. Ezeket a naplókat a fiók törlése jelenleg nem távolítja el."
+        },
+        "consent": {
+          "what": "Hozzájárulás feljegyzése",
+          "detail": "az elfogadás dátuma, verziója és IP-címe. A jogalap bizonyítékaként megtartjuk, és a fiók törlése után pszeudonim formában fennmarad."
+        }
+      }
     }
   },
   "foodChatHome": {

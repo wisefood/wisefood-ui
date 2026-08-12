@@ -265,6 +265,41 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    /**
+     * Erase the guest server-side, then drop the local session.
+     *
+     * Clearing the browser only hides the data: the household, its members and
+     * the FoodChat sessions live until the expiry reaper runs. At a booth the
+     * next attendee arrives long before that, so this asks the gateway to
+     * delete it all now. Returns false if the server refused, so the caller can
+     * say so rather than implying data was erased when it wasn't.
+     */
+    async purgeGuestSession(): Promise<boolean> {
+      const token = this.guest?.accessToken
+      if (!token) return false
+
+      let erased = false
+      try {
+        const response = await fetch(`${getWisefoodRestApiUrl()}/system/guest`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        erased = response.ok
+        if (!response.ok) {
+          log('[AuthStore] Guest purge refused:', response.status)
+        }
+      } catch (error) {
+        log('[AuthStore] Guest purge failed:', error)
+      }
+
+      // The local session goes either way — a guest who asked to be forgotten
+      // does not stay logged in because the call failed.
+      this.clearGuestSession()
+      this.isAuthenticated = false
+      this.user = null
+      return erased
+    },
+
     async logout(redirectUri: string = '/login') {
       if (this.guest) {
         this.clearGuestSession()

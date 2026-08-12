@@ -46,6 +46,28 @@ class ConsentApiService {
       version
     })
   }
+
+  /**
+   * Erase the signed-in account and everything hanging off it: the household
+   * and its members, their profiles and memories, meal plans, favorites, saved
+   * items and chat conversations. Irreversible.
+   *
+   * The consent ledger is deliberately retained — it records that a lawful
+   * basis existed for processing that already happened, and it no longer
+   * resolves to a person once the account is gone. `retained` names what
+   * survived so the UI can tell the truth rather than promise a clean slate.
+   */
+  async deleteAccount(): Promise<AccountErasureReceipt> {
+    return wisefoodRestApi.delete<AccountErasureReceipt>('/users/me')
+  }
+}
+
+export interface AccountErasureReceipt {
+  erased: boolean
+  households_deleted: number
+  members_deleted: number
+  chat_sessions_deleted: number
+  retained: string[]
 }
 
 export default new ConsentApiService()

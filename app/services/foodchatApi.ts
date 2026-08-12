@@ -188,6 +188,12 @@ export interface ConstraintApplied {
   status: string
   source: string
   detail?: string | null
+  /**
+   * The diners this row is there for — empty on a solo plan. A household row
+   * names the member it protects rather than the whole table, so one member's
+   * goal or allergy can be seen for what it is.
+   */
+  members?: string[]
 }
 
 /** Counts of personalization signals used to build a plan */

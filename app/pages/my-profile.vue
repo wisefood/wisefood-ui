@@ -343,36 +343,184 @@
             <div
               v-for="item in memoryItems"
               :key="item.key"
-              class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-gray-50 dark:bg-zinc-800/50"
+              class="rounded-xl bg-gray-50 dark:bg-zinc-800/50"
             >
-              <div class="flex items-center gap-3 min-w-0">
-                <div
-                  class="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center"
-                  :class="memoryKindStyle(item.entry.kind).bg"
-                >
-                  <UIcon
-                    :name="memoryKindStyle(item.entry.kind).icon"
-                    class="w-4 h-4"
-                    :class="memoryKindStyle(item.entry.kind).fg"
+              <div class="flex items-center justify-between gap-2 p-2.5">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div
+                    class="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center"
+                    :class="memoryKindStyle(item.entry.kind).bg"
+                  >
+                    <UIcon
+                      :name="memoryKindStyle(item.entry.kind).icon"
+                      class="w-4 h-4"
+                      :class="memoryKindStyle(item.entry.kind).fg"
+                    />
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ memoryValueLabel(item.entry) }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                      {{ t('myProfile.memory.learnedIn', { app: memorySourceLabel(item.entry) }) }}<template v-if="formatMemoryDate(item.entry.recorded_at)"> &middot; {{ formatMemoryDate(item.entry.recorded_at) }}</template>
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-0.5 shrink-0">
+                  <UButton
+                    variant="ghost"
+                    color="neutral"
+                    size="xs"
+                    :icon="explainedMemoryKey === item.key ? 'i-lucide-chevron-up' : 'i-lucide-help-circle'"
+                    :aria-label="t('myProfile.memory.why.title')"
+                    :aria-expanded="explainedMemoryKey === item.key"
+                    data-flows="memory-why"
+                    @click="toggleMemoryExplanation(item)"
+                  />
+                  <UButton
+                    v-if="memoryEditor(item.entry) !== 'none'"
+                    variant="ghost"
+                    color="neutral"
+                    icon="i-lucide-pencil"
+                    size="xs"
+                    :disabled="!!forgettingMemoryKey || !!savingMemoryKey"
+                    :aria-label="t('myProfile.memory.edit.action')"
+                    data-flows="memory-edit"
+                    @click="startMemoryEdit(item)"
+                  />
+                  <UButton
+                    variant="ghost"
+                    color="error"
+                    icon="i-lucide-trash-2"
+                    size="xs"
+                    :loading="forgettingMemoryKey === item.key"
+                    :disabled="!!forgettingMemoryKey || !!savingMemoryKey"
+                    :aria-label="t('myProfile.memory.forget')"
+                    @click="forgetMemory(item)"
                   />
                 </div>
-                <div class="min-w-0">
-                  <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ memoryValueLabel(item.entry) }}</p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                    {{ t('myProfile.memory.learnedIn', { app: memorySourceLabel(item.entry) }) }}<template v-if="formatMemoryDate(item.entry.recorded_at)"> &middot; {{ formatMemoryDate(item.entry.recorded_at) }}</template>
+              </div>
+
+              <!-- "Why am I seeing this?" — provenance, effect, and the way out,
+                   for the memory the member is pointing at. -->
+              <div
+                v-if="explainedMemoryKey === item.key"
+                class="px-2.5 pb-2.5 space-y-2.5"
+              >
+                <div class="rounded-lg bg-white/70 dark:bg-zinc-900/50 border border-gray-200/80 dark:border-white/10 p-3 space-y-2">
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">
+                    {{ t('myProfile.memory.why.title') }}
+                  </p>
+
+                  <dl class="space-y-1.5 text-xs">
+                    <div class="flex gap-2">
+                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-28">{{ t('myProfile.memory.why.learned') }}</dt>
+                      <dd class="text-gray-700 dark:text-gray-200">
+                        {{ t('myProfile.memory.why.learnedValue', {
+                          app: memorySourceLabel(item.entry),
+                          when: formatMemoryDate(item.entry.recorded_at) || t('myProfile.memory.why.unknownDate')
+                        }) }}
+                      </dd>
+                    </div>
+                    <div
+                      v-if="memorySourceQuote(item.entry)"
+                      class="flex gap-2"
+                    >
+                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-28">{{ t('myProfile.memory.why.fromWhatYouSaid') }}</dt>
+                      <dd class="text-gray-700 dark:text-gray-200 italic">“{{ memorySourceQuote(item.entry) }}”</dd>
+                    </div>
+                    <div class="flex gap-2">
+                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-28">{{ t('myProfile.memory.why.consent') }}</dt>
+                      <dd class="text-gray-700 dark:text-gray-200">{{ t('myProfile.memory.why.consentValue') }}</dd>
+                    </div>
+                    <div class="flex gap-2">
+                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-28">{{ t('myProfile.memory.why.effectLabel') }}</dt>
+                      <dd class="text-gray-700 dark:text-gray-200">{{ memoryEffect(item.entry) }}</dd>
+                    </div>
+                    <div class="flex gap-2">
+                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-28">{{ t('myProfile.memory.why.storedLabel') }}</dt>
+                      <dd class="text-gray-700 dark:text-gray-200 font-mono text-[11px]">{{ memoryStoredIn(item.entry) }}</dd>
+                    </div>
+                    <div
+                      v-if="item.entry.edited_at"
+                      class="flex gap-2"
+                    >
+                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-28">{{ t('myProfile.memory.why.edited') }}</dt>
+                      <dd class="text-gray-700 dark:text-gray-200">
+                        {{ t('myProfile.memory.why.editedValue', { when: formatMemoryDate(item.entry.edited_at) || t('myProfile.memory.why.unknownDate') }) }}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <p class="text-[11px] text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-200/70 dark:border-white/10">
+                    {{ t('myProfile.memory.why.control') }}
                   </p>
                 </div>
+
+                <!-- Editing: correct the memory instead of only deleting it -->
+                <div
+                  v-if="editingMemoryKey === item.key"
+                  class="rounded-lg bg-white/70 dark:bg-zinc-900/50 border border-gray-200/80 dark:border-white/10 p-3 space-y-2"
+                >
+                  <p class="text-xs font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">
+                    {{ t('myProfile.memory.edit.title') }}
+                  </p>
+
+                  <UInput
+                    v-if="memoryEditor(item.entry) === 'text'"
+                    v-model="memoryDraft.value"
+                    size="sm"
+                    class="w-full"
+                    :placeholder="t('myProfile.memory.edit.placeholder')"
+                    @keydown.enter="saveMemoryEdit(item)"
+                  />
+                  <USelectMenu
+                    v-else
+                    v-model="memoryDraft.value"
+                    :items="goalSlugOptions"
+                    value-key="value"
+                    label-key="label"
+                    size="sm"
+                    class="w-full"
+                  />
+
+                  <div
+                    v-if="memoryCanFlip(item.entry)"
+                    class="flex items-center gap-2"
+                  >
+                    <UButton
+                      variant="soft"
+                      color="neutral"
+                      size="xs"
+                      :icon="memoryDraft.kind === 'like' ? 'i-lucide-heart' : 'i-lucide-thumbs-down'"
+                      @click="flipMemoryKind()"
+                    >
+                      {{ memoryDraft.kind === 'like' ? t('myProfile.memory.edit.isLike') : t('myProfile.memory.edit.isDislike') }}
+                    </UButton>
+                    <span class="text-[11px] text-gray-500 dark:text-gray-400">{{ t('myProfile.memory.edit.flipHint') }}</span>
+                  </div>
+
+                  <div class="flex items-center gap-2 pt-1">
+                    <UButton
+                      color="primary"
+                      size="xs"
+                      :loading="savingMemoryKey === item.key"
+                      :disabled="!memoryDraftChanged"
+                      @click="saveMemoryEdit(item)"
+                    >
+                      {{ t('myProfile.memory.edit.save') }}
+                    </UButton>
+                    <UButton
+                      color="neutral"
+                      variant="ghost"
+                      size="xs"
+                      :disabled="savingMemoryKey === item.key"
+                      @click="cancelMemoryEdit()"
+                    >
+                      {{ t('myProfile.memory.edit.cancel') }}
+                    </UButton>
+                  </div>
+                </div>
               </div>
-              <UButton
-                variant="ghost"
-                color="error"
-                icon="i-lucide-trash-2"
-                size="xs"
-                :loading="forgettingMemoryKey === item.key"
-                :disabled="!!forgettingMemoryKey"
-                :aria-label="t('myProfile.memory.forget')"
-                @click="forgetMemory(item)"
-              />
             </div>
           </div>
         </UCard>
@@ -390,19 +538,94 @@
             </div>
           </template>
 
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="font-medium text-gray-900 dark:text-white">{{ t('myProfile.dangerZone.deleteTitle') }}</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('myProfile.dangerZone.deleteDescription') }}</p>
+          <div class="divide-y divide-gray-100 dark:divide-white/10">
+            <!-- Narrowest scope first: one profile out of a household -->
+            <div class="flex items-center justify-between gap-4 pb-4">
+              <div>
+                <p class="font-medium text-gray-900 dark:text-white">{{ t('myProfile.dangerZone.deleteTitle') }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('myProfile.dangerZone.deleteDescription') }}</p>
+              </div>
+              <UButton
+                color="error"
+                variant="soft"
+                icon="i-lucide-trash-2"
+                class="shrink-0"
+                @click="showDeleteConfirm = true"
+              >
+                {{ t('myProfile.actions.deleteProfile') }}
+              </UButton>
             </div>
-            <UButton
-              color="red"
-              variant="soft"
-              icon="i-lucide-trash-2"
-              @click="showDeleteConfirm = true"
+
+            <div class="flex items-center justify-between gap-4 py-4">
+              <div>
+                <p class="font-medium text-gray-900 dark:text-white">{{ t('myProfile.dangerZone.deleteHouseholdTitle') }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  {{ t('myProfile.dangerZone.deleteHouseholdDescription', { count: householdStore.members.length }) }}
+                </p>
+              </div>
+              <UButton
+                color="error"
+                variant="soft"
+                icon="i-lucide-users"
+                class="shrink-0"
+                data-flows="delete-household"
+                @click="showDeleteHouseholdConfirm = true"
+              >
+                {{ t('myProfile.actions.deleteHousehold') }}
+              </UButton>
+            </div>
+
+            <!-- Widest scope last: the account itself -->
+            <div class="flex items-center justify-between gap-4 pt-4">
+              <div>
+                <p class="font-medium text-gray-900 dark:text-white">{{ t('myProfile.dangerZone.deleteAccountTitle') }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('myProfile.dangerZone.deleteAccountDescription') }}</p>
+              </div>
+              <UButton
+                color="error"
+                icon="i-lucide-user-x"
+                class="shrink-0"
+                data-flows="delete-account"
+                @click="showDeleteAccountConfirm = true"
+              >
+                {{ t('myProfile.actions.deleteAccount') }}
+              </UButton>
+            </div>
+          </div>
+        </UCard>
+
+        <!-- What WiseFood keeps — the inventory, in the place where you can act
+             on it. Sits next to the deletion controls on purpose. -->
+        <UCard>
+          <template #header>
+            <div class="flex items-center gap-2">
+              <UIcon name="i-lucide-shield" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.dataKept.title') }}</h2>
+            </div>
+          </template>
+
+          <p class="text-sm text-gray-600 dark:text-gray-300">{{ t('myProfile.dataKept.intro') }}</p>
+
+          <ul class="mt-3 space-y-2">
+            <li
+              v-for="row in dataKeptRows"
+              :key="row.key"
+              class="flex gap-2.5 text-sm"
             >
-              {{ t('myProfile.actions.deleteProfile') }}
-            </UButton>
+              <UIcon :name="row.icon" class="w-4 h-4 mt-0.5 shrink-0 text-gray-400 dark:text-gray-500" />
+              <span class="text-gray-700 dark:text-gray-200">
+                <span class="font-medium">{{ row.what }}</span>
+                — {{ row.detail }}
+              </span>
+            </li>
+          </ul>
+
+          <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">{{ t('myProfile.dataKept.notUsedForTraining') }}</p>
+
+          <div class="mt-3 flex flex-wrap gap-3 text-sm">
+            <ULink to="/privacy" class="text-primary-600 dark:text-primary-400 hover:underline">
+              {{ t('myProfile.dataKept.privacyLink') }}
+            </ULink>
           </div>
         </UCard>
       </div>
@@ -821,12 +1044,119 @@
           </UCard>
         </template>
       </UModal>
+
+      <!-- Delete household -->
+      <UModal v-model:open="showDeleteHouseholdConfirm">
+        <template #content>
+          <UCard>
+            <template #header>
+              <div class="flex items-center gap-2">
+                <UIcon name="i-lucide-alert-triangle" class="w-5 h-5 text-red-500" />
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.modals.deleteHouseholdTitle') }}</h3>
+              </div>
+            </template>
+
+            <p class="text-gray-600 dark:text-gray-400">
+              {{ t('myProfile.modals.deleteHouseholdConfirm', { count: householdStore.members.length }) }}
+            </p>
+
+            <UAlert
+              v-if="deleteError"
+              color="error"
+              variant="soft"
+              icon="i-lucide-alert-circle"
+              :title="deleteError"
+              class="mt-4"
+            />
+
+            <template #footer>
+              <div class="flex justify-end gap-3">
+                <UButton variant="ghost" color="neutral" @click="showDeleteHouseholdConfirm = false">
+                  {{ t('myProfile.actions.cancel') }}
+                </UButton>
+                <UButton
+                  color="error"
+                  :loading="isDeleting"
+                  @click="deleteHousehold"
+                >
+                  {{ t('myProfile.actions.deleteHousehold') }}
+                </UButton>
+              </div>
+            </template>
+          </UCard>
+        </template>
+      </UModal>
+
+      <!-- Delete account — typed confirmation, and an honest list of what
+           survives, so nobody discovers the consent ledger afterwards. -->
+      <UModal v-model:open="showDeleteAccountConfirm">
+        <template #content>
+          <UCard>
+            <template #header>
+              <div class="flex items-center gap-2">
+                <UIcon name="i-lucide-user-x" class="w-5 h-5 text-red-500" />
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.modals.deleteAccountTitle') }}</h3>
+              </div>
+            </template>
+
+            <p class="text-gray-600 dark:text-gray-400">{{ t('myProfile.modals.deleteAccountConfirm') }}</p>
+
+            <ul class="mt-3 space-y-1 text-sm text-gray-600 dark:text-gray-300">
+              <li class="flex gap-2">
+                <UIcon name="i-lucide-x-circle" class="w-4 h-4 mt-0.5 shrink-0 text-red-500" />
+                {{ t('myProfile.modals.deleteAccountRemoved') }}
+              </li>
+              <li class="flex gap-2">
+                <UIcon name="i-lucide-file-check" class="w-4 h-4 mt-0.5 shrink-0 text-gray-400" />
+                {{ t('myProfile.modals.deleteAccountRetained') }}
+              </li>
+            </ul>
+
+            <UFormField
+              :label="t('myProfile.modals.deleteAccountTypeToConfirm', { phrase: accountConfirmPhrase })"
+              class="mt-4"
+            >
+              <UInput
+                v-model="accountConfirmInput"
+                :placeholder="accountConfirmPhrase"
+                autocomplete="off"
+                class="w-full"
+              />
+            </UFormField>
+
+            <UAlert
+              v-if="deleteError"
+              color="error"
+              variant="soft"
+              icon="i-lucide-alert-circle"
+              :title="deleteError"
+              class="mt-4"
+            />
+
+            <template #footer>
+              <div class="flex justify-end gap-3">
+                <UButton variant="ghost" color="neutral" @click="showDeleteAccountConfirm = false">
+                  {{ t('myProfile.actions.cancel') }}
+                </UButton>
+                <UButton
+                  color="error"
+                  :disabled="!accountConfirmed"
+                  :loading="isDeleting"
+                  @click="deleteAccount"
+                >
+                  {{ t('myProfile.actions.deleteAccount') }}
+                </UButton>
+              </div>
+            </template>
+          </UCard>
+        </template>
+      </UModal>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useHouseholdStore } from '@/stores/household'
 import { stringToAvatarConfig, avatarPresets } from '~/utils/avatarPresets'
@@ -836,7 +1166,9 @@ import {
   getFoodById,
   type DietaryGroup
 } from '~/utils/foodPreferences'
-import type { MemberProfile, NutritionalPreferences } from '~/services/householdsApi'
+import householdsApi, { type MemberProfile, type NutritionalPreferences } from '~/services/householdsApi'
+import consentApi from '~/services/consentApi'
+import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
   middleware: ['auth', 'profile']
@@ -849,6 +1181,7 @@ useHead({
 })
 
 const householdStore = useHouseholdStore()
+const authStore = useAuthStore()
 
 const loading = ref(false)
 const isSaving = ref(false)
@@ -907,6 +1240,17 @@ interface MemoryLogEntry {
   source?: string
   session_id?: string
   recorded_at?: string
+  /**
+   * Why this was inferred, in the member's own words. FoodChat stores the
+   * phrase its extractor keyed on (`evidence`); FoodScholar stores the question
+   * that produced the goal (`source_text`). Either answers "why am I seeing
+   * this?" better than any generated explanation could.
+   */
+  evidence?: string
+  source_text?: string
+  /** Set when the member corrected the memory from this panel. */
+  edited_at?: string
+  edited_by?: string
 }
 
 interface StandingSeed {
@@ -955,6 +1299,171 @@ const memorySourceLabel = (entry: MemoryLogEntry): string => {
 }
 
 const forgettingMemoryKey = ref<string | null>(null)
+const explainedMemoryKey = ref<string | null>(null)
+const editingMemoryKey = ref<string | null>(null)
+const savingMemoryKey = ref<string | null>(null)
+const memoryDraft = reactive<{ kind: string, value: string }>({ kind: '', value: '' })
+
+function toggleMemoryExplanation(item: MemoryItem) {
+  explainedMemoryKey.value = explainedMemoryKey.value === item.key ? null : item.key
+  if (explainedMemoryKey.value !== item.key) return
+  // Opening the explanation closes an edit in progress on another row, so the
+  // panel never shows two different states for the same memory.
+  if (editingMemoryKey.value && editingMemoryKey.value !== item.key) editingMemoryKey.value = null
+}
+
+/**
+ * Which editor a memory kind can offer. Food-valued kinds take free text (the
+ * planner matches on the string), goals must stay one of the canonical planner
+ * slugs, and allergies are deliberately not editable here — they are a safety
+ * filter with their own reviewed control above.
+ */
+function memoryEditor(entry: MemoryLogEntry): 'text' | 'goal' | 'none' {
+  if (entry.kind === 'like' || entry.kind === 'dislike' || entry.kind === 'cuisine' || entry.kind === 'standing_seed') return 'text'
+  if (entry.kind === 'goal' || entry.kind === 'dietary_goal') return 'goal'
+  return 'none'
+}
+
+/** Likes and dislikes are the pair a wrong guess most often lands on. */
+function memoryCanFlip(entry: MemoryLogEntry): boolean {
+  return entry.kind === 'like' || entry.kind === 'dislike'
+}
+
+/**
+ * Canonical planner goal slugs. These are a contract with the planner, not
+ * copy, so the list lives here rather than being read back out of the locale
+ * file — a locale with no myProfile block would otherwise offer no goals.
+ */
+const GOAL_SLUGS = [
+  'reduce_fat',
+  'reduce_sugar',
+  'reduce_sodium',
+  'reduce_calories',
+  'reduce_carbs',
+  'increase_protein',
+  'increase_fiber',
+  'increase_hydration',
+  'lose_weight',
+  'gain_weight',
+  'gain_muscle',
+  'maintain_weight'
+] as const
+
+const goalSlugOptions = computed(() =>
+  GOAL_SLUGS.map(slug => ({
+    value: slug as string,
+    label: memoryValueLabel({ kind: 'goal', value: slug })
+  }))
+)
+
+function startMemoryEdit(item: MemoryItem) {
+  editingMemoryKey.value = item.key
+  explainedMemoryKey.value = item.key
+  memoryDraft.kind = item.entry.kind
+  memoryDraft.value = item.entry.value
+}
+
+function cancelMemoryEdit() {
+  editingMemoryKey.value = null
+}
+
+function flipMemoryKind() {
+  memoryDraft.kind = memoryDraft.kind === 'like' ? 'dislike' : 'like'
+}
+
+const memoryDraftChanged = computed(() => {
+  const item = memoryItems.value.find(i => i.key === editingMemoryKey.value)
+  if (!item) return false
+  return memoryDraft.value.trim() !== ''
+    && (memoryDraft.value.trim() !== item.entry.value || memoryDraft.kind !== item.entry.kind)
+})
+
+/**
+ * Save an edited memory: detach the old value from the field it steered, attach
+ * the new one, and rewrite the log entry in place — keeping its provenance and
+ * stamping that the member corrected it, which is itself provenance.
+ */
+async function saveMemoryEdit(item: MemoryItem) {
+  if (!currentMember.value || savingMemoryKey.value || !memoryDraftChanged.value) return
+
+  savingMemoryKey.value = item.key
+  const target = currentMemoryTarget()
+  const edited: MemoryLogEntry = {
+    ...item.entry,
+    kind: memoryDraft.kind,
+    value: memoryDraft.value.trim(),
+    edited_at: new Date().toISOString(),
+    edited_by: 'member'
+  }
+
+  detachMemory(target, item.entry)
+  attachMemory(target, edited)
+
+  const log = memoryLog.value.map(e => (sameMemoryEntry(e, item.entry) ? edited : e))
+  // A standing seed with no log line of its own gets one on first edit, so the
+  // correction is not silently lost on reload.
+  target.props.memory_log = log.some(e => sameMemoryEntry(e, edited)) ? log : [...log, edited]
+
+  const ok = await persistMemoryTarget(target)
+  savingMemoryKey.value = null
+  if (ok) editingMemoryKey.value = null
+}
+
+/**
+ * "Why am I seeing this?" — the concrete effect a memory has on what WiseFood
+ * recommends, named per kind rather than as one generic line. Hard filters say
+ * so; ranking signals say they are only signals; the goal line names the
+ * household merge, because a goal that outranked another diner silently is the
+ * failure this panel exists to prevent.
+ */
+function memoryEffect(entry: MemoryLogEntry): string {
+  const value = memoryValueLabel(entry)
+  switch (entry.kind) {
+    case 'like':
+    case 'cuisine':
+      return t('myProfile.memory.why.effect.like', { value })
+    case 'dislike':
+      return t('myProfile.memory.why.effect.dislike', { value })
+    case 'allergy_hint':
+      return t('myProfile.memory.why.effect.allergy', { value })
+    case 'standing_seed':
+      return t('myProfile.memory.why.effect.seed', { value })
+    case 'goal':
+    case 'dietary_goal':
+      return t('myProfile.memory.why.effect.goal', { value })
+    case 'dietary_pattern':
+      return t('myProfile.memory.why.effect.pattern', { value })
+    default:
+      return t('myProfile.memory.why.effect.other', { value })
+  }
+}
+
+/** What the member said that led to this memory, if the writer recorded it. */
+function memorySourceQuote(entry: MemoryLogEntry): string {
+  return (entry.evidence || entry.source_text || '').trim()
+}
+
+/** The profile field the memory was written through to — what makes it auditable. */
+function memoryStoredIn(entry: MemoryLogEntry): string {
+  switch (entry.kind) {
+    case 'like':
+    case 'cuisine':
+      return t('myProfile.memory.why.storedIn.likes')
+    case 'dislike':
+      return t('myProfile.memory.why.storedIn.dislikes')
+    case 'allergy_hint':
+      return t('myProfile.memory.why.storedIn.allergies')
+    case 'standing_seed':
+      return t('myProfile.memory.why.storedIn.seeds')
+    case 'goal':
+    case 'dietary_goal':
+      return t('myProfile.memory.why.storedIn.goals')
+    case 'dietary_pattern':
+      return t('myProfile.memory.why.storedIn.pattern')
+    default:
+      return t('myProfile.memory.why.storedIn.other')
+  }
+}
 
 function memoryKindStyle(kind: string): { icon: string, bg: string, fg: string } {
   switch (kind) {
@@ -1011,66 +1520,128 @@ function formatMemoryDate(dateStr?: string): string {
   return date.toLocaleDateString(dateLocale.value, { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
-async function forgetMemory(item: MemoryItem) {
-  if (!currentMember.value || forgettingMemoryKey.value) return
+/**
+ * The profile fields a memory is applied to, gathered so one mapping can serve
+ * both forgetting and editing. A memory is never only a log line: it was
+ * written through to a field the planner reads, and both operations have to
+ * move that field too or the list would stop matching the recommendations.
+ */
+interface MemoryTarget {
+  nutPrefs: NutritionalPreferences
+  allergies: string[]
+  dietaryGroups: string[]
+  props: Record<string, unknown>
+}
+
+function currentMemoryTarget(): MemoryTarget {
+  return {
+    nutPrefs: { ...memberProfile.value?.nutritional_preferences },
+    allergies: [...allergies.value],
+    dietaryGroups: [...(memberProfile.value?.dietary_groups || [])],
+    props: { ...(memberProfile.value?.properties || {}) }
+  }
+}
+
+/** Drop a memory's value from the field it was applied to. */
+function detachMemory(target: MemoryTarget, entry: MemoryLogEntry) {
+  if (entry.kind === 'like' || entry.kind === 'cuisine') {
+    target.nutPrefs.food_likes = (target.nutPrefs.food_likes || []).filter(v => v !== entry.value)
+  } else if (entry.kind === 'dislike') {
+    target.nutPrefs.food_dislikes = (target.nutPrefs.food_dislikes || []).filter(v => v !== entry.value)
+  } else if (entry.kind === 'allergy_hint') {
+    target.allergies = target.allergies.filter(a => a !== entry.value)
+  } else if (entry.kind === 'standing_seed') {
+    const seeds = (target.props.standing_seeds as StandingSeed[] | undefined) || standingSeeds.value
+    target.props.standing_seeds = seeds.filter(s => s.name !== entry.value)
+  } else if (entry.kind === 'goal' || entry.kind === 'dietary_goal') {
+    // Goals live in properties.dietary_goals [{slug, label}] and steer the
+    // planner — forgetting must remove the slug, not just the log entry
+    const goals = (target.props.dietary_goals as Array<{ slug?: string }> | undefined) || []
+    target.props.dietary_goals = goals.filter(g => String(g?.slug || '').toLowerCase() !== entry.value)
+  } else if (entry.kind === 'dietary_pattern') {
+    target.dietaryGroups = target.dietaryGroups.filter(g => String(g).toLowerCase() !== entry.value)
+  }
+}
+
+/** Apply a memory's value to the field its kind belongs to, without duplicating. */
+function attachMemory(target: MemoryTarget, entry: MemoryLogEntry) {
+  const value = entry.value
+  if (!value) return
+
+  if (entry.kind === 'like' || entry.kind === 'cuisine') {
+    const likes = target.nutPrefs.food_likes || []
+    target.nutPrefs.food_likes = likes.includes(value) ? likes : [...likes, value]
+  } else if (entry.kind === 'dislike') {
+    const dislikes = target.nutPrefs.food_dislikes || []
+    target.nutPrefs.food_dislikes = dislikes.includes(value) ? dislikes : [...dislikes, value]
+  } else if (entry.kind === 'allergy_hint') {
+    target.allergies = target.allergies.includes(value) ? target.allergies : [...target.allergies, value]
+  } else if (entry.kind === 'standing_seed') {
+    const seeds = (target.props.standing_seeds as StandingSeed[] | undefined) || []
+    target.props.standing_seeds = seeds.some(s => s.name === value) ? seeds : [...seeds, { name: value }]
+  } else if (entry.kind === 'goal' || entry.kind === 'dietary_goal') {
+    const goals = (target.props.dietary_goals as Array<{ slug?: string, label?: string }> | undefined) || []
+    const slug = value.toLowerCase()
+    // The label is what the planner echoes back in its explanations, so it is
+    // written in the reader's language — same as the backend writers do.
+    target.props.dietary_goals = goals.some(g => String(g?.slug || '').toLowerCase() === slug)
+      ? goals
+      : [...goals, { slug, label: memoryValueLabel(entry) }]
+  } else if (entry.kind === 'dietary_pattern') {
+    target.dietaryGroups = target.dietaryGroups.some(g => String(g).toLowerCase() === value.toLowerCase())
+      ? target.dietaryGroups
+      : [...target.dietaryGroups, value]
+  }
+}
+
+function sameMemoryEntry(a: MemoryLogEntry, b: MemoryLogEntry): boolean {
+  return a.kind === b.kind && a.value === b.value && a.recorded_at === b.recorded_at
+}
+
+/** Push a rewritten target to the API, rolling the UI back if it fails. */
+async function persistMemoryTarget(target: MemoryTarget): Promise<boolean> {
+  if (!currentMember.value) return false
 
   const snapshot = memberProfile.value
     ? (JSON.parse(JSON.stringify(memberProfile.value)) as MemberProfile)
     : null
-  forgettingMemoryKey.value = item.key
-
-  const entry = item.entry
-  const nutPrefs: NutritionalPreferences = { ...memberProfile.value?.nutritional_preferences }
-  let newAllergies = [...allergies.value]
-  let newDietaryGroups = [...(memberProfile.value?.dietary_groups || [])]
-  const props: Record<string, unknown> = { ...(memberProfile.value?.properties || {}) }
-
-  // Remove the value from the field the memory was applied to
-  if (entry.kind === 'like' || entry.kind === 'cuisine') {
-    nutPrefs.food_likes = (nutPrefs.food_likes || []).filter(v => v !== entry.value)
-  } else if (entry.kind === 'dislike') {
-    nutPrefs.food_dislikes = (nutPrefs.food_dislikes || []).filter(v => v !== entry.value)
-  } else if (entry.kind === 'allergy_hint') {
-    newAllergies = newAllergies.filter(a => a !== entry.value)
-  } else if (entry.kind === 'standing_seed') {
-    props.standing_seeds = standingSeeds.value.filter(s => s.name !== entry.value)
-  } else if (entry.kind === 'goal' || entry.kind === 'dietary_goal') {
-    // Goals live in properties.dietary_goals [{slug, label}] and steer the
-    // planner — forgetting must remove the slug, not just the log entry
-    const goals = (props.dietary_goals as Array<{ slug?: string }> | undefined) || []
-    props.dietary_goals = goals.filter(g => String(g?.slug || '').toLowerCase() !== entry.value)
-  } else if (entry.kind === 'dietary_pattern') {
-    newDietaryGroups = newDietaryGroups.filter(g => String(g).toLowerCase() !== entry.value)
-  }
-
-  // And drop its entry from the memory log
-  props.memory_log = memoryLog.value.filter(
-    e => !(e.kind === entry.kind && e.value === entry.value && e.recorded_at === entry.recorded_at)
-  )
 
   // Optimistic update, reverted on failure
   memberProfile.value = {
     ...memberProfile.value,
-    nutritional_preferences: nutPrefs,
-    allergies: newAllergies,
-    dietary_groups: newDietaryGroups,
-    properties: props
+    nutritional_preferences: target.nutPrefs,
+    allergies: target.allergies,
+    dietary_groups: target.dietaryGroups,
+    properties: target.props
   }
 
   try {
     const payload = buildProfilePayload({
-      nutritional_preferences: nutPrefs,
-      allergies: newAllergies,
-      dietary_groups: newDietaryGroups,
-      properties: props
+      nutritional_preferences: target.nutPrefs,
+      allergies: target.allergies,
+      dietary_groups: target.dietaryGroups,
+      properties: target.props
     })
     await householdStore.updateMemberProfile(currentMember.value.id, payload)
+    return true
   } catch (err) {
-    console.error('Failed to forget memory:', err)
+    console.error('Failed to update memory:', err)
     memberProfile.value = snapshot
-  } finally {
-    forgettingMemoryKey.value = null
+    return false
   }
+}
+
+async function forgetMemory(item: MemoryItem) {
+  if (!currentMember.value || forgettingMemoryKey.value) return
+
+  forgettingMemoryKey.value = item.key
+  const target = currentMemoryTarget()
+
+  detachMemory(target, item.entry)
+  target.props.memory_log = memoryLog.value.filter(e => !sameMemoryEntry(e, item.entry))
+
+  await persistMemoryTarget(target)
+  forgettingMemoryKey.value = null
 }
 
 const memberAvatarConfig = computed(() => {
@@ -1544,6 +2115,106 @@ async function deleteProfile() {
   } catch (err) {
     console.error('Failed to delete profile:', err)
     deleteError.value = t('myProfile.errors.deleteProfileFailed')
+  } finally {
+    isDeleting.value = false
+  }
+}
+
+// ── Household and account erasure ──
+
+const showDeleteHouseholdConfirm = ref(false)
+const showDeleteAccountConfirm = ref(false)
+/**
+ * Typing the confirmation phrase is required for the account, and only for the
+ * account: it is the one action here that cannot be undone by re-entering data.
+ */
+const accountConfirmInput = ref('')
+const accountConfirmPhrase = computed(() => t('myProfile.dangerZone.confirmPhrase'))
+const accountConfirmed = computed(() =>
+  accountConfirmInput.value.trim().toLowerCase() === accountConfirmPhrase.value.trim().toLowerCase()
+)
+
+/**
+ * What is actually stored about a member, named from the code that stores it.
+ * Kept in the profile page rather than only in the privacy policy so it sits
+ * next to the controls that act on it.
+ */
+const dataKeptRows = computed(() => [
+  {
+    key: 'profile',
+    icon: 'i-lucide-user',
+    what: t('myProfile.dataKept.rows.profile.what'),
+    detail: t('myProfile.dataKept.rows.profile.detail')
+  },
+  {
+    key: 'memories',
+    icon: 'i-lucide-brain',
+    what: t('myProfile.dataKept.rows.memories.what'),
+    detail: t('myProfile.dataKept.rows.memories.detail')
+  },
+  {
+    key: 'plans',
+    icon: 'i-lucide-calendar',
+    what: t('myProfile.dataKept.rows.plans.what'),
+    detail: t('myProfile.dataKept.rows.plans.detail')
+  },
+  {
+    key: 'conversations',
+    icon: 'i-lucide-message-square',
+    what: t('myProfile.dataKept.rows.conversations.what'),
+    detail: t('myProfile.dataKept.rows.conversations.detail')
+  },
+  {
+    key: 'traces',
+    icon: 'i-lucide-activity',
+    what: t('myProfile.dataKept.rows.traces.what'),
+    detail: t('myProfile.dataKept.rows.traces.detail')
+  },
+  {
+    key: 'consent',
+    icon: 'i-lucide-file-check',
+    what: t('myProfile.dataKept.rows.consent.what'),
+    detail: t('myProfile.dataKept.rows.consent.detail')
+  }
+])
+
+async function deleteHousehold() {
+  const householdId = householdStore.household?.id
+  if (!householdId) return
+
+  isDeleting.value = true
+  deleteError.value = null
+
+  try {
+    await householdsApi.deleteHousehold(householdId)
+    showDeleteHouseholdConfirm.value = false
+    // The store's cached household and member selection are now stale.
+    householdStore.$reset?.()
+    await navigateTo('/dashboard')
+  } catch (err) {
+    console.error('Failed to delete household:', err)
+    deleteError.value = t('myProfile.errors.deleteHouseholdFailed')
+  } finally {
+    isDeleting.value = false
+  }
+}
+
+async function deleteAccount() {
+  if (!accountConfirmed.value) return
+
+  isDeleting.value = true
+  deleteError.value = null
+
+  try {
+    const receipt = await consentApi.deleteAccount()
+    if (!receipt?.erased) throw new Error('Erasure not confirmed by the server')
+    showDeleteAccountConfirm.value = false
+    // The account no longer exists, so there is no session to end politely —
+    // drop local state and leave through the logged-out door.
+    await authStore.logout('/?erased=1')
+  } catch (err) {
+    console.error('Failed to delete account:', err)
+    deleteError.value = t('myProfile.errors.deleteAccountFailed')
   } finally {
     isDeleting.value = false
   }

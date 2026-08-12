@@ -477,9 +477,21 @@
           <div v-else class="chat-flow-bubble chat-flow-bubble-assistant">
             <div class="flex items-center justify-between mb-3">
               <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.answer') }}</h4>
-              <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.confidence') }}: {{ primaryAnswer.confidence || t('foodScholarHome.qa.notAvailable') }}</span>
+              <UTooltip :text="t('foodScholarHome.qa.confidenceExplainer')">
+                <span class="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 cursor-help">
+                  {{ t('foodScholarHome.qa.confidence') }}: {{ primaryAnswer.confidence || t('foodScholarHome.qa.notAvailable') }}
+                  <UIcon name="i-lucide-help-circle" class="w-3 h-3" />
+                </span>
+              </UTooltip>
             </div>
             <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" style="--answer-reveal-delay: 40ms" @click="handleMarkdownClick" @mouseover="handleAnswerMouseOver" @mouseout="handleAnswerMouseOut" v-html="renderMarkdown(primaryAnswer.answer)" />
+
+            <!-- The boundary has to be on the answer itself: this is the surface
+                 where people ask health questions about their own bodies. -->
+            <p class="mt-3 flex items-start gap-1.5 text-[11px] text-gray-400 dark:text-gray-500">
+              <UIcon name="i-lucide-info" class="w-3 h-3 mt-0.5 shrink-0" />
+              {{ t('foodScholarHome.qa.medicalBoundary') }}
+            </p>
 
             <div v-if="singleAnswerFeedbackEnabled" class="mt-4">
               <div class="flex items-center gap-2">

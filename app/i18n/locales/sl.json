@@ -172,7 +172,10 @@
     "guestStarting": "Pripravljamo vaše testno okolje ...",
     "guestFailed": "Gostujoči dostop trenutno ni na voljo.",
     "guestBanner": "Brskate kot gost — vaši podatki so začasni",
-    "guestExpires": "poteče čez"
+    "guestExpires": "poteče čez",
+    "guestErase": "Izbriši moje podatke zdaj",
+    "guestErased": "Tvoji podatki gosta so izbrisani",
+    "guestEraseFailed": "Izbrisa nismo mogli potrditi — podatki bodo samodejno potekli"
   },
   "seo": {
     "title": "WiseFood – Tvoja personalizirana prehranska pot",
@@ -837,7 +840,9 @@
           "toneStyle": "Napačen ton ali slog",
           "safetyLegal": "Varnostni ali pravni pomislek"
         }
-      }
+      },
+      "confidenceExplainer": "Lastna navedena zanesljivost modela, ki odgovarja, ne umerjena verjetnost. Vsaka trditev je vezana na dobesedni navedek iz pridobljenega vira; pri priporočilih o vnosu imajo nacionalne smernice prednost pred posameznimi študijami.",
+      "medicalBoundary": "Splošne prehranske informacije iz objavljenih virov — ne individualiziran zdravniški ali dietetični nasvet. Za odločitve o svojem zdravju se posvetuj s strokovnjakom."
     }
   },
   "profileSelection": {
@@ -1147,7 +1152,9 @@
       "saveChanges": "Shrani spremembe",
       "addPreference": "Dodaj nastavitev",
       "addAllergy": "Dodaj alergijo",
-      "deleteProfile": "Izbriši profil"
+      "deleteProfile": "Izbriši profil",
+      "deleteHousehold": "Izbriši gospodinjstvo",
+      "deleteAccount": "Izbriši račun"
     },
     "sections": {
       "profileDetails": "Podrobnosti profila",
@@ -1165,6 +1172,48 @@
       "today": "danes",
       "yesterday": "včeraj",
       "daysAgo": "pred {count} dnevi",
+      "why": {
+        "title": "Zakaj to vidim?",
+        "learned": "Naučeno",
+        "learnedValue": "V aplikaciji {app}, {when}",
+        "consent": "Tvoje soglasje",
+        "consentValue": "Ko je WiseFood vprašal, si se dotaknil Zapomni si. Brez tega ne shranimo ničesar.",
+        "effectLabel": "Kaj spremeni",
+        "storedLabel": "Shranjeno v",
+        "edited": "Popravljeno",
+        "editedValue": "S tvoje strani, {when}",
+        "unknownDate": "datum ni zabeležen",
+        "control": "Popravi, če smo se zmotili, ali pozabi — načrti, narejeni po tem, tega ne uporabljajo več.",
+        "fromWhatYouSaid": "Iz tega, kar si rekel",
+        "effect": {
+          "like": "Recepti z {value} so višje uvrščeni. To je želja, ne filter.",
+          "dislike": "Recepti z {value} so izpuščeni iz tvojih načrtov.",
+          "allergy": "Trdi filter: noben načrt ne bo vseboval {value}.",
+          "seed": "{value} vključimo v tvoje tedenske načrte, kadar ustreza drugim jedcem.",
+          "goal": "Jedi morajo ustrezati cilju »{value}«, vpliva pa tudi na uvrstitev. V gospodinjstvu ga združimo s cilji in omejitvami drugih jedcev — nikoli jih ne povozi.",
+          "pattern": "Tvoji načrti sledijo vzorcu {value}.",
+          "other": "{value} se uporablja kot signal pri sestavljanju načrtov."
+        },
+        "storedIn": {
+          "likes": "profil · priljubljena živila",
+          "dislikes": "profil · nepriljubljena živila",
+          "allergies": "profil · alergije",
+          "seeds": "profil · stalne jedi",
+          "goals": "profil · prehranski cilji",
+          "pattern": "profil · prehranski vzorec",
+          "other": "profil · dnevnik spomina"
+        }
+      },
+      "edit": {
+        "action": "Uredi ta spomin",
+        "title": "Popravi ta spomin",
+        "placeholder": "Kaj naj piše?",
+        "isLike": "Shranjeno kot nekaj, kar ti je všeč",
+        "isDislike": "Shranjeno kot nekaj, kar ti ni všeč",
+        "flipHint": "Dotakni se za preklop",
+        "save": "Shrani",
+        "cancel": "Prekliči"
+      },
       "goals": {
         "reduce_fat": "Manj nasičenih maščob",
         "reduce_sugar": "Manj sladkorja",
@@ -1209,7 +1258,12 @@
     },
     "dangerZone": {
       "deleteTitle": "Izbriši ta profil",
-      "deleteDescription": "Ko profil izbrišeš, ga ni mogoče obnoviti."
+      "deleteDescription": "Ko profil izbrišeš, ga ni mogoče obnoviti.",
+      "deleteHouseholdTitle": "Izbriši to gospodinjstvo",
+      "deleteHouseholdDescription": "Odstrani gospodinjstvo in vse profile v njem ({count}), skupaj z njihovimi načrti in spomini.",
+      "deleteAccountTitle": "Izbriši moj račun in vse moje podatke",
+      "deleteAccountDescription": "Tvoja prijava, gospodinjstvo, vsak profil, načrt, spomin in pogovor. Tega ni mogoče razveljaviti.",
+      "confirmPhrase": "izbriši moj račun"
     },
     "modals": {
       "changeAvatar": "Spremeni avatar",
@@ -1217,7 +1271,14 @@
       "addDietaryPreference": "Dodaj prehransko nastavitev",
       "addAllergyOrIntolerance": "Dodaj alergijo ali intoleranco",
       "deleteProfileTitle": "Izbriši profil",
-      "deleteConfirm": "Ali res želiš izbrisati profil {name}? Tega dejanja ni mogoče razveljaviti."
+      "deleteConfirm": "Ali res želiš izbrisati profil {name}? Tega dejanja ni mogoče razveljaviti.",
+      "deleteHouseholdTitle": "Izbrišem gospodinjstvo?",
+      "deleteHouseholdConfirm": "To odstrani gospodinjstvo in vse profile v njem ({count}), skupaj z jedilniki, priljubljenimi, spomini in pogovori. Tega ni mogoče razveljaviti.",
+      "deleteAccountTitle": "Izbrišem tvoj račun?",
+      "deleteAccountConfirm": "To izbriše tvoj račun in vse, kar je shranjeno pod njim. Takoj te bomo odjavili in prijava ne bo več mogoča.",
+      "deleteAccountRemoved": "Izbrisano: tvoja prijava, gospodinjstvo in člani, vsak profil, želja in zapomnjeno dejstvo, jedilniki, priljubljene, shranjene vsebine in pogovori.",
+      "deleteAccountRetained": "Ohranjeno: datirani zapis, da si sprejel pogoje — naše dokazilo, da smo smeli obdelovati tvoje podatke, ki po izbrisu kaže na identifikator, ki nikogar ne identificira. Zaenkrat ostanejo tudi zapisi zahtev modelu v našem sistemu za spremljanje, ki jih ta izbris ne zajame.",
+      "deleteAccountTypeToConfirm": "Za potrditev vpiši »{phrase}«"
     },
     "foodPicker": {
       "addFoodsYouLike": "Dodaj hrano, ki jo imaš rad",
@@ -1258,7 +1319,9 @@
       "fructose": "Fruktoza"
     },
     "errors": {
-      "deleteProfileFailed": "Brisanje profila ni uspelo. Poskusi znova."
+      "deleteProfileFailed": "Brisanje profila ni uspelo. Poskusi znova.",
+      "deleteHouseholdFailed": "Gospodinjstva nismo mogli izbrisati. Poskusi znova.",
+      "deleteAccountFailed": "Tvojega računa nismo mogli izbrisati. Nič ni ostalo napol izbrisano — poskusi znova ali nas kontaktiraj."
     },
     "foodItems": {
       "chicken": "Piščanec",
@@ -1355,6 +1418,38 @@
       "smoothies": "Smutiji",
       "wine": "Vino",
       "beer": "Pivo"
+    },
+    "dataKept": {
+      "title": "Kaj WiseFood hrani",
+      "intro": "Vse, kar hranimo o tem profilu, in kaj to odstrani.",
+      "notUsedForTraining": "Ničesar ne uporabljamo za učenje modelov. Izbris profila, gospodinjstva ali računa takoj odstrani ustrezne zapise.",
+      "privacyLink": "Preberi celotno obvestilo o zasebnosti",
+      "rows": {
+        "profile": {
+          "what": "Podatki profila",
+          "detail": "ime, starostna skupina, prehranske skupine, alergije, priljubljena in nepriljubljena živila, prehranski cilji. Uredi ali odstrani na tej strani."
+        },
+        "memories": {
+          "what": "Zapomnjena dejstva",
+          "detail": "samo tisto, kar si potrdil, vsako z aplikacijo, iz katere izhaja, časom in tem, kar si rekel. Zgoraj jih lahko urejaš ali brišeš posamično."
+        },
+        "plans": {
+          "what": "Jedilniki in priljubljene",
+          "detail": "uporabljeni načrti, všečkani recepti, prilagojeni recepti in shranjeni članki. Odstranijo se s profilom."
+        },
+        "conversations": {
+          "what": "Pogovori",
+          "detail": "tvoje niti v FoodChatu in načrti, pripeti nanje. Seje vprašanj in odgovorov v FoodScholarju potečejo same."
+        },
+        "traces": {
+          "what": "Sledi modela",
+          "detail": "vsaka zahteva jezikovnemu modelu se beleži za odpravljanje napak in spremljanje stroškov, vezana na tvoj identifikator člana. Teh zapisov izbris računa trenutno ne odstrani."
+        },
+        "consent": {
+          "what": "Zapis o soglasju",
+          "detail": "datum, različica in IP-naslov tvojega sprejema. Hranimo ga kot dokazilo o pravni podlagi in po izbrisu računa ostane v psevdonimni obliki."
+        }
+      }
     }
   },
   "foodChatHome": {

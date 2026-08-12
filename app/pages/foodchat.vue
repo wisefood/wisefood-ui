@@ -740,16 +740,18 @@
                     <UTooltip
                       v-for="(constraint, cIdx) in displayedMealPlan.constraints_applied"
                       :key="cIdx"
-                      :text="constraintTooltip(constraint)"
+                      :text="constraint.detail || constraintTooltip(constraint)"
                     >
                       <span
                         class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full border cursor-help"
-                        :class="constraint.type === 'hard'
-                          ? 'border-brandp-200 dark:border-brandp-800/70 bg-brandp-50 dark:bg-brandp-950/40 text-brandp-600 dark:text-brandp-300 ring-1 ring-brandp-200/60 dark:ring-brandp-800/40'
-                          : 'border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400'"
+                        :class="ledgerRowClass(constraint)"
                       >
-                        <UIcon v-if="constraint.type === 'hard'" name="i-lucide-shield-check" class="w-3 h-3 shrink-0" />
+                        <UIcon v-if="ledgerRowIcon(constraint)" :name="ledgerRowIcon(constraint) || ''" class="w-3 h-3 shrink-0" />
                         {{ constraint.constraint }}
+                        <span
+                          v-if="constraintMembers(constraint)"
+                          class="opacity-70"
+                        >— {{ constraintMembers(constraint) }}</span>
                       </span>
                     </UTooltip>
                   </div>
@@ -955,10 +957,14 @@
                     >
                       <span
                         class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full border cursor-help"
-                        :class="weeklyLedgerClass(constraint)"
+                        :class="ledgerRowClass(constraint)"
                       >
-                        <UIcon v-if="weeklyLedgerIcon(constraint)" :name="weeklyLedgerIcon(constraint) || ''" class="w-3 h-3 shrink-0" />
+                        <UIcon v-if="ledgerRowIcon(constraint)" :name="ledgerRowIcon(constraint) || ''" class="w-3 h-3 shrink-0" />
                         {{ constraint.constraint }}
+                        <span
+                          v-if="constraintMembers(constraint)"
+                          class="opacity-70"
+                        >— {{ constraintMembers(constraint) }}</span>
                       </span>
                     </UTooltip>
                   </div>
@@ -1920,7 +1926,10 @@ watch(displayedWeeklyPlan, (now, prev) => {
 
 const weeklyLedger = computed(() => displayedWeeklyPlan.value?.constraints_applied ?? [])
 
-function weeklyLedgerClass(row: ConstraintApplied): string {
+// Both ledgers share these: the daily plan now carries the same relaxed /
+// violated states the weekly one does, since a goal demoted to a soft signal
+// during household reconciliation is exactly a relaxed row.
+function ledgerRowClass(row: ConstraintApplied): string {
   if (row.status === 'violated') {
     return 'border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-300'
   }
@@ -1932,7 +1941,7 @@ function weeklyLedgerClass(row: ConstraintApplied): string {
     : 'border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400'
 }
 
-function weeklyLedgerIcon(row: ConstraintApplied): string | null {
+function ledgerRowIcon(row: ConstraintApplied): string | null {
   if (row.status === 'violated') return 'i-lucide-alert-triangle'
   if (row.status === 'relaxed') return 'i-lucide-alert-circle'
   return row.type === 'hard' ? 'i-lucide-shield-check' : null
@@ -2101,6 +2110,15 @@ function flashChangedSlots(slots?: ChangedSlot[]) {
   highlightedSlots.value = new Set(keys)
   if (slotFlashTimer) clearTimeout(slotFlashTimer)
   slotFlashTimer = setTimeout(() => { highlightedSlots.value = new Set() }, 2600)
+}
+
+/**
+ * The diners a ledger row is there for. Empty on a solo plan — naming yourself
+ * on your own constraints is noise — and empty on rows that belong to the plan
+ * rather than a person (feedback exclusions, the weekly meat limit).
+ */
+function constraintMembers(constraint: ConstraintApplied): string {
+  return (constraint.members || []).join(', ')
 }
 
 function constraintTooltip(constraint: ConstraintApplied): string {

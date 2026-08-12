@@ -172,7 +172,10 @@
     "guestStarting": "Preparing your sandbox...",
     "guestFailed": "Guest access is unavailable right now.",
     "guestBanner": "You're exploring as a guest — your data is temporary",
-    "guestExpires": "expires in"
+    "guestExpires": "expires in",
+    "guestErase": "Erase my data now",
+    "guestErased": "Your guest data has been erased",
+    "guestEraseFailed": "We could not confirm the erase — it will still expire automatically"
   },
   "seo": {
     "title": "WiseFood - Your Personalized Nutrition Journey",
@@ -837,7 +840,9 @@
           "toneStyle": "Wrong tone or style",
           "safetyLegal": "Safety or legal concern"
         }
-      }
+      },
+      "confidenceExplainer": "The answering model's own stated confidence, not a calibrated probability. Every claim is tied to a verbatim quote from a retrieved source; national guideline rules take precedence over individual studies for intake advice.",
+      "medicalBoundary": "General nutrition information from published sources — not individualised medical or dietetic advice. For decisions about your own health, speak to a qualified professional."
     }
   },
   "profileSelection": {
@@ -1147,7 +1152,9 @@
       "saveChanges": "Save Changes",
       "addPreference": "Add Preference",
       "addAllergy": "Add Allergy",
-      "deleteProfile": "Delete Profile"
+      "deleteProfile": "Delete Profile",
+      "deleteHousehold": "Delete household",
+      "deleteAccount": "Delete account"
     },
     "sections": {
       "profileDetails": "Profile Details",
@@ -1165,6 +1172,48 @@
       "today": "today",
       "yesterday": "yesterday",
       "daysAgo": "{count} days ago",
+      "why": {
+        "title": "Why am I seeing this?",
+        "learned": "Learned",
+        "learnedValue": "In {app}, {when}",
+        "consent": "Your consent",
+        "consentValue": "You tapped Remember when WiseFood asked. Nothing is stored without that tap.",
+        "effectLabel": "What it changes",
+        "storedLabel": "Stored in",
+        "edited": "Corrected",
+        "editedValue": "By you, {when}",
+        "unknownDate": "date not recorded",
+        "control": "Edit it if we got it wrong, or forget it — plans made after that stop using it.",
+        "fromWhatYouSaid": "From what you said",
+        "effect": {
+          "like": "Recipes with {value} are ranked higher. It is a preference, not a filter.",
+          "dislike": "Recipes with {value} are left out of your plans.",
+          "allergy": "Hard filter: no plan will include {value}.",
+          "seed": "{value} is worked into your weekly plans when it fits the other diners.",
+          "goal": "Meals must fit \"{value}\", and it nudges ranking. Across a household it is merged with the other diners' goals and constraints — it never overrides them.",
+          "pattern": "Your plans follow the {value} pattern.",
+          "other": "{value} is used as a signal when plans are built."
+        },
+        "storedIn": {
+          "likes": "profile · food likes",
+          "dislikes": "profile · food dislikes",
+          "allergies": "profile · allergies",
+          "seeds": "profile · standing dishes",
+          "goals": "profile · dietary goals",
+          "pattern": "profile · dietary pattern",
+          "other": "profile · memory log"
+        }
+      },
+      "edit": {
+        "action": "Edit this memory",
+        "title": "Correct this memory",
+        "placeholder": "What should it say?",
+        "isLike": "Stored as something you like",
+        "isDislike": "Stored as something you dislike",
+        "flipHint": "Tap to switch",
+        "save": "Save",
+        "cancel": "Cancel"
+      },
       "goals": {
         "reduce_fat": "Less saturated fat",
         "reduce_sugar": "Less sugar",
@@ -1209,7 +1258,12 @@
     },
     "dangerZone": {
       "deleteTitle": "Delete this profile",
-      "deleteDescription": "Once deleted, this profile cannot be recovered."
+      "deleteDescription": "Once deleted, this profile cannot be recovered.",
+      "deleteHouseholdTitle": "Delete this household",
+      "deleteHouseholdDescription": "Removes the household and all {count} profiles in it, with their plans and memories.",
+      "deleteAccountTitle": "Delete my account and all my data",
+      "deleteAccountDescription": "Your sign-in, your household, every profile, plan, memory and conversation. This cannot be undone.",
+      "confirmPhrase": "delete my account"
     },
     "modals": {
       "changeAvatar": "Change Avatar",
@@ -1217,7 +1271,14 @@
       "addDietaryPreference": "Add Dietary Preference",
       "addAllergyOrIntolerance": "Add Allergy or Intolerance",
       "deleteProfileTitle": "Delete Profile",
-      "deleteConfirm": "Are you sure you want to delete {name}? This action cannot be undone."
+      "deleteConfirm": "Are you sure you want to delete {name}? This action cannot be undone.",
+      "deleteHouseholdTitle": "Delete household?",
+      "deleteHouseholdConfirm": "This removes the household and all {count} profiles in it, along with their meal plans, favorites, memories and conversations. It cannot be undone.",
+      "deleteAccountTitle": "Delete your account?",
+      "deleteAccountConfirm": "This erases your account and everything stored under it. You will be signed out immediately and cannot sign back in.",
+      "deleteAccountRemoved": "Deleted: your sign-in, household and members, every profile, preference and remembered fact, meal plans, favorites, saved items and chat conversations.",
+      "deleteAccountRetained": "Kept: the dated record that you accepted the terms — our proof that we were allowed to process your data, pointing after deletion to an id that identifies nobody. Also kept for now: the model request logs in our observability system, which this deletion does not reach.",
+      "deleteAccountTypeToConfirm": "Type “{phrase}” to confirm"
     },
     "foodPicker": {
       "addFoodsYouLike": "Add Foods You Like",
@@ -1258,7 +1319,9 @@
       "fructose": "Fructose"
     },
     "errors": {
-      "deleteProfileFailed": "Failed to delete profile. Please try again."
+      "deleteProfileFailed": "Failed to delete profile. Please try again.",
+      "deleteHouseholdFailed": "We could not delete the household. Please try again.",
+      "deleteAccountFailed": "We could not delete your account. Nothing was left half-deleted — please try again or contact us."
     },
     "foodItems": {
       "chicken": "Chicken",
@@ -1355,6 +1418,38 @@
       "smoothies": "Smoothies",
       "wine": "Wine",
       "beer": "Beer"
+    },
+    "dataKept": {
+      "title": "What WiseFood keeps",
+      "intro": "Everything stored about this profile, and what removes it.",
+      "notUsedForTraining": "None of it is used to train models. Deleting a profile, the household or your account removes the matching rows immediately.",
+      "privacyLink": "Read the full privacy notice",
+      "rows": {
+        "profile": {
+          "what": "Profile details",
+          "detail": "name, age group, dietary groups, allergies, likes and dislikes, nutrition targets. Edited or removed from this page."
+        },
+        "memories": {
+          "what": "Remembered facts",
+          "detail": "only what you approved, each with the app it came from, when, and what you said. Editable and deletable one by one above."
+        },
+        "plans": {
+          "what": "Meal plans and favorites",
+          "detail": "plans you applied, hearted recipes, adapted recipes and saved articles. Removed with the profile."
+        },
+        "conversations": {
+          "what": "Conversations",
+          "detail": "your FoodChat threads and the plans attached to them. FoodScholar Q&A sessions expire on their own."
+        },
+        "traces": {
+          "what": "Model traces",
+          "detail": "each request to a language model is logged for debugging and cost tracking, tied to your member id. These logs are not removed by account deletion today."
+        },
+        "consent": {
+          "what": "Consent record",
+          "detail": "the date, version and IP address of your acceptance. Kept as proof of lawful basis, and survives account deletion in pseudonymous form."
+        }
+      }
     }
   },
   "featureGate": {
