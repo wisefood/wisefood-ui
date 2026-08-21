@@ -1490,28 +1490,6 @@
       "unsavePlan": "Odstrani iz shranjenih",
       "dayN": "{n}. dan"
     },
-    "apply": {
-      "title": "Uporabi ta načrt za člane",
-      "subtitle": "Izberi člane in datum",
-      "selectMembers": "Izberi člane",
-      "onlyMe": "Samo jaz",
-      "all": "Vsi",
-      "noHouseholdMembers": "Ni najdenih članov gospodinjstva.",
-      "main": "Glavni",
-      "buttons": {
-        "apply": "Uporabi",
-        "revoke": "Prekliči"
-      },
-      "success": {
-        "applied": "Uporabljeno • {date}",
-        "revoked": "Preklicano"
-      },
-      "membersLabel": {
-        "selectMembers": "Izberi člane",
-        "singleSelected": "Izbran 1 član",
-        "multipleSelected": "Izbranih članov: {count}"
-      }
-    },
     "tooltips": {
       "planWorksWell": "Ta načrt deluje dobro",
       "needsImprovement": "Potrebne so izboljšave"
@@ -1527,23 +1505,12 @@
       "side": "Priloga",
       "drink": "Pijača"
     },
-    "errors": {
-      "failedToApply": "Uporaba jedilnika ni uspela.",
-      "failedToRevoke": "Preklic jedilnika ni uspel.",
-      "someMembersNoPlan": "Nekateri izbrani člani nimajo tega jedilnika za izbrani datum."
-    },
+    "errors": {},
     "suggestedQuestions": {
       "dailyPlan": "Ustvari dnevni jedilnik za danes",
       "weeklyPlan": "Ustvari celoten tedenski jedilnik",
       "highProtein": "Ideje za vegetarijanske obroke z veliko beljakovin",
       "mediterranean": "Mediteranski prehranski plan"
-    },
-    "modifyChips": {
-      "lowerCalorie": "Naj bo manj kalorično",
-      "moreProtein": "Dodaj več beljakovin",
-      "lighterLunch": "Zamenjaj kosilo za nekaj lažjega",
-      "vegetarian": "Naj bo vegetarijansko",
-      "differentDinner": "Predlagaj drugačno večerjo"
     },
     "mealCard": {
       "menu": "Možnosti obroka",

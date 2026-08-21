@@ -1089,66 +1089,90 @@
                         />
                       </button>
 
+                      <!-- Day-scoped tools. Here rather than only on the toolbar
+                           because THIS is where "this day" is unambiguous —
+                           "replace Thursday" needs no guess about which day the
+                           member meant. -->
+                      <div
+                        v-if="tools.length"
+                        v-show="expandedWeeklyDays.has(day.dayIndex)"
+                        class="flex items-center justify-end px-3 pb-1 -mt-1"
+                      >
+                        <FoodchatPlanToolsMenu
+                          :tools="tools"
+                          plan-type="weekly"
+                          :day="day.dayIndex"
+                          :running="runningTool"
+                          :busy="sending"
+                          @invoke="handleToolInvoke"
+                        />
+                      </div>
+
                       <div v-show="expandedWeeklyDays.has(day.dayIndex)" class="px-2 pb-2">
+                        <!-- One cell per PLATE, not per slot name. The cell used
+                             to look its entry up with `entries.find(meal_type)`,
+                             which returns the first match — so a dinner with a
+                             side rendered the main and silently dropped the
+                             rest. `day.cells` carries every entry. -->
                         <div
                           class="gap-1.5"
-                          :class="mealGridColumns(day.mealTypes.length)"
+                          :class="mealGridColumns(day.cells.length)"
                         >
                           <div
-                            v-for="mealType in day.mealTypes"
-                            :key="`${day.dayIndex}-${mealType}`"
+                            v-for="cell in day.cells"
+                            :key="cell.key"
                             class="relative rounded-lg border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/30 p-2 flex flex-col gap-1.5"
-                            :class="{ 'fc-slot-flash': highlightedSlots.has(`${day.dayIndex}-${mealType}`) }"
+                            :class="{ 'fc-slot-flash': highlightedSlots.has(cell.slotKey) }"
                           >
                             <div class="flex items-center gap-1">
-                              <UIcon :name="mealTypeIcon(mealType)" class="w-3 h-3 text-brandp-400 shrink-0" />
-                              <span class="text-[10px] text-gray-400 dark:text-zinc-500">{{ slotLabel(mealType) }}</span>
+                              <UIcon :name="mealTypeIcon(cell.mealType)" class="w-3 h-3 text-brandp-400 shrink-0" />
+                              <span class="text-[10px] text-gray-400 dark:text-zinc-500">{{ cell.label }}</span>
                               <button
-                                v-if="getWeeklyRecipeId(weeklyEntry(day, mealType))"
+                                v-if="getWeeklyRecipeId(cell.entry)"
                                 type="button"
                                 class="ml-auto flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 hover:scale-110 transition-all duration-200 shrink-0"
-                                :aria-label="isRecipeFavorite(getWeeklyRecipeId(weeklyEntry(day, mealType))) ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
-                                @click.prevent.stop="toggleRecipeFavorite(getWeeklyRecipeId(weeklyEntry(day, mealType)))"
+                                :aria-label="isRecipeFavorite(getWeeklyRecipeId(cell.entry)) ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
+                                @click.prevent.stop="toggleRecipeFavorite(getWeeklyRecipeId(cell.entry))"
                               >
                                 <UIcon
                                   name="i-lucide-heart"
                                   :class="[
                                     'w-3 h-3 transition-colors duration-200',
-                                    isRecipeFavorite(getWeeklyRecipeId(weeklyEntry(day, mealType)))
+                                    isRecipeFavorite(getWeeklyRecipeId(cell.entry))
                                       ? 'text-red-500 fill-red-500'
                                       : 'text-gray-300 dark:text-zinc-600'
                                   ]"
                                 />
                               </button>
                               <!-- Slot menu: replace via chat, adapt in the popup -->
-                              <div class="relative shrink-0" :class="{ 'ml-auto': !getWeeklyRecipeId(weeklyEntry(day, mealType)) }" @mouseleave="weeklySlotMenu = null">
+                              <div class="relative shrink-0" :class="{ 'ml-auto': !getWeeklyRecipeId(cell.entry) }" @mouseleave="weeklySlotMenu = null">
                                 <button
                                   type="button"
                                   class="flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
                                   :aria-label="t('foodChatHome.mealCard.menu')"
-                                  :aria-expanded="weeklySlotMenu === `${day.dayIndex}-${mealType}`"
-                                  @click.prevent.stop="weeklySlotMenu = weeklySlotMenu === `${day.dayIndex}-${mealType}` ? null : `${day.dayIndex}-${mealType}`"
+                                  :aria-expanded="weeklySlotMenu === cell.key"
+                                  @click.prevent.stop="weeklySlotMenu = weeklySlotMenu === cell.key ? null : cell.key"
                                 >
                                   <UIcon name="i-lucide-more-vertical" class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
                                 </button>
                                 <Transition name="chips-fade">
                                   <div
-                                    v-if="weeklySlotMenu === `${day.dayIndex}-${mealType}`"
+                                    v-if="weeklySlotMenu === cell.key"
                                     class="absolute right-0 top-6 z-20 w-40 rounded-xl border border-gray-100 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-lg overflow-hidden"
                                   >
                                     <button
                                       type="button"
                                       class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
-                                      @click.prevent.stop="prefillWeeklySlotReplace(day.dayIndex, mealType)"
+                                      @click.prevent.stop="prefillWeeklySlotReplace(day.dayIndex, cell.mealType)"
                                     >
                                       <UIcon name="i-lucide-replace" class="w-3.5 h-3.5 text-brandp-400" />
                                       {{ t('foodChatHome.mealCard.replace') }}
                                     </button>
                                     <button
-                                      v-if="getWeeklyRecipeId(weeklyEntry(day, mealType))"
+                                      v-if="getWeeklyRecipeId(cell.entry)"
                                       type="button"
                                       class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
-                                      @click.prevent.stop="openAdaptRecipe(getWeeklyRecipeId(weeklyEntry(day, mealType)))"
+                                      @click.prevent.stop="openAdaptRecipe(getWeeklyRecipeId(cell.entry))"
                                     >
                                       <UIcon name="i-lucide-wand-sparkles" class="w-3.5 h-3.5 text-brandp-400" />
                                       {{ t('foodChatHome.mealCard.adapt') }}
@@ -1159,18 +1183,18 @@
                             </div>
                             <div class="flex items-center gap-2">
                               <NuxtLink
-                                :to="getWeeklyRecipeId(weeklyEntry(day, mealType)) ? `/recipe-wrangler/${getWeeklyRecipeId(weeklyEntry(day, mealType))}` : ''"
-                                :target="getWeeklyRecipeId(weeklyEntry(day, mealType)) ? '_blank' : undefined"
+                                :to="getWeeklyRecipeId(cell.entry) ? `/recipe-wrangler/${getWeeklyRecipeId(cell.entry)}` : ''"
+                                :target="getWeeklyRecipeId(cell.entry) ? '_blank' : undefined"
                                 class="w-9 h-9 rounded-full overflow-hidden bg-gray-100 dark:bg-zinc-700 shrink-0 transition-transform duration-200 hover:scale-150 cursor-pointer block"
                               >
                                 <img
-                                  v-if="getRecipeImage(getWeeklyRecipeId(weeklyEntry(day, mealType)))"
-                                  :src="getRecipeImage(getWeeklyRecipeId(weeklyEntry(day, mealType))) || ''"
+                                  v-if="getRecipeImage(getWeeklyRecipeId(cell.entry))"
+                                  :src="getRecipeImage(getWeeklyRecipeId(cell.entry)) || ''"
                                   class="w-full h-full object-cover"
                                   loading="lazy"
                                 >
                                 <div
-                                  v-else-if="isRecipeImagePending(getWeeklyRecipeId(weeklyEntry(day, mealType)))"
+                                  v-else-if="isRecipeImagePending(getWeeklyRecipeId(cell.entry))"
                                   class="w-full h-full animate-pulse"
                                 />
                                 <div v-else class="w-full h-full flex items-center justify-center">
@@ -1179,33 +1203,33 @@
                               </NuxtLink>
                               <div class="flex-1 min-w-0">
                                 <NuxtLink
-                                  v-if="getWeeklyRecipeId(weeklyEntry(day, mealType))"
-                                  :to="`/recipe-wrangler/${getWeeklyRecipeId(weeklyEntry(day, mealType))}`"
+                                  v-if="getWeeklyRecipeId(cell.entry)"
+                                  :to="`/recipe-wrangler/${getWeeklyRecipeId(cell.entry)}`"
                                   target="_blank"
                                   class="text-[11px] font-medium text-brandp-600 dark:text-brandp-400 leading-tight line-clamp-2 hover:underline"
                                 >
-                                  {{ getWeeklyRecipeTitle(weeklyEntry(day, mealType)) }}
+                                  {{ getWeeklyRecipeTitle(cell.entry) }}
                                 </NuxtLink>
                                 <p v-else class="text-[11px] font-medium text-gray-800 dark:text-gray-200 leading-tight line-clamp-2">
-                                  {{ getWeeklyRecipeTitle(weeklyEntry(day, mealType)) }}
+                                  {{ getWeeklyRecipeTitle(cell.entry) }}
                                 </p>
                                 <span
-                                  v-if="getWeeklyEntryKcal(weeklyEntry(day, mealType)) != null"
+                                  v-if="getWeeklyEntryKcal(cell.entry) != null"
                                   class="text-[9px] text-gray-400 dark:text-zinc-500 leading-none"
                                 >
-                                  {{ t('foodChatHome.mealCard.kcal', { kcal: getWeeklyEntryKcal(weeklyEntry(day, mealType)) }) }}
+                                  {{ t('foodChatHome.mealCard.kcal', { kcal: getWeeklyEntryKcal(cell.entry) }) }}
                                 </span>
                               </div>
                               <!-- Nutrient donut -->
                               <div
-                                v-if="getWeeklyRecipeId(weeklyEntry(day, mealType)) && getWeeklySegments(getWeeklyRecipeId(weeklyEntry(day, mealType))).length"
+                                v-if="getWeeklyRecipeId(cell.entry) && getWeeklySegments(getWeeklyRecipeId(cell.entry)).length"
                                 class="shrink-0 relative cursor-help"
-                                @mouseleave="weeklyHovered[`${day.dayIndex}-${mealType}`] = null"
+                                @mouseleave="weeklyHovered[cell.key] = null"
                               >
                                 <svg width="28" height="28" viewBox="0 0 28 28" style="transform:rotate(-90deg)">
                                   <circle cx="14" cy="14" r="11" stroke="#e5e7eb" stroke-width="3.5" fill="none" />
                                   <circle
-                                    v-for="seg in getWeeklySegments(getWeeklyRecipeId(weeklyEntry(day, mealType)))"
+                                    v-for="seg in getWeeklySegments(getWeeklyRecipeId(cell.entry))"
                                     :key="seg.key"
                                     cx="14" cy="14" r="11"
                                     :stroke="seg.color"
@@ -1214,19 +1238,19 @@
                                     :stroke-dasharray="`${seg.dash} ${weeklyCircumference}`"
                                     :stroke-dashoffset="-seg.offset"
                                     stroke-linecap="butt"
-                                    :style="{ opacity: weeklyHovered[`${day.dayIndex}-${mealType}`] && weeklyHovered[`${day.dayIndex}-${mealType}`] !== seg.key ? 0.25 : 1, transition: 'opacity 0.15s' }"
-                                    @mouseenter="weeklyHovered[`${day.dayIndex}-${mealType}`] = seg.key"
+                                    :style="{ opacity: weeklyHovered[cell.key] && weeklyHovered[cell.key] !== seg.key ? 0.25 : 1, transition: 'opacity 0.15s' }"
+                                    @mouseenter="weeklyHovered[cell.key] = seg.key"
                                   />
                                 </svg>
                                 <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                  <span class="text-[7px] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ getWeeklyCenterValue(getWeeklyRecipeId(weeklyEntry(day, mealType))!, `${day.dayIndex}-${mealType}`) }}</span>
+                                  <span class="text-[7px] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ getWeeklyCenterValue(getWeeklyRecipeId(cell.entry)!, cell.key) }}</span>
                                 </div>
                               </div>
                             </div>
                             <!-- Why this meal — transparency chips -->
-                            <div v-if="weeklyEntryReasons(weeklyEntry(day, mealType)).length" class="flex flex-wrap gap-1">
+                            <div v-if="weeklyEntryReasons(cell.entry).length" class="flex flex-wrap gap-1">
                               <span
-                                v-for="(reason, rIdx) in weeklyEntryReasons(weeklyEntry(day, mealType))"
+                                v-for="(reason, rIdx) in weeklyEntryReasons(cell.entry)"
                                 :key="rIdx"
                                 class="px-1.5 py-0.5 text-[9px] rounded-full border border-brandp-100 dark:border-brandp-900/50 bg-brandp-50/60 dark:bg-brandp-950/30 text-brandp-600 dark:text-brandp-300"
                               >
@@ -1412,11 +1436,6 @@ import {
   planNutritionTotal,
   slotIcon
 } from '~/utils/planMeals'
-import { today, getLocalTimeZone, type DateValue } from '@internationalized/date'
-import memberMealPlansApi, {
-  extractSourceMealPlanIdFromMemberMealPlanResponse,
-  extractStoredMealPlanIdFromMemberMealPlanResponse
-} from '~/services/memberMealPlansApi'
 import type { HouseholdMember } from '~/services/householdsApi'
 import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
 
@@ -1719,21 +1738,6 @@ async function handleMemoryDecision(suggestion: MemorySuggestion, decision: 'acc
   }
 }
 
-// ── Apply state ──
-const selectedApplyMemberIds = ref<string[]>([])
-const applyingMealPlan = ref(false)
-const revokingMealPlan = ref(false)
-const applyError = ref<string | null>(null)
-const applySuccess = ref<string | null>(null)
-const selectedApplyDateValue = ref<DateValue>(today(getLocalTimeZone()))
-const storedMealPlanIdsBySourceId = ref<Record<string, string>>({})
-const revocablePlanIdByMemberId = ref<Record<string, string>>({})
-const checkingRevokeEligibility = ref(false)
-let revokeEligibilityRequestId = 0
-
-const minApplyDateValue = computed(() => today(getLocalTimeZone()))
-const selectedApplyDate = computed(() => selectedApplyDateValue.value.toString())
-
 // ── Computed ──
 const canSend = computed(() => inputText.value.trim().length > 0 && !sending.value)
 const latestMealPlan = computed(() => mealPlans.value?.[0] ?? null)
@@ -1929,38 +1933,11 @@ const activeDateLocale = computed(() => {
   return 'en-US'
 })
 
-const selectedMembersLabel = computed(() => {
-  const count = selectedApplyMemberIds.value.length
-  if (count === 0) return t('foodChatHome.apply.membersLabel.selectMembers')
-  if (count === 1) return t('foodChatHome.apply.membersLabel.singleSelected')
-  return t('foodChatHome.apply.membersLabel.multipleSelected', { count })
-})
-
-const canApplyMealPlan = computed(() =>
-  !!latestMealPlan.value && !!currentMemberId.value && !!selectedApplyDateValue.value
-  && selectedApplyMemberIds.value.length > 0 && !applyingMealPlan.value && !revokingMealPlan.value
-)
-
-const canRevokeMealPlan = computed(() => {
-  if (!latestMealPlan.value || !currentMemberId.value || revokingMealPlan.value || applyingMealPlan.value || checkingRevokeEligibility.value) return false
-  const selectedIds = selectedApplyMemberIds.value
-  if (!selectedIds.length) return false
-  return selectedIds.every(memberId => !!revocablePlanIdByMemberId.value[memberId])
-})
-
 const suggestedQuestions = computed(() => [
   { text: t('foodChatHome.suggestedQuestions.dailyPlan'), icon: 'i-lucide-calendar-days' },
   { text: t('foodChatHome.suggestedQuestions.weeklyPlan'), icon: 'i-lucide-calendar-range' },
   { text: t('foodChatHome.suggestedQuestions.highProtein'), icon: 'i-lucide-leaf' },
   { text: t('foodChatHome.suggestedQuestions.mediterranean'), icon: 'i-lucide-heart-pulse' }
-])
-
-const modifyChips = computed(() => [
-  { text: t('foodChatHome.modifyChips.lowerCalorie') },
-  { text: t('foodChatHome.modifyChips.moreProtein') },
-  { text: t('foodChatHome.modifyChips.lighterLunch') },
-  { text: t('foodChatHome.modifyChips.vegetarian') },
-  { text: t('foodChatHome.modifyChips.differentDinner') }
 ])
 
 const negativeFeedbackReasons = [
@@ -1982,26 +1959,47 @@ const weeklyDays = computed(() => {
     .sort(([a], [b]) => Number(a) - Number(b))
     .map(([day, entries]) => {
       const sorted = entries.sort((a, b) => a.meal_idx - b.meal_idx)
-      // The meal types this day actually has, in planner order. The template
-      // used to loop a literal ['breakfast','lunch','dinner'], so a weekly plan
-      // with a snack or a dessert fetched it, grouped it, and then rendered
-      // three slots regardless — `meal_type` has always been a free string here.
-      const mealTypes: string[] = []
+
+      // One cell per ENTRY, grouped by slot so a second plate of the same meal
+      // gets its own cell rather than being dropped.
+      //
+      // The grid used to loop slot NAMES and look each one up with
+      // `entries.find(e => e.meal_type === mealType)` — which returns the first
+      // match. A weekly dinner with a side would have rendered the main and
+      // silently discarded the rest.
+      //
+      // Latent today: the weekly planner is a fixed 7 x 3 walk
+      // (`environment.py` steps breakfast/lunch/dinner and wraps at 3), so it
+      // cannot yet emit two entries for one slot. The renderer no longer stands
+      // in the way of that, which is the half that belongs here.
+      const perSlot = new Map<string, number>()
       for (const entry of sorted) {
-        const type = String(entry.meal_type || '').trim()
-        if (type && !mealTypes.includes(type)) mealTypes.push(type)
+        const type = String(entry.meal_type || '').trim() || 'meal'
+        perSlot.set(type, (perSlot.get(type) ?? 0) + 1)
       }
-      return {
-        dayIndex: Number(day),
-        entries: sorted,
-        mealTypes: mealTypes.length > 0 ? mealTypes : ['breakfast', 'lunch', 'dinner']
-      }
+      const seen = new Map<string, number>()
+      const cells = sorted.map((entry) => {
+        const mealType = String(entry.meal_type || '').trim() || 'meal'
+        const index = seen.get(mealType) ?? 0
+        seen.set(mealType, index + 1)
+        const plates = perSlot.get(mealType) ?? 1
+        return {
+          entry,
+          mealType,
+          // Unique per plate: menus and donut hover states are addressed by
+          // this, and two plates sharing a key would open each other's menu.
+          key: `${day}-${mealType}-${index}`,
+          // Shared by every plate of a slot: the flash after an edit is about
+          // the slot, and highlighting only one plate of a meal would be a lie
+          // about which one changed.
+          slotKey: `${day}-${mealType}`,
+          label: plates > 1 ? `${slotLabel(mealType)} ${index + 1}` : slotLabel(mealType)
+        }
+      })
+
+      return { dayIndex: Number(day), entries: sorted, cells }
     })
 })
-
-function weeklyEntry(day: { entries: WeeklyMealEntry[] }, mealType: string): WeeklyMealEntry | undefined {
-  return day.entries.find(e => e.meal_type === mealType)
-}
 
 // ── Weekly explainability (M7 — collapsible days, measured ledger, metrics) ──
 const expandedWeeklyDays = ref<Set<number>>(new Set())
@@ -2492,54 +2490,7 @@ async function handleFeedbackReason(messageId: number, reason: string) {
   } catch { /* best-effort */ }
 }
 
-// ── Member / apply helpers ──
-watch([currentMemberId, householdMembers], () => {
-  const validIds = new Set(householdMembers.value.map(m => m.id))
-  const next = selectedApplyMemberIds.value.filter(id => validIds.has(id))
-  if (currentMemberId.value && !next.includes(currentMemberId.value)) next.unshift(currentMemberId.value)
-  selectedApplyMemberIds.value = next
-}, { immediate: true })
-
-watch(() => latestMealPlan.value?.id, () => {
-  applyError.value = null
-  applySuccess.value = null
-})
-
-watch(
-  [() => latestMealPlan.value?.id, selectedApplyDate, () => selectedApplyMemberIds.value.slice().join(',')],
-  () => void refreshRevokeEligibility(),
-  { immediate: true }
-)
-
-function isCurrentMember(memberId: string) { return currentMemberId.value === memberId }
-function isApplyMemberSelected(memberId: string) { return selectedApplyMemberIds.value.includes(memberId) }
-
-function toggleApplyMember(memberId: string, checked: boolean | 'indeterminate') {
-  if (isCurrentMember(memberId) || checked === 'indeterminate') return
-  if (checked) {
-    if (!selectedApplyMemberIds.value.includes(memberId)) selectedApplyMemberIds.value.push(memberId)
-  } else {
-    selectedApplyMemberIds.value = selectedApplyMemberIds.value.filter(id => id !== memberId)
-  }
-}
-
-function selectOnlyCurrentMember() {
-  selectedApplyMemberIds.value = currentMemberId.value ? [currentMemberId.value] : []
-}
-
-function selectAllMembers() {
-  const allIds = householdMembers.value.map(m => m.id)
-  if (currentMemberId.value && !allIds.includes(currentMemberId.value)) allIds.unshift(currentMemberId.value)
-  selectedApplyMemberIds.value = allIds
-}
-
-function memberInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return 'U'
-  if (parts.length === 1) return parts[0][0].toUpperCase()
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-}
-
+// ── Member helpers ──
 function getMemberAvatar(member: HouseholdMember): AvatarConfig | null {
   if (!member.image_url) return null
   return stringToAvatarConfig(member.image_url)
@@ -2589,109 +2540,6 @@ function formatPlanDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString(activeDateLocale.value, {
     month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
   })
-}
-
-function cloneRecipe(recipe?: MealRecipe): MealRecipe | undefined {
-  if (!recipe) return undefined
-  return { recipe_id: recipe.recipe_id, title: recipe.title, ingredients: recipe.ingredients, directions: recipe.directions }
-}
-
-function buildMealPlanPayload(mealPlan: MealPlan): MealPlan {
-  return {
-    id: mealPlan.id,
-    created_at: mealPlan.created_at,
-    breakfast: cloneRecipe(mealPlan.breakfast),
-    lunch: cloneRecipe(mealPlan.lunch),
-    dinner: cloneRecipe(mealPlan.dinner),
-    reasoning: mealPlan.reasoning
-  }
-}
-
-async function refreshRevokeEligibility() {
-  const planId = latestMealPlan.value?.id
-  const selectedIds = [...selectedApplyMemberIds.value]
-  if (!planId || !selectedIds.length) {
-    revocablePlanIdByMemberId.value = {}
-    checkingRevokeEligibility.value = false
-    return
-  }
-  checkingRevokeEligibility.value = true
-  const requestId = ++revokeEligibilityRequestId
-  try {
-    const cachedStoredPlanId = storedMealPlanIdsBySourceId.value[planId]
-    const nextRevocableMap: Record<string, string> = {}
-    await Promise.all(selectedIds.map(async (memberId) => {
-      try {
-        const response = await memberMealPlansApi.getMealPlan(memberId, selectedApplyDate.value)
-        const storedPlanId = extractStoredMealPlanIdFromMemberMealPlanResponse(response)
-        const sourcePlanId = extractSourceMealPlanIdFromMemberMealPlanResponse(response)
-        if (!storedPlanId) return
-        if (sourcePlanId === planId || (!!cachedStoredPlanId && storedPlanId === cachedStoredPlanId)) {
-          nextRevocableMap[memberId] = storedPlanId
-        }
-      } catch { /* member has no plan */ }
-    }))
-    if (requestId !== revokeEligibilityRequestId) return
-    const firstStoredId = Object.values(nextRevocableMap)[0]
-    if (firstStoredId && !storedMealPlanIdsBySourceId.value[planId]) {
-      storedMealPlanIdsBySourceId.value[planId] = firstStoredId
-    }
-    revocablePlanIdByMemberId.value = nextRevocableMap
-  } finally {
-    if (requestId === revokeEligibilityRequestId) checkingRevokeEligibility.value = false
-  }
-}
-
-async function applyMealPlanToMembers() {
-  if (!latestMealPlan.value || !currentMemberId.value) return
-  applyingMealPlan.value = true
-  applyError.value = null
-  applySuccess.value = null
-  try {
-    const mealPlanPayload = buildMealPlanPayload(latestMealPlan.value)
-    const selectedMemberIds = new Set(selectedApplyMemberIds.value)
-    selectedMemberIds.add(currentMemberId.value)
-    const response = await memberMealPlansApi.storeMealPlan(currentMemberId.value, {
-      date: selectedApplyDate.value,
-      applies_to_member_ids: Array.from(selectedMemberIds),
-      meal_plan: mealPlanPayload,
-      foodchat_response: { help: 'Meal plan stored from FoodChat UI', success: true, result: [mealPlanPayload] }
-    })
-    const storedMealPlanId = extractStoredMealPlanIdFromMemberMealPlanResponse(response)
-    if (storedMealPlanId) storedMealPlanIdsBySourceId.value[latestMealPlan.value.id] = storedMealPlanId
-    applySuccess.value = t('foodChatHome.apply.success.applied', { date: selectedApplyDate.value })
-    await refreshRevokeEligibility()
-  } catch (err: unknown) {
-    applyError.value = (err && typeof err === 'object' && 'message' in err)
-      ? String((err as { message: string }).message)
-      : t('foodChatHome.errors.failedToApply')
-  } finally {
-    applyingMealPlan.value = false
-  }
-}
-
-async function revokeMealPlanFromMembers() {
-  if (!latestMealPlan.value || !currentMemberId.value) return
-  revokingMealPlan.value = true
-  applyError.value = null
-  applySuccess.value = null
-  try {
-    const selectedIds = [...selectedApplyMemberIds.value]
-    if (selectedIds.some(id => !revocablePlanIdByMemberId.value[id])) {
-      throw new Error(t('foodChatHome.errors.someMembersNoPlan'))
-    }
-    for (const memberId of selectedIds) {
-      await memberMealPlansApi.revokeMealPlan(memberId, revocablePlanIdByMemberId.value[memberId], false)
-    }
-    await refreshRevokeEligibility()
-    applySuccess.value = t('foodChatHome.apply.success.revoked')
-  } catch (err: unknown) {
-    applyError.value = (err && typeof err === 'object' && 'message' in err)
-      ? String((err as { message: string }).message)
-      : t('foodChatHome.errors.failedToRevoke')
-  } finally {
-    revokingMealPlan.value = false
-  }
 }
 
 // ── Standing planning state: pantry, inferred facets ──────────────────────

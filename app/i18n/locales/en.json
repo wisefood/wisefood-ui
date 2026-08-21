@@ -1512,28 +1512,6 @@
       "unsavePlan": "Remove from saved plans",
       "dayN": "Day {n}"
     },
-    "apply": {
-      "title": "Apply this plan to members",
-      "subtitle": "Choose members and date",
-      "selectMembers": "Select members",
-      "onlyMe": "Only me",
-      "all": "All",
-      "noHouseholdMembers": "No household members found.",
-      "main": "Main",
-      "buttons": {
-        "apply": "Apply",
-        "revoke": "Revoke"
-      },
-      "success": {
-        "applied": "Applied • {date}",
-        "revoked": "Revoked"
-      },
-      "membersLabel": {
-        "selectMembers": "Select members",
-        "singleSelected": "1 member selected",
-        "multipleSelected": "{count} members selected"
-      }
-    },
     "tooltips": {
       "planWorksWell": "This plan works well",
       "needsImprovement": "Needs improvement"
@@ -1549,23 +1527,12 @@
       "side": "Side",
       "drink": "Drink"
     },
-    "errors": {
-      "failedToApply": "Failed to apply meal plan.",
-      "failedToRevoke": "Failed to revoke meal plan.",
-      "someMembersNoPlan": "Some selected members do not have this meal plan for the chosen date."
-    },
+    "errors": {},
     "suggestedQuestions": {
       "dailyPlan": "Create a daily meal plan for today",
       "weeklyPlan": "Generate a full weekly meal plan",
       "highProtein": "High-protein vegetarian ideas",
       "mediterranean": "Mediterranean diet plan"
-    },
-    "modifyChips": {
-      "lowerCalorie": "Make it lower calorie",
-      "moreProtein": "Add more protein",
-      "lighterLunch": "Swap lunch for something lighter",
-      "vegetarian": "Make it vegetarian",
-      "differentDinner": "Suggest a different dinner"
     },
     "mealCard": {
       "menu": "Meal options",

@@ -1490,28 +1490,6 @@
       "unsavePlan": "Eltávolítás a mentettek közül",
       "dayN": "{n}. nap"
     },
-    "apply": {
-      "title": "Alkalmazd ezt a tervet a tagokra",
-      "subtitle": "Válassz tagokat és dátumot",
-      "selectMembers": "Tagok kiválasztása",
-      "onlyMe": "Csak én",
-      "all": "Összes",
-      "noHouseholdMembers": "Nem találhatók háztartástagok.",
-      "main": "Fő",
-      "buttons": {
-        "apply": "Alkalmazás",
-        "revoke": "Visszavonás"
-      },
-      "success": {
-        "applied": "Alkalmazva • {date}",
-        "revoked": "Visszavonva"
-      },
-      "membersLabel": {
-        "selectMembers": "Tagok kiválasztása",
-        "singleSelected": "1 tag kiválasztva",
-        "multipleSelected": "{count} tag kiválasztva"
-      }
-    },
     "tooltips": {
       "planWorksWell": "Ez a terv jól működik",
       "needsImprovement": "Fejlesztés szükséges"
@@ -1527,23 +1505,12 @@
       "side": "Köret",
       "drink": "Ital"
     },
-    "errors": {
-      "failedToApply": "A menüterv alkalmazása sikertelen.",
-      "failedToRevoke": "A menüterv visszavonása sikertelen.",
-      "someMembersNoPlan": "Néhány kiválasztott tagnál nincs ez a menüterv a választott dátumon."
-    },
+    "errors": {},
     "suggestedQuestions": {
       "dailyPlan": "Készíts napi menütervet mára",
       "weeklyPlan": "Készíts teljes heti menütervet",
       "highProtein": "Magas fehérjetartalmú vegetáriánus ötletek",
       "mediterranean": "Mediterrán étrendterv"
-    },
-    "modifyChips": {
-      "lowerCalorie": "Legyen alacsonyabb kalóriás",
-      "moreProtein": "Adj hozzá több fehérjét",
-      "lighterLunch": "Cseréld az ebédet valami könnyebbre",
-      "vegetarian": "Legyen vegetáriánus",
-      "differentDinner": "Javasolj másik vacsorát"
     },
     "mealCard": {
       "menu": "Étkezés menü",
