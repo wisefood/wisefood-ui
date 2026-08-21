@@ -133,12 +133,45 @@ export interface ChatMessage {
   timestamp: string
   /** FoodScholar provenance — persisted server-side, present on reloads too */
   attribution?: ChatAttribution
-  /** Client-side only — grafted from the live response like attribution */
+  /**
+   * Everything else the turn produced, as stored on the message.
+   *
+   * These three used to be client-side only, grafted onto the last assistant
+   * message from the live response — so a reload showed the plan with none of
+   * the explanation that came with it: no memory nudge, no proof of what a swap
+   * changed, no settings ribbon. They are persisted now, and `normaliseMessage`
+   * below flattens them onto the fields the templates already read.
+   */
+  extras?: MessageExtras | null
   memory_suggestions?: MemorySuggestion[]
-  /** Client-side only — grafted from the live response like attribution */
   changed_slots?: ChangedSlot[]
-  /** Client-side only — grafted from the live response like attribution */
   plan_parameters?: PlanParameterCard
+}
+
+/** The stored form of a turn's non-text output. */
+export interface MessageExtras {
+  memory_suggestions?: MemorySuggestion[]
+  changed_slots?: ChangedSlot[]
+  plan_parameters?: PlanParameterCard
+}
+
+/**
+ * A message with its stored extras flattened onto the fields templates read.
+ *
+ * Done here rather than in each template: `extras` is a storage shape, and a
+ * component that has to check two places for a memory nudge is a component that
+ * will check one. The live response keeps setting the same fields directly, so
+ * both paths converge on one representation.
+ */
+export function normaliseMessage(message: ChatMessage): ChatMessage {
+  const extras = message.extras
+  if (!extras) return message
+  return {
+    ...message,
+    memory_suggestions: message.memory_suggestions ?? extras.memory_suggestions,
+    changed_slots: message.changed_slots ?? extras.changed_slots,
+    plan_parameters: message.plan_parameters ?? extras.plan_parameters
+  }
 }
 
 /** Per-course nutrition summary (M4 transparency) */

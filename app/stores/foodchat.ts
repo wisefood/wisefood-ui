@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import foodchatApi from '~/services/foodchatApi'
+import foodchatApi, { normaliseMessage } from '~/services/foodchatApi'
 import type {
   SavedPlan,
   ChatSession,
@@ -305,7 +305,7 @@ export const useFoodChatStore = defineStore('foodchat', {
       this.error = null
       try {
         const res: ConversationResponse = await foodchatApi.getConversation(sessionId, memberId)
-        this.messages = res.messages
+        this.messages = res.messages.map(normaliseMessage)
         this.hasMoreMessages = res.has_more
         this.nextBeforeId = res.next_before_id
       } catch (err: any) {
@@ -323,7 +323,7 @@ export const useFoodChatStore = defineStore('foodchat', {
           sessionId, memberId, this.nextBeforeId
         )
         // Prepend older messages (API returns oldest-first)
-        this.messages = [...res.messages, ...this.messages]
+        this.messages = [...res.messages.map(normaliseMessage), ...this.messages]
         this.hasMoreMessages = res.has_more
         this.nextBeforeId = res.next_before_id
       } catch {
@@ -369,9 +369,10 @@ export const useFoodChatStore = defineStore('foodchat', {
       // Re-fetch conversation for ground truth
       await this.fetchConversation(sessionId, memberId)
 
-      // Attribution, memory suggestions, changed-slot proofs and the
-      // plan-parameter card are not persisted server-side, so carry them from
-      // the live response onto the just-fetched assistant message (client-side only)
+      // All four ARE persisted server-side now, and `fetchConversation` above
+      // has already flattened them onto the message. This still runs because
+      // the write is best-effort: a turn whose extras failed to store must
+      // still show its nudge to the member who is looking at it right now.
       if (
         response.attribution
         || response.memory_suggestions?.length
