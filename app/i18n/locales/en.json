@@ -1527,7 +1527,9 @@
       "side": "Side",
       "drink": "Drink"
     },
-    "errors": {},
+    "errors": {
+      "retry": "Try again"
+    },
     "suggestedQuestions": {
       "dailyPlan": "Create a daily meal plan for today",
       "weeklyPlan": "Generate a full weekly meal plan",

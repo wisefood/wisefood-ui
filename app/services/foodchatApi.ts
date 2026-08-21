@@ -5,7 +5,22 @@ import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 // Timeout Configuration
 // ============================================================================
 const DEFAULT_TIMEOUT = 30000
-const MESSAGE_TIMEOUT = 180000 // 3 minutes for AI responses
+
+/**
+ * The outermost rung of the timeout ladder.
+ *
+ *   this            100s   just outside the gateway's
+ *   gateway          90s   for anything that generates a plan
+ *   FoodChat turn    70s   its own budget — it sheds work and answers
+ *   one model call   45s   bounded, one retry
+ *
+ * Strictly larger than the gateway's so the gateway's own error reaches the
+ * member rather than being pre-empted by a local abort that says nothing
+ * useful. It was three minutes, which meant a member could sit watching a
+ * spinner for ninety seconds after the request had already been answered —
+ * or refused — downstream.
+ */
+const MESSAGE_TIMEOUT = 100000
 
 // ============================================================================
 // Type Definitions

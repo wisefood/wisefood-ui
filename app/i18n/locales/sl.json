@@ -1505,7 +1505,9 @@
       "side": "Priloga",
       "drink": "Pijača"
     },
-    "errors": {},
+    "errors": {
+      "retry": "Poskusi znova"
+    },
     "suggestedQuestions": {
       "dailyPlan": "Ustvari dnevni jedilnik za danes",
       "weeklyPlan": "Ustvari celoten tedenski jedilnik",

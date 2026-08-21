@@ -1424,6 +1424,13 @@
         <div class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200/80 dark:border-red-800/50 text-sm text-red-700 dark:text-red-300 shadow-lg shadow-red-500/5">
           <UIcon name="i-lucide-alert-circle" class="w-4 h-4 shrink-0" />
           <span class="flex-1 font-light">{{ error }}</span>
+          <button
+            v-if="lastFailedMessage && !sending"
+            class="shrink-0 px-2 py-1 rounded-lg text-xs font-medium text-red-700 dark:text-red-200 bg-red-100/70 dark:bg-red-900/40 hover:bg-red-200/70 dark:hover:bg-red-900/60 transition-colors"
+            @click="retryLastMessage"
+          >
+            {{ t('foodChatHome.errors.retry') }}
+          </button>
           <button class="shrink-0 text-red-400 hover:text-red-600 transition-colors" @click="clearError">
             <UIcon name="i-lucide-x" class="w-4 h-4" />
           </button>
@@ -2467,9 +2474,28 @@ async function ensureSessionAndSend(content: string) {
   }
   if (!activeSession.value) await newSession(cookingForForNewSession())
   showEphemeralGenerating.value = true
-  const response = await sendMessage(content)
-  flashChangedSlots(response?.changed_slots)
-  scrollToBottom()
+  try {
+    const response = await sendMessage(content)
+    lastFailedMessage.value = null
+    flashChangedSlots(response?.changed_slots)
+    scrollToBottom()
+  } catch {
+    // The store rolls the optimistic message back and surfaces the error, but
+    // the member's words were gone: the input was cleared on send, so a failed
+    // turn cost them their sentence and they had to retype it to try again.
+    // Hold it so one click resends.
+    lastFailedMessage.value = content
+  }
+}
+
+/** The message a failed turn ate, kept so the banner can offer it back. */
+const lastFailedMessage = ref<string | null>(null)
+
+async function retryLastMessage() {
+  const content = lastFailedMessage.value
+  if (!content || sending.value) return
+  clearError()
+  await ensureSessionAndSend(content)
 }
 
 async function handleSend() {

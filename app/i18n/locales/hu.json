@@ -1505,7 +1505,9 @@
       "side": "Köret",
       "drink": "Ital"
     },
-    "errors": {},
+    "errors": {
+      "retry": "Újra"
+    },
     "suggestedQuestions": {
       "dailyPlan": "Készíts napi menütervet mára",
       "weeklyPlan": "Készíts teljes heti menütervet",
