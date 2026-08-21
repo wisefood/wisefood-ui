@@ -686,6 +686,18 @@
                     <span class="text-sm font-medium text-gray-900 dark:text-white">{{ canvasMode === 'weekly' ? t('foodChatHome.planHeader.weeklyPlan') : t('foodChatHome.planHeader.dailyPlan') }}</span>
                   </div>
 
+                  <!-- Tools: the capabilities FoodChat declares, as buttons.
+                       Fed by the manifest, so a tool that exists is offered. -->
+                  <FoodchatPlanToolsMenu
+                    v-if="tools.length"
+                    :tools="tools"
+                    :plan-type="canvasMode"
+                    :day="toolsMenuDay"
+                    :running="runningTool"
+                    :busy="sending"
+                    @invoke="handleToolInvoke"
+                  />
+
                   <!-- Save: this plan outlives the conversation -->
                   <button
                     v-if="displayedPlanId"
@@ -725,6 +737,70 @@
                     {{ canvasMode === 'daily' && displayedMealPlan ? formatPlanDate(displayedMealPlan.created_at) : '' }}
                     {{ canvasMode === 'weekly' && displayedWeeklyPlan ? formatPlanDate(displayedWeeklyPlan.created_at) : '' }}
                   </span>
+                </div>
+
+                <!-- ── What FoodChat is planning around ──
+                     Session-scoped and server-held, so unlike the ledger below
+                     it describes the NEXT plan rather than this one — and it
+                     survives a reload, which the client-grafted extras do not. -->
+                <div v-if="planningState" class="mb-4">
+                  <FoodchatPlanningStatePanel
+                    :state="planningState"
+                    :facets="facetChips"
+                    :pending-changes="pendingStateChanges"
+                    :busy="sending"
+                    :start-open="pendingStateChanges > 0"
+                    @add-pantry="handleAddPantry"
+                    @remove-pantry="handleRemovePantry"
+                    @remove-facet="handleRemoveFacet"
+                    @replan="handleReplan"
+                  />
+                </div>
+
+                <!-- The last tool result. Dismissible, and never mistaken for
+                     the plan itself: a summary is an answer, not a change. -->
+                <div
+                  v-if="toolResult"
+                  class="mb-4 rounded-2xl border border-gray-200 dark:border-zinc-700/70 bg-white/70 dark:bg-zinc-900/40 overflow-hidden"
+                >
+                  <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-100 dark:border-zinc-800">
+                    <UIcon
+                      :name="toolResult.error ? 'i-lucide-alert-triangle' : 'i-lucide-wand-sparkles'"
+                      class="w-3.5 h-3.5 shrink-0"
+                      :class="toolResult.error ? 'text-amber-500' : 'text-brandp-500'"
+                    />
+                    <span class="text-xs font-medium text-gray-700 dark:text-zinc-200">{{ toolResult.title }}</span>
+                    <button
+                      class="ml-auto w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+                      :aria-label="t('a11y.close')"
+                      @click="toolResult = null"
+                    >
+                      <UIcon name="i-lucide-x" class="w-3 h-3" />
+                    </button>
+                  </div>
+                  <div class="px-4 py-3 space-y-2">
+                    <p v-if="toolResult.error" class="text-xs text-amber-700 dark:text-amber-300 font-light">
+                      {{ toolResult.error }}
+                    </p>
+                    <template v-else>
+                      <p v-if="toolResult.headline" class="text-xs text-gray-600 dark:text-zinc-300">
+                        {{ toolResult.headline }}
+                      </p>
+                      <ul v-if="toolResult.lines.length" class="space-y-1">
+                        <li
+                          v-for="(line, lIdx) in toolResult.lines"
+                          :key="lIdx"
+                          class="text-xs text-gray-500 dark:text-zinc-400 font-light flex items-baseline gap-2"
+                        >
+                          <span class="text-gray-400 dark:text-zinc-500 shrink-0 min-w-20">{{ line.label }}</span>
+                          <span class="tabular-nums">{{ line.value }}</span>
+                        </li>
+                      </ul>
+                      <p v-if="toolResult.caveat" class="text-[10px] text-gray-400 dark:text-zinc-500 font-light">
+                        {{ toolResult.caveat }}
+                      </p>
+                    </template>
+                  </div>
                 </div>
 
                 <!-- ── Daily plan content ── -->
@@ -1325,7 +1401,7 @@ import DOMPurify from 'dompurify'
 import { useFoodChat } from '~/composables/useFoodChat'
 import { useHouseholdStore } from '~/stores/household'
 import { useRecipeStore } from '~/stores/recipe'
-import type { AttributionCitation, ChangedSlot, ChatMessage, ConstraintApplied, MealPlan, MealRecipe, MemorySuggestion, PlanParameterValues, WeeklyDayBreakdown, WeeklyMealEntry } from '~/services/foodchatApi'
+import type { AttributionCitation, ChangedSlot, ChatMessage, ConstraintApplied, FoodChatTool, MealPlan, MealRecipe, MemorySuggestion, PlanParameterValues, WeeklyDayBreakdown, WeeklyMealEntry } from '~/services/foodchatApi'
 import recipeApi from '~/services/recipeApi'
 import {
   humaniseSlot,
@@ -1379,7 +1455,19 @@ const {
   composePlan,
   activeDiners,
   updateDiners,
-  clearError
+  clearError,
+  planningState,
+  facetChips,
+  pendingStateChanges,
+  loadPlanningState,
+  addPantryItems,
+  removePantryItem,
+  removeFacet,
+  replan,
+  tools,
+  runningTool,
+  loadTools,
+  invokeTool
 } = useFoodChat()
 
 const householdStore = useHouseholdStore()
@@ -2606,6 +2694,187 @@ async function revokeMealPlanFromMembers() {
   }
 }
 
+// ── Standing planning state: pantry, inferred facets ──────────────────────
+// The panel writes immediately (so a tick-off is not lost to a reload) but does
+// not re-plan — `pendingStateChanges` is what the member commits.
+
+async function handleAddPantry(items: string[]) {
+  try {
+    await addPantryItems(items)
+  } catch { /* the store surfaces the error */ }
+}
+
+async function handleRemovePantry(item: string) {
+  try {
+    await removePantryItem(item)
+  } catch { /* the store surfaces the error */ }
+}
+
+async function handleRemoveFacet(value: string) {
+  try {
+    await removeFacet(value)
+  } catch { /* the store surfaces the error */ }
+}
+
+async function handleReplan() {
+  try {
+    await replan(canvasMode.value)
+  } catch { /* the store surfaces the error */ }
+}
+
+// ── Tools ─────────────────────────────────────────────────────────────────
+
+/** Rendered result of the last tool run — an answer, not a plan change. */
+interface ToolResultView {
+  title: string
+  headline?: string
+  lines: Array<{ label: string, value: string }>
+  caveat?: string
+  error?: string
+}
+
+const toolResult = ref<ToolResultView | null>(null)
+
+/**
+ * The day a day-scoped tool would act on.
+ *
+ * The toolbar menu sits above the whole canvas, so on a weekly plan it can only
+ * honestly name a day when exactly one is expanded. Null keeps "replace this
+ * day" out of the menu rather than having it pick one — the per-day menus on the
+ * weekly grid are where a specific day is unambiguous.
+ */
+const toolsMenuDay = computed<number | null>(() => {
+  if (canvasMode.value === 'weekly') {
+    const expanded = [...expandedWeeklyDays.value]
+    return expanded.length === 1 ? expanded[0]! : null
+  }
+  // A single-day daily plan has exactly one day to act on.
+  return displayedPlanDayGroups.value.length === 1
+    ? displayedPlanDayGroups.value[0]!.day
+    : null
+})
+
+async function handleToolInvoke(tool: FoodChatTool, args: Record<string, unknown>) {
+  toolResult.value = null
+  try {
+    const result = await invokeTool<Record<string, any>>(tool, args)
+    toolResult.value = renderToolResult(tool, result)
+  } catch (err: any) {
+    // A ToolError is a 400 carrying member-facing prose — "this plan covers
+    // Monday to Wednesday" — so show it rather than a generic failure.
+    toolResult.value = {
+      title: t('foodChatHome.tools.failed'),
+      lines: [],
+      error: err?.data?.detail || err?.message || t('foodChatHome.tools.failed')
+    }
+  }
+}
+
+/**
+ * One tool result, as rows.
+ *
+ * Deliberately shallow: it reads the documented keys and shows nothing for the
+ * ones a given tool does not return, rather than guessing at a shape. A tool
+ * whose result it does not recognise still gets its title and its own caveat,
+ * which beats rendering `[object Object]`.
+ */
+function renderToolResult(tool: FoodChatTool, result?: Record<string, any>): ToolResultView {
+  const view: ToolResultView = { title: tool.summary, lines: [] }
+  if (!result) return view
+
+  const totals = result.week_totals ?? result.total ?? result.totals
+  if (totals && typeof totals === 'object') {
+    if (typeof totals.calories === 'number') {
+      view.lines.push({ label: 'kcal', value: Math.round(totals.calories).toLocaleString() })
+    }
+    for (const [key, label] of [['protein_g', 'protein'], ['carbs_g', 'carbs'], ['fat_g', 'fat']] as const) {
+      if (typeof totals[key] === 'number') {
+        view.lines.push({ label, value: `${Math.round(totals[key])} g` })
+      }
+    }
+    // The tool says how many meals it could actually see; a bare total would
+    // understate the plan and imply completeness.
+    if (totals.complete === false && typeof totals.meals_counted === 'number') {
+      view.caveat = t('foodChatHome.tools.totalsPartial', {
+        counted: totals.meals_counted,
+        total: totals.meals_total ?? totals.meals_counted
+      })
+    }
+  }
+
+  if (typeof result.daily_average_kcal === 'number') {
+    view.headline = t('foodChatHome.tools.dailyAverage', {
+      kcal: Math.round(result.daily_average_kcal)
+    })
+  }
+
+  if (Array.isArray(result.days)) {
+    for (const day of result.days) {
+      const meals = Array.isArray(day?.meals)
+        ? day.meals.map((m: any) => m?.title).filter(Boolean).join(' · ')
+        : ''
+      if (meals) view.lines.push({ label: String(day?.name ?? day?.day ?? ''), value: meals })
+    }
+  } else if (Array.isArray(result.meals)) {
+    for (const meal of result.meals) {
+      if (meal?.title) {
+        view.lines.push({ label: String(meal.meal_type ?? ''), value: String(meal.title) })
+      }
+    }
+  }
+
+  if (Array.isArray(result.per_day)) {
+    for (const day of result.per_day) {
+      if (typeof day?.calories === 'number') {
+        view.lines.push({
+          label: String(day.name ?? `day ${day.day ?? ''}`),
+          value: `${Math.round(day.calories)} kcal`
+        })
+      }
+    }
+  }
+
+  if (tool.mutates && !view.lines.length) {
+    view.headline = t('foodChatHome.tools.dayReplaced', { day: result.day ?? '' })
+  }
+  return view
+}
+
+/**
+ * Open a specific session and plan when the URL names them.
+ *
+ * The library's saved-plan cards link here, and a link that lands on whatever
+ * session happens to be newest is a link that does not work. Applied after the
+ * sessions and their plans are loaded, because until then there is nothing to
+ * select. A stale id (a deleted session, a plan from another member) is ignored
+ * rather than reported: the page still shows a working conversation, and an
+ * error banner about a bookmark from three weeks ago helps nobody.
+ */
+async function openFromQuery() {
+  const route = useRoute()
+  const wantedSession = typeof route.query.session === 'string' ? route.query.session : null
+  const wantedPlan = typeof route.query.plan === 'string' ? route.query.plan : null
+  if (!wantedSession) return
+
+  if (sessions.value.some(session => session.session_id === wantedSession)) {
+    await selectSession(wantedSession)
+  }
+  if (!wantedPlan) return
+
+  await nextTick()
+  const dailyIdx = mealPlans.value.findIndex(plan => plan.id === wantedPlan)
+  if (dailyIdx !== -1) {
+    canvasMode.value = 'daily'
+    selectedDailyPlanIdx.value = dailyIdx
+    return
+  }
+  const weeklyIdx = weeklyMealPlans.value.findIndex(plan => plan.id === wantedPlan)
+  if (weeklyIdx !== -1) {
+    canvasMode.value = 'weekly'
+    selectedWeeklyPlanIdx.value = weeklyIdx
+  }
+}
+
 // ── Watch messages to auto-scroll ──
 watch(messages, () => scrollToBottom(), { deep: true, flush: 'post' })
 watch(messagesScrollRef, (el) => { if (el) scrollToBottom(false) })
@@ -2614,6 +2883,7 @@ watch(messagesScrollRef, (el) => { if (el) scrollToBottom(false) })
 onMounted(async () => {
   recipeStore.initialize()
   await loadSessions()
+  await openFromQuery()
   // Bookmark states on the canvas need the saved-plan ids; fire-and-forget,
   // the store treats a failed load as "no bookmarks yet".
   loadSavedPlans()
@@ -2624,6 +2894,23 @@ onMounted(async () => {
   if (!householdMembers.value.length && householdStore.currentHousehold?.id) {
     await householdStore.fetchMembers()
   }
+  // Both are fire-and-forget: an unreachable tool surface hides the menu, and
+  // an unreadable planning state hides the panel. Neither should hold the page.
+  loadTools()
+  loadPlanningState()
+})
+
+// The standing state belongs to the session, so it is re-read whenever the
+// active session changes — including the switch a fresh session performs.
+watch(() => activeSession.value?.session_id, (id) => {
+  toolResult.value = null
+  if (id) loadPlanningState()
+})
+
+// A new plan means whatever was pending has been applied. Re-read rather than
+// assume: the plan may have come from a chat turn that changed the state too.
+watch(() => latestMealPlan.value?.id, (id) => {
+  if (id) loadPlanningState()
 })
 </script>
 

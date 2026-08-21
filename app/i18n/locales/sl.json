@@ -631,7 +631,16 @@
     "saved": "Shranjeno",
     "signInToSave": "Za shranjevanje izberi profil",
     "unresolvedTitle": "Shranjenih receptov ni bilo mogoče naložiti",
-    "unresolvedDescription": "Shranjenih imaš {count}, a njihovih podrobnosti trenutno ni bilo mogoče pridobiti. Poskusi znova čez trenutek."
+    "unresolvedDescription": "Shranjenih imaš {count}, a njihovih podrobnosti trenutno ni bilo mogoče pridobiti. Poskusi znova čez trenutek.",
+    "savedPlans": "Shranjeni jedilniki",
+    "savedPlansEmpty": "Še ni shranjenih jedilnikov. Označi enega v FoodChatu in ostal bo tudi po koncu pogovora.",
+    "savedPlansLoadFailed": "Shranjenih jedilnikov ni bilo mogoče naložiti.",
+    "planDaily": "Dnevni načrt",
+    "planWeekly": "Tedenski načrt",
+    "planMealCount": "{count} obrokov",
+    "planDayCount": "{count} dni",
+    "planOpen": "Odpri v FoodChatu",
+    "planSavedOn": "Shranjeno {date}"
   },
   "foodChat": {
     "title": "FoodChat",
@@ -1699,6 +1708,49 @@
       "label": "Skupaj na dan",
       "macros": "{kcal} kcal · {protein}g beljakovin · {carbs}g OH · {fat}g maščob",
       "partial": "delno — nekateri obroki nimajo podatkov"
+    },
+    "planningState": {
+      "title": "Kaj upoštevam",
+      "subtitle": "Vse tukaj oblikuje naslednji načrt. Odstrani, kar sem narobe razumel.",
+      "empty": "Še nič — povej, kaj imaš doma ali česa si želiš.",
+      "pantryLabel": "V tvoji kuhinji",
+      "pantryHint": "Sestavine za porabo. Načrtovanje da prednost receptom, ki jih potrebujejo.",
+      "pantryAdd": "Dodaj sestavino",
+      "pantryAddPlaceholder": "bučka, feta, ostanki piščanca…",
+      "pantryEmpty": "Še ni sestavin.",
+      "facetsLabel": "Slišano od tebe",
+      "facetsHint": "Razbrano iz tvojih besed. Odstranitev to izloči iz naslednjega načrta.",
+      "dietLabel": "Dieta, ki si jo navedel",
+      "dietHint": "Navedena v tem pogovoru. Do konca seje ima prednost pred shranjenim profilom.",
+      "claimsLabel": "Kar si želel",
+      "removeItem": "Odstrani {value}",
+      "family": {
+        "cuisines": "Kuhinja",
+        "moods": "Razpoloženje",
+        "flavor_profiles": "Okus",
+        "food_groups": "Skupina živil"
+      },
+      "replan": "Posodobi načrt",
+      "replanHint": "Spremembe so shranjene. Posodobi načrt, ko boš pripravljen.",
+      "replanning": "Posodabljam načrt…",
+      "pendingChanges": "{count} neuporabljenih sprememb",
+      "favoritesDeclined": "Priljubljenih ne uporabljam, kot si želel."
+    },
+    "tools": {
+      "label": "Dejanja",
+      "weekSummary": "Povzemi teden",
+      "daySummary": "Povzemi ta dan",
+      "replaceDay": "Zamenjaj ta dan",
+      "planTotals": "Pokaži seštevke",
+      "running": "Delam…",
+      "readOnly": "Samo bere načrt",
+      "changesPlan": "Spremeni načrt",
+      "failed": "To ni uspelo",
+      "totalsTitle": "Seštevki načrta",
+      "totalsPartial": "{counted} od {total} obrokov ima podatke o hranilih",
+      "dayReplaced": "{day}. dan zamenjan.",
+      "summaryTitle": "Povzetek tedna",
+      "dailyAverage": "Povprečno {kcal} kcal na dan"
     }
   },
   "a11y": {

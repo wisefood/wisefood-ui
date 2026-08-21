@@ -631,7 +631,16 @@
     "saved": "Saved",
     "signInToSave": "Select a profile to save this",
     "unresolvedTitle": "We couldn't load your saved recipes",
-    "unresolvedDescription": "You have {count} saved, but we couldn't fetch their details right now. Try again in a moment."
+    "unresolvedDescription": "You have {count} saved, but we couldn't fetch their details right now. Try again in a moment.",
+    "savedPlans": "Saved meal plans",
+    "savedPlansEmpty": "No saved plans yet. Bookmark one in FoodChat and it will keep, even after the conversation ends.",
+    "savedPlansLoadFailed": "We couldn't load your saved plans.",
+    "planDaily": "Day plan",
+    "planWeekly": "Week plan",
+    "planMealCount": "{count} meals",
+    "planDayCount": "{count} days",
+    "planOpen": "Open in FoodChat",
+    "planSavedOn": "Saved {date}"
   },
   "foodChat": {
     "title": "FoodChat",
@@ -1721,6 +1730,49 @@
       "label": "Day total",
       "macros": "{kcal} kcal · {protein}g protein · {carbs}g carbs · {fat}g fat",
       "partial": "partial — some meals have no nutrition data"
+    },
+    "planningState": {
+      "title": "What I'm planning around",
+      "subtitle": "Everything here shapes the next plan. Remove anything I misheard.",
+      "empty": "Nothing standing yet — tell me what you have in, or what you feel like.",
+      "pantryLabel": "In your kitchen",
+      "pantryHint": "Ingredients to use up. Planning prefers recipes that need them.",
+      "pantryAdd": "Add an ingredient",
+      "pantryAddPlaceholder": "zucchini, feta, leftover chicken…",
+      "pantryEmpty": "No ingredients yet.",
+      "facetsLabel": "Heard from you",
+      "facetsHint": "Read from what you said. Removing one takes it out of the next plan.",
+      "dietLabel": "Diet you stated",
+      "dietHint": "Stated in this conversation. It outranks your saved profile until the session ends.",
+      "claimsLabel": "Asked for",
+      "removeItem": "Remove {value}",
+      "family": {
+        "cuisines": "Cuisine",
+        "moods": "Mood",
+        "flavor_profiles": "Flavour",
+        "food_groups": "Food group"
+      },
+      "replan": "Update the plan",
+      "replanHint": "Changes are saved. Update the plan when you're ready.",
+      "replanning": "Updating the plan…",
+      "pendingChanges": "{count} unapplied change(s)",
+      "favoritesDeclined": "Not using your favourites, as you asked."
+    },
+    "tools": {
+      "label": "Actions",
+      "weekSummary": "Summarise the week",
+      "daySummary": "Summarise this day",
+      "replaceDay": "Replace this day",
+      "planTotals": "Show the totals",
+      "running": "Working…",
+      "readOnly": "Reads the plan",
+      "changesPlan": "Changes the plan",
+      "failed": "That didn't work",
+      "totalsTitle": "Plan totals",
+      "totalsPartial": "{counted} of {total} meals have nutrition data",
+      "dayReplaced": "Day {day} replaced.",
+      "summaryTitle": "Week summary",
+      "dailyAverage": "{kcal} kcal a day on average"
     }
   },
   "a11y": {

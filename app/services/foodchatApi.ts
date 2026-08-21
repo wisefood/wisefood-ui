@@ -356,6 +356,71 @@ export interface MemberCurrentPlans {
   cooking_for: string[]
 }
 
+/**
+ * Everything the member has said that outlives a turn.
+ *
+ * The plan's own `constraints_applied` ledger says what was applied to THAT
+ * plan. This says what is still in force for the next one — which is what lets
+ * the constraints on screen survive a page reload, and what makes an inferred
+ * facet correctable instead of something to argue with the assistant about.
+ */
+export interface PlanningState {
+  /** On-hand ingredients to plan around, lowercased, insertion order kept. */
+  pantry: string[]
+  /** All four families, always present — empty arrays rather than absent keys. */
+  facets: {
+    cuisines: string[]
+    moods: string[]
+    flavor_profiles: string[]
+    food_groups: string[]
+  }
+  /** Diet stated in chat, as recipe diet tags. Outranks the stored profile. */
+  diet_tags: string[]
+  /** Nutrition claims ("high protein") — a different filter from a diet. */
+  claim_tags: string[]
+  notes: string[]
+  anchors: Record<string, string>
+  excluded_recipe_ids: string[]
+  /** null = never offered, false = offered and declined. The difference matters. */
+  use_favorites: boolean | null
+  plan_shape: Record<string, unknown>
+  plan_shape_is_default: boolean
+  /** The request a re-plan would run, so the UI can show it rather than describe a button. */
+  query: string
+}
+
+/** One facet chip on the plan header, with the family it came from. */
+export interface FacetChip {
+  family: keyof PlanningState['facets']
+  value: string
+}
+
+/** The facet vocabulary the recipe corpus actually carries. */
+export interface Vocabularies {
+  cuisines?: string[]
+  moods?: string[]
+  flavor_profiles?: string[]
+  food_groups?: string[]
+  [key: string]: string[] | undefined
+}
+
+/** One tool from the manifest — MCP-shaped, generated from FoodChat's registry. */
+export interface FoodChatTool {
+  name: string
+  summary: string
+  description: string
+  parameters: {
+    type?: string
+    properties?: Record<string, { type?: string, description?: string, enum?: string[], minimum?: number, maximum?: number }>
+    required?: string[]
+  }
+  /** True when the tool spends model calls — worth a spinner. */
+  uses_model: boolean
+  /** True when it changes the plan. A reader is always safe to retry. */
+  mutates: boolean
+  examples: string[]
+}
+
 export interface UnifiedChatRequest {
   content: string
   member_id: string
@@ -608,13 +673,134 @@ class FoodChatApiService {
     )
   }
 
+  // ==========================================================================
+  // Standing planning state — the pantry panel and the facet chips
+  // ==========================================================================
+
+  /** What is standing for this session: pantry, facets, stated diet, claims. */
+  async getPlanningState(sessionId: string, memberId: string): Promise<PlanningState> {
+    const params = new URLSearchParams({ member_id: memberId })
+    return this.fetchWithTimeout<PlanningState>(
+      `${this.basePath}/sessions/${sessionId}/planning-state?${params}`,
+      'GET'
+    )
+  }
+
+  /**
+   * Replace the pantry with exactly these items.
+   *
+   * The whole list, not a delta: an empty array means the member cleared it,
+   * which an add-only call cannot express.
+   */
+  async setPantry(sessionId: string, memberId: string, items: string[]): Promise<PlanningState> {
+    return this.fetchWithTimeout<PlanningState>(
+      `${this.basePath}/sessions/${sessionId}/pantry`,
+      'PUT',
+      { member_id: memberId, items }
+    )
+  }
+
+  /** Add items, leaving the rest of the pantry alone. */
+  async addPantryItems(sessionId: string, memberId: string, items: string[]): Promise<PlanningState> {
+    return this.fetchWithTimeout<PlanningState>(
+      `${this.basePath}/sessions/${sessionId}/pantry`,
+      'POST',
+      { member_id: memberId, items }
+    )
+  }
+
+  /** Tick one item off — used up, or heard wrong. */
+  async removePantryItem(sessionId: string, memberId: string, item: string): Promise<PlanningState> {
+    const params = new URLSearchParams({ member_id: memberId })
+    return this.fetchWithTimeout<PlanningState>(
+      `${this.basePath}/sessions/${sessionId}/pantry/${encodeURIComponent(item)}?${params}`,
+      'DELETE'
+    )
+  }
+
+  /**
+   * Take back one facet FoodChat inferred from something the member said.
+   *
+   * By value, not by family: the member removing "light" does not know whether
+   * it was read as a mood or a flavour, and neither does the chip.
+   */
+  async removeFacet(sessionId: string, memberId: string, value: string): Promise<PlanningState> {
+    const params = new URLSearchParams({ member_id: memberId })
+    return this.fetchWithTimeout<PlanningState>(
+      `${this.basePath}/sessions/${sessionId}/facets/${encodeURIComponent(value)}?${params}`,
+      'DELETE'
+    )
+  }
+
+  /**
+   * Re-plan from the standing state — no message, no intent classification.
+   *
+   * Called once after the member finishes changing chips or pantry items, not
+   * per change: it generates a plan, so it gets the message timeout.
+   */
+  async replan(
+    sessionId: string,
+    memberId: string,
+    planType?: 'daily' | 'weekly'
+  ): Promise<UnifiedChatResponse> {
+    return this.fetchWithTimeout<UnifiedChatResponse>(
+      `${this.basePath}/sessions/${sessionId}/replan`,
+      'POST',
+      planType ? { member_id: memberId, plan_type: planType } : { member_id: memberId },
+      MESSAGE_TIMEOUT
+    )
+  }
+
+  /**
+   * The facet vocabulary the corpus actually carries.
+   *
+   * Used to offer real values rather than a hardcoded list that drifts. The
+   * recipe search ANDs facet values and never relaxes an unlisted one, so an
+   * invented value does not soften a search — it empties it.
+   */
+  async getVocabularies(): Promise<Vocabularies> {
+    const payload = await this.fetchWithTimeout<{ vocabularies: Vocabularies }>(
+      `${this.basePath}/vocabularies`,
+      'GET'
+    )
+    return payload?.vocabularies ?? {}
+  }
+
+  // ==========================================================================
+  // Tool surface
+  // ==========================================================================
+
+  /** Every tool the agent can call, generated from FoodChat's own registry. */
+  async listTools(): Promise<FoodChatTool[]> {
+    const payload = await this.fetchWithTimeout<{ tools: FoodChatTool[] }>(
+      `${this.basePath}/tools`,
+      'GET'
+    )
+    return payload?.tools ?? []
+  }
+
+  /** Run one tool by name. Some regenerate part of a plan, hence the timeout. */
+  async invokeTool<T = Record<string, unknown>>(
+    toolName: string,
+    memberId: string,
+    args: Record<string, unknown>
+  ): Promise<T> {
+    const payload = await this.fetchWithTimeout<{ tool: string, result: T }>(
+      `${this.basePath}/tools/${toolName}`,
+      'POST',
+      { member_id: memberId, arguments: args },
+      MESSAGE_TIMEOUT
+    )
+    return payload?.result as T
+  }
+
   // ============================================================================
   // Private helpers
   // ============================================================================
 
   private async fetchWithTimeout<T>(
     endpoint: string,
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
     data?: unknown,
     timeoutMs: number = DEFAULT_TIMEOUT
   ): Promise<T> {

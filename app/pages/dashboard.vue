@@ -374,7 +374,7 @@ import { useHouseholdStore } from '@/stores/household'
 import foodscholarApi, { type QaTipsResult } from '~/services/foodscholarApi'
 import catalogApi from '~/services/catalogApi'
 import recipeApi, { type RecipeSearchResult } from '~/services/recipeApi'
-import foodchatApi, { type MealPlan, type MealRecipe, type MemberCurrentPlans } from '~/services/foodchatApi'
+import foodchatApi, { type MealPlan, type MealRecipe, type MemberCurrentPlans, type PlanMeal } from '~/services/foodchatApi'
 import { humaniseSlot, planMeals } from '~/utils/planMeals'
 import type { HouseholdMember } from '~/services/householdsApi'
 import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
@@ -730,33 +730,46 @@ const extractTodayPlan = (plans: MemberCurrentPlans): MealPlan | null => {
     const jsDay = new Date().getDay() // 0=Sun .. 6=Sat
     const planDay = jsDay === 0 ? 7 : jsDay // Day 1=Mon .. 7=Sun
 
-    // Every meal for today, whatever its slot. This used to keep only
-    // breakfast/lunch/dinner and drop the rest on the floor — a member whose
-    // weekly plan included a snack or a dessert saw a day that was quietly
-    // missing meals, with nothing to say so.
-    const meals = plans.weekly_meal_plan.entries
+    // Every meal for today, whatever its slot, in the ONE shape `planMeals()`
+    // reads: `days -> meals -> plates`.
+    //
+    // This used to emit `{ meals: [{slot, recipe}] }`, which is not a field on
+    // `MealPlan` — `planMeals()` looks for `days`, found nothing, and fell
+    // through to the three scalars. So the snack and the dessert this code
+    // exists to carry were dropped one line after being collected, and the
+    // comment claiming otherwise had been wrong since it was written.
+    //
+    // Two entries can share a meal_type (a dinner with a side), so they are
+    // grouped rather than assumed unique — the same grouping the plan canvas
+    // does, for the same reason.
+    const todaysEntries = plans.weekly_meal_plan.entries
       .filter(entry => entry.day === planDay && entry.meal_type)
       .sort((a, b) => a.meal_idx - b.meal_idx)
-      .map(entry => ({
-        slot: String(entry.meal_type),
-        recipe: weeklyRecipeToMealRecipe(entry.recipe as Record<string, unknown>)
-      }))
-      .filter(meal => meal.recipe.recipe_id)
+
+    const meals: PlanMeal[] = []
+    for (const entry of todaysEntries) {
+      const recipe = weeklyRecipeToMealRecipe(entry.recipe as Record<string, unknown>)
+      if (!recipe.recipe_id) continue
+      const slot = String(entry.meal_type)
+      const existing = meals.find(meal => meal.meal_type === slot)
+      if (existing) existing.plates.push(recipe)
+      else meals.push({ meal_type: slot, plates: [recipe] })
+    }
 
     if (meals.length > 0) {
-      // The three legacy keys are still populated for anything that reads them
-      // directly; `meals` carries the full set. `planMeals()` prefers `meals`,
-      // so nothing renders twice.
+      // The three legacy keys stay populated for anything that addresses a slot
+      // by name; `days` carries the full set and `planMeals()` prefers it, so
+      // nothing renders twice.
       const bySlot: Partial<Record<'breakfast' | 'lunch' | 'dinner', MealRecipe>> = {}
       for (const meal of meals) {
-        if (meal.slot === 'breakfast' || meal.slot === 'lunch' || meal.slot === 'dinner') {
-          bySlot[meal.slot] = meal.recipe
+        if (meal.meal_type === 'breakfast' || meal.meal_type === 'lunch' || meal.meal_type === 'dinner') {
+          bySlot[meal.meal_type] = meal.plates[0]
         }
       }
       return {
         id: plans.weekly_meal_plan.id,
         created_at: plans.weekly_meal_plan.created_at,
-        meals,
+        days: [{ day: planDay, meals }],
         breakfast: bySlot.breakfast,
         lunch: bySlot.lunch,
         dinner: bySlot.dinner
@@ -857,10 +870,14 @@ const upcomingMeals = computed(() => {
   // entirely, so a member's snack simply never appeared on their dashboard.
   const canonical = new Set(['breakfast', 'lunch', 'dinner'])
   const extras = planMeals(todayMealPlan.value)
-    .filter(meal => !canonical.has(meal.slot))
+    // A non-main plate of a canonical slot is extra too: the fixed row above
+    // shows that meal's main course, so the side salad has nowhere else to go.
+    .filter(meal => !canonical.has(meal.slot) || meal.role !== 'main')
     .map((meal, index) => ({
-      id: `${meal.slot}-${index}`,
-      name: humaniseSlot(meal.slot),
+      id: `${meal.slot}-${meal.role}-${index}`,
+      name: canonical.has(meal.slot)
+        ? `${humaniseSlot(meal.slot)} · ${humaniseSlot(meal.role)}`
+        : humaniseSlot(meal.slot),
       time: meal.time ?? '',
       icon: meal.icon,
       recipeId: meal.recipe.recipe_id || null,

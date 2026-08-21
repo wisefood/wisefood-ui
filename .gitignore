@@ -24,3 +24,6 @@ logs
 .env
 .env.*
 !.env.example
+
+# Confidential peer-review material — never commit
+WiseFood_camera_ready_*.md

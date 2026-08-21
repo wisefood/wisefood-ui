@@ -11,7 +11,11 @@ import type {
   ConversationResponse,
   MemorySuggestion,
   PlanParameterValues,
-  SessionDinersResponse
+  SessionDinersResponse,
+  PlanningState,
+  FacetChip,
+  Vocabularies,
+  FoodChatTool
 } from '~/services/foodchatApi'
 
 interface SessionDiners {
@@ -33,6 +37,19 @@ interface FoodChatState {
   /** Plans the member saved — outlive their conversations */
   savedPlans: SavedPlan[]
   savedPlanIds: string[]
+  /**
+   * What is standing for the active session: pantry, inferred facets, a diet
+   * stated in chat. Server-held, so unlike the per-message extras it survives
+   * a reload — which is the point of reading it at all.
+   */
+  planningState: PlanningState | null
+  planningStateLoading: boolean
+  /** The facet vocabulary the corpus carries. Fetched once, process-wide. */
+  vocabularies: Vocabularies | null
+  /** The tool manifest, generated from FoodChat's registry. Fetched once. */
+  tools: FoodChatTool[]
+  /** Name of the tool currently running, so one spinner can't claim them all. */
+  runningTool: string | null
   sessionsLoading: boolean
   messagesLoading: boolean
   loadingMoreMessages: boolean
@@ -49,6 +66,11 @@ export const useFoodChatStore = defineStore('foodchat', {
     nextBeforeId: null,
     savedPlans: [],
     savedPlanIds: [],
+    planningState: null,
+    planningStateLoading: false,
+    vocabularies: null,
+    tools: [],
+    runningTool: null,
     mealPlans: [],
     weeklyMealPlans: [],
     lastResponse: null,
@@ -71,6 +93,49 @@ export const useFoodChatStore = defineStore('foodchat', {
 
     // Messages are already oldest-first from the conversation endpoint
     sortedMessages: (state) => state.messages,
+
+    /**
+     * Every standing facet as a chip, flattened across the four families.
+     *
+     * Flattened because the member does not think in families: "light" is a
+     * thing they asked for, and whether FoodChat read it as a mood or a
+     * flavour is an implementation detail. The family rides along only so the
+     * chip can be labelled.
+     */
+    facetChips: (state): FacetChip[] => {
+      const facets = state.planningState?.facets
+      if (!facets) return []
+      const families: Array<FacetChip['family']> = [
+        'cuisines', 'moods', 'flavor_profiles', 'food_groups'
+      ]
+      return families.flatMap(family =>
+        (facets[family] || []).map(value => ({ family, value }))
+      )
+    },
+
+    /** On-hand ingredients FoodChat is planning around. */
+    pantryItems: (state): string[] => state.planningState?.pantry ?? [],
+
+    /**
+     * True when the member has told us something that shapes the next plan.
+     *
+     * Used to decide whether the panel is worth showing at all: an empty
+     * pantry with no facets is not a state worth a header.
+     */
+    hasStandingConstraints: (state): boolean => {
+      const ps = state.planningState
+      if (!ps) return false
+      return Boolean(
+        ps.pantry.length
+        || ps.diet_tags.length
+        || ps.claim_tags.length
+        || Object.values(ps.facets).some(values => values.length)
+      )
+    },
+
+    /** Tools that change a plan, separated from the ones that only read it. */
+    mutatingTools: (state): FoodChatTool[] => state.tools.filter(t => t.mutates),
+    readOnlyTools: (state): FoodChatTool[] => state.tools.filter(t => !t.mutates),
 
     activeMealPlans: (state): MealPlan[] => {
       const ids = new Set(state.mealPlans.map(p => p.id))
@@ -455,6 +520,150 @@ export const useFoodChatStore = defineStore('foodchat', {
     },
 
     // ----------------------------------------------------------------
+    // Standing planning state — the pantry panel and the facet chips
+    // ----------------------------------------------------------------
+
+    /**
+     * What FoodChat is currently planning around.
+     *
+     * Failure leaves the previous value alone rather than clearing it: a
+     * transient error should not make the member's pantry appear to have been
+     * forgotten. `null` means never loaded; `{...}` with empty arrays means
+     * loaded and genuinely empty, and the panel needs to tell those apart.
+     */
+    async fetchPlanningState(sessionId: string, memberId: string) {
+      this.planningStateLoading = true
+      try {
+        this.planningState = await foodchatApi.getPlanningState(sessionId, memberId)
+      } catch {
+        // keep whatever we had
+      } finally {
+        this.planningStateLoading = false
+      }
+    },
+
+    /**
+     * Replace the pantry with exactly these items.
+     *
+     * Every mutation below returns the resulting state and stores it, so the
+     * panel never has to re-fetch to find out what its own write did.
+     */
+    async setPantry(sessionId: string, memberId: string, items: string[]) {
+      this.planningState = await foodchatApi.setPantry(sessionId, memberId, items)
+      return this.planningState
+    },
+
+    async addPantryItems(sessionId: string, memberId: string, items: string[]) {
+      this.planningState = await foodchatApi.addPantryItems(sessionId, memberId, items)
+      return this.planningState
+    },
+
+    async removePantryItem(sessionId: string, memberId: string, item: string) {
+      this.planningState = await foodchatApi.removePantryItem(sessionId, memberId, item)
+      return this.planningState
+    },
+
+    /** Take back one inferred facet. Does NOT re-plan — see `replan`. */
+    async removeFacet(sessionId: string, memberId: string, value: string) {
+      this.planningState = await foodchatApi.removeFacet(sessionId, memberId, value)
+      return this.planningState
+    },
+
+    /**
+     * Re-plan from the standing state.
+     *
+     * Separate from the writes above on purpose: removing three chips should
+     * produce one plan, not three. Routes through `ingestTurnResponse` like
+     * every other turn-shaped response, so the canvas, the message list and
+     * the plan lists all update the same way they do after a chat turn.
+     */
+    async replan(sessionId: string, memberId: string, planType?: 'daily' | 'weekly') {
+      this.sending = true
+      this.error = null
+      try {
+        const response = await foodchatApi.replan(sessionId, memberId, planType)
+        await this.ingestTurnResponse(sessionId, memberId, response)
+        await this.fetchPlanningState(sessionId, memberId)
+        return response
+      } catch (err: any) {
+        this.error = err.message || 'Failed to update the plan'
+        throw err
+      } finally {
+        this.sending = false
+      }
+    },
+
+    /**
+     * The facet vocabulary the corpus actually carries.
+     *
+     * Fetched once and kept: it is the same for every member and changes only
+     * when the corpus is re-annotated. An empty result is the signal to offer
+     * nothing rather than to guess — a value the corpus does not carry does
+     * not soften a search, it empties it.
+     */
+    async fetchVocabularies() {
+      if (this.vocabularies) return this.vocabularies
+      try {
+        this.vocabularies = await foodchatApi.getVocabularies()
+      } catch {
+        this.vocabularies = {}
+      }
+      return this.vocabularies
+    },
+
+    // ----------------------------------------------------------------
+    // Tools
+    // ----------------------------------------------------------------
+
+    /** The tool manifest. Generated from FoodChat's registry, so it can't drift. */
+    async fetchTools() {
+      if (this.tools.length) return this.tools
+      try {
+        this.tools = await foodchatApi.listTools()
+      } catch {
+        this.tools = []
+      }
+      return this.tools
+    },
+
+    /**
+     * Run one tool.
+     *
+     * A tool that mutates the plan is followed by the same refresh a turn gets,
+     * because it has changed the canvas the member is looking at. A reader is
+     * left alone — re-fetching the world to answer "what are the totals" would
+     * make a read look like an edit.
+     */
+    async invokeTool<T = Record<string, unknown>>(
+      toolName: string,
+      memberId: string,
+      args: Record<string, unknown>,
+      opts: { mutates?: boolean, sessionId?: string } = {}
+    ): Promise<T> {
+      this.runningTool = toolName
+      this.error = null
+      try {
+        const result = await foodchatApi.invokeTool<T>(toolName, memberId, args)
+        const sessionId = opts.sessionId ?? (args.session_id as string | undefined)
+        if (opts.mutates && sessionId) {
+          await Promise.all([
+            this.fetchMealPlans(sessionId, memberId),
+            this.fetchWeeklyMealPlans(sessionId, memberId)
+          ])
+        }
+        return result
+      } catch (err: any) {
+        // A ToolError is a 400 carrying member-facing prose — "this plan
+        // covers Monday to Wednesday" — so it is worth showing verbatim
+        // rather than replacing with a generic failure.
+        this.error = err?.data?.detail || err.message || `Could not run ${toolName}`
+        throw err
+      } finally {
+        this.runningTool = null
+      }
+    },
+
+    // ----------------------------------------------------------------
     // Cleanup
     // ----------------------------------------------------------------
     reset() {
@@ -468,6 +677,9 @@ export const useFoodChatStore = defineStore('foodchat', {
         weeklyMealPlans: [],
         lastResponse: null,
         dinersBySession: {},
+        planningState: null,
+        planningStateLoading: false,
+        runningTool: null,
         sessionsLoading: false,
         messagesLoading: false,
         loadingMoreMessages: false,
