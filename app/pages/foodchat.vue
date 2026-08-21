@@ -76,11 +76,10 @@
                     :items="sessionItems"
                     value-key="value"
                     label-key="label"
-                    :search-input="false"
                     size="sm"
                     :placeholder="t('foodChatHome.chat.previousSessions')"
                     :content="{ align: 'start', side: 'bottom', sideOffset: 4 }"
-                    :ui="{ base: 'fc-session-select text-xs text-gray-500 dark:text-zinc-400 cursor-pointer' }"
+                    :ui="sessionPickerUi"
                     class="w-52"
                     @update:model-value="handleSessionSwitch"
                   />
@@ -154,11 +153,10 @@
               :items="sessionItems"
               value-key="value"
               label-key="label"
-              :search-input="false"
               size="sm"
-              :ui="{ base: 'fc-session-select flex-1 min-w-0 truncate text-xs text-gray-600 dark:text-zinc-400 cursor-pointer', trailingIcon: 'w-3.5 h-3.5' }"
+              :ui="sessionBarUi"
               :content="{ align: 'start', side: 'bottom', sideOffset: 4 }"
-              class="flex-1 min-w-0 fc-session-select"
+              class="flex-1 min-w-0"
               @update:model-value="handleSessionSwitch"
             />
             <button
@@ -1687,6 +1685,29 @@ const sessionItems = computed(() =>
   }))
 )
 
+// Session-picker trigger styling.
+//
+// These MUST ride on `:ui.base`, which Nuxt UI applies to the trigger element
+// itself. The previous attempt put them in a `.fc-session-select button` CSS
+// rule — a DESCENDANT selector — while the class was on the trigger, so the
+// whole hit area (min-height, padding, border) matched nothing and silently
+// never applied. Only the `cursor: pointer` on the element itself landed,
+// which is exactly what "looks like text, not a control" means.
+const SESSION_TRIGGER = [
+  'cursor-pointer min-h-8 px-2.5 rounded-lg border transition-colors',
+  'border-gray-200/90 bg-gray-50 hover:bg-white hover:border-brandp-300',
+  'dark:border-zinc-700/90 dark:bg-zinc-800/60 dark:hover:bg-zinc-800',
+  'dark:hover:border-brandp-700',
+].join(' ')
+
+const sessionPickerUi = {
+  base: `${SESSION_TRIGGER} text-xs text-gray-500 dark:text-zinc-400`,
+}
+const sessionBarUi = {
+  base: `${SESSION_TRIGGER} flex-1 min-w-0 truncate text-xs text-gray-600 dark:text-zinc-400`,
+  trailingIcon: 'w-3.5 h-3.5',
+}
+
 function formatSessionLabel(s: typeof sessions.value[0]): string {
   // A member-given name beats a timestamp; the timestamp is the fallback
   // identity for sessions nobody bothered to name.
@@ -2987,33 +3008,10 @@ onMounted(async () => {
   padding: 0.1rem 0.45rem 0.1rem 0.15rem;
 }
 
-/* ── Session select: comfortable, obviously-clickable trigger ── */
-.fc-session-select,
-.fc-session-select button {
-  cursor: pointer !important;
-}
-/* Give the trigger a real hit area + a visible control affordance so it
-   doesn't read as plain text (was size=xs, too small to tap). */
-.fc-session-select button {
-  min-height: 2rem;
-  padding-inline: 0.6rem;
-  border: 1px solid rgb(228 228 231 / 0.9);
-  border-radius: 0.5rem;
-  background: rgb(250 250 250);
-  transition: border-color 0.15s, background 0.15s;
-}
-.fc-session-select button:hover {
-  border-color: var(--color-brandp-300);
-  background: white;
-}
-.dark .fc-session-select button {
-  border-color: rgb(63 63 70 / 0.9);
-  background: rgb(39 39 42 / 0.6);
-}
-.dark .fc-session-select button:hover {
-  border-color: var(--color-brandp-700);
-  background: rgb(39 39 42);
-}
+/* The session-picker trigger is styled via `:ui.base` in the script (see
+   SESSION_TRIGGER). It cannot be done here: the class Nuxt UI applies lands on
+   the trigger itself, so `.fc-session-select button` selected a descendant
+   that does not exist and the hit area never applied. */
 /* Nuxt UI renders the listbox in a portal — target items globally */
 [data-slot="content"] [data-slot="item"] {
   cursor: pointer !important;
