@@ -49,6 +49,20 @@
         {{ t('foodChatHome.planningState.subtitle') }}
       </p>
 
+      <!-- ── The shape being planned ──────────────────────────────────
+           Only when it is not the default: "1 day — breakfast; lunch; dinner"
+           is what everyone gets and is not news. A member who asked for three
+           days with a side at dinner should be able to see that standing. -->
+      <section v-if="state && !state.plan_shape_is_default && state.plan_shape_summary">
+        <h4 class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 mb-1.5 flex items-center gap-1">
+          <UIcon name="i-lucide-layout-grid" class="w-3 h-3" />
+          {{ t('foodChatHome.planningState.shapeLabel') }}
+        </h4>
+        <p class="text-[11px] text-gray-600 dark:text-zinc-300">
+          {{ state.plan_shape_summary }}
+        </p>
+      </section>
+
       <!-- ── In your kitchen ─────────────────────────────────────────── -->
       <section>
         <div class="flex items-baseline gap-2 mb-1.5">
@@ -120,7 +134,7 @@
       </section>
 
       <!-- ── Heard from you: the removable facet chips ───────────────── -->
-      <section v-if="facets.length">
+      <section v-if="facets.length || vocabularyOptions.length">
         <div class="flex items-baseline gap-2 mb-1.5">
           <h4 class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 flex items-center gap-1">
             <UIcon
@@ -157,6 +171,30 @@
               </button>
             </span>
           </UTooltip>
+
+          <span
+            v-if="!facets.length"
+            class="text-[11px] text-gray-400 dark:text-zinc-500 font-light"
+          >{{ t('foodChatHome.planningState.facetsEmpty') }}</span>
+        </div>
+
+        <!-- Add one. The options come from the LIVE corpus vocabulary, not a
+             hardcoded list: the search ANDs facet values and never relaxes an
+             unlisted one, so offering a taste the collection is not tagged
+             with would empty the next plan rather than narrow it. Nothing is
+             offered when the vocabulary is unreachable. -->
+        <div v-if="vocabularyOptions.length" class="mt-2">
+          <USelectMenu
+            v-model="facetDraft"
+            :items="vocabularyOptions"
+            value-key="value"
+            label-key="label"
+            size="xs"
+            :placeholder="t('foodChatHome.planningState.facetsAdd')"
+            :disabled="busy"
+            class="w-full"
+            @update:model-value="submitFacet"
+          />
         </div>
       </section>
 
@@ -268,7 +306,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { FacetChip, PlanningState } from '~/services/foodchatApi'
+import type { FacetChip, PlanningState, Vocabularies } from '~/services/foodchatApi'
 
 const props = withDefaults(defineProps<{
   state: PlanningState | null
@@ -278,13 +316,17 @@ const props = withDefaults(defineProps<{
   busy?: boolean
   /** Start expanded when the member has nothing yet and needs the invitation. */
   startOpen?: boolean
+  /** The facet vocabulary the corpus carries. Empty hides the picker. */
+  vocabularies?: Vocabularies | null
 }>(), {
   pendingChanges: 0,
   busy: false,
-  startOpen: false
+  startOpen: false,
+  vocabularies: null
 })
 
 const emit = defineEmits<{
+  'add-facet': [value: string]
   'add-pantry': [items: string[]]
   'remove-pantry': [item: string]
   'remove-facet': [value: string]
@@ -295,6 +337,39 @@ const { t } = useI18n()
 
 const open = ref(props.startOpen)
 const draft = ref('')
+const facetDraft = ref<string | undefined>(undefined)
+
+/**
+ * Everything the corpus is tagged with, minus what is already standing.
+ *
+ * Flattened across the four families for the same reason the chips are: the
+ * member is choosing a taste, not a taxonomy slot. The family rides in the
+ * label so two families sharing a word stay distinguishable.
+ */
+const vocabularyOptions = computed(() => {
+  const vocab = props.vocabularies
+  if (!vocab) return []
+  const standing = new Set(props.facets.map(chip => chip.value))
+  const families: Array<FacetChip['family']> = [
+    'cuisines', 'moods', 'flavor_profiles', 'food_groups'
+  ]
+  return families.flatMap(family =>
+    (vocab[family] || [])
+      .filter(value => !standing.has(value))
+      .map(value => ({
+        value,
+        label: `${humanise(value)} · ${familyLabel(family)}`
+      }))
+  )
+})
+
+function submitFacet(value: string | undefined) {
+  if (!value) return
+  emit('add-facet', value)
+  // Cleared immediately: the chip list above is the record of what was added,
+  // and leaving the choice in the box reads as "still pending".
+  facetDraft.value = undefined
+}
 
 const pantry = computed(() => props.state?.pantry ?? [])
 const dietTags = computed(() => props.state?.diet_tags ?? [])

@@ -142,6 +142,12 @@ export function useFoodChat() {
     if ((store.planningState?.pantry.length ?? 0) !== before) pendingStateChanges.value += 1
   }
 
+  async function addFacets(values: string[]) {
+    if (!store.activeSessionId || !memberId.value) return
+    await store.addFacets(store.activeSessionId, memberId.value, values)
+    pendingStateChanges.value += 1
+  }
+
   async function removeFacet(value: string) {
     if (!store.activeSessionId || !memberId.value) return
     await store.removeFacet(store.activeSessionId, memberId.value, value)
@@ -157,6 +163,11 @@ export function useFoodChat() {
   }
 
   // ---- Tools ----
+
+  /** The facet vocabulary the corpus carries. Fetched once, process-wide. */
+  async function loadVocabularies() {
+    return store.fetchVocabularies()
+  }
 
   async function loadTools() {
     await store.fetchTools()
@@ -247,9 +258,12 @@ export function useFoodChat() {
     loadPlanningState,
     addPantryItems,
     removePantryItem,
+    addFacets,
     removeFacet,
     replan,
 
+    vocabularies: computed(() => store.vocabularies),
+    loadVocabularies,
     tools: computed(() => store.tools),
     runningTool: computed(() => store.runningTool),
     loadTools,

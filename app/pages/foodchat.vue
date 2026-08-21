@@ -750,6 +750,8 @@
                     :pending-changes="pendingStateChanges"
                     :busy="sending"
                     :start-open="pendingStateChanges > 0"
+                    :vocabularies="vocabularies"
+                    @add-facet="handleAddFacet"
                     @add-pantry="handleAddPantry"
                     @remove-pantry="handleRemovePantry"
                     @remove-facet="handleRemoveFacet"
@@ -1248,12 +1250,18 @@
                               </div>
                             </div>
                             <!-- Why this meal — transparency chips -->
+                            <!-- Same chips as the daily cards, with the same
+                                 icons. Weekly rendered the label alone, so a
+                                 `guideline` chip — a rule from the member's own
+                                 national guidance — was indistinguishable from
+                                 a favourite or a memory. -->
                             <div v-if="weeklyEntryReasons(cell.entry).length" class="flex flex-wrap gap-1">
                               <span
                                 v-for="(reason, rIdx) in weeklyEntryReasons(cell.entry)"
                                 :key="rIdx"
-                                class="px-1.5 py-0.5 text-[9px] rounded-full border border-brandp-100 dark:border-brandp-900/50 bg-brandp-50/60 dark:bg-brandp-950/30 text-brandp-600 dark:text-brandp-300"
+                                class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] rounded-full border border-brandp-100 dark:border-brandp-900/50 bg-brandp-50/60 dark:bg-brandp-950/30 text-brandp-600 dark:text-brandp-300"
                               >
+                                <UIcon :name="reasonIcon(reason.kind)" class="w-2.5 h-2.5 shrink-0" />
                                 {{ reason.label }}
                               </span>
                             </div>
@@ -1298,7 +1306,16 @@
                           :class="check.met ? 'text-emerald-500' : 'text-amber-500'"
                           class="w-3.5 h-3.5 shrink-0"
                         />
-                        <span class="flex-1 text-[11px] font-light text-gray-500 dark:text-zinc-400">{{ check.rule }}</span>
+                        <span class="flex-1 text-[11px] font-light text-gray-500 dark:text-zinc-400">
+                          {{ check.rule }}
+                          <!-- Whose rule this is. Absent on the built-in
+                               fallbacks, which are not anyone's national
+                               guidance and need no byline. -->
+                          <span
+                            v-if="check.source"
+                            class="text-gray-400 dark:text-zinc-500"
+                          >· {{ check.source }}</span>
+                        </span>
                         <span class="shrink-0 text-[11px] font-medium text-gray-700 dark:text-zinc-200 tabular-nums">{{ check.actual }} · {{ check.target }}</span>
                       </div>
                       <div v-if="weeklyVariety?.reasoning" class="flex items-start gap-2 pt-1.5 border-t border-gray-100 dark:border-zinc-800">
@@ -1481,8 +1498,11 @@ const {
   loadPlanningState,
   addPantryItems,
   removePantryItem,
+  addFacets,
   removeFacet,
   replan,
+  vocabularies,
+  loadVocabularies,
   tools,
   runningTool,
   loadTools,
@@ -2036,12 +2056,27 @@ const weeklyLedger = computed(() => displayedWeeklyPlan.value?.constraints_appli
 // Both ledgers share these: the daily plan now carries the same relaxed /
 // violated states the weekly one does, since a goal demoted to a soft signal
 // during household reconciliation is exactly a relaxed row.
+/**
+ * Four states, and `unsupported` is the one that matters most.
+ *
+ * It means FoodChat could NOT enforce this constraint and is saying so —
+ * a dietary group with no filter behind it, or a facet the recipe details
+ * carry no annotation to check. It used to fall through to the branch below
+ * and render as a hard constraint WITH a shield-check, which is precisely the
+ * guarantee it exists to withhold. A member selecting `peanut_free` saw a
+ * green shield over an unenforced rule.
+ *
+ * Grey and informational: not an alarm (nothing was violated), not a promise.
+ */
 function ledgerRowClass(row: ConstraintApplied): string {
   if (row.status === 'violated') {
     return 'border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-300'
   }
   if (row.status === 'relaxed') {
     return 'border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-300'
+  }
+  if (row.status === 'unsupported') {
+    return 'border-gray-300 dark:border-zinc-600 bg-gray-50 dark:bg-zinc-800/60 text-gray-500 dark:text-zinc-400 border-dashed'
   }
   return row.type === 'hard'
     ? 'border-brandp-200 dark:border-brandp-800/70 bg-brandp-50 dark:bg-brandp-950/40 text-brandp-600 dark:text-brandp-300 ring-1 ring-brandp-200/60 dark:ring-brandp-800/40'
@@ -2051,6 +2086,9 @@ function ledgerRowClass(row: ConstraintApplied): string {
 function ledgerRowIcon(row: ConstraintApplied): string | null {
   if (row.status === 'violated') return 'i-lucide-alert-triangle'
   if (row.status === 'relaxed') return 'i-lucide-alert-circle'
+  // Never the shield here — the shield is the claim that a hard constraint was
+  // enforced, and `unsupported` is the admission that it was not.
+  if (row.status === 'unsupported') return 'i-lucide-info'
   return row.type === 'hard' ? 'i-lucide-shield-check' : null
 }
 
@@ -2079,6 +2117,23 @@ function weeklyDaySummary(dayIndex: number): string {
 
 function weeklyDayKcal(dayIndex: number): number | null {
   return weeklyDayInfo(dayIndex)?.kcal ?? null
+}
+
+// The seven declared reason kinds, matching MealScheduleCard's map so a chip
+// means the same thing on both canvases. `guideline` is the newest: it had an
+// icon and a renderer here long before anything emitted one.
+const WEEKLY_REASON_ICONS: Record<string, string> = {
+  pinned: 'i-lucide-pin',
+  favorite: 'i-lucide-heart',
+  memory: 'i-lucide-brain',
+  profile: 'i-lucide-user',
+  feedback: 'i-lucide-thumbs-up',
+  diner: 'i-lucide-users',
+  guideline: 'i-lucide-book-open'
+}
+
+function reasonIcon(kind: string): string {
+  return WEEKLY_REASON_ICONS[kind] ?? 'i-lucide-sparkles'
 }
 
 function weeklyEntryReasons(entry: WeeklyMealEntry | undefined): Array<{ kind: string, label: string }> {
@@ -2229,6 +2284,11 @@ function constraintMembers(constraint: ConstraintApplied): string {
 }
 
 function constraintTooltip(constraint: ConstraintApplied): string {
+  // An unsupported row's own `detail` names what could not be enforced and
+  // why; the generic hard/soft wording would overwrite that with a claim.
+  if (constraint.status === 'unsupported') {
+    return t('foodChatHome.constraints.unsupportedTooltip')
+  }
   return constraint.type === 'hard'
     ? t('foodChatHome.constraints.hardTooltip', { source: constraint.source })
     : t('foodChatHome.constraints.softTooltip', { source: constraint.source })
@@ -2559,6 +2619,12 @@ async function handleRemovePantry(item: string) {
   } catch { /* the store surfaces the error */ }
 }
 
+async function handleAddFacet(value: string) {
+  try {
+    await addFacets([value])
+  } catch { /* the store surfaces the error */ }
+}
+
 async function handleRemoveFacet(value: string) {
   try {
     await removeFacet(value)
@@ -2747,6 +2813,9 @@ onMounted(async () => {
   // an unreadable planning state hides the panel. Neither should hold the page.
   loadTools()
   loadPlanningState()
+  // The corpus vocabulary, so the panel can offer tastes that exist. Fetched
+  // once and kept — it is the same for every member.
+  loadVocabularies()
 })
 
 // The standing state belongs to the session, so it is re-read whenever the

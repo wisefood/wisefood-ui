@@ -330,6 +330,15 @@ export interface WeeklyGuidelineCheck {
   target: string
   actual: number
   met: boolean
+  /**
+   * Which published guide the rule came from.
+   *
+   * Empty on the built-in fallback rules, which need no attribution because
+   * they are not anyone's national guidance. Present once FoodChat is reading
+   * the catalog — and at that point the member is being shown a real rule from
+   * a real body, which should say whose it is.
+   */
+  source?: string
 }
 
 /** Per-day justification row from the weekly explainability metrics */
@@ -418,6 +427,8 @@ export interface PlanningState {
   use_favorites: boolean | null
   plan_shape: Record<string, unknown>
   plan_shape_is_default: boolean
+  /** The same shape as a sentence — "3 days — breakfast; lunch; dinner: main + side". */
+  plan_shape_summary: string
   /** The request a re-plan would run, so the UI can show it rather than describe a button. */
   query: string
 }
@@ -752,6 +763,21 @@ class FoodChatApiService {
   }
 
   /**
+   * Ask for a taste FoodChat did not infer.
+   *
+   * Values must come from `getVocabularies()`. The endpoint rejects anything
+   * the corpus is not tagged with rather than accepting it: an unlisted value
+   * does not narrow the next search, it empties it.
+   */
+  async addFacets(sessionId: string, memberId: string, values: string[]): Promise<PlanningState> {
+    return this.fetchWithTimeout<PlanningState>(
+      `${this.basePath}/sessions/${sessionId}/facets`,
+      'POST',
+      { member_id: memberId, values }
+    )
+  }
+
+  /**
    * Take back one facet FoodChat inferred from something the member said.
    *
    * By value, not by family: the member removing "light" does not know whether
@@ -818,13 +844,19 @@ class FoodChatApiService {
     memberId: string,
     args: Record<string, unknown>
   ): Promise<T> {
-    const payload = await this.fetchWithTimeout<{ tool: string, result: T }>(
+    // Two `result` keys meet on this one call: the gateway envelopes every
+    // response as `{help, result}`, and FoodChat's own tool payload is
+    // `{tool, result}`. `fetchWithTimeout` strips exactly one, which leaves
+    // the tool payload — but only while the envelope is exactly one deep.
+    // Accept either shape rather than render nothing if that ever changes.
+    const payload = await this.fetchWithTimeout<{ tool?: string, result?: T } | T>(
       `${this.basePath}/tools/${toolName}`,
       'POST',
       { member_id: memberId, arguments: args },
       MESSAGE_TIMEOUT
     )
-    return payload?.result as T
+    const envelope = payload as { tool?: string, result?: T } | undefined
+    return (envelope && 'tool' in envelope ? envelope.result : payload) as T
   }
 
   // ============================================================================

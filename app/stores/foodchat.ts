@@ -564,6 +564,12 @@ export const useFoodChatStore = defineStore('foodchat', {
       return this.planningState
     },
 
+    /** Ask for a taste FoodChat did not infer. Does NOT re-plan. */
+    async addFacets(sessionId: string, memberId: string, values: string[]) {
+      this.planningState = await foodchatApi.addFacets(sessionId, memberId, values)
+      return this.planningState
+    },
+
     /** Take back one inferred facet. Does NOT re-plan — see `replan`. */
     async removeFacet(sessionId: string, memberId: string, value: string) {
       this.planningState = await foodchatApi.removeFacet(sessionId, memberId, value)

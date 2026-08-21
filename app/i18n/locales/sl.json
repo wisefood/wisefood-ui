@@ -1537,7 +1537,8 @@
     "constraints": {
       "label": "Omejitve",
       "hardTooltip": "Stroga omejitev · Vir: {source}",
-      "softTooltip": "Mehka omejitev · Vir: {source}"
+      "softTooltip": "Mehka omejitev · Vir: {source}",
+      "unsupportedTooltip": "Tega nismo mogli uveljaviti — prikazano je, da veš, da ni bilo upoštevano."
     },
     "personalization": {
       "prefix": "Prilagojeno na podlagi:",
@@ -1701,7 +1702,10 @@
       "replanHint": "Spremembe so shranjene. Posodobi načrt, ko boš pripravljen.",
       "replanning": "Posodabljam načrt…",
       "pendingChanges": "{count} neuporabljenih sprememb",
-      "favoritesDeclined": "Priljubljenih ne uporabljam, kot si želel."
+      "favoritesDeclined": "Priljubljenih ne uporabljam, kot si želel.",
+      "shapeLabel": "Oblika načrta",
+      "facetsAdd": "Dodaj okus…",
+      "facetsEmpty": "Zaenkrat nič slišanega."
     },
     "tools": {
       "label": "Dejanja",

@@ -1537,7 +1537,8 @@
     "constraints": {
       "label": "Feltételek",
       "hardTooltip": "Kötelező feltétel · Forrás: {source}",
-      "softTooltip": "Rugalmas feltétel · Forrás: {source}"
+      "softTooltip": "Rugalmas feltétel · Forrás: {source}",
+      "unsupportedTooltip": "Ezt nem tudtuk érvényesíteni — azért látod, hogy tudd: nem lett alkalmazva."
     },
     "personalization": {
       "prefix": "Személyre szabva:",
@@ -1701,7 +1702,10 @@
       "replanHint": "A módosítások elmentve. Frissítsd a tervet, amikor készen állsz.",
       "replanning": "Terv frissítése…",
       "pendingChanges": "{count} nem alkalmazott módosítás",
-      "favoritesDeclined": "Kérésedre nem használom a kedvenceidet."
+      "favoritesDeclined": "Kérésedre nem használom a kedvenceidet.",
+      "shapeLabel": "Terv felépítése",
+      "facetsAdd": "Ízlés hozzáadása…",
+      "facetsEmpty": "Még nem hallottam semmit."
     },
     "tools": {
       "label": "Műveletek",

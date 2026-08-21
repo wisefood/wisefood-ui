@@ -1559,7 +1559,8 @@
     "constraints": {
       "label": "Constraints",
       "hardTooltip": "Hard constraint · Source: {source}",
-      "softTooltip": "Soft constraint · Source: {source}"
+      "softTooltip": "Soft constraint · Source: {source}",
+      "unsupportedTooltip": "We couldn't enforce this one — it's shown so you know it wasn't applied, not because it was."
     },
     "personalization": {
       "prefix": "Personalized with",
@@ -1723,7 +1724,10 @@
       "replanHint": "Changes are saved. Update the plan when you're ready.",
       "replanning": "Updating the plan…",
       "pendingChanges": "{count} unapplied change(s)",
-      "favoritesDeclined": "Not using your favourites, as you asked."
+      "favoritesDeclined": "Not using your favourites, as you asked.",
+      "shapeLabel": "Plan shape",
+      "facetsAdd": "Add a taste…",
+      "facetsEmpty": "Nothing heard yet."
     },
     "tools": {
       "label": "Actions",
