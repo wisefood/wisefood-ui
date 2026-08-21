@@ -161,7 +161,13 @@ const actionDescriptionKeys: Record<CookingAction, string> = {
   simmering: 'foodChatHome.cookingAnimation.descriptions.simmering'
 }
 
-const actionDescription = computed(() => t(actionDescriptionKeys[currentAction.value]))
+const actionDescription = computed(() => {
+  // `cookingActions[i]` is typed as possibly undefined even though the index
+  // wraps and is always in range, so the fallback is for the compiler — and
+  // costs nothing if the array is ever emptied.
+  const action = currentAction.value ?? 'stirring'
+  return t(actionDescriptionKeys[action])
+})
 
 const flyingIngredients = [
   { type: 'carrot', x: -45, y: -5 },

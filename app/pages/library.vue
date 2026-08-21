@@ -273,6 +273,7 @@
               v-for="guide in lit.guides.value"
               :key="guide.urn"
               :guide="guide"
+              :to="buildGuideDetailPath(guide.region, guide.urn)"
             />
           </div>
         </section>
@@ -313,6 +314,7 @@ import foodchatApi, { type SavedPlan } from '~/services/foodchatApi'
 import { useRecipeStore } from '~/stores/recipe'
 import { useHouseholdStore } from '~/stores/household'
 import { useSavedLibrary } from '~/composables/useSavedLibrary'
+import { buildGuideDetailPath } from '~/utils/guidesCatalog'
 import ArticleCard from '~/components/foodscholar/ArticleCard.vue'
 import GuideCard from '~/components/foodscholar/guides/GuideCard.vue'
 import TextbookCard from '~/components/foodscholar/TextbookCard.vue'

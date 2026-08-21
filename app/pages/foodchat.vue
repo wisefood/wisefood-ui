@@ -72,7 +72,7 @@
                 <div v-if="sessions.length > 0" class="flex items-center gap-1.5 min-w-0">
                   <UIcon name="i-lucide-history" class="w-3 h-3 text-gray-400 dark:text-zinc-500 shrink-0" />
                   <USelectMenu
-                    :model-value="null"
+                    :model-value="undefined"
                     :items="sessionItems"
                     value-key="value"
                     label-key="label"
@@ -149,7 +149,7 @@
           <div class="fc-session-bar flex items-center gap-2 px-3 py-2 shrink-0">
             <UIcon name="i-lucide-messages-square" class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0" />
             <USelectMenu
-              :model-value="activeSession?.session_id ?? null"
+              :model-value="activeSession?.session_id"
               :items="sessionItems"
               value-key="value"
               label-key="label"
@@ -1952,8 +1952,8 @@ const weeklyDays = computed(() => {
   if (!displayedWeeklyPlan.value) return []
   const grouped: Record<number, WeeklyMealEntry[]> = {}
   for (const entry of displayedWeeklyPlan.value.entries) {
-    if (!grouped[entry.day]) grouped[entry.day] = []
-    grouped[entry.day].push(entry)
+    const day = (grouped[entry.day] ??= [])
+    day.push(entry)
   }
   return Object.entries(grouped)
     .sort(([a], [b]) => Number(a) - Number(b))
@@ -2134,7 +2134,7 @@ function getWeeklySegments(id: string | null) {
   const total = Object.values(values).reduce((s, v) => s + v, 0) || 1
   let offset = 0
   return WEEKLY_SEGMENT_DEFS.map(def => {
-    const dash = (values[def.key] / total) * weeklyCircumference
+    const dash = ((values[def.key] ?? 0) / total) * weeklyCircumference
     const seg = { ...def, dash, offset }
     offset += dash
     return seg
@@ -2367,7 +2367,7 @@ function focusChatInputWith(text: string) {
   })
 }
 
-function prefillSlotReplace(slot: 'breakfast' | 'lunch' | 'dinner') {
+function prefillSlotReplace(slot: string) {
   // Prefill the verified-edit phrasing; the user tweaks the directive and
   // sends — the edit flow swaps exactly this slot with before/after proof
   focusChatInputWith(t('foodChatHome.mealCard.replacePrefill', {
@@ -2428,8 +2428,6 @@ async function handleQuickAsk(question: string) {
 }
 
 async function handleStartOver() {
-  applyError.value = null
-  applySuccess.value = null
   hasSentFirstMessage.value = false
   await newSession(cookingForForNewSession())
 }
@@ -2497,7 +2495,10 @@ function getMemberAvatar(member: HouseholdMember): AvatarConfig | null {
 }
 
 function getMemberAvatarForDisplay(member: HouseholdMember): AvatarConfig {
-  return getMemberAvatar(member) || stringToAvatarConfig(member.id)
+  // `stringToAvatarConfig` is declared as possibly-undefined but is total over
+  // a non-empty string — it hashes into a fixed preset table. The member id is
+  // never empty, so this branch always yields a config.
+  return getMemberAvatar(member) ?? (stringToAvatarConfig(member.id) as AvatarConfig)
 }
 
 /** Grid width for however many meals the plan turned out to have.

@@ -47,7 +47,7 @@ onMounted(() => {
         <p class="text-base text-gray-600 dark:text-gray-300 mb-4">
           {{ encouragement }}
         </p>
-        <UBadge color="green" variant="subtle" size="lg" class="inline-flex items-center gap-2">
+        <UBadge color="success" variant="subtle" size="lg" class="inline-flex items-center gap-2">
           <UIcon name="i-lucide-check-circle" class="w-4 h-4" />
           {{ callout }}
         </UBadge>

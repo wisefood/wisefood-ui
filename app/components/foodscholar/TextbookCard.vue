@@ -98,7 +98,7 @@ const props = withDefaults(defineProps<Props>(), { index: 0, fade: true })
 
 const formatAuthors = (authors: string[]): string => {
   if (!authors.length) return 'Unknown author'
-  if (authors.length === 1) return authors[0]
+  if (authors.length === 1) return authors[0] ?? 'Unknown author'
   if (authors.length === 2) return `${authors[0]} and ${authors[1]}`
   return `${authors[0]} et al.`
 }

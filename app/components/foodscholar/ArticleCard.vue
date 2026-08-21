@@ -85,17 +85,23 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
+// Every non-identity field is optional AND nullable, because that is what the
+// catalog projection actually produces. It was declared as required-and-
+// non-null, which made the saved-library composable — a real caller, building
+// from a lighter projection — a type error on whichever field it happened to
+// be missing first. Requiring a summary line does not make one exist; it just
+// moves the absence into the type checker.
 interface Article {
   id: string | number
   urn: string
   title: string
-  category: string
+  category?: string | null
   ai_category?: string | null
-  excerpt: string
-  authors?: string[]
-  tags?: string[]
-  ai_tags?: string[]
-  topics?: string[]
+  excerpt?: string | null
+  authors?: string[] | null
+  tags?: string[] | null
+  ai_tags?: string[] | null
+  topics?: string[] | null
   venue?: string | null
   publication_year?: string | null
 }
@@ -114,7 +120,7 @@ const props = withDefaults(defineProps<Props>(), { index: 0, fade: true, selecte
 // Format authors for display
 const formatAuthors = (authors: string[]): string => {
   if (!authors || authors.length === 0) return t('foodScholarCatalog.card.unknownAuthor')
-  if (authors.length === 1) return authors[0]
+  if (authors.length === 1) return authors[0] ?? t('foodScholarCatalog.card.unknownAuthor')
   if (authors.length === 2) return `${authors[0]} ${t('foodScholarCatalog.card.and')} ${authors[1]}`
   return `${authors[0]} et al.`
 }

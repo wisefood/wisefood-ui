@@ -40,7 +40,7 @@ const formattedDate = computed(() => {
       </div>
 
       <div class="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
-        <UBadge color="blue" variant="subtle" size="sm">
+        <UBadge color="info" variant="subtle" size="sm">
           {{ source }}
         </UBadge>
         <span class="text-xs text-gray-500 dark:text-gray-400">

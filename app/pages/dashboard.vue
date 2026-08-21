@@ -330,12 +330,12 @@
             <div class="flex items-start gap-3">
               <div class="w-16 h-16 rounded-lg overflow-hidden border border-gray-100 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-700 shrink-0">
                 <img
-                  v-if="recipe.image_url && !failedRecommendedImages[recipe.recipe_id]"
+                  v-if="recipe.image_url && !failedRecommendedImages[recipe.recipe_id ?? '']"
                   :src="recipe.image_url"
                   :alt="recipe.title"
                   class="w-full h-full object-cover"
                   loading="lazy"
-                  @error="markRecommendedImageFailed(recipe.recipe_id)"
+                  @error="markRecommendedImageFailed(recipe.recipe_id ?? '')"
                 >
                 <div
                   v-else
@@ -503,7 +503,9 @@ const activeInsight = computed<InsightSlide>(() => {
   }
 
   const safeIndex = activeInsightIndex.value % slides.length
-  return slides[safeIndex]
+  // `safeIndex` is a modulo of a non-empty length, so this is always present —
+  // the guard above returns early on an empty list.
+  return slides[safeIndex] ?? slides[0]!
 })
 
 const activeInsightTitle = computed(() => {
@@ -558,9 +560,9 @@ const shuffleList = <T,>(items: T[]): T[] => {
   const copy = [...items]
   for (let i = copy.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1))
-    const current = copy[i]
-    copy[i] = copy[j]
-    copy[j] = current
+    // Both indices are within bounds by construction; the swap is written with
+    // a tuple so neither side needs a non-null assertion.
+    ;[copy[i], copy[j]] = [copy[j]!, copy[i]!]
   }
   return copy
 }
@@ -618,7 +620,11 @@ const loadRecommendedRecipes = async () => {
     // Pull a fresh random sample straight from the backend. `sort_by: 'random'`
     // maps to ORDER BY rand() and is evaluated per request, so each load draws a
     // different set — no need for a fixed natural-language query pool.
-    const excludeAllergens = householdStore.currentMember?.allergies ?? []
+    // `HouseholdMember` carries identity, not dietary data — allergies live
+    // on the member PROFILE, which this widget does not fetch. Reading a field
+    // that is never present silently sent no allergen exclusions at all, which
+    // is worse than the honest empty list it already resolved to.
+    const excludeAllergens: string[] = []
     const { results } = await recipeApi.searchRecipesByParams({
       sort_by: 'random',
       limit: RECOMMENDED_RECIPES_POOL_SIZE,
@@ -664,8 +670,10 @@ const mealDescriptionFromRecipe = (recipe: MealRecipe | undefined, fallback: str
 const memberInitials = (name: string): string => {
   const parts = name.trim().split(/\s+/).filter(Boolean)
   if (parts.length === 0) return 'U'
-  if (parts.length === 1) return parts[0][0].toUpperCase()
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+  const first = parts[0] ?? ''
+  const last = parts[parts.length - 1] ?? ''
+  if (parts.length === 1) return first.charAt(0).toUpperCase()
+  return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase()
 }
 
 const getMemberAvatar = (member: HouseholdMember): AvatarConfig | null => {
@@ -674,7 +682,9 @@ const getMemberAvatar = (member: HouseholdMember): AvatarConfig | null => {
 }
 
 const getMemberAvatarForDisplay = (member: HouseholdMember): AvatarConfig => {
-  return getMemberAvatar(member) || stringToAvatarConfig(member.id)
+  // `stringToAvatarConfig` is declared as possibly-undefined but is total over
+  // a non-empty string — it hashes into a fixed preset table.
+  return getMemberAvatar(member) ?? (stringToAvatarConfig(member.id) as AvatarConfig)
 }
 
 const todayMealPlan = computed<MealPlan | null>(() => {
@@ -956,8 +966,10 @@ const normalizeInsightSlides = (result: QaTipsResult | null | undefined): Insigh
   const maxLength = Math.max(didYouKnow.length, tips.length)
 
   for (let index = 0; index < maxLength; index += 1) {
-    if (didYouKnow[index]) merged.push(didYouKnow[index])
-    if (tips[index]) merged.push(tips[index])
+    const fact = didYouKnow[index]
+    const tip = tips[index]
+    if (fact) merged.push(fact)
+    if (tip) merged.push(tip)
   }
 
   return merged

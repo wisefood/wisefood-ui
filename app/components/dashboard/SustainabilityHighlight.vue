@@ -40,7 +40,7 @@ const props = defineProps<{
       </div>
 
       <UButton
-        color="emerald"
+        color="success"
         variant="soft"
         block
         trailing-icon="i-lucide-arrow-right"
