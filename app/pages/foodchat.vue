@@ -937,39 +937,7 @@
                   </div>
 
                   <!-- Plan quality panel -->
-                  <div v-if="qualityMetrics.length" class="mb-4 rounded-xl border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-800/40 overflow-hidden">
-                    <button
-                      class="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-colors"
-                      @click="qualityOpen = !qualityOpen"
-                    >
-                      <span class="inline-flex items-center gap-1.5">
-                        <UIcon name="i-lucide-gauge" class="w-3.5 h-3.5 text-brandp-400" />
-                        {{ t('foodChatHome.quality.title') }}
-                      </span>
-                      <UIcon :name="qualityOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3.5 h-3.5" />
-                    </button>
-                    <div v-show="qualityOpen" class="px-3 pb-3 pt-1 space-y-2">
-                      <div v-for="metric in qualityMetrics" :key="metric.key" class="flex items-center gap-2">
-                        <span class="w-24 shrink-0 text-[11px] font-light text-gray-500 dark:text-zinc-400">{{ metric.label }}</span>
-                        <template v-if="metric.max != null">
-                          <div class="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-zinc-700 overflow-hidden">
-                            <div
-                              class="h-full rounded-full bg-brandp-400 dark:bg-brandp-500 transition-all"
-                              :style="{ width: `${Math.min(Math.max(metric.value / metric.max, 0), 1) * 100}%` }"
-                            />
-                          </div>
-                          <span class="w-9 shrink-0 text-right text-[11px] font-medium text-gray-700 dark:text-zinc-200">{{ metric.value }}/{{ metric.max }}</span>
-                        </template>
-                        <span v-else class="flex-1 text-right text-[11px] font-medium text-gray-700 dark:text-zinc-200">
-                          {{ t('foodChatHome.quality.varietyValue', { count: metric.value }) }}
-                        </span>
-                        <UTooltip v-if="metric.reasoning" :text="metric.reasoning">
-                          <UIcon name="i-lucide-info" class="w-3 h-3 text-gray-300 dark:text-zinc-600 cursor-help shrink-0" />
-                        </UTooltip>
-                        <span v-else class="w-3 shrink-0" />
-                      </div>
-                    </div>
-                  </div>
+                  <FoodchatPlanQualityPanel :metrics="qualityMetrics" />
 
                   <!-- Plan vote -->
                   <div class="mb-5 px-1">
@@ -1020,6 +988,13 @@
 
                 <!-- ── Weekly plan content ── -->
                 <template v-else-if="canvasMode === 'weekly' && displayedWeeklyPlan">
+                  <!-- The same quality panel the daily canvas has. Weekly is the
+                       deepest plan the product makes and said the least about
+                       it: the graders were instance attributes on the daily
+                       service, so no variety, diversity or adherence score ever
+                       reached a week. -->
+                  <FoodchatPlanQualityPanel :metrics="weeklyQualityMetrics" />
+
                   <!-- Measured constraint ledger (weekly rows can be relaxed/violated) -->
                   <div v-if="weeklyLedger.length" class="mb-3 px-1 flex items-center gap-1.5 flex-wrap">
                     <span class="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 shrink-0">
@@ -2321,8 +2296,7 @@ const weeklyPersonalizationParts = computed(() => {
   return parts
 })
 
-const qualityOpen = ref(false)
-
+// The panel owns its own open/closed state now that it is a component.
 interface QualityMetric {
   key: string
   label: string
@@ -2331,23 +2305,60 @@ interface QualityMetric {
   reasoning?: string
 }
 
-const qualityMetrics = computed<QualityMetric[]>(() => {
-  const plan = displayedMealPlan.value
-  if (!plan) return []
+/**
+ * The three member-meaningful quality scores, from a plan of either shape.
+ *
+ * `llm_score` is deliberately absent: it is the grader's internal ranking of
+ * one candidate day against nine others, which means nothing to the person
+ * eating it. A score of 0 is also skipped — on the weekly and structured paths
+ * nothing ranked anything, and rendering a zero bar reads as "judged, badly"
+ * rather than "not judged".
+ */
+function buildQualityMetrics(source: {
+  fvs_count?: number
+  fvs_reasoning?: string
+  diversity_llm_score?: number
+  diversity_llm_reasoning?: string
+  guideline_adherence_score?: number
+  guideline_adherence_reasoning?: string
+} | null | undefined): QualityMetric[] {
+  if (!source) return []
   const metrics: QualityMetric[] = []
-  // llm_score ("LLM match") is an internal grader signal, not a
-  // member-meaningful quality — deliberately not displayed.
-  if (plan.fvs_count != null) {
-    metrics.push({ key: 'variety', label: t('foodChatHome.quality.variety'), value: plan.fvs_count, reasoning: plan.fvs_reasoning })
+  if (source.fvs_count != null && source.fvs_count > 0) {
+    metrics.push({
+      key: 'variety', label: t('foodChatHome.quality.variety'),
+      value: source.fvs_count, reasoning: source.fvs_reasoning
+    })
   }
-  if (plan.diversity_llm_score != null) {
-    metrics.push({ key: 'diversity', label: t('foodChatHome.quality.diversity'), value: plan.diversity_llm_score, max: 5, reasoning: plan.diversity_llm_reasoning })
+  if (source.diversity_llm_score != null && source.diversity_llm_score > 0) {
+    metrics.push({
+      key: 'diversity', label: t('foodChatHome.quality.diversity'),
+      value: source.diversity_llm_score, max: 5,
+      reasoning: source.diversity_llm_reasoning
+    })
   }
-  if (plan.guideline_adherence_score != null) {
-    metrics.push({ key: 'guidelines', label: t('foodChatHome.quality.guidelines'), value: plan.guideline_adherence_score, max: 5, reasoning: plan.guideline_adherence_reasoning })
+  if (source.guideline_adherence_score != null && source.guideline_adherence_score > 0) {
+    metrics.push({
+      key: 'guidelines', label: t('foodChatHome.quality.guidelines'),
+      value: source.guideline_adherence_score, max: 5,
+      reasoning: source.guideline_adherence_reasoning
+    })
   }
   return metrics
-})
+}
+
+const qualityMetrics = computed<QualityMetric[]>(
+  () => buildQualityMetrics(displayedMealPlan.value)
+)
+
+/**
+ * The week's scores, which live under `metrics.quality` rather than on the
+ * plan object — a weekly plan carries its metrics in one dict, and the daily
+ * one carries them as fields.
+ */
+const weeklyQualityMetrics = computed<QualityMetric[]>(
+  () => buildQualityMetrics(weeklyMetrics.value.quality)
+)
 
 function getWeeklyEntryKcal(entry: WeeklyMealEntry | undefined): number | null {
   if (!entry) return null

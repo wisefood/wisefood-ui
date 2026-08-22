@@ -386,6 +386,26 @@ export interface WeeklyPlanMetrics {
   }
   days?: WeeklyDayBreakdown[]
   selection_events?: unknown[]
+  /**
+   * The judged quality of the week.
+   *
+   * Absent on every plan stored before weekly had any: the two graders were
+   * instance attributes on the daily service, so a week — the deepest plan the
+   * product makes — carried no variety, diversity or adherence score at all.
+   *
+   * No `llm_score`: nothing ranked a week. The planner walks and picks; it does
+   * not score a batch of candidate weeks against each other.
+   */
+  quality?: {
+    fvs_count?: number
+    fvs_reasoning?: string
+    diversity_llm_score?: number
+    diversity_llm_reasoning?: string
+    guideline_adherence_score?: number
+    guideline_adherence_reasoning?: string
+  }
+  /** What a repair pass swapped, when one ran. */
+  repair?: string
 }
 
 export interface WeeklyMealPlan {
