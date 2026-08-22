@@ -1707,7 +1707,10 @@
       "favoritesDeclined": "Priljubljenih ne uporabljam, kot si želel.",
       "shapeLabel": "Oblika načrta",
       "facetsAdd": "Dodaj okus…",
-      "facetsEmpty": "Zaenkrat nič slišanega."
+      "facetsEmpty": "Zaenkrat nič slišanega.",
+      "timeLabel": "Čas priprave",
+      "timeValue": "Manj kot {minutes} minut na obrok",
+      "timeHint": "spremeni na kartici z nastavitvami"
     },
     "tools": {
       "label": "Dejanja",

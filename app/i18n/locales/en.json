@@ -1729,7 +1729,10 @@
       "favoritesDeclined": "Not using your favourites, as you asked.",
       "shapeLabel": "Plan shape",
       "facetsAdd": "Add a taste…",
-      "facetsEmpty": "Nothing heard yet."
+      "facetsEmpty": "Nothing heard yet.",
+      "timeLabel": "Cooking time",
+      "timeValue": "Under {minutes} minutes a meal",
+      "timeHint": "change it on the settings card"
     },
     "tools": {
       "label": "Actions",

@@ -1707,7 +1707,10 @@
       "favoritesDeclined": "Kérésedre nem használom a kedvenceidet.",
       "shapeLabel": "Terv felépítése",
       "facetsAdd": "Ízlés hozzáadása…",
-      "facetsEmpty": "Még nem hallottam semmit."
+      "facetsEmpty": "Még nem hallottam semmit.",
+      "timeLabel": "Elkészítési idő",
+      "timeValue": "Fogásonként {minutes} perc alatt",
+      "timeHint": "a beállítások kártyán módosítható"
     },
     "tools": {
       "label": "Műveletek",

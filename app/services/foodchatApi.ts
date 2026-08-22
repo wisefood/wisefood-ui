@@ -457,6 +457,9 @@ export interface PlanningState {
   claim_tags: string[]
   anchors: Record<string, string>
   excluded_recipe_ids: string[]
+  /** A cooking-time ceiling in force, in minutes — slider or sentence, one
+      constraint. Null when nobody set one. */
+  max_minutes: number | null
   /** null = never offered, false = offered and declined. The difference matters. */
   use_favorites: boolean | null
   plan_shape: Record<string, unknown>

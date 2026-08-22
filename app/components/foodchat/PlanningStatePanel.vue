@@ -63,6 +63,27 @@
         </p>
       </section>
 
+      <!-- ── How long a meal may take ─────────────────────────────────
+           In force whether it came from the slider or from a sentence, and
+           shown here because a ribbon that lists what is being planned around
+           and omits a hard time limit is a ribbon that is lying.
+
+           Read-only on purpose: the slider card is where this is changed, and
+           two controls for one number is how they end up disagreeing. The hint
+           says where to go. -->
+      <section v-if="state && state.max_minutes">
+        <h4 class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 mb-1.5 flex items-center gap-1">
+          <UIcon name="i-lucide-timer" class="w-3 h-3" />
+          {{ t('foodChatHome.planningState.timeLabel') }}
+        </h4>
+        <p class="text-[11px] text-gray-600 dark:text-zinc-300">
+          {{ t('foodChatHome.planningState.timeValue', { minutes: state.max_minutes }) }}
+          <span class="text-gray-400 dark:text-zinc-500 font-light">
+            — {{ t('foodChatHome.planningState.timeHint') }}
+          </span>
+        </p>
+      </section>
+
       <!-- ── In your kitchen ─────────────────────────────────────────── -->
       <section>
         <div class="flex items-baseline gap-2 mb-1.5">
@@ -378,6 +399,9 @@ const claimTags = computed(() => props.state?.claim_tags ?? [])
 /** Everything standing, as one number for the collapsed header. */
 const summaryCount = computed(() =>
   pantry.value.length + props.facets.length + dietTags.value.length + claimTags.value.length
+  // A time ceiling counts as one thing in force, so the collapsed badge does
+  // not read "0" on a session whose only standing constraint is the clock.
+  + (props.state?.max_minutes ? 1 : 0)
 )
 
 /**
