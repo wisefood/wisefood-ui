@@ -337,6 +337,14 @@ export interface WeeklyMealEntry {
   meal_type: string
   recipe: Record<string, unknown>
   reward: number
+  /**
+   * Which plate of the meal this is: main | side | dessert | drink.
+   *
+   * Two entries share a day, a slot and a `meal_idx` when a dinner is served
+   * as a main and a salad — this is the only thing that says which is which.
+   * "main" for every plan made before meals could have plates.
+   */
+  role?: string | null
 }
 
 /** One weekly guideline frequency rule, checked against the final plan */

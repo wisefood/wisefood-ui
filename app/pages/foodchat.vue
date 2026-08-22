@@ -1996,7 +1996,13 @@ const weeklyDays = computed(() => {
           // the slot, and highlighting only one plate of a meal would be a lie
           // about which one changed.
           slotKey: `${day}-${mealType}`,
-          label: plates > 1 ? `${slotLabel(mealType)} ${index + 1}` : slotLabel(mealType)
+          // "Dinner · Main" / "Dinner · Salad" rather than "Dinner 1" /
+          // "Dinner 2". The role is what FoodChat persists and what the
+          // nutrition weighting is keyed by, so it is what the member should
+          // read; an ordinal says only that there are two of something.
+          label: plates > 1
+            ? `${slotLabel(mealType)} · ${humaniseSlot(String(entry.role || 'main'))}`
+            : slotLabel(mealType)
         }
       })
 
