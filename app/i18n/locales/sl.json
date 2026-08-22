@@ -1715,6 +1715,8 @@
       "daySummary": "Povzemi ta dan",
       "replaceDay": "Zamenjaj ta dan",
       "planTotals": "Pokaži seštevke",
+      "savePlan": "Shrani ta načrt",
+      "shoppingList": "Kaj je treba kupiti",
       "running": "Delam…",
       "readOnly": "Samo bere načrt",
       "changesPlan": "Spremeni načrt",
@@ -1723,7 +1725,13 @@
       "totalsPartial": "{counted} od {total} obrokov ima podatke o hranilih",
       "dayReplaced": "{day}. dan zamenjan.",
       "summaryTitle": "Povzetek tedna",
-      "dailyAverage": "Povprečno {kcal} kcal na dan"
+      "dailyAverage": "Povprečno {kcal} kcal na dan",
+      "shoppingHeadline": "{items} izdelkov za {dishes} jedi",
+      "shoppingForMany": "za {count} obrokov",
+      "shoppingMore": "{count} jih ni prikazanih",
+      "saved": "Shranjeno med tvoje načrte",
+      "savedAs": "Shranjeno kot »{title}«",
+      "unsaved": "Odstranjeno iz tvojih načrtov"
     }
   },
   "a11y": {

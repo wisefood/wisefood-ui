@@ -1737,6 +1737,8 @@
       "daySummary": "Summarise this day",
       "replaceDay": "Replace this day",
       "planTotals": "Show the totals",
+      "savePlan": "Keep this plan",
+      "shoppingList": "What to buy",
       "running": "Working…",
       "readOnly": "Reads the plan",
       "changesPlan": "Changes the plan",
@@ -1745,7 +1747,13 @@
       "totalsPartial": "{counted} of {total} meals have nutrition data",
       "dayReplaced": "Day {day} replaced.",
       "summaryTitle": "Week summary",
-      "dailyAverage": "{kcal} kcal a day on average"
+      "dailyAverage": "{kcal} kcal a day on average",
+      "shoppingHeadline": "{items} things to buy across {dishes} dishes",
+      "shoppingForMany": "for {count} meals",
+      "shoppingMore": "{count} more not shown",
+      "saved": "Kept in your plans",
+      "savedAs": "Kept as “{title}”",
+      "unsaved": "Taken off your plans"
     }
   },
   "a11y": {

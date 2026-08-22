@@ -1715,6 +1715,8 @@
       "daySummary": "Nap összegzése",
       "replaceDay": "Nap kicserélése",
       "planTotals": "Összesítés megjelenítése",
+      "savePlan": "Terv megőrzése",
+      "shoppingList": "Mit kell bevásárolni",
       "running": "Dolgozom…",
       "readOnly": "Csak olvassa a tervet",
       "changesPlan": "Módosítja a tervet",
@@ -1723,7 +1725,13 @@
       "totalsPartial": "{total} étkezés közül {counted} rendelkezik tápértékadattal",
       "dayReplaced": "{day}. nap kicserélve.",
       "summaryTitle": "Heti összegzés",
-      "dailyAverage": "Átlagosan {kcal} kcal naponta"
+      "dailyAverage": "Átlagosan {kcal} kcal naponta",
+      "shoppingHeadline": "{items} tétel {dishes} fogáshoz",
+      "shoppingForMany": "{count} étkezéshez",
+      "shoppingMore": "további {count} nem látható",
+      "saved": "Elmentve a terveid közé",
+      "savedAs": "Elmentve „{title}” néven",
+      "unsaved": "Eltávolítva a terveid közül"
     }
   },
   "a11y": {

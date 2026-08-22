@@ -1078,6 +1078,7 @@
                         <FoodchatPlanToolsMenu
                           :tools="tools"
                           plan-type="weekly"
+                          scope="day"
                           :day="day.dayIndex"
                           :running="runningTool"
                           :busy="sending"
@@ -2786,11 +2787,50 @@ function renderToolResult(tool: FoodChatTool, result?: Record<string, any>): Too
     }
   }
 
+  // A shopping list. One row per item, saying which meals need it — never a
+  // quantity: the recipes store ingredients as free text, so the tool reports
+  // the absence explicitly and this must not paper over it.
+  if (Array.isArray(result.items) && typeof result.item_count === 'number') {
+    view.headline = t('foodChatHome.tools.shoppingHeadline', {
+      items: result.item_count,
+      dishes: result.dishes ?? 0
+    })
+    for (const row of result.items.slice(0, SHOPPING_ROWS)) {
+      if (!row?.item) continue
+      const uses = Array.isArray(row.for) ? row.for.length : 0
+      view.lines.push({
+        label: String(row.item),
+        value: uses > 1
+          ? t('foodChatHome.tools.shoppingForMany', { count: uses })
+          : String((row.for ?? [])[0] ?? '')
+      })
+    }
+    // Said rather than silently truncated: a list that stops at 25 and looks
+    // finished is a shopping trip that comes home short.
+    if (result.item_count > SHOPPING_ROWS) {
+      view.caveat = t('foodChatHome.tools.shoppingMore', {
+        count: result.item_count - SHOPPING_ROWS
+      })
+    }
+  }
+
+  // Saved, or taken back off the list.
+  if (typeof result.saved === 'boolean') {
+    view.headline = result.saved
+      ? (result.title
+          ? t('foodChatHome.tools.savedAs', { title: result.title })
+          : t('foodChatHome.tools.saved'))
+      : t('foodChatHome.tools.unsaved')
+  }
+
   if (tool.mutates && !view.lines.length) {
     view.headline = t('foodChatHome.tools.dayReplaced', { day: result.day ?? '' })
   }
   return view
 }
+
+/** How many shopping rows the panel shows before it says how many it did not. */
+const SHOPPING_ROWS = 25
 
 /**
  * Open a specific session and plan when the URL names them.

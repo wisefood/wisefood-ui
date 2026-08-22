@@ -2,10 +2,10 @@
   <!--
     FoodChat's tools, as buttons.
 
-    Five typed capabilities — summarise the week, summarise one day, total a
-    plan, replace one day, swap one meal — reachable only by hoping a sentence
-    classified into the right handler. Four of the five had no route through the
-    gateway at all, so no caller was even possible.
+    Typed capabilities — summarise the week or one day, total a plan, list what
+    to buy, keep the plan, replace one day, swap one meal — reachable only by
+    hoping a sentence classified into the right handler. Most of them had no
+    route through the gateway at all, so no caller was even possible.
 
     The manifest drives this menu rather than a hardcoded list: FoodChat
     generates it from its own registry, so a tool that exists is offered and a
@@ -42,11 +42,21 @@ const props = withDefaults(defineProps<{
   planType: 'daily' | 'weekly'
   /** The day this menu belongs to, on a weekly or multi-day plan. */
   day?: number | null
+  /**
+   * Where this menu sits.
+   *
+   * `'day'` is the copy that hangs off one day's row, and it offers only the
+   * tools that are ABOUT a day. Without this every day row repeated the whole
+   * plan-level list — "summarise the week" and "what to buy" once per day —
+   * which reads as seven ways to do the same thing.
+   */
+  scope?: 'plan' | 'day'
   /** Name of the tool currently running, so only its own button spins. */
   running?: string | null
   busy?: boolean
 }>(), {
   day: null,
+  scope: 'plan',
   running: null,
   busy: false
 })
@@ -58,7 +68,15 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 /** A tool is offered only when this canvas can supply its required arguments. */
-const available = computed(() => props.tools.filter(tool => argsFor(tool) !== null))
+const available = computed(() => props.tools.filter(
+  tool => argsFor(tool) !== null && inScope(tool)
+))
+
+/** Day menus offer day tools; the plan menu offers everything it can supply. */
+function inScope(tool: FoodChatTool): boolean {
+  if (props.scope !== 'day') return true
+  return 'day' in (tool.parameters?.properties ?? {})
+}
 
 const running = computed(() =>
   Boolean(props.running && available.value.some(tool => tool.name === props.running))
@@ -131,7 +149,9 @@ const TOOL_KEYS: Record<string, string> = {
   summarize_week: 'weekSummary',
   summarize_day: 'daySummary',
   replace_day: 'replaceDay',
-  plan_totals: 'planTotals'
+  plan_totals: 'planTotals',
+  save_plan: 'savePlan',
+  shopping_list: 'shoppingList'
 }
 
 const TOOL_ICONS: Record<string, string> = {
@@ -139,7 +159,9 @@ const TOOL_ICONS: Record<string, string> = {
   summarize_day: 'i-lucide-calendar-check',
   replace_day: 'i-lucide-refresh-cw',
   plan_totals: 'i-lucide-calculator',
-  swap_meal: 'i-lucide-repeat'
+  swap_meal: 'i-lucide-repeat',
+  save_plan: 'i-lucide-bookmark',
+  shopping_list: 'i-lucide-shopping-basket'
 }
 
 function icon(name: string): string {
