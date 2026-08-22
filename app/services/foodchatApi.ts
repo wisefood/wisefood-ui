@@ -455,7 +455,6 @@ export interface PlanningState {
   diet_tags: string[]
   /** Nutrition claims ("high protein") — a different filter from a diet. */
   claim_tags: string[]
-  notes: string[]
   anchors: Record<string, string>
   excluded_recipe_ids: string[]
   /** null = never offered, false = offered and declined. The difference matters. */
