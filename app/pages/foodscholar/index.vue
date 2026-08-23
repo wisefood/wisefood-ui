@@ -616,7 +616,10 @@
               class="citation-source-card flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600 dark:hover:text-brand-400 transition-colors group"
             >
               <UIcon :name="getQaSourceIcon(citation.article_urn, getCitationSourceType(citation))" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
-              <span class="text-xs text-gray-800 dark:text-gray-200 leading-snug line-clamp-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ citation.article_title }}</span>
+              <span class="min-w-0 flex-1">
+                <span class="block text-xs text-gray-800 dark:text-gray-200 leading-snug line-clamp-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ citation.article_title }}</span>
+                <span v-if="citationMetaLine(citation)" class="block text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{{ citationMetaLine(citation) }}</span>
+              </span>
               <span class="text-[0.6rem] font-bold text-brand-400 dark:text-brand-500 shrink-0 mt-0.5 ml-auto">[{{ idx + 1 }}]</span>
             </NuxtLink>
 
@@ -631,7 +634,10 @@
                 class="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-100 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/50 opacity-60 hover:opacity-100 hover:border-gray-300 dark:hover:border-zinc-700 transition-all group"
               >
                 <UIcon :name="getQaSourceIcon(article.urn, article.source_type)" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
-                <span class="text-xs text-gray-700 dark:text-gray-300 leading-snug line-clamp-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ article.title }}</span>
+                <span class="min-w-0 flex-1">
+                  <span class="block text-xs text-gray-700 dark:text-gray-300 leading-snug line-clamp-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ article.title }}</span>
+                  <span v-if="retrievedMetaLine(article)" class="block text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{{ retrievedMetaLine(article) }}</span>
+                </span>
               </NuxtLink>
             </template>
           </template>
@@ -1722,6 +1728,44 @@ const getCitationSourcePath = (citation: QaCitation) => {
     }
   }
   return getQaSourcePath(citation.article_urn, sourceType)
+}
+
+/**
+ * The prioritization signals behind a sidebar source, made visible: year,
+ * study design, and citation reach for articles; region for guidelines.
+ * These are the same fields the ranking multiplies — transparency, not gloss.
+ */
+const retrievedMetaLine = (article: QaRetrievedArticle | undefined | null): string => {
+  if (!article) return ''
+  if (normalizeQaSourceType(article.urn, article.source_type) === 'guideline') {
+    return ['Guideline', article.venue].filter(Boolean).join(' · ')
+  }
+  const parts: string[] = []
+  const year = String(article.publication_year || '').slice(0, 4)
+  if (year) parts.push(year)
+  if (article.study_type) parts.push(article.study_type)
+  if (typeof article.citation_count === 'number') {
+    parts.push(
+      article.citation_count === 1
+        ? '1 citation'
+        : `${article.citation_count} citations`
+    )
+  }
+  return parts.join(' · ')
+}
+
+const citationMetaLine = (citation: QaCitation): string => {
+  const retrieved = retrievedArticleMap.value[citation.article_urn]
+  if (retrieved) {
+    const line = retrievedMetaLine(retrieved)
+    if (line) return line
+  }
+  // Fallback to the citation's own fields (cached answers may lack the
+  // retrieved-source record).
+  if (normalizeQaSourceType(citation.article_urn, citation.source_type) === 'guideline') {
+    return ['Guideline', citation.region || citation.journal].filter(Boolean).join(' · ')
+  }
+  return [citation.year, citation.journal].filter(Boolean).join(' · ')
 }
 
 const getRetrievedSourcePath = (article: QaRetrievedArticle) => {
@@ -2923,11 +2967,26 @@ const mapArticleToHome = (article: Article): HomeArticle => {
   }
 }
 
+/**
+ * Repair model formatting quirks before markdown parsing. Some model families
+ * wrap citations in fullwidth CJK brackets (【label](url)】), which markdown
+ * cannot parse — the citation renders as raw text and loses its click/hover
+ * affordances. Em/en-dashes are banned by product style. The backend applies
+ * the same repair to settled answers; doing it here too covers the live token
+ * stream (re-rendered on every delta) and answers cached before the fix.
+ */
+const normalizeAnswerProse = (text: string): string =>
+  text
+    .replace(/【/g, '[')
+    .replace(/】/g, '')
+    .replace(/[ \t]*[—–][ \t]+/g, ', ')
+    .replace(/[—–]/g, '-')
+
 const renderMarkdown = (text: string): string => {
   if (!text) return ''
 
   const base = useRuntimeConfig().app.baseURL?.replace(/\/$/, '') || ''
-  const normalizedText = text
+  const normalizedText = normalizeAnswerProse(text)
     .replace(/\]\(\/articles\/(urn:article:[^)]+)\)/g, `](${base}/foodscholar/$1)`)
     .replace(/\]\(\/foodscholar\/(urn:article:[^)]+)\)/g, `](${base}/foodscholar/$1)`)
 

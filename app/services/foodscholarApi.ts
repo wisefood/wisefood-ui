@@ -73,6 +73,10 @@ export interface QaRetrievedArticle {
   /** Guide-routing hints for guideline sources (venue carries the region). */
   guide_urn?: string | null
   page_no?: number | null
+  /** Prioritization signals surfaced for transparency (articles only). */
+  citation_count?: number | null
+  influential_citation_count?: number | null
+  study_type?: string | null
 }
 
 export interface QaClarificationOption {
