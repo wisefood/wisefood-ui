@@ -3070,8 +3070,17 @@ const mapArticleToHome = (article: Article): HomeArticle => {
  */
 const normalizeAnswerProse = (text: string): string =>
   text
+    // A leaked citation trailer (malformed sentinel) must never render: cut
+    // from the sentinel — or the bare JSON object — to the end. Covers the
+    // live stream mid-flight and answers cached before the backend fix.
+    .replace(/<{2,}\s*END_ANSWER\s*>{2,}[\s\S]*$/, '')
+    .replace(/\{\s*"cited_sources"[\s\S]*$/, '')
     .replace(/【/g, '[')
     .replace(/】/g, '')
+    // "[Zhao et al. (2025)(/articles/urn)" → restore the missing "](" so the
+    // citation forms a real link (well-formed links cannot match: the label
+    // class excludes "]").
+    .replace(/\[([^\[\]]+?)\((\/(?:articles|guidelines)\/[^)\s]+)\)/g, '[$1]($2)')
     .replace(/[ \t]*[—–][ \t]+/g, ', ')
     .replace(/[—–]/g, '-')
 
