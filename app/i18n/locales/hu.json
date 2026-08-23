@@ -851,6 +851,38 @@
         "title": "Felhasznált szövegrész",
         "noQuote": "Ehhez a hivatkozáshoz nem került rögzítésre szó szerinti szövegrész.",
         "openArticle": "Cikk megnyitása"
+      },
+      "tabs": {
+        "askQuestions": "Kérdésfeltevés",
+        "library": "Könyvtár"
+      },
+      "clarify": {
+        "yourAnswer": "Az Ön válasza…",
+        "otherOptional": "Egyéb (nem kötelező)…",
+        "skip": "Kihagyás",
+        "continueBtn": "Folytatás",
+        "yes": "Igen",
+        "no": "Nem"
+      },
+      "sidebar": {
+        "cited": "Hivatkozott források",
+        "consulted": "Átnézett források"
+      },
+      "sourceMeta": {
+        "guideline": "Irányelv",
+        "citations": "hivatkozások: {count}"
+      },
+      "headings": {
+        "h1": "Mi jár a fejében{greeting}?",
+        "h2": "Készen áll felfedezni a táplálkozást{greeting}?",
+        "h3": "Kérdezzen bármit{greeting}",
+        "h4": "Mit szeretne megtudni{greeting}?",
+        "h5": "Hol kezdjük{greeting}?",
+        "h6": "Táplálkozási kérdése van{greeting}?",
+        "h7": "Üdvözlöm{greeting}! Miben segíthetek?",
+        "h8": "Merüljünk el a tudományban{greeting}",
+        "h9": "Kíváncsi valamire{greeting}?",
+        "h10": "Mit kutat éppen{greeting}?"
       }
     }
   },

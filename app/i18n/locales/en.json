@@ -851,6 +851,38 @@
         "title": "Passage used",
         "noQuote": "No verbatim passage was recorded for this citation.",
         "openArticle": "Open article"
+      },
+      "tabs": {
+        "askQuestions": "Ask Questions",
+        "library": "Library"
+      },
+      "clarify": {
+        "yourAnswer": "Your answer…",
+        "otherOptional": "Other (optional)…",
+        "skip": "Skip",
+        "continueBtn": "Continue",
+        "yes": "Yes",
+        "no": "No"
+      },
+      "sidebar": {
+        "cited": "Sources cited",
+        "consulted": "Sources consulted"
+      },
+      "sourceMeta": {
+        "guideline": "Guideline",
+        "citations": "citations: {count}"
+      },
+      "headings": {
+        "h1": "What's on your mind{greeting}?",
+        "h2": "Ready to explore nutrition{greeting}?",
+        "h3": "Ask me anything{greeting}",
+        "h4": "What would you like to know{greeting}?",
+        "h5": "Where shall we start{greeting}?",
+        "h6": "Your nutrition question{greeting}?",
+        "h7": "Hello{greeting}! What can I help with?",
+        "h8": "Let's dig into the science{greeting}",
+        "h9": "Curious about something{greeting}?",
+        "h10": "What are you researching{greeting}?"
       }
     }
   },

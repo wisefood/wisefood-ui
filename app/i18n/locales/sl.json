@@ -851,6 +851,38 @@
         "title": "Uporabljeni odlomek",
         "noQuote": "Za ta vir ni zabeleženega dobesednega odlomka.",
         "openArticle": "Odpri članek"
+      },
+      "tabs": {
+        "askQuestions": "Zastavi vprašanje",
+        "library": "Knjižnica"
+      },
+      "clarify": {
+        "yourAnswer": "Vaš odgovor …",
+        "otherOptional": "Drugo (neobvezno) …",
+        "skip": "Preskoči",
+        "continueBtn": "Nadaljuj",
+        "yes": "Da",
+        "no": "Ne"
+      },
+      "sidebar": {
+        "cited": "Navedeni viri",
+        "consulted": "Pregledani viri"
+      },
+      "sourceMeta": {
+        "guideline": "Smernica",
+        "citations": "citati: {count}"
+      },
+      "headings": {
+        "h1": "Kaj vas zanima{greeting}?",
+        "h2": "Ste pripravljeni raziskovati prehrano{greeting}?",
+        "h3": "Vprašajte me karkoli{greeting}",
+        "h4": "Kaj bi radi izvedeli{greeting}?",
+        "h5": "Kje začnemo{greeting}?",
+        "h6": "Vaše prehransko vprašanje{greeting}?",
+        "h7": "Pozdravljeni{greeting}! Kako lahko pomagam?",
+        "h8": "Poglobimo se v znanost{greeting}",
+        "h9": "Vas kaj zanima{greeting}?",
+        "h10": "Kaj raziskujete{greeting}?"
       }
     }
   },

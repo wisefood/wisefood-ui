@@ -24,7 +24,7 @@
           >
             <span class="flex items-center gap-1.5">
               <UIcon name="i-lucide-sparkles" class="w-3.5 h-3.5" />
-              Ask Questions
+              {{ t('foodScholarHome.qa.tabs.askQuestions') }}
             </span>
           </button>
           <button
@@ -39,7 +39,7 @@
           >
             <span class="flex items-center gap-1.5">
               <UIcon name="i-lucide-library" class="w-3.5 h-3.5" />
-              Library
+              {{ t('foodScholarHome.qa.tabs.library') }}
             </span>
           </button>
         </div>
@@ -377,7 +377,7 @@
               class="flex flex-wrap gap-2 mb-4"
             >
               <button
-                v-for="opt in (pendingClarification.options ?? (pendingClarification.input_type === 'boolean' ? [{ label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }] : []))"
+                v-for="opt in (pendingClarification.options ?? (pendingClarification.input_type === 'boolean' ? [{ label: t('foodScholarHome.qa.clarify.yes'), value: 'true' }, { label: t('foodScholarHome.qa.clarify.no'), value: 'false' }] : []))"
                 :key="opt.value"
                 type="button"
                 :class="[
@@ -414,7 +414,7 @@
                 v-model="clarificationFreeText"
                 :type="pendingClarification.input_type === 'number' ? 'number' : 'text'"
                 class="w-full px-3 py-2 text-sm rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400"
-                placeholder="Your answer…"
+                :placeholder="t('foodScholarHome.qa.clarify.yourAnswer')"
                 @keydown.enter.prevent="submitClarification"
               />
             </div>
@@ -428,7 +428,7 @@
                 v-model="clarificationFreeText"
                 type="text"
                 class="w-full px-3 py-2 text-sm rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400"
-                placeholder="Other (optional)…"
+                :placeholder="t('foodScholarHome.qa.clarify.otherOptional')"
                 @keydown.enter.prevent="submitClarification"
               />
             </div>
@@ -438,13 +438,13 @@
                 type="button"
                 class="px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                 @click="pendingClarification = null; qaError = null"
-              >Skip</button>
+              >{{ t('foodScholarHome.qa.clarify.skip') }}</button>
               <button
                 type="button"
                 :disabled="clarificationSelectedValues.length === 0 && !String(clarificationFreeText ?? '').trim()"
                 class="px-4 py-1.5 text-sm font-medium rounded-full bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 @click="submitClarification"
-              >Continue</button>
+              >{{ t('foodScholarHome.qa.clarify.continueBtn') }}</button>
             </div>
           </div>
         </div>
@@ -605,7 +605,7 @@
         <aside class="qa-source-sidebar hidden xl:block pt-1">
           <div class="qa-source-sidebar-inner">
           <template v-if="qaResult && primaryAnswer && primaryAnswer.citations?.length">
-            <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mb-1">Sources cited</p>
+            <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mb-1">{{ t('foodScholarHome.qa.sidebar.cited') }}</p>
             <NuxtLink
               v-for="(citation, idx) in primaryAnswer.citations"
               :key="citation.article_urn"
@@ -624,7 +624,7 @@
             </NuxtLink>
 
             <template v-if="uncitedRetrievedArticles.length">
-              <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mt-3 mb-1">Sources consulted</p>
+              <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mt-3 mb-1">{{ t('foodScholarHome.qa.sidebar.consulted') }}</p>
               <NuxtLink
                 v-for="article in uncitedRetrievedArticles"
                 :key="article.urn"
@@ -1631,18 +1631,9 @@ const qaHeadingIndex = Math.floor(Math.random() * 10)
 const qaHeadings = computed(() => {
   const name = householdStore.currentMember?.name?.split(' ')[0] || householdStore.currentMember?.name || ''
   const greeting = name ? `, ${name}` : ''
-  return [
-    `What's on your mind${greeting}?`,
-    `Ready to explore nutrition${greeting}?`,
-    `Ask me anything${greeting}`,
-    `What would you like to know${greeting}?`,
-    `Where shall we start${greeting}?`,
-    `Your nutrition question${greeting}?`,
-    `Hello${greeting}! What can I help with?`,
-    `Let's dig into the science${greeting}`,
-    `Curious about something${greeting}?`,
-    `What are you researching${greeting}?`
-  ]
+  return Array.from({ length: 10 }, (_, i) =>
+    t(`foodScholarHome.qa.headings.h${i + 1}`, { greeting })
+  )
 })
 const qaHeading = computed(() => qaHeadings.value[qaHeadingIndex] || qaHeadings.value[0])
 
@@ -1738,7 +1729,8 @@ const getCitationSourcePath = (citation: QaCitation) => {
 const retrievedMetaLine = (article: QaRetrievedArticle | undefined | null): string => {
   if (!article) return ''
   if (normalizeQaSourceType(article.urn, article.source_type) === 'guideline') {
-    return ['Guideline', article.venue].filter(Boolean).join(' · ')
+    return [t('foodScholarHome.qa.sourceMeta.guideline'), article.venue]
+      .filter(Boolean).join(' · ')
   }
   const parts: string[] = []
   const year = String(article.publication_year || '').slice(0, 4)
@@ -1746,9 +1738,7 @@ const retrievedMetaLine = (article: QaRetrievedArticle | undefined | null): stri
   if (article.study_type) parts.push(article.study_type)
   if (typeof article.citation_count === 'number') {
     parts.push(
-      article.citation_count === 1
-        ? '1 citation'
-        : `${article.citation_count} citations`
+      t('foodScholarHome.qa.sourceMeta.citations', { count: article.citation_count })
     )
   }
   return parts.join(' · ')
@@ -1763,7 +1753,10 @@ const citationMetaLine = (citation: QaCitation): string => {
   // Fallback to the citation's own fields (cached answers may lack the
   // retrieved-source record).
   if (normalizeQaSourceType(citation.article_urn, citation.source_type) === 'guideline') {
-    return ['Guideline', citation.region || citation.journal].filter(Boolean).join(' · ')
+    return [
+      t('foodScholarHome.qa.sourceMeta.guideline'),
+      citation.region || citation.journal
+    ].filter(Boolean).join(' · ')
   }
   return [citation.year, citation.journal].filter(Boolean).join(' · ')
 }
