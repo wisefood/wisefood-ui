@@ -305,6 +305,61 @@
           </Transition>
         </div>
 
+        <!-- Thread bar: the memory made visible, and a fresh start -->
+        <div v-if="qaThreadId && hasActiveSession" class="flex items-center justify-between gap-2 -mt-2 mb-4 px-1">
+          <button
+            v-if="hasCarriedContext"
+            type="button"
+            class="inline-flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+            :aria-expanded="memoryPanelOpen"
+            @click="memoryPanelOpen = !memoryPanelOpen"
+          >
+            <UIcon name="i-lucide-brain" class="w-3.5 h-3.5" />
+            {{ t('foodScholarHome.qa.thread.remembers') }}
+            <UIcon :name="memoryPanelOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3 h-3" />
+          </button>
+          <span v-else />
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 dark:text-zinc-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+            @click="startNewThread"
+          >
+            <UIcon name="i-lucide-plus" class="w-3.5 h-3.5" />
+            {{ t('foodScholarHome.qa.thread.new') }}
+          </button>
+        </div>
+
+        <!-- What FoodScholar is carrying from this conversation -->
+        <div v-if="memoryPanelOpen && carriedContext" class="mb-4 px-4 py-3 rounded-2xl border border-gray-200 dark:border-zinc-700/70 bg-white/60 dark:bg-zinc-900/40 space-y-2">
+          <p v-if="carriedContext.summary" class="text-xs text-gray-600 dark:text-zinc-300 whitespace-pre-line">{{ carriedContext.summary }}</p>
+          <div v-if="carriedContext.notes?.length" class="flex flex-wrap gap-1.5">
+            <span
+              v-for="(note, nIdx) in carriedContext.notes.slice(0, 8)"
+              :key="`cnote-${nIdx}`"
+              class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300"
+            >
+              <UIcon :name="note.kind === 'gap' ? 'i-lucide-circle-alert' : note.kind === 'lead' ? 'i-lucide-compass' : 'i-lucide-check'" class="w-2.5 h-2.5 opacity-70" />
+              {{ note.text }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Sliding history: earlier exchanges of this thread, dimmed under a
+             top fade — present when you scroll up for them, quiet otherwise. -->
+        <div v-if="threadTurns.length" class="qa-thread-history relative space-y-4 mb-6">
+          <div class="sticky top-14 h-16 -mb-16 z-10 pointer-events-none bg-gradient-to-b from-white/90 dark:from-zinc-950/90 to-transparent" />
+          <template v-for="(turn, tIdx) in threadTurns" :key="`turn-${turn.result.request_id || tIdx}`">
+            <div class="flex justify-end qa-history-bubble">
+              <div class="chat-flow-bubble chat-flow-bubble-user">
+                <p class="text-sm leading-relaxed">{{ turn.question }}</p>
+              </div>
+            </div>
+            <div class="chat-flow-bubble chat-flow-bubble-assistant qa-history-bubble">
+              <div class="qa-answer-markdown text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" @click="handleMarkdownClick" v-html="renderMarkdown(turn.result.primary_answer?.answer || '')" />
+            </div>
+          </template>
+        </div>
+
         <!-- Error -->
         <div v-if="qaError" class="mb-4 p-4 rounded-xl border border-red-200 dark:border-red-800 bg-red-50/90 dark:bg-red-900/20">
           <p class="text-sm text-red-700 dark:text-red-300">{{ qaError }}</p>
@@ -450,7 +505,7 @@
         </div>
 
         <!-- Answer -->
-        <div v-if="qaResult && primaryAnswer" class="space-y-4 session-answer-enter">
+        <div v-if="qaResult && primaryAnswer" ref="latestExchangeRef" class="space-y-4 session-answer-enter">
           <div class="flex justify-end">
             <div class="chat-flow-bubble chat-flow-bubble-user">
               <p class="text-[10px] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
@@ -1142,7 +1197,7 @@ import foodscholarApi, {
 } from '~/services/foodscholarApi'
 import { useAuthStore } from '~/stores/auth'
 import { useHouseholdStore } from '~/stores/household'
-import { useFoodScholarQaStore } from '~/stores/foodscholarQa'
+import { useFoodScholarQaStore, type QaThreadTurn } from '~/stores/foodscholarQa'
 import { getExcerpt } from '~/utils/articleHelpers'
 import {
   buildGuideDetailPath,
@@ -2059,6 +2114,20 @@ const handleMemoryDecision = async (suggestion: QaMemorySuggestion, decision: 'a
   }
 }
 
+// ── Conversation thread: sliding visible history + carried memory ──
+// Previous exchanges of the active thread stay on screen above the current
+// one, dimmed under a top fade and revealed by scrolling — continuity you can
+// see, without turning the page into a chatbox.
+const MAX_VISIBLE_TURNS = 6
+const threadTurns = ref<QaThreadTurn[]>([])
+const latestExchangeRef = ref<HTMLElement | null>(null)
+const memoryPanelOpen = ref(false)
+const carriedContext = computed(() => qaResult.value?.conversation_context ?? null)
+const hasCarriedContext = computed(() => Boolean(
+  carriedContext.value
+  && (carriedContext.value.summary || carriedContext.value.notes?.length)
+))
+
 // clarification state
 const pendingClarification = ref<QaClarification | null>(null)
 const qaThreadId = ref<string | null>(null)
@@ -2629,6 +2698,8 @@ const handleQaResponse = (result: QaAskResult, basePayload: QaAskRequest) => {
     qaResult.value = null
   } else {
     pendingClarification.value = null
+    // Visible history is managed in askScholarQA (the previous exchange slides
+    // up there before the new answer streams); here we only settle the result.
     // Keep the thread id returned with every answer so the next question in this
     // session continues the conversation (free-form follow-ups + thread summary).
     // A deliberate new question resets it in askScholarQA().
@@ -2639,9 +2710,29 @@ const handleQaResponse = (result: QaAskResult, basePayload: QaAskRequest) => {
       question: pendingQuestion.value,
       result: qaResult.value,
       expertiseLevel: expertiseLevel.value,
-      qaThreadId: qaThreadId.value
+      qaThreadId: qaThreadId.value,
+      turns: threadTurns.value
     })
+    if (threadTurns.value.length) {
+      void nextTick(() => {
+        latestExchangeRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
+    }
   }
+}
+
+/** Start a fresh conversation: new thread id, empty visible history. */
+const startNewThread = () => {
+  qaThreadId.value = null
+  threadTurns.value = []
+  qaResult.value = null
+  qaError.value = null
+  pendingClarification.value = null
+  pendingQuestion.value = ''
+  chatQuery.value = ''
+  memoryPanelOpen.value = false
+  resetStream()
+  qaStore.clear()
 }
 
 // continueThread: keep the active qa_thread_id so the backend treats this as a
@@ -2667,12 +2758,21 @@ const askScholarQA = async (
   }
 
   asking.value = true
+  // A follow-up on a live thread keeps the previous exchange visible in the
+  // sliding history while the new answer streams in.
+  if (continueThread && qaResult.value) {
+    threadTurns.value = [
+      ...threadTurns.value,
+      { question: qaResult.value.question, result: qaResult.value }
+    ].slice(-MAX_VISIBLE_TURNS)
+  }
   qaResult.value = null
   qaError.value = null
   pendingClarification.value = null
   // Preserve the thread id for a follow-up; drop it to start a new conversation.
   if (!continueThread) {
     qaThreadId.value = null
+    threadTurns.value = []
     qaStore.clear()
   }
   pendingPayload.value = null
@@ -3147,6 +3247,7 @@ onMounted(async () => {
       expertiseLevel.value = saved.expertiseLevel
       // Rehydrate the thread so a follow-up after navigation stays in-context.
       qaThreadId.value = saved.qaThreadId ?? null
+      threadTurns.value = saved.turns ?? []
     }
   }
 
@@ -3182,6 +3283,18 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* Earlier exchanges of the thread: present but receded — dimmed until the
+   reader deliberately engages with them. The sticky gradient above the list
+   adds the top fade while scrolling through history. */
+.qa-history-bubble {
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
+.qa-history-bubble:hover,
+.qa-history-bubble:focus-within {
+  opacity: 1;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap');
 
 @font-face {

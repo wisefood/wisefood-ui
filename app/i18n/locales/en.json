@@ -883,6 +883,10 @@
         "h8": "Let's dig into the science{greeting}",
         "h9": "Curious about something{greeting}?",
         "h10": "What are you researching{greeting}?"
+      },
+      "thread": {
+        "new": "New conversation",
+        "remembers": "What FoodScholar remembers"
       }
     }
   },

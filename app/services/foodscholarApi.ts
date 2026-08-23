@@ -115,6 +115,21 @@ export interface QaStreamEvent {
   data: Record<string, unknown>
 }
 
+/** A research note the pipeline carries on the conversation thread. */
+export interface QaResearchNote {
+  text: string
+  kind: 'finding' | 'gap' | 'lead'
+  sub_question_id?: string | null
+  source_urns?: string[]
+}
+
+/** What the thread remembers into the next turn, made visible to the user. */
+export interface QaConversationContext {
+  summary?: string | null
+  notes?: QaResearchNote[]
+  turn_count?: number
+}
+
 export interface QaAskResult {
   question: string
   mode: string
@@ -134,6 +149,8 @@ export interface QaAskResult {
   memory_suggestions?: QaMemorySuggestion[] | null
   /** Pipeline steps that produced this answer; null on the legacy pipeline. */
   reasoning_steps?: QaReasoningStep[] | null
+  /** What the thread carries into the next turn (summary + research notes). */
+  conversation_context?: QaConversationContext | null
 }
 
 /** Consent nudge for a durable preference expressed in the question —

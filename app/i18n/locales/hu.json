@@ -883,6 +883,10 @@
         "h8": "Merüljünk el a tudományban{greeting}",
         "h9": "Kíváncsi valamire{greeting}?",
         "h10": "Mit kutat éppen{greeting}?"
+      },
+      "thread": {
+        "new": "Új beszélgetés",
+        "remembers": "Amire a FoodScholar emlékszik"
       }
     }
   },

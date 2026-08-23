@@ -883,6 +883,10 @@
         "h8": "Poglobimo se v znanost{greeting}",
         "h9": "Vas kaj zanima{greeting}?",
         "h10": "Kaj raziskujete{greeting}?"
+      },
+      "thread": {
+        "new": "Nov pogovor",
+        "remembers": "Kaj si FoodScholar zapomni"
       }
     }
   },
