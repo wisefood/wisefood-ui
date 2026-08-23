@@ -842,7 +842,16 @@
         }
       },
       "confidenceExplainer": "Lastna navedena zanesljivost modela, ki odgovarja, ne umerjena verjetnost. Vsaka trditev je vezana na dobesedni navedek iz pridobljenega vira; pri priporočilih o vnosu imajo nacionalne smernice prednost pred posameznimi študijami.",
-      "medicalBoundary": "Splošne prehranske informacije iz objavljenih virov — ne individualiziran zdravniški ali dietetični nasvet. Za odločitve o svojem zdravju se posvetuj s strokovnjakom."
+      "medicalBoundary": "Splošne prehranske informacije iz objavljenih virov — ne individualiziran zdravniški ali dietetični nasvet. Za odločitve o svojem zdravju se posvetuj s strokovnjakom.",
+      "reasoning": {
+        "thinking": "Razmišljam …",
+        "summary": "Kako je nastal odgovor · {count} korakov"
+      },
+      "passagePeek": {
+        "title": "Uporabljeni odlomek",
+        "noQuote": "Za ta vir ni zabeleženega dobesednega odlomka.",
+        "openArticle": "Odpri članek"
+      }
     }
   },
   "profileSelection": {

@@ -842,7 +842,16 @@
         }
       },
       "confidenceExplainer": "A válaszoló modell saját megadott bizonyossága, nem kalibrált valószínűség. Minden állítás egy visszakeresett forrás szó szerinti idézetéhez kötődik; a beviteli javaslatoknál a nemzeti irányelvek elsőbbséget kapnak az egyedi tanulmányokkal szemben.",
-      "medicalBoundary": "Általános, publikált forrásokon alapuló táplálkozási információ — nem személyre szabott orvosi vagy dietetikai tanács. Saját egészségedet érintő döntésekhez fordulj szakemberhez."
+      "medicalBoundary": "Általános, publikált forrásokon alapuló táplálkozási információ — nem személyre szabott orvosi vagy dietetikai tanács. Saját egészségedet érintő döntésekhez fordulj szakemberhez.",
+      "reasoning": {
+        "thinking": "Gondolkodik…",
+        "summary": "Így készült a válasz · {count} lépés"
+      },
+      "passagePeek": {
+        "title": "Felhasznált szövegrész",
+        "noQuote": "Ehhez a hivatkozáshoz nem került rögzítésre szó szerinti szövegrész.",
+        "openArticle": "Cikk megnyitása"
+      }
     }
   },
   "profileSelection": {

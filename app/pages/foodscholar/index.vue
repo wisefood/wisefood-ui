@@ -310,7 +310,7 @@
           <p class="text-sm text-red-700 dark:text-red-300">{{ qaError }}</p>
         </div>
 
-        <!-- Loading skeleton -->
+        <!-- Live pipeline: reasoning steps stream in, then the answer tokens -->
         <div v-if="asking" class="space-y-4 session-answer-enter">
           <div class="flex justify-end">
             <div class="chat-flow-bubble chat-flow-bubble-user">
@@ -318,7 +318,27 @@
               <p class="text-sm leading-relaxed">{{ pendingQuestion || chatQuery }}</p>
             </div>
           </div>
-          <div class="chat-flow-bubble chat-flow-bubble-assistant">
+
+          <FoodscholarReasoningSteps
+            v-if="liveSteps.length"
+            :steps="liveSteps"
+            live
+            start-open
+          />
+
+          <!-- The answer as it streams: same markdown surface as the settled
+               answer, minus the reveal animation (it would restart per token). -->
+          <div v-if="liveAnswer" class="chat-flow-bubble chat-flow-bubble-assistant">
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.answer') }}</h4>
+              <UIcon name="i-lucide-loader-2" class="w-3.5 h-3.5 animate-spin text-gray-400 dark:text-zinc-500" />
+            </div>
+            <div class="qa-answer-markdown text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" @click="handleMarkdownClick" @mouseover="handleAnswerMouseOver" @mouseout="handleAnswerMouseOut" v-html="renderMarkdown(liveAnswer)" />
+          </div>
+
+          <!-- Skeleton only until the first pipeline event arrives (or when the
+               gateway lacks the streaming route and we fell back to one-shot). -->
+          <div v-else-if="!liveSteps.length" class="chat-flow-bubble chat-flow-bubble-assistant">
             <div class="flex items-center justify-between mb-3">
               <div class="h-4 w-16 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
               <div class="h-3 w-24 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
@@ -329,8 +349,6 @@
               <div class="h-3 w-4/5 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
               <div class="h-3 w-full rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
               <div class="h-3 w-3/4 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-              <div class="h-3 w-5/6 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-              <div class="h-3 w-2/3 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
             </div>
           </div>
         </div>
@@ -439,6 +457,12 @@
               <p class="text-sm leading-relaxed">{{ qaResult.question }}</p>
             </div>
           </div>
+
+          <!-- How the answer was researched: collapsed once settled, reopenable -->
+          <FoodscholarReasoningSteps
+            v-if="answerReasoningSteps.length"
+            :steps="answerReasoningSteps"
+          />
 
           <div v-if="hasDualAnswerMode" class="space-y-3">
             <p v-if="!selectedPreferredAnswer" class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.feedback.choosePreferredAnswer') }}</p>
@@ -601,7 +625,7 @@
               <NuxtLink
                 v-for="article in uncitedRetrievedArticles"
                 :key="article.urn"
-                :to="getQaSourcePath(article.urn, article.source_type)"
+                :to="getRetrievedSourcePath(article)"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-100 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/50 opacity-60 hover:opacity-100 hover:border-gray-300 dark:hover:border-zinc-700 transition-all group"
@@ -1067,7 +1091,7 @@
       </div>
     </template>
 
-    <GuidelineCitationPeek
+    <FoodscholarGuidelineCitationPeek
       :open="guidelinePeekOpen"
       :guideline="guidelinePeek"
       :loading="guidelinePeekLoading"
@@ -1075,6 +1099,15 @@
       :anchor-rect="guidelinePeekAnchorRect"
       @close="closeGuidelinePeek"
       @open="openGuidelineFromPeek"
+    />
+
+    <FoodscholarArticleCitationPeek
+      :open="articlePeekOpen"
+      :citation="articlePeekCitation"
+      :anchor-rect="articlePeekAnchorRect"
+      @open="openArticleFromPeek"
+      @pointer-enter="cancelArticlePeekClose"
+      @pointer-leave="scheduleArticlePeekClose"
     />
   </div>
 </template>
@@ -1098,6 +1131,7 @@ import foodscholarApi, {
   type QaClarification,
   type QaClarificationResponse,
   type QaMemorySuggestion,
+  type QaRetrievedArticle,
   type QaRetriever
 } from '~/services/foodscholarApi'
 import { useAuthStore } from '~/stores/auth'
@@ -1655,8 +1689,50 @@ const getQaSourceIcon = (urn: string, sourceType?: QaCitation['source_type']) =>
 const getCitationSourceType = (citation: QaCitation): QaCitation['source_type'] =>
   citation.source_type ?? retrievedArticleMap.value[citation.article_urn]?.source_type ?? null
 
-const getCitationSourcePath = (citation: QaCitation) =>
-  getQaSourcePath(citation.article_urn, getCitationSourceType(citation))
+/**
+ * Guide-routing hints for a guideline urn, from wherever this answer carries
+ * them (citation fields first, retrieved-source fields as fallback). These
+ * ride the resolver as `guide`/`region`/`pdf_page` so a rule outside the
+ * reader's visibility still lands on its guide page instead of a 404.
+ */
+const getGuidelineHintsForUrn = (urn: string): Record<string, string> => {
+  const hints: Record<string, string> = {}
+  const citation = [
+    ...(primaryAnswer.value?.citations || []),
+    ...(secondaryAnswer.value?.citations || [])
+  ].find(c => c.article_urn === urn)
+  const retrieved = retrievedArticleMap.value[urn]
+
+  const guideUrn = citation?.guide_urn || retrieved?.guide_urn
+  const region = citation?.region || retrieved?.venue
+  const pageNo = citation?.page_no ?? retrieved?.page_no
+
+  if (guideUrn) hints.guide = String(guideUrn)
+  if (region) hints.region = String(region)
+  if (typeof pageNo === 'number') hints.pdf_page = String(pageNo)
+  return hints
+}
+
+const getCitationSourcePath = (citation: QaCitation) => {
+  const sourceType = getCitationSourceType(citation)
+  if (normalizeQaSourceType(citation.article_urn, sourceType) === 'guideline') {
+    return {
+      path: getQaSourcePath(citation.article_urn, sourceType),
+      query: getGuidelineHintsForUrn(citation.article_urn)
+    }
+  }
+  return getQaSourcePath(citation.article_urn, sourceType)
+}
+
+const getRetrievedSourcePath = (article: QaRetrievedArticle) => {
+  if (normalizeQaSourceType(article.urn, article.source_type) === 'guideline') {
+    return {
+      path: getQaSourcePath(article.urn, article.source_type),
+      query: getGuidelineHintsForUrn(article.urn)
+    }
+  }
+  return getQaSourcePath(article.urn, article.source_type)
+}
 
 const getCitationForUrn = (articleUrn: string) => {
   const citations = [
@@ -1677,22 +1753,42 @@ const goToLocation = (location: { path: string, query?: Record<string, string>, 
 }
 
 const navigateToGuideline = async (guidelineId: string, extraQuery: Record<string, string> = {}, openInNewTab = false) => {
-  const fallback = { path: `/foodscholar/catalog/guidelines/${encodeURIComponent(guidelineId)}`, query: { ...extraQuery, guideline: guidelineId } }
+  // `guide`/`region` are routing hints, not state for the guide page. The
+  // resolver at /foodscholar/catalog/guidelines strips them the same way.
+  const { guide: hintedGuide, region: hintedRegion, ...restQuery } = extraQuery
+  const guidePageQuery = (pdfPage?: string | number | null): Record<string, string> => {
+    const query: Record<string, string> = { ...restQuery, guideline: guidelineId }
+    if (pdfPage !== null && pdfPage !== undefined && pdfPage !== '') {
+      query.pdf_page = String(pdfPage)
+    }
+    return query
+  }
+  const fallback = {
+    path: `/foodscholar/catalog/guidelines/${encodeURIComponent(guidelineId)}`,
+    query: { ...extraQuery, guideline: guidelineId }
+  }
   try {
     const guideline = await catalogApi.getGuideline(guidelineId)
     if (!guideline.guide_urn) {
       goToLocation(fallback, openInNewTab)
       return
     }
-    const query: Record<string, string> = { ...extraQuery, guideline: guidelineId }
-    if (typeof guideline.page_no === 'number') {
-      query.pdf_page = String(guideline.page_no)
-    }
     goToLocation({
-      path: buildGuideDetailPath(guideline.region, guideline.guide_urn),
-      query
+      path: buildGuideDetailPath(guideline.region || hintedRegion, guideline.guide_urn),
+      query: guidePageQuery(
+        typeof guideline.page_no === 'number' ? guideline.page_no : restQuery.pdf_page
+      )
     }, openInNewTab)
   } catch {
+    // The rule is not readable (draft, archived, restricted) — but the hints
+    // can still land the reader on the guide page directly.
+    if (hintedGuide) {
+      goToLocation({
+        path: buildGuideDetailPath(hintedRegion || null, hintedGuide),
+        query: guidePageQuery(restQuery.pdf_page)
+      }, openInNewTab)
+      return
+    }
     goToLocation(fallback, openInNewTab)
   }
 }
@@ -1841,12 +1937,16 @@ const handleMarkdownClick = (event: MouseEvent) => {
   const query = Object.fromEntries(url.searchParams.entries()) as Record<string, string>
 
   if (sourceType === 'guideline') {
+    // Carry the answer's guide-routing hints so navigation still lands on
+    // the guide page (rule highlighted, PDF page open) when the rule itself
+    // is not publicly readable.
+    const hintedQuery = { ...getGuidelineHintsForUrn(targetUrn), ...query }
     // A plain click previews the rule in place; a modifier click keeps the
     // familiar "open in a new tab" behaviour for people who want the guide.
     if (event.metaKey || event.ctrlKey || event.shiftKey) {
-      void navigateToGuideline(targetUrn, query, true)
+      void navigateToGuideline(targetUrn, hintedQuery, true)
     } else {
-      void openGuidelinePeek(targetUrn, anchor, query)
+      void openGuidelinePeek(targetUrn, anchor, hintedQuery)
     }
   } else {
     if (!('section' in query) && citation?.section) query.section = String(citation.section)
@@ -1885,6 +1985,22 @@ const replayFigTilt = () => {
 const asking = ref(false)
 const qaError = ref<string | null>(null)
 const qaResult = ref<QaAskResult | null>(null)
+
+// ── Streaming pipeline (SSE): live reasoning steps + token-streamed answer ──
+const {
+  streamingAnswer: liveAnswer,
+  steps: liveSteps,
+  ask: askStreamed,
+  reset: resetStream
+} = useFoodScholarQaStream()
+
+// Steps shown with a settled answer: prefer the response's own record (it
+// survives the 30-min qaStore restore), fall back to what just streamed.
+const answerReasoningSteps = computed(() =>
+  qaResult.value?.reasoning_steps?.length
+    ? qaResult.value.reasoning_steps
+    : liveSteps.value
+)
 
 // ── Memory nudges (consent-first; mirrors FoodChat's chips) ──
 const memoryChipState = reactive<Record<string, 'pending' | 'accepted' | 'declined'>>({})
@@ -2131,7 +2247,7 @@ const retrievedSources = computed(() =>
 )
 
 const retrievedArticleMap = computed(() => {
-  const map: Record<string, { urn: string; title: string; source_type?: QaCitation['source_type']; authors?: string[] | null; publication_year?: string; similarity_score?: number }> = {}
+  const map: Record<string, QaRetrievedArticle> = {}
   for (const a of retrievedSources.value) {
     map[a.urn] = a
   }
@@ -2185,18 +2301,79 @@ function getAnchorCitationUrn(a: HTMLElement): string | null {
   return resolveQaSourceHref(href)?.urn ?? null
 }
 
+// ── Article passage peek: hover shows the quote the answer used ──
+const articlePeekOpen = ref(false)
+const articlePeekCitation = ref<QaCitation | null>(null)
+const articlePeekAnchorRect = ref<{ top: number, left: number, bottom: number, width: number } | null>(null)
+let articlePeekOpenTimer: ReturnType<typeof setTimeout> | null = null
+let articlePeekCloseTimer: ReturnType<typeof setTimeout> | null = null
+
+const cancelArticlePeekClose = () => {
+  if (articlePeekCloseTimer) {
+    clearTimeout(articlePeekCloseTimer)
+    articlePeekCloseTimer = null
+  }
+}
+
+const scheduleArticlePeekClose = () => {
+  cancelArticlePeekClose()
+  articlePeekCloseTimer = setTimeout(() => {
+    articlePeekOpen.value = false
+  }, 200)
+}
+
+const scheduleArticlePeekOpen = (anchor: HTMLElement, urn: string) => {
+  // Only when we actually have the passage — a peek with nothing to show is
+  // noise. (During streaming citations are not settled yet, so no peek.)
+  const citation = getCitationForUrn(urn)
+  if (!citation?.quote) return
+  cancelArticlePeekClose()
+  if (articlePeekOpenTimer) clearTimeout(articlePeekOpenTimer)
+  articlePeekOpenTimer = setTimeout(() => {
+    const rect = anchor.getBoundingClientRect()
+    articlePeekAnchorRect.value = {
+      top: rect.top, left: rect.left, bottom: rect.bottom, width: rect.width
+    }
+    articlePeekCitation.value = citation
+    articlePeekOpen.value = true
+  }, 250)
+}
+
+const openArticleFromPeek = () => {
+  const citation = articlePeekCitation.value
+  if (!citation) return
+  articlePeekOpen.value = false
+  const query: Record<string, string> = {}
+  if (citation.section) query.section = String(citation.section)
+  if (citation.quote) query.hl = String(citation.quote)
+  goToLocation(
+    { path: getQaSourcePath(citation.article_urn, 'article'), query },
+    true
+  )
+}
+
 function handleAnswerMouseOver(e: MouseEvent) {
   const a = (e.target as HTMLElement).closest<HTMLElement>('a[href]')
   if (!a) return
   const urn = getAnchorCitationUrn(a)
   if (!urn) return
   drawCitationLine(a, urn)
+  if (a.getAttribute('data-citation-type') !== 'guideline') {
+    scheduleArticlePeekOpen(a, urn)
+  }
 }
 
 function handleAnswerMouseOut(e: MouseEvent) {
   const a = (e.target as HTMLElement).closest<HTMLElement>('a[href]')
   if (!a) return
-  if (getAnchorCitationUrn(a)) clearCitationLine()
+  if (getAnchorCitationUrn(a)) {
+    clearCitationLine()
+    if (articlePeekOpenTimer) {
+      clearTimeout(articlePeekOpenTimer)
+      articlePeekOpenTimer = null
+    }
+    if (articlePeekOpen.value) scheduleArticlePeekClose()
+  }
 }
 const hasDualAnswerMode = computed(() => Boolean(primaryAnswer.value && secondaryAnswer.value && qaResult.value?.dual_answer_feedback))
 const isAdvancedMode = computed(() => qaMode.value === 'advanced')
@@ -2468,10 +2645,12 @@ const askScholarQA = async (
   selectedNegativeReason.value = null
   negativeFeedbackComment.value = ''
 
+  resetStream()
+
   try {
     const payload = buildBasePayload(question)
     pendingQuestion.value = question
-    const result = await foodscholarApi.askQuestion(payload)
+    const result = await askStreamed(payload)
     handleQaResponse(result, payload)
   } catch (err: unknown) {
     qaError.value = getErrorMessage(err, t('foodScholarHome.errors.failedToGetQaResponse'))
@@ -2506,7 +2685,8 @@ const submitClarification = async () => {
       clarification_response: clarificationResponse
     }
 
-    const result = await foodscholarApi.askQuestion(payload)
+    resetStream()
+    const result = await askStreamed(payload)
     handleQaResponse(result, pendingPayload.value)
   } catch (err: unknown) {
     qaError.value = getErrorMessage(err, t('foodScholarHome.errors.failedToGetQaResponse'))

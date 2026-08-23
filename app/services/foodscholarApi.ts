@@ -35,6 +35,14 @@ export interface QaCitation {
   quote?: string | null
   confidence?: string | null
   relevance_score?: number | null
+  /**
+   * Guide-routing hints on guideline citations (same contract as tip
+   * evidence): they let the UI land on the guide page — rule highlighted,
+   * PDF page open — even when the rule itself is not publicly readable.
+   */
+  guide_urn?: string | null
+  region?: string | null
+  page_no?: number | null
 }
 
 export interface QaAnswer {
@@ -62,6 +70,9 @@ export interface QaRetrievedArticle {
   category?: string | null
   tags?: string[]
   similarity_score?: number | null
+  /** Guide-routing hints for guideline sources (venue carries the region). */
+  guide_urn?: string | null
+  page_no?: number | null
 }
 
 export interface QaClarificationOption {
@@ -76,6 +87,28 @@ export interface QaClarification {
   options?: QaClarificationOption[]
   allow_free_text?: boolean
   reason?: string | null
+}
+
+/**
+ * One user-visible step of FoodScholar's agentic pipeline, for the inline
+ * collapsible reasoning disclosure. Streamed twice per step over SSE (status
+ * running → done, same id) and included in full on the final result.
+ */
+export interface QaReasoningStep {
+  id: string
+  kind: 'plan' | 'search' | 'rank' | 'notes' | 'evaluate' | 'repair' | 'answer' | 'cache' | 'clarification'
+  status: 'running' | 'done'
+  title: string
+  detail?: string | null
+  round?: number
+  elapsed_ms?: number | null
+  data?: Record<string, unknown>
+}
+
+/** A parsed SSE frame from the streaming QA endpoint. */
+export interface QaStreamEvent {
+  event: string
+  data: Record<string, unknown>
 }
 
 export interface QaAskResult {
@@ -95,6 +128,8 @@ export interface QaAskResult {
   cache_hit?: boolean
   request_id?: string
   memory_suggestions?: QaMemorySuggestion[] | null
+  /** Pipeline steps that produced this answer; null on the legacy pipeline. */
+  reasoning_steps?: QaReasoningStep[] | null
 }
 
 /** Consent nudge for a durable preference expressed in the question —
@@ -161,11 +196,62 @@ export interface QaFeedbackRequest {
   reason?: string
 }
 
+/**
+ * Parse one SSE frame ("event: name\ndata: {...}") into a QaStreamEvent.
+ * Comment frames (keep-alives, ": keep-alive") and unparseable data yield null.
+ */
+function parseSseFrame(frame: string): QaStreamEvent | null {
+  let eventName = ''
+  const dataLines: string[] = []
+  for (const line of frame.split('\n')) {
+    if (line.startsWith(':')) continue
+    if (line.startsWith('event:')) eventName = line.slice(6).trim()
+    else if (line.startsWith('data:')) dataLines.push(line.slice(5).trimStart())
+  }
+  if (!eventName || !dataLines.length) return null
+  try {
+    return { event: eventName, data: JSON.parse(dataLines.join('\n')) }
+  } catch {
+    return null
+  }
+}
+
 class FoodScholarApiService {
   private readonly basePath = '/foodscholar/qa'
 
   async askQuestion(payload: QaAskRequest): Promise<QaAskResult> {
     return wisefoodRestApi.post<QaAskResult, QaAskRequest>(`${this.basePath}/ask`, payload)
+  }
+
+  /**
+   * Streaming ask: yields the agentic pipeline's SSE events as they arrive —
+   * `step` (reasoning steps), `stage.*` (detail), `answer_delta` (answer
+   * tokens), `citations`, and a terminal `done` / `clarification` / `error`.
+   */
+  async* askQuestionStream(payload: QaAskRequest): AsyncGenerator<QaStreamEvent> {
+    const response = await wisefoodRestApi.postStream(`${this.basePath}/ask/stream`, payload)
+    const reader = response.body!.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    try {
+      for (;;) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        let frameEnd = buffer.indexOf('\n\n')
+        while (frameEnd >= 0) {
+          const frame = buffer.slice(0, frameEnd)
+          buffer = buffer.slice(frameEnd + 2)
+          const parsed = parseSseFrame(frame)
+          if (parsed) yield parsed
+          frameEnd = buffer.indexOf('\n\n')
+        }
+      }
+      const tail = parseSseFrame(buffer)
+      if (tail) yield tail
+    } finally {
+      reader.releaseLock()
+    }
   }
 
   async submitFeedback(payload: QaFeedbackRequest): Promise<string | Record<string, unknown>> {

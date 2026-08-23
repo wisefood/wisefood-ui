@@ -144,6 +144,60 @@ class WiseFoodRestApiService {
   }
 
   /**
+   * Makes an authenticated POST request and returns the raw streaming
+   * Response (used for Server-Sent Events, e.g. FoodScholar's streaming QA).
+   *
+   * Unlike post(), the body is NOT consumed here — no envelope unwrapping,
+   * no .json(). The caller reads `response.body` incrementally. Auth and the
+   * one-shot 401 refresh mirror handleResponse(); EventSource cannot be used
+   * because it cannot carry the Authorization header.
+   */
+  async postStream<D = unknown>(endpoint: string, data?: D, options: RequestOptions = {}): Promise<Response> {
+    const { params, ...fetchOptions } = options
+    const url = this.buildUrl(endpoint, params)
+
+    const doFetch = () => fetch(url, {
+      method: 'POST',
+      headers: {
+        ...this.getAuthHeaders(),
+        Accept: 'text/event-stream',
+        ...fetchOptions.headers
+      },
+      body: data ? JSON.stringify(data) : undefined,
+      ...fetchOptions
+    })
+
+    let response = await doFetch()
+
+    if (response.status === 401) {
+      const authStore = useAuthStore()
+      const refreshed = await authStore.refreshToken()
+      if (refreshed) {
+        response = await doFetch()
+      } else if (import.meta.client) {
+        await authStore.logout()
+      }
+    }
+
+    if (!response.ok || !response.body) {
+      let errorData: unknown
+      try {
+        errorData = await response.json()
+      } catch {
+        errorData = await response.text().catch(() => undefined)
+      }
+      const error: ApiError = {
+        message: `API request failed with status ${response.status}`,
+        status: response.status,
+        data: errorData
+      }
+      throw error
+    }
+
+    return response
+  }
+
+  /**
    * Makes an authenticated PUT request
    */
   async put<T, D = unknown>(endpoint: string, data?: D, options: RequestOptions = {}): Promise<T> {

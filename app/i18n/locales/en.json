@@ -842,7 +842,16 @@
         }
       },
       "confidenceExplainer": "The answering model's own stated confidence, not a calibrated probability. Every claim is tied to a verbatim quote from a retrieved source; national guideline rules take precedence over individual studies for intake advice.",
-      "medicalBoundary": "General nutrition information from published sources — not individualised medical or dietetic advice. For decisions about your own health, speak to a qualified professional."
+      "medicalBoundary": "General nutrition information from published sources — not individualised medical or dietetic advice. For decisions about your own health, speak to a qualified professional.",
+      "reasoning": {
+        "thinking": "Thinking…",
+        "summary": "How this was researched · {count} steps"
+      },
+      "passagePeek": {
+        "title": "Passage used",
+        "noQuote": "No verbatim passage was recorded for this citation.",
+        "openArticle": "Open article"
+      }
     }
   },
   "profileSelection": {
