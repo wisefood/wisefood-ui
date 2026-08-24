@@ -3118,6 +3118,11 @@ const renderMarkdown = (text: string): string => {
   const normalizedText = normalizeAnswerProse(text)
     .replace(/\]\(\/articles\/(urn:article:[^)]+)\)/g, `](${base}/foodscholar/$1)`)
     .replace(/\]\(\/foodscholar\/(urn:article:[^)]+)\)/g, `](${base}/foodscholar/$1)`)
+    // Guideline citations must be ROUTABLE, not just interceptable: a plain
+    // click opens the peek, but a middle-click / open-in-new-tab bypasses the
+    // handler and needs a real destination — the catalog resolver, which
+    // redirects to the guide page with the rule highlighted.
+    .replace(/\]\(\/guidelines\/([^)\s]+)\)/g, `](${base}/foodscholar/catalog/guidelines/$1)`)
 
   const rawHtml = marked(normalizedText, {
     breaks: true,
