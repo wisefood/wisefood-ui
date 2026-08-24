@@ -13,14 +13,23 @@
           :ui="{ root: 'relative py-0 border-b-0' }"
         />
 
-        <UButton
-          color="primary"
-          icon="i-lucide-plus"
-          class="self-start"
-          @click="openCreateArticleModal"
-        >
-          Add Article
-        </UButton>
+        <div class="flex flex-wrap gap-2 self-start">
+          <UButton
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-sparkles"
+            to="/console/assets/articles/enrichment"
+          >
+            Enrichment
+          </UButton>
+          <UButton
+            color="primary"
+            icon="i-lucide-plus"
+            @click="openCreateArticleModal"
+          >
+            Add Article
+          </UButton>
+        </div>
       </div>
 
       <UPageBody class="space-y-6">

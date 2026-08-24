@@ -101,8 +101,83 @@ export interface EnrichmentWorkerRestartResponse {
   status: EnrichmentWorkerStatus
 }
 
+export interface VenueEnrichmentStatus {
+  venue: string
+  total: number
+  enriched: number
+  pending: number
+}
+
+export interface EnrichmentOverview {
+  total: number
+  enriched: number
+  pending: number
+  queue_depth?: number | null
+  sweeper_paused: boolean
+  venues: VenueEnrichmentStatus[]
+}
+
+export interface EnrichmentBatchProgress {
+  total: number
+  done: number
+  percent: number
+  queued: number
+  running: number
+  succeeded: number
+  failed: number
+  unknown: number
+}
+
+export interface EnrichmentBatchSummary {
+  batch_id: string
+  criteria: {
+    venue?: string | null
+    only_missing?: boolean
+    force?: boolean
+    limit?: number
+  }
+  requested_by?: string | null
+  created_at: string
+  selected: number
+  already_active?: number
+  queued?: number | null
+  progress?: EnrichmentBatchProgress | null
+  failures?: Array<{ urn: string, error?: string | null }>
+}
+
+export interface EnrichmentCriteriaBatchRequest {
+  venue?: string | null
+  only_missing?: boolean
+  force?: boolean
+  limit?: number
+}
+
 class FoodScholarEnrichmentApiService {
   private readonly basePath = '/foodscholar/enrich'
+
+  /** Corpus-wide enrichment coverage with per-journal breakdown. */
+  async getOverview(): Promise<EnrichmentOverview> {
+    return wisefoodRestApi.get<EnrichmentOverview>(`${this.basePath}/overview`)
+  }
+
+  /** Queue a batch by criteria (journal, missing-only, limit). Idempotent
+   *  across runs: re-running the same criteria continues where it stopped. */
+  async enqueueBatch(criteria: EnrichmentCriteriaBatchRequest): Promise<EnrichmentBatchSummary> {
+    return wisefoodRestApi.post<EnrichmentBatchSummary, EnrichmentCriteriaBatchRequest>(
+      `${this.basePath}/batches`,
+      criteria
+    )
+  }
+
+  async listBatches(): Promise<EnrichmentBatchSummary[]> {
+    return wisefoodRestApi.get<EnrichmentBatchSummary[]>(`${this.basePath}/batches`)
+  }
+
+  async getBatch(batchId: string): Promise<EnrichmentBatchSummary> {
+    return wisefoodRestApi.get<EnrichmentBatchSummary>(
+      `${this.basePath}/batches/${encodeURIComponent(batchId)}`
+    )
+  }
 
   /** Queue enrichment for one article. `force` re-enriches an already-processed one. */
   async enrichArticle(urn: string, force = false): Promise<EnrichmentJobStatus> {
