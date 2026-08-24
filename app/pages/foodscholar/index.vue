@@ -3068,6 +3068,15 @@ const mapArticleToHome = (article: Article): HomeArticle => {
  * the same repair to settled answers; doing it here too covers the live token
  * stream (re-rendered on every delta) and answers cached before the fix.
  */
+/** "diet-food-and-nutritional-exposures-and-281008798" → "Diet food and nutritional exposures and…" */
+const prettyUrnLabel = (urn: string): string => {
+  const slug = urn.replace(/^urn:article:/, '').replace(/-\d{6,}$/, '')
+  const words = slug.split('-').filter(Boolean)
+  const label = words.join(' ')
+  const trimmed = label.length > 48 ? `${label.slice(0, 48).trim()}…` : label
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1)
+}
+
 const normalizeAnswerProse = (text: string): string =>
   text
     // A leaked citation trailer (malformed sentinel) must never render: cut
@@ -3077,6 +3086,14 @@ const normalizeAnswerProse = (text: string): string =>
     .replace(/\{\s*"cited_sources"[\s\S]*$/, '')
     .replace(/【/g, '[')
     .replace(/】/g, '')
+    // A bare bracketed URN citation (a model quirk the backend now repairs
+    // with real author labels) still lands here from answers cached before
+    // that fix: give it a readable label and a working link. A URN inside a
+    // proper link URL is preceded by "/", not "[", so it never matches.
+    .replace(
+      /\[\s*(urn:article:[a-z0-9][a-z0-9-]*)\s*\]?(?!\()/g,
+      (_match, urn: string) => `[${prettyUrnLabel(urn)}](/articles/${urn})`
+    )
     // "[Zhao et al. (2025)(/articles/urn)" → restore the missing "](" so the
     // citation forms a real link (well-formed links cannot match: the label
     // class excludes "]").
