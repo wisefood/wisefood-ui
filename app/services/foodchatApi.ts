@@ -518,6 +518,14 @@ export interface FoodChatTool {
   uses_model: boolean
   /** True when it changes the plan. A reader is always safe to retry. */
   mutates: boolean
+  /**
+   * Which canvases the tool actually works on ('daily' | 'weekly').
+   *
+   * Optional because a FoodChat older than this field does not send it, and an
+   * absent declaration has to mean "no restriction known" rather than "none" —
+   * otherwise a deploy order alone empties the menu.
+   */
+  canvases?: string[]
   examples: string[]
 }
 

@@ -100,8 +100,23 @@ const { t } = useI18n()
 
 /** A tool is offered only when this canvas can supply its required arguments. */
 const available = computed(() => props.tools.filter(
-  tool => argsFor(tool) !== null && inScope(tool)
+  tool => argsFor(tool) !== null && onThisCanvas(tool) && inScope(tool)
 ))
+
+/**
+ * Whether the tool runs on the canvas this menu sits on.
+ *
+ * "Replace this day" was offered beside a daily plan and answered "there's no
+ * weekly plan in this conversation yet" — it pins weekly entries and there is
+ * nothing on a daily canvas for it to pin. The manifest declares this now, so
+ * the menu asks instead of assuming. A manifest that predates the field says
+ * nothing, and nothing means no restriction.
+ */
+function onThisCanvas(tool: FoodChatTool): boolean {
+  const canvases = tool.canvases
+  if (!Array.isArray(canvases) || canvases.length === 0) return true
+  return canvases.includes(props.planType)
+}
 
 /** Day menus offer day tools; the plan menu offers everything it can supply. */
 function inScope(tool: FoodChatTool): boolean {
@@ -170,10 +185,22 @@ const menuItems = computed<DropdownMenuItem[][]>(() => {
  * rather than not appearing until someone remembers the locale files.
  */
 function label(tool: FoodChatTool): string {
-  const key = `foodChatHome.tools.${TOOL_KEYS[tool.name] ?? ''}`
-  if (!TOOL_KEYS[tool.name]) return tool.summary
+  const key = `foodChatHome.tools.${labelKey(tool.name) ?? ''}`
+  if (!labelKey(tool.name)) return tool.summary
   const translated = t(key, props.day != null ? { day: props.day } : {})
   return translated === key ? tool.summary : translated
+}
+
+/**
+ * The label key, which for one tool depends on the canvas.
+ *
+ * `summarize_week` digests whichever canvas it is given, and a three-day plan
+ * on the daily canvas is not a week — offering "Summarise the week" beside it
+ * describes something the member does not have.
+ */
+function labelKey(name: string): string | undefined {
+  if (name === 'summarize_week' && props.planType === 'daily') return 'planSummary'
+  return TOOL_KEYS[name]
 }
 
 const TOOL_KEYS: Record<string, string> = {

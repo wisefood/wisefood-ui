@@ -1592,6 +1592,7 @@
       "replace": "Replace…",
       "adapt": "Adapt recipe",
       "replacePrefill": "Swap the {meal} for something lighter",
+      "replacePrefillDay": "Swap the {meal} on day {day} for something lighter",
       "replacePrefillWeekly": "Swap the {meal} on {day} for something lighter",
       "viewRecipe": "View recipe",
       "loadingNutrition": "Loading nutrition...",
@@ -1797,6 +1798,7 @@
     "tools": {
       "label": "Actions",
       "weekSummary": "Summarise the week",
+      "planSummary": "Summarise the plan",
       "daySummary": "Summarise this day",
       "replaceDay": "Replace this day",
       "planTotals": "Show the totals",

@@ -1570,6 +1570,7 @@
       "replace": "Csere…",
       "adapt": "Recept átalakítása",
       "replacePrefill": "Cseréld le a {meal} valami könnyebbre",
+      "replacePrefillDay": "Cseréld le a {day}. nap {meal} étkezését valami könnyebbre",
       "replacePrefillWeekly": "Cseréld le a {meal} étkezést ({day}) valami könnyebbre",
       "viewRecipe": "Recept megnyitása",
       "loadingNutrition": "Tápérték betöltése...",
@@ -1775,6 +1776,7 @@
     "tools": {
       "label": "Műveletek",
       "weekSummary": "Hét összegzése",
+      "planSummary": "A terv összegzése",
       "daySummary": "Nap összegzése",
       "replaceDay": "Nap kicserélése",
       "planTotals": "Összesítés megjelenítése",

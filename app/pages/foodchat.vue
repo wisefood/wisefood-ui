@@ -985,6 +985,21 @@
                         >
                           {{ Math.round(mealsNutritionTotal(group.meals)!.calories) }} kcal
                         </span>
+                        <!-- The weekly grid has had a per-day menu since the
+                             tools existed; a multi-day daily plan had none, so
+                             "summarise this day" was unreachable on the one
+                             canvas that routinely holds several days. -->
+                        <FoodchatPlanToolsMenu
+                          v-if="tools.length"
+                          :tools="tools"
+                          plan-type="daily"
+                          scope="day"
+                          :day="group.day"
+                          :running="runningTool"
+                          :busy="sending"
+                          class="ml-auto"
+                          @invoke="handleToolInvoke"
+                        />
                       </div>
                       <div
                         class="rounded-2xl overflow-hidden"
@@ -998,7 +1013,8 @@
                           :icon="meal.icon"
                           :recipe="meal.plates[0]!.recipe"
                           :extra-plates="meal.plates.slice(1).map(p => p.recipe)"
-                          @replace="prefillSlotReplace(meal.slot)"
+                          :class="{ 'fc-slot-flash': highlightedSlots.has(`${group.day}-${meal.slot}`) }"
+                          @replace="prefillSlotReplace(meal.slot, group.day)"
                           @adapt="openAdaptRecipe(meal.plates[0]!.recipe.recipe_id)"
                         />
                       </div>
@@ -2730,12 +2746,23 @@ function focusChatInputWith(text: string) {
   })
 }
 
-function prefillSlotReplace(slot: string) {
+function prefillSlotReplace(slot: string, day?: number) {
   // Prefill the verified-edit phrasing; the user tweaks the directive and
-  // sends — the edit flow swaps exactly this slot with before/after proof
-  focusChatInputWith(t('foodChatHome.mealCard.replacePrefill', {
-    meal: t(`foodChatHome.meals.${slot}`).toLowerCase()
-  }))
+  // sends — the edit flow swaps exactly this slot with before/after proof.
+  //
+  // The day is NOT optional decoration on a plan that has more than one. The
+  // card said "swap the dinner", which on a three-day plan names three
+  // dinners; the edit reader then has to ask which one, and a member who was
+  // one click from a swap is instead in a clarification. `day N` rather than a
+  // weekday, because a multi-day daily plan carries no calendar — day 1 is its
+  // first day, not Monday, and edit_service refuses to read weekdays there.
+  const meal = t(`foodChatHome.meals.${slot}`).toLowerCase()
+  const multiDay = displayedPlanDayGroups.value.length > 1
+  focusChatInputWith(
+    multiDay && day != null
+      ? t('foodChatHome.mealCard.replacePrefillDay', { meal, day })
+      : t('foodChatHome.mealCard.replacePrefill', { meal })
+  )
 }
 
 function prefillWeeklySlotReplace(dayIndex: number, slot: string) {

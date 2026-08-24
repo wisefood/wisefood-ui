@@ -1570,6 +1570,7 @@
       "replace": "Zamenjaj…",
       "adapt": "Prilagodi recept",
       "replacePrefill": "Zamenjaj {meal} za kaj lažjega",
+      "replacePrefillDay": "Zamenjaj {meal} na {day}. dan za kaj lažjega",
       "replacePrefillWeekly": "Zamenjaj {meal} v {day} za kaj lažjega",
       "viewRecipe": "Prikaži recept",
       "loadingNutrition": "Nalaganje hranilnih vrednosti...",
@@ -1775,6 +1776,7 @@
     "tools": {
       "label": "Dejanja",
       "weekSummary": "Povzemi teden",
+      "planSummary": "Povzemi načrt",
       "daySummary": "Povzemi ta dan",
       "replaceDay": "Zamenjaj ta dan",
       "planTotals": "Pokaži seštevke",
