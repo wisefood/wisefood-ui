@@ -89,6 +89,17 @@ export interface PlanParameter {
   default?: number | string | null
   /** Currently applied value, if the member has set this knob before */
   value?: number | string | null
+  /**
+   * Whether the options are a DIRECTION rather than alternatives.
+   *
+   * "Simple → Any" and "Off → Reuse → Minimal shopping" are points on a
+   * scale, so they read as a knob you slide. The goals are not — "lose
+   * weight" is not more or less than "high protein" — so they read as
+   * choices you pick between. The distinction comes from the server because
+   * that is where the options are defined; inferring it from the key would
+   * mean the UI holding a list of parameter names to keep in sync.
+   */
+  ordered?: boolean | null
 }
 
 /** Optional slider card attached to fresh plans — replaces the old textual

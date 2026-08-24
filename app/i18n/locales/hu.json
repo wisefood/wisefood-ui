@@ -1601,7 +1601,17 @@
         "diner": "Az étkezőknek választva",
         "guideline": "Táplálkozási irányelv"
       },
-      "macroSummary": "{carbs}g szénhidrát · {fat}g zsír"
+      "macroSummary": "{carbs}g szénhidrát · {fat}g zsír",
+      "mealMacros": "{kcal} kcal · {protein} g protein · {carbs} g szénhidrát · {fat} g zsír",
+      "partialMeal": "az egyik fogásnak nincs tápértékadata",
+      "roles": {
+        "main": "Főétel",
+        "side": "Köret",
+        "salad": "Saláta",
+        "soup": "Leves",
+        "dessert": "Desszert",
+        "drink": "Ital"
+      }
     },
     "constraints": {
       "label": "Feltételek",
@@ -1690,14 +1700,13 @@
         "touchedHint": "{n} beállítás módosítva",
         "params": {
           "cooking_time": "Főzési idő",
-          "difficulty": "Nehézség",
+          "difficulty": "Ráfordítás",
           "goal": "Cél",
           "food_waste": "Élelmiszer-pazarlás"
         },
         "options": {
-          "easy": "Könnyű",
-          "medium": "Közepes",
-          "hard": "Igényes",
+          "easy": "Egyszerű",
+          "medium": "Bármi",
           "weight_loss": "Fogyás",
           "balanced": "Kiegyensúlyozott",
           "high_protein": "Fehérjedús",

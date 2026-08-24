@@ -1623,7 +1623,17 @@
         "diner": "Chosen for your diners",
         "guideline": "Dietary guideline"
       },
-      "macroSummary": "{carbs}g carbs · {fat}g fat"
+      "macroSummary": "{carbs}g carbs · {fat}g fat",
+      "mealMacros": "{kcal} kcal · {protein}g protein · {carbs}g carbs · {fat}g fat",
+      "partialMeal": "one dish has no nutrition data",
+      "roles": {
+        "main": "Main",
+        "side": "Side",
+        "salad": "Salad",
+        "soup": "Soup",
+        "dessert": "Dessert",
+        "drink": "Drink"
+      }
     },
     "constraints": {
       "label": "Constraints",
@@ -1712,14 +1722,13 @@
         "touchedHint": "{n} setting adjusted | {n} settings adjusted",
         "params": {
           "cooking_time": "Cooking time",
-          "difficulty": "Difficulty",
+          "difficulty": "Effort",
           "goal": "Goal",
           "food_waste": "Food waste"
         },
         "options": {
-          "easy": "Easy",
-          "medium": "Medium",
-          "hard": "Elaborate",
+          "easy": "Simple",
+          "medium": "Any",
           "weight_loss": "Lose weight",
           "balanced": "Balanced",
           "high_protein": "High protein",

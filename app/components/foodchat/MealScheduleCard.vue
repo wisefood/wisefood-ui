@@ -1,5 +1,10 @@
 <template>
-  <div class="relative flex flex-col gap-3 p-5 bg-white dark:bg-zinc-800/50 transition-all hover:bg-gray-50 dark:hover:bg-zinc-700/30">
+  <div
+    class="relative flex flex-col gap-3 p-5 transition-all"
+    :class="isMultiPlate
+      ? 'bg-brandp-50/40 dark:bg-brandp-950/20 ring-1 ring-inset ring-brandp-200/70 dark:ring-brandp-900/50 hover:bg-brandp-50/70 dark:hover:bg-brandp-950/30'
+      : 'bg-white dark:bg-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-700/30'"
+  >
     <!-- Meal type + time -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2.5">
@@ -115,23 +120,101 @@
         </div>
       </NuxtLink>
 
-      <NuxtLink
-        v-if="recipe.recipe_id"
-        :to="`/recipe-wrangler/${recipe.recipe_id}`"
-        target="_blank"
-        class="flex-1 min-w-0 font-medium text-base sm:text-lg text-gray-900 dark:text-white leading-snug hover:text-brandp-500 dark:hover:text-brandp-300 transition-colors"
-      >{{ recipe.title }}</NuxtLink>
-      <h3
-        v-else
-        class="flex-1 min-w-0 font-medium text-base sm:text-lg text-gray-900 dark:text-white leading-snug"
+      <div class="flex-1 min-w-0">
+        <!-- The plate's role, as a badge on the dish rather than in the meal
+             heading: on a two-plate lunch the heading says "LUNCH" once, and
+             what distinguishes the dishes is which plate each one is. -->
+        <span
+          v-if="isMultiPlate"
+          class="inline-flex items-center px-1.5 py-0.5 mb-1 text-[10px] font-semibold uppercase tracking-wide rounded"
+          :class="roleBadgeClass(recipe)"
+        >{{ roleLabel(recipe) }}</span>
+        <NuxtLink
+          v-if="recipe.recipe_id"
+          :to="`/recipe-wrangler/${recipe.recipe_id}`"
+          target="_blank"
+          class="block font-medium text-base sm:text-lg text-gray-900 dark:text-white leading-snug hover:text-brandp-500 dark:hover:text-brandp-300 transition-colors"
+        >{{ recipe.title }}</NuxtLink>
+        <h3
+          v-else
+          class="font-medium text-base sm:text-lg text-gray-900 dark:text-white leading-snug"
+        >
+          {{ recipe.title }}
+        </h3>
+      </div>
+    </div>
+
+    <!-- The rest of the meal. Compact rows under the main, divided from it:
+         a salad beside a main is part of that lunch, not another lunch. -->
+    <div
+      v-if="extraPlates?.length"
+      class="border-t border-gray-100 dark:border-zinc-700/60 pt-3 space-y-2.5"
+    >
+      <div
+        v-for="(plate, pIdx) in extraPlates"
+        :key="plate.recipe_id || `plate-${pIdx}`"
+        class="flex items-center gap-3 pr-16"
       >
-        {{ recipe.title }}
-      </h3>
+        <NuxtLink
+          :to="plate.recipe_id ? `/recipe-wrangler/${plate.recipe_id}` : ''"
+          :target="plate.recipe_id ? '_blank' : undefined"
+          class="w-9 h-9 rounded-full shrink-0 overflow-hidden bg-gray-100 dark:bg-zinc-700 transition-transform duration-200 hover:scale-150 block"
+        >
+          <img
+            v-if="plate.image_url"
+            :src="plate.image_url"
+            class="w-full h-full object-cover"
+            loading="lazy"
+          >
+          <div
+            v-else
+            class="w-full h-full flex items-center justify-center"
+          >
+            <UIcon
+              name="i-lucide-salad"
+              class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600"
+            />
+          </div>
+        </NuxtLink>
+        <div class="flex-1 min-w-0">
+          <span
+            class="inline-flex items-center px-1.5 py-0.5 mb-0.5 text-[10px] font-semibold uppercase tracking-wide rounded"
+            :class="roleBadgeClass(plate)"
+          >{{ roleLabel(plate) }}</span>
+          <NuxtLink
+            v-if="plate.recipe_id"
+            :to="`/recipe-wrangler/${plate.recipe_id}`"
+            target="_blank"
+            class="block text-sm font-medium text-gray-800 dark:text-zinc-100 leading-snug hover:text-brandp-500 dark:hover:text-brandp-300 transition-colors"
+          >{{ plate.title }}</NuxtLink>
+          <span
+            v-else
+            class="block text-sm font-medium text-gray-800 dark:text-zinc-100 leading-snug"
+          >{{ plate.title }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- One line for the whole MEAL when it has more than one plate.
+         Two calorie figures side by side ask the member to add up their own
+         lunch; the main's figure alone understates it. -->
+    <div
+      v-if="isMultiPlate && mealMacros"
+      class="flex items-center gap-2 flex-wrap pr-16 border-t border-gray-100 dark:border-zinc-700/60 pt-3"
+    >
+      <UIcon name="i-lucide-flame" class="w-3.5 h-3.5 text-brandp-400 shrink-0" />
+      <span class="text-[11px] text-gray-600 dark:text-zinc-300 tabular-nums font-light">
+        {{ mealMacroLine }}
+      </span>
+      <span
+        v-if="!mealMacros.complete"
+        class="text-[10px] text-amber-600 dark:text-amber-400"
+      >{{ t('foodChatHome.mealCard.partialMeal') }}</span>
     </div>
 
     <!-- Nutrition summary + Nutri-Score (M4 transparency) -->
     <div
-      v-if="recipe.nutrition"
+      v-if="!isMultiPlate && recipe.nutrition"
       class="flex items-center gap-1.5 flex-wrap pr-16 -mt-1"
     >
       <span class="inline-flex items-center px-2 py-1 text-[11px] rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-300 font-light">
@@ -233,6 +316,7 @@ import type { MealRecipe } from '~/services/foodchatApi'
 import type { Recipe } from '~/services/recipeApi'
 import recipeApi from '~/services/recipeApi'
 import { useRecipeStore } from '~/stores/recipe'
+import { humaniseSlot } from '~/utils/planMeals'
 
 const props = defineProps<{
   type: string
@@ -242,6 +326,19 @@ const props = defineProps<{
   /** "Main Dish" / "Salad" — set only when a meal has several plates. */
   courseLabel?: string
   recipe: MealRecipe
+  /**
+   * The rest of this meal's plates — the salad beside the main, the dessert
+   * after it.
+   *
+   * A multi-plate meal used to be rendered as several SIBLING cards sharing a
+   * heading, which reads as three meals rather than one, and which totalled
+   * each plate separately so a two-plate lunch showed two calorie figures and
+   * no meal figure. One card per MEAL is what a plate actually is: the main
+   * leads, the rest sit under it, and the numbers are the meal's.
+   *
+   * Absent or empty keeps the single-plate card byte for byte.
+   */
+  extraPlates?: MealRecipe[]
 }>()
 
 const emit = defineEmits<{
@@ -382,7 +479,82 @@ const SEGMENT_DEFS = [
 
 const circumference = 2 * Math.PI * 23
 
+/** Every plate of this meal, main first. */
+const plates = computed<MealRecipe[]>(() => [props.recipe, ...(props.extraPlates ?? [])])
+
+const isMultiPlate = computed(() => plates.value.length > 1)
+
+/** A plate's role, humanised — "Main", "Salad", "Dessert". */
+function roleLabel(plate: MealRecipe): string {
+  const key = `foodChatHome.mealCard.roles.${String(plate.role || 'main').toLowerCase()}`
+  const translated = t(key)
+  return translated === key ? humaniseSlot(String(plate.role || 'main')) : translated
+}
+
+const ROLE_BADGE: Record<string, string> = {
+  main: 'bg-brandp-500 text-white',
+  side: 'bg-emerald-500 text-white',
+  salad: 'bg-emerald-500 text-white',
+  soup: 'bg-amber-500 text-white',
+  dessert: 'bg-pink-500 text-white',
+  drink: 'bg-sky-500 text-white'
+}
+
+function roleBadgeClass(plate: MealRecipe): string {
+  return ROLE_BADGE[String(plate.role || 'main').toLowerCase()]
+    ?? 'bg-gray-400 text-white'
+}
+
+/**
+ * The MEAL's macros — every plate added up, with what it could not see.
+ *
+ * A main plus a salad is one meal and one calorie figure. Reporting the main
+ * alone understates what the member eats; reporting two figures side by side
+ * asks them to add. `complete` is false when a plate carries no profile, and
+ * the card says so rather than presenting a partial sum as the whole.
+ */
+const mealMacros = computed(() => {
+  let kcal = 0, protein = 0, carbs = 0, fat = 0
+  let counted = 0
+  for (const plate of plates.value) {
+    const n = plate.nutrition
+    if (!n || typeof n.kcal !== 'number') continue
+    counted += 1
+    kcal += n.kcal ?? 0
+    protein += n.protein_g ?? 0
+    carbs += n.carbs_g ?? 0
+    fat += n.fat_g ?? 0
+  }
+  if (!counted) return null
+  return { kcal, protein, carbs, fat, complete: counted === plates.value.length }
+})
+
+const mealMacroLine = computed(() => {
+  const m = mealMacros.value
+  if (!m) return ''
+  return t('foodChatHome.mealCard.mealMacros', {
+    kcal: Math.round(m.kcal),
+    protein: Math.round(m.protein),
+    carbs: Math.round(m.carbs),
+    fat: Math.round(m.fat)
+  })
+})
+
 const macros = computed(() => {
+  // On a multi-plate meal the donut is the MEAL's balance, not the main's —
+  // a main and a salad split differently from the main alone, which is the
+  // whole reason the two plates are on one plate.
+  if (isMultiPlate.value) {
+    const m = mealMacros.value
+    if (m) {
+      return {
+        protein: Math.max(m.protein, 0),
+        carbs: Math.max(m.carbs, 0),
+        fat: Math.max(m.fat, 0),
+        fiber: 0
+      }
+    }
+  }
   // The plan's own per-serving macros, when it carries them. Same numbers, same
   // source (the recipe's Postgres profile) — just already delivered.
   const n = props.recipe.nutrition

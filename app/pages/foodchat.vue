@@ -767,16 +767,16 @@
                     :class="mealGridCols(displayedMealPlan)"
                   >
                     <FoodchatMealScheduleCard
-                      v-for="meal in displayedPlanMeals"
-                      :key="meal.key"
+                      v-for="meal in displayedPlanBySlot"
+                      :key="meal.slot"
                       :type="slotLabel(meal.slot)"
                       :time="meal.time || ''"
                       :icon="meal.icon"
-                      :course-label="meal.partOfMultiCourse ? humaniseSlot(meal.role) : ''"
-                      :recipe="meal.recipe"
+                      :recipe="meal.plates[0]!.recipe"
+                      :extra-plates="meal.plates.slice(1).map(p => p.recipe)"
                       :class="{ 'fc-slot-flash': highlightedSlots.has(meal.slot) }"
                       @replace="prefillSlotReplace(meal.slot)"
-                      @adapt="openAdaptRecipe(meal.recipe.recipe_id)"
+                      @adapt="openAdaptRecipe(meal.plates[0]!.recipe.recipe_id)"
                     />
                   </div>
 
@@ -798,18 +798,18 @@
                       </div>
                       <div
                         class="rounded-2xl overflow-hidden"
-                        :class="mealGridColumns(group.meals.length)"
+                        :class="mealGridColumns(groupBySlot(group.meals).length)"
                       >
                         <FoodchatMealScheduleCard
-                          v-for="meal in group.meals"
-                          :key="`d${group.day}-${meal.key}`"
+                          v-for="meal in groupBySlot(group.meals)"
+                          :key="`d${group.day}-${meal.slot}`"
                           :type="slotLabel(meal.slot)"
                           :time="meal.time || ''"
                           :icon="meal.icon"
-                          :course-label="meal.partOfMultiCourse ? humaniseSlot(meal.role) : ''"
-                          :recipe="meal.recipe"
+                          :recipe="meal.plates[0]!.recipe"
+                          :extra-plates="meal.plates.slice(1).map(p => p.recipe)"
                           @replace="prefillSlotReplace(meal.slot)"
-                          @adapt="openAdaptRecipe(meal.recipe.recipe_id)"
+                          @adapt="openAdaptRecipe(meal.plates[0]!.recipe.recipe_id)"
                         />
                       </div>
                     </section>
@@ -1335,8 +1335,10 @@ import {
   mealsNutritionTotal,
   planDayGroups,
   planMeals,
+  planMealsBySlot,
   planNutritionTotal,
-  slotIcon
+  slotIcon,
+  type NormalisedMeal
 } from '~/utils/planMeals'
 import { today, getLocalTimeZone, type DateValue } from '@internationalized/date'
 import memberMealPlansApi, {
@@ -2444,11 +2446,32 @@ function getMemberAvatarForDisplay(member: HouseholdMember): AvatarConfig {
  *  Previously derived from a literal `[breakfast, lunch, dinner]` triple, so a
  *  four-meal day was laid out as if it had three. */
 function mealGridCols(plan: MealPlan): string {
-  return mealGridColumns(planMeals(plan).length)
+  // Columns per MEAL, not per plate: a two-plate lunch is one card now, and
+  // counting plates gave a four-column grid for a three-meal day.
+  return mealGridColumns(planMealsBySlot(plan).length)
+}
+
+/**
+ * Plates of the same slot, gathered into one meal, order preserved.
+ *
+ * `planMealsBySlot` does this for a whole plan; the multi-day sections already
+ * have their day's plates in hand, so this groups those without re-reading the
+ * plan.
+ */
+function groupBySlot(meals: NormalisedMeal[]) {
+  const out: Array<{ slot: string, icon: string, time: string | null, plates: NormalisedMeal[] }> = []
+  for (const meal of meals) {
+    const existing = out.find(entry => entry.slot === meal.slot)
+    if (existing) existing.plates.push(meal)
+    else out.push({ slot: meal.slot, icon: meal.icon, time: meal.time, plates: [meal] })
+  }
+  return out
 }
 
 /** The plan's meals, whichever shape the backend sent. */
 const displayedPlanMeals = computed(() => planMeals(displayedMealPlan.value))
+/** The same plates, gathered one card per MEAL — a main and its salad together. */
+const displayedPlanBySlot = computed(() => planMealsBySlot(displayedMealPlan.value))
 // Every day of the displayed plan; length > 1 switches the canvas to day
 // sections. The single-day path keeps its exact existing markup.
 const displayedPlanDayGroups = computed(() => planDayGroups(displayedMealPlan.value))

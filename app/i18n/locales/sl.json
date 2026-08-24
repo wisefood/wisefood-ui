@@ -1601,7 +1601,17 @@
         "diner": "Izbrano za tvoje jedce",
         "guideline": "Prehranska smernica"
       },
-      "macroSummary": "{carbs}g OH · {fat}g maščob"
+      "macroSummary": "{carbs}g OH · {fat}g maščob",
+      "mealMacros": "{kcal} kcal · {protein} g beljakovin · {carbs} g ogljikovih hidratov · {fat} g maščob",
+      "partialMeal": "ena jed nima podatkov o hranilih",
+      "roles": {
+        "main": "Glavna jed",
+        "side": "Priloga",
+        "salad": "Solata",
+        "soup": "Juha",
+        "dessert": "Sladica",
+        "drink": "Napitek"
+      }
     },
     "constraints": {
       "label": "Omejitve",
@@ -1695,9 +1705,8 @@
           "food_waste": "Zavržena hrana"
         },
         "options": {
-          "easy": "Enostavno",
-          "medium": "Srednje",
-          "hard": "Zahtevno",
+          "easy": "Preprosto",
+          "medium": "Karkoli",
           "weight_loss": "Hujšanje",
           "balanced": "Uravnoteženo",
           "high_protein": "Veliko beljakovin",
