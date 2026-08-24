@@ -22,14 +22,24 @@
       {{ citation.article_title }}
     </p>
 
-    <!-- The exact sentence(s) the answer leaned on — verbatim from the
-         source, guaranteed by the backend's quote coercion. -->
-    <blockquote
+    <!-- The cited line shown IN its source: dimmed fragments of what comes
+         before and after, with the exact quoted sentence highlighted — the
+         same passage the article page marks via ?hl=. Quote verbatimness is
+         guaranteed by the backend's coercion. -->
+    <p
       v-if="citation.quote"
-      class="mt-2 border-l-2 border-brand-300 dark:border-brand-700 pl-2.5 text-sm leading-6 text-gray-700 dark:text-gray-200 italic"
+      class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-200"
     >
-      “{{ citation.quote }}”
-    </blockquote>
+      <span
+        v-if="citation.quote_context_before"
+        class="text-gray-400 dark:text-zinc-500"
+      >…{{ citation.quote_context_before }} </span>
+      <mark class="rounded-sm bg-amber-100 dark:bg-amber-500/25 px-0.5 text-gray-900 dark:text-amber-100">{{ citation.quote }}</mark>
+      <span
+        v-if="citation.quote_context_after"
+        class="text-gray-400 dark:text-zinc-500"
+      > {{ citation.quote_context_after }}…</span>
+    </p>
     <p
       v-else
       class="mt-2 text-xs text-gray-500 dark:text-gray-400"
@@ -92,7 +102,7 @@ const panelStyle = computed(() => {
   if (!rect) return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
 
   const PANEL_WIDTH = Math.min(384, window.innerWidth - 32)
-  const ESTIMATED_HEIGHT = 200
+  const ESTIMATED_HEIGHT = 280
   const GAP = 8
 
   const spaceBelow = window.innerHeight - rect.bottom

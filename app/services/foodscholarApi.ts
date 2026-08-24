@@ -33,6 +33,9 @@ export interface QaCitation {
   journal?: string | null
   section?: string | null
   quote?: string | null
+  /** Source text around the quote, so previews show the line in context. */
+  quote_context_before?: string | null
+  quote_context_after?: string | null
   confidence?: string | null
   relevance_score?: number | null
   /**
