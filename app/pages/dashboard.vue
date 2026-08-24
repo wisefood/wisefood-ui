@@ -209,6 +209,16 @@
                   <h3 class="font-semibold text-sm text-gray-900 dark:text-white mb-1">{{ meal.name }}</h3>
                   <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{{ meal.description }}</p>
                 </div>
+                <ul v-if="meal.plates.length" class="space-y-0.5">
+                  <li
+                    v-for="plate in meal.plates"
+                    :key="plate.id"
+                    class="flex items-baseline gap-1.5 text-xs"
+                  >
+                    <span class="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">{{ plate.role }}</span>
+                    <span class="min-w-0 truncate text-gray-600 dark:text-gray-300">{{ plate.title }}</span>
+                  </li>
+                </ul>
                 <div class="flex items-center gap-2 pt-1">
                   <div v-if="meal.members.length" class="flex items-center -space-x-0.5">
                     <UTooltip
@@ -375,7 +385,7 @@ import foodscholarApi, { type QaTipsResult } from '~/services/foodscholarApi'
 import catalogApi from '~/services/catalogApi'
 import recipeApi, { type RecipeSearchResult } from '~/services/recipeApi'
 import foodchatApi, { type MealPlan, type MealRecipe, type MemberCurrentPlans, type PlanMeal } from '~/services/foodchatApi'
-import { humaniseSlot, planMeals } from '~/utils/planMeals'
+import { humaniseSlot, planMealsBySlot } from '~/utils/planMeals'
 import type { HouseholdMember } from '~/services/householdsApi'
 import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
 import { buildGuideDetailPath } from '~/utils/guidesCatalog'
@@ -862,41 +872,70 @@ const upcomingMeals = computed(() => {
     }
   ]
 
-  const rendered = meals.map(meal => ({
+  const isNowAt = (timeInMinutes: number) =>
+    currentTimeInMinutes >= timeInMinutes && currentTimeInMinutes < timeInMinutes + 60
+
+  // The plan's OWN meals, one row each, with their extra plates inside.
+  //
+  // This used to be three fixed rows plus an "extras" list, and every plate
+  // beyond a main became its own row labelled "Lunch · Side". A member with a
+  // two-plate lunch and dinner read:
+  //
+  //   Breakfast   No breakfast planned yet
+  //   Lunch       1 recipe = 4 dinners: Herby onion rice
+  //   Lunch · Side  Sautéed Peppers
+  //   Dinner      Moroccan pumpkin, chickpea and haloumi burgers
+  //   Dinner · Side  Beans and peas in ginger dressing
+  //
+  // Five rows for two meals, and a breakfast reported as missing from a plan
+  // that was never asked to have one. The plates belong to their meal, and the
+  // shape of the plan is the shape of the plan.
+  const grouped = planMealsBySlot(todayMealPlan.value)
+  if (grouped.length) {
+    const known = new Map(meals.map(m => [m.mealType as string, m]))
+    return grouped
+      .map((group) => {
+        const fixed = known.get(group.slot)
+        const main = group.plates.find(p => p.role === 'main') ?? group.plates[0]!
+        return {
+          id: `slot-${group.slot}`,
+          name: fixed?.name ?? humaniseSlot(group.slot),
+          time: group.time ?? fixed?.time ?? '',
+          icon: fixed?.icon ?? group.icon,
+          recipeId: main.recipe.recipe_id || null,
+          description: mealDescriptionFromRecipe(main.recipe, ''),
+          // The rest of the meal, named by what it is. Rendered under the main
+          // rather than beside it, which is what the canvas does too.
+          plates: group.plates
+            .filter(plate => plate !== main)
+            .map(plate => ({
+              id: `${group.slot}-${plate.recipe.recipe_id}`,
+              role: humaniseSlot(plate.role),
+              title: plate.recipe.title,
+              recipeId: plate.recipe.recipe_id || null
+            })),
+          members: membersByMealType.value[group.slot as 'breakfast' | 'lunch' | 'dinner'] ?? [],
+          isNow: fixed ? isNowAt(fixed.timeInMinutes) : false
+        }
+      })
+      .sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'))
+  }
+
+  // No plan at all — the three canonical rows, so the widget shows a schedule
+  // rather than a blank card. This is the ONLY case they are invented: a plan
+  // that exists gets to say what shape it is, and "no breakfast planned yet"
+  // on a deliberate lunch-and-dinner day reads as a gap the member left.
+  return meals.map(meal => ({
     id: meal.id,
     name: meal.name,
     time: meal.time,
     icon: meal.icon,
-    recipeId: meal.recipe?.recipe_id || null,
-    description: mealDescriptionFromRecipe(meal.recipe, meal.fallbackDescription),
+    recipeId: null,
+    description: meal.fallbackDescription,
+    plates: [] as Array<{ id: string, role: string, title: string, recipeId: string | null }>,
     members: membersByMealType.value[meal.mealType],
-    isNow: currentTimeInMinutes >= meal.timeInMinutes && currentTimeInMinutes < meal.timeInMinutes + 60
+    isNow: isNowAt(meal.timeInMinutes)
   }))
-
-  // Anything the plan has beyond the three canonical slots — a snack, a
-  // dessert, the second plate of a two-course dinner. The three above are kept
-  // as fixed rows so the widget still shows a schedule when nothing is planned;
-  // these are appended only when they exist, and were previously dropped
-  // entirely, so a member's snack simply never appeared on their dashboard.
-  const canonical = new Set(['breakfast', 'lunch', 'dinner'])
-  const extras = planMeals(todayMealPlan.value)
-    // A non-main plate of a canonical slot is extra too: the fixed row above
-    // shows that meal's main course, so the side salad has nowhere else to go.
-    .filter(meal => !canonical.has(meal.slot) || meal.role !== 'main')
-    .map((meal, index) => ({
-      id: `${meal.slot}-${meal.role}-${index}`,
-      name: canonical.has(meal.slot)
-        ? `${humaniseSlot(meal.slot)} · ${humaniseSlot(meal.role)}`
-        : humaniseSlot(meal.slot),
-      time: meal.time ?? '',
-      icon: meal.icon,
-      recipeId: meal.recipe.recipe_id || null,
-      description: mealDescriptionFromRecipe(meal.recipe, ''),
-      members: [] as HouseholdMember[],
-      isNow: false
-    }))
-
-  return [...rendered, ...extras].sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'))
 })
 
 let timeInterval: NodeJS.Timeout | null = null
