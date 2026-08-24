@@ -1,6 +1,8 @@
 <template>
   <div class="flex flex-col">
-    <div class="flex h-[calc(100dvh-6rem)] flex-col overflow-hidden bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+    <!-- The app header is 4rem (UHeader default); reserving more than that
+         just shortens the PDF viewport for nothing. -->
+    <div class="flex h-[calc(100dvh-4rem)] flex-col overflow-hidden bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
       <FoodscholarMicroHeader
         :show-back="true"
         :back-to="resolvedRegion ? buildGuidesRegionPath(resolvedRegion) : buildGuidesCatalogPath()"
@@ -212,11 +214,13 @@
         v-else-if="selectedGuide"
         class="flex min-h-0 flex-1 justify-center"
       >
-        <div class="flex min-h-0 w-full max-w-[140rem] flex-1">
-          <!-- LEFT: PDF viewer -->
+        <div class="flex min-h-0 w-full max-w-[100rem] flex-1">
+          <!-- LEFT: PDF viewer. Documents are portrait: width beyond ~64rem
+               is dead margin that only makes fit-width pages taller than the
+               viewport, so the column is capped and the split stays centered. -->
           <div
             v-if="primaryPdfArtifact"
-            class="flex min-w-0 flex-1 flex-col"
+            class="flex min-w-0 max-w-[64rem] flex-1 flex-col"
           >
             <!-- PDF toolbar -->
             <div class="flex shrink-0 flex-wrap items-center gap-2 border-b border-gray-100/60 bg-white/70 px-3 py-2 dark:border-white/5 dark:bg-zinc-900/40">
