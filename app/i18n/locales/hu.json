@@ -1735,9 +1735,9 @@
       "partial": "részleges — egyes ételekhez nincs tápérték"
     },
     "planningState": {
-      "title": "Amit figyelembe veszek",
-      "subtitle": "Minden itt látható elem alakítja a következő tervet. Töröld, amit félreértettem.",
-      "empty": "Még semmi — írd meg, mi van otthon, vagy mire vágysz.",
+      "title": "Amit a FoodChat figyelembe vesz",
+      "subtitle": "Minden itt látható elem alakítja a következő tervet. Töröld, amit a FoodChat félreértett.",
+      "empty": "Még semmi sincs beállítva — írd le, mi van otthon, vagy mire vágysz.",
       "pantryLabel": "A konyhádban",
       "pantryHint": "Felhasználandó hozzávalók. A tervezés előnyben részesíti az ezeket használó recepteket.",
       "pantryAdd": "Hozzávaló hozzáadása",

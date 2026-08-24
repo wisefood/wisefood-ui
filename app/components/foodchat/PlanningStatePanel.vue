@@ -18,33 +18,12 @@
       commits them.
   -->
   <div class="fc-state-panel rounded-2xl border border-gray-200 dark:border-zinc-700/70 bg-white/60 dark:bg-zinc-900/40 overflow-hidden">
-    <!-- Header: collapses, because on a settled plan this is reference material -->
-    <button
-      class="w-full flex items-center gap-2 px-4 py-2.5 text-left hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors"
-      :aria-expanded="open"
-      @click="open = !open"
-    >
-      <UIcon
-        name="i-lucide-clipboard-list"
-        class="w-4 h-4 text-brandp-500 shrink-0"
-      />
-      <span class="text-sm font-medium text-gray-700 dark:text-zinc-200">
-        {{ t('foodChatHome.planningState.title') }}
-      </span>
-      <span
-        v-if="!open && summaryCount > 0"
-        class="text-[10px] px-1.5 py-0.5 rounded-full bg-brandp-50 dark:bg-brandp-900/30 text-brandp-600 dark:text-brandp-300 tabular-nums"
-      >{{ summaryCount }}</span>
-      <UIcon
-        :name="open ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
-        class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 ml-auto shrink-0"
-      />
-    </button>
-
-    <div
-      v-if="open"
-      class="px-4 pb-4 space-y-4"
-    >
+    <!-- No header of its own.
+         There was one, with its own collapse — and this panel now lives inside
+         a rail that IS the disclosure, so opening it took two clicks on two
+         chevrons for one thing. The rail's header carries the title and the
+         count; this is the content. -->
+    <div class="px-4 pb-4 pt-3 space-y-4">
       <p class="text-xs text-gray-500 dark:text-zinc-400 font-light">
         {{ t('foodChatHome.planningState.subtitle') }}
       </p>
@@ -336,13 +315,11 @@ const props = withDefaults(defineProps<{
   pendingChanges?: number
   busy?: boolean
   /** Start expanded when the member has nothing yet and needs the invitation. */
-  startOpen?: boolean
   /** The facet vocabulary the corpus carries. Empty hides the picker. */
   vocabularies?: Vocabularies | null
 }>(), {
   pendingChanges: 0,
   busy: false,
-  startOpen: false,
   vocabularies: null
 })
 
@@ -356,7 +333,6 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const open = ref(props.startOpen)
 const draft = ref('')
 const facetDraft = ref<string | undefined>(undefined)
 

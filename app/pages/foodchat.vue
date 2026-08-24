@@ -1572,7 +1572,6 @@
     :facets="facetChips"
     :pending-changes="pendingStateChanges"
     :busy="sending"
-    :start-open="pendingStateChanges > 0"
     :vocabularies="vocabularies"
     @add-facet="handleAddFacet"
     @add-pantry="handleAddPantry"

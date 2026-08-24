@@ -1757,9 +1757,9 @@
       "partial": "partial — some meals have no nutrition data"
     },
     "planningState": {
-      "title": "What I'm planning around",
-      "subtitle": "Everything here shapes the next plan. Remove anything I misheard.",
-      "empty": "Nothing standing yet — tell me what you have in, or what you feel like.",
+      "title": "What FoodChat is planning around",
+      "subtitle": "Everything here shapes the next plan. Remove anything that was misheard.",
+      "empty": "Nothing standing yet — say what you have in, or what you feel like.",
       "pantryLabel": "In your kitchen",
       "pantryHint": "Ingredients to use up. Planning prefers recipes that need them.",
       "pantryAdd": "Add an ingredient",

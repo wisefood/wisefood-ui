@@ -1735,9 +1735,9 @@
       "partial": "delno — nekateri obroki nimajo podatkov"
     },
     "planningState": {
-      "title": "Kaj upoštevam",
-      "subtitle": "Vse tukaj oblikuje naslednji načrt. Odstrani, kar sem narobe razumel.",
-      "empty": "Še nič — povej, kaj imaš doma ali česa si želiš.",
+      "title": "Kaj FoodChat upošteva",
+      "subtitle": "Vse tukaj oblikuje naslednji načrt. Odstrani, kar je bilo narobe razumljeno.",
+      "empty": "Še nič ni določeno — povej, kaj imaš doma ali kaj bi rad.",
       "pantryLabel": "V tvoji kuhinji",
       "pantryHint": "Sestavine za porabo. Načrtovanje da prednost receptom, ki jih potrebujejo.",
       "pantryAdd": "Dodaj sestavino",
