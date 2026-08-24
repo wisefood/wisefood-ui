@@ -1577,10 +1577,15 @@
       "retry": "Try again"
     },
     "suggestedQuestions": {
-      "dailyPlan": "Create a daily meal plan for today",
-      "weeklyPlan": "Generate a full weekly meal plan",
-      "highProtein": "High-protein vegetarian ideas",
-      "mediterranean": "Mediterranean diet plan"
+      "dailyPlan": "Plan my day",
+      "weeklyPlan": "Plan my week",
+      "shape": "Three days, dinner with a salad on the side",
+      "taste": "Something comforting and Thai tonight",
+      "pantry": "I've got spinach and half a jar of olives to use up",
+      "quick": "Dinner under 20 minutes",
+      "diet": "A gluten-free week, high protein",
+      "science": "Is keto safe for teenagers?",
+      "thenWhat": "Once there's a plan you can swap a meal, add a course, ask what it adds up to, get a shopping list, or keep it in your library."
     },
     "mealCard": {
       "menu": "Meal options",

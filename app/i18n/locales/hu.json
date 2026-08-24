@@ -1555,10 +1555,15 @@
       "retry": "Újra"
     },
     "suggestedQuestions": {
-      "dailyPlan": "Készíts napi menütervet mára",
-      "weeklyPlan": "Készíts teljes heti menütervet",
-      "highProtein": "Magas fehérjetartalmú vegetáriánus ötletek",
-      "mediterranean": "Mediterrán étrendterv"
+      "dailyPlan": "Tervezd meg a napom",
+      "weeklyPlan": "Tervezd meg a hetem",
+      "shape": "Három nap, vacsora salátával",
+      "taste": "Valami vigasztaló és thai ma este",
+      "pantry": "Van itthon spenót és egy fél üveg olívabogyó",
+      "quick": "Vacsora 20 perc alatt",
+      "diet": "Gluténmentes hét, sok proteinnel",
+      "science": "Biztonságos a keto tinédzsereknek?",
+      "thenWhat": "Ha már van terv, kicserélhetsz egy fogást, hozzáadhatsz egy köretet, megkérdezheted az összesítést, kérhetsz bevásárlólistát, vagy elmentheted a könyvtáradba."
     },
     "mealCard": {
       "menu": "Étkezés menü",

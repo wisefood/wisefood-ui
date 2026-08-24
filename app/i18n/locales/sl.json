@@ -1555,10 +1555,15 @@
       "retry": "Poskusi znova"
     },
     "suggestedQuestions": {
-      "dailyPlan": "Ustvari dnevni jedilnik za danes",
-      "weeklyPlan": "Ustvari celoten tedenski jedilnik",
-      "highProtein": "Ideje za vegetarijanske obroke z veliko beljakovin",
-      "mediterranean": "Mediteranski prehranski plan"
+      "dailyPlan": "Načrtuj moj dan",
+      "weeklyPlan": "Načrtuj moj teden",
+      "shape": "Trije dnevi, večerja s solato",
+      "taste": "Nekaj tolažilnega in tajskega za večer",
+      "pantry": "Doma imam špinačo in pol kozarca oliv",
+      "quick": "Večerja v manj kot 20 minutah",
+      "diet": "Brezglutenski teden z veliko beljakovin",
+      "science": "Je keto varen za najstnike?",
+      "thenWhat": "Ko načrt obstaja, lahko zamenjaš jed, dodaš hod, vprašaš za seštevke, dobiš nakupovalni seznam ali ga shraniš v knjižnico."
     },
     "mealCard": {
       "menu": "Možnosti obroka",

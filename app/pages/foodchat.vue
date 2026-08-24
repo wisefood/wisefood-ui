@@ -129,6 +129,14 @@
               <p class="text-xs text-gray-600 dark:text-gray-400 font-light leading-relaxed group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">{{ q.text }}</p>
             </button>
           </div>
+
+          <!-- What becomes possible once a plan exists.
+               These are real capabilities and every one of them needs a plan to
+               act on, so they are said rather than offered as buttons that
+               would answer "there is no plan yet". -->
+          <p class="mt-4 text-[11px] text-gray-400 dark:text-zinc-500 font-light leading-relaxed">
+            {{ t('foodChatHome.suggestedQuestions.thenWhat') }}
+          </p>
         </div>
       </div>
     </Transition>
@@ -2145,11 +2153,30 @@ const activeDateLocale = computed(() => {
   return 'en-US'
 })
 
+/**
+ * The starters, one per CAPABILITY rather than four ways to ask for a plan.
+ *
+ * It was "daily plan", "weekly plan", "high-protein vegetarian ideas",
+ * "Mediterranean diet plan" — all four the same thing said differently, so a
+ * member could use FoodChat for a while and never learn it can hear what is in
+ * their fridge, cap the cooking time, plan a dinner as two courses, or answer a
+ * nutrition question from the evidence base.
+ *
+ * Every one of these works from a COLD start. That rules out the tools and the
+ * edits — "what do I need to buy?" and "swap Tuesday's dinner" are real
+ * capabilities and both need a plan to exist first, so offering them here would
+ * hand someone a button that answers "there is no plan yet". They are named in
+ * the line underneath instead.
+ */
 const suggestedQuestions = computed(() => [
   { text: t('foodChatHome.suggestedQuestions.dailyPlan'), icon: 'i-lucide-calendar-days' },
   { text: t('foodChatHome.suggestedQuestions.weeklyPlan'), icon: 'i-lucide-calendar-range' },
-  { text: t('foodChatHome.suggestedQuestions.highProtein'), icon: 'i-lucide-leaf' },
-  { text: t('foodChatHome.suggestedQuestions.mediterranean'), icon: 'i-lucide-heart-pulse' }
+  { text: t('foodChatHome.suggestedQuestions.shape'), icon: 'i-lucide-layout-grid' },
+  { text: t('foodChatHome.suggestedQuestions.taste'), icon: 'i-lucide-sparkles' },
+  { text: t('foodChatHome.suggestedQuestions.pantry'), icon: 'i-lucide-refrigerator' },
+  { text: t('foodChatHome.suggestedQuestions.quick'), icon: 'i-lucide-timer' },
+  { text: t('foodChatHome.suggestedQuestions.diet'), icon: 'i-lucide-leaf' },
+  { text: t('foodChatHome.suggestedQuestions.science'), icon: 'i-lucide-graduation-cap' }
 ])
 
 const negativeFeedbackReasons = [
