@@ -344,10 +344,13 @@
           </div>
         </div>
 
-        <!-- Sliding history: earlier exchanges of this thread, dimmed under a
-             top fade — present when you scroll up for them, quiet otherwise. -->
-        <div v-if="threadTurns.length" class="qa-thread-history relative space-y-4 mb-6">
-          <div class="sticky top-14 h-16 -mb-16 z-10 pointer-events-none bg-gradient-to-b from-white/90 dark:from-zinc-950/90 to-transparent" />
+        <!-- Sliding history: earlier exchanges of this thread live in a
+             bounded strip that scrolls internally and stays pinned to its
+             newest turn — the page never grows with the conversation, and the
+             latest exchange keeps its place at eye level below. The top fade
+             hints at what scrolling up reveals. -->
+        <div v-if="threadTurns.length" ref="historyScrollRef" class="qa-thread-history relative space-y-4 mb-6 max-h-[45vh] overflow-y-auto overscroll-contain pr-1">
+          <div class="sticky top-0 h-12 -mb-12 z-10 pointer-events-none bg-gradient-to-b from-white/95 dark:from-zinc-950/95 to-transparent" />
           <template v-for="(turn, tIdx) in threadTurns" :key="`turn-${turn.result.request_id || tIdx}`">
             <div class="flex justify-end qa-history-bubble">
               <div class="chat-flow-bubble chat-flow-bubble-user">
@@ -2078,6 +2081,27 @@ const asking = ref(false)
 const qaError = ref<string | null>(null)
 const qaResult = ref<QaAskResult | null>(null)
 
+// ── Sliding thread history: bounded strip, pinned to its newest turn ──
+const MAX_VISIBLE_TURNS = 6
+const threadTurns = ref<QaThreadTurn[]>([])
+const historyScrollRef = ref<HTMLElement | null>(null)
+const latestExchangeRef = ref<HTMLElement | null>(null)
+const memoryPanelOpen = ref(false)
+
+const scrollHistoryToBottom = () => {
+  void nextTick(() => {
+    const el = historyScrollRef.value
+    if (el) el.scrollTop = el.scrollHeight
+  })
+}
+watch(() => threadTurns.value.length, scrollHistoryToBottom)
+
+const carriedContext = computed(() => qaResult.value?.conversation_context ?? null)
+const hasCarriedContext = computed(() => Boolean(
+  carriedContext.value
+  && (carriedContext.value.summary || carriedContext.value.notes?.length)
+))
+
 // ── Streaming pipeline (SSE): live reasoning steps + token-streamed answer ──
 const {
   streamingAnswer: liveAnswer,
@@ -2113,20 +2137,6 @@ const handleMemoryDecision = async (suggestion: QaMemorySuggestion, decision: 'a
     delete memoryChipState[suggestion.id]
   }
 }
-
-// ── Conversation thread: sliding visible history + carried memory ──
-// Previous exchanges of the active thread stay on screen above the current
-// one, dimmed under a top fade and revealed by scrolling — continuity you can
-// see, without turning the page into a chatbox.
-const MAX_VISIBLE_TURNS = 6
-const threadTurns = ref<QaThreadTurn[]>([])
-const latestExchangeRef = ref<HTMLElement | null>(null)
-const memoryPanelOpen = ref(false)
-const carriedContext = computed(() => qaResult.value?.conversation_context ?? null)
-const hasCarriedContext = computed(() => Boolean(
-  carriedContext.value
-  && (carriedContext.value.summary || carriedContext.value.notes?.length)
-))
 
 // clarification state
 const pendingClarification = ref<QaClarification | null>(null)
