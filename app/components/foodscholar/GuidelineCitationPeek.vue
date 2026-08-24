@@ -27,6 +27,15 @@
         {{ guideline.rule_text }}
       </p>
 
+      <!-- What surrounded the rule on its page: the context the sentence
+           loses the moment it is lifted out of the document. -->
+      <p
+        v-if="guideline.page_summary"
+        class="mt-2 border-l-2 border-gray-200 dark:border-white/10 pl-2.5 text-xs leading-5 text-gray-500 dark:text-gray-400"
+      >
+        {{ guideline.page_summary }}
+      </p>
+
       <div v-if="chips.length" class="mt-3 flex flex-wrap items-center gap-1.5">
         <span
           v-for="chip in chips"
