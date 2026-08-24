@@ -72,15 +72,14 @@
                 <div v-if="sessions.length > 0" class="flex items-center gap-1.5 min-w-0">
                   <UIcon name="i-lucide-history" class="w-3 h-3 text-gray-400 dark:text-zinc-500 shrink-0" />
                   <USelectMenu
-                    :model-value="null"
+                    :model-value="undefined"
                     :items="sessionItems"
                     value-key="value"
                     label-key="label"
-                    :search-input="false"
                     size="sm"
                     :placeholder="t('foodChatHome.chat.previousSessions')"
                     :content="{ align: 'start', side: 'bottom', sideOffset: 4 }"
-                    :ui="{ base: 'fc-session-select text-xs text-gray-500 dark:text-zinc-400 cursor-pointer' }"
+                    :ui="sessionPickerUi"
                     class="w-52"
                     @update:model-value="handleSessionSwitch"
                   />
@@ -150,15 +149,14 @@
           <div class="fc-session-bar flex items-center gap-2 px-3 py-2 shrink-0">
             <UIcon name="i-lucide-messages-square" class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0" />
             <USelectMenu
-              :model-value="activeSession?.session_id ?? null"
+              :model-value="activeSession?.session_id"
               :items="sessionItems"
               value-key="value"
               label-key="label"
-              :search-input="false"
               size="sm"
-              :ui="{ base: 'fc-session-select flex-1 min-w-0 truncate text-xs text-gray-600 dark:text-zinc-400 cursor-pointer', trailingIcon: 'w-3.5 h-3.5' }"
+              :ui="sessionBarUi"
               :content="{ align: 'start', side: 'bottom', sideOffset: 4 }"
-              class="flex-1 min-w-0 fc-session-select"
+              class="flex-1 min-w-0"
               @update:model-value="handleSessionSwitch"
             />
             <button
@@ -688,6 +686,18 @@
                     <span class="text-sm font-medium text-gray-900 dark:text-white">{{ canvasMode === 'weekly' ? t('foodChatHome.planHeader.weeklyPlan') : t('foodChatHome.planHeader.dailyPlan') }}</span>
                   </div>
 
+                  <!-- Tools: the capabilities FoodChat declares, as buttons.
+                       Fed by the manifest, so a tool that exists is offered. -->
+                  <FoodchatPlanToolsMenu
+                    v-if="tools.length"
+                    :tools="tools"
+                    :plan-type="canvasMode"
+                    :day="toolsMenuDay"
+                    :running="runningTool"
+                    :busy="sending"
+                    @invoke="handleToolInvoke"
+                  />
+
                   <!-- Save: this plan outlives the conversation -->
                   <button
                     v-if="displayedPlanId"
@@ -727,6 +737,72 @@
                     {{ canvasMode === 'daily' && displayedMealPlan ? formatPlanDate(displayedMealPlan.created_at) : '' }}
                     {{ canvasMode === 'weekly' && displayedWeeklyPlan ? formatPlanDate(displayedWeeklyPlan.created_at) : '' }}
                   </span>
+                </div>
+
+                <!-- ── What FoodChat is planning around ──
+                     Session-scoped and server-held, so unlike the ledger below
+                     it describes the NEXT plan rather than this one — and it
+                     survives a reload, which the client-grafted extras do not. -->
+                <div v-if="planningState" class="mb-4">
+                  <FoodchatPlanningStatePanel
+                    :state="planningState"
+                    :facets="facetChips"
+                    :pending-changes="pendingStateChanges"
+                    :busy="sending"
+                    :start-open="pendingStateChanges > 0"
+                    :vocabularies="vocabularies"
+                    @add-facet="handleAddFacet"
+                    @add-pantry="handleAddPantry"
+                    @remove-pantry="handleRemovePantry"
+                    @remove-facet="handleRemoveFacet"
+                    @replan="handleReplan"
+                  />
+                </div>
+
+                <!-- The last tool result. Dismissible, and never mistaken for
+                     the plan itself: a summary is an answer, not a change. -->
+                <div
+                  v-if="toolResult"
+                  class="mb-4 rounded-2xl border border-gray-200 dark:border-zinc-700/70 bg-white/70 dark:bg-zinc-900/40 overflow-hidden"
+                >
+                  <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-100 dark:border-zinc-800">
+                    <UIcon
+                      :name="toolResult.error ? 'i-lucide-alert-triangle' : 'i-lucide-wand-sparkles'"
+                      class="w-3.5 h-3.5 shrink-0"
+                      :class="toolResult.error ? 'text-amber-500' : 'text-brandp-500'"
+                    />
+                    <span class="text-xs font-medium text-gray-700 dark:text-zinc-200">{{ toolResult.title }}</span>
+                    <button
+                      class="ml-auto w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+                      :aria-label="t('a11y.close')"
+                      @click="toolResult = null"
+                    >
+                      <UIcon name="i-lucide-x" class="w-3 h-3" />
+                    </button>
+                  </div>
+                  <div class="px-4 py-3 space-y-2">
+                    <p v-if="toolResult.error" class="text-xs text-amber-700 dark:text-amber-300 font-light">
+                      {{ toolResult.error }}
+                    </p>
+                    <template v-else>
+                      <p v-if="toolResult.headline" class="text-xs text-gray-600 dark:text-zinc-300">
+                        {{ toolResult.headline }}
+                      </p>
+                      <ul v-if="toolResult.lines.length" class="space-y-1">
+                        <li
+                          v-for="(line, lIdx) in toolResult.lines"
+                          :key="lIdx"
+                          class="text-xs text-gray-500 dark:text-zinc-400 font-light flex items-baseline gap-2"
+                        >
+                          <span class="text-gray-400 dark:text-zinc-500 shrink-0 min-w-20">{{ line.label }}</span>
+                          <span class="tabular-nums">{{ line.value }}</span>
+                        </li>
+                      </ul>
+                      <p v-if="toolResult.caveat" class="text-[10px] text-gray-400 dark:text-zinc-500 font-light">
+                        {{ toolResult.caveat }}
+                      </p>
+                    </template>
+                  </div>
                 </div>
 
                 <!-- ── Daily plan content ── -->
@@ -861,39 +937,7 @@
                   </div>
 
                   <!-- Plan quality panel -->
-                  <div v-if="qualityMetrics.length" class="mb-4 rounded-xl border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-800/40 overflow-hidden">
-                    <button
-                      class="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-colors"
-                      @click="qualityOpen = !qualityOpen"
-                    >
-                      <span class="inline-flex items-center gap-1.5">
-                        <UIcon name="i-lucide-gauge" class="w-3.5 h-3.5 text-brandp-400" />
-                        {{ t('foodChatHome.quality.title') }}
-                      </span>
-                      <UIcon :name="qualityOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3.5 h-3.5" />
-                    </button>
-                    <div v-show="qualityOpen" class="px-3 pb-3 pt-1 space-y-2">
-                      <div v-for="metric in qualityMetrics" :key="metric.key" class="flex items-center gap-2">
-                        <span class="w-24 shrink-0 text-[11px] font-light text-gray-500 dark:text-zinc-400">{{ metric.label }}</span>
-                        <template v-if="metric.max != null">
-                          <div class="flex-1 h-1.5 rounded-full bg-gray-100 dark:bg-zinc-700 overflow-hidden">
-                            <div
-                              class="h-full rounded-full bg-brandp-400 dark:bg-brandp-500 transition-all"
-                              :style="{ width: `${Math.min(Math.max(metric.value / metric.max, 0), 1) * 100}%` }"
-                            />
-                          </div>
-                          <span class="w-9 shrink-0 text-right text-[11px] font-medium text-gray-700 dark:text-zinc-200">{{ metric.value }}/{{ metric.max }}</span>
-                        </template>
-                        <span v-else class="flex-1 text-right text-[11px] font-medium text-gray-700 dark:text-zinc-200">
-                          {{ t('foodChatHome.quality.varietyValue', { count: metric.value }) }}
-                        </span>
-                        <UTooltip v-if="metric.reasoning" :text="metric.reasoning">
-                          <UIcon name="i-lucide-info" class="w-3 h-3 text-gray-300 dark:text-zinc-600 cursor-help shrink-0" />
-                        </UTooltip>
-                        <span v-else class="w-3 shrink-0" />
-                      </div>
-                    </div>
-                  </div>
+                  <FoodchatPlanQualityPanel :metrics="qualityMetrics" />
 
                   <!-- Plan vote -->
                   <div class="mb-5 px-1">
@@ -944,6 +988,13 @@
 
                 <!-- ── Weekly plan content ── -->
                 <template v-else-if="canvasMode === 'weekly' && displayedWeeklyPlan">
+                  <!-- The same quality panel the daily canvas has. Weekly is the
+                       deepest plan the product makes and said the least about
+                       it: the graders were instance attributes on the daily
+                       service, so no variety, diversity or adherence score ever
+                       reached a week. -->
+                  <FoodchatPlanQualityPanel :metrics="weeklyQualityMetrics" />
+
                   <!-- Measured constraint ledger (weekly rows can be relaxed/violated) -->
                   <div v-if="weeklyLedger.length" class="mb-3 px-1 flex items-center gap-1.5 flex-wrap">
                     <span class="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 shrink-0">
@@ -1015,66 +1066,96 @@
                         />
                       </button>
 
+                      <!-- Day-scoped tools. Here rather than only on the toolbar
+                           because THIS is where "this day" is unambiguous —
+                           "replace Thursday" needs no guess about which day the
+                           member meant. -->
+                      <div
+                        v-if="tools.length"
+                        v-show="expandedWeeklyDays.has(day.dayIndex)"
+                        class="flex items-center justify-end px-3 pb-1 -mt-1"
+                      >
+                        <FoodchatPlanToolsMenu
+                          :tools="tools"
+                          plan-type="weekly"
+                          scope="day"
+                          :day="day.dayIndex"
+                          :running="runningTool"
+                          :busy="sending"
+                          @invoke="handleToolInvoke"
+                        />
+                      </div>
+
                       <div v-show="expandedWeeklyDays.has(day.dayIndex)" class="px-2 pb-2">
+                        <!-- One cell per PLATE, not per slot name. The cell used
+                             to look its entry up with `entries.find(meal_type)`,
+                             which returns the first match — so a dinner with a
+                             side rendered the main and silently dropped the
+                             rest. `day.cells` carries every entry. -->
                         <div
                           class="gap-1.5"
-                          :class="mealGridColumns(day.mealTypes.length)"
+                          :class="mealGridColumns(day.cells.length)"
                         >
                           <div
-                            v-for="mealType in day.mealTypes"
-                            :key="`${day.dayIndex}-${mealType}`"
-                            class="relative rounded-lg border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/30 p-2 flex flex-col gap-1.5"
-                            :class="{ 'fc-slot-flash': highlightedSlots.has(`${day.dayIndex}-${mealType}`) }"
+                            v-for="cell in day.cells"
+                            :key="cell.key"
+                            class="relative rounded-lg border p-2 flex flex-col gap-1.5"
+                            :class="[
+                              cell.plates.length > 1
+                                ? 'border-brandp-200/70 dark:border-brandp-900/50 bg-brandp-50/40 dark:bg-brandp-950/20'
+                                : 'border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/30',
+                              { 'fc-slot-flash': highlightedSlots.has(cell.slotKey) }
+                            ]"
                           >
                             <div class="flex items-center gap-1">
-                              <UIcon :name="mealTypeIcon(mealType)" class="w-3 h-3 text-brandp-400 shrink-0" />
-                              <span class="text-[10px] text-gray-400 dark:text-zinc-500">{{ slotLabel(mealType) }}</span>
+                              <UIcon :name="mealTypeIcon(cell.mealType)" class="w-3 h-3 text-brandp-400 shrink-0" />
+                              <span class="text-[10px] text-gray-400 dark:text-zinc-500">{{ cell.label }}</span>
                               <button
-                                v-if="getWeeklyRecipeId(weeklyEntry(day, mealType))"
+                                v-if="getWeeklyRecipeId(cellMain(cell))"
                                 type="button"
                                 class="ml-auto flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 hover:scale-110 transition-all duration-200 shrink-0"
-                                :aria-label="isRecipeFavorite(getWeeklyRecipeId(weeklyEntry(day, mealType))) ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
-                                @click.prevent.stop="toggleRecipeFavorite(getWeeklyRecipeId(weeklyEntry(day, mealType)))"
+                                :aria-label="isRecipeFavorite(getWeeklyRecipeId(cellMain(cell))) ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
+                                @click.prevent.stop="toggleRecipeFavorite(getWeeklyRecipeId(cellMain(cell)))"
                               >
                                 <UIcon
                                   name="i-lucide-heart"
                                   :class="[
                                     'w-3 h-3 transition-colors duration-200',
-                                    isRecipeFavorite(getWeeklyRecipeId(weeklyEntry(day, mealType)))
+                                    isRecipeFavorite(getWeeklyRecipeId(cellMain(cell)))
                                       ? 'text-red-500 fill-red-500'
                                       : 'text-gray-300 dark:text-zinc-600'
                                   ]"
                                 />
                               </button>
                               <!-- Slot menu: replace via chat, adapt in the popup -->
-                              <div class="relative shrink-0" :class="{ 'ml-auto': !getWeeklyRecipeId(weeklyEntry(day, mealType)) }" @mouseleave="weeklySlotMenu = null">
+                              <div class="relative shrink-0" :class="{ 'ml-auto': !getWeeklyRecipeId(cellMain(cell)) }" @mouseleave="weeklySlotMenu = null">
                                 <button
                                   type="button"
                                   class="flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
                                   :aria-label="t('foodChatHome.mealCard.menu')"
-                                  :aria-expanded="weeklySlotMenu === `${day.dayIndex}-${mealType}`"
-                                  @click.prevent.stop="weeklySlotMenu = weeklySlotMenu === `${day.dayIndex}-${mealType}` ? null : `${day.dayIndex}-${mealType}`"
+                                  :aria-expanded="weeklySlotMenu === cell.key"
+                                  @click.prevent.stop="weeklySlotMenu = weeklySlotMenu === cell.key ? null : cell.key"
                                 >
                                   <UIcon name="i-lucide-more-vertical" class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
                                 </button>
                                 <Transition name="chips-fade">
                                   <div
-                                    v-if="weeklySlotMenu === `${day.dayIndex}-${mealType}`"
+                                    v-if="weeklySlotMenu === cell.key"
                                     class="absolute right-0 top-6 z-20 w-40 rounded-xl border border-gray-100 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-lg overflow-hidden"
                                   >
                                     <button
                                       type="button"
                                       class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
-                                      @click.prevent.stop="prefillWeeklySlotReplace(day.dayIndex, mealType)"
+                                      @click.prevent.stop="prefillWeeklySlotReplace(day.dayIndex, cell.mealType)"
                                     >
                                       <UIcon name="i-lucide-replace" class="w-3.5 h-3.5 text-brandp-400" />
                                       {{ t('foodChatHome.mealCard.replace') }}
                                     </button>
                                     <button
-                                      v-if="getWeeklyRecipeId(weeklyEntry(day, mealType))"
+                                      v-if="getWeeklyRecipeId(cellMain(cell))"
                                       type="button"
                                       class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
-                                      @click.prevent.stop="openAdaptRecipe(getWeeklyRecipeId(weeklyEntry(day, mealType)))"
+                                      @click.prevent.stop="openAdaptRecipe(getWeeklyRecipeId(cellMain(cell)))"
                                     >
                                       <UIcon name="i-lucide-wand-sparkles" class="w-3.5 h-3.5 text-brandp-400" />
                                       {{ t('foodChatHome.mealCard.adapt') }}
@@ -1085,18 +1166,18 @@
                             </div>
                             <div class="flex items-center gap-2">
                               <NuxtLink
-                                :to="getWeeklyRecipeId(weeklyEntry(day, mealType)) ? `/recipe-wrangler/${getWeeklyRecipeId(weeklyEntry(day, mealType))}` : ''"
-                                :target="getWeeklyRecipeId(weeklyEntry(day, mealType)) ? '_blank' : undefined"
+                                :to="getWeeklyRecipeId(cellMain(cell)) ? `/recipe-wrangler/${getWeeklyRecipeId(cellMain(cell))}` : ''"
+                                :target="getWeeklyRecipeId(cellMain(cell)) ? '_blank' : undefined"
                                 class="w-9 h-9 rounded-full overflow-hidden bg-gray-100 dark:bg-zinc-700 shrink-0 transition-transform duration-200 hover:scale-150 cursor-pointer block"
                               >
                                 <img
-                                  v-if="getRecipeImage(getWeeklyRecipeId(weeklyEntry(day, mealType)))"
-                                  :src="getRecipeImage(getWeeklyRecipeId(weeklyEntry(day, mealType))) || ''"
+                                  v-if="getRecipeImage(getWeeklyRecipeId(cellMain(cell)))"
+                                  :src="getRecipeImage(getWeeklyRecipeId(cellMain(cell))) || ''"
                                   class="w-full h-full object-cover"
                                   loading="lazy"
                                 >
                                 <div
-                                  v-else-if="isRecipeImagePending(getWeeklyRecipeId(weeklyEntry(day, mealType)))"
+                                  v-else-if="isRecipeImagePending(getWeeklyRecipeId(cellMain(cell)))"
                                   class="w-full h-full animate-pulse"
                                 />
                                 <div v-else class="w-full h-full flex items-center justify-center">
@@ -1105,33 +1186,36 @@
                               </NuxtLink>
                               <div class="flex-1 min-w-0">
                                 <NuxtLink
-                                  v-if="getWeeklyRecipeId(weeklyEntry(day, mealType))"
-                                  :to="`/recipe-wrangler/${getWeeklyRecipeId(weeklyEntry(day, mealType))}`"
+                                  v-if="getWeeklyRecipeId(cellMain(cell))"
+                                  :to="`/recipe-wrangler/${getWeeklyRecipeId(cellMain(cell))}`"
                                   target="_blank"
                                   class="text-[11px] font-medium text-brandp-600 dark:text-brandp-400 leading-tight line-clamp-2 hover:underline"
                                 >
-                                  {{ getWeeklyRecipeTitle(weeklyEntry(day, mealType)) }}
+                                  {{ getWeeklyRecipeTitle(cellMain(cell)) }}
                                 </NuxtLink>
                                 <p v-else class="text-[11px] font-medium text-gray-800 dark:text-gray-200 leading-tight line-clamp-2">
-                                  {{ getWeeklyRecipeTitle(weeklyEntry(day, mealType)) }}
+                                  {{ getWeeklyRecipeTitle(cellMain(cell)) }}
                                 </p>
+                                <!-- The MEAL's calories, not the main's: a
+                                     main plus a salad is one meal, and the
+                                     main alone understates what gets eaten. -->
                                 <span
-                                  v-if="getWeeklyEntryKcal(weeklyEntry(day, mealType)) != null"
+                                  v-if="weeklyMealKcal(cell.plates) != null"
                                   class="text-[9px] text-gray-400 dark:text-zinc-500 leading-none"
                                 >
-                                  {{ t('foodChatHome.mealCard.kcal', { kcal: getWeeklyEntryKcal(weeklyEntry(day, mealType)) }) }}
+                                  {{ t('foodChatHome.mealCard.kcal', { kcal: weeklyMealKcal(cell.plates) }) }}
                                 </span>
                               </div>
                               <!-- Nutrient donut -->
                               <div
-                                v-if="getWeeklyRecipeId(weeklyEntry(day, mealType)) && getWeeklySegments(getWeeklyRecipeId(weeklyEntry(day, mealType))).length"
+                                v-if="getWeeklyRecipeId(cellMain(cell)) && getWeeklySegments(getWeeklyRecipeId(cellMain(cell))).length"
                                 class="shrink-0 relative cursor-help"
-                                @mouseleave="weeklyHovered[`${day.dayIndex}-${mealType}`] = null"
+                                @mouseleave="weeklyHovered[cell.key] = null"
                               >
                                 <svg width="28" height="28" viewBox="0 0 28 28" style="transform:rotate(-90deg)">
                                   <circle cx="14" cy="14" r="11" stroke="#e5e7eb" stroke-width="3.5" fill="none" />
                                   <circle
-                                    v-for="seg in getWeeklySegments(getWeeklyRecipeId(weeklyEntry(day, mealType)))"
+                                    v-for="seg in getWeeklySegments(getWeeklyRecipeId(cellMain(cell)))"
                                     :key="seg.key"
                                     cx="14" cy="14" r="11"
                                     :stroke="seg.color"
@@ -1140,22 +1224,73 @@
                                     :stroke-dasharray="`${seg.dash} ${weeklyCircumference}`"
                                     :stroke-dashoffset="-seg.offset"
                                     stroke-linecap="butt"
-                                    :style="{ opacity: weeklyHovered[`${day.dayIndex}-${mealType}`] && weeklyHovered[`${day.dayIndex}-${mealType}`] !== seg.key ? 0.25 : 1, transition: 'opacity 0.15s' }"
-                                    @mouseenter="weeklyHovered[`${day.dayIndex}-${mealType}`] = seg.key"
+                                    :style="{ opacity: weeklyHovered[cell.key] && weeklyHovered[cell.key] !== seg.key ? 0.25 : 1, transition: 'opacity 0.15s' }"
+                                    @mouseenter="weeklyHovered[cell.key] = seg.key"
                                   />
                                 </svg>
                                 <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                  <span class="text-[7px] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ getWeeklyCenterValue(getWeeklyRecipeId(weeklyEntry(day, mealType))!, `${day.dayIndex}-${mealType}`) }}</span>
+                                  <span class="text-[7px] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ getWeeklyCenterValue(getWeeklyRecipeId(cellMain(cell))!, cell.key) }}</span>
                                 </div>
                               </div>
                             </div>
                             <!-- Why this meal — transparency chips -->
-                            <div v-if="weeklyEntryReasons(weeklyEntry(day, mealType)).length" class="flex flex-wrap gap-1">
-                              <span
-                                v-for="(reason, rIdx) in weeklyEntryReasons(weeklyEntry(day, mealType))"
-                                :key="rIdx"
-                                class="px-1.5 py-0.5 text-[9px] rounded-full border border-brandp-100 dark:border-brandp-900/50 bg-brandp-50/60 dark:bg-brandp-950/30 text-brandp-600 dark:text-brandp-300"
+                            <!-- The rest of the meal: the salad beside the
+                                 main, badged by what it is. Compact rows under
+                                 the main rather than tiles beside it, which is
+                                 how the daily canvas reads a composed meal. -->
+                            <div
+                              v-if="cell.plates.length > 1"
+                              class="border-t border-gray-100 dark:border-zinc-800 pt-1.5 space-y-1.5"
+                            >
+                              <div
+                                v-for="plate in cell.plates.slice(1)"
+                                :key="`${cell.key}-${plate.meal_idx}-${getWeeklyRecipeId(plate)}`"
+                                class="flex items-center gap-1.5"
                               >
+                                <NuxtLink
+                                  :to="getWeeklyRecipeId(plate) ? `/recipe-wrangler/${getWeeklyRecipeId(plate)}` : ''"
+                                  :target="getWeeklyRecipeId(plate) ? '_blank' : undefined"
+                                  class="w-6 h-6 rounded-full overflow-hidden bg-gray-100 dark:bg-zinc-700 shrink-0 transition-transform duration-200 hover:scale-150 block"
+                                >
+                                  <img
+                                    v-if="getRecipeImage(getWeeklyRecipeId(plate))"
+                                    :src="getRecipeImage(getWeeklyRecipeId(plate)) || ''"
+                                    class="w-full h-full object-cover"
+                                    loading="lazy"
+                                  >
+                                  <div v-else class="w-full h-full flex items-center justify-center">
+                                    <UIcon name="i-lucide-salad" class="w-2.5 h-2.5 text-gray-300 dark:text-zinc-600" />
+                                  </div>
+                                </NuxtLink>
+                                <span
+                                  class="shrink-0 inline-flex items-center px-1 py-px text-[8px] font-semibold uppercase tracking-wide rounded"
+                                  :class="plateBadgeClass(plate)"
+                                >{{ plateRoleLabel(plate) }}</span>
+                                <NuxtLink
+                                  v-if="getWeeklyRecipeId(plate)"
+                                  :to="`/recipe-wrangler/${getWeeklyRecipeId(plate)}`"
+                                  target="_blank"
+                                  class="min-w-0 text-[10px] font-medium text-gray-700 dark:text-zinc-200 leading-tight line-clamp-1 hover:underline"
+                                >{{ getWeeklyRecipeTitle(plate) }}</NuxtLink>
+                                <span
+                                  v-else
+                                  class="min-w-0 text-[10px] font-medium text-gray-700 dark:text-zinc-200 leading-tight line-clamp-1"
+                                >{{ getWeeklyRecipeTitle(plate) }}</span>
+                              </div>
+                            </div>
+
+                            <!-- Same chips as the daily cards, with the same
+                                 icons. Weekly rendered the label alone, so a
+                                 `guideline` chip — a rule from the member's own
+                                 national guidance — was indistinguishable from
+                                 a favourite or a memory. -->
+                            <div v-if="weeklyEntryReasons(cellMain(cell)).length" class="flex flex-wrap gap-1">
+                              <span
+                                v-for="(reason, rIdx) in weeklyEntryReasons(cellMain(cell))"
+                                :key="rIdx"
+                                class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] rounded-full border border-brandp-100 dark:border-brandp-900/50 bg-brandp-50/60 dark:bg-brandp-950/30 text-brandp-600 dark:text-brandp-300"
+                              >
+                                <UIcon :name="reasonIcon(reason.kind)" class="w-2.5 h-2.5 shrink-0" />
                                 {{ reason.label }}
                               </span>
                             </div>
@@ -1200,7 +1335,16 @@
                           :class="check.met ? 'text-emerald-500' : 'text-amber-500'"
                           class="w-3.5 h-3.5 shrink-0"
                         />
-                        <span class="flex-1 text-[11px] font-light text-gray-500 dark:text-zinc-400">{{ check.rule }}</span>
+                        <span class="flex-1 text-[11px] font-light text-gray-500 dark:text-zinc-400">
+                          {{ check.rule }}
+                          <!-- Whose rule this is. Absent on the built-in
+                               fallbacks, which are not anyone's national
+                               guidance and need no byline. -->
+                          <span
+                            v-if="check.source"
+                            class="text-gray-400 dark:text-zinc-500"
+                          >· {{ check.source }}</span>
+                        </span>
                         <span class="shrink-0 text-[11px] font-medium text-gray-700 dark:text-zinc-200 tabular-nums">{{ check.actual }} · {{ check.target }}</span>
                       </div>
                       <div v-if="weeklyVariety?.reasoning" class="flex items-start gap-2 pt-1.5 border-t border-gray-100 dark:border-zinc-800">
@@ -1309,6 +1453,13 @@
         <div class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200/80 dark:border-red-800/50 text-sm text-red-700 dark:text-red-300 shadow-lg shadow-red-500/5">
           <UIcon name="i-lucide-alert-circle" class="w-4 h-4 shrink-0" />
           <span class="flex-1 font-light">{{ error }}</span>
+          <button
+            v-if="lastFailedMessage && !sending"
+            class="shrink-0 px-2 py-1 rounded-lg text-xs font-medium text-red-700 dark:text-red-200 bg-red-100/70 dark:bg-red-900/40 hover:bg-red-200/70 dark:hover:bg-red-900/60 transition-colors"
+            @click="retryLastMessage"
+          >
+            {{ t('foodChatHome.errors.retry') }}
+          </button>
           <button class="shrink-0 text-red-400 hover:text-red-600 transition-colors" @click="clearError">
             <UIcon name="i-lucide-x" class="w-4 h-4" />
           </button>
@@ -1327,7 +1478,7 @@ import DOMPurify from 'dompurify'
 import { useFoodChat } from '~/composables/useFoodChat'
 import { useHouseholdStore } from '~/stores/household'
 import { useRecipeStore } from '~/stores/recipe'
-import type { AttributionCitation, ChangedSlot, ChatMessage, ConstraintApplied, MealPlan, MealRecipe, MemorySuggestion, PlanParameterValues, WeeklyDayBreakdown, WeeklyMealEntry } from '~/services/foodchatApi'
+import type { AttributionCitation, ChangedSlot, ChatMessage, ConstraintApplied, FoodChatTool, MealPlan, MealRecipe, MemorySuggestion, PlanParameterValues, WeeklyDayBreakdown, WeeklyMealEntry } from '~/services/foodchatApi'
 import recipeApi from '~/services/recipeApi'
 import {
   humaniseSlot,
@@ -1340,11 +1491,6 @@ import {
   slotIcon,
   type NormalisedMeal
 } from '~/utils/planMeals'
-import { today, getLocalTimeZone, type DateValue } from '@internationalized/date'
-import memberMealPlansApi, {
-  extractSourceMealPlanIdFromMemberMealPlanResponse,
-  extractStoredMealPlanIdFromMemberMealPlanResponse
-} from '~/services/memberMealPlansApi'
 import type { HouseholdMember } from '~/services/householdsApi'
 import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
 
@@ -1383,7 +1529,22 @@ const {
   composePlan,
   activeDiners,
   updateDiners,
-  clearError
+  clearError,
+  planningState,
+  facetChips,
+  pendingStateChanges,
+  loadPlanningState,
+  addPantryItems,
+  removePantryItem,
+  addFacets,
+  removeFacet,
+  replan,
+  vocabularies,
+  loadVocabularies,
+  tools,
+  runningTool,
+  loadTools,
+  invokeTool
 } = useFoodChat()
 
 const householdStore = useHouseholdStore()
@@ -1635,21 +1796,6 @@ async function handleMemoryDecision(suggestion: MemorySuggestion, decision: 'acc
   }
 }
 
-// ── Apply state ──
-const selectedApplyMemberIds = ref<string[]>([])
-const applyingMealPlan = ref(false)
-const revokingMealPlan = ref(false)
-const applyError = ref<string | null>(null)
-const applySuccess = ref<string | null>(null)
-const selectedApplyDateValue = ref<DateValue>(today(getLocalTimeZone()))
-const storedMealPlanIdsBySourceId = ref<Record<string, string>>({})
-const revocablePlanIdByMemberId = ref<Record<string, string>>({})
-const checkingRevokeEligibility = ref(false)
-let revokeEligibilityRequestId = 0
-
-const minApplyDateValue = computed(() => today(getLocalTimeZone()))
-const selectedApplyDate = computed(() => selectedApplyDateValue.value.toString())
-
 // ── Computed ──
 const canSend = computed(() => inputText.value.trim().length > 0 && !sending.value)
 const latestMealPlan = computed(() => mealPlans.value?.[0] ?? null)
@@ -1688,6 +1834,29 @@ const sessionItems = computed(() =>
     label: formatSessionLabel(s)
   }))
 )
+
+// Session-picker trigger styling.
+//
+// These MUST ride on `:ui.base`, which Nuxt UI applies to the trigger element
+// itself. The previous attempt put them in a `.fc-session-select button` CSS
+// rule — a DESCENDANT selector — while the class was on the trigger, so the
+// whole hit area (min-height, padding, border) matched nothing and silently
+// never applied. Only the `cursor: pointer` on the element itself landed,
+// which is exactly what "looks like text, not a control" means.
+const SESSION_TRIGGER = [
+  'cursor-pointer min-h-8 px-2.5 rounded-lg border transition-colors',
+  'border-gray-200/90 bg-gray-50 hover:bg-white hover:border-brandp-300',
+  'dark:border-zinc-700/90 dark:bg-zinc-800/60 dark:hover:bg-zinc-800',
+  'dark:hover:border-brandp-700',
+].join(' ')
+
+const sessionPickerUi = {
+  base: `${SESSION_TRIGGER} text-xs text-gray-500 dark:text-zinc-400`,
+}
+const sessionBarUi = {
+  base: `${SESSION_TRIGGER} flex-1 min-w-0 truncate text-xs text-gray-600 dark:text-zinc-400`,
+  trailingIcon: 'w-3.5 h-3.5',
+}
 
 function formatSessionLabel(s: typeof sessions.value[0]): string {
   // A member-given name beats a timestamp; the timestamp is the fallback
@@ -1822,38 +1991,11 @@ const activeDateLocale = computed(() => {
   return 'en-US'
 })
 
-const selectedMembersLabel = computed(() => {
-  const count = selectedApplyMemberIds.value.length
-  if (count === 0) return t('foodChatHome.apply.membersLabel.selectMembers')
-  if (count === 1) return t('foodChatHome.apply.membersLabel.singleSelected')
-  return t('foodChatHome.apply.membersLabel.multipleSelected', { count })
-})
-
-const canApplyMealPlan = computed(() =>
-  !!latestMealPlan.value && !!currentMemberId.value && !!selectedApplyDateValue.value
-  && selectedApplyMemberIds.value.length > 0 && !applyingMealPlan.value && !revokingMealPlan.value
-)
-
-const canRevokeMealPlan = computed(() => {
-  if (!latestMealPlan.value || !currentMemberId.value || revokingMealPlan.value || applyingMealPlan.value || checkingRevokeEligibility.value) return false
-  const selectedIds = selectedApplyMemberIds.value
-  if (!selectedIds.length) return false
-  return selectedIds.every(memberId => !!revocablePlanIdByMemberId.value[memberId])
-})
-
 const suggestedQuestions = computed(() => [
   { text: t('foodChatHome.suggestedQuestions.dailyPlan'), icon: 'i-lucide-calendar-days' },
   { text: t('foodChatHome.suggestedQuestions.weeklyPlan'), icon: 'i-lucide-calendar-range' },
   { text: t('foodChatHome.suggestedQuestions.highProtein'), icon: 'i-lucide-leaf' },
   { text: t('foodChatHome.suggestedQuestions.mediterranean'), icon: 'i-lucide-heart-pulse' }
-])
-
-const modifyChips = computed(() => [
-  { text: t('foodChatHome.modifyChips.lowerCalorie') },
-  { text: t('foodChatHome.modifyChips.moreProtein') },
-  { text: t('foodChatHome.modifyChips.lighterLunch') },
-  { text: t('foodChatHome.modifyChips.vegetarian') },
-  { text: t('foodChatHome.modifyChips.differentDinner') }
 ])
 
 const negativeFeedbackReasons = [
@@ -1868,33 +2010,57 @@ const weeklyDays = computed(() => {
   if (!displayedWeeklyPlan.value) return []
   const grouped: Record<number, WeeklyMealEntry[]> = {}
   for (const entry of displayedWeeklyPlan.value.entries) {
-    if (!grouped[entry.day]) grouped[entry.day] = []
-    grouped[entry.day].push(entry)
+    const day = (grouped[entry.day] ??= [])
+    day.push(entry)
   }
   return Object.entries(grouped)
     .sort(([a], [b]) => Number(a) - Number(b))
     .map(([day, entries]) => {
       const sorted = entries.sort((a, b) => a.meal_idx - b.meal_idx)
-      // The meal types this day actually has, in planner order. The template
-      // used to loop a literal ['breakfast','lunch','dinner'], so a weekly plan
-      // with a snack or a dessert fetched it, grouped it, and then rendered
-      // three slots regardless — `meal_type` has always been a free string here.
-      const mealTypes: string[] = []
+
+      // One cell per MEAL, with its plates inside.
+      //
+      // The grid used to loop slot NAMES and look each one up with
+      // `entries.find(e => e.meal_type === mealType)` — which returns the first
+      // match, so a weekly dinner with a side rendered the main and silently
+      // discarded the rest. That became one cell per PLATE, which fixed the
+      // dropping and introduced a different lie: a two-plate dinner drawn as
+      // two independent tiles beside breakfast and lunch, so the day looked
+      // like four meals and the grid gave it four columns.
+      //
+      // A plate is part of a meal, and the daily canvas already renders it
+      // that way.
+      const cells: Array<{
+        key: string
+        slotKey: string
+        mealType: string
+        label: string
+        plates: WeeklyMealEntry[]
+      }> = []
       for (const entry of sorted) {
-        const type = String(entry.meal_type || '').trim()
-        if (type && !mealTypes.includes(type)) mealTypes.push(type)
+        const mealType = String(entry.meal_type || '').trim() || 'meal'
+        const existing = cells.find(cell => cell.mealType === mealType)
+        if (existing) {
+          existing.plates.push(entry)
+          continue
+        }
+        cells.push({
+          // Unique per meal: menus and donut hover states are addressed by
+          // this.
+          key: `${day}-${mealType}`,
+          // Shared by every plate of a slot: the flash after an edit is about
+          // the slot, and highlighting one plate of a meal would be a lie
+          // about which one changed.
+          slotKey: `${day}-${mealType}`,
+          mealType,
+          label: slotLabel(mealType),
+          plates: [entry]
+        })
       }
-      return {
-        dayIndex: Number(day),
-        entries: sorted,
-        mealTypes: mealTypes.length > 0 ? mealTypes : ['breakfast', 'lunch', 'dinner']
-      }
+
+      return { dayIndex: Number(day), entries: sorted, cells }
     })
 })
-
-function weeklyEntry(day: { entries: WeeklyMealEntry[] }, mealType: string): WeeklyMealEntry | undefined {
-  return day.entries.find(e => e.meal_type === mealType)
-}
 
 // ── Weekly explainability (M7 — collapsible days, measured ledger, metrics) ──
 const expandedWeeklyDays = ref<Set<number>>(new Set())
@@ -1931,12 +2097,27 @@ const weeklyLedger = computed(() => displayedWeeklyPlan.value?.constraints_appli
 // Both ledgers share these: the daily plan now carries the same relaxed /
 // violated states the weekly one does, since a goal demoted to a soft signal
 // during household reconciliation is exactly a relaxed row.
+/**
+ * Four states, and `unsupported` is the one that matters most.
+ *
+ * It means FoodChat could NOT enforce this constraint and is saying so —
+ * a dietary group with no filter behind it, or a facet the recipe details
+ * carry no annotation to check. It used to fall through to the branch below
+ * and render as a hard constraint WITH a shield-check, which is precisely the
+ * guarantee it exists to withhold. A member selecting `peanut_free` saw a
+ * green shield over an unenforced rule.
+ *
+ * Grey and informational: not an alarm (nothing was violated), not a promise.
+ */
 function ledgerRowClass(row: ConstraintApplied): string {
   if (row.status === 'violated') {
     return 'border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-300'
   }
   if (row.status === 'relaxed') {
     return 'border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-300'
+  }
+  if (row.status === 'unsupported') {
+    return 'border-gray-300 dark:border-zinc-600 bg-gray-50 dark:bg-zinc-800/60 text-gray-500 dark:text-zinc-400 border-dashed'
   }
   return row.type === 'hard'
     ? 'border-brandp-200 dark:border-brandp-800/70 bg-brandp-50 dark:bg-brandp-950/40 text-brandp-600 dark:text-brandp-300 ring-1 ring-brandp-200/60 dark:ring-brandp-800/40'
@@ -1946,6 +2127,9 @@ function ledgerRowClass(row: ConstraintApplied): string {
 function ledgerRowIcon(row: ConstraintApplied): string | null {
   if (row.status === 'violated') return 'i-lucide-alert-triangle'
   if (row.status === 'relaxed') return 'i-lucide-alert-circle'
+  // Never the shield here — the shield is the claim that a hard constraint was
+  // enforced, and `unsupported` is the admission that it was not.
+  if (row.status === 'unsupported') return 'i-lucide-info'
   return row.type === 'hard' ? 'i-lucide-shield-check' : null
 }
 
@@ -1974,6 +2158,23 @@ function weeklyDaySummary(dayIndex: number): string {
 
 function weeklyDayKcal(dayIndex: number): number | null {
   return weeklyDayInfo(dayIndex)?.kcal ?? null
+}
+
+// The seven declared reason kinds, matching MealScheduleCard's map so a chip
+// means the same thing on both canvases. `guideline` is the newest: it had an
+// icon and a renderer here long before anything emitted one.
+const WEEKLY_REASON_ICONS: Record<string, string> = {
+  pinned: 'i-lucide-pin',
+  favorite: 'i-lucide-heart',
+  memory: 'i-lucide-brain',
+  profile: 'i-lucide-user',
+  feedback: 'i-lucide-thumbs-up',
+  diner: 'i-lucide-users',
+  guideline: 'i-lucide-book-open'
+}
+
+function reasonIcon(kind: string): string {
+  return WEEKLY_REASON_ICONS[kind] ?? 'i-lucide-sparkles'
 }
 
 function weeklyEntryReasons(entry: WeeklyMealEntry | undefined): Array<{ kind: string, label: string }> {
@@ -2029,7 +2230,7 @@ function getWeeklySegments(id: string | null) {
   const total = Object.values(values).reduce((s, v) => s + v, 0) || 1
   let offset = 0
   return WEEKLY_SEGMENT_DEFS.map(def => {
-    const dash = (values[def.key] / total) * weeklyCircumference
+    const dash = ((values[def.key] ?? 0) / total) * weeklyCircumference
     const seg = { ...def, dash, offset }
     offset += dash
     return seg
@@ -2124,6 +2325,11 @@ function constraintMembers(constraint: ConstraintApplied): string {
 }
 
 function constraintTooltip(constraint: ConstraintApplied): string {
+  // An unsupported row's own `detail` names what could not be enforced and
+  // why; the generic hard/soft wording would overwrite that with a claim.
+  if (constraint.status === 'unsupported') {
+    return t('foodChatHome.constraints.unsupportedTooltip')
+  }
   return constraint.type === 'hard'
     ? t('foodChatHome.constraints.hardTooltip', { source: constraint.source })
     : t('foodChatHome.constraints.softTooltip', { source: constraint.source })
@@ -2149,8 +2355,7 @@ const weeklyPersonalizationParts = computed(() => {
   return parts
 })
 
-const qualityOpen = ref(false)
-
+// The panel owns its own open/closed state now that it is a component.
 interface QualityMetric {
   key: string
   label: string
@@ -2159,23 +2364,105 @@ interface QualityMetric {
   reasoning?: string
 }
 
-const qualityMetrics = computed<QualityMetric[]>(() => {
-  const plan = displayedMealPlan.value
-  if (!plan) return []
+/**
+ * The three member-meaningful quality scores, from a plan of either shape.
+ *
+ * `llm_score` is deliberately absent: it is the grader's internal ranking of
+ * one candidate day against nine others, which means nothing to the person
+ * eating it. A score of 0 is also skipped — on the weekly and structured paths
+ * nothing ranked anything, and rendering a zero bar reads as "judged, badly"
+ * rather than "not judged".
+ */
+function buildQualityMetrics(source: {
+  fvs_count?: number
+  fvs_reasoning?: string
+  diversity_llm_score?: number
+  diversity_llm_reasoning?: string
+  guideline_adherence_score?: number
+  guideline_adherence_reasoning?: string
+} | null | undefined): QualityMetric[] {
+  if (!source) return []
   const metrics: QualityMetric[] = []
-  // llm_score ("LLM match") is an internal grader signal, not a
-  // member-meaningful quality — deliberately not displayed.
-  if (plan.fvs_count != null) {
-    metrics.push({ key: 'variety', label: t('foodChatHome.quality.variety'), value: plan.fvs_count, reasoning: plan.fvs_reasoning })
+  if (source.fvs_count != null && source.fvs_count > 0) {
+    metrics.push({
+      key: 'variety', label: t('foodChatHome.quality.variety'),
+      value: source.fvs_count, reasoning: source.fvs_reasoning
+    })
   }
-  if (plan.diversity_llm_score != null) {
-    metrics.push({ key: 'diversity', label: t('foodChatHome.quality.diversity'), value: plan.diversity_llm_score, max: 5, reasoning: plan.diversity_llm_reasoning })
+  if (source.diversity_llm_score != null && source.diversity_llm_score > 0) {
+    metrics.push({
+      key: 'diversity', label: t('foodChatHome.quality.diversity'),
+      value: source.diversity_llm_score, max: 5,
+      reasoning: source.diversity_llm_reasoning
+    })
   }
-  if (plan.guideline_adherence_score != null) {
-    metrics.push({ key: 'guidelines', label: t('foodChatHome.quality.guidelines'), value: plan.guideline_adherence_score, max: 5, reasoning: plan.guideline_adherence_reasoning })
+  if (source.guideline_adherence_score != null && source.guideline_adherence_score > 0) {
+    metrics.push({
+      key: 'guidelines', label: t('foodChatHome.quality.guidelines'),
+      value: source.guideline_adherence_score, max: 5,
+      reasoning: source.guideline_adherence_reasoning
+    })
   }
   return metrics
-})
+}
+
+const qualityMetrics = computed<QualityMetric[]>(
+  () => buildQualityMetrics(displayedMealPlan.value)
+)
+
+/**
+ * The week's scores, which live under `metrics.quality` rather than on the
+ * plan object — a weekly plan carries its metrics in one dict, and the daily
+ * one carries them as fields.
+ */
+const weeklyQualityMetrics = computed<QualityMetric[]>(
+  () => buildQualityMetrics(weeklyMetrics.value.quality)
+)
+
+/** A meal cell's main plate — the one its heading, heart and menu act on. */
+function cellMain(cell: { plates: WeeklyMealEntry[] }): WeeklyMealEntry | undefined {
+  return cell.plates.find(plate => String(plate.role || 'main') === 'main')
+    ?? cell.plates[0]
+}
+
+/**
+ * The MEAL's calories — every plate added up.
+ *
+ * Null when no plate carries a figure, which is the honest state; a partial sum
+ * is still shown, because the alternative is showing nothing for a meal whose
+ * main is profiled and whose side is not.
+ */
+function weeklyMealKcal(plates: WeeklyMealEntry[]): number | null {
+  let total = 0
+  let counted = 0
+  for (const plate of plates) {
+    const kcal = getWeeklyEntryKcal(plate)
+    if (kcal == null) continue
+    total += kcal
+    counted += 1
+  }
+  return counted ? Math.round(total) : null
+}
+
+const PLATE_BADGE: Record<string, string> = {
+  main: 'bg-brandp-500 text-white',
+  side: 'bg-emerald-500 text-white',
+  salad: 'bg-emerald-500 text-white',
+  soup: 'bg-amber-500 text-white',
+  dessert: 'bg-pink-500 text-white',
+  drink: 'bg-sky-500 text-white'
+}
+
+function plateBadgeClass(plate: WeeklyMealEntry): string {
+  return PLATE_BADGE[String(plate.role || 'main').toLowerCase()] ?? 'bg-gray-400 text-white'
+}
+
+function plateRoleLabel(plate: WeeklyMealEntry): string {
+  const role = String(plate.role || 'main').toLowerCase()
+  const key = `foodChatHome.mealCard.roles.${role}`
+  const translated = t(key)
+  return translated === key ? humaniseSlot(role) : translated
+}
 
 function getWeeklyEntryKcal(entry: WeeklyMealEntry | undefined): number | null {
   if (!entry) return null
@@ -2262,7 +2549,7 @@ function focusChatInputWith(text: string) {
   })
 }
 
-function prefillSlotReplace(slot: 'breakfast' | 'lunch' | 'dinner') {
+function prefillSlotReplace(slot: string) {
   // Prefill the verified-edit phrasing; the user tweaks the directive and
   // sends — the edit flow swaps exactly this slot with before/after proof
   focusChatInputWith(t('foodChatHome.mealCard.replacePrefill', {
@@ -2302,9 +2589,28 @@ async function ensureSessionAndSend(content: string) {
   }
   if (!activeSession.value) await newSession(cookingForForNewSession())
   showEphemeralGenerating.value = true
-  const response = await sendMessage(content)
-  flashChangedSlots(response?.changed_slots)
-  scrollToBottom()
+  try {
+    const response = await sendMessage(content)
+    lastFailedMessage.value = null
+    flashChangedSlots(response?.changed_slots)
+    scrollToBottom()
+  } catch {
+    // The store rolls the optimistic message back and surfaces the error, but
+    // the member's words were gone: the input was cleared on send, so a failed
+    // turn cost them their sentence and they had to retype it to try again.
+    // Hold it so one click resends.
+    lastFailedMessage.value = content
+  }
+}
+
+/** The message a failed turn ate, kept so the banner can offer it back. */
+const lastFailedMessage = ref<string | null>(null)
+
+async function retryLastMessage() {
+  const content = lastFailedMessage.value
+  if (!content || sending.value) return
+  clearError()
+  await ensureSessionAndSend(content)
 }
 
 async function handleSend() {
@@ -2323,8 +2629,6 @@ async function handleQuickAsk(question: string) {
 }
 
 async function handleStartOver() {
-  applyError.value = null
-  applySuccess.value = null
   hasSentFirstMessage.value = false
   await newSession(cookingForForNewSession())
 }
@@ -2385,61 +2689,17 @@ async function handleFeedbackReason(messageId: number, reason: string) {
   } catch { /* best-effort */ }
 }
 
-// ── Member / apply helpers ──
-watch([currentMemberId, householdMembers], () => {
-  const validIds = new Set(householdMembers.value.map(m => m.id))
-  const next = selectedApplyMemberIds.value.filter(id => validIds.has(id))
-  if (currentMemberId.value && !next.includes(currentMemberId.value)) next.unshift(currentMemberId.value)
-  selectedApplyMemberIds.value = next
-}, { immediate: true })
-
-watch(() => latestMealPlan.value?.id, () => {
-  applyError.value = null
-  applySuccess.value = null
-})
-
-watch(
-  [() => latestMealPlan.value?.id, selectedApplyDate, () => selectedApplyMemberIds.value.slice().join(',')],
-  () => void refreshRevokeEligibility(),
-  { immediate: true }
-)
-
-function isCurrentMember(memberId: string) { return currentMemberId.value === memberId }
-function isApplyMemberSelected(memberId: string) { return selectedApplyMemberIds.value.includes(memberId) }
-
-function toggleApplyMember(memberId: string, checked: boolean | 'indeterminate') {
-  if (isCurrentMember(memberId) || checked === 'indeterminate') return
-  if (checked) {
-    if (!selectedApplyMemberIds.value.includes(memberId)) selectedApplyMemberIds.value.push(memberId)
-  } else {
-    selectedApplyMemberIds.value = selectedApplyMemberIds.value.filter(id => id !== memberId)
-  }
-}
-
-function selectOnlyCurrentMember() {
-  selectedApplyMemberIds.value = currentMemberId.value ? [currentMemberId.value] : []
-}
-
-function selectAllMembers() {
-  const allIds = householdMembers.value.map(m => m.id)
-  if (currentMemberId.value && !allIds.includes(currentMemberId.value)) allIds.unshift(currentMemberId.value)
-  selectedApplyMemberIds.value = allIds
-}
-
-function memberInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return 'U'
-  if (parts.length === 1) return parts[0][0].toUpperCase()
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-}
-
+// ── Member helpers ──
 function getMemberAvatar(member: HouseholdMember): AvatarConfig | null {
   if (!member.image_url) return null
   return stringToAvatarConfig(member.image_url)
 }
 
 function getMemberAvatarForDisplay(member: HouseholdMember): AvatarConfig {
-  return getMemberAvatar(member) || stringToAvatarConfig(member.id)
+  // `stringToAvatarConfig` is declared as possibly-undefined but is total over
+  // a non-empty string — it hashes into a fixed preset table. The member id is
+  // never empty, so this branch always yields a config.
+  return getMemberAvatar(member) ?? (stringToAvatarConfig(member.id) as AvatarConfig)
 }
 
 /** Grid width for however many meals the plan turned out to have.
@@ -2505,106 +2765,229 @@ function formatPlanDate(dateStr: string): string {
   })
 }
 
-function cloneRecipe(recipe?: MealRecipe): MealRecipe | undefined {
-  if (!recipe) return undefined
-  return { recipe_id: recipe.recipe_id, title: recipe.title, ingredients: recipe.ingredients, directions: recipe.directions }
+// ── Standing planning state: pantry, inferred facets ──────────────────────
+// The panel writes immediately (so a tick-off is not lost to a reload) but does
+// not re-plan — `pendingStateChanges` is what the member commits.
+
+async function handleAddPantry(items: string[]) {
+  try {
+    await addPantryItems(items)
+  } catch { /* the store surfaces the error */ }
 }
 
-function buildMealPlanPayload(mealPlan: MealPlan): MealPlan {
-  return {
-    id: mealPlan.id,
-    created_at: mealPlan.created_at,
-    breakfast: cloneRecipe(mealPlan.breakfast),
-    lunch: cloneRecipe(mealPlan.lunch),
-    dinner: cloneRecipe(mealPlan.dinner),
-    reasoning: mealPlan.reasoning
+async function handleRemovePantry(item: string) {
+  try {
+    await removePantryItem(item)
+  } catch { /* the store surfaces the error */ }
+}
+
+async function handleAddFacet(value: string) {
+  try {
+    await addFacets([value])
+  } catch { /* the store surfaces the error */ }
+}
+
+async function handleRemoveFacet(value: string) {
+  try {
+    await removeFacet(value)
+  } catch { /* the store surfaces the error */ }
+}
+
+async function handleReplan() {
+  try {
+    await replan(canvasMode.value)
+  } catch { /* the store surfaces the error */ }
+}
+
+// ── Tools ─────────────────────────────────────────────────────────────────
+
+/** Rendered result of the last tool run — an answer, not a plan change. */
+interface ToolResultView {
+  title: string
+  headline?: string
+  lines: Array<{ label: string, value: string }>
+  caveat?: string
+  error?: string
+}
+
+const toolResult = ref<ToolResultView | null>(null)
+
+/**
+ * The day a day-scoped tool would act on.
+ *
+ * The toolbar menu sits above the whole canvas, so on a weekly plan it can only
+ * honestly name a day when exactly one is expanded. Null keeps "replace this
+ * day" out of the menu rather than having it pick one — the per-day menus on the
+ * weekly grid are where a specific day is unambiguous.
+ */
+const toolsMenuDay = computed<number | null>(() => {
+  if (canvasMode.value === 'weekly') {
+    const expanded = [...expandedWeeklyDays.value]
+    return expanded.length === 1 ? expanded[0]! : null
+  }
+  // A single-day daily plan has exactly one day to act on.
+  return displayedPlanDayGroups.value.length === 1
+    ? displayedPlanDayGroups.value[0]!.day
+    : null
+})
+
+async function handleToolInvoke(tool: FoodChatTool, args: Record<string, unknown>) {
+  toolResult.value = null
+  try {
+    const result = await invokeTool<Record<string, any>>(tool, args)
+    toolResult.value = renderToolResult(tool, result)
+  } catch (err: any) {
+    // A ToolError is a 400 carrying member-facing prose — "this plan covers
+    // Monday to Wednesday" — so show it rather than a generic failure.
+    toolResult.value = {
+      title: t('foodChatHome.tools.failed'),
+      lines: [],
+      error: err?.data?.detail || err?.message || t('foodChatHome.tools.failed')
+    }
   }
 }
 
-async function refreshRevokeEligibility() {
-  const planId = latestMealPlan.value?.id
-  const selectedIds = [...selectedApplyMemberIds.value]
-  if (!planId || !selectedIds.length) {
-    revocablePlanIdByMemberId.value = {}
-    checkingRevokeEligibility.value = false
+/**
+ * One tool result, as rows.
+ *
+ * Deliberately shallow: it reads the documented keys and shows nothing for the
+ * ones a given tool does not return, rather than guessing at a shape. A tool
+ * whose result it does not recognise still gets its title and its own caveat,
+ * which beats rendering `[object Object]`.
+ */
+function renderToolResult(tool: FoodChatTool, result?: Record<string, any>): ToolResultView {
+  const view: ToolResultView = { title: tool.summary, lines: [] }
+  if (!result) return view
+
+  const totals = result.week_totals ?? result.total ?? result.totals
+  if (totals && typeof totals === 'object') {
+    if (typeof totals.calories === 'number') {
+      view.lines.push({ label: 'kcal', value: Math.round(totals.calories).toLocaleString() })
+    }
+    for (const [key, label] of [['protein_g', 'protein'], ['carbs_g', 'carbs'], ['fat_g', 'fat']] as const) {
+      if (typeof totals[key] === 'number') {
+        view.lines.push({ label, value: `${Math.round(totals[key])} g` })
+      }
+    }
+    // The tool says how many meals it could actually see; a bare total would
+    // understate the plan and imply completeness.
+    if (totals.complete === false && typeof totals.meals_counted === 'number') {
+      view.caveat = t('foodChatHome.tools.totalsPartial', {
+        counted: totals.meals_counted,
+        total: totals.meals_total ?? totals.meals_counted
+      })
+    }
+  }
+
+  if (typeof result.daily_average_kcal === 'number') {
+    view.headline = t('foodChatHome.tools.dailyAverage', {
+      kcal: Math.round(result.daily_average_kcal)
+    })
+  }
+
+  if (Array.isArray(result.days)) {
+    for (const day of result.days) {
+      const meals = Array.isArray(day?.meals)
+        ? day.meals.map((m: any) => m?.title).filter(Boolean).join(' · ')
+        : ''
+      if (meals) view.lines.push({ label: String(day?.name ?? day?.day ?? ''), value: meals })
+    }
+  } else if (Array.isArray(result.meals)) {
+    for (const meal of result.meals) {
+      if (meal?.title) {
+        view.lines.push({ label: String(meal.meal_type ?? ''), value: String(meal.title) })
+      }
+    }
+  }
+
+  if (Array.isArray(result.per_day)) {
+    for (const day of result.per_day) {
+      if (typeof day?.calories === 'number') {
+        view.lines.push({
+          label: String(day.name ?? `day ${day.day ?? ''}`),
+          value: `${Math.round(day.calories)} kcal`
+        })
+      }
+    }
+  }
+
+  // A shopping list. One row per item, saying which meals need it — never a
+  // quantity: the recipes store ingredients as free text, so the tool reports
+  // the absence explicitly and this must not paper over it.
+  if (Array.isArray(result.items) && typeof result.item_count === 'number') {
+    view.headline = t('foodChatHome.tools.shoppingHeadline', {
+      items: result.item_count,
+      dishes: result.dishes ?? 0
+    })
+    for (const row of result.items.slice(0, SHOPPING_ROWS)) {
+      if (!row?.item) continue
+      const uses = Array.isArray(row.for) ? row.for.length : 0
+      view.lines.push({
+        label: String(row.item),
+        value: uses > 1
+          ? t('foodChatHome.tools.shoppingForMany', { count: uses })
+          : String((row.for ?? [])[0] ?? '')
+      })
+    }
+    // Said rather than silently truncated: a list that stops at 25 and looks
+    // finished is a shopping trip that comes home short.
+    if (result.item_count > SHOPPING_ROWS) {
+      view.caveat = t('foodChatHome.tools.shoppingMore', {
+        count: result.item_count - SHOPPING_ROWS
+      })
+    }
+  }
+
+  // Saved, or taken back off the list.
+  if (typeof result.saved === 'boolean') {
+    view.headline = result.saved
+      ? (result.title
+          ? t('foodChatHome.tools.savedAs', { title: result.title })
+          : t('foodChatHome.tools.saved'))
+      : t('foodChatHome.tools.unsaved')
+  }
+
+  if (tool.mutates && !view.lines.length) {
+    view.headline = t('foodChatHome.tools.dayReplaced', { day: result.day ?? '' })
+  }
+  return view
+}
+
+/** How many shopping rows the panel shows before it says how many it did not. */
+const SHOPPING_ROWS = 25
+
+/**
+ * Open a specific session and plan when the URL names them.
+ *
+ * The library's saved-plan cards link here, and a link that lands on whatever
+ * session happens to be newest is a link that does not work. Applied after the
+ * sessions and their plans are loaded, because until then there is nothing to
+ * select. A stale id (a deleted session, a plan from another member) is ignored
+ * rather than reported: the page still shows a working conversation, and an
+ * error banner about a bookmark from three weeks ago helps nobody.
+ */
+async function openFromQuery() {
+  const route = useRoute()
+  const wantedSession = typeof route.query.session === 'string' ? route.query.session : null
+  const wantedPlan = typeof route.query.plan === 'string' ? route.query.plan : null
+  if (!wantedSession) return
+
+  if (sessions.value.some(session => session.session_id === wantedSession)) {
+    await selectSession(wantedSession)
+  }
+  if (!wantedPlan) return
+
+  await nextTick()
+  const dailyIdx = mealPlans.value.findIndex(plan => plan.id === wantedPlan)
+  if (dailyIdx !== -1) {
+    canvasMode.value = 'daily'
+    selectedDailyPlanIdx.value = dailyIdx
     return
   }
-  checkingRevokeEligibility.value = true
-  const requestId = ++revokeEligibilityRequestId
-  try {
-    const cachedStoredPlanId = storedMealPlanIdsBySourceId.value[planId]
-    const nextRevocableMap: Record<string, string> = {}
-    await Promise.all(selectedIds.map(async (memberId) => {
-      try {
-        const response = await memberMealPlansApi.getMealPlan(memberId, selectedApplyDate.value)
-        const storedPlanId = extractStoredMealPlanIdFromMemberMealPlanResponse(response)
-        const sourcePlanId = extractSourceMealPlanIdFromMemberMealPlanResponse(response)
-        if (!storedPlanId) return
-        if (sourcePlanId === planId || (!!cachedStoredPlanId && storedPlanId === cachedStoredPlanId)) {
-          nextRevocableMap[memberId] = storedPlanId
-        }
-      } catch { /* member has no plan */ }
-    }))
-    if (requestId !== revokeEligibilityRequestId) return
-    const firstStoredId = Object.values(nextRevocableMap)[0]
-    if (firstStoredId && !storedMealPlanIdsBySourceId.value[planId]) {
-      storedMealPlanIdsBySourceId.value[planId] = firstStoredId
-    }
-    revocablePlanIdByMemberId.value = nextRevocableMap
-  } finally {
-    if (requestId === revokeEligibilityRequestId) checkingRevokeEligibility.value = false
-  }
-}
-
-async function applyMealPlanToMembers() {
-  if (!latestMealPlan.value || !currentMemberId.value) return
-  applyingMealPlan.value = true
-  applyError.value = null
-  applySuccess.value = null
-  try {
-    const mealPlanPayload = buildMealPlanPayload(latestMealPlan.value)
-    const selectedMemberIds = new Set(selectedApplyMemberIds.value)
-    selectedMemberIds.add(currentMemberId.value)
-    const response = await memberMealPlansApi.storeMealPlan(currentMemberId.value, {
-      date: selectedApplyDate.value,
-      applies_to_member_ids: Array.from(selectedMemberIds),
-      meal_plan: mealPlanPayload,
-      foodchat_response: { help: 'Meal plan stored from FoodChat UI', success: true, result: [mealPlanPayload] }
-    })
-    const storedMealPlanId = extractStoredMealPlanIdFromMemberMealPlanResponse(response)
-    if (storedMealPlanId) storedMealPlanIdsBySourceId.value[latestMealPlan.value.id] = storedMealPlanId
-    applySuccess.value = t('foodChatHome.apply.success.applied', { date: selectedApplyDate.value })
-    await refreshRevokeEligibility()
-  } catch (err: unknown) {
-    applyError.value = (err && typeof err === 'object' && 'message' in err)
-      ? String((err as { message: string }).message)
-      : t('foodChatHome.errors.failedToApply')
-  } finally {
-    applyingMealPlan.value = false
-  }
-}
-
-async function revokeMealPlanFromMembers() {
-  if (!latestMealPlan.value || !currentMemberId.value) return
-  revokingMealPlan.value = true
-  applyError.value = null
-  applySuccess.value = null
-  try {
-    const selectedIds = [...selectedApplyMemberIds.value]
-    if (selectedIds.some(id => !revocablePlanIdByMemberId.value[id])) {
-      throw new Error(t('foodChatHome.errors.someMembersNoPlan'))
-    }
-    for (const memberId of selectedIds) {
-      await memberMealPlansApi.revokeMealPlan(memberId, revocablePlanIdByMemberId.value[memberId], false)
-    }
-    await refreshRevokeEligibility()
-    applySuccess.value = t('foodChatHome.apply.success.revoked')
-  } catch (err: unknown) {
-    applyError.value = (err && typeof err === 'object' && 'message' in err)
-      ? String((err as { message: string }).message)
-      : t('foodChatHome.errors.failedToRevoke')
-  } finally {
-    revokingMealPlan.value = false
+  const weeklyIdx = weeklyMealPlans.value.findIndex(plan => plan.id === wantedPlan)
+  if (weeklyIdx !== -1) {
+    canvasMode.value = 'weekly'
+    selectedWeeklyPlanIdx.value = weeklyIdx
   }
 }
 
@@ -2616,6 +2999,7 @@ watch(messagesScrollRef, (el) => { if (el) scrollToBottom(false) })
 onMounted(async () => {
   recipeStore.initialize()
   await loadSessions()
+  await openFromQuery()
   // Bookmark states on the canvas need the saved-plan ids; fire-and-forget,
   // the store treats a failed load as "no bookmarks yet".
   loadSavedPlans()
@@ -2626,6 +3010,26 @@ onMounted(async () => {
   if (!householdMembers.value.length && householdStore.currentHousehold?.id) {
     await householdStore.fetchMembers()
   }
+  // Both are fire-and-forget: an unreachable tool surface hides the menu, and
+  // an unreadable planning state hides the panel. Neither should hold the page.
+  loadTools()
+  loadPlanningState()
+  // The corpus vocabulary, so the panel can offer tastes that exist. Fetched
+  // once and kept — it is the same for every member.
+  loadVocabularies()
+})
+
+// The standing state belongs to the session, so it is re-read whenever the
+// active session changes — including the switch a fresh session performs.
+watch(() => activeSession.value?.session_id, (id) => {
+  toolResult.value = null
+  if (id) loadPlanningState()
+})
+
+// A new plan means whatever was pending has been applied. Re-read rather than
+// assume: the plan may have come from a chat turn that changed the state too.
+watch(() => latestMealPlan.value?.id, (id) => {
+  if (id) loadPlanningState()
 })
 </script>
 
@@ -3010,33 +3414,10 @@ onMounted(async () => {
   padding: 0.1rem 0.45rem 0.1rem 0.15rem;
 }
 
-/* ── Session select: comfortable, obviously-clickable trigger ── */
-.fc-session-select,
-.fc-session-select button {
-  cursor: pointer !important;
-}
-/* Give the trigger a real hit area + a visible control affordance so it
-   doesn't read as plain text (was size=xs, too small to tap). */
-.fc-session-select button {
-  min-height: 2rem;
-  padding-inline: 0.6rem;
-  border: 1px solid rgb(228 228 231 / 0.9);
-  border-radius: 0.5rem;
-  background: rgb(250 250 250);
-  transition: border-color 0.15s, background 0.15s;
-}
-.fc-session-select button:hover {
-  border-color: var(--color-brandp-300);
-  background: white;
-}
-.dark .fc-session-select button {
-  border-color: rgb(63 63 70 / 0.9);
-  background: rgb(39 39 42 / 0.6);
-}
-.dark .fc-session-select button:hover {
-  border-color: var(--color-brandp-700);
-  background: rgb(39 39 42);
-}
+/* The session-picker trigger is styled via `:ui.base` in the script (see
+   SESSION_TRIGGER). It cannot be done here: the class Nuxt UI applies lands on
+   the trigger itself, so `.fc-session-select button` selected a descendant
+   that does not exist and the hit area never applied. */
 /* Nuxt UI renders the listbox in a portal — target items globally */
 [data-slot="content"] [data-slot="item"] {
   cursor: pointer !important;

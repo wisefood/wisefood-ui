@@ -136,6 +136,100 @@
           </div>
         </section>
 
+        <!-- Saved meal plans -->
+        <!--
+          `savedPlans[]` has been fetched, stored and typed since the plan
+          canvas shipped, with a bookmark button on every plan writing to it —
+          and nothing has ever rendered it. So a member could save a plan, see
+          the bookmark fill in, and then find their library had no meal plans
+          in it. This is the missing half of that feature.
+        -->
+        <section class="mt-10">
+          <div class="flex items-center gap-2 mb-4">
+            <UIcon name="i-lucide-calendar-heart" class="w-5 h-5 text-brandp-500" />
+            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
+              {{ t('library.savedPlans') }}
+            </h2>
+            <span
+              v-if="savedPlans.length > 0"
+              class="text-sm text-zinc-500 dark:text-zinc-400"
+            >
+              ({{ savedPlans.length }})
+            </span>
+          </div>
+
+          <div
+            v-if="plansError"
+            class="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-center"
+          >
+            <p class="text-sm text-red-700 dark:text-red-300">
+              {{ t('library.savedPlansLoadFailed') }}
+            </p>
+          </div>
+
+          <div
+            v-else-if="!plansLoading && savedPlans.length === 0"
+            class="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-8 text-center"
+          >
+            <UIcon
+              name="i-lucide-calendar-off"
+              class="w-8 h-8 text-zinc-300 dark:text-zinc-600 mx-auto mb-3"
+            />
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
+              {{ t('library.savedPlansEmpty') }}
+            </p>
+          </div>
+
+          <div
+            v-else
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+          >
+            <NuxtLink
+              v-for="plan in savedPlans"
+              :key="plan.plan_id"
+              :to="`/foodchat?session=${plan.session_id}&plan=${plan.plan_id}`"
+              class="group rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 p-5 hover:border-brandp-300 dark:hover:border-brandp-700 hover:shadow-md transition-all"
+            >
+              <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-lg bg-brandp-50 dark:bg-brandp-950/40 flex items-center justify-center shrink-0">
+                  <UIcon
+                    :name="plan.plan_type === 'weekly' ? 'i-lucide-calendar-range' : 'i-lucide-calendar-days'"
+                    class="w-4.5 h-4.5 text-brandp-500"
+                  />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <h3 class="text-sm font-medium text-zinc-900 dark:text-white truncate group-hover:text-brandp-600 dark:group-hover:text-brandp-400">
+                    {{ planTitle(plan) }}
+                  </h3>
+                  <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    {{ plan.plan_type === 'weekly' ? t('library.planWeekly') : t('library.planDaily') }}
+                    <span v-if="planScale(plan)"> · {{ planScale(plan) }}</span>
+                  </p>
+                </div>
+              </div>
+
+              <p
+                v-if="planDishes(plan)"
+                class="mt-3 text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2"
+              >
+                {{ planDishes(plan) }}
+              </p>
+
+              <div class="mt-3 flex items-center justify-between">
+                <span
+                  v-if="plan.saved_at"
+                  class="text-[11px] text-zinc-400 dark:text-zinc-500"
+                >
+                  {{ t('library.planSavedOn', { date: formatDate(plan.saved_at) }) }}
+                </span>
+                <span class="text-[11px] text-brandp-500 opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
+                  {{ t('library.planOpen') }} →
+                </span>
+              </div>
+            </NuxtLink>
+          </div>
+        </section>
+
         <!-- Saved articles -->
         <section
           v-if="lit.savedCounts.value.article > 0 || lit.articles.value.length > 0"
@@ -179,6 +273,7 @@
               v-for="guide in lit.guides.value"
               :key="guide.urn"
               :guide="guide"
+              :to="buildGuideDetailPath(guide.region, guide.urn)"
             />
           </div>
         </section>
@@ -215,9 +310,11 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import recipeApi, { type RecipeSearchResult } from '~/services/recipeApi'
+import foodchatApi, { type SavedPlan } from '~/services/foodchatApi'
 import { useRecipeStore } from '~/stores/recipe'
 import { useHouseholdStore } from '~/stores/household'
 import { useSavedLibrary } from '~/composables/useSavedLibrary'
+import { buildGuideDetailPath } from '~/utils/guidesCatalog'
 import ArticleCard from '~/components/foodscholar/ArticleCard.vue'
 import GuideCard from '~/components/foodscholar/guides/GuideCard.vue'
 import TextbookCard from '~/components/foodscholar/TextbookCard.vue'
@@ -291,11 +388,145 @@ watch(
   { immediate: true }
 )
 
+// ── Saved meal plans ──────────────────────────────────────────────────────
+// Fetched directly rather than through the FoodChat store: this page has no
+// active session, and pulling the whole chat store in to read one list would
+// mean loading sessions and conversations nobody is going to look at.
+
+const savedPlans = ref<SavedPlan[]>([])
+const plansLoading = ref(false)
+const plansError = ref(false)
+
+const loadSavedPlans = async () => {
+  const memberId = householdStore.currentMember?.id
+  if (!memberId) {
+    savedPlans.value = []
+    return
+  }
+  plansLoading.value = true
+  plansError.value = false
+  try {
+    savedPlans.value = await foodchatApi.getSavedPlans(memberId)
+  } catch (e) {
+    console.error('[Library] Failed to load saved plans:', e)
+    savedPlans.value = []
+    plansError.value = true
+  } finally {
+    plansLoading.value = false
+  }
+}
+
+/**
+ * The member's own name for the plan, or an honest fallback.
+ *
+ * `saved_title` is what they typed when they bookmarked it. Without one, the
+ * date it was made beats "Untitled": a member scanning six saved plans is
+ * looking for *which* one, and a date distinguishes them where a placeholder
+ * does not.
+ */
+function planTitle(plan: SavedPlan): string {
+  const title = (plan.saved_title || '').trim()
+  if (title) return title
+  const stamp = plan.created_at || plan.saved_at
+  const kind = plan.plan_type === 'weekly' ? t('library.planWeekly') : t('library.planDaily')
+  return stamp ? `${kind} · ${formatDate(stamp)}` : kind
+}
+
+/**
+ * How big the plan is — days for a week, meals for a day.
+ *
+ * Read off the stored payload, which is the same serialized shape the canvas
+ * renders, so the count is the plan's own rather than an assumption about
+ * three meals a day.
+ */
+function planScale(plan: SavedPlan): string {
+  const payload = plan.plan as Record<string, unknown>
+  const entries = payload?.entries
+  if (Array.isArray(entries)) {
+    const days = new Set(entries.map(e => (e as Record<string, unknown>)?.day).filter(d => d != null))
+    return days.size ? t('library.planDayCount', { count: days.size }) : ''
+  }
+  const days = payload?.days
+  if (Array.isArray(days) && days.length > 1) {
+    return t('library.planDayCount', { count: days.length })
+  }
+  const count = countMeals(payload)
+  return count ? t('library.planMealCount', { count }) : ''
+}
+
+/** Meals in a stored daily plan, from either the flexible or the legacy shape. */
+function countMeals(payload: Record<string, unknown>): number {
+  const days = payload?.days
+  if (Array.isArray(days)) {
+    return days.reduce((total: number, day: unknown) => {
+      const meals = (day as Record<string, unknown>)?.meals
+      return total + (Array.isArray(meals) ? meals.length : 0)
+    }, 0)
+  }
+  return ['breakfast', 'lunch', 'dinner'].filter((slot) => {
+    const course = payload?.[slot] as Record<string, unknown> | undefined
+    return Boolean(course?.recipe_id)
+  }).length
+}
+
+/**
+ * A few dish names, so the card says what is in the plan.
+ *
+ * Titles only — a saved plan card is for recognising a plan, and the full
+ * detail is one click away on the canvas that can render it properly.
+ */
+function planDishes(plan: SavedPlan): string {
+  const payload = plan.plan as Record<string, unknown>
+  const titles: string[] = []
+
+  const entries = payload?.entries
+  if (Array.isArray(entries)) {
+    for (const entry of entries) {
+      const recipe = (entry as Record<string, unknown>)?.recipe as Record<string, unknown> | undefined
+      const title = recipe?.recipe_title ?? recipe?.title
+      if (typeof title === 'string' && title) titles.push(title)
+      if (titles.length >= 4) break
+    }
+    return titles.join(' · ')
+  }
+
+  const days = payload?.days
+  if (Array.isArray(days)) {
+    for (const day of days) {
+      for (const meal of ((day as Record<string, unknown>)?.meals as unknown[]) ?? []) {
+        for (const plate of ((meal as Record<string, unknown>)?.plates as unknown[]) ?? []) {
+          const title = (plate as Record<string, unknown>)?.title
+          if (typeof title === 'string' && title) titles.push(title)
+          if (titles.length >= 4) return titles.join(' · ')
+        }
+      }
+    }
+    return titles.join(' · ')
+  }
+
+  for (const slot of ['breakfast', 'lunch', 'dinner']) {
+    const course = payload?.[slot] as Record<string, unknown> | undefined
+    if (typeof course?.title === 'string' && course.title) titles.push(course.title)
+  }
+  return titles.join(' · ')
+}
+
+function formatDate(value: string): string {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime())
+    ? ''
+    : date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
 // Literature has no boot-time store; load it for the current member and
-// whenever the member changes.
+// whenever the member changes. Saved plans are member-scoped too, so they
+// follow the same trigger rather than loading once on mount.
 watch(
   () => householdStore.currentMember?.id,
-  () => { lit.load() },
+  () => {
+    lit.load()
+    loadSavedPlans()
+  },
   { immediate: true }
 )
 </script>

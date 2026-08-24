@@ -353,7 +353,10 @@ const menuOpen = ref(false)
 
 function onMenuAction(action: 'replace' | 'adapt') {
   menuOpen.value = false
-  emit(action)
+  // Narrowed rather than passed through: `replace` and `adapt` are two
+  // distinct events, and `emit` has no overload accepting their union.
+  if (action === 'replace') emit('replace')
+  else emit('adapt')
 }
 
 const recipeStore = useRecipeStore()
@@ -583,7 +586,7 @@ const segments = computed(() => {
   const total = Object.values(values).reduce((s, v) => s + v, 0) || 1
   let offset = 0
   return SEGMENT_DEFS.map((d) => {
-    const dash = (values[d.key] / total) * circumference
+    const dash = ((values[d.key] ?? 0) / total) * circumference
     const seg = { ...d, dash, offset }
     offset += dash
     return seg

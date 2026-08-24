@@ -631,7 +631,16 @@
     "saved": "Mentve",
     "signInToSave": "Válasszon profilt a mentéshez",
     "unresolvedTitle": "Nem sikerült betölteni a mentett recepteket",
-    "unresolvedDescription": "{count} mentett recepted van, de a részleteiket most nem sikerült lekérni. Próbáld újra egy pillanat múlva."
+    "unresolvedDescription": "{count} mentett recepted van, de a részleteiket most nem sikerült lekérni. Próbáld újra egy pillanat múlva.",
+    "savedPlans": "Mentett étrendek",
+    "savedPlansEmpty": "Még nincs mentett étrend. Jelöld meg egyet a FoodChatben, és megmarad a beszélgetés után is.",
+    "savedPlansLoadFailed": "Nem sikerült betölteni a mentett étrendeket.",
+    "planDaily": "Napi terv",
+    "planWeekly": "Heti terv",
+    "planMealCount": "{count} étkezés",
+    "planDayCount": "{count} nap",
+    "planOpen": "Megnyitás a FoodChatben",
+    "planSavedOn": "Mentve: {date}"
   },
   "foodChat": {
     "title": "FoodChat",
@@ -1526,28 +1535,6 @@
       "unsavePlan": "Eltávolítás a mentettek közül",
       "dayN": "{n}. nap"
     },
-    "apply": {
-      "title": "Alkalmazd ezt a tervet a tagokra",
-      "subtitle": "Válassz tagokat és dátumot",
-      "selectMembers": "Tagok kiválasztása",
-      "onlyMe": "Csak én",
-      "all": "Összes",
-      "noHouseholdMembers": "Nem találhatók háztartástagok.",
-      "main": "Fő",
-      "buttons": {
-        "apply": "Alkalmazás",
-        "revoke": "Visszavonás"
-      },
-      "success": {
-        "applied": "Alkalmazva • {date}",
-        "revoked": "Visszavonva"
-      },
-      "membersLabel": {
-        "selectMembers": "Tagok kiválasztása",
-        "singleSelected": "1 tag kiválasztva",
-        "multipleSelected": "{count} tag kiválasztva"
-      }
-    },
     "tooltips": {
       "planWorksWell": "Ez a terv jól működik",
       "needsImprovement": "Fejlesztés szükséges"
@@ -1564,22 +1551,13 @@
       "drink": "Ital"
     },
     "errors": {
-      "failedToApply": "A menüterv alkalmazása sikertelen.",
-      "failedToRevoke": "A menüterv visszavonása sikertelen.",
-      "someMembersNoPlan": "Néhány kiválasztott tagnál nincs ez a menüterv a választott dátumon."
+      "retry": "Újra"
     },
     "suggestedQuestions": {
       "dailyPlan": "Készíts napi menütervet mára",
       "weeklyPlan": "Készíts teljes heti menütervet",
       "highProtein": "Magas fehérjetartalmú vegetáriánus ötletek",
       "mediterranean": "Mediterrán étrendterv"
-    },
-    "modifyChips": {
-      "lowerCalorie": "Legyen alacsonyabb kalóriás",
-      "moreProtein": "Adj hozzá több fehérjét",
-      "lighterLunch": "Cseréld az ebédet valami könnyebbre",
-      "vegetarian": "Legyen vegetáriánus",
-      "differentDinner": "Javasolj másik vacsorát"
     },
     "mealCard": {
       "menu": "Étkezés menü",
@@ -1616,7 +1594,8 @@
     "constraints": {
       "label": "Feltételek",
       "hardTooltip": "Kötelező feltétel · Forrás: {source}",
-      "softTooltip": "Rugalmas feltétel · Forrás: {source}"
+      "softTooltip": "Rugalmas feltétel · Forrás: {source}",
+      "unsupportedTooltip": "Ezt nem tudtuk érvényesíteni — azért látod, hogy tudd: nem lett alkalmazva."
     },
     "personalization": {
       "prefix": "Személyre szabva:",
@@ -1753,6 +1732,63 @@
       "label": "Napi összesen",
       "macros": "{kcal} kcal · {protein}g fehérje · {carbs}g szénhidrát · {fat}g zsír",
       "partial": "részleges — egyes ételekhez nincs tápérték"
+    },
+    "planningState": {
+      "title": "Amit figyelembe veszek",
+      "subtitle": "Minden itt látható elem alakítja a következő tervet. Töröld, amit félreértettem.",
+      "empty": "Még semmi — írd meg, mi van otthon, vagy mire vágysz.",
+      "pantryLabel": "A konyhádban",
+      "pantryHint": "Felhasználandó hozzávalók. A tervezés előnyben részesíti az ezeket használó recepteket.",
+      "pantryAdd": "Hozzávaló hozzáadása",
+      "pantryAddPlaceholder": "cukkini, feta, maradék csirke…",
+      "pantryEmpty": "Még nincs hozzávaló.",
+      "facetsLabel": "Amit tőled hallottam",
+      "facetsHint": "A szavaidból olvastam ki. A törlés kiveszi a következő tervből.",
+      "dietLabel": "Az általad megadott étrend",
+      "dietHint": "Ebben a beszélgetésben adtad meg. A mentett profilod felett áll, míg a beszélgetés tart.",
+      "claimsLabel": "Amit kértél",
+      "removeItem": "{value} eltávolítása",
+      "family": {
+        "cuisines": "Konyha",
+        "moods": "Hangulat",
+        "flavor_profiles": "Íz",
+        "food_groups": "Élelmiszercsoport"
+      },
+      "replan": "Terv frissítése",
+      "replanHint": "A módosítások elmentve. Frissítsd a tervet, amikor készen állsz.",
+      "replanning": "Terv frissítése…",
+      "pendingChanges": "{count} nem alkalmazott módosítás",
+      "favoritesDeclined": "Kérésedre nem használom a kedvenceidet.",
+      "shapeLabel": "Terv felépítése",
+      "facetsAdd": "Ízlés hozzáadása…",
+      "facetsEmpty": "Még nem hallottam semmit.",
+      "timeLabel": "Elkészítési idő",
+      "timeValue": "Fogásonként {minutes} perc alatt",
+      "timeHint": "a beállítások kártyán módosítható"
+    },
+    "tools": {
+      "label": "Műveletek",
+      "weekSummary": "Hét összegzése",
+      "daySummary": "Nap összegzése",
+      "replaceDay": "Nap kicserélése",
+      "planTotals": "Összesítés megjelenítése",
+      "savePlan": "Terv megőrzése",
+      "shoppingList": "Mit kell bevásárolni",
+      "running": "Dolgozom…",
+      "readOnly": "Csak olvassa a tervet",
+      "changesPlan": "Módosítja a tervet",
+      "failed": "Ez nem sikerült",
+      "totalsTitle": "Terv összesítés",
+      "totalsPartial": "{total} étkezés közül {counted} rendelkezik tápértékadattal",
+      "dayReplaced": "{day}. nap kicserélve.",
+      "summaryTitle": "Heti összegzés",
+      "dailyAverage": "Átlagosan {kcal} kcal naponta",
+      "shoppingHeadline": "{items} tétel {dishes} fogáshoz",
+      "shoppingForMany": "{count} étkezéshez",
+      "shoppingMore": "további {count} nem látható",
+      "saved": "Elmentve a terveid közé",
+      "savedAs": "Elmentve „{title}” néven",
+      "unsaved": "Eltávolítva a terveid közül"
     }
   },
   "a11y": {

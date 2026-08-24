@@ -330,12 +330,12 @@
             <div class="flex items-start gap-3">
               <div class="w-16 h-16 rounded-lg overflow-hidden border border-gray-100 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-700 shrink-0">
                 <img
-                  v-if="recipe.image_url && !failedRecommendedImages[recipe.recipe_id]"
+                  v-if="recipe.image_url && !failedRecommendedImages[recipe.recipe_id ?? '']"
                   :src="recipe.image_url"
                   :alt="recipe.title"
                   class="w-full h-full object-cover"
                   loading="lazy"
-                  @error="markRecommendedImageFailed(recipe.recipe_id)"
+                  @error="markRecommendedImageFailed(recipe.recipe_id ?? '')"
                 >
                 <div
                   v-else
@@ -374,7 +374,7 @@ import { useHouseholdStore } from '@/stores/household'
 import foodscholarApi, { type QaTipsResult } from '~/services/foodscholarApi'
 import catalogApi from '~/services/catalogApi'
 import recipeApi, { type RecipeSearchResult } from '~/services/recipeApi'
-import foodchatApi, { type MealPlan, type MealRecipe, type MemberCurrentPlans } from '~/services/foodchatApi'
+import foodchatApi, { type MealPlan, type MealRecipe, type MemberCurrentPlans, type PlanMeal } from '~/services/foodchatApi'
 import { humaniseSlot, planMeals } from '~/utils/planMeals'
 import type { HouseholdMember } from '~/services/householdsApi'
 import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
@@ -503,7 +503,9 @@ const activeInsight = computed<InsightSlide>(() => {
   }
 
   const safeIndex = activeInsightIndex.value % slides.length
-  return slides[safeIndex]
+  // `safeIndex` is a modulo of a non-empty length, so this is always present —
+  // the guard above returns early on an empty list.
+  return slides[safeIndex] ?? slides[0]!
 })
 
 const activeInsightTitle = computed(() => {
@@ -558,9 +560,9 @@ const shuffleList = <T,>(items: T[]): T[] => {
   const copy = [...items]
   for (let i = copy.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1))
-    const current = copy[i]
-    copy[i] = copy[j]
-    copy[j] = current
+    // Both indices are within bounds by construction; the swap is written with
+    // a tuple so neither side needs a non-null assertion.
+    ;[copy[i], copy[j]] = [copy[j]!, copy[i]!]
   }
   return copy
 }
@@ -618,7 +620,11 @@ const loadRecommendedRecipes = async () => {
     // Pull a fresh random sample straight from the backend. `sort_by: 'random'`
     // maps to ORDER BY rand() and is evaluated per request, so each load draws a
     // different set — no need for a fixed natural-language query pool.
-    const excludeAllergens = householdStore.currentMember?.allergies ?? []
+    // `HouseholdMember` carries identity, not dietary data — allergies live
+    // on the member PROFILE, which this widget does not fetch. Reading a field
+    // that is never present silently sent no allergen exclusions at all, which
+    // is worse than the honest empty list it already resolved to.
+    const excludeAllergens: string[] = []
     const { results } = await recipeApi.searchRecipesByParams({
       sort_by: 'random',
       limit: RECOMMENDED_RECIPES_POOL_SIZE,
@@ -664,8 +670,10 @@ const mealDescriptionFromRecipe = (recipe: MealRecipe | undefined, fallback: str
 const memberInitials = (name: string): string => {
   const parts = name.trim().split(/\s+/).filter(Boolean)
   if (parts.length === 0) return 'U'
-  if (parts.length === 1) return parts[0][0].toUpperCase()
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+  const first = parts[0] ?? ''
+  const last = parts[parts.length - 1] ?? ''
+  if (parts.length === 1) return first.charAt(0).toUpperCase()
+  return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase()
 }
 
 const getMemberAvatar = (member: HouseholdMember): AvatarConfig | null => {
@@ -674,7 +682,9 @@ const getMemberAvatar = (member: HouseholdMember): AvatarConfig | null => {
 }
 
 const getMemberAvatarForDisplay = (member: HouseholdMember): AvatarConfig => {
-  return getMemberAvatar(member) || stringToAvatarConfig(member.id)
+  // `stringToAvatarConfig` is declared as possibly-undefined but is total over
+  // a non-empty string — it hashes into a fixed preset table.
+  return getMemberAvatar(member) ?? (stringToAvatarConfig(member.id) as AvatarConfig)
 }
 
 const todayMealPlan = computed<MealPlan | null>(() => {
@@ -730,33 +740,46 @@ const extractTodayPlan = (plans: MemberCurrentPlans): MealPlan | null => {
     const jsDay = new Date().getDay() // 0=Sun .. 6=Sat
     const planDay = jsDay === 0 ? 7 : jsDay // Day 1=Mon .. 7=Sun
 
-    // Every meal for today, whatever its slot. This used to keep only
-    // breakfast/lunch/dinner and drop the rest on the floor — a member whose
-    // weekly plan included a snack or a dessert saw a day that was quietly
-    // missing meals, with nothing to say so.
-    const meals = plans.weekly_meal_plan.entries
+    // Every meal for today, whatever its slot, in the ONE shape `planMeals()`
+    // reads: `days -> meals -> plates`.
+    //
+    // This used to emit `{ meals: [{slot, recipe}] }`, which is not a field on
+    // `MealPlan` — `planMeals()` looks for `days`, found nothing, and fell
+    // through to the three scalars. So the snack and the dessert this code
+    // exists to carry were dropped one line after being collected, and the
+    // comment claiming otherwise had been wrong since it was written.
+    //
+    // Two entries can share a meal_type (a dinner with a side), so they are
+    // grouped rather than assumed unique — the same grouping the plan canvas
+    // does, for the same reason.
+    const todaysEntries = plans.weekly_meal_plan.entries
       .filter(entry => entry.day === planDay && entry.meal_type)
       .sort((a, b) => a.meal_idx - b.meal_idx)
-      .map(entry => ({
-        slot: String(entry.meal_type),
-        recipe: weeklyRecipeToMealRecipe(entry.recipe as Record<string, unknown>)
-      }))
-      .filter(meal => meal.recipe.recipe_id)
+
+    const meals: PlanMeal[] = []
+    for (const entry of todaysEntries) {
+      const recipe = weeklyRecipeToMealRecipe(entry.recipe as Record<string, unknown>)
+      if (!recipe.recipe_id) continue
+      const slot = String(entry.meal_type)
+      const existing = meals.find(meal => meal.meal_type === slot)
+      if (existing) existing.plates.push(recipe)
+      else meals.push({ meal_type: slot, plates: [recipe] })
+    }
 
     if (meals.length > 0) {
-      // The three legacy keys are still populated for anything that reads them
-      // directly; `meals` carries the full set. `planMeals()` prefers `meals`,
-      // so nothing renders twice.
+      // The three legacy keys stay populated for anything that addresses a slot
+      // by name; `days` carries the full set and `planMeals()` prefers it, so
+      // nothing renders twice.
       const bySlot: Partial<Record<'breakfast' | 'lunch' | 'dinner', MealRecipe>> = {}
       for (const meal of meals) {
-        if (meal.slot === 'breakfast' || meal.slot === 'lunch' || meal.slot === 'dinner') {
-          bySlot[meal.slot] = meal.recipe
+        if (meal.meal_type === 'breakfast' || meal.meal_type === 'lunch' || meal.meal_type === 'dinner') {
+          bySlot[meal.meal_type] = meal.plates[0]
         }
       }
       return {
         id: plans.weekly_meal_plan.id,
         created_at: plans.weekly_meal_plan.created_at,
-        meals,
+        days: [{ day: planDay, meals }],
         breakfast: bySlot.breakfast,
         lunch: bySlot.lunch,
         dinner: bySlot.dinner
@@ -857,10 +880,14 @@ const upcomingMeals = computed(() => {
   // entirely, so a member's snack simply never appeared on their dashboard.
   const canonical = new Set(['breakfast', 'lunch', 'dinner'])
   const extras = planMeals(todayMealPlan.value)
-    .filter(meal => !canonical.has(meal.slot))
+    // A non-main plate of a canonical slot is extra too: the fixed row above
+    // shows that meal's main course, so the side salad has nowhere else to go.
+    .filter(meal => !canonical.has(meal.slot) || meal.role !== 'main')
     .map((meal, index) => ({
-      id: `${meal.slot}-${index}`,
-      name: humaniseSlot(meal.slot),
+      id: `${meal.slot}-${meal.role}-${index}`,
+      name: canonical.has(meal.slot)
+        ? `${humaniseSlot(meal.slot)} · ${humaniseSlot(meal.role)}`
+        : humaniseSlot(meal.slot),
       time: meal.time ?? '',
       icon: meal.icon,
       recipeId: meal.recipe.recipe_id || null,
@@ -939,8 +966,10 @@ const normalizeInsightSlides = (result: QaTipsResult | null | undefined): Insigh
   const maxLength = Math.max(didYouKnow.length, tips.length)
 
   for (let index = 0; index < maxLength; index += 1) {
-    if (didYouKnow[index]) merged.push(didYouKnow[index])
-    if (tips[index]) merged.push(tips[index])
+    const fact = didYouKnow[index]
+    const tip = tips[index]
+    if (fact) merged.push(fact)
+    if (tip) merged.push(tip)
   }
 
   return merged

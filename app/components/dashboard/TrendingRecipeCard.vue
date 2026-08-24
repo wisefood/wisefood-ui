@@ -58,10 +58,10 @@ const toggleSave = () => {
             {{ title }}
           </h3>
           <div class="flex gap-2 flex-wrap">
-            <UBadge v-if="healthy" color="green" variant="subtle" size="sm">
+            <UBadge v-if="healthy" color="success" variant="subtle" size="sm">
               Healthy
             </UBadge>
-            <UBadge v-if="sustainable" color="emerald" variant="subtle" size="sm">
+            <UBadge v-if="sustainable" color="success" variant="subtle" size="sm">
               Sustainable
             </UBadge>
           </div>

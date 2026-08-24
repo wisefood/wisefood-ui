@@ -40,9 +40,14 @@
 </template>
 
 <script setup lang="ts">
+type BadgeColor = 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
+
 interface Badge {
   text: string
-  color?: string
+  // The semantic set UBadge accepts. It was `string`, so a caller passing
+  // "green" typechecked here and was then dropped by the component — the
+  // badge rendered in the default colour with nothing reporting it.
+  color?: BadgeColor
 }
 
 interface Link {

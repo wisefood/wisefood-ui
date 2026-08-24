@@ -5,7 +5,22 @@ import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 // Timeout Configuration
 // ============================================================================
 const DEFAULT_TIMEOUT = 30000
-const MESSAGE_TIMEOUT = 180000 // 3 minutes for AI responses
+
+/**
+ * The outermost rung of the timeout ladder.
+ *
+ *   this            100s   just outside the gateway's
+ *   gateway          90s   for anything that generates a plan
+ *   FoodChat turn    70s   its own budget — it sheds work and answers
+ *   one model call   45s   bounded, one retry
+ *
+ * Strictly larger than the gateway's so the gateway's own error reaches the
+ * member rather than being pre-empted by a local abort that says nothing
+ * useful. It was three minutes, which meant a member could sit watching a
+ * spinner for ninety seconds after the request had already been answered —
+ * or refused — downstream.
+ */
+const MESSAGE_TIMEOUT = 100000
 
 // ============================================================================
 // Type Definitions
@@ -144,12 +159,45 @@ export interface ChatMessage {
   timestamp: string
   /** FoodScholar provenance — persisted server-side, present on reloads too */
   attribution?: ChatAttribution
-  /** Client-side only — grafted from the live response like attribution */
+  /**
+   * Everything else the turn produced, as stored on the message.
+   *
+   * These three used to be client-side only, grafted onto the last assistant
+   * message from the live response — so a reload showed the plan with none of
+   * the explanation that came with it: no memory nudge, no proof of what a swap
+   * changed, no settings ribbon. They are persisted now, and `normaliseMessage`
+   * below flattens them onto the fields the templates already read.
+   */
+  extras?: MessageExtras | null
   memory_suggestions?: MemorySuggestion[]
-  /** Client-side only — grafted from the live response like attribution */
   changed_slots?: ChangedSlot[]
-  /** Client-side only — grafted from the live response like attribution */
   plan_parameters?: PlanParameterCard
+}
+
+/** The stored form of a turn's non-text output. */
+export interface MessageExtras {
+  memory_suggestions?: MemorySuggestion[]
+  changed_slots?: ChangedSlot[]
+  plan_parameters?: PlanParameterCard
+}
+
+/**
+ * A message with its stored extras flattened onto the fields templates read.
+ *
+ * Done here rather than in each template: `extras` is a storage shape, and a
+ * component that has to check two places for a memory nudge is a component that
+ * will check one. The live response keeps setting the same fields directly, so
+ * both paths converge on one representation.
+ */
+export function normaliseMessage(message: ChatMessage): ChatMessage {
+  const extras = message.extras
+  if (!extras) return message
+  return {
+    ...message,
+    memory_suggestions: message.memory_suggestions ?? extras.memory_suggestions,
+    changed_slots: message.changed_slots ?? extras.changed_slots,
+    plan_parameters: message.plan_parameters ?? extras.plan_parameters
+  }
 }
 
 /** Per-course nutrition summary (M4 transparency) */
@@ -300,6 +348,14 @@ export interface WeeklyMealEntry {
   meal_type: string
   recipe: Record<string, unknown>
   reward: number
+  /**
+   * Which plate of the meal this is: main | side | dessert | drink.
+   *
+   * Two entries share a day, a slot and a `meal_idx` when a dinner is served
+   * as a main and a salad — this is the only thing that says which is which.
+   * "main" for every plan made before meals could have plates.
+   */
+  role?: string | null
 }
 
 /** One weekly guideline frequency rule, checked against the final plan */
@@ -308,6 +364,15 @@ export interface WeeklyGuidelineCheck {
   target: string
   actual: number
   met: boolean
+  /**
+   * Which published guide the rule came from.
+   *
+   * Empty on the built-in fallback rules, which need no attribution because
+   * they are not anyone's national guidance. Present once FoodChat is reading
+   * the catalog — and at that point the member is being shown a real rule from
+   * a real body, which should say whose it is.
+   */
+  source?: string
 }
 
 /** Per-day justification row from the weekly explainability metrics */
@@ -340,6 +405,26 @@ export interface WeeklyPlanMetrics {
   }
   days?: WeeklyDayBreakdown[]
   selection_events?: unknown[]
+  /**
+   * The judged quality of the week.
+   *
+   * Absent on every plan stored before weekly had any: the two graders were
+   * instance attributes on the daily service, so a week — the deepest plan the
+   * product makes — carried no variety, diversity or adherence score at all.
+   *
+   * No `llm_score`: nothing ranked a week. The planner walks and picks; it does
+   * not score a batch of candidate weeks against each other.
+   */
+  quality?: {
+    fvs_count?: number
+    fvs_reasoning?: string
+    diversity_llm_score?: number
+    diversity_llm_reasoning?: string
+    guideline_adherence_score?: number
+    guideline_adherence_reasoning?: string
+  }
+  /** What a repair pass swapped, when one ran. */
+  repair?: string
 }
 
 export interface WeeklyMealPlan {
@@ -365,6 +450,75 @@ export interface MemberCurrentPlans {
   meal_plan: MealPlan | null
   weekly_meal_plan: WeeklyMealPlan | null
   cooking_for: string[]
+}
+
+/**
+ * Everything the member has said that outlives a turn.
+ *
+ * The plan's own `constraints_applied` ledger says what was applied to THAT
+ * plan. This says what is still in force for the next one — which is what lets
+ * the constraints on screen survive a page reload, and what makes an inferred
+ * facet correctable instead of something to argue with the assistant about.
+ */
+export interface PlanningState {
+  /** On-hand ingredients to plan around, lowercased, insertion order kept. */
+  pantry: string[]
+  /** All four families, always present — empty arrays rather than absent keys. */
+  facets: {
+    cuisines: string[]
+    moods: string[]
+    flavor_profiles: string[]
+    food_groups: string[]
+  }
+  /** Diet stated in chat, as recipe diet tags. Outranks the stored profile. */
+  diet_tags: string[]
+  /** Nutrition claims ("high protein") — a different filter from a diet. */
+  claim_tags: string[]
+  anchors: Record<string, string>
+  excluded_recipe_ids: string[]
+  /** A cooking-time ceiling in force, in minutes — slider or sentence, one
+      constraint. Null when nobody set one. */
+  max_minutes: number | null
+  /** null = never offered, false = offered and declined. The difference matters. */
+  use_favorites: boolean | null
+  plan_shape: Record<string, unknown>
+  plan_shape_is_default: boolean
+  /** The same shape as a sentence — "3 days — breakfast; lunch; dinner: main + side". */
+  plan_shape_summary: string
+  /** The request a re-plan would run, so the UI can show it rather than describe a button. */
+  query: string
+}
+
+/** One facet chip on the plan header, with the family it came from. */
+export interface FacetChip {
+  family: keyof PlanningState['facets']
+  value: string
+}
+
+/** The facet vocabulary the recipe corpus actually carries. */
+export interface Vocabularies {
+  cuisines?: string[]
+  moods?: string[]
+  flavor_profiles?: string[]
+  food_groups?: string[]
+  [key: string]: string[] | undefined
+}
+
+/** One tool from the manifest — MCP-shaped, generated from FoodChat's registry. */
+export interface FoodChatTool {
+  name: string
+  summary: string
+  description: string
+  parameters: {
+    type?: string
+    properties?: Record<string, { type?: string, description?: string, enum?: string[], minimum?: number, maximum?: number }>
+    required?: string[]
+  }
+  /** True when the tool spends model calls — worth a spinner. */
+  uses_model: boolean
+  /** True when it changes the plan. A reader is always safe to retry. */
+  mutates: boolean
+  examples: string[]
 }
 
 export interface UnifiedChatRequest {
@@ -619,13 +773,155 @@ class FoodChatApiService {
     )
   }
 
+  // ==========================================================================
+  // Standing planning state — the pantry panel and the facet chips
+  // ==========================================================================
+
+  /** What is standing for this session: pantry, facets, stated diet, claims. */
+  async getPlanningState(sessionId: string, memberId: string): Promise<PlanningState> {
+    const params = new URLSearchParams({ member_id: memberId })
+    return this.fetchWithTimeout<PlanningState>(
+      `${this.basePath}/sessions/${sessionId}/planning-state?${params}`,
+      'GET'
+    )
+  }
+
+  /**
+   * Replace the pantry with exactly these items.
+   *
+   * The whole list, not a delta: an empty array means the member cleared it,
+   * which an add-only call cannot express.
+   */
+  async setPantry(sessionId: string, memberId: string, items: string[]): Promise<PlanningState> {
+    return this.fetchWithTimeout<PlanningState>(
+      `${this.basePath}/sessions/${sessionId}/pantry`,
+      'PUT',
+      { member_id: memberId, items }
+    )
+  }
+
+  /** Add items, leaving the rest of the pantry alone. */
+  async addPantryItems(sessionId: string, memberId: string, items: string[]): Promise<PlanningState> {
+    return this.fetchWithTimeout<PlanningState>(
+      `${this.basePath}/sessions/${sessionId}/pantry`,
+      'POST',
+      { member_id: memberId, items }
+    )
+  }
+
+  /** Tick one item off — used up, or heard wrong. */
+  async removePantryItem(sessionId: string, memberId: string, item: string): Promise<PlanningState> {
+    const params = new URLSearchParams({ member_id: memberId })
+    return this.fetchWithTimeout<PlanningState>(
+      `${this.basePath}/sessions/${sessionId}/pantry/${encodeURIComponent(item)}?${params}`,
+      'DELETE'
+    )
+  }
+
+  /**
+   * Ask for a taste FoodChat did not infer.
+   *
+   * Values must come from `getVocabularies()`. The endpoint rejects anything
+   * the corpus is not tagged with rather than accepting it: an unlisted value
+   * does not narrow the next search, it empties it.
+   */
+  async addFacets(sessionId: string, memberId: string, values: string[]): Promise<PlanningState> {
+    return this.fetchWithTimeout<PlanningState>(
+      `${this.basePath}/sessions/${sessionId}/facets`,
+      'POST',
+      { member_id: memberId, values }
+    )
+  }
+
+  /**
+   * Take back one facet FoodChat inferred from something the member said.
+   *
+   * By value, not by family: the member removing "light" does not know whether
+   * it was read as a mood or a flavour, and neither does the chip.
+   */
+  async removeFacet(sessionId: string, memberId: string, value: string): Promise<PlanningState> {
+    const params = new URLSearchParams({ member_id: memberId })
+    return this.fetchWithTimeout<PlanningState>(
+      `${this.basePath}/sessions/${sessionId}/facets/${encodeURIComponent(value)}?${params}`,
+      'DELETE'
+    )
+  }
+
+  /**
+   * Re-plan from the standing state — no message, no intent classification.
+   *
+   * Called once after the member finishes changing chips or pantry items, not
+   * per change: it generates a plan, so it gets the message timeout.
+   */
+  async replan(
+    sessionId: string,
+    memberId: string,
+    planType?: 'daily' | 'weekly'
+  ): Promise<UnifiedChatResponse> {
+    return this.fetchWithTimeout<UnifiedChatResponse>(
+      `${this.basePath}/sessions/${sessionId}/replan`,
+      'POST',
+      planType ? { member_id: memberId, plan_type: planType } : { member_id: memberId },
+      MESSAGE_TIMEOUT
+    )
+  }
+
+  /**
+   * The facet vocabulary the corpus actually carries.
+   *
+   * Used to offer real values rather than a hardcoded list that drifts. The
+   * recipe search ANDs facet values and never relaxes an unlisted one, so an
+   * invented value does not soften a search — it empties it.
+   */
+  async getVocabularies(): Promise<Vocabularies> {
+    const payload = await this.fetchWithTimeout<{ vocabularies: Vocabularies }>(
+      `${this.basePath}/vocabularies`,
+      'GET'
+    )
+    return payload?.vocabularies ?? {}
+  }
+
+  // ==========================================================================
+  // Tool surface
+  // ==========================================================================
+
+  /** Every tool the agent can call, generated from FoodChat's own registry. */
+  async listTools(): Promise<FoodChatTool[]> {
+    const payload = await this.fetchWithTimeout<{ tools: FoodChatTool[] }>(
+      `${this.basePath}/tools`,
+      'GET'
+    )
+    return payload?.tools ?? []
+  }
+
+  /** Run one tool by name. Some regenerate part of a plan, hence the timeout. */
+  async invokeTool<T = Record<string, unknown>>(
+    toolName: string,
+    memberId: string,
+    args: Record<string, unknown>
+  ): Promise<T> {
+    // Two `result` keys meet on this one call: the gateway envelopes every
+    // response as `{help, result}`, and FoodChat's own tool payload is
+    // `{tool, result}`. `fetchWithTimeout` strips exactly one, which leaves
+    // the tool payload — but only while the envelope is exactly one deep.
+    // Accept either shape rather than render nothing if that ever changes.
+    const payload = await this.fetchWithTimeout<{ tool?: string, result?: T } | T>(
+      `${this.basePath}/tools/${toolName}`,
+      'POST',
+      { member_id: memberId, arguments: args },
+      MESSAGE_TIMEOUT
+    )
+    const envelope = payload as { tool?: string, result?: T } | undefined
+    return (envelope && 'tool' in envelope ? envelope.result : payload) as T
+  }
+
   // ============================================================================
   // Private helpers
   // ============================================================================
 
   private async fetchWithTimeout<T>(
     endpoint: string,
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
     data?: unknown,
     timeoutMs: number = DEFAULT_TIMEOUT
   ): Promise<T> {

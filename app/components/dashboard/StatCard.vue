@@ -1,5 +1,5 @@
 <template>
-  <UCard :ui="{ body: { padding: 'p-5 sm:p-6' } }">
+  <UCard :ui="{ body: 'p-5 sm:p-6' }">
     <div class="flex items-start justify-between">
       <div class="flex-1">
         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">

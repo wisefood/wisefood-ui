@@ -1,5 +1,5 @@
 <template>
-  <UCard :ui="{ body: { padding: 'p-0' } }">
+  <UCard :ui="{ body: 'p-0' }">
     <div class="p-5 border-b border-gray-200 dark:border-gray-800">
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
@@ -63,7 +63,7 @@
     <div v-if="showViewAll" class="p-4 border-t border-gray-200 dark:border-gray-800">
       <UButton
         variant="ghost"
-        color="gray"
+        color="neutral"
         block
         trailing-icon="i-lucide-arrow-right"
         @click="onViewAll"
@@ -75,9 +75,14 @@
 </template>
 
 <script setup lang="ts">
+type BadgeColor = 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
+
 interface Badge {
   text: string
-  color?: string
+  // The semantic set UBadge accepts. It was `string`, so a caller passing
+  // "green" typechecked here and was then dropped by the component — the
+  // badge rendered in the default colour with nothing reporting it.
+  color?: BadgeColor
 }
 
 interface Meta {

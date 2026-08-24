@@ -1,7 +1,7 @@
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useFoodChatStore } from '~/stores/foodchat'
 import { useHouseholdStore } from '~/stores/household'
-import type { ComposePick, MemorySuggestion, PlanParameterValues } from '~/services/foodchatApi'
+import type { ComposePick, FoodChatTool, MemorySuggestion, PlanParameterValues } from '~/services/foodchatApi'
 
 export function useFoodChat() {
   const store = useFoodChatStore()
@@ -111,6 +111,88 @@ export function useFoodChat() {
     return store.composePlan(store.activeSessionId, memberId.value, picks, planType, message)
   }
 
+  // ---- Standing planning state (pantry, inferred facets, stated diet) ----
+
+  /**
+   * Pantry and facet edits are saved immediately but do NOT re-plan, so the
+   * page has to know how many are waiting. Counted here rather than in the
+   * store because it is a property of what the member is looking at: a fresh
+   * plan clears it, and only the page knows when one arrives.
+   */
+  const pendingStateChanges = ref(0)
+
+  async function loadPlanningState() {
+    if (!store.activeSessionId || !memberId.value) return
+    await store.fetchPlanningState(store.activeSessionId, memberId.value)
+  }
+
+  async function addPantryItems(items: string[]) {
+    if (!store.activeSessionId || !memberId.value) return
+    const before = store.planningState?.pantry.length ?? 0
+    await store.addPantryItems(store.activeSessionId, memberId.value, items)
+    // Only count it as pending if it actually changed something — re-adding
+    // an item already in the pantry is not a change waiting to be applied.
+    if ((store.planningState?.pantry.length ?? 0) !== before) pendingStateChanges.value += 1
+  }
+
+  async function removePantryItem(item: string) {
+    if (!store.activeSessionId || !memberId.value) return
+    const before = store.planningState?.pantry.length ?? 0
+    await store.removePantryItem(store.activeSessionId, memberId.value, item)
+    if ((store.planningState?.pantry.length ?? 0) !== before) pendingStateChanges.value += 1
+  }
+
+  async function addFacets(values: string[]) {
+    if (!store.activeSessionId || !memberId.value) return
+    await store.addFacets(store.activeSessionId, memberId.value, values)
+    pendingStateChanges.value += 1
+  }
+
+  async function removeFacet(value: string) {
+    if (!store.activeSessionId || !memberId.value) return
+    await store.removeFacet(store.activeSessionId, memberId.value, value)
+    pendingStateChanges.value += 1
+  }
+
+  /** Apply everything accumulated. One plan, however many edits. */
+  async function replan(planType?: 'daily' | 'weekly') {
+    if (!store.activeSessionId || !memberId.value) return
+    const response = await store.replan(store.activeSessionId, memberId.value, planType)
+    pendingStateChanges.value = 0
+    return response
+  }
+
+  // ---- Tools ----
+
+  /** The facet vocabulary the corpus carries. Fetched once, process-wide. */
+  async function loadVocabularies() {
+    return store.fetchVocabularies()
+  }
+
+  async function loadTools() {
+    await store.fetchTools()
+  }
+
+  /**
+   * Run one tool from the manifest.
+   *
+   * `session_id` is filled in here: the tool schemas declare it, the menu has
+   * no business knowing it, and a caller that forgets it gets a 400 from the
+   * registry rather than a tool acting on the wrong session.
+   */
+  async function invokeTool<T = Record<string, unknown>>(
+    tool: FoodChatTool,
+    args: Record<string, unknown> = {}
+  ): Promise<T | undefined> {
+    if (!store.activeSessionId || !memberId.value) return
+    return store.invokeTool<T>(
+      tool.name,
+      memberId.value,
+      { session_id: store.activeSessionId, ...args },
+      { mutates: tool.mutates, sessionId: store.activeSessionId }
+    )
+  }
+
   const activeDiners = computed(() =>
     store.activeSessionId ? store.dinersBySession[store.activeSessionId] ?? null : null
   )
@@ -166,6 +248,25 @@ export function useFoodChat() {
     activeDiners,
     updateDiners,
     setLocalDiners,
-    clearError
+    clearError,
+
+    planningState: computed(() => store.planningState),
+    planningStateLoading: computed(() => store.planningStateLoading),
+    facetChips: computed(() => store.facetChips),
+    hasStandingConstraints: computed(() => store.hasStandingConstraints),
+    pendingStateChanges,
+    loadPlanningState,
+    addPantryItems,
+    removePantryItem,
+    addFacets,
+    removeFacet,
+    replan,
+
+    vocabularies: computed(() => store.vocabularies),
+    loadVocabularies,
+    tools: computed(() => store.tools),
+    runningTool: computed(() => store.runningTool),
+    loadTools,
+    invokeTool
   }
 }
