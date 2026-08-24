@@ -1099,13 +1099,8 @@
                           <div
                             v-for="cell in day.cells"
                             :key="cell.key"
-                            class="relative rounded-lg border p-2 flex flex-col gap-1.5"
-                            :class="[
-                              cell.plates.length > 1
-                                ? 'border-brandp-200/70 dark:border-brandp-900/50 bg-brandp-50/40 dark:bg-brandp-950/20'
-                                : 'border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/30',
-                              { 'fc-slot-flash': highlightedSlots.has(cell.slotKey) }
-                            ]"
+                            class="relative rounded-lg border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/30 p-2 flex flex-col gap-1.5"
+                            :class="{ 'fc-slot-flash': highlightedSlots.has(cell.slotKey) }"
                           >
                             <div class="flex items-center gap-1">
                               <UIcon :name="mealTypeIcon(cell.mealType)" class="w-3 h-3 text-brandp-400 shrink-0" />

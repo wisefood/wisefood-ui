@@ -1,10 +1,11 @@
 <template>
-  <div
-    class="relative flex flex-col gap-3 p-5 transition-all"
-    :class="isMultiPlate
-      ? 'bg-brandp-50/40 dark:bg-brandp-950/20 ring-1 ring-inset ring-brandp-200/70 dark:ring-brandp-900/50 hover:bg-brandp-50/70 dark:hover:bg-brandp-950/30'
-      : 'bg-white dark:bg-zinc-800/50 hover:bg-gray-50 dark:hover:bg-zinc-700/30'"
-  >
+  <!-- Same surface whatever the meal is made of. A multi-plate meal was
+       tinted and ringed to read as one thing; it does not need to be. The
+       divider, the role badges and the single nutrition line already say a
+       main and a salad are one lunch, and colouring one card differently from
+       its neighbours reads as a state — selected, flagged, needing attention —
+       rather than as a fact about the food. -->
+  <div class="relative flex flex-col gap-3 p-5 bg-white dark:bg-zinc-800/50 transition-all hover:bg-gray-50 dark:hover:bg-zinc-700/30">
     <!-- Meal type + time -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2.5">
