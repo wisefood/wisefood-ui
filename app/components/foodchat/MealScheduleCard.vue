@@ -291,13 +291,20 @@
           @mouseenter="hoveredSegment = seg.key"
         />
       </svg>
-      <!-- Center label -->
+      <!-- Center label.
+           Gated on `macros` — the same thing the segments are drawn from. It
+           used to be gated on `nutritionData`, which is only set when this
+           component FETCHED the recipe, and it stopped fetching as soon as
+           plans began carrying macros of their own. So the ring was drawn from
+           real numbers while the middle of it showed "···": the data was
+           there, and the label was asking a variable that had been left
+           behind. -->
       <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         <span
-          v-if="nutritionLoading"
+          v-if="nutritionLoading && !macros"
           class="text-[9px] text-gray-400"
         >···</span>
-        <template v-else-if="nutritionData">
+        <template v-else-if="macros">
           <span class="text-[10px] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ centerValue }}</span>
           <span class="text-[8px] text-gray-400 dark:text-zinc-500 leading-none mt-0.5">{{ centerLabel }}</span>
         </template>

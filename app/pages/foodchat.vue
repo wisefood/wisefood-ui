@@ -140,10 +140,16 @@
         key="split"
         class="flex-1 flex justify-center px-4 sm:px-6 py-6 pt-12 min-h-0"
       >
-        <div class="fc-split-wrap flex w-full max-w-7xl 2xl:max-w-[100rem] min-h-0">
+        <div
+          ref="splitWrap"
+          class="fc-split-wrap flex w-full max-w-7xl 2xl:max-w-[100rem] min-h-0"
+        >
 
         <!-- ── LEFT: Chat column (FoodScholar-style floating) ── -->
-        <div class="fc-chat-col flex flex-col min-w-0 relative">
+        <div
+          class="fc-chat-col flex flex-col min-w-0 relative"
+          :style="{ width: `${chatWidth}px` }"
+        >
 
           <!-- Session bar -->
           <div class="fc-session-bar flex items-center gap-2 px-3 py-2 shrink-0">
@@ -404,6 +410,67 @@
 
           <!-- ── Chat input (pinned to bottom) ── -->
           <div class="fc-composer-wrap px-4 pb-4 pt-2">
+            <!-- ── What's in the kitchen, settled here ──
+                 Saying "I've got spinach and half a jar of olives" already
+                 reaches the plan — the extractor hears it and the planner uses
+                 it. What was missing was any way to SEE it or correct it
+                 without opening a panel, right where the member said it.
+
+                 So it sits above the box they typed into: what was heard, one
+                 tap to drop a wrong item, one field to add a missed one. It
+                 writes immediately and does NOT re-plan — the next plan uses
+                 it, and re-planning on every tick would spend a turn per
+                 vegetable. -->
+            <div v-if="pantryStripOpen || pantryItems.length" class="mb-2 px-1">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <UIcon name="i-lucide-refrigerator" class="w-3 h-3 text-emerald-500 shrink-0" />
+                <span
+                  v-for="item in pantryItems"
+                  :key="`strip-${item}`"
+                  class="group inline-flex items-center gap-1 pl-2 pr-1 py-0.5 text-[11px] rounded-full border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
+                >
+                  {{ item }}
+                  <button
+                    class="w-3.5 h-3.5 flex items-center justify-center rounded-full text-emerald-500/70 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-800/40 disabled:opacity-40"
+                    :aria-label="t('foodChatHome.planningState.removeItem', { value: item })"
+                    :disabled="sending"
+                    @click="handleRemovePantry(item)"
+                  >
+                    <UIcon name="i-lucide-x" class="w-2.5 h-2.5" />
+                  </button>
+                </span>
+                <form
+                  v-if="pantryStripOpen"
+                  class="inline-flex items-center gap-1"
+                  @submit.prevent="submitPantryStrip"
+                >
+                  <input
+                    v-model="pantryDraft"
+                    class="fc-pantry-input"
+                    :placeholder="t('foodChatHome.planningState.pantryAddPlaceholder')"
+                    :aria-label="t('foodChatHome.planningState.pantryAdd')"
+                    :disabled="sending"
+                  >
+                  <button
+                    type="submit"
+                    class="w-4 h-4 flex items-center justify-center rounded text-gray-400 hover:text-emerald-600 disabled:opacity-40"
+                    :disabled="sending || !pantryDraft.trim()"
+                    :aria-label="t('foodChatHome.planningState.pantryAdd')"
+                  >
+                    <UIcon name="i-lucide-check" class="w-3 h-3" />
+                  </button>
+                </form>
+                <button
+                  v-else
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[11px] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
+                  @click="pantryStripOpen = true"
+                >
+                  <UIcon name="i-lucide-plus" class="w-2.5 h-2.5" />
+                  {{ t('foodChatHome.planningState.pantryAdd') }}
+                </button>
+              </div>
+            </div>
+
             <!-- Diner picker (multi-member households only) -->
             <div v-if="showDinerPicker" class="mb-2 px-1 flex items-center gap-1.5 flex-wrap">
               <UIcon name="i-lucide-users" class="w-3 h-3 text-gray-400 dark:text-zinc-500 shrink-0" />
@@ -456,17 +523,62 @@
           </div>
         </div>
 
+        <!-- ── The drag handle between the two ──
+             The chat and the canvas want different amounts of room depending
+             on what the member is doing — reading a week, or arguing about a
+             dinner — and the split was a fixed 34%. Dragging is remembered, so
+             a member who widened the canvas once does not widen it every
+             session. Double-click restores the default. -->
+        <div
+          class="fc-splitter shrink-0 group"
+          role="separator"
+          aria-orientation="vertical"
+          :aria-valuenow="Math.round(chatWidth)"
+          tabindex="0"
+          :title="t('foodChatHome.splitter.hint')"
+          @pointerdown="beginDrag"
+          @dblclick="resetSplit"
+          @keydown.left.prevent="nudgeSplit(-24)"
+          @keydown.right.prevent="nudgeSplit(24)"
+        >
+          <span class="fc-splitter-grip" />
+        </div>
+
         <!-- ── RIGHT: Canvas column ── -->
         <div class="fc-canvas-col flex flex-col overflow-y-auto">
-          <!-- Plan settings ribbon: the parameter card's controls, living on
-               the plan itself. Shown once a plan exists; each control
-               applies on interaction. -->
-          <FoodchatPlanSettingsRibbon
+          <!-- Plan settings, behind a disclosure and closed by default.
+               Four groups of pills across the top of the canvas is the first
+               thing a member sees and the last thing they came for: it reads
+               as a control panel bolted above their dinner. Every control
+               still commits on interaction — this only decides whether they
+               are on screen when nobody asked. -->
+          <div
             v-if="latestParamCard && hasAnyPlan"
-            :card="latestParamCard"
-            :busy="sending || showEphemeralGenerating"
-            @apply="handleApplyPlanParameters"
-          />
+            class="fc-settings-shell shrink-0"
+          >
+            <button
+              class="w-full flex items-center gap-2 px-4 sm:px-6 py-2 text-xs text-gray-500 dark:text-zinc-400 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors"
+              :aria-expanded="settingsOpen"
+              @click="settingsOpen = !settingsOpen"
+            >
+              <UIcon name="i-lucide-settings-2" class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0" />
+              <span>{{ t('foodChatHome.planSettings.title') }}</span>
+              <span
+                v-if="!settingsOpen && appliedSettingsSummary"
+                class="text-[11px] text-gray-400 dark:text-zinc-500 font-light truncate"
+              >· {{ appliedSettingsSummary }}</span>
+              <UIcon
+                :name="settingsOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+                class="w-3.5 h-3.5 ml-auto shrink-0"
+              />
+            </button>
+            <FoodchatPlanSettingsRibbon
+              v-show="settingsOpen"
+              :card="latestParamCard"
+              :busy="sending || showEphemeralGenerating"
+              @apply="handleApplyPlanParameters"
+            />
+          </div>
           <!-- "Cooking for" banner (when more than one diner) -->
           <Transition name="chips-fade">
             <div v-if="showCookingForBanner" class="px-4 sm:px-6 pt-3 shrink-0">
@@ -686,32 +798,6 @@
                     <span class="text-sm font-medium text-gray-900 dark:text-white">{{ canvasMode === 'weekly' ? t('foodChatHome.planHeader.weeklyPlan') : t('foodChatHome.planHeader.dailyPlan') }}</span>
                   </div>
 
-                  <!-- Tools: the capabilities FoodChat declares, as buttons.
-                       Fed by the manifest, so a tool that exists is offered. -->
-                  <FoodchatPlanToolsMenu
-                    v-if="tools.length"
-                    :tools="tools"
-                    :plan-type="canvasMode"
-                    :day="toolsMenuDay"
-                    :running="runningTool"
-                    :busy="sending"
-                    @invoke="handleToolInvoke"
-                  />
-
-                  <!-- Save: this plan outlives the conversation -->
-                  <button
-                    v-if="displayedPlanId"
-                    class="shrink-0 h-6 w-6 flex items-center justify-center rounded-md transition-colors"
-                    :class="displayedPlanSaved
-                      ? 'text-brandp-500 hover:text-brandp-600'
-                      : 'text-gray-400 dark:text-zinc-500 hover:text-brandp-500'"
-                    :title="displayedPlanSaved ? t('foodChatHome.planHeader.unsavePlan') : t('foodChatHome.planHeader.savePlan')"
-                    :disabled="sending"
-                    @click="handleTogglePlanSaved"
-                  >
-                    <UIcon :name="displayedPlanSaved ? 'i-lucide-bookmark-check' : 'i-lucide-bookmark'" class="w-4 h-4" />
-                  </button>
-
                   <!-- Plan history dropdown -->
                   <USelect
                     v-if="canvasMode === 'daily' && mealPlans.length > 1"
@@ -737,27 +823,47 @@
                     {{ canvasMode === 'daily' && displayedMealPlan ? formatPlanDate(displayedMealPlan.created_at) : '' }}
                     {{ canvasMode === 'weekly' && displayedWeeklyPlan ? formatPlanDate(displayedWeeklyPlan.created_at) : '' }}
                   </span>
+
+                  <!-- What you can DO with this plan, at the end of its own
+                       heading and said in words.
+                       A bookmark glyph and a wand glyph wedged between the
+                       title and the version picker read as decoration; nothing
+                       about them says "keep this" or "there are seven things
+                       here". Grouped, labelled, and pushed right so the row
+                       reads: what this is · when it was made · what you can do
+                       with it. -->
+                  <div class="ml-auto flex items-center gap-2 shrink-0">
+                    <UButton
+                      v-if="displayedPlanId"
+                      size="xs"
+                      :color="displayedPlanSaved ? 'primary' : 'neutral'"
+                      :variant="displayedPlanSaved ? 'soft' : 'subtle'"
+                      :icon="displayedPlanSaved ? 'i-lucide-bookmark-check' : 'i-lucide-bookmark'"
+                      :disabled="sending"
+                      @click="handleTogglePlanSaved"
+                    >
+                      {{ displayedPlanSaved
+                        ? t('foodChatHome.planHeader.savedPlan')
+                        : t('foodChatHome.planHeader.savePlan') }}
+                    </UButton>
+                    <FoodchatPlanToolsMenu
+                      v-if="tools.length"
+                      :tools="tools"
+                      :plan-type="canvasMode"
+                      :day="toolsMenuDay"
+                      :running="runningTool"
+                      :busy="sending"
+                      show-label
+                      @invoke="handleToolInvoke"
+                    />
+                  </div>
                 </div>
 
-                <!-- ── What FoodChat is planning around ──
-                     Session-scoped and server-held, so unlike the ledger below
-                     it describes the NEXT plan rather than this one — and it
-                     survives a reload, which the client-grafted extras do not. -->
-                <div v-if="planningState" class="mb-4">
-                  <FoodchatPlanningStatePanel
-                    :state="planningState"
-                    :facets="facetChips"
-                    :pending-changes="pendingStateChanges"
-                    :busy="sending"
-                    :start-open="pendingStateChanges > 0"
-                    :vocabularies="vocabularies"
-                    @add-facet="handleAddFacet"
-                    @add-pantry="handleAddPantry"
-                    @remove-pantry="handleRemovePantry"
-                    @remove-facet="handleRemoveFacet"
-                    @replan="handleReplan"
-                  />
-                </div>
+                <!-- "What FoodChat is planning around" used to sit here, above
+                     the meals. It describes the NEXT plan, not this one, so it
+                     pushed the plan the member asked for down the page to make
+                     room for a panel about the one they had not asked for yet.
+                     It lives in the right rail now. -->
 
                 <!-- The last tool result. Dismissible, and never mistaken for
                      the plan itself: a summary is an answer, not a change. -->
@@ -1420,6 +1526,60 @@
               </div>
             </Transition>
 
+          </div>
+        </div>
+
+        <!-- ── RIGHT RAIL: what the NEXT plan is being built around ──
+             A rail rather than a block above the meals, and collapsed by
+             default. It describes the next plan, not the one on screen, so
+             above the meals it pushed what the member asked for down the page
+             to make room for what they had not asked for yet.
+
+             Collapsed it is a spine of icons with a count, so a member can see
+             at a glance that three things are standing without opening
+             anything. -->
+        <div
+          v-if="planningState"
+          class="fc-rail shrink-0 flex flex-col"
+          :class="railOpen ? 'fc-rail-open' : 'fc-rail-shut'"
+        >
+          <button
+            class="flex items-center gap-2 px-2 py-2.5 text-gray-500 dark:text-zinc-400 hover:bg-gray-100/70 dark:hover:bg-zinc-800/50 transition-colors shrink-0"
+            :class="railOpen ? 'justify-between' : 'flex-col gap-1.5'"
+            :aria-expanded="railOpen"
+            :title="t('foodChatHome.planningState.title')"
+            @click="railOpen = !railOpen"
+          >
+            <span class="inline-flex items-center gap-2">
+              <UIcon name="i-lucide-clipboard-list" class="w-4 h-4 text-brandp-500 shrink-0" />
+              <span v-if="railOpen" class="text-xs font-medium whitespace-nowrap">
+                {{ t('foodChatHome.planningState.title') }}
+              </span>
+            </span>
+            <span
+              v-if="standingCount"
+              class="text-[10px] px-1.5 py-0.5 rounded-full bg-brandp-50 dark:bg-brandp-900/30 text-brandp-600 dark:text-brandp-300 tabular-nums shrink-0"
+            >{{ standingCount }}</span>
+            <UIcon
+              v-if="railOpen"
+              name="i-lucide-chevrons-right"
+              class="w-3.5 h-3.5 shrink-0"
+            />
+          </button>
+          <div v-if="railOpen" class="flex-1 overflow-y-auto px-2 pb-3">
+    <FoodchatPlanningStatePanel
+    :state="planningState"
+    :facets="facetChips"
+    :pending-changes="pendingStateChanges"
+    :busy="sending"
+    :start-open="pendingStateChanges > 0"
+    :vocabularies="vocabularies"
+    @add-facet="handleAddFacet"
+    @add-pantry="handleAddPantry"
+    @remove-pantry="handleRemovePantry"
+    @remove-facet="handleRemoveFacet"
+    @replan="handleReplan"
+    />
           </div>
         </div>
 
@@ -2723,6 +2883,135 @@ function groupBySlot(meals: NormalisedMeal[]) {
   return out
 }
 
+// ── The chat/canvas split ────────────────────────────────────────────────
+//
+// It was `width: clamp(300px, 34%, 460px)` — one ratio for reading a week and
+// for arguing about one dinner. The handle between the columns sets it, the
+// choice is remembered, and double-click restores the default.
+
+const SPLIT_KEY = 'foodchat:chat-width'
+const SPLIT_MIN = 300
+const SPLIT_MAX = 720
+const SPLIT_DEFAULT = 420
+
+const splitWrap = ref<HTMLElement | null>(null)
+const chatWidth = ref(SPLIT_DEFAULT)
+
+function clampSplit(px: number): number {
+  // Never wider than half: past that the "chat column" is the page and the
+  // canvas is the sidebar, which is not what either of them is.
+  const half = (splitWrap.value?.clientWidth ?? 1200) / 2
+  return Math.max(SPLIT_MIN, Math.min(Math.min(SPLIT_MAX, half), px))
+}
+
+function persistSplit() {
+  try {
+    localStorage.setItem(SPLIT_KEY, String(Math.round(chatWidth.value)))
+  } catch { /* private mode, quota — a forgotten width is not a failure */ }
+}
+
+function beginDrag(event: PointerEvent) {
+  const startX = event.clientX
+  const startWidth = chatWidth.value
+  const target = event.currentTarget as HTMLElement
+  target.setPointerCapture?.(event.pointerId)
+  document.body.style.cursor = 'col-resize'
+  // Dragging over the canvas selects its text otherwise, which looks broken.
+  document.body.style.userSelect = 'none'
+
+  const move = (e: PointerEvent) => {
+    chatWidth.value = clampSplit(startWidth + (e.clientX - startX))
+  }
+  const up = () => {
+    target.removeEventListener('pointermove', move)
+    target.removeEventListener('pointerup', up)
+    target.removeEventListener('pointercancel', up)
+    document.body.style.cursor = ''
+    document.body.style.userSelect = ''
+    persistSplit()
+  }
+  target.addEventListener('pointermove', move)
+  target.addEventListener('pointerup', up)
+  target.addEventListener('pointercancel', up)
+}
+
+function nudgeSplit(by: number) {
+  chatWidth.value = clampSplit(chatWidth.value + by)
+  persistSplit()
+}
+
+function resetSplit() {
+  chatWidth.value = SPLIT_DEFAULT
+  persistSplit()
+}
+
+// ── The pantry strip above the composer ──────────────────────────────────
+const pantryStripOpen = ref(false)
+const pantryDraft = ref('')
+
+const pantryItems = computed(() => planningState.value?.pantry ?? [])
+
+/**
+ * "ground beef, feta" and "ground beef" both work.
+ *
+ * A comma is how people list things, and splitting here means one round trip
+ * instead of three — the endpoint takes a list precisely so it can.
+ */
+function submitPantryStrip() {
+  const items = pantryDraft.value
+    .split(',')
+    .map(part => part.trim())
+    .filter(Boolean)
+  if (!items.length) return
+  pantryDraft.value = ''
+  handleAddPantry(items)
+}
+
+// ── The right rail ───────────────────────────────────────────────────────
+const railOpen = ref(false)
+
+/** How many things are standing, for the collapsed rail's badge. */
+const standingCount = computed(() => {
+  const state = planningState.value
+  if (!state) return 0
+  return (state.pantry?.length ?? 0)
+    + facetChips.value.length
+    + (state.diet_tags?.length ?? 0)
+    + (state.claim_tags?.length ?? 0)
+    + (state.max_minutes ? 1 : 0)
+})
+
+// The settings disclosure. Closed by default: four groups of pills across the
+// top of the canvas is the first thing a member sees and the last thing they
+// came for.
+const settingsOpen = ref(false)
+
+/**
+ * What is currently set, in one line, for the collapsed header.
+ *
+ * So closing the panel does not hide the fact that a 20-minute ceiling or a
+ * high-protein goal is in force. A disclosure that hides state is worse than a
+ * ribbon that shows it.
+ */
+const appliedSettingsSummary = computed(() => {
+  const card = latestParamCard.value
+  if (!card) return ''
+  const parts: string[] = []
+  for (const param of card.parameters) {
+    const value = param.value
+    if (value == null || value === '') continue
+    if (param.kind === 'scale') {
+      parts.push(`${value}${param.unit ? ` ${param.unit}` : ''}`)
+      continue
+    }
+    const option = param.options?.find(o => o.value === value)
+    const key = `foodChatHome.chat.planParams.options.${value}`
+    const translated = t(key)
+    parts.push(translated === key ? (option?.label ?? String(value)) : translated)
+  }
+  return parts.join(' · ')
+})
+
 /** The plan's meals, whichever shape the backend sent. */
 const displayedPlanMeals = computed(() => planMeals(displayedMealPlan.value))
 /** The same plates, gathered one card per MEAL — a main and its salad together. */
@@ -2992,6 +3281,14 @@ watch(messagesScrollRef, (el) => { if (el) scrollToBottom(false) })
 
 // ── Mount ──
 onMounted(async () => {
+  // The remembered split, read here rather than in the ref's initialiser: on
+  // the server there is no localStorage, and a value read during setup would
+  // make the markup Nuxt sends differ from what the client renders.
+  try {
+    const stored = Number(localStorage.getItem(SPLIT_KEY))
+    if (Number.isFinite(stored) && stored > 0) chatWidth.value = clampSplit(stored)
+  } catch { /* private mode — the default width is a fine answer */ }
+
   recipeStore.initialize()
   await loadSessions()
   await openFromQuery()
@@ -3052,7 +3349,10 @@ watch(() => latestMealPlan.value?.id, (id) => {
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.2);
 }
 .fc-chat-col {
+  /* Width comes from the drag handle now (inline style). The clamp stays as
+     the pre-hydration and no-JS fallback, so the column is never 0 wide. */
   width: clamp(300px, 34%, 460px);
+  flex: 0 0 auto;
   background: white;
   display: flex;
   flex-direction: column;
@@ -3069,6 +3369,70 @@ watch(() => latestMealPlan.value?.id, (id) => {
 }
 .dark .fc-canvas-col {
   background: rgb(18 18 20);
+}
+
+/* ── The drag handle between chat and canvas ──
+   Six pixels of hit area with a two-pixel grip: wide enough to grab without
+   aiming, narrow enough not to read as a border. */
+.fc-splitter {
+  width: 0.5rem;
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+}
+.fc-splitter-grip {
+  width: 2px;
+  height: 2.5rem;
+  border-radius: 9999px;
+  background: rgb(212 212 216);
+  transition: background-color 150ms, height 150ms;
+}
+.fc-splitter:hover .fc-splitter-grip,
+.fc-splitter:focus-visible .fc-splitter-grip {
+  background: var(--ui-primary, rgb(99 102 241));
+  height: 4rem;
+}
+.fc-splitter:focus-visible { outline: none; }
+.dark .fc-splitter-grip { background: rgb(63 63 70); }
+
+/* ── The right rail ──
+   A spine when shut, a column when open. Fixed widths rather than a second
+   drag handle: two splitters on one screen is a layout the member has to
+   maintain. */
+.fc-rail {
+  border-left: 1px solid rgb(228 228 231 / 0.7);
+  background: rgb(255 255 255 / 0.55);
+  transition: width 180ms ease;
+  min-height: 0;
+}
+.dark .fc-rail {
+  border-left-color: rgb(63 63 70 / 0.5);
+  background: rgb(24 24 27 / 0.5);
+}
+.fc-pantry-input {
+  width: 8rem;
+  border: 1px dashed rgb(212 212 216);
+  border-radius: 9999px;
+  padding: 0.0625rem 0.5rem;
+  font-size: 11px;
+  background: transparent;
+  color: inherit;
+}
+.fc-pantry-input:focus {
+  outline: none;
+  border-style: solid;
+  border-color: rgb(16 185 129);
+}
+.dark .fc-pantry-input { border-color: rgb(63 63 70); }
+
+.fc-rail-shut { width: 2.75rem; }
+.fc-rail-open { width: 19rem; }
+@media (max-width: 1024px) {
+  /* Not enough room for three columns; the rail stays a spine and opens over
+     the canvas rather than squeezing it to nothing. */
+  .fc-rail-open { width: 15rem; }
 }
 
 /* ── Messages area ── */

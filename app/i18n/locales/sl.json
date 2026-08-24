@@ -1533,7 +1533,8 @@
       "weeklyPlan": "Tedenski plan",
       "savePlan": "Shrani načrt",
       "unsavePlan": "Odstrani iz shranjenih",
-      "dayN": "{n}. dan"
+      "dayN": "{n}. dan",
+      "savedPlan": "Shranjeno"
     },
     "tooltips": {
       "planWorksWell": "Ta načrt deluje dobro",
@@ -1789,6 +1790,12 @@
       "saved": "Shranjeno med tvoje načrte",
       "savedAs": "Shranjeno kot »{title}«",
       "unsaved": "Odstranjeno iz tvojih načrtov"
+    },
+    "planSettings": {
+      "title": "Nastavitve načrta"
+    },
+    "splitter": {
+      "hint": "Povleci za spremembo velikosti · dvojni klik za ponastavitev"
     }
   },
   "a11y": {

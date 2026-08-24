@@ -1533,7 +1533,8 @@
       "weeklyPlan": "Heti terv",
       "savePlan": "Terv mentése",
       "unsavePlan": "Eltávolítás a mentettek közül",
-      "dayN": "{n}. nap"
+      "dayN": "{n}. nap",
+      "savedPlan": "Elmentve"
     },
     "tooltips": {
       "planWorksWell": "Ez a terv jól működik",
@@ -1789,6 +1790,12 @@
       "saved": "Elmentve a terveid közé",
       "savedAs": "Elmentve „{title}” néven",
       "unsaved": "Eltávolítva a terveid közül"
+    },
+    "planSettings": {
+      "title": "Terv beállításai"
+    },
+    "splitter": {
+      "hint": "Húzd az átméretezéshez · dupla kattintás a visszaállításhoz"
     }
   },
   "a11y": {

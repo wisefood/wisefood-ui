@@ -1555,7 +1555,8 @@
       "weeklyPlan": "Weekly Plan",
       "savePlan": "Save this plan",
       "unsavePlan": "Remove from saved plans",
-      "dayN": "Day {n}"
+      "dayN": "Day {n}",
+      "savedPlan": "Saved"
     },
     "tooltips": {
       "planWorksWell": "This plan works well",
@@ -1811,6 +1812,12 @@
       "saved": "Kept in your plans",
       "savedAs": "Kept as “{title}”",
       "unsaved": "Taken off your plans"
+    },
+    "planSettings": {
+      "title": "Plan settings"
+    },
+    "splitter": {
+      "hint": "Drag to resize · double-click to reset"
     }
   },
   "a11y": {

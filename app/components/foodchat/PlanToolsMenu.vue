@@ -16,7 +16,25 @@
     :items="menuItems"
     :popper="{ placement: 'bottom-end' }"
   >
+    <!-- Labelled at plan level, an icon on a day row.
+         A bare wand icon is not discoverable: it reads as decoration, and the
+         member has to click it to find out that "replace this day" and "what
+         to buy" live behind it. The day rows keep the icon because there is
+         one per day and seven labelled buttons is a toolbar, not a plan. -->
     <UButton
+      v-if="showLabel"
+      size="xs"
+      color="neutral"
+      variant="subtle"
+      :icon="running ? 'i-lucide-loader-2' : 'i-lucide-wand-sparkles'"
+      :ui="{ leadingIcon: running ? 'animate-spin' : '' }"
+      trailing-icon="i-lucide-chevron-down"
+      :disabled="busy || !available.length"
+    >
+      {{ t('foodChatHome.tools.label') }}
+    </UButton>
+    <UButton
+      v-else
       size="xs"
       color="neutral"
       variant="ghost"
@@ -51,12 +69,25 @@ const props = withDefaults(defineProps<{
    * which reads as seven ways to do the same thing.
    */
   scope?: 'plan' | 'day'
+  /**
+   * Show the button's text.
+   *
+   * NOT called `label`: this component already has a `label(tool)` function
+   * for a menu row's text, and a prop of that name shadows it in the template,
+   * where `v-if="label"` then tests a function that is always defined — always
+   * true, and typecheck says so.
+   *
+   * Off for the compact per-day copies: seven labelled buttons down a week is
+   * a toolbar, not a plan.
+   */
+  showLabel?: boolean
   /** Name of the tool currently running, so only its own button spins. */
   running?: string | null
   busy?: boolean
 }>(), {
   day: null,
   scope: 'plan',
+  showLabel: false,
   running: null,
   busy: false
 })
