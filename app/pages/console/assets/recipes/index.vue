@@ -1246,7 +1246,7 @@ import type {
   RecipeSearchResult,
   RecipeSource
 } from '~/services/recipeApi'
-import recipeApi from '~/services/recipeApi'
+import recipeApi, { RECIPE_REGIONS, resolveRecipeRegion } from '~/services/recipeApi'
 import {
   buildConsoleRecipeRoutePath,
   normalizeRecipeImageUrl,
@@ -1367,7 +1367,13 @@ const sourceOptions: { value: RecipeSource; label: string }[] = [
   { value: 'foodhero', label: 'Food Hero' },
   { value: 'myplate', label: 'MyPlate' },
   { value: 'irish_safefood', label: 'Irish Safefood' },
-  { value: 'recipe1m', label: 'Recipe1M' }
+  { value: 'irish_heart_foundation', label: 'Irish Heart Foundation' },
+  { value: 'supervalu', label: 'SuperValu' },
+  { value: 'hungarian', label: 'Curated Hungarian Recipes' },
+  { value: 'best_of_hungary', label: 'Best of Hungary' },
+  { value: 'the_hungary_soul', label: 'The Hungary Soul' },
+  { value: 'slovenian', label: 'Curated Slovenian Recipes' },
+  { value: 'slovenian_kitchen', label: 'Slovenian Kitchen' }
 ]
 
 const sortByOptions: { value: RecipeParamSortBy; label: string; icon: string }[] = [
@@ -1454,11 +1460,11 @@ const createAnalysisError = ref<string | null>(null)
 const createAnalysisResult = ref<RecipeProfileResult | null>(null)
 const createAnalysisSignature = ref('')
 
-const CREATE_REGIONS = ['IE', 'HU', 'US'] as const
+const CREATE_REGIONS = RECIPE_REGIONS
 
 const createForm = reactive({
   title: '',
-  region: 'US',
+  region: 'EU',
   duration: '30',
   serves: '4',
   ingredients: [] as EditableIngredient[],
@@ -1614,7 +1620,7 @@ function resetCreateForm() {
   createWizardStep.value = 1
   createMode.value = 'manual'
   createForm.title = ''
-  createForm.region = 'US'
+  createForm.region = 'EU'
   createForm.duration = '30'
   createForm.serves = '4'
   createForm.ingredients = [
@@ -1656,7 +1662,7 @@ function setCreateMode(mode: CreateRecipeMode) {
 }
 
 function normalizeRecipeRegion(value: string) {
-  return String(value || '').trim().toUpperCase() || 'US'
+  return resolveRecipeRegion(value)
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {

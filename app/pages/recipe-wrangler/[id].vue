@@ -327,13 +327,9 @@
                 </button>
               </div>
             </div>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-8">{{ t('recipeWrangler.detail.perServing') }} · <span class="italic">{{
-              selectedRegion === 'HU'
-                ? 'Based on the Hungarian Food Composition Table'
-                : selectedRegion === 'IE'
-                  ? 'Based on the Irish Food Composition Table'
-                  : 'Based on the USDA Food Composition Table'
-            }}</span></p>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-8">
+              {{ t('recipeWrangler.detail.perServing') }} · <span class="italic">{{ compositionTableLabel }}</span>
+            </p>
 
             <!-- Profile still being computed in the background -->
             <div
@@ -1312,7 +1308,7 @@ import { useRecipes } from '~/composables/useRecipes'
 import { useRecipeStore } from '~/stores/recipe'
 import { useHouseholdStore } from '~/stores/household'
 import { useAuthStore } from '~/stores/auth'
-import recipeApi from '~/services/recipeApi'
+import recipeApi, { RECIPE_REGIONS, resolveRecipeRegion } from '~/services/recipeApi'
 import memberAdaptedRecipesApi from '~/services/memberAdaptedRecipesApi'
 import type {
   PipelineTraceWeightDetail,
@@ -1324,6 +1320,7 @@ import type {
   RecipeNutrient,
   RecipeNutritionProfilingDetail,
   RecipeProfileResult,
+  RecipeRegion,
   RecipeSubstituteResult
 } from '~/services/recipeApi'
 import type { AdaptedRecipeNutrition, MemberAdaptedRecipe } from '~/services/memberAdaptedRecipesApi'
@@ -1359,17 +1356,24 @@ const backLink = computed(() => {
 // ============================================================================
 // State
 // ============================================================================
-const SUPPORTED_REGIONS = ['IE', 'HU', 'US'] as const
-type SupportedRegion = typeof SUPPORTED_REGIONS[number]
+const SUPPORTED_REGIONS = RECIPE_REGIONS
+type SupportedRegion = RecipeRegion
 
-const resolveRegion = (raw: string | null | undefined): SupportedRegion => {
-  const upper = String(raw || '').toUpperCase() as SupportedRegion
-  return SUPPORTED_REGIONS.includes(upper) ? upper : 'US'
+const resolveRegion = resolveRecipeRegion
+
+// Which composition table backs the displayed profile. Keyed by region so a new
+// regional source shows its own attribution instead of inheriting a neighbour's.
+const COMPOSITION_TABLES: Record<RecipeRegion, string> = {
+  IE: 'Based on the Irish Food Composition Table',
+  HU: 'Based on the Hungarian Food Composition Table',
+  SI: 'Based on the Slovenian Food Composition Table',
+  EU: 'Based on the EU Food Composition Table'
 }
 
 const selectedRegion = ref<SupportedRegion>(
   resolveRegion(householdStore.currentHousehold?.region)
 )
+const compositionTableLabel = computed(() => COMPOSITION_TABLES[selectedRegion.value])
 
 const checkedIngredients = ref<Record<number, boolean>>({})
 const checkedInstructions = ref<Record<number, boolean>>({})
@@ -1960,7 +1964,7 @@ const toggleNutritionProfilingDetails = async () => {
   profilingError.value = null
   try {
     const rawRecipe = buildRecipeProfilingInput(recipe.value)
-    profilingResult.value = await recipeApi.analyzeRecipe(rawRecipe, 'US')
+    profilingResult.value = await recipeApi.analyzeRecipe(rawRecipe, selectedRegion.value)
   } catch (err: unknown) {
     const e = err as { data?: { detail?: string }; message?: string }
     profilingError.value = String(e?.data?.detail || e?.message || 'Failed to profile nutrition details')

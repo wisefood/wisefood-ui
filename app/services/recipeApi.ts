@@ -164,7 +164,23 @@ export interface RecipeSearchParams {
 }
 
 export type RecipeParamSortBy = 'title_asc' | 'title_desc' | 'time_asc' | 'time_desc' | 'random'
-export type RecipeSource = 'healthyfoods' | 'foodhero' | 'myplate' | 'irish_safefood' | 'slovenian' | 'recipe1m'
+export type RecipeSource = 'healthyfoods' | 'foodhero' | 'myplate' | 'irish_safefood' | 'irish_heart_foundation' | 'supervalu' | 'hungarian' | 'best_of_hungary' | 'the_hungary_soul' | 'slovenian' | 'slovenian_kitchen'
+
+// The regions the backend accepts as a nutrition-source selector. IE/HU/SI
+// double as ISO country codes, so a household's country maps straight through;
+// EU is the global composition table and therefore the fallback for every
+// country without one of its own.
+//
+// 'US' is deliberately absent. The v4 regional API dropped USDA as a nutrition
+// source (it survives only for portion weights, server-side), so sending 'US'
+// is now a 422 rather than the silent fallback it used to be.
+export const RECIPE_REGIONS = ['IE', 'HU', 'EU', 'SI'] as const
+export type RecipeRegion = typeof RECIPE_REGIONS[number]
+
+export const resolveRecipeRegion = (raw: string | null | undefined): RecipeRegion => {
+  const upper = String(raw || '').trim().toUpperCase() as RecipeRegion
+  return RECIPE_REGIONS.includes(upper) ? upper : 'EU'
+}
 // Backend-owned taxonomy — treat as an open string set so newly emitted
 // values (e.g. "side-dish") don't require a frontend type bump.
 export type RecipeDishType = string
@@ -260,7 +276,7 @@ export interface RecipeCollectionSuggestion {
 }
 
 export interface GetRecipeOptions {
-  region?: 'US' | 'IE' | 'HU'
+  region?: RecipeRegion
   slim?: boolean
   /** Console/admin only — resolve the recipe even if disabled. */
   include_disabled?: boolean
@@ -1153,14 +1169,11 @@ class RecipeApiService {
   /**
    * Analyze raw recipe text through parsing + profiling chain
    */
-  async analyzeRecipe(rawRecipe: string, region: string = 'IE'): Promise<RecipeProfileResult> {
+  async analyzeRecipe(rawRecipe: string, region: string = 'EU'): Promise<RecipeProfileResult> {
     if (!rawRecipe || !rawRecipe.trim()) {
       throw new Error('Recipe text is required for analysis')
     }
-    const normalizedRegion = String(region || 'IE').trim().toUpperCase()
-    const safeRegion = (normalizedRegion === 'IE' || normalizedRegion === 'HU' || normalizedRegion === 'US')
-      ? normalizedRegion
-      : 'US'
+    const safeRegion = resolveRecipeRegion(region)
     try {
       const transport = this.resolveTransport()
       return await this.fetchWithTimeout<RecipeProfileResult>(
@@ -1181,16 +1194,13 @@ class RecipeApiService {
   async substituteIngredient(
     recipeId: string,
     ingredient: string,
-    region: string = 'IE'
+    region: string = 'EU'
   ): Promise<RecipeSubstituteResult> {
     const name = String(ingredient || '').trim()
     if (!name) {
       throw new Error('Ingredient name is required for substitution')
     }
-    const normalizedRegion = String(region || 'IE').trim().toUpperCase()
-    const safeRegion = (normalizedRegion === 'IE' || normalizedRegion === 'HU' || normalizedRegion === 'US')
-      ? normalizedRegion
-      : 'IE'
+    const safeRegion = resolveRecipeRegion(region)
     try {
       const transport = this.resolveTransport()
       return await this.fetchWithTimeout<RecipeSubstituteResult>(
@@ -1213,10 +1223,7 @@ class RecipeApiService {
     recipeId: string,
     options: RecipeAdaptSuggestionsOptions = {}
   ): Promise<RecipeAdaptSuggestionsResult> {
-    const normalizedRegion = String(options.region || 'IE').trim().toUpperCase()
-    const safeRegion = (normalizedRegion === 'IE' || normalizedRegion === 'HU' || normalizedRegion === 'US')
-      ? normalizedRegion
-      : 'IE'
+    const safeRegion = resolveRecipeRegion(options.region)
     try {
       const transport = this.resolveTransport()
       return await this.fetchWithTimeout<RecipeAdaptSuggestionsResult>(
@@ -1249,10 +1256,7 @@ class RecipeApiService {
     if (!original || !substitute) {
       throw new Error('Both the original and substitute ingredients are required')
     }
-    const normalizedRegion = String(options.region || 'IE').trim().toUpperCase()
-    const safeRegion = (normalizedRegion === 'IE' || normalizedRegion === 'HU' || normalizedRegion === 'US')
-      ? normalizedRegion
-      : 'IE'
+    const safeRegion = resolveRecipeRegion(options.region)
     try {
       const transport = this.resolveTransport()
       return await this.fetchWithTimeout<RecipeAdaptSimulateResult>(

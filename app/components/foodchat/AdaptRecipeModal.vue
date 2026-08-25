@@ -193,7 +193,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import recipeApi, { type Recipe, type RecipeAdaptSuggestion, type RecipeAdaptSuggestionsResult, type RecipeIngredient } from '~/services/recipeApi'
+import recipeApi, { resolveRecipeRegion, type Recipe, type RecipeAdaptSuggestion, type RecipeAdaptSuggestionsResult, type RecipeIngredient } from '~/services/recipeApi'
 import memberAdaptedRecipesApi, { type AdaptedRecipeNutrition } from '~/services/memberAdaptedRecipesApi'
 import { useHouseholdStore } from '~/stores/household'
 
@@ -211,10 +211,7 @@ const savingRank = ref<number | null>(null)
 const savedRank = ref<number | null>(null)
 const saveError = ref<string | null>(null)
 
-const region = computed(() => {
-  const raw = String(householdStore.currentHousehold?.region || '').toUpperCase()
-  return raw === 'HU' || raw === 'US' || raw === 'IE' ? raw : 'IE'
-})
+const region = computed(() => resolveRecipeRegion(householdStore.currentHousehold?.region))
 
 const suggestions = computed<RecipeAdaptSuggestion[]>(() => result.value?.suggestions ?? [])
 const formatGrade = (raw?: string | null): string => String(raw || '').replace('Nutriscore_', '')

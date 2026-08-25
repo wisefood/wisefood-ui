@@ -352,8 +352,13 @@ const sourceOptions: { value: RecipeSource; label: string }[] = [
   { value: 'foodhero', label: 'Food Hero' },
   { value: 'myplate', label: 'MyPlate' },
   { value: 'irish_safefood', label: 'Curated Irish Recipes' },
+  { value: 'irish_heart_foundation', label: 'Irish Heart Foundation' },
+  { value: 'supervalu', label: 'SuperValu' },
+  { value: 'hungarian', label: 'Curated Hungarian Recipes' },
+  { value: 'best_of_hungary', label: 'Best of Hungary' },
+  { value: 'the_hungary_soul', label: 'The Hungary Soul' },
   { value: 'slovenian', label: 'Curated Slovenian Recipes' },
-  { value: 'recipe1m', label: 'Recipe1M' }
+  { value: 'slovenian_kitchen', label: 'Slovenian Kitchen' }
 ]
 
 const quickFilters = computed(() => [

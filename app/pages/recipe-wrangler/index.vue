@@ -659,7 +659,7 @@ import { useRecipes } from '~/composables/useRecipes'
 import { useRecipeStore } from '~/stores/recipe'
 import { useI18n } from 'vue-i18n'
 import { useHouseholdStore } from '~/stores/household'
-import recipeApi from '~/services/recipeApi'
+import recipeApi, { RECIPE_REGIONS, resolveRecipeRegion } from '~/services/recipeApi'
 import type {
   PipelineTraceWeightDetail,
   RecipeAutocompleteSuggestion,
@@ -715,8 +715,8 @@ const favoriteRecipes = ref<RecipeSearchResult[]>([])
 const favoritesViewLoading = ref(false)
 const hasUserTriggeredSearch = ref(false)
 const analysisInput = ref('')
-const ANALYSIS_REGIONS = ['IE', 'HU', 'US'] as const
-const analysisRegion = ref<typeof ANALYSIS_REGIONS[number]>('IE')
+const ANALYSIS_REGIONS = RECIPE_REGIONS
+const analysisRegion = ref<typeof ANALYSIS_REGIONS[number]>('EU')
 const analysisLoading = ref(false)
 const analysisError = ref<string | null>(null)
 const analysisResult = ref<RecipeProfileResult | null>(null)
@@ -1181,7 +1181,7 @@ const buildSearchPersonalization = async (): Promise<SearchPersonalization> => {
       allergens,
       dietTags,
       preferredIngredients: preferredIngredients.slice(0, 10),
-      region: ['US', 'IE', 'HU'].includes(region) ? region : undefined
+      region: resolveRecipeRegion(region)
     }
   } catch (err) {
     console.warn('Personalized search: profile unavailable, searching unpersonalized', err)
