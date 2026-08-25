@@ -83,6 +83,14 @@ function extractErrorDetail(value: unknown): string | null {
     return extractErrorDetail(record.detail)
   }
 
+  // The gateway renders failures as `{"error": {"detail", "code"}}`, so the
+  // message sits one level deeper than FastAPI's own `{"detail": ...}`. Without
+  // this branch every upstream failure surfaced as the bare
+  // "API request failed with status NNN", hiding the reason the call failed.
+  if (record?.error !== undefined) {
+    return extractErrorDetail(record.error)
+  }
+
   return null
 }
 

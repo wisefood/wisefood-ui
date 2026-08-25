@@ -155,6 +155,12 @@ export interface RecipeSearchParams {
    * are the member's profile preferences and only reorder results.
    */
   require_diet_tags?: string[]
+  /**
+   * Paging. Accepted by the question path exactly as by `param_search`; omit
+   * both to take the backend's own default page size.
+   */
+  limit?: number
+  offset?: number
 }
 
 export type RecipeParamSortBy = 'title_asc' | 'title_desc' | 'time_asc' | 'time_desc' | 'random'
@@ -916,6 +922,11 @@ class RecipeApiService {
         'POST',
         {
           question: normalizedQuery,
+          // Paging, same as the param_search branch above. These were missing
+          // entirely, so a question search was pinned to the downstream default
+          // of 10 rows and every page past the first re-served the first.
+          limit: safeLimit,
+          offset: safeOffset,
           ...(filterPayload.exclude_allergens ? { exclude_allergens: filterPayload.exclude_allergens } : {}),
           // The question path accepts the same filters as param_search, so the
           // console's sidebar keeps working once a query is typed. `diet_tags`

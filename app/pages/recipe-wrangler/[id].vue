@@ -2126,9 +2126,12 @@ const loadAdaptSuggestions = async () => {
     })
     adaptResults.value = { ...adaptResults.value, [mode]: result }
   } catch (err: unknown) {
-    const e = err as { data?: { detail?: string }, message?: string }
+    // The gateway nests the reason as `{error: {detail}}`; FastAPI itself uses a
+    // bare `{detail}`. Reading only the latter turned every upstream failure
+    // into "API request failed with status NNN" with the cause discarded.
+    const e = err as { data?: { detail?: string, error?: { detail?: string } }, message?: string }
     adaptError.value = String(
-      e?.data?.detail || e?.message || t('recipeWrangler.detail.adaptation.error')
+      e?.data?.error?.detail || e?.data?.detail || e?.message || t('recipeWrangler.detail.adaptation.error')
     )
   } finally {
     adaptLoading.value = false

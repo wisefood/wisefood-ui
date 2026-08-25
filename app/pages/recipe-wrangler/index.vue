@@ -665,6 +665,7 @@ import type {
   RecipeAutocompleteSuggestion,
   RecipeParamSearchParams,
   RecipeProfileResult,
+  RecipeSearchParams,
   RecipeSearchResult
 } from '~/services/recipeApi'
 
@@ -704,6 +705,9 @@ const currentPage = ref(1)
 const itemsPerPage = 12
 const searchMode = ref<'nl' | 'params'>('nl')
 const lastParamSearch = ref<RecipeParamSearchParams | null>(null)
+// The question search pages on the server too, so the params that produced
+// the current result set have to survive until the next page change.
+const lastNlSearch = ref<RecipeSearchParams | null>(null)
 const activeTab = ref<'search' | 'analyze'>('search')
 const hasSearchAttempted = ref(false)
 const showFavoritesView = ref(false)
@@ -747,8 +751,23 @@ const totalResultsDisplay = computed(() => {
 
 const hasRecipes = computed(() => recipesCount.value > 0)
 
+/**
+ * Whether the rows on screen are one backend-supplied page.
+ *
+ * True for `param_search`, and for a question search once we have the params to
+ * re-issue it with an offset. Category browsing also runs in 'nl' mode but goes
+ * through `fetchRecipesByCategory`, which returns a single unpaged batch — that
+ * one still slices locally.
+ */
+const isServerPaged = computed(() =>
+  searchMode.value === 'params' || (searchMode.value === 'nl' && lastNlSearch.value !== null)
+)
+
+// Both server-paged modes report a real filtered total, so the page count comes
+// from that total. Deriving it from the rows on screen capped a question search
+// at a single page of whatever the backend's default happened to be.
 const totalPages = computed(() => {
-  if (searchMode.value === 'params') {
+  if (isServerPaged.value) {
     return paramSearchTotal.value > 0 ? Math.ceil(paramSearchTotal.value / itemsPerPage) : 0
   }
   return Math.ceil(recipesCount.value / itemsPerPage)
@@ -756,7 +775,8 @@ const totalPages = computed(() => {
 
 const paginatedRecipes = computed(() => {
   if (!recipes.value) return []
-  if (searchMode.value === 'params') return recipes.value
+  // Already exactly one page.
+  if (isServerPaged.value) return recipes.value
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
   return recipes.value.slice(start, end)
@@ -781,7 +801,7 @@ const visiblePages = computed(() => {
 const showPagination = computed(() => {
   if (showFavoritesView.value) return false
   if (!hasRecipes.value) return false
-  return totalPages.value > 1 || (searchMode.value === 'params' && (currentPage.value > 1 || hasMore.value))
+  return totalPages.value > 1 || (isServerPaged.value && (currentPage.value > 1 || hasMore.value))
 })
 
 const isLastPage = computed(() => {
@@ -1198,7 +1218,7 @@ const performSearch = async (options: { openFirstResult?: boolean } = {}) => {
       ...facetFilters
     } = buildFilterParams()
 
-    await searchRecipes({
+    const nlParams: RecipeSearchParams = {
       question: searchQuery.value,
       ...facetFilters,
       require_diet_tags: sidebarDietTags,
@@ -1206,7 +1226,10 @@ const performSearch = async (options: { openFirstResult?: boolean } = {}) => {
       diet_tags: personalization.dietTags?.length ? personalization.dietTags : undefined,
       preferred_ingredients: personalization.preferredIngredients?.length ? personalization.preferredIngredients : undefined,
       region: personalization.region
-    }, false)
+    }
+    lastNlSearch.value = nlParams
+
+    await searchRecipes({ ...nlParams, limit: itemsPerPage, offset: 0 }, false)
 
     recipeStore.addSearchQuery(searchQuery.value)
 
@@ -1285,9 +1308,18 @@ const goToPage = async (page: number) => {
   currentPage.value = page
   activeRecipeResultIndex.value = -1
 
+  const offset = (page - 1) * itemsPerPage
+
   if (searchMode.value === 'params' && lastParamSearch.value) {
-    const offset = (page - 1) * itemsPerPage
     await searchRecipesByParams({ ...lastParamSearch.value, limit: itemsPerPage, offset }, false)
+    return
+  }
+
+  // The question path takes an offset as well, so a text search pages against
+  // the backend rather than slicing whatever the first response happened to
+  // contain — which was one page of 10, whatever the match count.
+  if (searchMode.value === 'nl' && lastNlSearch.value) {
+    await searchRecipes({ ...lastNlSearch.value, limit: itemsPerPage, offset }, false)
   }
 }
 
@@ -1302,6 +1334,7 @@ const browseCategory = async (category: { name: string; query: string }) => {
     resetPagination()
     searchMode.value = 'nl'
     lastParamSearch.value = null
+    lastNlSearch.value = null
     searchQuery.value = category.query
     const excludeAllergens = recipeStore.excludedAllergens
 
@@ -1331,7 +1364,10 @@ const browseCategory = async (category: { name: string; query: string }) => {
  * shows up in logs as a filter that was applied.
  */
 const buildFilterParams = () => {
-  const omitEmpty = (values: string[]) => (values.length > 0 ? values : undefined)
+  // Generic so a closed-vocabulary selection keeps its element type. Typed as
+  // `string[]` this widened `RecipeSource[]` to `string[]` on the way out, and
+  // every caller then failed to assign the result back to a search-params type.
+  const omitEmpty = <T extends string>(values: T[]) => (values.length > 0 ? values : undefined)
   return {
     exclude_allergens: omitEmpty(recipeStore.excludedAllergens),
     sources: omitEmpty(recipeStore.selectedSources),
@@ -1410,13 +1446,15 @@ const handleQuickFilter = async (filterType: string) => {
       ...excludeAllergens,
       ...(personalization.allergens || [])
     ])]
-    await searchRecipes({
+    const quickParams: RecipeSearchParams = {
       question: query,
       exclude_allergens: mergedAllergens.length > 0 ? mergedAllergens : undefined,
       diet_tags: personalization.dietTags?.length ? personalization.dietTags : undefined,
       preferred_ingredients: personalization.preferredIngredients?.length ? personalization.preferredIngredients : undefined,
       region: personalization.region
-    }, false)
+    }
+    lastNlSearch.value = quickParams
+    await searchRecipes({ ...quickParams, limit: itemsPerPage, offset: 0 }, false)
   } catch (err) {
     console.error('Quick filter failed:', err)
   }
