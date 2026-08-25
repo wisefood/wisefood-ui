@@ -302,7 +302,12 @@
                     </p>
                   </div>
                   <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Page {{ currentPage }} of {{ totalPdfPages || 1 }}<span v-if="secondaryPdfPage"> · Context page {{ secondaryPdfPage }}</span>
+                    <template v-if="isGuidelineSearchActive">
+                      Searching every rule in this guide
+                    </template>
+                    <template v-else>
+                      Page {{ currentPage }} of {{ totalPdfPages || 1 }}<span v-if="secondaryPdfPage"> · Context page {{ secondaryPdfPage }}</span>
+                    </template>
                   </p>
                 </div>
 
@@ -318,9 +323,60 @@
                     color="neutral"
                     variant="outline"
                   >
-                    {{ pageGuidelinesTotal }} on page
+                    {{ pageGuidelinesTotal }} {{ isGuidelineSearchActive ? 'matching' : 'on page' }}
                   </UBadge>
                 </div>
+              </div>
+
+              <UAlert
+                v-if="isGuideActive"
+                class="mt-4"
+                color="neutral"
+                variant="soft"
+                icon="i-lucide-lock"
+                title="This guide is published"
+                description="Rules are read-only while the guide is active. Unpublish it from the guide page to approve, edit or discard them."
+              />
+
+              <!-- The dot colour encodes two independent things — published
+                   state and review state — and reviewers kept reading it as one.
+                   Spelling both out is cheaper than a tooltip nobody hovers. -->
+              <p
+                v-else
+                class="mt-3 text-xs leading-5 text-gray-500 dark:text-gray-400"
+              >
+                <span class="inline-flex h-2 w-2 rounded-full bg-brandg-500 align-middle dark:bg-brandg-400" />
+                Approved — active <span class="text-gray-400 dark:text-gray-500">and</span> verified.
+                <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-amber-400 align-middle dark:bg-amber-300" />
+                Still draft, or verified but not yet published. Approving sets both, and records you as the verifier.
+              </p>
+
+              <!-- Rule text search. The list is bound to the PDF page by
+                   default, so without this there is no way to locate a rule by
+                   its wording. -->
+              <div class="mt-3">
+                <UInput
+                  v-model="guidelineQuery"
+                  icon="i-lucide-search"
+                  size="sm"
+                  placeholder="Search this guide's rules by text"
+                  class="w-full"
+                  @update:model-value="handleGuidelineQueryInput"
+                >
+                  <template
+                    v-if="guidelineQuery"
+                    #trailing
+                  >
+                    <UButton
+                      color="neutral"
+                      variant="link"
+                      size="xs"
+                      icon="i-lucide-x"
+                      aria-label="Clear rule search"
+                      @click="clearGuidelineSearch"
+                    />
+                  </template>
+                </UInput>
               </div>
 
               <div class="mt-4">
@@ -365,6 +421,20 @@
                           >
                             {{ row.original.rule_text }}
                           </p>
+
+                          <!-- A hit from the whole-guide search has no page
+                               context around it, so it carries its own. -->
+                          <UButton
+                            v-if="isGuidelineSearchActive && row.original.page_no"
+                            color="neutral"
+                            variant="link"
+                            size="xs"
+                            class="mt-1 px-0"
+                            icon="i-lucide-corner-down-right"
+                            @click.stop="openGuidelineInContext(row.original)"
+                          >
+                            Show on page {{ row.original.page_no }}
+                          </UButton>
 
                           <div
                             v-if="ruleChips(row.original).length"
@@ -1059,6 +1129,19 @@ const detailError = ref<string | null>(null)
 const pageGuidelinesLoading = ref(false)
 const guidelineTablePage = ref(1)
 const guidelinePageSize = 4
+
+/**
+ * Free-text search over this guide's rules.
+ *
+ * The rule list is otherwise bound to the PDF page on screen, which is the
+ * right default for reviewing a document front to back but leaves no way to
+ * find a rule you can only remember the wording of. While a query is active the
+ * page filter is dropped and the whole guide is searched; clearing it returns
+ * to the current page.
+ */
+const guidelineQuery = ref('')
+const guidelineSearchTerm = ref('')
+let guidelineSearchTimer: ReturnType<typeof setTimeout> | null = null
 const pageGuidelinesTotal = ref(0)
 const selectedGuidelineIds = ref<string[]>([])
 
@@ -1257,9 +1340,13 @@ const pdfPageBadgeLabel = computed(() =>
 
 const guidelineTableOffset = computed(() => (guidelineTablePage.value - 1) * guidelinePageSize)
 
+const isGuidelineSearchActive = computed(() => guidelineSearchTerm.value.length > 0)
+
 const guidelinePaginationSummary = computed(() => {
   if (!pageGuidelinesTotal.value) {
-    return 'No guidelines on this PDF page.'
+    return isGuidelineSearchActive.value
+      ? 'No rules in this guide match that text.'
+      : 'No guidelines on this PDF page.'
   }
 
   const start = guidelineTableOffset.value + 1
@@ -1625,6 +1712,50 @@ function toggleGuidelineSelection(guidelineId: string, checked: boolean | 'indet
   selectedGuidelineIds.value = selectedGuidelineIds.value.filter(id => id !== guidelineId)
 }
 
+function applyGuidelineSearch(term: string) {
+  const normalized = term.trim()
+  if (normalized === guidelineSearchTerm.value) {
+    return
+  }
+
+  guidelineSearchTerm.value = normalized
+  selectedGuidelineIds.value = []
+  // Results are their own list; page 1 of it is where a new query starts.
+  if (guidelineTablePage.value !== 1) {
+    guidelineTablePage.value = 1
+    return
+  }
+  void loadPageGuidelines()
+}
+
+function handleGuidelineQueryInput() {
+  if (guidelineSearchTimer) {
+    clearTimeout(guidelineSearchTimer)
+  }
+  guidelineSearchTimer = setTimeout(() => applyGuidelineSearch(guidelineQuery.value), 250)
+}
+
+function clearGuidelineSearch() {
+  if (guidelineSearchTimer) {
+    clearTimeout(guidelineSearchTimer)
+    guidelineSearchTimer = null
+  }
+  guidelineQuery.value = ''
+  applyGuidelineSearch('')
+}
+
+/**
+ * Jump the PDF viewport to the page a search hit came from, and leave search
+ * mode so the surrounding rules on that page come back into view.
+ */
+function openGuidelineInContext(guideline: CatalogGuideline) {
+  const pageNo = typeof guideline.page_no === 'number' ? guideline.page_no : null
+  clearGuidelineSearch()
+  if (pageNo && pageNo !== currentPage.value) {
+    currentPage.value = clampPage(pageNo)
+  }
+}
+
 async function loadPageGuidelines() {
   const guide = selectedGuide.value
   if (!guide) {
@@ -1642,7 +1773,11 @@ async function loadPageGuidelines() {
       limit: guidelinePageSize,
       offset: guidelineTableOffset.value,
       sort: 'sequence_no asc',
-      fq: [`page_no:${currentPage.value}`]
+      // A query searches the whole guide, so the page filter has to come off —
+      // otherwise a search would only ever find rules already on screen.
+      ...(isGuidelineSearchActive.value
+        ? { q: guidelineSearchTerm.value }
+        : { fq: [`page_no:${currentPage.value}`] })
     })
 
     if (loadToken !== pageGuidelineLoadToken) {
@@ -2218,6 +2353,14 @@ watch(currentPage, (page) => {
     return
   }
 
+  // Turning to a new page of the PDF means the reviewer wants that page's
+  // rules, not the previous query's hits. Reset the term only — the reload is
+  // already handled below.
+  if (guidelineSearchTerm.value) {
+    guidelineSearchTerm.value = ''
+    guidelineQuery.value = ''
+  }
+
   if (guidelineTablePage.value !== 1) {
     guidelineTablePage.value = 1
   } else {
@@ -2258,6 +2401,10 @@ watch(totalPdfPages, (pages) => {
 onBeforeUnmount(() => {
   if (import.meta.client) {
     window.removeEventListener('resize', handlePdfViewportResize)
+  }
+  if (guidelineSearchTimer) {
+    clearTimeout(guidelineSearchTimer)
+    guidelineSearchTimer = null
   }
 })
 

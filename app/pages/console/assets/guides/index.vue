@@ -81,7 +81,7 @@
                   <UInput
                     v-model="filters.q"
                     icon="i-lucide-search"
-                    placeholder="Search title or authority"
+                    placeholder="Search guides — title, authority, description. Rule text is searched inside a guide's review."
                     @keydown.enter="applyFilters"
                   />
                 </div>

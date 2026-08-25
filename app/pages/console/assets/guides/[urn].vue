@@ -133,7 +133,8 @@
                   </p>
                 </div>
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Review and curate guidelines page by page against the source PDF.
+                  Review guidelines page by page against the source PDF. Editing, approving
+                  and discarding a rule all happen there, and only while this guide is unpublished.
                 </p>
               </div>
 
