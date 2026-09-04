@@ -4,7 +4,11 @@
       :items="breadcrumbItems"
       class="mb-4"
     />
-    <ConsoleInsightsNav />
+    <ConsoleInsightsNav
+      :loaded-at="loadedAt"
+      :refreshing="loading"
+      @refresh="reload"
+    />
     <UPageHeader
       title="Page speed"
       description="How fast pages felt, as the browser measured it — not how fast the server answered."
@@ -17,8 +21,14 @@
 
     <UPageBody>
       <div class="space-y-6">
+        <!--
+          "Capture is off" is only claimed when the load succeeded and came
+          back empty. A failed fetch used to land here too, telling the reader
+          to go and flip a switch when the real problem was the API — the one
+          diagnosis this alert must never hand out.
+        -->
         <UAlert
-          v-if="loaded && !metrics.length"
+          v-if="status === 'empty'"
           color="info"
           variant="subtle"
           icon="i-lucide-power-off"
@@ -31,9 +41,35 @@
           The five tiles are the summary band, so they stay full width: at a
           third of it they would be five columns of about a hundred pixels,
           and the median/95th/samples list inside each would wrap to nothing.
+          They pulse while the first fetch is out, and give way to the failure
+          notice when it did not come back.
         -->
         <div
-          v-if="metrics.length"
+          v-if="pending"
+          class="grid animate-pulse gap-4 sm:grid-cols-2 lg:grid-cols-5"
+          role="status"
+          aria-live="polite"
+          aria-label="Loading page speed"
+        >
+          <div
+            v-for="n in 5"
+            :key="n"
+            class="h-40 rounded-lg border border-gray-200/70 bg-gray-100 dark:border-white/10 dark:bg-zinc-800/60"
+          />
+        </div>
+        <UCard
+          v-else-if="failed"
+          :ui="{ body: 'p-0' }"
+          class="border border-gray-200/70 dark:border-white/10"
+        >
+          <ConsoleInsightsEmptyState
+            failed
+            title="Page speed could not be loaded"
+            hint="The request to the API failed. This does not mean capture is off — retry, and if it persists check the gateway."
+          />
+        </UCard>
+        <div
+          v-else-if="metrics.length"
           class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5"
         >
           <UCard
@@ -100,12 +136,14 @@
               subtitle="Worst 75th percentile first"
               :rows="pathRows"
               :columns="pathColumns"
+              :loading="loading"
+              :failed="failed"
               empty="No measurements yet."
               empty-hint="Page-speed capture ships switched off."
               empty-icon="i-lucide-file-clock"
             >
               <template #cell-path="{ row }">
-                <span class="font-mono text-xs">{{ row.path }}</span>
+                <span class="break-all font-mono text-xs">{{ row.path }}</span>
               </template>
               <template #cell-p75="{ row }">
                 <span :class="verdictClass(verdict(String(row.metric), row.p75 as number | null))">
@@ -126,6 +164,8 @@
               subtitle="The split an average hides"
               :rows="deviceRows"
               :columns="deviceColumns"
+              :loading="loading"
+              :failed="failed"
               empty="No measurements yet."
               empty-hint="Page-speed capture ships switched off."
               empty-icon="i-lucide-gauge"
@@ -143,8 +183,9 @@
               class="text-xs text-gray-500 dark:text-gray-400"
             >
               The verdict is taken at the 75th percentile, which is how the web-vitals standard
-              itself is defined: a page passes when three quarters of visits are good. An average
-              would let a fast desktop majority hide a phone minority for whom the page is unusable.
+              itself is defined: a page passes when three quarters of its page loads are good. An
+              average would let a fast desktop majority hide a phone minority for whom the page is
+              unusable.
             </p>
           </div>
         </div>
@@ -166,9 +207,8 @@ const breadcrumbItems = consoleBreadcrumb(
   { label: 'Page speed', icon: 'i-lucide-gauge' }
 )
 
-const range = ref({ days: 7 })
+const range = useInsightsRange(7)
 const report = ref<VitalsReport | null>(null)
-const loaded = ref(false)
 
 /** What each acronym means, since nobody should have to remember five of them. */
 const NAMES: Record<string, string> = {
@@ -254,9 +294,16 @@ function display(metric: string, value: number | null | undefined): string {
 
 async function load() {
   report.value = await insightsApi.getVitals(range.value.days, 50)
-  loaded.value = true
 }
 
-watch(range, () => { void load() }, { deep: true })
-onMounted(() => { void load() })
+const { status, loading, failed, loadedAt, reload } = useInsightsLoad(
+  load,
+  () => !metrics.value.length && !pathRows.value.length && !deviceRows.value.length
+)
+
+// The first fetch, with nothing on screen yet; a refresh keeps the tiles up.
+const pending = computed(() => loading.value && !report.value)
+
+watch(range, reload, { deep: true })
+onMounted(reload)
 </script>

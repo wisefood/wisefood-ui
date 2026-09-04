@@ -28,8 +28,39 @@
       </UButton>
     </div>
 
+    <!--
+      Four states, rendered distinctly. Before this the panel had two — rows or
+      the empty message — so the empty message showed for the duration of every
+      fetch (a false quiet week on every page view) and showed again, identically,
+      when the fetch had failed.
+    -->
+    <div
+      v-if="loading && !rows.length"
+      class="animate-pulse divide-y divide-gray-100 px-5 dark:divide-zinc-800"
+      role="status"
+      aria-live="polite"
+      :aria-label="`Loading ${title}`"
+    >
+      <div
+        v-for="n in 5"
+        :key="n"
+        class="flex gap-6 py-3"
+      >
+        <span class="h-3 flex-1 rounded bg-gray-200 dark:bg-zinc-800" />
+        <span class="h-3 w-16 rounded bg-gray-200 dark:bg-zinc-800" />
+        <span class="h-3 w-12 rounded bg-gray-200 dark:bg-zinc-800" />
+      </div>
+    </div>
+
     <ConsoleInsightsEmptyState
-      v-if="!rows.length"
+      v-else-if="failed"
+      failed
+      :title="`${title} could not be loaded`"
+      hint="The request to the API failed. This is not an empty period — retry, and if it persists check the gateway."
+    />
+
+    <ConsoleInsightsEmptyState
+      v-else-if="!rows.length"
       :title="empty"
       :hint="emptyHint"
       :icon="emptyIcon"
@@ -48,10 +79,16 @@
               class="px-5 py-2"
               :class="[
                 column.align === 'right' ? 'text-right' : '',
-                column.sortable !== false ? 'cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200' : ''
+                column.sortable !== false
+                  ? 'cursor-pointer select-none hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:hover:text-gray-200'
+                  : ''
               ]"
               :aria-sort="ariaSort(column)"
+              :tabindex="column.sortable !== false ? 0 : undefined"
+              :role="column.sortable !== false ? 'button' : undefined"
               @click="column.sortable !== false && toggleSort(column.key)"
+              @keydown.enter.prevent="column.sortable !== false && toggleSort(column.key)"
+              @keydown.space.prevent="column.sortable !== false && toggleSort(column.key)"
             >
               <span
                 class="inline-flex items-center gap-1"
@@ -77,6 +114,7 @@
               v-for="column in columns"
               :key="column.key"
               class="px-5 py-2"
+              :title="column.truncate ? format(row, column) : undefined"
               :class="[
                 column.align === 'right' ? 'text-right tabular-nums' : '',
                 column.truncate ? 'max-w-xs truncate' : ''
@@ -126,7 +164,14 @@ const props = withDefaults(defineProps<{
   empty?: string
   emptyHint?: string
   emptyIcon?: string
+  /** A fetch is in flight and nothing is on screen yet. */
+  loading?: boolean
+  /** The fetch failed. Not the same thing as an empty result, and must never
+   *  look like one. */
+  failed?: boolean
 }>(), {
+  loading: false,
+  failed: false,
   subtitle: '',
   to: '',
   linkLabel: 'View all',

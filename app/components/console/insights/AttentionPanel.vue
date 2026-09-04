@@ -51,6 +51,9 @@
         />
         <div class="min-w-0 flex-1">
           <p class="font-medium text-gray-900 dark:text-white">
+            <!-- The dot is decorative; the word is what a screen reader gets.
+                 Red-versus-amber is a distinction only for people who can see it. -->
+            <span class="sr-only">{{ severityWord(item.severity) }}: </span>
             {{ item.title }}
           </p>
           <p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
@@ -83,6 +86,9 @@ import type { AttentionItem } from '~/services/insightsApi'
  * fact, "7 searches found nothing, most often 'pickled moon cheese'" is a task.
  */
 defineProps<{ items: AttentionItem[] }>()
+
+const severityWord = (severity: string) =>
+  ({ error: 'Critical', warning: 'Warning', info: 'Note' })[severity] ?? 'Note'
 
 const dotClass = (severity: string) => ({
   error: 'bg-red-500',

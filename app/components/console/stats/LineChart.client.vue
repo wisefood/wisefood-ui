@@ -1,5 +1,26 @@
 <template>
-  <div class="h-48 w-full">
+  <div
+    class="h-48 w-full"
+    role="img"
+    :aria-label="summary"
+  >
+    <table
+      v-if="data.length"
+      class="sr-only"
+    >
+      <caption>{{ summary }}</caption>
+      <tbody>
+        <tr
+          v-for="(row, i) in data"
+          :key="i"
+        >
+          <th scope="row">
+            {{ rowLabel(row) }}
+          </th>
+          <td>{{ row.value }}</td>
+        </tr>
+      </tbody>
+    </table>
     <VisXYContainer
       v-if="data.length"
       :data="data"
@@ -46,7 +67,7 @@ const props = withDefaults(defineProps<{
   color?: string
   valuePrefix?: string
 }>(), {
-  color: '#d53355',
+  color: '',
   valuePrefix: ''
 })
 
@@ -66,4 +87,28 @@ const yTickFormat = (v: number): string => {
   if (v >= 1000) return `${(v / 1000).toFixed(1)}K`
   return String(Math.round(v))
 }
+
+/*
+ * Colour comes from the theme when none is given, so a chart drawn in a card
+ * matches the buttons beside it and follows the palette if the palette moves.
+ * Read once, at setup: the custom property is stable for the life of the page.
+ */
+const themeColor = (): string => {
+  if (typeof document === 'undefined') return '#a6b52b'
+  const value = getComputedStyle(document.documentElement).getPropertyValue('--ui-primary').trim()
+  return value || '#a6b52b'
+}
+const color = computed(() => props.color || themeColor())
+
+const rowLabel = (row: { label?: string, bucket?: string }) => row.label ?? row.bucket ?? ''
+
+/** One sentence for the accessible name: what the series is and its extent. */
+const summary = computed(() => {
+  if (!props.data.length) return 'No data in range'
+  const values = props.data.map(d => d.value)
+  const top = Math.max(...values)
+  const first = rowLabel(props.data[0] as { label?: string, bucket?: string })
+  const last = rowLabel(props.data[props.data.length - 1] as { label?: string, bucket?: string })
+  return `${props.data.length} points from ${first} to ${last}, highest ${props.valuePrefix ?? ''}${top}`
+})
 </script>

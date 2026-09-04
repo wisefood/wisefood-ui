@@ -11,11 +11,23 @@
       v-if="showBar"
       class="fixed inset-x-0 bottom-0 z-[120] px-3 pb-3 sm:px-4 pointer-events-none"
     >
+      <!--
+        Announced as a dialog, because it asks for a decision. A plain div that
+        appears at the foot of the page is invisible to a screen reader until
+        the user happens to tab into it — which for a consent request means
+        consent was asked for and never heard.
+      -->
       <div
         class="pointer-events-auto mx-auto max-w-3xl rounded-xl bg-white/85 dark:bg-gray-900/85 backdrop-blur ring-1 ring-gray-200 dark:ring-gray-800 shadow-lg px-4 py-3"
+        role="dialog"
+        aria-live="polite"
+        aria-labelledby="consent-bar-message"
       >
         <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-          <p class="flex-1 text-sm text-gray-700 dark:text-gray-300">
+          <p
+            id="consent-bar-message"
+            class="flex-1 text-sm text-gray-700 dark:text-gray-300"
+          >
             <UIcon
               name="i-lucide-cookie"
               class="h-4 w-4 shrink-0 inline-block align-[-2px] mr-1.5 text-gray-500 dark:text-gray-400"

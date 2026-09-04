@@ -52,7 +52,9 @@
           <span class="w-24 shrink-0 font-mono text-xs text-gray-400 dark:text-gray-500">
             {{ formatTime(entry.occurred_at) }}
           </span>
-          <span class="w-40 shrink-0 text-sm font-medium text-gray-900 dark:text-white">
+          <!-- A minimum, not a fixed width: `expert.feedback_context_read` is
+               longer than forty rem-units of column and was being clipped. -->
+          <span class="min-w-40 shrink-0 break-all text-sm font-medium text-gray-900 dark:text-white">
             {{ entry.event_type }}
             <!-- The run is shown, not hidden: forty polls collapse to one line
                  that says forty, so nothing is lost but the scrolling. -->

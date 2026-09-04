@@ -4,20 +4,46 @@
       :items="breadcrumbItems"
       class="mb-4"
     />
-    <ConsoleInsightsNav />
+    <ConsoleInsightsNav
+      :loaded-at="loadedAt"
+      :refreshing="loading"
+      @refresh="reload"
+    />
     <UPageHeader
       title="Service health"
       description="How long each endpoint takes and how often it fails, from the requests people actually made."
       :ui="{ root: 'relative py-8 border-b-0' }"
     >
       <template #links>
-        <ConsoleInsightsRangePicker v-model="days" />
+        <ConsoleInsightsRangeControl v-model="range" />
       </template>
     </UPageHeader>
 
     <UPageBody>
       <div class="space-y-6">
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <!--
+          The tiles are sums over the table, so before the table has arrived
+          they would read as zero — a false quiet week in the biggest type on
+          the page. Pulse instead until there is something to sum, and show
+          nothing when the fetch failed: the panels below carry that news.
+        -->
+        <div
+          v-if="pending"
+          class="grid animate-pulse gap-4 sm:grid-cols-2 lg:grid-cols-4"
+          role="status"
+          aria-live="polite"
+          aria-label="Loading service health"
+        >
+          <div
+            v-for="n in 4"
+            :key="n"
+            class="h-20 rounded-lg border border-gray-200/70 bg-gray-100 dark:border-white/10 dark:bg-zinc-800/60"
+          />
+        </div>
+        <div
+          v-else-if="!failed"
+          class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        >
           <ConsoleStatsStatTile
             label="Requests"
             :value="totalRequests"
@@ -46,7 +72,7 @@
           variant="subtle"
           :icon="worst.server_errors ? 'i-lucide-server-crash' : 'i-lucide-triangle-alert'"
           :title="`${worst.error_rate}% of requests to ${shortRoute(worst.route)} failed`"
-          :description="`${worst.errors.toLocaleString()} of ${worst.requests.toLocaleString()} requests in the last ${days === 1 ? '24 hours' : `${days} days`}, on ${worst.app}.`"
+          :description="`${worst.errors.toLocaleString()} of ${worst.requests.toLocaleString()} requests in the last ${range.days === 1 ? '24 hours' : `${range.days} days`}, on ${worst.app}.`"
         />
 
         <!--
@@ -62,12 +88,14 @@
               subtitle="Sorted by traffic. Median is the typical wait, p95 is the bad one."
               :rows="routes"
               :columns="routeColumns"
+              :loading="loading"
+              :failed="failed"
               empty="No requests recorded in this period."
               empty-hint="Turn on recording in Platform Operations to populate this."
               empty-icon="i-lucide-route"
             >
               <template #cell-route="{ row }">
-                <span class="font-mono text-xs">{{ shortRoute(row.route) }}</span>
+                <span class="break-all font-mono text-xs">{{ shortRoute(row.route) }}</span>
               </template>
               <template #cell-p50_ms="{ row }">
                 {{ formatMs(row.p50_ms) }}
@@ -109,8 +137,29 @@
                   By 95th percentile — what the unlucky one in twenty waits
                 </p>
               </div>
+              <div
+                v-if="pending"
+                class="animate-pulse divide-y divide-gray-100 px-5 dark:divide-zinc-800"
+                role="status"
+                aria-label="Loading slowest endpoints"
+              >
+                <div
+                  v-for="n in 5"
+                  :key="n"
+                  class="space-y-2 py-3"
+                >
+                  <span class="block h-3 w-3/4 rounded bg-gray-200 dark:bg-zinc-800" />
+                  <span class="block h-1 rounded-full bg-gray-200 dark:bg-zinc-800" />
+                </div>
+              </div>
               <ConsoleInsightsEmptyState
-                v-if="!slowest.length"
+                v-else-if="failed"
+                failed
+                title="Slowest endpoints could not be loaded"
+                hint="The request to the API failed. Retry, and if it persists check the gateway."
+              />
+              <ConsoleInsightsEmptyState
+                v-else-if="!slowest.length"
                 title="No timings recorded."
                 hint="Timings appear once requests are being recorded."
                 icon="i-lucide-timer"
@@ -125,7 +174,12 @@
                   class="px-5 py-2.5"
                 >
                   <div class="flex items-baseline justify-between gap-3">
-                    <span class="truncate text-sm text-gray-700 dark:text-gray-200">
+                    <!--
+                      Route templates have no spaces, so a long one has to be
+                      allowed to break anywhere or it is clipped — and the tail
+                      is the part that identifies it.
+                    -->
+                    <span class="min-w-0 break-all text-sm text-gray-700 dark:text-gray-200">
                       {{ shortRoute(row.route) }}
                     </span>
                     <span
@@ -144,7 +198,20 @@
             </UCard>
 
             <ConsoleStatsChartCard title="Responses by status">
+              <div
+                v-if="pending"
+                class="h-40 animate-pulse rounded bg-gray-100 dark:bg-zinc-800/60"
+                role="status"
+                aria-label="Loading responses by status"
+              />
+              <ConsoleInsightsEmptyState
+                v-else-if="failed"
+                failed
+                title="Responses by status could not be loaded"
+                hint="The request to the API failed."
+              />
               <ConsoleStatsBarChart
+                v-else
                 :data="statusSeries"
                 color="#d53355"
               />
@@ -169,7 +236,7 @@ const breadcrumbItems = consoleBreadcrumb(
   { label: 'Service health', icon: 'i-lucide-gauge' }
 )
 
-const days = ref(7)
+const range = useInsightsRange(7)
 const routes = ref<RoutePerfRow[]>([])
 const slowest = ref<RoutePerfRow[]>([])
 const mostErrors = ref<RoutePerfRow[]>([])
@@ -216,13 +283,22 @@ function latencyClass(ms: number | null | undefined): string {
 const shortRoute = (route: string) => route.replace(/^\/api\/v1\//, '')
 
 async function load() {
-  const report = await insightsApi.getPerformance(days.value, 50)
+  const report = await insightsApi.getPerformance(range.value.days, 50)
   routes.value = report?.routes ?? []
   slowest.value = report?.slowest ?? []
   mostErrors.value = report?.most_errors ?? []
   byStatus.value = report?.by_status ?? []
 }
 
-watch(days, () => { void load() })
-onMounted(() => { void load() })
+const { loading, failed, loadedAt, reload } = useInsightsLoad(
+  load,
+  () => !routes.value.length && !slowest.value.length && !byStatus.value.length
+)
+
+// The first fetch, with nothing on screen yet. A refresh keeps the old numbers
+// up rather than pulsing over them, so this is false during one.
+const pending = computed(() => loading.value && !routes.value.length)
+
+watch(range, reload, { deep: true })
+onMounted(reload)
 </script>

@@ -4,23 +4,18 @@
       :items="breadcrumbItems"
       class="mb-4"
     />
-    <ConsoleInsightsNav />
+    <ConsoleInsightsNav
+      :loaded-at="loadedAt"
+      :refreshing="loading"
+      @refresh="reload"
+    />
     <UPageHeader
       title="Session board"
-      description="Every visit, the machine it ran on, and whether anything broke. The list a support conversation starts from."
+      description="Every session, the machine it ran on, and whether anything broke. The list a support conversation starts from."
       :ui="{ root: 'relative py-8 border-b-0' }"
     >
       <template #links>
         <ConsoleInsightsRangeControl v-model="range" />
-        <UButton
-          color="neutral"
-          variant="outline"
-          icon="i-lucide-refresh-cw"
-          :loading="loading"
-          @click="load"
-        >
-          Refresh
-        </UButton>
       </template>
     </UPageHeader>
 
@@ -96,12 +91,13 @@
                  nothing else here would say so — a filter you cannot see is
                  just a list that looks wrong. So it is shown as the filter it
                  is, and clicking it is the way back to everybody. The id is a
-                 Keycloak sub, clipped rather than allowed to set the width of
-                 the whole row. -->
+                 Keycloak sub; it wraps rather than clips, because a reference
+                 you cannot read to the end cannot be checked against the one
+                 in the support message. -->
             <button
               v-if="filters.userId"
               type="button"
-              class="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full border border-brand-500 bg-brand-50 px-2.5 py-1 text-xs text-brand-700 transition-colors hover:bg-brand-100 dark:border-brand-400/50 dark:bg-brand-500/10 dark:text-brand-300 dark:hover:bg-brand-500/20"
+              class="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full border border-brand-500 bg-brand-50 px-2.5 py-1 text-left text-xs text-brand-700 transition-colors hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-brand-400/50 dark:bg-brand-500/10 dark:text-brand-300 dark:hover:bg-brand-500/20"
               :title="`Only this person's sessions: ${filters.userId}. Click to show everybody again.`"
               aria-label="Clear the person filter"
               @click="filters.userId = ''"
@@ -110,7 +106,7 @@
                 name="i-lucide-user"
                 class="h-3 w-3 shrink-0"
               />
-              <span class="truncate font-mono">{{ filters.userId }}</span>
+              <span class="min-w-0 break-all font-mono">{{ filters.userId }}</span>
               <UIcon
                 name="i-lucide-x"
                 class="h-3 w-3 shrink-0"
@@ -143,7 +139,47 @@
              to narrow, which is a rail job. -->
         <div class="grid gap-6 lg:grid-cols-3">
           <div class="min-w-0 space-y-6 lg:col-span-2">
+            <!-- The board table renders rows or an empty message and nothing
+                 else, so the two states it cannot tell apart from "no sessions
+                 match" are decided out here, in a card of the same shape. -->
+            <UCard
+              v-if="loading && !board"
+              :ui="{ body: 'p-0' }"
+              class="border border-gray-200/70 dark:border-white/10"
+            >
+              <div
+                class="animate-pulse divide-y divide-gray-100 px-5 dark:divide-zinc-800"
+                role="status"
+                aria-live="polite"
+                aria-label="Loading sessions"
+              >
+                <div
+                  v-for="n in 8"
+                  :key="n"
+                  class="flex gap-6 py-3"
+                >
+                  <span class="h-3 w-28 rounded bg-gray-200 dark:bg-zinc-800" />
+                  <span class="h-3 flex-1 rounded bg-gray-200 dark:bg-zinc-800" />
+                  <span class="h-3 w-16 rounded bg-gray-200 dark:bg-zinc-800" />
+                  <span class="h-3 w-12 rounded bg-gray-200 dark:bg-zinc-800" />
+                </div>
+              </div>
+            </UCard>
+
+            <UCard
+              v-else-if="failed"
+              :ui="{ body: 'p-0' }"
+              class="border border-gray-200/70 dark:border-white/10"
+            >
+              <ConsoleInsightsEmptyState
+                failed
+                title="The session board could not be loaded"
+                hint="The request to the API failed. This is not an empty period and not a filter with no matches — retry, and if it persists check the gateway."
+              />
+            </UCard>
+
             <ConsoleInsightsSessionBoardTable
+              v-else
               :rows="board?.sessions ?? []"
               title="Sessions"
               :subtitle="tableSubtitle"
@@ -193,7 +229,38 @@
                narrow the table — so they follow the scroll instead of being
                somewhere back up the page once you are into the rows. -->
           <aside class="min-w-0 space-y-6 lg:sticky lg:top-6 lg:self-start">
-            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+            <div
+              v-if="loading && !board"
+              class="grid animate-pulse gap-4 sm:grid-cols-2 lg:grid-cols-1"
+              role="status"
+              aria-live="polite"
+              aria-label="Loading the summaries"
+            >
+              <div
+                v-for="n in 4"
+                :key="n"
+                class="h-28 rounded-lg bg-gray-200 dark:bg-zinc-800"
+              />
+            </div>
+
+            <!-- One notice for the four tiles, not four copies of it: they all
+                 come from the one request that did not come back. -->
+            <UCard
+              v-else-if="failed"
+              :ui="{ body: 'p-0' }"
+              class="border border-gray-200/70 dark:border-white/10"
+            >
+              <ConsoleInsightsEmptyState
+                failed
+                title="Summaries could not be loaded"
+                hint="They come from the same request as the table."
+              />
+            </UCard>
+
+            <div
+              v-else
+              class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1"
+            >
               <UCard
                 v-for="tile in tiles"
                 :key="tile.key"
@@ -224,7 +291,7 @@
                     v-for="chip in tile.chips"
                     :key="chip.key"
                     type="button"
-                    class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors"
+                    class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                     :class="chip.active
                       ? 'border-brand-500 bg-brand-50 text-brand-700 dark:border-brand-400/50 dark:bg-brand-500/10 dark:text-brand-300'
                       : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5'"
@@ -258,6 +325,8 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { useInsightsLoad } from '~/composables/useInsightsLoad'
+import { useInsightsRange } from '~/composables/useInsightsRange'
 import insightsApi, { type SessionBoard } from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
 
@@ -280,19 +349,19 @@ useHead({ title: 'Session board · Console' })
 
 const breadcrumbItems = consoleBreadcrumb(
   { label: 'Analytics', icon: 'i-lucide-chart-column', to: '/console/insights' },
-  { label: 'People & sessions', icon: 'i-lucide-users', to: '/console/insights/users' },
   { label: 'Session board', icon: 'i-lucide-monitor-smartphone' }
 )
-
-/** Structurally what `RangeControl` models; kept local so the page owns no import of a component's internals. */
-interface Range { days: number, since?: string, until?: string }
 
 const route = useRoute()
 const router = useRouter()
 
 const pageSize = 50
 
-const range = ref<Range>({ days: 7 })
+const DEFAULT_DAYS = 7
+// The period is shared state: it reads the URL, then what was last chosen on
+// any analytics page, then this default — and it writes `days`/`since`/`until`
+// back to the URL itself, so nothing below touches those three keys.
+const range = useInsightsRange(DEFAULT_DAYS)
 const filters = reactive({
   // Set from the URL rather than typed here: the board is narrowed to a person
   // by following a link out of their page, so this filter arrives ready-made.
@@ -308,7 +377,6 @@ const filters = reactive({
 const searchInput = ref('')
 const offset = ref(0)
 const board = ref<SessionBoard | null>(null)
-const loading = ref(true)
 
 const first = (value: unknown): string => {
   if (Array.isArray(value)) return typeof value[0] === 'string' ? value[0] : ''
@@ -316,14 +384,6 @@ const first = (value: unknown): string => {
 }
 
 function hydrateFromRoute() {
-  const days = Number(first(route.query.days))
-  const since = first(route.query.since)
-  const until = first(route.query.until)
-  range.value = {
-    days: Number.isFinite(days) && days > 0 ? days : 7,
-    since: since || undefined,
-    until: until || undefined
-  }
   filters.userId = first(route.query.user_id)
   filters.deviceType = first(route.query.device)
   filters.browser = first(route.query.browser)
@@ -341,9 +401,6 @@ function hydrateFromRoute() {
 // shared link says exactly what was narrowed and nothing else.
 function buildRouteQuery(): Record<string, string> {
   const query: Record<string, string> = {}
-  if (range.value.days !== 7) query.days = String(range.value.days)
-  if (range.value.since) query.since = range.value.since
-  if (range.value.until) query.until = range.value.until
   if (filters.userId) query.user_id = filters.userId
   if (filters.deviceType) query.device = filters.deviceType
   if (filters.browser) query.browser = filters.browser
@@ -353,6 +410,27 @@ function buildRouteQuery(): Record<string, string> {
   if (filters.includeBots) query.bots = '1'
   if (filters.search) query.q = filters.search
   if (offset.value > 0) query.offset = String(offset.value)
+  return query
+}
+
+/*
+ * The period's keys, written the way `useInsightsRange` writes them.
+ *
+ * That composable mirrors the range into the URL on its own, and a filter
+ * change here must not wipe it — but reading the keys back off `route.query`
+ * is not safe either: a range change fires both its `router.replace` and ours
+ * in the same tick, the router keeps only the later navigation, and at that
+ * moment the URL still holds the old period. So they are carried from the
+ * same source it writes from, not from what it has managed to write so far.
+ */
+function rangeQuery(): Record<string, string> {
+  const query: Record<string, string> = {}
+  if (range.value.since || range.value.until) {
+    if (range.value.since) query.since = range.value.since
+    if (range.value.until) query.until = range.value.until
+  } else if (range.value.days !== DEFAULT_DAYS) {
+    query.days = String(range.value.days)
+  }
   return query
 }
 
@@ -517,7 +595,6 @@ function resetFilters() {
 }
 
 async function load() {
-  loading.value = true
   board.value = await insightsApi.getSessionBoard({
     days: boardDays.value,
     limit: pageSize,
@@ -533,12 +610,20 @@ async function load() {
     search: filters.search || undefined,
     includeBots: filters.includeBots
   })
-  loading.value = false
 }
 
+// Empty means the period held nothing at all — not merely that this page of
+// rows is blank, which the breakdowns would contradict.
+const { loading, failed, loadedAt, reload } = useInsightsLoad(load, () => {
+  const data = board.value
+  if (!data) return true
+  return !data.sessions.length && !data.by_device.length && !data.by_browser.length
+    && !data.by_os.length && !data.by_country.length
+})
+
 function syncAndLoad() {
-  void router.replace({ query: buildRouteQuery() })
-  void load()
+  void router.replace({ query: { ...rangeQuery(), ...buildRouteQuery() } })
+  void reload()
 }
 
 // A keystroke is not a query. Committing on a pause (or on Enter) keeps a
@@ -567,5 +652,7 @@ watch([filters, range], () => {
 watch(offset, syncAndLoad)
 
 hydrateFromRoute()
-onMounted(() => { void load() })
+onMounted(() => {
+  void reload()
+})
 </script>

@@ -17,8 +17,12 @@
               :name="delta >= 0 ? 'i-lucide-trending-up' : 'i-lucide-trending-down'"
               class="h-3.5 w-3.5"
               :class="toneClass"
+              aria-hidden="true"
             />
             <span :class="toneClass">{{ delta >= 0 ? '+' : '' }}{{ delta }}%</span>
+            <!-- Green means good and red means bad only to someone who can see
+                 the colour. The judgement is said out loud for everyone else. -->
+            <span class="sr-only">{{ delta >= 0 ? 'up' : 'down' }}, {{ isGood ? 'better' : 'worse' }} than the previous period</span>
             <span class="text-gray-400 dark:text-gray-500">vs previous {{ days }}d</span>
           </template>
           <span
@@ -78,9 +82,14 @@ const delta = computed<number | null>(() => {
   return Math.round(((props.value - props.previous) / props.previous) * 1000) / 10
 })
 
+/** Whether the movement is welcome. Drives the colour AND the spoken word. */
+const isGood = computed(() => {
+  if (delta.value === null || delta.value === 0) return true
+  return delta.value > 0 ? props.higherIsBetter : !props.higherIsBetter
+})
+
 const toneClass = computed(() => {
   if (delta.value === null || delta.value === 0) return 'text-gray-400 dark:text-gray-500'
-  const good = delta.value > 0 ? props.higherIsBetter : !props.higherIsBetter
-  return good ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
+  return isGood.value ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
 })
 </script>

@@ -4,9 +4,16 @@
       :items="breadcrumbItems"
       class="mb-4"
     />
-    <ConsoleInsightsNav />
+    <!-- The one Refresh on the page. It used to sit in the header as well,
+         which was two buttons for one action — the Nav's carries the "as of"
+         time with it, which is the half the header's never had. -->
+    <ConsoleInsightsNav
+      :loaded-at="loadedAt"
+      :refreshing="loading"
+      @refresh="reload"
+    />
     <UPageHeader
-      description="Everything done in this visit, in order."
+      description="Everything done in this session, in order."
       :ui="{ root: 'relative py-8 border-b-0' }"
     >
       <!-- The reference is what somebody arrives here holding — they pasted it
@@ -17,29 +24,60 @@
       <template #title>
         <span class="break-all font-mono">{{ sessionId }}</span>
       </template>
-      <template #links>
-        <UButton
-          color="neutral"
-          variant="outline"
-          icon="i-lucide-refresh-cw"
-          :loading="loading"
-          @click="load"
-        >
-          Refresh
-        </UButton>
-      </template>
     </UPageHeader>
 
     <UPageBody>
       <div class="space-y-6">
+        <!-- Only once the fetch has come back with nothing. During the fetch
+             this used to flash for every session; after a failure it said
+             "no activity" about a reference that was never looked up. -->
         <UAlert
-          v-if="!loading && !session"
+          v-if="status === 'empty'"
           color="warning"
           variant="soft"
           icon="i-lucide-search-x"
           title="No activity recorded under that reference"
           :description="notFoundHint"
         />
+
+        <!-- Two requests, so failure has two shapes: nothing came back, or the
+             summary did and the device half did not. The second still renders
+             what arrived below — a page with a timeline and no device header
+             is a page with a gap, not a blank page — and the notice says so. -->
+        <UCard
+          v-if="failed"
+          :ui="{ body: 'p-0' }"
+          class="border border-gray-200/70 dark:border-white/10"
+        >
+          <ConsoleInsightsEmptyState
+            failed
+            :title="session ? 'Part of this session could not be loaded' : 'This session could not be loaded'"
+            :hint="session
+              ? 'The device request failed, so the hardware, errors, frustration and vitals sections may be missing or stale. This is not an empty session — retry.'
+              : 'The request to the API failed. This is not a missing session — retry, and if it persists check the gateway.'"
+          />
+        </UCard>
+
+        <div
+          v-if="loading && !session"
+          class="animate-pulse space-y-6"
+          role="status"
+          aria-live="polite"
+          aria-label="Loading this session"
+        >
+          <div class="h-4 w-1/2 rounded bg-gray-200 dark:bg-zinc-800" />
+          <div class="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            <div
+              v-for="n in 6"
+              :key="n"
+              class="h-20 rounded-lg bg-gray-200 dark:bg-zinc-800"
+            />
+          </div>
+          <div class="grid gap-6 lg:grid-cols-3">
+            <div class="h-96 rounded-lg bg-gray-200 lg:col-span-2 dark:bg-zinc-800" />
+            <div class="h-64 rounded-lg bg-gray-200 dark:bg-zinc-800" />
+          </div>
+        </div>
 
         <template v-if="session">
           <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
@@ -235,7 +273,7 @@
             <!-- Evidence, not narrative: how it felt and where it went wrong are
                  checked against the timeline rather than read through, and all
                  three are short next to it — so the rail follows the scroll and
-                 stays beside whatever part of the visit is on screen. -->
+                 stays beside whatever part of the session is on screen. -->
             <aside class="min-w-0 space-y-6 lg:sticky lg:top-6 lg:self-start">
               <ConsoleInsightsSessionFrustration :items="device?.frustration ?? []" />
 
@@ -252,6 +290,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useInsightsLoad } from '~/composables/useInsightsLoad'
 import insightsApi, { type SessionDevice, type SessionSummary } from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
 import { formatDuration } from '~/utils/deviceIcons'
@@ -276,32 +315,11 @@ definePageMeta({ layout: 'default' })
 const route = useRoute()
 const sessionId = String(route.params.id ?? '')
 
-/*
- * The timeline pages independently of everything else on this page.
- *
- * A busy session runs to thousands of actions and the server caps a page at
- * 500. Refetching the whole summary for a page of the timeline is a little
- * wasteful, but the alternative is a second endpoint for one list, and the
- * summary is a single indexed round trip.
- */
-const timelineOffset = ref(0)
-const pagingTimeline = ref(false)
-
-async function loadTimelinePage(offset: number) {
-  timelineOffset.value = Math.max(0, offset)
-  pagingTimeline.value = true
-  try {
-    await load()
-  } finally {
-    pagingTimeline.value = false
-  }
-}
-
 useHead({ title: `${sessionId} · Console` })
 
 const breadcrumbItems = consoleBreadcrumb(
   { label: 'Analytics', icon: 'i-lucide-chart-column', to: '/console/insights' },
-  { label: 'People & sessions', icon: 'i-lucide-users', to: '/console/insights/users' },
+  { label: 'Session board', icon: 'i-lucide-monitor-smartphone', to: '/console/insights/sessions' },
   { label: sessionId, icon: 'i-lucide-monitor-smartphone' }
 )
 
@@ -336,7 +354,6 @@ type SessionExtras = {
 
 const session = ref<(SessionSummary & Partial<SessionExtras>) | null>(null)
 const device = ref<SessionDevice | null>(null)
-const loading = ref(true)
 
 const notFoundHint = computed(() =>
   'Check the reference is complete. A session also disappears once its activity ages out of the'
@@ -400,8 +417,17 @@ const formatWhen = (value: string | null) => {
   return Number.isNaN(when.getTime()) ? '—' : when.toLocaleString()
 }
 
+/*
+ * The timeline pages independently of everything else on this page.
+ *
+ * A busy session runs to thousands of actions and the server caps a page at
+ * 500. Refetching the whole summary for a page of the timeline is a little
+ * wasteful, but the alternative is a second endpoint for one list, and the
+ * summary is a single indexed round trip.
+ */
+const timelineOffset = ref(0)
+
 async function load() {
-  loading.value = true
   // In parallel: the device half is supporting evidence, so it must never make
   // the summary wait, and either failing leaves the other's sections intact.
   const [summary, hardware] = await Promise.all([
@@ -410,8 +436,28 @@ async function load() {
   ])
   session.value = summary
   device.value = hardware
-  loading.value = false
 }
 
-onMounted(() => { void load() })
+// Empty is "no such session": a summary with an empty timeline still has
+// counts, a duration and a person to show.
+const { status, loading, failed, loadedAt, reload } = useInsightsLoad(load, () => !session.value)
+
+// Paging goes through `reload()` rather than `load()` so the "as of" time and
+// the failure state stay true for what is on screen — the timeline is part of
+// the same response as everything else.
+const pagingTimeline = ref(false)
+
+async function loadTimelinePage(offset: number) {
+  timelineOffset.value = Math.max(0, offset)
+  pagingTimeline.value = true
+  try {
+    await reload()
+  } finally {
+    pagingTimeline.value = false
+  }
+}
+
+onMounted(() => {
+  void reload()
+})
 </script>

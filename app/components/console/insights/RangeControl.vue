@@ -1,22 +1,36 @@
 <template>
   <div class="inline-flex items-center gap-2">
-    <div class="inline-flex rounded-lg border border-gray-200 p-0.5 dark:border-white/10">
+    <!--
+      A toggle group, and announced as one: each button says whether it is the
+      selected period, and keyboard focus is visible. Previously these were
+      plain buttons whose state was carried only by background colour.
+    -->
+    <div
+      class="inline-flex rounded-lg border border-gray-200 p-0.5 dark:border-white/10"
+      role="group"
+      aria-label="Reporting period"
+    >
       <button
         v-for="option in options"
         :key="option.value"
-        class="rounded-md px-3 py-1 text-sm font-medium transition-colors"
+        type="button"
+        class="rounded-md px-3 py-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-zinc-900"
         :class="!custom && days === option.value
           ? 'bg-brand-500 text-white'
           : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5'"
+        :aria-pressed="!custom && days === option.value"
         @click="choose(option.value)"
       >
         {{ option.label }}
       </button>
       <button
-        class="rounded-md px-3 py-1 text-sm font-medium transition-colors"
+        type="button"
+        class="rounded-md px-3 py-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-zinc-900"
         :class="custom
           ? 'bg-brand-500 text-white'
           : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5'"
+        :aria-pressed="custom"
+        aria-controls="range-custom-fields"
         @click="custom = !custom"
       >
         Custom
@@ -25,6 +39,7 @@
 
     <div
       v-if="custom"
+      id="range-custom-fields"
       class="inline-flex items-center gap-1.5"
     >
       <UInput

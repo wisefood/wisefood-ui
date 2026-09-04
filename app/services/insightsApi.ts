@@ -1,4 +1,5 @@
 import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
+import { ref } from 'vue'
 import wisefoodRestApi from './wisefoodRestApi'
 
 /**
@@ -703,6 +704,17 @@ export const emptyOverview = (days = 7): Overview => ({
   llm_calls: 0, total_tokens: 0, cost_usd: 0
 })
 
+/**
+ * Bumped every time a fetcher swallows a failure.
+ *
+ * The fetchers return an empty result on failure so a page renders rather than
+ * throws. That leaves the page unable to tell an outage from a quiet week —
+ * the same pixels for both. Rather than change every fetcher's return type,
+ * each failure increments this, and `useInsightsLoad` reads it across a load
+ * to know which of the two it is looking at.
+ */
+export const lastInsightsFailure = ref(0)
+
 class InsightsApiService {
   private readonly basePath = '/analytics'
 
@@ -711,6 +723,7 @@ class InsightsApiService {
       const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/overview?days=${days}`)
       return asResult<Overview>(payload, emptyOverview(days))
     } catch {
+      lastInsightsFailure.value++
       return emptyOverview(days)
     }
   }
@@ -721,6 +734,7 @@ class InsightsApiService {
       const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/attention?days=${days}`)
       return unwrap<AttentionItem[]>(payload, 'items', [])
     } catch {
+      lastInsightsFailure.value++
       return []
     }
   }
@@ -735,6 +749,7 @@ class InsightsApiService {
         rising: unwrap<TrendingRow[]>(payload, 'rising', [])
       }
     } catch {
+      lastInsightsFailure.value++
       return { top: [], rising: [] }
     }
   }
@@ -746,6 +761,7 @@ class InsightsApiService {
       )
       return unwrap<ZeroResultRow[]>(payload, 'queries', [])
     } catch {
+      lastInsightsFailure.value++
       return []
     }
   }
@@ -757,6 +773,7 @@ class InsightsApiService {
       )
       return unwrap<UserRow[]>(payload, 'users', [])
     } catch {
+      lastInsightsFailure.value++
       return []
     }
   }
@@ -786,6 +803,7 @@ class InsightsApiService {
         daily: unwrap(payload, 'daily', [])
       }
     } catch {
+      lastInsightsFailure.value++
       return empty
     }
   }
@@ -809,6 +827,7 @@ class InsightsApiService {
         items: unwrap<FeedbackRow[]>(payload, 'items', [])
       }
     } catch {
+      lastInsightsFailure.value++
       return { total: 0, items: [] }
     }
   }
@@ -819,6 +838,7 @@ class InsightsApiService {
       await wisefoodRestApi.patch(`${this.basePath}/feedback/${id}/status`, { status })
       return true
     } catch {
+      lastInsightsFailure.value++
       return false
     }
   }
@@ -836,6 +856,7 @@ class InsightsApiService {
         recent: unwrap(payload, 'recent', [])
       }
     } catch {
+      lastInsightsFailure.value++
       return { by_actor: [], recent: [] }
     }
   }
@@ -854,6 +875,7 @@ class InsightsApiService {
       )
       return asResult<SessionSummary | null>(payload, null)
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -868,6 +890,7 @@ class InsightsApiService {
       )
       return unwrap(payload, 'sessions', [])
     } catch {
+      lastInsightsFailure.value++
       return []
     }
   }
@@ -880,6 +903,7 @@ class InsightsApiService {
       )
       return asResult<RoutePerformance | null>(payload, null)
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -891,6 +915,7 @@ class InsightsApiService {
       )
       return asResult<SearchQuality | null>(payload, null)
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -900,6 +925,7 @@ class InsightsApiService {
       const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/funnel?days=${days}`)
       return unwrap<FunnelStage[]>(payload, 'stages', [])
     } catch {
+      lastInsightsFailure.value++
       return []
     }
   }
@@ -912,6 +938,7 @@ class InsightsApiService {
       )
       return unwrap<FeedbackTargetRow[]>(payload, 'targets', [])
     } catch {
+      lastInsightsFailure.value++
       return []
     }
   }
@@ -938,6 +965,7 @@ class InsightsApiService {
         await wisefoodRestApi.get<unknown>(`${this.basePath}/board?${query.toString()}`), null
       )
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -951,6 +979,7 @@ class InsightsApiService {
         null
       )
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -969,6 +998,7 @@ class InsightsApiService {
         await wisefoodRestApi.get<unknown>(`${this.basePath}/errors?${query.toString()}`), null
       )
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -982,6 +1012,7 @@ class InsightsApiService {
         null
       )
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -994,6 +1025,7 @@ class InsightsApiService {
       )
       return true
     } catch {
+      lastInsightsFailure.value++
       return false
     }
   }
@@ -1007,6 +1039,7 @@ class InsightsApiService {
         null
       )
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -1026,6 +1059,7 @@ class InsightsApiService {
         await wisefoodRestApi.get<unknown>(`${this.basePath}/heatmap?${query.toString()}`), null
       )
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -1037,6 +1071,7 @@ class InsightsApiService {
         null
       )
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -1047,6 +1082,7 @@ class InsightsApiService {
         await wisefoodRestApi.get<unknown>(`${this.basePath}/patterns?days=${days}`), null
       )
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -1058,6 +1094,7 @@ class InsightsApiService {
         null
       )
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -1068,6 +1105,7 @@ class InsightsApiService {
         await wisefoodRestApi.get<unknown>(`${this.basePath}/feedback/quality?days=${days}`), null
       )
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -1081,6 +1119,7 @@ class InsightsApiService {
         null
       )
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -1091,6 +1130,7 @@ class InsightsApiService {
         await wisefoodRestApi.get<unknown>(`${this.basePath}/audience?days=${days}`), null
       )
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -1101,6 +1141,7 @@ class InsightsApiService {
         await wisefoodRestApi.get<unknown>(`${this.basePath}/reviews/summary?days=${days}`), null
       )
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -1125,6 +1166,7 @@ class InsightsApiService {
         await wisefoodRestApi.get<unknown>(`${this.basePath}/health`), null
       )
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -1135,6 +1177,7 @@ class InsightsApiService {
     try {
       return asResult(await wisefoodRestApi.get<unknown>(`${this.basePath}/settings`), null)
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -1145,6 +1188,7 @@ class InsightsApiService {
       await wisefoodRestApi.put(`${this.basePath}/settings/${encodeURIComponent(key)}`, { value })
       return null
     } catch (error) {
+      lastInsightsFailure.value++
       const detail = (error as { data?: { error?: { detail?: string } } })?.data?.error?.detail
       return detail || 'Could not save that setting.'
     }
@@ -1173,6 +1217,7 @@ class InsightsApiService {
         items: unwrap<QaRequestRow[]>(payload, 'items', [])
       }
     } catch {
+      lastInsightsFailure.value++
       return { total: 0, items: [] }
     }
   }
@@ -1186,6 +1231,7 @@ class InsightsApiService {
         null
       )
     } catch {
+      lastInsightsFailure.value++
       return null
     }
   }
@@ -1198,6 +1244,7 @@ class InsightsApiService {
       )
       return unwrap<ReviewRow[]>(payload, 'items', [])
     } catch {
+      lastInsightsFailure.value++
       return []
     }
   }
@@ -1211,6 +1258,7 @@ class InsightsApiService {
       await wisefoodRestApi.post(`${this.basePath}/reviews`, review)
       return true
     } catch {
+      lastInsightsFailure.value++
       return false
     }
   }

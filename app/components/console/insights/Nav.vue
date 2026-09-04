@@ -31,6 +31,33 @@
         {{ group.title }}
       </UButton>
     </UDropdownMenu>
+
+    <!--
+      How old the numbers are, and a way to get newer ones — on every page.
+      The recorder flushes on a two-second interval behind a thirty-second
+      cache, so the console is always a little behind; a page that never said
+      so left the reader to wonder whether a missing event was lost or late.
+    -->
+    <div
+      v-if="loadedAt !== undefined"
+      class="ml-auto flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400"
+    >
+      <span
+        v-if="loadedAt"
+        aria-live="polite"
+      >as of {{ formatTime(loadedAt) }}</span>
+      <UButton
+        color="neutral"
+        variant="ghost"
+        size="xs"
+        icon="i-lucide-refresh-cw"
+        :loading="refreshing"
+        aria-label="Refresh this page's data"
+        @click="$emit('refresh')"
+      >
+        Refresh
+      </UButton>
+    </div>
   </nav>
 </template>
 
@@ -51,6 +78,21 @@ import { INSIGHTS_NAV, type InsightsGroup } from '~/utils/insightsNav'
  * grouping is what makes an unfamiliar page findable — you know whether you
  * want speed or spend before you know which page is called what.
  */
+/*
+ * `loadedAt` is optional and tri-state on purpose: `undefined` means the page
+ * has not adopted freshness reporting and the control is hidden; `null` means
+ * it has but nothing has loaded yet; a Date is the real thing.
+ */
+withDefaults(defineProps<{
+  loadedAt?: Date | null
+  refreshing?: boolean
+}>(), { loadedAt: undefined, refreshing: false })
+
+defineEmits<{ refresh: [] }>()
+
+const formatTime = (when: Date) =>
+  when.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+
 const route = useRoute()
 
 const isOverview = computed(() => route.path === '/console/insights')

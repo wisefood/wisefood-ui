@@ -1,8 +1,16 @@
 <template>
   <div>
+    <!--
+      A picture, and named as one. The density is only readable by eye, so the
+      same facts are said in words: how many clicks, where the hottest spots
+      are, and how many of them were somebody stuck. Without this the grid is a
+      few hundred empty divs to a screen reader.
+    -->
     <div
       class="relative w-full overflow-hidden rounded-xl border border-dashed border-gray-300 bg-gray-50 dark:border-white/15 dark:bg-zinc-900/60"
       style="aspect-ratio: 3 / 4"
+      role="img"
+      :aria-label="summary"
     >
       <!-- Tenths of the page box, so a cell reads as a position rather than
            as a floating blob. -->
@@ -84,6 +92,14 @@
       every visit and every screen size, so the box above is a page-shaped canvas and nothing is
       drawn underneath it.
     </p>
+    <ul class="sr-only">
+      <li
+        v-for="cell in hottest"
+        :key="`sr-${cell.x}-${cell.y}`"
+      >
+        {{ describe(cell) }}
+      </li>
+    </ul>
   </div>
 </template>
 
@@ -158,4 +174,27 @@ function describe(cell: HeatmapCell): string {
   const y = Math.round(((cell.y + 0.5) / props.grid) * 100)
   return `${parts.join(' · ')} — ${x}% across, ${y}% down`
 }
+
+/*
+ * The spoken version of the picture. The eye reads density from colour;
+ * this reads it as a sentence, then lists the handful of cells that carry
+ * most of it — which is exactly what a sighted reader looks at first.
+ */
+const hottest = computed(() =>
+  [...props.cells].sort((a, b) => b.clicks - a.clicks).slice(0, 8)
+)
+
+const summary = computed(() => {
+  const total = props.cells.reduce((n, c) => n + c.clicks, 0)
+  const rage = props.cells.reduce((n, c) => n + c.rage, 0)
+  const dead = props.cells.reduce((n, c) => n + c.dead, 0)
+  if (!total) return `Click map of ${props.path}: no clicks recorded`
+  const trouble = [
+    rage ? `${rage} rage click${rage === 1 ? '' : 's'}` : '',
+    dead ? `${dead} dead click${dead === 1 ? '' : 's'}` : ''
+  ].filter(Boolean).join(' and ')
+  return `Click map of ${props.path}: ${total.toLocaleString()} clicks across `
+    + `${props.cells.length} areas, busiest area ${props.peak} clicks`
+    + (trouble ? `, ${trouble}` : '')
+})
 </script>

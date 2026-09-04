@@ -4,16 +4,54 @@
       :items="breadcrumbItems"
       class="mb-4"
     />
-    <ConsoleInsightsNav />
+    <ConsoleInsightsNav
+      :loaded-at="loadedAt"
+      :refreshing="loading"
+      @refresh="reload"
+    />
+
+    <!--
+      Before this the page rendered nothing at all until the detail arrived, and
+      then "No such failure" for anything that did not — an outage and a stale
+      link were the same words. The API answers a missing fingerprint and a
+      dead gateway with the same thrown error, so the page cannot split those
+      two, but it can at least stop calling a failed request an absence.
+    -->
+    <div
+      v-if="loading && !detail"
+      class="animate-pulse space-y-6 py-8"
+      role="status"
+      aria-live="polite"
+      aria-label="Loading failure"
+    >
+      <div class="space-y-3">
+        <span class="block h-7 w-1/3 rounded bg-gray-200 dark:bg-zinc-800" />
+        <span class="block h-4 w-2/3 rounded bg-gray-200 dark:bg-zinc-800" />
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div
+          v-for="n in 4"
+          :key="n"
+          class="h-20 rounded-lg border border-gray-200/70 bg-gray-100 dark:border-white/10 dark:bg-zinc-800/60"
+        />
+      </div>
+    </div>
 
     <ConsoleInsightsEmptyState
-      v-if="loaded && !detail"
+      v-else-if="failed"
+      failed
+      title="This failure could not be loaded"
+      hint="The request to the API failed. Retry; if it keeps failing the gateway may be down — or the link may point at a failure that retention has since trimmed, which the API reports the same way."
+    />
+
+    <ConsoleInsightsEmptyState
+      v-else-if="!detail"
       title="No such failure."
       hint="It may have been trimmed by retention, or the link may be stale."
       icon="i-lucide-search-x"
     />
 
-    <template v-else-if="detail">
+    <template v-else>
       <UPageHeader
         :title="detail.group.name || 'Error'"
         :description="detail.group.message || 'No message was recorded.'"
@@ -70,9 +108,13 @@
                   <h3 class="text-base font-semibold text-gray-900 dark:text-white">
                     Stack
                   </h3>
+                  <!--
+                    A culprit is a bundle path with no spaces to wrap at, and
+                    truncating it hid the file name — the one part that matters.
+                  -->
                   <p
                     v-if="detail.group.culprit"
-                    class="truncate font-mono text-xs text-gray-500 dark:text-gray-400"
+                    class="break-all font-mono text-xs text-gray-500 dark:text-gray-400"
                   >
                     {{ detail.group.culprit }}
                   </p>
@@ -100,7 +142,10 @@
               -->
               <UCard class="border border-gray-200/70 dark:border-white/10">
                 <div class="flex items-center justify-between gap-2">
-                  <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
+                  <h3
+                    id="failure-status-label"
+                    class="text-sm font-semibold text-gray-900 dark:text-white"
+                  >
                     Status
                   </h3>
                   <UBadge
@@ -117,6 +162,7 @@
                   size="sm"
                   class="mt-2 w-full"
                   :disabled="saving"
+                  aria-labelledby="failure-status-label"
                 />
               </UCard>
 
@@ -176,7 +222,6 @@ const route = useRoute()
 const fingerprint = computed(() => String(route.params.fingerprint || ''))
 
 const detail = ref<ErrorDetail | null>(null)
-const loaded = ref(false)
 const status = ref('new')
 const saving = ref(false)
 const savedAt = ref<number | null>(null)
@@ -227,9 +272,12 @@ const concentration = computed(() => {
 
 async function load() {
   detail.value = await insightsApi.getError(fingerprint.value)
-  loaded.value = true
   if (detail.value) status.value = detail.value.group.status
 }
+
+// No period on this page — one failure, all of it — but the loading, failed
+// and refresh states are wanted just the same.
+const { loading, failed, loadedAt, reload } = useInsightsLoad(load, () => !detail.value)
 
 // Not a save button: the select IS the action, matching how the feedback inbox
 // triages. Reverted on failure so the control never shows a state the server
@@ -247,5 +295,5 @@ watch(status, async (next, previous) => {
   }
 })
 
-onMounted(() => { void load() })
+onMounted(reload)
 </script>

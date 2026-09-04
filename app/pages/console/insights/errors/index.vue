@@ -4,7 +4,11 @@
       :items="breadcrumbItems"
       class="mb-4"
     />
-    <ConsoleInsightsNav />
+    <ConsoleInsightsNav
+      :loaded-at="loadedAt"
+      :refreshing="loading"
+      @refresh="reload"
+    />
     <UPageHeader
       title="Browser errors"
       description="Distinct failures, ranked by how many people they reached."
@@ -17,7 +21,29 @@
 
     <UPageBody>
       <div class="space-y-6">
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <!--
+          Five zeros in large type is what "nothing has arrived yet" used to
+          look like, and also what "the API is down" looked like. Pulse until
+          the report is here; show nothing when it failed — the list below
+          says so in words.
+        -->
+        <div
+          v-if="pending"
+          class="grid animate-pulse gap-4 sm:grid-cols-2 lg:grid-cols-5"
+          role="status"
+          aria-live="polite"
+          aria-label="Loading browser errors"
+        >
+          <div
+            v-for="n in 5"
+            :key="n"
+            class="h-20 rounded-lg border border-gray-200/70 bg-gray-100 dark:border-white/10 dark:bg-zinc-800/60"
+          />
+        </div>
+        <div
+          v-else-if="!failed"
+          class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5"
+        >
           <ConsoleStatsStatTile
             label="Distinct failures"
             :value="report?.distinct_errors ?? 0"
@@ -75,8 +101,34 @@
                 </p>
               </div>
 
+              <div
+                v-if="pending"
+                class="animate-pulse divide-y divide-gray-100 px-5 dark:divide-zinc-800"
+                role="status"
+                aria-label="Loading failures"
+              >
+                <div
+                  v-for="n in 5"
+                  :key="n"
+                  class="flex items-start justify-between gap-4 py-3"
+                >
+                  <div class="flex-1 space-y-2">
+                    <span class="block h-3.5 w-1/3 rounded bg-gray-200 dark:bg-zinc-800" />
+                    <span class="block h-3 w-3/4 rounded bg-gray-200 dark:bg-zinc-800" />
+                  </div>
+                  <span class="h-3.5 w-20 rounded bg-gray-200 dark:bg-zinc-800" />
+                </div>
+              </div>
+
               <ConsoleInsightsEmptyState
-                v-if="!groups.length"
+                v-else-if="failed"
+                failed
+                title="Failures could not be loaded"
+                hint="The request to the API failed. This is not a clean period — retry, and if it persists check the gateway."
+              />
+
+              <ConsoleInsightsEmptyState
+                v-else-if="!groups.length"
                 title="No browser errors recorded."
                 :hint="emptyHint"
                 icon="i-lucide-shield-check"
@@ -93,7 +145,7 @@
                 >
                   <NuxtLink
                     :to="`/console/insights/errors/${group.fingerprint}`"
-                    class="block"
+                    class="block rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                   >
                     <div class="flex items-start justify-between gap-4">
                       <div class="min-w-0 flex-1">
@@ -125,12 +177,17 @@
                             {{ group.kind }}
                           </UBadge>
                         </div>
-                        <p class="mt-0.5 truncate text-sm text-gray-600 dark:text-gray-300">
+                        <!--
+                          Neither line is clipped: the message's tail is often
+                          the only thing that distinguishes two failures, and a
+                          culprit is a file path with no spaces to wrap at.
+                        -->
+                        <p class="mt-0.5 break-words text-sm text-gray-600 dark:text-gray-300">
                           {{ group.message || 'No message' }}
                         </p>
                         <p
                           v-if="group.culprit"
-                          class="mt-0.5 truncate font-mono text-xs text-gray-400 dark:text-gray-500"
+                          class="mt-0.5 break-all font-mono text-xs text-gray-400 dark:text-gray-500"
                         >
                           {{ group.culprit }}
                         </p>
@@ -183,6 +240,7 @@
                   placeholder="Any status"
                   size="sm"
                   class="w-full"
+                  aria-label="Filter by status"
                 />
                 <USelect
                   v-model="app"
@@ -190,18 +248,62 @@
                   placeholder="Any service"
                   size="sm"
                   class="w-full"
+                  aria-label="Filter by service"
                 />
               </div>
             </UCard>
 
             <ConsoleStatsChartCard title="Errors per day">
+              <div
+                v-if="pending"
+                class="h-40 animate-pulse rounded bg-gray-100 dark:bg-zinc-800/60"
+                role="status"
+                aria-label="Loading errors per day"
+              />
+              <ConsoleInsightsEmptyState
+                v-else-if="failed"
+                failed
+                title="Errors per day could not be loaded"
+                hint="The request to the API failed."
+              />
               <ConsoleStatsBarChart
+                v-else
                 :data="dailySeries"
                 color="#d53355"
               />
             </ConsoleStatsChartCard>
 
+            <UCard
+              v-if="pending || failed"
+              :ui="{ body: 'p-0' }"
+              class="border border-gray-200/70 dark:border-white/10"
+            >
+              <div class="border-b border-gray-200/70 px-5 py-3 dark:border-white/10">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+                  By browser
+                </h3>
+              </div>
+              <div
+                v-if="pending"
+                class="animate-pulse space-y-3 px-5 py-4"
+                role="status"
+                aria-label="Loading browser split"
+              >
+                <span
+                  v-for="n in 4"
+                  :key="n"
+                  class="block h-3 rounded bg-gray-200 dark:bg-zinc-800"
+                />
+              </div>
+              <ConsoleInsightsEmptyState
+                v-else
+                failed
+                title="Browser split could not be loaded"
+                hint="The request to the API failed."
+              />
+            </UCard>
             <ConsoleInsightsErrorBreakdown
+              v-else
               title="By browser"
               icon="i-lucide-globe"
               :rows="browserRows"
@@ -231,7 +333,9 @@ const router = useRouter()
 
 // Filter state lives in the query string so a filtered view can be pasted into
 // a conversation — "the unresolved FoodChat ones" is a link, not instructions.
-const range = ref({ days: Number(route.query.days) || 7 })
+// The period is handled the same way by useInsightsRange, which also remembers
+// it across pages; only the two filters are this page's own.
+const range = useInsightsRange(7)
 const status = ref<string | undefined>((route.query.status as string) || undefined)
 const app = ref<string | undefined>((route.query.app as string) || undefined)
 const report = ref<ErrorReport | null>(null)
@@ -290,16 +394,26 @@ async function load() {
   })
 }
 
-watch([range, status, app], () => {
-  void router.replace({
-    query: {
-      ...(range.value.days === 7 ? {} : { days: String(range.value.days) }),
-      ...(status.value ? { status: status.value } : {}),
-      ...(app.value ? { app: app.value } : {})
-    }
-  })
-  void load()
-}, { deep: true })
+const { loading, failed, loadedAt, reload } = useInsightsLoad(
+  load,
+  () => !groups.value.length && !dailySeries.value.length && !browserRows.value.length
+)
 
-onMounted(() => { void load() })
+// The first fetch, with nothing on screen yet; a refresh keeps the old list up.
+const pending = computed(() => loading.value && !report.value)
+
+// Only the filters are mirrored here. The period's own key is owned by
+// useInsightsRange, so the rest of the query is copied through untouched
+// rather than rebuilt — rebuilding it would drop `days` on every filter change.
+watch([status, app], () => {
+  const query = { ...route.query }
+  delete query.status
+  delete query.app
+  if (status.value) query.status = status.value
+  if (app.value) query.app = app.value
+  void router.replace({ query })
+})
+
+watch([range, status, app], reload, { deep: true })
+onMounted(reload)
 </script>

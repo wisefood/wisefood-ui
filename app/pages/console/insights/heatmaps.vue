@@ -4,7 +4,11 @@
       :items="breadcrumbItems"
       class="mb-4"
     />
-    <ConsoleInsightsNav />
+    <ConsoleInsightsNav
+      :loaded-at="loadedAt"
+      :refreshing="loading"
+      @refresh="reload"
+    />
     <UPageHeader
       :title="selectedPath ? 'Click map' : 'Click maps'"
       :description="selectedPath
@@ -30,6 +34,12 @@
     </UPageHeader>
 
     <UPageBody>
+      <!--
+        "Capture is off" is only claimed when the load succeeded and came back
+        with nothing. A failed fetch used to land here too, and this alert
+        then told the reader to go and flip a switch when the real problem
+        was the API — the one diagnosis it must never hand out.
+      -->
       <UAlert
         v-if="collectionLikelyOff"
         color="info"
@@ -48,7 +58,28 @@
         v-if="selectedPath"
         class="space-y-6"
       >
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <!--
+          Five zeros in large type is what "nothing has arrived yet" looked
+          like, and also what "the API is down" looked like. Pulse until the
+          map is here; show nothing when it failed — the grid below says so.
+        -->
+        <div
+          v-if="pending"
+          class="grid animate-pulse gap-4 sm:grid-cols-2 lg:grid-cols-5"
+          role="status"
+          aria-live="polite"
+          aria-label="Loading click map"
+        >
+          <div
+            v-for="n in 5"
+            :key="n"
+            class="h-20 rounded-lg border border-gray-200/70 bg-gray-100 dark:border-white/10 dark:bg-zinc-800/60"
+          />
+        </div>
+        <div
+          v-else-if="!failed"
+          class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5"
+        >
           <ConsoleStatsStatTile
             label="Clicks"
             :value="map?.clicks ?? 0"
@@ -76,7 +107,16 @@
           />
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
+        <!--
+          A toggle group, announced as one: each button says whether it is the
+          chosen size, so a screen reader hears the selection rather than
+          inferring it from a background colour.
+        -->
+        <div
+          class="flex flex-wrap items-center gap-2"
+          role="group"
+          aria-label="Screen size"
+        >
           <span class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
             Screen size
           </span>
@@ -86,6 +126,7 @@
             :color="deviceType === option.value ? 'primary' : 'neutral'"
             :variant="deviceType === option.value ? 'solid' : 'ghost'"
             size="xs"
+            :aria-pressed="deviceType === option.value"
             @click="deviceType = option.value"
           >
             {{ option.label }}
@@ -101,8 +142,25 @@
         -->
         <div class="grid gap-6 lg:grid-cols-3">
           <div class="min-w-0 lg:col-span-2">
+            <div
+              v-if="pending"
+              class="aspect-[4/3] animate-pulse rounded-lg border border-gray-200/70 bg-gray-100 dark:border-white/10 dark:bg-zinc-800/60"
+              role="status"
+              aria-label="Loading the click map"
+            />
+            <UCard
+              v-else-if="failed"
+              :ui="{ body: 'p-0' }"
+              class="border border-gray-200/70 dark:border-white/10"
+            >
+              <ConsoleInsightsEmptyState
+                failed
+                title="The click map could not be loaded"
+                hint="The request to the API failed. This does not mean capture is off — retry, and if it persists check the gateway."
+              />
+            </UCard>
             <ConsoleInsightsHeatmapGrid
-              v-if="map"
+              v-else-if="map"
               :cells="map.cells"
               :grid="map.grid"
               :peak="map.peak"
@@ -116,12 +174,14 @@
               subtitle="A control nobody touches is interface to remove"
               :rows="elementRows"
               :columns="elementColumns"
+              :loading="loading"
+              :failed="failed"
               empty="No named controls were clicked."
               empty-hint="Elements are named from a data-track attribute where the UI sets one."
               empty-icon="i-lucide-mouse-pointer-click"
             >
               <template #cell-element_key="{ row }">
-                <span class="font-mono text-xs">{{ row.element_key || '—' }}</span>
+                <span class="break-all font-mono text-xs">{{ row.element_key || '—' }}</span>
               </template>
               <template #cell-trouble="{ row }">
                 <UBadge
@@ -156,8 +216,29 @@
                   Everything below the median is written for a minority
                 </p>
               </div>
+              <div
+                v-if="pending"
+                class="animate-pulse divide-y divide-gray-100 px-5 dark:divide-zinc-800"
+                role="status"
+                aria-label="Loading scroll depth"
+              >
+                <div
+                  v-for="n in 4"
+                  :key="n"
+                  class="space-y-2 py-3"
+                >
+                  <span class="block h-3 w-1/2 rounded bg-gray-200 dark:bg-zinc-800" />
+                  <span class="block h-1.5 rounded-full bg-gray-200 dark:bg-zinc-800" />
+                </div>
+              </div>
               <ConsoleInsightsEmptyState
-                v-if="!map?.scroll_depth.measured"
+                v-else-if="failed"
+                failed
+                title="Scroll depth could not be loaded"
+                hint="The request to the API failed."
+              />
+              <ConsoleInsightsEmptyState
+                v-else-if="!map?.scroll_depth.measured"
                 title="No scroll depth recorded."
                 hint="Measured once per page view, when the view ends."
                 icon="i-lucide-chevrons-down"
@@ -207,13 +288,21 @@
             subtitle="Open one to see its map"
             :rows="pageRows"
             :columns="pageColumns"
+            :loading="loading"
+            :failed="failed"
             empty="No clicks recorded in this period."
             empty-hint="Click capture ships switched off — see Platform Operations."
             empty-icon="i-lucide-mouse-pointer-click"
           >
             <template #cell-path="{ row }">
+              <!--
+                A real button, so it needs a visible focus ring — colour alone
+                said "link" to a mouse and nothing to a keyboard. Left-aligned
+                and allowed to break so a long route wraps instead of clipping.
+              -->
               <button
-                class="font-mono text-xs text-brand-600 hover:underline dark:text-brand-400"
+                type="button"
+                :class="PATH_BUTTON"
                 @click="selectedPath = String(row.path)"
               >
                 {{ row.path }}
@@ -228,20 +317,23 @@
             subtitle="Rage and dead clicks — somebody clicking a thing that looks like it should work"
             :rows="frustrationRows"
             :columns="frustrationColumns"
+            :loading="loading"
+            :failed="failed"
             empty="Nobody is visibly stuck."
             empty-hint="No rage or dead clicks recorded in this period."
             empty-icon="i-lucide-smile"
           >
             <template #cell-path="{ row }">
               <button
-                class="font-mono text-xs text-brand-600 hover:underline dark:text-brand-400"
+                type="button"
+                :class="PATH_BUTTON"
                 @click="selectedPath = String(row.path)"
               >
                 {{ row.path }}
               </button>
             </template>
             <template #cell-element_key="{ row }">
-              <span class="font-mono text-xs">{{ row.element_key || '—' }}</span>
+              <span class="break-all font-mono text-xs">{{ row.element_key || '—' }}</span>
             </template>
             <template #cell-kind="{ row }">
               <UBadge
@@ -275,7 +367,10 @@ const breadcrumbItems = consoleBreadcrumb(
 const route = useRoute()
 const router = useRouter()
 
-const range = ref({ days: Number(route.query.days) || 30 })
+// The period is owned by useInsightsRange, which also remembers it across
+// pages; the chosen page and screen size are this page's own and stay in the
+// URL so a map can be linked to.
+const range = useInsightsRange(30)
 const selectedPath = ref(String(route.query.path || ''))
 const deviceType = ref(String(route.query.device || ''))
 const overview = ref<InteractionOverview | null>(null)
@@ -287,6 +382,11 @@ const deviceOptions = [
   { label: 'Tablet', value: 'tablet' },
   { label: 'Desktop', value: 'desktop' }
 ]
+
+// The page-path cell is a button in two tables; one definition keeps its focus
+// ring and wrapping in step between them.
+const PATH_BUTTON = 'break-all rounded text-left font-mono text-xs text-brand-600 hover:underline '
+  + 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-brand-400'
 
 const pageColumns = [
   { key: 'path', label: 'Page' },
@@ -325,12 +425,6 @@ const scrollSteps = computed(() => {
   ]
 })
 
-// Nothing recorded at all is far more likely to be the switch than a platform
-// nobody clicked, so the page says so rather than showing a bare empty table.
-const collectionLikelyOff = computed(() =>
-  Boolean(overview.value) && !pageRows.value.length && !frustrationRows.value.length
-)
-
 async function load() {
   overview.value = await insightsApi.getInteractions(range.value.days, 50)
   if (selectedPath.value) {
@@ -344,16 +438,32 @@ async function load() {
   }
 }
 
-watch([range, selectedPath, deviceType], () => {
-  void router.replace({
-    query: {
-      ...(range.value.days === 30 ? {} : { days: String(range.value.days) }),
-      ...(selectedPath.value ? { path: selectedPath.value } : {}),
-      ...(deviceType.value ? { device: deviceType.value } : {})
-    }
-  })
-  void load()
-}, { deep: true })
+const { status, loading, failed, loadedAt, reload } = useInsightsLoad(
+  load,
+  () => !pageRows.value.length && !frustrationRows.value.length && !map.value?.clicks
+)
 
-onMounted(() => { void load() })
+// Nothing recorded at all is far more likely to be the switch than a platform
+// nobody clicked, so the page says so rather than showing a bare empty table.
+// 'empty' is the load that succeeded with nothing in it; a failed load is not
+// that, and never earns this alert.
+const collectionLikelyOff = computed(() => status.value === 'empty')
+
+// The first fetch, with nothing on screen yet; a refresh keeps the old view up.
+const pending = computed(() => loading.value && !overview.value && !map.value)
+
+// Only the page and screen size are mirrored here. `days` is owned by
+// useInsightsRange, so the rest of the query is copied through untouched
+// rather than rebuilt — rebuilding it would drop the period on every click.
+watch([selectedPath, deviceType], () => {
+  const query = { ...route.query }
+  delete query.path
+  delete query.device
+  if (selectedPath.value) query.path = selectedPath.value
+  if (deviceType.value) query.device = deviceType.value
+  void router.replace({ query })
+})
+
+watch([range, selectedPath, deviceType], reload, { deep: true })
+onMounted(reload)
 </script>

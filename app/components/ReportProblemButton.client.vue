@@ -43,15 +43,22 @@
               <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                 {{ t('report.whatKind') || 'What kind of problem?' }}
               </p>
-              <div class="grid gap-2 sm:grid-cols-2">
+              <!-- A choice of one, announced as such: each option says whether it
+                   is the chosen one, and the group has a name. -->
+              <div
+                class="grid gap-2 sm:grid-cols-2"
+                role="group"
+                :aria-label="t('report.whatKind') || 'What kind of problem?'"
+              >
                 <button
                   v-for="option in REASONS"
                   :key="option.value"
                   type="button"
-                  class="rounded-lg border px-3 py-2 text-left text-sm transition-colors"
+                  class="rounded-lg border px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-zinc-900"
                   :class="reason === option.value
                     ? 'border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300'
                     : 'border-gray-200 hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5'"
+                  :aria-pressed="reason === option.value"
                   @click="reason = option.value"
                 >
                   <span class="flex items-center gap-2">

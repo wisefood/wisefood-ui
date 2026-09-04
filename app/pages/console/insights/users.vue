@@ -4,9 +4,13 @@
       :items="breadcrumbItems"
       class="mb-4"
     />
-    <ConsoleInsightsNav />
+    <ConsoleInsightsNav
+      :loaded-at="loadedAt"
+      :refreshing="loading"
+      @refresh="reload"
+    />
     <UPageHeader
-      title="People & sessions"
+      title="People"
       description="Who is using the platform, how much, and what it costs to serve them."
       :ui="{ root: 'relative py-8 border-b-0' }"
     >
@@ -36,6 +40,8 @@
               subtitle="Ordered by recorded actions"
               :rows="users"
               :columns="userColumns"
+              :loading="loading"
+              :failed="failed"
               empty="Nobody has consented to being named yet."
               empty-hint="Activity is still counted — it just has no name attached."
               empty-icon="i-lucide-users"
@@ -60,9 +66,13 @@
 
             <ConsoleInsightsTablePanel
               title="Recent sessions"
-              subtitle="One row per visit. Open one to see everything that happened in it."
+              subtitle="One row per session. Open one to see everything that happened in it."
               :rows="sessions"
               :columns="sessionColumns"
+              :loading="loading"
+              :failed="failed"
+              to="/console/insights/sessions"
+              link-label="Session board"
               empty="No sessions recorded."
               empty-hint="A session is created the first time somebody does anything."
               empty-icon="i-lucide-monitor-smartphone"
@@ -140,19 +150,31 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useInsightsLoad } from '~/composables/useInsightsLoad'
+import { useInsightsRange } from '~/composables/useInsightsRange'
 import insightsApi, { type UserRow } from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({ layout: 'default' })
-useHead({ title: 'People & sessions · Console' })
+useHead({ title: 'People · Console' })
 
 const breadcrumbItems = consoleBreadcrumb(
   { label: 'Analytics', icon: 'i-lucide-chart-column', to: '/console/insights' },
-  { label: 'People & sessions', icon: 'i-lucide-users' }
+  { label: 'People', icon: 'i-lucide-users' }
 )
 
-const days = ref(30)
+const range = useInsightsRange(30)
+// The picker here is preset-only, so choosing one is also choosing to drop any
+// custom dates remembered from a page that has them — the request below only
+// ever reads the day count, and a URL still carrying `since` would lie.
+const days = computed({
+  get: () => range.value.days,
+  set: (value: number) => {
+    range.value = { days: value }
+  }
+})
+
 const users = ref<UserRow[]>([])
 const sessions = ref<Array<Record<string, unknown>>>([])
 const lookup = ref('')
@@ -160,7 +182,7 @@ const lookup = ref('')
 const userColumns = [
   { key: 'user_id', label: 'Person' },
   { key: 'events', label: 'Actions', align: 'right' as const },
-  { key: 'sessions', label: 'Visits', align: 'right' as const },
+  { key: 'sessions', label: 'Sessions', align: 'right' as const },
   { key: 'questions_asked', label: 'Questions', align: 'right' as const },
   { key: 'searches', label: 'Searches', align: 'right' as const },
   { key: 'total_tokens', label: 'Tokens', align: 'right' as const },
@@ -194,6 +216,15 @@ async function load() {
   sessions.value = recent as unknown as Array<Record<string, unknown>>
 }
 
-watch(days, () => { void load() })
-onMounted(() => { void load() })
+const { loading, failed, loadedAt, reload } = useInsightsLoad(
+  load,
+  () => !users.value.length && !sessions.value.length
+)
+
+watch(range, () => {
+  void reload()
+}, { deep: true })
+onMounted(() => {
+  void reload()
+})
 </script>
