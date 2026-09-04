@@ -1,45 +1,70 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
     <!-- Header -->
-    <RecipesRecipeWranglerHeader :back-to="backLink.to" :back-label="backLink.label" />
+    <RecipesRecipeWranglerHeader
+      :back-to="backLink.to"
+      :back-label="backLink.label"
+    />
 
     <!-- Loading State -->
-    <div v-if="loading && !regionReloading" class="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div
+      v-if="loading && !regionReloading"
+      class="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12"
+    >
       <div class="animate-pulse space-y-6">
-        <div class="h-8 bg-zinc-200 dark:bg-zinc-700 rounded w-3/4"></div>
-        <div class="aspect-video bg-zinc-200 dark:bg-zinc-700 rounded-2xl"></div>
+        <div class="h-8 bg-zinc-200 dark:bg-zinc-700 rounded w-3/4" />
+        <div class="aspect-video bg-zinc-200 dark:bg-zinc-700 rounded-2xl" />
         <div class="space-y-3">
-          <div class="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-full"></div>
-          <div class="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-5/6"></div>
-          <div class="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-4/6"></div>
+          <div class="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-full" />
+          <div class="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-5/6" />
+          <div class="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-4/6" />
         </div>
       </div>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="max-w-5xl mx-auto px-4 sm:px-6 py-6 text-center">
-      <UIcon name="i-lucide-alert-circle" class="w-16 h-16 text-red-500 mx-auto mb-4" />
-      <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">{{ t('recipeWrangler.detail.failedToLoad') }}</h2>
-      <p class="text-zinc-600 dark:text-zinc-400 mb-6">{{ error }}</p>
-      <UButton @click="loadRecipe" color="primary">
+    <div
+      v-else-if="error"
+      class="max-w-5xl mx-auto px-4 sm:px-6 py-6 text-center"
+    >
+      <UIcon
+        name="i-lucide-alert-circle"
+        class="w-16 h-16 text-red-500 mx-auto mb-4"
+      />
+      <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
+        {{ t('recipeWrangler.detail.failedToLoad') }}
+      </h2>
+      <p class="text-zinc-600 dark:text-zinc-400 mb-6">
+        {{ error }}
+      </p>
+      <UButton
+        color="primary"
+        @click="loadRecipe"
+      >
         {{ t('recipeWrangler.results.tryAgain') }}
       </UButton>
     </div>
 
     <!-- Recipe Content -->
-    <main v-else-if="recipe" class="max-w-7xl mx-auto px-1 sm:px-6 lg:px-8 py-4 sm:py-10">
+    <main
+      v-else-if="recipe"
+      class="max-w-7xl mx-auto px-1 sm:px-6 lg:px-8 py-4 sm:py-10"
+    >
       <!-- Hero Section with Image -->
       <div class="mb-8 sm:mb-10">
         <!-- Image -->
-        <div v-if="recipeImageUrl" class="relative aspect-[16/7] sm:aspect-[16/6] rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-xl mb-6">
+        <div
+          v-if="recipeImageUrl"
+          class="relative aspect-[16/7] sm:aspect-[16/6] rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-xl mb-6"
+        >
           <img
             :src="recipeImageUrl"
             :alt="recipe.title"
             class="w-full h-full object-cover"
             referrerpolicy="no-referrer"
             @error="handleImageError"
-          />
-          <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+          >
+          <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
           <!-- Title Overlay on Image -->
           <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8">
@@ -49,12 +74,24 @@
 
             <!-- Meta Info -->
             <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-white/90">
-              <div v-if="recipe.duration" class="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                <UIcon name="i-lucide-clock" class="w-4 h-4" />
+              <div
+                v-if="recipe.duration"
+                class="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full"
+              >
+                <UIcon
+                  name="i-lucide-clock"
+                  class="w-4 h-4"
+                />
                 <span class="text-xs sm:text-sm font-medium">{{ recipe.duration }} {{ t('recipeWrangler.recipe.minuteShort') }}</span>
               </div>
-              <div v-if="recipe.serves" class="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                <UIcon name="i-lucide-users" class="w-4 h-4" />
+              <div
+                v-if="recipe.serves"
+                class="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full"
+              >
+                <UIcon
+                  name="i-lucide-users"
+                  class="w-4 h-4"
+                />
                 <span class="text-xs sm:text-sm font-medium">{{ recipe.serves }} {{ t('recipeWrangler.recipe.servings', recipe.serves) }}</span>
               </div>
               <NuxtLink
@@ -63,25 +100,47 @@
                 :class="recipe.source_id ? 'hover:bg-white/30 transition-colors cursor-pointer' : ''"
                 class="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full"
               >
-                <UIcon name="i-lucide-database" class="w-4 h-4" />
+                <UIcon
+                  name="i-lucide-database"
+                  class="w-4 h-4"
+                />
                 <span class="text-xs sm:text-sm font-medium">Source: {{ recipe.source }}</span>
-                <UIcon v-if="recipe.source_id" name="i-lucide-arrow-up-right" class="w-3 h-3 opacity-75" />
+                <UIcon
+                  v-if="recipe.source_id"
+                  name="i-lucide-arrow-up-right"
+                  class="w-3 h-3 opacity-75"
+                />
               </NuxtLink>
             </div>
           </div>
         </div>
-        <div v-else class="mb-6">
+        <div
+          v-else
+          class="mb-6"
+        >
           <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-zinc-900 dark:text-white mb-4">
             {{ recipe.title }}
           </h1>
           <!-- Meta Info for no-image case -->
           <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-zinc-600 dark:text-zinc-400">
-            <div v-if="recipe.duration" class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full">
-              <UIcon name="i-lucide-clock" class="w-4 h-4 text-brandg-600 dark:text-brandg-400" />
+            <div
+              v-if="recipe.duration"
+              class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full"
+            >
+              <UIcon
+                name="i-lucide-clock"
+                class="w-4 h-4 text-brandg-600 dark:text-brandg-400"
+              />
               <span class="text-xs sm:text-sm font-medium">{{ recipe.duration }} {{ t('recipeWrangler.recipe.minuteShort') }}</span>
             </div>
-            <div v-if="recipe.serves" class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full">
-              <UIcon name="i-lucide-users" class="w-4 h-4 text-brandg-600 dark:text-brandg-400" />
+            <div
+              v-if="recipe.serves"
+              class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full"
+            >
+              <UIcon
+                name="i-lucide-users"
+                class="w-4 h-4 text-brandg-600 dark:text-brandg-400"
+              />
               <span class="text-xs sm:text-sm font-medium">{{ recipe.serves }} {{ t('recipeWrangler.recipe.servings', recipe.serves) }}</span>
             </div>
             <NuxtLink
@@ -90,12 +149,22 @@
               :class="recipe.source_id ? 'hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer' : ''"
               class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full"
             >
-              <UIcon name="i-lucide-database" class="w-4 h-4 text-brandg-600 dark:text-brandg-400" />
+              <UIcon
+                name="i-lucide-database"
+                class="w-4 h-4 text-brandg-600 dark:text-brandg-400"
+              />
               <span class="text-xs sm:text-sm font-medium">Source: {{ recipe.source }}</span>
-              <UIcon v-if="recipe.source_id" name="i-lucide-arrow-up-right" class="w-3 h-3 text-brandg-500 dark:text-brandg-400" />
+              <UIcon
+                v-if="recipe.source_id"
+                name="i-lucide-arrow-up-right"
+                class="w-3 h-3 text-brandg-500 dark:text-brandg-400"
+              />
             </NuxtLink>
             <div class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full">
-              <UIcon name="i-lucide-award" class="w-4 h-4 text-brandg-600 dark:text-brandg-400" />
+              <UIcon
+                name="i-lucide-award"
+                class="w-4 h-4 text-brandg-600 dark:text-brandg-400"
+              />
               <span class="text-xs sm:text-sm font-medium">Nutri-Score {{ nutriScoreGrade || 'N/A' }}</span>
             </div>
           </div>
@@ -104,20 +173,29 @@
         <!-- Tags + Nutri-Score strip + Sustainability bar -->
         <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2 justify-between">
           <!-- Dish types -->
-          <div v-if="dishTypeChips.length" class="flex flex-wrap items-center gap-2">
+          <div
+            v-if="dishTypeChips.length"
+            class="flex flex-wrap items-center gap-2"
+          >
             <span class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Dish</span>
             <span
               v-for="chip in dishTypeChips"
               :key="`dish-${chip.value}`"
               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-brandg-50 dark:bg-brandg-900/40 text-brandg-700 dark:text-brandg-200 border border-brandg-200 dark:border-brandg-700"
             >
-              <UIcon :name="chip.icon" class="w-3 h-3" />
+              <UIcon
+                :name="chip.icon"
+                class="w-3 h-3"
+              />
               {{ chip.label }}
             </span>
           </div>
 
           <!-- Tags -->
-          <div v-if="displayRecipeTags.length" class="flex flex-wrap items-center gap-2">
+          <div
+            v-if="displayRecipeTags.length"
+            class="flex flex-wrap items-center gap-2"
+          >
             <span class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Tags</span>
             <span
               v-for="(tag, idx) in displayRecipeTags"
@@ -129,7 +207,10 @@
           </div>
 
           <!-- Divider -->
-          <div v-if="displayRecipeTags.length" class="h-4 w-px bg-zinc-300 dark:bg-zinc-600 hidden sm:block"></div>
+          <div
+            v-if="displayRecipeTags.length"
+            class="h-4 w-px bg-zinc-300 dark:bg-zinc-600 hidden sm:block"
+          />
 
           <!-- Nutri-Score mini strip -->
           <div class="flex items-center gap-2">
@@ -145,19 +226,28 @@
                 ]"
               >{{ grade }}</span>
             </div>
-            <UTooltip v-if="nutriBreakdown" text="How was this score calculated?">
+            <UTooltip
+              v-if="nutriBreakdown"
+              text="How was this score calculated?"
+            >
               <button
                 type="button"
-                @click="showNutriScoreDetails = true"
                 class="flex items-center justify-center w-4 h-4 rounded-full text-zinc-400 dark:text-zinc-500 hover:text-brandg-600 dark:hover:text-brandg-400 transition-colors cursor-pointer"
+                @click="showNutriScoreDetails = true"
               >
-                <UIcon name="i-lucide-circle-help" class="w-4 h-4" />
+                <UIcon
+                  name="i-lucide-circle-help"
+                  class="w-4 h-4"
+                />
               </button>
             </UTooltip>
           </div>
 
           <!-- Divider -->
-          <div v-if="sustainabilityLevel" class="h-5 w-px bg-zinc-300 dark:bg-zinc-600 hidden sm:block"></div>
+          <div
+            v-if="sustainabilityLevel"
+            class="h-5 w-px bg-zinc-300 dark:bg-zinc-600 hidden sm:block"
+          />
 
           <!-- Sustainability progress bar (hidden when no footprint data) -->
           <UTooltip
@@ -165,7 +255,10 @@
             :text="t('recipeWrangler.detail.sustainability.perServing', { value: formatNumber(sustainabilityPerServing) })"
           >
             <div class="flex items-center gap-2">
-              <UIcon name="i-lucide-leaf" class="w-3.5 h-3.5 text-brandg-500 dark:text-brandg-400 flex-shrink-0" />
+              <UIcon
+                name="i-lucide-leaf"
+                class="w-3.5 h-3.5 text-brandg-500 dark:text-brandg-400 flex-shrink-0"
+              />
               <span class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                 {{ t('recipeWrangler.detail.sustainability.label') }}
               </span>
@@ -173,7 +266,7 @@
                 <div
                   :class="['h-full bg-gradient-to-r rounded-full', sustainabilityLevel.barClass]"
                   :style="{ width: `${sustainabilityLevel.pct}%` }"
-                ></div>
+                />
               </div>
               <span :class="['text-xs font-medium', sustainabilityLevel.textClass]">
                 {{ t(`recipeWrangler.detail.sustainability.levels.${sustainabilityLevel.key}`) }}
@@ -188,7 +281,10 @@
               :to="`/console/assets/recipes/${encodeURIComponent(recipe.recipe_id)}`"
               class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all"
             >
-              <UIcon name="i-lucide-pencil" class="w-4 h-4 text-brandg-600 dark:text-brandg-400" />
+              <UIcon
+                name="i-lucide-pencil"
+                class="w-4 h-4 text-brandg-600 dark:text-brandg-400"
+              />
               <span class="text-xs font-medium text-zinc-600 dark:text-zinc-300">
                 {{ t('recipeWrangler.recipe.editInConsole') }}
               </span>
@@ -197,8 +293,8 @@
             <!-- Save button -->
             <button
               v-if="recipe"
-              @click="toggleFavorite"
               class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all"
+              @click="toggleFavorite"
             >
               <UIcon
                 name="i-lucide-heart"
@@ -238,7 +334,10 @@
             class="flex flex-wrap items-center gap-2"
           >
             <span class="inline-flex items-center gap-1.5 w-28 flex-shrink-0 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-              <UIcon :name="group.icon" class="w-3.5 h-3.5 text-brandg-500" />
+              <UIcon
+                :name="group.icon"
+                class="w-3.5 h-3.5 text-brandg-500"
+              />
               {{ group.title }}
             </span>
             <span
@@ -246,7 +345,10 @@
               :key="`${group.key}-${chip.value}`"
               class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-600"
             >
-              <span v-if="chip.emoji" aria-hidden="true">{{ chip.emoji }}</span>
+              <span
+                v-if="chip.emoji"
+                aria-hidden="true"
+              >{{ chip.emoji }}</span>
               {{ chip.label }}
             </span>
           </div>
@@ -275,10 +377,13 @@
         </div>
         <button
           type="button"
-          @click="openAdaptModal"
           class="flex-shrink-0 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-brandg-600 hover:bg-brandg-700 text-white transition-colors"
+          @click="openAdaptModal"
         >
-          <UIcon name="i-lucide-sparkles" class="w-4 h-4" />
+          <UIcon
+            name="i-lucide-sparkles"
+            class="w-4 h-4"
+          />
           {{ t('recipeWrangler.detail.adaptation.nudgeCta') }}
         </button>
       </div>
@@ -286,12 +391,14 @@
       <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
         <!-- Main Content (Left Column) -->
         <div class="lg:col-span-3 space-y-6 sm:space-y-8">
-
           <!-- Nutrition Information -->
           <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 sm:p-10 border border-zinc-200 dark:border-zinc-700 shadow-lg">
             <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
               <h2 class="text-xl font-claude text-zinc-900 dark:text-white flex items-center gap-3">
-                <UIcon name="i-lucide-activity" class="w-7 h-7 text-brandg-600 dark:text-brandg-400" />
+                <UIcon
+                  name="i-lucide-activity"
+                  class="w-7 h-7 text-brandg-600 dark:text-brandg-400"
+                />
                 {{ t('recipeWrangler.detail.nutritionalInfo') }}
               </h2>
               <div class="flex items-center gap-2 flex-wrap">
@@ -302,20 +409,20 @@
                     :key="region"
                     type="button"
                     :disabled="regionReloading"
-                    @click="changeRegion(region)"
                     :class="[
                       'px-3 py-1 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50',
                       selectedRegion === region
                         ? 'bg-brandg-500 text-white'
                         : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                     ]"
+                    @click="changeRegion(region)"
                   >
                     {{ region }}
                   </button>
                 </div>
                 <button
-                  @click="toggleNutrientView"
                   class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brandg-50 to-brandg-100 dark:from-brandg-900/30 dark:to-brandg-800/30 border border-brandg-200 dark:border-brandg-700 hover:from-brandg-100 hover:to-brandg-200 dark:hover:from-brandg-900/50 dark:hover:to-brandg-800/50 transition-all group"
+                  @click="toggleNutrientView"
                 >
                   <UIcon
                     :name="showRadarChart ? 'i-lucide-layout-grid' : 'i-lucide-radar'"
@@ -337,22 +444,31 @@
               class="rounded-xl bg-zinc-50 dark:bg-white/4 p-6 flex flex-col items-start gap-4"
             >
               <div class="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
-                <UIcon name="i-lucide-loader-2" class="w-4 h-4 animate-spin text-brandg-600 dark:text-brandg-400" />
+                <UIcon
+                  name="i-lucide-loader-2"
+                  class="w-4 h-4 animate-spin text-brandg-600 dark:text-brandg-400"
+                />
                 <span>{{ t('recipeWrangler.detail.profilePending.message') }}</span>
               </div>
               <button
                 type="button"
-                @click="reloadProfile"
                 :disabled="profileReloading"
                 class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-brandg-600 hover:bg-brandg-700 text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                @click="reloadProfile"
               >
-                <UIcon name="i-lucide-rotate-cw" :class="['w-4 h-4', profileReloading ? 'animate-spin' : '']" />
+                <UIcon
+                  name="i-lucide-rotate-cw"
+                  :class="['w-4 h-4', profileReloading ? 'animate-spin' : '']"
+                />
                 {{ t('recipeWrangler.detail.profilePending.reload') }}
               </button>
             </div>
 
             <!-- Animated Container for View Switching -->
-            <div v-else class="relative overflow-hidden">
+            <div
+              v-else
+              class="relative overflow-hidden"
+            >
               <!-- Grid View -->
               <Transition
                 enter-active-class="transition-all duration-500 ease-out"
@@ -362,12 +478,20 @@
                 leave-from-class="opacity-100 scale-100"
                 leave-to-class="opacity-0 scale-95"
               >
-                <div v-if="!showRadarChart" class="space-y-6">
+                <div
+                  v-if="!showRadarChart"
+                  class="space-y-6"
+                >
                   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div class="rounded-xl bg-zinc-50 dark:bg-white/4 p-4 sm:p-5">
                       <div class="flex items-center gap-1.5 mb-2">
-                        <UIcon name="i-lucide-flame" class="w-4 h-4 text-brand-500 dark:text-brand-400" />
-                        <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.calories') }}</p>
+                        <UIcon
+                          name="i-lucide-flame"
+                          class="w-4 h-4 text-brand-500 dark:text-brand-400"
+                        />
+                        <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                          {{ t('recipeWrangler.detail.calories') }}
+                        </p>
                       </div>
                       <p class="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white">
                         {{ formatMetric(summaryCaloriesPerServing, 0) }}
@@ -376,8 +500,13 @@
 
                     <div class="rounded-xl bg-zinc-50 dark:bg-white/4 p-4 sm:p-5">
                       <div class="flex items-center gap-1.5 mb-2">
-                        <UIcon name="i-lucide-dumbbell" class="w-4 h-4 text-brandg-500 dark:text-brandg-400" />
-                        <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.protein') }}</p>
+                        <UIcon
+                          name="i-lucide-dumbbell"
+                          class="w-4 h-4 text-brandg-500 dark:text-brandg-400"
+                        />
+                        <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                          {{ t('recipeWrangler.detail.protein') }}
+                        </p>
                       </div>
                       <p class="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white">
                         {{ formatMetricWithUnit(summaryProteinPerServing, 1, 'g') }}
@@ -386,8 +515,13 @@
 
                     <div class="rounded-xl bg-zinc-50 dark:bg-white/4 p-4 sm:p-5">
                       <div class="flex items-center gap-1.5 mb-2">
-                        <UIcon name="i-lucide-wheat" class="w-4 h-4 text-brandp-400 dark:text-brandp-300" />
-                        <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.carbs') }}</p>
+                        <UIcon
+                          name="i-lucide-wheat"
+                          class="w-4 h-4 text-brandp-400 dark:text-brandp-300"
+                        />
+                        <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                          {{ t('recipeWrangler.detail.carbs') }}
+                        </p>
                       </div>
                       <p class="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white">
                         {{ formatMetricWithUnit(summaryCarbsPerServing, 1, 'g') }}
@@ -396,8 +530,13 @@
 
                     <div class="rounded-xl bg-zinc-50 dark:bg-white/4 p-4 sm:p-5">
                       <div class="flex items-center gap-1.5 mb-2">
-                        <UIcon name="i-lucide-droplet" class="w-4 h-4 text-terracotta dark:text-orange-400" />
-                        <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">{{ t('recipeWrangler.detail.fat') }}</p>
+                        <UIcon
+                          name="i-lucide-droplet"
+                          class="w-4 h-4 text-terracotta dark:text-orange-400"
+                        />
+                        <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                          {{ t('recipeWrangler.detail.fat') }}
+                        </p>
                       </div>
                       <p class="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white">
                         {{ formatMetricWithUnit(summaryFatPerServing, 1, 'g') }}
@@ -409,8 +548,13 @@
                   <div class="grid grid-cols-3 gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                     <div class="rounded-lg bg-zinc-50 dark:bg-white/4 px-3 py-3">
                       <div class="flex items-center gap-1.5 mb-1.5">
-                        <UIcon name="i-lucide-leaf" class="w-3.5 h-3.5 text-brandg-500 dark:text-brandg-400" />
-                        <p class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">Fiber</p>
+                        <UIcon
+                          name="i-lucide-leaf"
+                          class="w-3.5 h-3.5 text-brandg-500 dark:text-brandg-400"
+                        />
+                        <p class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
+                          Fiber
+                        </p>
                       </div>
                       <p class="text-lg font-bold text-zinc-900 dark:text-white">
                         {{ formatMetricWithUnit(summaryFiberPerServing, 1, 'g') }}
@@ -418,8 +562,13 @@
                     </div>
                     <div class="rounded-lg bg-zinc-50 dark:bg-white/4 px-3 py-3">
                       <div class="flex items-center gap-1.5 mb-1.5">
-                        <UIcon name="i-lucide-candy" class="w-3.5 h-3.5 text-brand-400 dark:text-brand-300" />
-                        <p class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">Sugar</p>
+                        <UIcon
+                          name="i-lucide-candy"
+                          class="w-3.5 h-3.5 text-brand-400 dark:text-brand-300"
+                        />
+                        <p class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
+                          Sugar
+                        </p>
                       </div>
                       <p class="text-lg font-bold text-zinc-900 dark:text-white">
                         {{ formatMetricWithUnit(summarySugarPerServing, 1, 'g') }}
@@ -427,8 +576,13 @@
                     </div>
                     <div class="rounded-lg bg-zinc-50 dark:bg-white/4 px-3 py-3">
                       <div class="flex items-center gap-1.5 mb-1.5">
-                        <UIcon name="i-lucide-droplets" class="w-3.5 h-3.5 text-brandp-400 dark:text-brandp-300" />
-                        <p class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">Sodium</p>
+                        <UIcon
+                          name="i-lucide-droplets"
+                          class="w-3.5 h-3.5 text-brandp-400 dark:text-brandp-300"
+                        />
+                        <p class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
+                          Sodium
+                        </p>
                       </div>
                       <p class="text-lg font-bold text-zinc-900 dark:text-white">
                         {{ formatMetricWithUnit(summarySodiumPerServing, 0, 'mg') }}
@@ -447,7 +601,10 @@
                 leave-from-class="opacity-100 scale-100"
                 leave-to-class="opacity-0 scale-95"
               >
-                <div v-if="showRadarChart" class="py-4">
+                <div
+                  v-if="showRadarChart"
+                  class="py-4"
+                >
                   <NutrientRadarChart
                     :calories="toNumber(summaryCaloriesPerServing)"
                     :protein="toNumber(summaryProteinPerServing)"
@@ -467,8 +624,8 @@
             >
               <button
                 type="button"
-                @click="showAllNutrients = !showAllNutrients"
                 class="w-full flex items-center justify-between gap-3 rounded-xl border border-zinc-200 dark:border-zinc-700 px-4 py-3 bg-zinc-50/70 dark:bg-zinc-900/30 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors"
+                @click="showAllNutrients = !showAllNutrients"
               >
                 <div class="text-left">
                   <h3 class="text-base font-semibold text-zinc-900 dark:text-white">
@@ -531,13 +688,16 @@
               </Transition>
             </div>
 
-            <div v-if="!profilePending" class="mt-6">
+            <div
+              v-if="!profilePending"
+              class="mt-6"
+            >
               <button
                 v-if="(!showProfilingDetails || profilingLoading) && profilingDetailRows.length === 0"
                 type="button"
-                @click="toggleNutritionProfilingDetails"
                 :disabled="profilingLoading"
                 class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                @click="toggleNutritionProfilingDetails"
               >
                 <UIcon
                   :name="profilingLoading ? 'i-lucide-loader-2' : 'i-lucide-microscope'"
@@ -552,13 +712,15 @@
                 {{ profilingError }}
               </p>
             </div>
-
           </section>
 
           <!-- Instructions -->
           <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 sm:p-10 border border-zinc-200 dark:border-zinc-700 shadow-lg">
             <h2 class="text-xl font-claude text-zinc-900 dark:text-white mb-8 flex items-center gap-3">
-              <UIcon name="i-lucide-chef-hat" class="w-7 h-7 text-brandg-600 dark:text-brandg-400" />
+              <UIcon
+                name="i-lucide-chef-hat"
+                class="w-7 h-7 text-brandg-600 dark:text-brandg-400"
+              />
               {{ t('recipeWrangler.detail.instructions') }}
             </h2>
 
@@ -566,8 +728,8 @@
               <li
                 v-for="(instruction, index) in recipe.instructions"
                 :key="index"
-                @click="toggleInstruction(index)"
                 class="flex gap-5 group cursor-pointer"
+                @click="toggleInstruction(index)"
               >
                 <div
                   :class="[
@@ -605,17 +767,23 @@
           <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 border border-zinc-200 dark:border-zinc-700 shadow-lg sticky top-24 z-0">
             <div class="mb-8 flex items-center justify-between gap-3">
               <h2 class="text-xl font-claude text-zinc-900 dark:text-white flex items-center gap-3">
-                <UIcon name="i-lucide-shopping-basket" class="w-7 h-7 text-brandg-600 dark:text-brandg-400" />
+                <UIcon
+                  name="i-lucide-shopping-basket"
+                  class="w-7 h-7 text-brandg-600 dark:text-brandg-400"
+                />
                 {{ t('recipeWrangler.detail.ingredients') }}
               </h2>
               <UTooltip :text="adaptAvailable ? t('recipeWrangler.detail.adaptation.action') : t('recipeWrangler.detail.adaptation.unavailable')">
                 <button
                   type="button"
                   :disabled="!adaptAvailable"
-                  @click="openAdaptModal"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-brandg-50 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300 border border-brandg-200 dark:border-brandg-700 hover:bg-brandg-100 dark:hover:bg-brandg-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  @click="openAdaptModal"
                 >
-                  <UIcon name="i-lucide-sparkles" class="w-3.5 h-3.5" />
+                  <UIcon
+                    name="i-lucide-sparkles"
+                    class="w-3.5 h-3.5"
+                  />
                   {{ t('recipeWrangler.detail.adaptation.improve') }}
                 </button>
               </UTooltip>
@@ -627,7 +795,10 @@
               class="mb-4 rounded-xl border border-brandg-200 dark:border-brandg-700 bg-brandg-50 dark:bg-brandg-900/20 px-3 py-2.5"
             >
               <div class="flex items-center gap-2">
-                <UIcon name="i-lucide-bookmark-check" class="w-4 h-4 text-brandg-600 dark:text-brandg-400 flex-shrink-0" />
+                <UIcon
+                  name="i-lucide-bookmark-check"
+                  class="w-4 h-4 text-brandg-600 dark:text-brandg-400 flex-shrink-0"
+                />
                 <p class="text-xs text-brandg-800 dark:text-brandg-200 flex-1 min-w-0 truncate">
                   {{ t('recipeWrangler.detail.adaptation.savedBanner') }}
                   <span class="font-semibold">{{ savedAdaptation.title }}</span>
@@ -635,8 +806,8 @@
                 <button
                   type="button"
                   :disabled="adaptRemoveBusy"
-                  @click="removeAdaptedRecipe"
                   class="flex-shrink-0 text-xs font-medium text-brandg-700 dark:text-brandg-300 underline hover:text-brandg-900 dark:hover:text-brandg-100 disabled:opacity-50 transition-colors"
+                  @click="removeAdaptedRecipe"
                 >
                   {{ t('recipeWrangler.detail.adaptation.remove') }}
                 </button>
@@ -671,20 +842,25 @@
                     />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <p :class="[
-                      'font-medium text-base transition-all',
-                      checkedIngredients[index]
-                        ? 'line-through text-zinc-400 dark:text-zinc-600'
-                        : 'text-zinc-900 dark:text-white'
-                    ]">
+                    <p
+                      :class="[
+                        'font-medium text-base transition-all',
+                        checkedIngredients[index]
+                          ? 'line-through text-zinc-400 dark:text-zinc-600'
+                          : 'text-zinc-900 dark:text-white'
+                      ]"
+                    >
                       {{ ingredient.name }}
                     </p>
-                    <p v-if="ingredient.measurement" :class="[
-                      'text-sm mt-0.5 transition-all',
-                      checkedIngredients[index]
-                        ? 'line-through text-zinc-400 dark:text-zinc-600'
-                        : 'text-zinc-500 dark:text-zinc-400'
-                    ]">
+                    <p
+                      v-if="ingredient.measurement"
+                      :class="[
+                        'text-sm mt-0.5 transition-all',
+                        checkedIngredients[index]
+                          ? 'line-through text-zinc-400 dark:text-zinc-600'
+                          : 'text-zinc-500 dark:text-zinc-400'
+                      ]"
+                    >
                       {{ ingredient.measurement }}
                     </p>
                     <!-- Profiling summary pill (visible when loaded, not expanded) -->
@@ -696,7 +872,10 @@
                         v-if="profilingFor(ingredient.name)?.weight_g || weightDetailFor(ingredient.name)?.weight_grams"
                         class="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-brandg-100 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300"
                       >
-                        <UIcon name="i-lucide-weight" class="w-2.5 h-2.5" />
+                        <UIcon
+                          name="i-lucide-weight"
+                          class="w-2.5 h-2.5"
+                        />
                         {{ formatNumber(profilingFor(ingredient.name)?.weight_g || weightDetailFor(ingredient.name)?.weight_grams) }}g
                       </span>
                     </div>
@@ -705,19 +884,22 @@
                   <UTooltip :text="t('recipeWrangler.detail.substitution.action')">
                     <button
                       type="button"
-                      @click.stop="openSubstituteModal(ingredient.name)"
                       class="flex-shrink-0 mt-0.5 p-1 rounded-md text-zinc-300 dark:text-zinc-600 hover:text-brandg-600 dark:hover:text-brandg-400 hover:bg-brandg-50 dark:hover:bg-brandg-900/20 transition-colors"
                       :aria-label="t('recipeWrangler.detail.substitution.action')"
+                      @click.stop="openSubstituteModal(ingredient.name)"
                     >
-                      <UIcon name="i-lucide-repeat-2" class="w-3.5 h-3.5" />
+                      <UIcon
+                        name="i-lucide-repeat-2"
+                        class="w-3.5 h-3.5"
+                      />
                     </button>
                   </UTooltip>
                   <!-- Expand toggle for profiling (only when data is loaded) -->
                   <button
                     v-if="showProfilingDetails && profilingFor(ingredient.name)"
                     type="button"
-                    @click.stop="expandedIngredient = expandedIngredient === index ? null : index"
                     class="flex-shrink-0 mt-0.5 p-1 rounded-md text-zinc-400 dark:text-zinc-500 hover:text-brandg-600 dark:hover:text-brandg-400 hover:bg-brandg-50 dark:hover:bg-brandg-900/20 transition-colors"
+                    @click.stop="expandedIngredient = expandedIngredient === index ? null : index"
                   >
                     <UIcon
                       :name="expandedIngredient === index ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
@@ -753,19 +935,30 @@
                         <span class="font-mono text-xs text-zinc-700 dark:text-zinc-300">
                           {{ profilingFor(ingredient.name)?.parsed_quantity || weightDetailFor(ingredient.name)?.parsed_quantity || '—' }}
                           {{ profilingFor(ingredient.name)?.parsed_unit || weightDetailFor(ingredient.name)?.parsed_unit || '' }}
-                          <span v-if="weightDetailFor(ingredient.name)?.quantity_inferred || weightDetailFor(ingredient.name)?.unit_inferred" class="ml-1 text-amber-500">
-                            <UIcon name="i-lucide-zap" class="w-2.5 h-2.5 inline" />
+                          <span
+                            v-if="weightDetailFor(ingredient.name)?.quantity_inferred || weightDetailFor(ingredient.name)?.unit_inferred"
+                            class="ml-1 text-amber-500"
+                          >
+                            <UIcon
+                              name="i-lucide-zap"
+                              class="w-2.5 h-2.5 inline"
+                            />
                           </span>
                         </span>
                       </div>
                       <!-- Match source -->
                       <div class="flex items-center justify-between gap-2">
                         <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Match source</span>
-                        <span :class="[
-                          'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border',
-                          getMatchSourceStyle(String(profilingFor(ingredient.name)?.weight_source || profilingFor(ingredient.name)?.nutrition_match_source || weightDetailFor(ingredient.name)?.match_type || ''))
-                        ]">
-                          <UIcon :name="getMatchSourceIcon(String(profilingFor(ingredient.name)?.weight_source || profilingFor(ingredient.name)?.nutrition_match_source || weightDetailFor(ingredient.name)?.match_type || ''))" class="w-2.5 h-2.5" />
+                        <span
+                          :class="[
+                            'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border',
+                            getMatchSourceStyle(String(profilingFor(ingredient.name)?.weight_source || profilingFor(ingredient.name)?.nutrition_match_source || weightDetailFor(ingredient.name)?.match_type || ''))
+                          ]"
+                        >
+                          <UIcon
+                            :name="getMatchSourceIcon(String(profilingFor(ingredient.name)?.weight_source || profilingFor(ingredient.name)?.nutrition_match_source || weightDetailFor(ingredient.name)?.match_type || ''))"
+                            class="w-2.5 h-2.5"
+                          />
                           {{ getWeightSourceLabel(String(profilingFor(ingredient.name)?.weight_source || profilingFor(ingredient.name)?.nutrition_match_source || weightDetailFor(ingredient.name)?.match_type || '')) }}
                         </span>
                       </div>
@@ -789,17 +982,22 @@
                         class="flex items-center justify-between gap-2"
                       >
                         <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Similarity</span>
-                        <span :class="[
-                          'font-mono text-xs font-semibold',
-                          Number(profilingFor(ingredient.name)?.similarity) >= 0.85 ? 'text-brandg-600 dark:text-brandg-400' :
-                          Number(profilingFor(ingredient.name)?.similarity) >= 0.6 ? 'text-amber-600 dark:text-amber-400' :
-                          'text-red-600 dark:text-red-400'
-                        ]">
+                        <span
+                          :class="[
+                            'font-mono text-xs font-semibold',
+                            Number(profilingFor(ingredient.name)?.similarity) >= 0.85 ? 'text-brandg-600 dark:text-brandg-400'
+                            : Number(profilingFor(ingredient.name)?.similarity) >= 0.6 ? 'text-amber-600 dark:text-amber-400'
+                              : 'text-red-600 dark:text-red-400'
+                          ]"
+                        >
                           {{ (Number(profilingFor(ingredient.name)?.similarity) * 100).toFixed(0) }}%
                         </span>
                       </div>
                       <!-- USDA ID -->
-                      <div v-if="profilingFor(ingredient.name)?.canonical_food_id || weightDetailFor(ingredient.name)?.usda_id" class="flex items-center justify-between gap-2">
+                      <div
+                        v-if="profilingFor(ingredient.name)?.canonical_food_id || weightDetailFor(ingredient.name)?.usda_id"
+                        class="flex items-center justify-between gap-2"
+                      >
                         <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">USDA ID</span>
                         <span class="font-mono text-[10px] text-zinc-500 dark:text-zinc-400">
                           #{{ profilingFor(ingredient.name)?.canonical_food_id || weightDetailFor(ingredient.name)?.usda_id }}
@@ -811,22 +1009,41 @@
                         class="pt-2 border-t border-zinc-200 dark:border-zinc-700 grid grid-cols-3 gap-2"
                       >
                         <div class="text-center">
-                          <p class="text-[9px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Protein</p>
-                          <p class="font-mono text-xs font-semibold text-zinc-700 dark:text-zinc-300">{{ formatNumber(profilingFor(ingredient.name)?.protein_g) }}g</p>
+                          <p class="text-[9px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                            Protein
+                          </p>
+                          <p class="font-mono text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                            {{ formatNumber(profilingFor(ingredient.name)?.protein_g) }}g
+                          </p>
                         </div>
                         <div class="text-center">
-                          <p class="text-[9px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Carbs</p>
-                          <p class="font-mono text-xs font-semibold text-zinc-700 dark:text-zinc-300">{{ formatNumber(profilingFor(ingredient.name)?.carbs_g) }}g</p>
+                          <p class="text-[9px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                            Carbs
+                          </p>
+                          <p class="font-mono text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                            {{ formatNumber(profilingFor(ingredient.name)?.carbs_g) }}g
+                          </p>
                         </div>
                         <div class="text-center">
-                          <p class="text-[9px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Fat</p>
-                          <p class="font-mono text-xs font-semibold text-zinc-700 dark:text-zinc-300">{{ formatNumber(profilingFor(ingredient.name)?.fat_g) }}g</p>
+                          <p class="text-[9px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                            Fat
+                          </p>
+                          <p class="font-mono text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                            {{ formatNumber(profilingFor(ingredient.name)?.fat_g) }}g
+                          </p>
                         </div>
                       </div>
                       <!-- Error -->
-                      <div v-if="weightDetailFor(ingredient.name)?.error" class="pt-1 border-t border-red-200 dark:border-red-800">
-                        <p class="text-[10px] font-semibold uppercase tracking-wider text-red-400 mb-0.5">Error</p>
-                        <p class="text-xs text-red-600 dark:text-red-400">{{ weightDetailFor(ingredient.name)?.error }}</p>
+                      <div
+                        v-if="weightDetailFor(ingredient.name)?.error"
+                        class="pt-1 border-t border-red-200 dark:border-red-800"
+                      >
+                        <p class="text-[10px] font-semibold uppercase tracking-wider text-red-400 mb-0.5">
+                          Error
+                        </p>
+                        <p class="text-xs text-red-600 dark:text-red-400">
+                          {{ weightDetailFor(ingredient.name)?.error }}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -837,7 +1054,10 @@
         </div>
       </div>
 
-      <UModal v-model:open="showNutriScoreDetails" :ui="{ content: 'max-w-3xl' }">
+      <UModal
+        v-model:open="showNutriScoreDetails"
+        :ui="{ content: 'max-w-3xl' }"
+      >
         <template #content>
           <div class="p-6 sm:p-7 bg-white dark:bg-zinc-900">
             <div class="flex items-start justify-between gap-3 mb-4">
@@ -854,7 +1074,10 @@
               </span>
             </div>
 
-            <div v-if="nutriBreakdown" class="space-y-6">
+            <div
+              v-if="nutriBreakdown"
+              class="space-y-6"
+            >
               <div class="text-sm text-zinc-700 dark:text-zinc-200">
                 Final score:
                 <span class="font-semibold">{{ nutriBreakdown.score }}</span>
@@ -927,20 +1150,29 @@
               </div>
             </div>
 
-            <div v-else class="text-sm text-zinc-600 dark:text-zinc-300">
+            <div
+              v-else
+              class="text-sm text-zinc-600 dark:text-zinc-300"
+            >
               Detailed Nutri-Score breakdown is not available for this recipe yet.
             </div>
           </div>
         </template>
       </UModal>
 
-      <UModal v-model:open="showSubstituteModal" :ui="{ content: 'max-w-xl' }">
+      <UModal
+        v-model:open="showSubstituteModal"
+        :ui="{ content: 'max-w-xl' }"
+      >
         <template #content>
           <div class="p-6 sm:p-7 bg-white dark:bg-zinc-900">
             <div class="flex items-start justify-between gap-3 mb-5">
               <div>
                 <h3 class="text-xl font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
-                  <UIcon name="i-lucide-repeat-2" class="w-5 h-5 text-brandg-600 dark:text-brandg-400" />
+                  <UIcon
+                    name="i-lucide-repeat-2"
+                    class="w-5 h-5 text-brandg-600 dark:text-brandg-400"
+                  />
                   {{ t('recipeWrangler.detail.substitution.title') }}
                 </h3>
                 <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
@@ -950,33 +1182,51 @@
             </div>
 
             <!-- Loading -->
-            <div v-if="substituteLoading" class="py-10 flex flex-col items-center gap-3">
-              <UIcon name="i-lucide-loader-2" class="w-8 h-8 text-brandg-500 animate-spin" />
+            <div
+              v-if="substituteLoading"
+              class="py-10 flex flex-col items-center gap-3"
+            >
+              <UIcon
+                name="i-lucide-loader-2"
+                class="w-8 h-8 text-brandg-500 animate-spin"
+              />
               <p class="text-sm text-zinc-600 dark:text-zinc-400">
                 {{ t('recipeWrangler.detail.substitution.loading') }}
               </p>
             </div>
 
             <!-- Error -->
-            <div v-else-if="substituteError" class="py-6">
+            <div
+              v-else-if="substituteError"
+              class="py-6"
+            >
               <div class="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 flex items-start gap-3">
-                <UIcon name="i-lucide-triangle-alert" class="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                <UIcon
+                  name="i-lucide-triangle-alert"
+                  class="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"
+                />
                 <p class="text-sm text-amber-800 dark:text-amber-200">
                   {{ substituteError }}
                 </p>
               </div>
               <button
                 type="button"
-                @click="loadSubstitute"
                 class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-brandg-600 hover:bg-brandg-700 text-white transition-colors"
+                @click="loadSubstitute"
               >
-                <UIcon name="i-lucide-rotate-cw" class="w-4 h-4" />
+                <UIcon
+                  name="i-lucide-rotate-cw"
+                  class="w-4 h-4"
+                />
                 {{ t('recipeWrangler.detail.substitution.retry') }}
               </button>
             </div>
 
             <!-- Result -->
-            <div v-else-if="substituteResult" class="space-y-5">
+            <div
+              v-else-if="substituteResult"
+              class="space-y-5"
+            >
               <!-- Swap card -->
               <div class="rounded-2xl border border-zinc-200 dark:border-zinc-700 p-4">
                 <div class="flex items-center justify-between gap-3">
@@ -988,7 +1238,10 @@
                       {{ substituteResult.original_ingredient }}
                     </p>
                   </div>
-                  <UIcon name="i-lucide-arrow-right" class="w-5 h-5 text-brandg-500 flex-shrink-0" />
+                  <UIcon
+                    name="i-lucide-arrow-right"
+                    class="w-5 h-5 text-brandg-500 flex-shrink-0"
+                  />
                   <div class="flex-1 min-w-0 text-center">
                     <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1">
                       {{ t('recipeWrangler.detail.substitution.substitute') }}
@@ -1017,7 +1270,10 @@
                 <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-3">
                   {{ t('recipeWrangler.detail.substitution.perServingNote') }}
                 </p>
-                <div v-if="substituteNutriGrade" class="flex items-center gap-3 mb-3">
+                <div
+                  v-if="substituteNutriGrade"
+                  class="flex items-center gap-3 mb-3"
+                >
                   <span class="text-xs font-medium text-zinc-600 dark:text-zinc-300">
                     {{ t('recipeWrangler.detail.substitution.nutriScore') }}
                   </span>
@@ -1026,7 +1282,10 @@
                   >
                     {{ nutriScoreGrade || '—' }}
                   </span>
-                  <UIcon name="i-lucide-arrow-right" class="w-4 h-4 text-zinc-400" />
+                  <UIcon
+                    name="i-lucide-arrow-right"
+                    class="w-4 h-4 text-zinc-400"
+                  />
                   <span
                     :class="['w-7 h-7 rounded-md flex items-center justify-center text-sm font-bold text-white', getNutriScoreColorBg(substituteNutriGrade)]"
                   >
@@ -1051,7 +1310,10 @@
                   </div>
                 </div>
               </div>
-              <div v-else class="rounded-lg bg-zinc-50 dark:bg-zinc-800 p-3">
+              <div
+                v-else
+                class="rounded-lg bg-zinc-50 dark:bg-zinc-800 p-3"
+              >
                 <p class="text-xs text-zinc-500 dark:text-zinc-400">
                   {{ t('recipeWrangler.detail.substitution.profilingUnavailable') }}
                 </p>
@@ -1074,7 +1336,10 @@
               </div>
 
               <p class="text-xs text-zinc-400 dark:text-zinc-500 flex items-start gap-1.5">
-                <UIcon name="i-lucide-info" class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                <UIcon
+                  name="i-lucide-info"
+                  class="w-3.5 h-3.5 flex-shrink-0 mt-0.5"
+                />
                 {{ t('recipeWrangler.detail.substitution.note') }}
               </p>
             </div>
@@ -1082,12 +1347,18 @@
         </template>
       </UModal>
 
-      <UModal v-model:open="showAdaptModal" :ui="{ content: 'max-w-2xl' }">
+      <UModal
+        v-model:open="showAdaptModal"
+        :ui="{ content: 'max-w-2xl' }"
+      >
         <template #content>
           <div class="p-6 sm:p-7 bg-white dark:bg-zinc-900 max-h-[85vh] overflow-y-auto">
             <div class="mb-5">
               <h3 class="text-xl font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
-                <UIcon name="i-lucide-sparkles" class="w-5 h-5 text-brandg-600 dark:text-brandg-400" />
+                <UIcon
+                  name="i-lucide-sparkles"
+                  class="w-5 h-5 text-brandg-600 dark:text-brandg-400"
+                />
                 {{ t('recipeWrangler.detail.adaptation.title') }}
               </h3>
               <p class="text-sm text-zinc-600 dark:text-zinc-400 mt-1">
@@ -1102,7 +1373,6 @@
                 :key="mode.value"
                 type="button"
                 :disabled="adaptLoading"
-                @click="setAdaptMode(mode.value)"
                 :class="[
                   'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
                   adaptMode === mode.value
@@ -1110,46 +1380,77 @@
                     : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-brandg-400',
                   adaptLoading ? 'opacity-60 cursor-not-allowed' : ''
                 ]"
+                @click="setAdaptMode(mode.value)"
               >
-                <UIcon :name="mode.icon" class="w-3.5 h-3.5" />
+                <UIcon
+                  :name="mode.icon"
+                  class="w-3.5 h-3.5"
+                />
                 {{ mode.label }}
               </button>
             </div>
 
             <!-- Loading -->
-            <div v-if="adaptLoading" class="py-10 flex flex-col items-center gap-3">
-              <UIcon name="i-lucide-loader-2" class="w-8 h-8 text-brandg-500 animate-spin" />
+            <div
+              v-if="adaptLoading"
+              class="py-10 flex flex-col items-center gap-3"
+            >
+              <UIcon
+                name="i-lucide-loader-2"
+                class="w-8 h-8 text-brandg-500 animate-spin"
+              />
               <p class="text-sm text-zinc-600 dark:text-zinc-400">
                 {{ t('recipeWrangler.detail.adaptation.loading') }}
               </p>
             </div>
 
             <!-- Error -->
-            <div v-else-if="adaptError" class="py-6">
+            <div
+              v-else-if="adaptError"
+              class="py-6"
+            >
               <div class="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 flex items-start gap-3">
-                <UIcon name="i-lucide-triangle-alert" class="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                <UIcon
+                  name="i-lucide-triangle-alert"
+                  class="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"
+                />
                 <p class="text-sm text-amber-800 dark:text-amber-200">
                   {{ adaptError }}
                 </p>
               </div>
               <button
                 type="button"
-                @click="loadAdaptSuggestions"
                 class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-brandg-600 hover:bg-brandg-700 text-white transition-colors"
+                @click="loadAdaptSuggestions"
               >
-                <UIcon name="i-lucide-rotate-cw" class="w-4 h-4" />
+                <UIcon
+                  name="i-lucide-rotate-cw"
+                  class="w-4 h-4"
+                />
                 {{ t('recipeWrangler.detail.adaptation.retry') }}
               </button>
             </div>
 
             <!-- Result -->
-            <div v-else-if="adaptResult" class="space-y-4">
+            <div
+              v-else-if="adaptResult"
+              class="space-y-4"
+            >
               <!-- Context line -->
-              <div v-if="adaptContextLine" class="rounded-lg bg-zinc-50 dark:bg-zinc-800 p-3 flex items-start gap-2">
-                <UIcon name="i-lucide-crosshair" class="w-4 h-4 text-brandg-600 dark:text-brandg-400 flex-shrink-0 mt-0.5" />
+              <div
+                v-if="adaptContextLine"
+                class="rounded-lg bg-zinc-50 dark:bg-zinc-800 p-3 flex items-start gap-2"
+              >
+                <UIcon
+                  name="i-lucide-crosshair"
+                  class="w-4 h-4 text-brandg-600 dark:text-brandg-400 flex-shrink-0 mt-0.5"
+                />
                 <p class="text-xs text-zinc-600 dark:text-zinc-300">
                   {{ adaptContextLine }}
-                  <span v-if="adaptResult.current_nutri_score" class="ml-1">
+                  <span
+                    v-if="adaptResult.current_nutri_score"
+                    class="ml-1"
+                  >
                     {{ t('recipeWrangler.detail.adaptation.currentScore') }}
                     <span class="font-semibold">{{ formatAdaptGrade(adaptResult.current_nutri_score) }}</span>
                   </span>
@@ -1157,15 +1458,24 @@
               </div>
 
               <!-- Already optimal: a success state, not a failure -->
-              <div v-if="adaptResult.status === 'already_optimal'" class="py-6 text-center space-y-2">
-                <UIcon name="i-lucide-badge-check" class="w-8 h-8 text-brandg-500 mx-auto" />
+              <div
+                v-if="adaptResult.status === 'already_optimal'"
+                class="py-6 text-center space-y-2"
+              >
+                <UIcon
+                  name="i-lucide-badge-check"
+                  class="w-8 h-8 text-brandg-500 mx-auto"
+                />
                 <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">
                   {{ t('recipeWrangler.detail.adaptation.alreadyOptimal') }}
                 </p>
               </div>
 
               <!-- Empty -->
-              <div v-else-if="!adaptResult.suggestions.length" class="py-6 text-center">
+              <div
+                v-else-if="!adaptResult.suggestions.length"
+                class="py-6 text-center"
+              >
                 <p class="text-sm text-zinc-500 dark:text-zinc-400">
                   {{ t('recipeWrangler.detail.adaptation.empty') }}
                 </p>
@@ -1182,15 +1492,27 @@
                 </p>
 
                 <!-- Swap / reduce line -->
-                <div v-if="suggestion.action === 'reduce'" class="text-sm text-zinc-700 dark:text-zinc-200">
+                <div
+                  v-if="suggestion.action === 'reduce'"
+                  class="text-sm text-zinc-700 dark:text-zinc-200"
+                >
                   <span class="font-medium">{{ suggestion.original_ingredient }}</span>:
                   <span class="font-mono">{{ formatNumber(suggestion.reduced_from_weight_g) }}g</span>
-                  <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 inline mx-1 text-brandg-500" />
+                  <UIcon
+                    name="i-lucide-arrow-right"
+                    class="w-3.5 h-3.5 inline mx-1 text-brandg-500"
+                  />
                   <span class="font-mono font-semibold text-brandg-700 dark:text-brandg-300">{{ formatNumber(suggestion.reduced_to_weight_g) }}g</span>
                 </div>
-                <div v-else class="flex items-center gap-2 text-sm min-w-0">
+                <div
+                  v-else
+                  class="flex items-center gap-2 text-sm min-w-0"
+                >
                   <span class="line-through text-zinc-500 dark:text-zinc-400 truncate">{{ suggestion.original_ingredient }}</span>
-                  <UIcon name="i-lucide-arrow-right" class="w-4 h-4 text-brandg-500 flex-shrink-0" />
+                  <UIcon
+                    name="i-lucide-arrow-right"
+                    class="w-4 h-4 text-brandg-500 flex-shrink-0"
+                  />
                   <span class="font-semibold text-brandg-700 dark:text-brandg-300 truncate">{{ suggestion.substitute_name }}</span>
                 </div>
 
@@ -1242,13 +1564,19 @@
                   v-if="suggestion.introduces_allergen"
                   class="text-xs text-red-600 dark:text-red-400 flex items-start gap-1.5"
                 >
-                  <UIcon name="i-lucide-triangle-alert" class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                  <UIcon
+                    name="i-lucide-triangle-alert"
+                    class="w-3.5 h-3.5 flex-shrink-0 mt-0.5"
+                  />
                   {{ t('recipeWrangler.detail.adaptation.allergenWarning') }}
                   {{ (suggestion.new_allergens || []).join(', ') }}
                 </p>
 
                 <!-- Explanation warning -->
-                <p v-if="suggestion.explanation?.warning" class="text-xs text-amber-600 dark:text-amber-400">
+                <p
+                  v-if="suggestion.explanation?.warning"
+                  class="text-xs text-amber-600 dark:text-amber-400"
+                >
                   {{ suggestion.explanation.warning }}
                 </p>
 
@@ -1265,10 +1593,16 @@
                   v-if="currentMemberId"
                   class="pt-2.5 border-t border-zinc-100 dark:border-zinc-700/50 flex items-center justify-between gap-2"
                 >
-                  <p v-if="adaptSaveError" class="text-xs text-red-500 dark:text-red-400 truncate">
+                  <p
+                    v-if="adaptSaveError"
+                    class="text-xs text-red-500 dark:text-red-400 truncate"
+                  >
                     {{ adaptSaveError }}
                   </p>
-                  <p v-else class="text-[10px] text-zinc-400 dark:text-zinc-500 truncate">
+                  <p
+                    v-else
+                    class="text-[10px] text-zinc-400 dark:text-zinc-500 truncate"
+                  >
                     {{ savedAdaptation
                       ? t('recipeWrangler.detail.adaptation.saveHintReplace')
                       : t('recipeWrangler.detail.adaptation.saveHint') }}
@@ -1276,8 +1610,8 @@
                   <button
                     type="button"
                     :disabled="adaptSavingRank !== null"
-                    @click="saveAdaptedRecipe(suggestion)"
                     class="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-brandg-600 hover:bg-brandg-700 disabled:opacity-60 text-white transition-colors"
+                    @click="saveAdaptedRecipe(suggestion)"
                   >
                     <UIcon
                       :name="adaptSavingRank === suggestion.rank ? 'i-lucide-loader-2' : 'i-lucide-bookmark-plus'"
@@ -1289,13 +1623,28 @@
               </div>
 
               <p class="text-xs text-zinc-400 dark:text-zinc-500 flex items-start gap-1.5">
-                <UIcon name="i-lucide-info" class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                <UIcon
+                  name="i-lucide-info"
+                  class="w-3.5 h-3.5 flex-shrink-0 mt-0.5"
+                />
                 {{ t('recipeWrangler.detail.adaptation.note') }}
               </p>
             </div>
           </div>
         </template>
       </UModal>
+
+      <!--
+        At the foot of the recipe, not beside the title: somebody reports a
+        problem after reading the thing, and a flag next to the heading invites
+        a reaction to the dish rather than a report of a fault in it.
+      -->
+      <div
+        v-if="recipe && recipeId"
+        class="mx-auto mt-8 flex max-w-5xl justify-end px-4 pb-8"
+      >
+        <ReportProblemButton :recipe-id="recipeId" />
+      </div>
     </main>
   </div>
 </template>
@@ -1533,7 +1882,7 @@ const negativePointItems = computed(() => {
     { key: 'sugar', label: 'Sugar', ...(items['sugar'] || { points: 0, max: 10, value_per_100g: 0, unit: 'g' }) },
     { key: 'saturated_fats', label: 'Saturated fat', ...(items['saturated_fats'] || { points: 0, max: 10, value_per_100g: 0, unit: 'g' }) },
     { key: 'sodium', label: 'Sodium', ...(items['sodium'] || { points: 0, max: 10, value_per_100g: 0, unit: 'mg' }) }
-  ].map((item) => ({
+  ].map(item => ({
     ...item,
     displayValue: formatPer100(item.value_per_100g, item.unit)
   }))
@@ -1544,7 +1893,7 @@ const positivePointItems = computed(() => {
     { key: 'protein', label: 'Protein', ...(items['protein'] || { points: 0, max: 5, value_per_100g: 0, unit: 'g' }) },
     { key: 'fiber', label: 'Fiber', ...(items['fiber'] || { points: 0, max: 5, value_per_100g: 0, unit: 'g' }) },
     { key: 'fruit_percentage', label: 'Fruits, vegetables, legumes & nuts', ...(items['fruit_percentage'] || { points: 0, max: 5, value_per_100g: 0, unit: '%' }) }
-  ].map((item) => ({
+  ].map(item => ({
     ...item,
     displayValue: item.unit === '%'
       ? `${Number.isFinite(item.value_per_100g) ? item.value_per_100g.toFixed(1) : '0.0'}% of recipe weight`
@@ -1574,7 +1923,7 @@ const toFriendlyTagLabel = (tag: string): string => {
     .replace(/\s+/g, ' ')
     .trim()
     .split(' ')
-    .map((part) => part ? `${part[0]?.toUpperCase() || ''}${part.slice(1)}` : part)
+    .map(part => part ? `${part[0]?.toUpperCase() || ''}${part.slice(1)}` : part)
     .join(' ')
 }
 const dishTypes = computed(() => normalizeDishTypes(recipe.value?.dish_types))
@@ -1640,8 +1989,8 @@ const annotationGroups = computed(() => {
   }).filter(group => group.chips.length > 0)
 })
 
-const displayRecipeTags = computed<Array<{ raw: string; label: string }>>(() => {
-  return recipeTags.value.map((raw) => ({
+const displayRecipeTags = computed<Array<{ raw: string, label: string }>>(() => {
+  return recipeTags.value.map(raw => ({
     raw,
     label: toFriendlyTagLabel(raw)
   }))
@@ -1649,7 +1998,7 @@ const displayRecipeTags = computed<Array<{ raw: string; label: string }>>(() => 
 const nutrientRows = computed<RecipeNutrient[]>(() => {
   const nutrients = recipe.value?.nutrients
   if (!Array.isArray(nutrients)) return []
-  return nutrients.filter((nutrient) => nutrient && (nutrient.nutrient_name || nutrient.nutrient_code))
+  return nutrients.filter(nutrient => nutrient && (nutrient.nutrient_name || nutrient.nutrient_code))
 })
 const nutrientLabelMap: Record<string, string> = {
   energy_kcal: 'Calories',
@@ -1665,7 +2014,7 @@ const nutrientLabelMap: Record<string, string> = {
   fiber_g: 'Dietary Fiber',
   sugar_g: 'Total Sugars',
   sodium_mg: 'Sodium',
-  potassium_mg: 'Potassium',
+  potassium_mg: 'Potassium'
 }
 const nutrientSortOrder: Record<string, number> = {
   energy_kcal: 1,
@@ -1677,7 +2026,7 @@ const nutrientSortOrder: Record<string, number> = {
   fibre_g: 6,
   fiber_g: 6,
   sugar_g: 7,
-  sodium_mg: 8,
+  sodium_mg: 8
 }
 const toNutrientKey = (nutrient: RecipeNutrient): string => {
   return String(nutrient.nutrient_name || nutrient.nutrient_code || '')
@@ -1693,7 +2042,7 @@ const toFriendlyNutrientLabel = (nutrient: RecipeNutrient): string => {
     .trim()
   return fallback
     .split(' ')
-    .map((part) => part ? `${part[0]?.toUpperCase() || ''}${part.slice(1).toLowerCase()}` : part)
+    .map(part => part ? `${part[0]?.toUpperCase() || ''}${part.slice(1).toLowerCase()}` : part)
     .join(' ')
 }
 const inferNutrientUnit = (nutrient: RecipeNutrient): string | null => {
@@ -1709,7 +2058,7 @@ const displayNutrientRows = computed<Array<RecipeNutrient & { display_label: str
       const key = toNutrientKey(nutrient)
       return key !== 'cholesterol_mg' && key !== 'cholesterol'
     })
-    .map((nutrient) => ({
+    .map(nutrient => ({
       ...nutrient,
       display_label: toFriendlyNutrientLabel(nutrient)
     }))
@@ -1722,7 +2071,7 @@ const displayNutrientRows = computed<Array<RecipeNutrient & { display_label: str
 })
 const getNutrientAmountByKeys = (keys: string[]): number | null => {
   if (!keys.length) return null
-  const normalizedKeys = new Set(keys.map((key) => key.trim().toLowerCase()))
+  const normalizedKeys = new Set(keys.map(key => key.trim().toLowerCase()))
 
   const totalsPerServing = recipe.value?.total_nutrients_per_serving
   if (totalsPerServing && typeof totalsPerServing === 'object' && !Array.isArray(totalsPerServing)) {
@@ -1829,7 +2178,7 @@ const normalizeIngredientKey = (value: unknown): string =>
 const profilingRowsByName = computed<Record<string, Record<string, unknown>>>(() => {
   const out: Record<string, Record<string, unknown>> = {}
   for (const row of profilingIngredientRows.value) {
-    const key = normalizeIngredientKey((row as { name?: unknown; ingredient?: unknown }).name
+    const key = normalizeIngredientKey((row as { name?: unknown, ingredient?: unknown }).name
       ?? (row as { ingredient?: unknown }).ingredient)
     if (key && !out[key]) out[key] = row
   }
@@ -1850,7 +2199,7 @@ const weightDetailFor = (name: string): PipelineTraceWeightDetail | undefined =>
 const matchedWeightCount = computed(
   () => {
     if (profilingDetailRows.value.length > 0) {
-      return profilingDetailRows.value.filter((row) => row.weight_g !== null && row.weight_g !== undefined && row.weight_g !== '').length
+      return profilingDetailRows.value.filter(row => row.weight_g !== null && row.weight_g !== undefined && row.weight_g !== '').length
     }
     return profilingResult.value?.pipeline_trace?.weight_calculation?.matched_count || 0
   }
@@ -1960,9 +2309,9 @@ const reloadProfile = async () => {
 const buildRecipeProfilingInput = (value: Recipe): string => {
   const title = value.title ? `${value.title}\n` : ''
   const ingredients = (value.ingredients || [])
-    .map((item) => `${item.measurement || ''} ${item.name || ''}`.trim())
+    .map(item => `${item.measurement || ''} ${item.name || ''}`.trim())
     .filter(Boolean)
-  const instructions = (value.instructions || []).filter((step) => String(step || '').trim().length > 0)
+  const instructions = (value.instructions || []).filter(step => String(step || '').trim().length > 0)
   const serves = value.serves ? `Serves: ${value.serves}` : ''
   return [
     title.trim(),
@@ -1985,7 +2334,7 @@ const toggleNutritionProfilingDetails = async () => {
     const rawRecipe = buildRecipeProfilingInput(recipe.value)
     profilingResult.value = await recipeApi.analyzeRecipe(rawRecipe, selectedRegion.value)
   } catch (err: unknown) {
-    const e = err as { data?: { detail?: string }; message?: string }
+    const e = err as { data?: { detail?: string }, message?: string }
     profilingError.value = String(e?.data?.detail || e?.message || 'Failed to profile nutrition details')
   } finally {
     profilingLoading.value = false
@@ -2401,10 +2750,10 @@ const formatNutritionSourceLabel = (source?: unknown): string => {
   if (!text) return 'USDA FoodData Central'
   const normalized = text.toLowerCase()
   if (
-    normalized.includes('groq llm fallback') ||
-    normalized.includes('groq_llm_fallback') ||
-    normalized.includes('usda_llm_fallback') ||
-    normalized.includes('llm_fallback')
+    normalized.includes('groq llm fallback')
+    || normalized.includes('groq_llm_fallback')
+    || normalized.includes('usda_llm_fallback')
+    || normalized.includes('llm_fallback')
   ) {
     return 'USDA Nutrients (AI Generated (LLM Fallback))'
   }

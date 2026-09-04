@@ -1912,5 +1912,24 @@
     "context": {
       "show": "Context from the source page"
     }
+  },
+  "report": {
+    "trigger": "Report a problem",
+    "title": "What is wrong with this recipe?",
+    "subtitle": "A curator reads these. Tell us what you saw and we will fix it.",
+    "whatKind": "What kind of problem?",
+    "details": "Anything else? (optional)",
+    "placeholder": "What did you expect, and what did you see?",
+    "privacy": "Only what you write here is sent, along with which recipe it is about.",
+    "send": "Send report",
+    "thanks": "Thank you — a curator will look at this.",
+    "reason": {
+      "allergens": "Wrong or missing allergens",
+      "quantities": "Quantities look wrong",
+      "steps": "The steps do not work",
+      "nutrition": "Nutrition looks wrong",
+      "description": "Title or description is wrong",
+      "other": "Something else"
+    }
   }
 }

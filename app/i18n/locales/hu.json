@@ -1912,5 +1912,24 @@
     "context": {
       "show": "Kontextus a forrásoldalról"
     }
+  },
+  "report": {
+    "trigger": "Hiba jelentése",
+    "title": "Mi a hiba ezzel a recepttel?",
+    "subtitle": "Egy szerkesztő elolvassa. Írja le, mit tapasztalt, és kijavítjuk.",
+    "whatKind": "Milyen jellegű a hiba?",
+    "details": "Bármi más? (nem kötelező)",
+    "placeholder": "Mire számított, és mit látott?",
+    "privacy": "Csak az itt leírtakat küldjük el, azzal együtt, hogy melyik receptről van szó.",
+    "send": "Jelentés küldése",
+    "thanks": "Köszönjük — egy szerkesztő megnézi.",
+    "reason": {
+      "allergens": "Hibás vagy hiányzó allergének",
+      "quantities": "A mennyiségek hibásak",
+      "steps": "A lépések nem működnek",
+      "nutrition": "A tápértékek hibásak",
+      "description": "A cím vagy a leírás hibás",
+      "other": "Valami más"
+    }
   }
 }

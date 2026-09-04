@@ -1912,5 +1912,24 @@
     "context": {
       "show": "Kontekst z izvorne strani"
     }
+  },
+  "report": {
+    "trigger": "Prijavi težavo",
+    "title": "Kaj je narobe s tem receptom?",
+    "subtitle": "Prebral ga bo urednik. Opišite, kaj ste opazili, in popravili bomo.",
+    "whatKind": "Kakšna je težava?",
+    "details": "Še kaj? (neobvezno)",
+    "placeholder": "Kaj ste pričakovali in kaj ste videli?",
+    "privacy": "Poslano bo le tisto, kar napišete tukaj, skupaj s tem, za kateri recept gre.",
+    "send": "Pošlji prijavo",
+    "thanks": "Hvala — urednik bo to pregledal.",
+    "reason": {
+      "allergens": "Napačni ali manjkajoči alergeni",
+      "quantities": "Količine so videti napačne",
+      "steps": "Koraki ne delujejo",
+      "nutrition": "Hranilne vrednosti so videti napačne",
+      "description": "Naslov ali opis je napačen",
+      "other": "Nekaj drugega"
+    }
   }
 }
