@@ -4,24 +4,16 @@
       :items="breadcrumbItems"
       class="mb-4"
     />
-    <ConsoleInsightsNav />
+    <ConsoleInsightsNav
+      :loaded-at="loadedAt"
+      :refreshing="busy"
+      @refresh="reload"
+    />
     <UPageHeader
       title="Q&A review"
       description="Every question asked of FoodScholar, the answer it gave, and what people thought of it."
       :ui="{ root: 'relative py-8 border-b-0' }"
-    >
-      <template #links>
-        <UButton
-          color="neutral"
-          variant="outline"
-          icon="i-lucide-refresh-cw"
-          :loading="loading"
-          @click="load"
-        >
-          Refresh
-        </UButton>
-      </template>
-    </UPageHeader>
+    />
 
     <UPageBody>
       <div class="space-y-6">
@@ -29,24 +21,52 @@
           The judgements this page collects, added up. Without it the console
           can take a verdict but cannot say what has been judged — which makes
           it a form rather than a review tool.
+
+          Nothing at all while the first load is in flight: the panel's own
+          zeros would read as "nobody has reviewed anything", and a failure
+          must not read that way either.
         -->
+        <UCard
+          v-if="failed"
+          :ui="{ body: 'p-0' }"
+          class="border border-gray-200/70 dark:border-white/10"
+        >
+          <ConsoleInsightsEmptyState
+            failed
+            title="The review tally could not be loaded"
+            hint="The request to the API failed. Verdicts may well have been recorded — retry, and if it persists check the gateway."
+          />
+        </UCard>
         <ConsoleInsightsReviewSummaryPanel
+          v-else-if="!loading"
           :summary="reviewSummary"
-          :days="reviewDays"
+          :days="range.days"
         >
           <template #actions>
+            <!--
+              A quarter by default: expert review is episodic, and a week of
+              it is usually empty. The console's remembered range wins over
+              that, so the tally can be read against the same window as the
+              rest of the analytics.
+            -->
+            <ConsoleInsightsRangePicker v-model="range.days" />
             <ConsoleInsightsExportButton
               report="reviewers"
-              :days="reviewDays"
+              :days="range.days"
               label="Reviewers CSV"
             />
           </template>
         </ConsoleInsightsReviewSummaryPanel>
 
-        <div class="flex flex-wrap items-center gap-2">
+        <div
+          class="flex flex-wrap items-center gap-2"
+          role="group"
+          aria-label="Filter the questions"
+        >
           <UInput
             v-model="search"
             placeholder="Search the questions…"
+            aria-label="Search the questions"
             icon="i-lucide-search"
             class="w-72"
             @keydown.enter="applyFilters"
@@ -54,6 +74,7 @@
           <UButton
             :color="negativeOnly ? 'error' : 'neutral'"
             :variant="negativeOnly ? 'solid' : 'outline'"
+            :aria-pressed="negativeOnly"
             size="sm"
             icon="i-lucide-thumbs-down"
             @click="toggleNegative"
@@ -63,6 +84,7 @@
           <UButton
             :color="withFeedback ? 'primary' : 'neutral'"
             :variant="withFeedback ? 'solid' : 'outline'"
+            :aria-pressed="withFeedback"
             size="sm"
             icon="i-lucide-message-square"
             @click="toggleWithFeedback"
@@ -93,8 +115,31 @@
                 {{ total }} matching
               </p>
             </div>
+            <div
+              v-if="loading"
+              class="animate-pulse divide-y divide-gray-100 px-5 dark:divide-zinc-800"
+              role="status"
+              aria-live="polite"
+              aria-label="Loading the questions"
+            >
+              <div
+                v-for="n in 6"
+                :key="n"
+                class="space-y-2 py-3"
+              >
+                <span class="block h-3 w-full rounded bg-gray-200 dark:bg-zinc-800" />
+                <span class="block h-3 w-2/3 rounded bg-gray-200 dark:bg-zinc-800" />
+                <span class="block h-2.5 w-24 rounded bg-gray-200 dark:bg-zinc-800" />
+              </div>
+            </div>
             <ConsoleInsightsEmptyState
-              v-if="!items.length"
+              v-else-if="failed"
+              failed
+              title="The questions could not be loaded"
+              hint="The request to the API failed. This is not an empty list — retry, and if it persists check the gateway."
+            />
+            <ConsoleInsightsEmptyState
+              v-else-if="!items.length"
               title="No questions match."
               hint="Questions asked through FoodScholar and inside FoodChat both appear here."
               icon="i-lucide-message-circle-question"
@@ -109,11 +154,16 @@
               >
                 <button
                   type="button"
-                  class="w-full px-5 py-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-white/5"
+                  class="w-full px-5 py-3 text-left transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500 dark:hover:bg-white/5"
                   :class="selectedId === row.request_id ? 'bg-brand-50 dark:bg-brand-500/10' : ''"
+                  :aria-current="selectedId === row.request_id ? 'true' : undefined"
                   @click="select(row.request_id)"
                 >
-                  <p class="line-clamp-2 text-sm font-medium text-gray-900 dark:text-white">
+                  <!-- Two lines here; the full question is in the detail pane. -->
+                  <p
+                    class="line-clamp-2 text-sm font-medium text-gray-900 dark:text-white"
+                    :title="row.question"
+                  >
                     {{ row.question }}
                   </p>
                   <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
@@ -173,7 +223,7 @@
                 <p class="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
                   Question
                 </p>
-                <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
+                <p class="mt-1 break-words text-lg font-semibold text-gray-900 dark:text-white">
                   {{ detail.question }}
                 </p>
                 <div class="mt-3 flex flex-wrap gap-2 text-xs">
@@ -210,7 +260,7 @@
                     {{ detail.articles_consulted }} sources consulted
                   </UBadge>
                 </div>
-                <p class="mt-3 text-xs text-gray-400 dark:text-gray-500">
+                <p class="mt-3 break-all text-xs text-gray-400 dark:text-gray-500">
                   {{ formatWhen(detail.created_at) }} ·
                   <template v-if="detail.user_id">
                     {{ detail.user_id }}
@@ -231,7 +281,7 @@
                 <p class="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
                   Answer
                 </p>
-                <p class="mt-2 whitespace-pre-wrap text-sm leading-6 text-gray-800 dark:text-gray-200">
+                <p class="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-gray-800 dark:text-gray-200">
                   {{ answerText || 'No answer text stored.' }}
                 </p>
                 <div
@@ -241,11 +291,15 @@
                   <p class="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500">
                     Sources
                   </p>
+                  <!--
+                    URNs wrap rather than truncate: the distinguishing part of
+                    one is its tail, which is exactly what an ellipsis removes.
+                  -->
                   <ul class="mt-2 space-y-1">
                     <li
                       v-for="urn in detail.retrieved_article_urns"
                       :key="urn"
-                      class="truncate font-mono text-xs text-gray-500 dark:text-gray-400"
+                      class="break-all font-mono text-xs text-gray-500 dark:text-gray-400"
                     >
                       {{ urn }}
                     </li>
@@ -275,7 +329,7 @@
                     </UBadge>
                     <span
                       v-if="entry.reason"
-                      class="ml-2 text-gray-700 dark:text-gray-300"
+                      class="ml-2 break-words text-gray-700 dark:text-gray-300"
                     >{{ entry.reason }}</span>
                   </li>
                 </ul>
@@ -293,12 +347,17 @@
                   Recorded against your name, and visible to other reviewers.
                 </p>
 
-                <div class="mt-4 flex flex-wrap gap-2">
+                <div
+                  class="mt-4 flex flex-wrap gap-2"
+                  role="group"
+                  aria-label="Verdict"
+                >
                   <UButton
                     v-for="option in verdicts"
                     :key="option.value"
                     :color="verdict === option.value ? option.color : 'neutral'"
                     :variant="verdict === option.value ? 'solid' : 'outline'"
+                    :aria-pressed="verdict === option.value"
                     size="sm"
                     @click="verdict = option.value"
                   >
@@ -310,6 +369,7 @@
                   v-model="notes"
                   class="mt-3 w-full"
                   :rows="3"
+                  aria-label="Notes on this verdict"
                   placeholder="What was wrong, or what would a good answer have said?"
                 />
 
@@ -326,10 +386,12 @@
                   <span
                     v-if="reviewSaved"
                     class="text-sm text-emerald-600 dark:text-emerald-400"
+                    role="status"
                   >Saved.</span>
                   <span
                     v-else-if="reviewError"
                     class="text-sm text-red-600 dark:text-red-400"
+                    role="alert"
                   >{{ reviewError }}</span>
                 </div>
 
@@ -357,7 +419,7 @@
                       </span>
                       <p
                         v-if="review.notes"
-                        class="mt-1 text-gray-700 dark:text-gray-300"
+                        class="mt-1 break-words text-gray-700 dark:text-gray-300"
                       >
                         {{ review.notes }}
                       </p>
@@ -409,10 +471,11 @@ const withFeedback = ref(false)
 const page = ref(1)
 const total = ref(0)
 const items = ref<QaRequestRow[]>([])
-const loading = ref(false)
 
-// A quarter: expert review is episodic, and a week of it is usually empty.
-const reviewDays = 90
+// The review tally's window. Ninety days is this page's default — a week of
+// expert review is usually empty — but a range chosen elsewhere in the
+// console is kept, and `?request=` and `?negative=` survive it untouched.
+const range = useInsightsRange(90)
 const reviewSummary = ref<ReviewSummary | null>(null)
 
 const selectedId = ref<string | null>(null)
@@ -444,7 +507,7 @@ const formatWhen = (value: unknown) => {
 
 function applyFilters() {
   page.value = 1
-  void load()
+  void reload()
 }
 function toggleNegative() {
   negativeOnly.value = !negativeOnly.value
@@ -456,11 +519,10 @@ function toggleWithFeedback() {
 }
 
 async function loadReviewSummary() {
-  reviewSummary.value = await insightsApi.getReviewSummary(reviewDays)
+  reviewSummary.value = await insightsApi.getReviewSummary(range.value.days)
 }
 
-async function load() {
-  loading.value = true
+async function loadQuestions() {
   const result = await insightsApi.getQaRequests({
     limit: pageSize,
     offset: (page.value - 1) * pageSize,
@@ -470,8 +532,18 @@ async function load() {
   })
   total.value = result.total
   items.value = result.items
-  loading.value = false
 }
+
+// One load for the page, so one "as of" and one failure state cover both the
+// list and the tally: the two are read together, and a reader told the list
+// is fresh would assume the tally above it is too.
+async function load() {
+  await Promise.all([loadQuestions(), loadReviewSummary()])
+}
+
+const { loading, failed, loadedAt, reload, busy } = useInsightsLoad(load, () =>
+  !items.value.length && !(reviewSummary.value?.agreement.targets_reviewed ?? 0)
+)
 
 async function select(requestId: string) {
   selectedId.value = requestId
@@ -510,9 +582,14 @@ async function saveReview() {
   }
 }
 
-watch(page, () => { void load() })
+watch(page, () => {
+  void reload()
+})
+watch(range, () => {
+  void reload()
+}, { deep: true })
 onMounted(async () => {
-  await Promise.all([load(), loadReviewSummary()])
+  await reload()
   const requested = route.query.request
   if (typeof requested === 'string' && requested) await select(requested)
 })

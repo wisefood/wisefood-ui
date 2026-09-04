@@ -6,7 +6,7 @@
     />
     <ConsoleInsightsNav
       :loaded-at="loadedAt"
-      :refreshing="loading"
+      :refreshing="busy"
       @refresh="reload"
     />
 
@@ -277,7 +277,7 @@ async function load() {
 
 // No period on this page — one failure, all of it — but the loading, failed
 // and refresh states are wanted just the same.
-const { loading, failed, loadedAt, reload } = useInsightsLoad(load, () => !detail.value)
+const { loading, failed, loadedAt, reload, busy } = useInsightsLoad(load, () => !detail.value)
 
 // Not a save button: the select IS the action, matching how the feedback inbox
 // triages. Reverted on failure so the control never shows a state the server

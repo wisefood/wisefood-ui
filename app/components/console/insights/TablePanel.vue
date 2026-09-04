@@ -5,12 +5,12 @@
   >
     <div class="flex items-center justify-between gap-3 border-b border-gray-200/70 px-5 py-3 dark:border-white/10">
       <div class="min-w-0">
-        <h3 class="truncate text-base font-semibold text-gray-900 dark:text-white">
+        <h3 class="text-base font-semibold text-gray-900 dark:text-white">
           {{ title }}
         </h3>
         <p
           v-if="subtitle"
-          class="truncate text-xs text-gray-500 dark:text-gray-400"
+          class="text-xs text-gray-500 dark:text-gray-400"
         >
           {{ subtitle }}
         </p>

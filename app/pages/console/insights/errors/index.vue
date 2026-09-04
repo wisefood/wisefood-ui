@@ -6,7 +6,7 @@
     />
     <ConsoleInsightsNav
       :loaded-at="loadedAt"
-      :refreshing="loading"
+      :refreshing="busy"
       @refresh="reload"
     />
     <UPageHeader
@@ -394,7 +394,7 @@ async function load() {
   })
 }
 
-const { loading, failed, loadedAt, reload } = useInsightsLoad(
+const { loading, failed, loadedAt, reload, busy } = useInsightsLoad(
   load,
   () => !groups.value.length && !dailySeries.value.length && !browserRows.value.length
 )

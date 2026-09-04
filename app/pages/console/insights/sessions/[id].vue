@@ -9,7 +9,7 @@
          time with it, which is the half the header's never had. -->
     <ConsoleInsightsNav
       :loaded-at="loadedAt"
-      :refreshing="loading"
+      :refreshing="busy"
       @refresh="reload"
     />
     <UPageHeader
@@ -440,7 +440,7 @@ async function load() {
 
 // Empty is "no such session": a summary with an empty timeline still has
 // counts, a duration and a person to show.
-const { status, loading, failed, loadedAt, reload } = useInsightsLoad(load, () => !session.value)
+const { status, loading, failed, loadedAt, reload, busy } = useInsightsLoad(load, () => !session.value)
 
 // Paging goes through `reload()` rather than `load()` so the "as of" time and
 // the failure state stay true for what is on screen — the timeline is part of

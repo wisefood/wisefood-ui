@@ -24,8 +24,12 @@ export type InsightsStatus = 'loading' | 'ok' | 'empty' | 'failed'
 
 export interface InsightsLoad {
   status: Ref<InsightsStatus>
-  /** True while a load is in flight, first or subsequent. */
+  /** True only while nothing is on screen yet — drives skeletons. */
   loading: Ref<boolean>
+  /** True while any load is in flight, including a refresh over live data.
+   *  Distinct from `loading`: a refresh must spin the button without blanking
+   *  the numbers it is refreshing. */
+  busy: Ref<boolean>
   /** True when the last load ended in failure rather than in an empty result. */
   failed: Ref<boolean>
   /** When the data on screen was fetched, or null before the first load. */
@@ -49,12 +53,14 @@ export function useInsightsLoad(
 ): InsightsLoad {
   const status = ref<InsightsStatus>('loading')
   const loadedAt = ref<Date | null>(null)
+  const busy = ref(false)
 
   async function reload() {
     // Keep 'ok'/'empty' on screen during a refresh rather than dropping back
     // to a skeleton: a refresh that blanks the page reads as a reload, and the
     // whole point of a refresh is that it is not one.
     if (status.value !== 'ok' && status.value !== 'empty') status.value = 'loading'
+    busy.value = true
     const failuresBefore = lastInsightsFailure.value
     try {
       await loader()
@@ -62,6 +68,8 @@ export function useInsightsLoad(
       // Fetchers do not throw, but a page's own post-processing might.
       status.value = 'failed'
       return
+    } finally {
+      busy.value = false
     }
     if (lastInsightsFailure.value !== failuresBefore) {
       status.value = 'failed'
@@ -74,6 +82,7 @@ export function useInsightsLoad(
   return {
     status,
     loading: computed(() => status.value === 'loading'),
+    busy,
     failed: computed(() => status.value === 'failed'),
     loadedAt,
     reload

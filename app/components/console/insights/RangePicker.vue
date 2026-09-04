@@ -1,12 +1,20 @@
 <template>
-  <div class="inline-flex rounded-lg border border-gray-200 p-0.5 dark:border-white/10">
+  <!-- A toggle group, announced as one. The selected period was carried only
+       by background colour, and focus was invisible. -->
+  <div
+    class="inline-flex rounded-lg border border-gray-200 p-0.5 dark:border-white/10"
+    role="group"
+    aria-label="Reporting period"
+  >
     <button
       v-for="option in options"
       :key="option.value"
-      class="rounded-md px-3 py-1 text-sm font-medium transition-colors"
+      type="button"
+      class="rounded-md px-3 py-1 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-zinc-900"
       :class="modelValue === option.value
         ? 'bg-brand-500 text-white'
         : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5'"
+      :aria-pressed="modelValue === option.value"
       @click="$emit('update:modelValue', option.value)"
     >
       {{ option.label }}

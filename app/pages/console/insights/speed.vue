@@ -6,7 +6,7 @@
     />
     <ConsoleInsightsNav
       :loaded-at="loadedAt"
-      :refreshing="loading"
+      :refreshing="busy"
       @refresh="reload"
     />
     <UPageHeader
@@ -296,7 +296,7 @@ async function load() {
   report.value = await insightsApi.getVitals(range.value.days, 50)
 }
 
-const { status, loading, failed, loadedAt, reload } = useInsightsLoad(
+const { status, loading, failed, loadedAt, reload, busy } = useInsightsLoad(
   load,
   () => !metrics.value.length && !pathRows.value.length && !deviceRows.value.length
 )

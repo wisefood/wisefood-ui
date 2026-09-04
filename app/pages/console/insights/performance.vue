@@ -6,7 +6,7 @@
     />
     <ConsoleInsightsNav
       :loaded-at="loadedAt"
-      :refreshing="loading"
+      :refreshing="busy"
       @refresh="reload"
     />
     <UPageHeader
@@ -290,7 +290,7 @@ async function load() {
   byStatus.value = report?.by_status ?? []
 }
 
-const { loading, failed, loadedAt, reload } = useInsightsLoad(
+const { loading, failed, loadedAt, reload, busy } = useInsightsLoad(
   load,
   () => !routes.value.length && !slowest.value.length && !byStatus.value.length
 )

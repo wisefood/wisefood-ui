@@ -38,7 +38,7 @@
         class="px-4 py-2.5"
       >
         <div class="flex items-baseline justify-between gap-3">
-          <span class="min-w-0 truncate text-sm text-gray-800 dark:text-gray-100">
+          <span class="min-w-0 break-all text-sm text-gray-800 dark:text-gray-100">
             {{ names[row.value] ?? row.value ?? 'unattributed' }}
           </span>
           <span class="shrink-0 text-xs tabular-nums text-gray-500 dark:text-gray-400">

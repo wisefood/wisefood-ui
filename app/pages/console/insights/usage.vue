@@ -4,17 +4,21 @@
       :items="breadcrumbItems"
       class="mb-4"
     />
-    <ConsoleInsightsNav />
+    <ConsoleInsightsNav
+      :loaded-at="loadedAt"
+      :refreshing="busy"
+      @refresh="reload"
+    />
     <UPageHeader
       title="Model usage"
-      description="Tokens and spend by model, product, feature and person — the breakdown Langfuse cannot give per user."
+      description="Tokens and spend by model, product, feature and person — the breakdown Langfuse cannot give per person."
       :ui="{ root: 'relative py-8 border-b-0' }"
     >
       <template #links>
-        <ConsoleInsightsRangePicker v-model="days" />
+        <ConsoleInsightsRangePicker v-model="range.days" />
         <ConsoleInsightsExportButton
           report="llm-usage"
-          :days="days"
+          :days="range.days"
           label="Usage CSV"
         />
       </template>
@@ -22,7 +26,48 @@
 
     <UPageBody>
       <div class="space-y-6">
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <!--
+          The totals band has three states. Its zeros are the loudest number
+          on the page, and before this they showed for the length of every
+          fetch — and stayed up when the fetch had failed, which on a spend
+          page reads as "free". The skeleton keeps the grid's shape; a refresh
+          leaves the figures on screen.
+        -->
+        <div
+          v-if="loading"
+          class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5"
+          role="status"
+          aria-live="polite"
+          aria-label="Loading model usage"
+        >
+          <UCard
+            v-for="n in 5"
+            :key="n"
+            :ui="{ body: 'p-4' }"
+            class="animate-pulse border border-gray-200/70 dark:border-white/10"
+          >
+            <span class="block h-3 w-24 rounded bg-gray-200 dark:bg-zinc-800" />
+            <span class="mt-3 block h-7 w-20 rounded bg-gray-200 dark:bg-zinc-800" />
+            <span class="mt-3 block h-3 w-32 rounded bg-gray-200 dark:bg-zinc-800" />
+          </UCard>
+        </div>
+
+        <UCard
+          v-else-if="failed"
+          :ui="{ body: 'p-0' }"
+          class="border border-gray-200/70 dark:border-white/10"
+        >
+          <ConsoleInsightsEmptyState
+            failed
+            title="Model usage could not be loaded"
+            hint="The request to the API failed. Nothing here means the platform spent nothing — retry, and if it persists check the gateway."
+          />
+        </UCard>
+
+        <div
+          v-else
+          class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5"
+        >
           <ConsoleStatsStatTile
             label="Model calls"
             :value="totals.calls"
@@ -97,8 +142,30 @@
             its money does not.
           </p>
 
+          <div
+            v-if="loading"
+            class="mt-4 grid animate-pulse gap-4 sm:grid-cols-3"
+            role="status"
+            aria-live="polite"
+            aria-label="Loading pricing coverage"
+          >
+            <div
+              v-for="n in 3"
+              :key="n"
+            >
+              <span class="block h-3 w-20 rounded bg-gray-200 dark:bg-zinc-800" />
+              <span class="mt-2 block h-6 w-16 rounded bg-gray-200 dark:bg-zinc-800" />
+              <span class="mt-2 block h-3 w-32 rounded bg-gray-200 dark:bg-zinc-800" />
+            </div>
+          </div>
           <ConsoleInsightsEmptyState
-            v-if="!pricing || !pricing.calls"
+            v-else-if="failed"
+            failed
+            title="Pricing coverage could not be loaded"
+            hint="The request to the API failed, so nothing can be said about how much of the spend is priced."
+          />
+          <ConsoleInsightsEmptyState
+            v-else-if="!pricing || !pricing.calls"
             title="No model calls in this period."
             :hint="emptyHint"
             icon="i-lucide-receipt"
@@ -177,7 +244,11 @@
           </template>
         </UCard>
 
-        <ConsoleStatsChartCard title="Spend over time">
+        <!-- A flat line during a fetch or after a failure reads as "spent nothing". -->
+        <ConsoleStatsChartCard
+          v-if="!loading && !failed"
+          title="Spend over time"
+        >
           <ConsoleStatsLineChart
             :data="costSeries"
             color="#a6b52b"
@@ -190,6 +261,8 @@
           subtitle="Input and output apart, because they are billed apart"
           :rows="byModel"
           :columns="modelColumns"
+          :loading="loading"
+          :failed="failed"
           empty="No model calls recorded."
           :empty-hint="emptyHint"
           empty-icon="i-lucide-cpu"
@@ -217,6 +290,8 @@
             subtitle="Who the bill would come from"
             :rows="byProvider"
             :columns="providerColumns"
+            :loading="loading"
+            :failed="failed"
             empty="No model calls recorded."
             :empty-hint="emptyHint"
             empty-icon="i-lucide-building-2"
@@ -229,6 +304,8 @@
             title="By product"
             :rows="byApp"
             :columns="appColumns"
+            :loading="loading"
+            :failed="failed"
             empty="No model calls recorded."
             :empty-hint="emptyHint"
             empty-icon="i-lucide-cpu"
@@ -242,6 +319,8 @@
             subtitle="Which part of the pipeline is spending"
             :rows="byFeature"
             :columns="featureColumns"
+            :loading="loading"
+            :failed="failed"
             empty="No model calls recorded."
             :empty-hint="emptyHint"
             empty-icon="i-lucide-cpu"
@@ -255,6 +334,8 @@
             subtitle="Only those who agreed to be named"
             :rows="byUser"
             :columns="userColumns"
+            :loading="loading"
+            :failed="failed"
             empty="No attributed usage."
             empty-hint="Usage is still counted, just without a name."
             empty-icon="i-lucide-users"
@@ -289,7 +370,10 @@ const breadcrumbItems = consoleBreadcrumb(
  */
 type UsageReport = Awaited<ReturnType<typeof insightsApi.getLlmUsage>>
 
-const days = ref(30)
+// Thirty days by default — spend is read monthly — unless the console has a
+// range remembered from another page. The usage report takes a day count,
+// so only `days` is read from it.
+const range = useInsightsRange(30)
 const collecting = ref(true)
 const usage = ref<UsageReport>({
   by_model: [],
@@ -382,17 +466,27 @@ const usd = (value: unknown) => {
 
 async function load() {
   const [report, health] = await Promise.all([
-    insightsApi.getLlmUsage(days.value),
+    insightsApi.getLlmUsage(range.value.days),
     insightsApi.getHealth()
   ])
   usage.value = report
   collecting.value = Boolean(health?.enabled)
 }
 
-watch(days, () => {
-  void load()
-})
+// Every breakdown bare, and no day with a call in it.
+const { loading, failed, loadedAt, reload, busy } = useInsightsLoad(load, () =>
+  !usage.value.by_model.length
+  && !usage.value.by_app.length
+  && !usage.value.by_feature.length
+  && !usage.value.by_user.length
+  && !usage.value.by_provider.length
+  && !usage.value.daily.length
+)
+
+watch(range, () => {
+  void reload()
+}, { deep: true })
 onMounted(() => {
-  void load()
+  void reload()
 })
 </script>

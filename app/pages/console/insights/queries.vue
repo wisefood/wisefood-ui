@@ -4,7 +4,11 @@
       :items="breadcrumbItems"
       class="mb-4"
     />
-    <ConsoleInsightsNav />
+    <ConsoleInsightsNav
+      :loaded-at="loadedAt"
+      :refreshing="busy"
+      @refresh="reload"
+    />
     <UPageHeader
       title="Search insights"
       description="What people look for, what is newly popular, and what the catalogue does not have."
@@ -38,17 +42,17 @@
         <div class="grid gap-4 sm:grid-cols-3">
           <ConsoleStatsStatTile
             label="Distinct queries"
-            :value="top.length"
+            :value="settled ? top.length : null"
             icon="i-lucide-search"
           />
           <ConsoleStatsStatTile
             label="Newly rising"
-            :value="rising.filter(r => r.is_new).length"
+            :value="settled ? rising.filter(r => r.is_new).length : null"
             icon="i-lucide-trending-up"
           />
           <ConsoleStatsStatTile
             label="Queries finding nothing"
-            :value="zeroResult.length"
+            :value="settled ? zeroResult.length : null"
             icon="i-lucide-search-x"
           />
         </div>
@@ -69,6 +73,8 @@
               subtitle="Where the searching happens, and how well each place answers"
               :rows="quality?.by_surface ?? []"
               :columns="surfaceColumns"
+              :loading="loading"
+              :failed="failed"
               empty="No surface recorded a search."
               :empty-hint="emptyHint"
               empty-icon="i-lucide-layout-panel-top"
@@ -95,8 +101,27 @@
                   clicking once is one person who got somewhere.
                 </p>
               </div>
+              <div
+                v-if="loading"
+                class="animate-pulse space-y-4 px-5 py-4"
+                role="status"
+                aria-live="polite"
+                aria-label="Loading search funnel"
+              >
+                <span
+                  v-for="n in 3"
+                  :key="n"
+                  class="block h-6 rounded bg-gray-200 dark:bg-zinc-800"
+                />
+              </div>
               <ConsoleInsightsEmptyState
-                v-if="!funnelHasData"
+                v-else-if="failed"
+                failed
+                title="Search funnel could not be loaded"
+                hint="The request to the API failed. This is not an empty period — retry, and if it persists check the gateway."
+              />
+              <ConsoleInsightsEmptyState
+                v-else-if="!funnelHasData"
                 title="Nobody searched in this period."
                 :hint="emptyHint"
                 icon="i-lucide-filter"
@@ -136,7 +161,27 @@
             </UCard>
 
             <ConsoleStatsChartCard title="Most searched">
+              <div
+                v-if="loading"
+                class="h-32 animate-pulse rounded bg-gray-200 dark:bg-zinc-800"
+                role="status"
+                aria-live="polite"
+                aria-label="Loading most searched"
+              />
+              <ConsoleInsightsEmptyState
+                v-else-if="failed"
+                failed
+                title="Most searched could not be loaded"
+                hint="The request to the API failed. This is not an empty period — retry, and if it persists check the gateway."
+              />
+              <ConsoleInsightsEmptyState
+                v-else-if="!topSeries.length"
+                title="No searches recorded in this period."
+                :hint="emptyHint"
+                icon="i-lucide-search"
+              />
               <ConsoleStatsBarChart
+                v-else
                 :data="topSeries"
                 color="#d53355"
               />
@@ -147,6 +192,8 @@
               subtitle="Growing fastest against the previous period"
               :rows="rising"
               :columns="risingColumns"
+              :loading="loading"
+              :failed="failed"
               empty="Nothing is rising yet."
               empty-hint="Needs two periods of searches to compare."
               empty-icon="i-lucide-trending-up"
@@ -171,6 +218,8 @@
               subtitle="Each row is something a person wanted and we do not have"
               :rows="zeroResult"
               :columns="zeroColumns"
+              :loading="loading"
+              :failed="failed"
               empty="Every search found something."
               :empty-hint="collecting ? 'No catalogue gaps in this period.' : emptyHint"
               empty-icon="i-lucide-check-circle-2"
@@ -185,6 +234,8 @@
               subtitle="Ordered by how often they were run"
               :rows="top"
               :columns="topColumns"
+              :loading="loading"
+              :failed="failed"
               empty="No searches recorded in this period."
               :empty-hint="emptyHint"
               empty-icon="i-lucide-search"
@@ -224,8 +275,28 @@
                 Search quality
               </h2>
 
+              <div
+                v-if="loading"
+                class="grid animate-pulse gap-4 sm:grid-cols-2 lg:grid-cols-1"
+                role="status"
+                aria-live="polite"
+                aria-label="Loading search quality"
+              >
+                <span
+                  v-for="n in 3"
+                  :key="n"
+                  class="block h-20 rounded-xl bg-gray-200 dark:bg-zinc-800"
+                />
+              </div>
               <ConsoleInsightsEmptyState
-                v-if="!quality || !quality.searches"
+                v-else-if="failed"
+                failed
+                class="rounded-xl border border-gray-200/70 dark:border-white/10"
+                title="Search quality could not be loaded"
+                hint="The request to the API failed. This is not an empty period — retry, and if it persists check the gateway."
+              />
+              <ConsoleInsightsEmptyState
+                v-else-if="!quality || !quality.searches"
                 class="rounded-xl border border-gray-200/70 dark:border-white/10"
                 title="No searches measured in this period."
                 :hint="emptyHint"
@@ -315,6 +386,8 @@
                 subtitle="Near misses: nothing matched what was asked, something matched once the constraints were dropped"
                 :rows="quality?.rescued_by_relaxing ?? []"
                 :columns="rescuedColumns"
+                :loading="loading"
+                :failed="failed"
                 empty="No search had to be loosened."
                 :empty-hint="emptyHint"
                 empty-icon="i-lucide-unlink"
@@ -327,102 +400,129 @@
                 Filters people apply
               </h2>
 
-              <div class="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-                <UCard
-                  :ui="{ body: 'p-4' }"
-                  class="border border-gray-200/70 dark:border-white/10"
-                >
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Searches with a filter
-                  </p>
-                  <p class="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-white">
-                    {{ pct(filters?.filtered_rate) }}
-                  </p>
-                  <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                    {{ (filters?.unfiltered ?? 0).toLocaleString() }} of
-                    {{ (filters?.searches ?? 0).toLocaleString() }} searches used none
-                  </p>
-                </UCard>
-                <UCard
-                  :ui="{ body: 'p-4' }"
-                  class="border border-gray-200/70 dark:border-white/10"
-                >
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Filters at a time
-                  </p>
-                  <p class="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-white">
-                    {{ filters?.avg_facets_when_filtered ?? '—' }}
-                  </p>
-                  <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                    average, counting only searches that used at least one
-                  </p>
-                </UCard>
-                <UCard
-                  :ui="{ body: 'p-4' }"
-                  class="border border-gray-200/70 dark:border-white/10"
-                >
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Recovered from empty
-                  </p>
-                  <p class="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-white">
-                    {{ pct(filters?.recovery.recovery_rate) }}
-                  </p>
-                  <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-                    of the empty first passes ended up showing something
-                  </p>
-                </UCard>
-              </div>
-
-              <!--
-                Two counts, deliberately kept apart: an empty first pass is a filter
-                being too tight, a true miss is the catalogue not having the thing.
-                Only the second is work for the content team.
-              -->
-              <UCard
-                :ui="{ body: 'p-5' }"
-                class="border border-gray-200/70 dark:border-white/10"
+              <div
+                v-if="loading"
+                class="grid animate-pulse gap-4 sm:grid-cols-3 lg:grid-cols-1"
+                role="status"
+                aria-live="polite"
+                aria-label="Loading filters people apply"
               >
-                <h3 class="text-base font-semibold text-gray-900 dark:text-white">
-                  Empty first pass, rescued, or a real gap
-                </h3>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  A filtered search that finds nothing is not automatically a missing recipe. When
-                  loosening the filters found something, the catalogue had it and the constraints were
-                  too tight. Only what stayed empty is a gap.
-                </p>
-                <div class="mt-4 grid gap-4 sm:grid-cols-3">
-                  <div>
-                    <p class="text-xs uppercase text-gray-500 dark:text-gray-400">
-                      Empty first pass
+                <span
+                  v-for="n in 3"
+                  :key="n"
+                  class="block h-20 rounded-xl bg-gray-200 dark:bg-zinc-800"
+                />
+              </div>
+              <ConsoleInsightsEmptyState
+                v-else-if="failed"
+                failed
+                class="rounded-xl border border-gray-200/70 dark:border-white/10"
+                title="Filter figures could not be loaded"
+                hint="The request to the API failed. This is not an empty period — retry, and if it persists check the gateway."
+              />
+              <!-- The three cards and the recovery card printed 0 and — for a
+                   pending fetch and a failed one alike, so they render only once
+                   there is a report behind them. -->
+              <template v-else>
+                <div class="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+                  <UCard
+                    :ui="{ body: 'p-4' }"
+                    class="border border-gray-200/70 dark:border-white/10"
+                  >
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      Searches with a filter
                     </p>
-                    <p class="mt-1 text-xl font-semibold tabular-nums text-gray-900 dark:text-white">
-                      {{ (filters?.recovery.empty_first_pass ?? 0).toLocaleString() }}
+                    <p class="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-white">
+                      {{ pct(filters?.filtered_rate) }}
                     </p>
-                  </div>
-                  <div>
-                    <p class="text-xs uppercase text-gray-500 dark:text-gray-400">
-                      Rescued by loosening
+                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                      {{ (filters?.unfiltered ?? 0).toLocaleString() }} of
+                      {{ (filters?.searches ?? 0).toLocaleString() }} searches used none
                     </p>
-                    <p class="mt-1 text-xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
-                      {{ (filters?.recovery.rescued ?? 0).toLocaleString() }}
+                  </UCard>
+                  <UCard
+                    :ui="{ body: 'p-4' }"
+                    class="border border-gray-200/70 dark:border-white/10"
+                  >
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      Filters at a time
                     </p>
-                  </div>
-                  <div>
-                    <p class="text-xs uppercase text-gray-500 dark:text-gray-400">
-                      True misses
+                    <p class="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-white">
+                      {{ filters?.avg_facets_when_filtered ?? '—' }}
                     </p>
-                    <p class="mt-1 text-xl font-semibold tabular-nums text-amber-600 dark:text-amber-400">
-                      {{ (filters?.recovery.true_misses ?? 0).toLocaleString() }}
+                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                      average, counting only searches that used at least one
                     </p>
-                  </div>
+                  </UCard>
+                  <UCard
+                    :ui="{ body: 'p-4' }"
+                    class="border border-gray-200/70 dark:border-white/10"
+                  >
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      Recovered from empty
+                    </p>
+                    <p class="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-white">
+                      {{ pct(filters?.recovery.recovery_rate) }}
+                    </p>
+                    <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                      of the empty first passes ended up showing something
+                    </p>
+                  </UCard>
                 </div>
-              </UCard>
+
+                <!--
+                  Two counts, deliberately kept apart: an empty first pass is a filter
+                  being too tight, a true miss is the catalogue not having the thing.
+                  Only the second is work for the content team.
+                -->
+                <UCard
+                  :ui="{ body: 'p-5' }"
+                  class="border border-gray-200/70 dark:border-white/10"
+                >
+                  <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+                    Empty first pass, rescued, or a real gap
+                  </h3>
+                  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    A filtered search that finds nothing is not automatically a missing recipe. When
+                    loosening the filters found something, the catalogue had it and the constraints were
+                    too tight. Only what stayed empty is a gap.
+                  </p>
+                  <div class="mt-4 grid gap-4 sm:grid-cols-3">
+                    <div>
+                      <p class="text-xs uppercase text-gray-500 dark:text-gray-400">
+                        Empty first pass
+                      </p>
+                      <p class="mt-1 text-xl font-semibold tabular-nums text-gray-900 dark:text-white">
+                        {{ (filters?.recovery.empty_first_pass ?? 0).toLocaleString() }}
+                      </p>
+                    </div>
+                    <div>
+                      <p class="text-xs uppercase text-gray-500 dark:text-gray-400">
+                        Rescued by loosening
+                      </p>
+                      <p class="mt-1 text-xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                        {{ (filters?.recovery.rescued ?? 0).toLocaleString() }}
+                      </p>
+                    </div>
+                    <div>
+                      <p class="text-xs uppercase text-gray-500 dark:text-gray-400">
+                        True misses
+                      </p>
+                      <p class="mt-1 text-xl font-semibold tabular-nums text-amber-600 dark:text-amber-400">
+                        {{ (filters?.recovery.true_misses ?? 0).toLocaleString() }}
+                      </p>
+                    </div>
+                  </div>
+                </UCard>
+              </template>
 
               <ConsoleInsightsTablePanel
                 title="Facet usage"
                 subtitle="Which filters get applied, and how often each one empties the results"
                 :rows="filters?.facets ?? []"
                 :columns="facetColumns"
+                :loading="loading"
+                :failed="failed"
                 empty="Nobody filtered a search."
                 :empty-hint="emptyHint"
                 empty-icon="i-lucide-sliders-horizontal"
@@ -437,6 +537,8 @@
                 subtitle="Named catalogue gaps: every search with these filters came back empty"
                 :rows="filters?.empty_combinations ?? []"
                 :columns="comboColumns"
+                :loading="loading"
+                :failed="failed"
                 empty="Every filter combination found something."
                 :empty-hint="emptyHint"
                 empty-icon="i-lucide-check-circle-2"
@@ -458,7 +560,6 @@ import insightsApi, {
   type TrendingRow,
   type ZeroResultRow
 } from '~/services/insightsApi'
-import type { Range } from '~/components/console/insights/RangeControl.vue'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({ layout: 'default' })
@@ -469,17 +570,10 @@ const breadcrumbItems = consoleBreadcrumb(
   { label: 'Search insights', icon: 'i-lucide-search' }
 )
 
-const route = useRoute()
-const router = useRouter()
-
-// The period lives in the URL: "the numbers I was looking at" is something
-// people paste to each other, and a view nobody can link to gets re-derived by
-// hand every time it is discussed.
-const range = ref<Range>({
-  days: Number(route.query.days) || 7,
-  since: typeof route.query.since === 'string' ? route.query.since : undefined,
-  until: typeof route.query.until === 'string' ? route.query.until : undefined
-})
+// The period is shared across the insights pages and mirrored into the URL:
+// "the numbers I was looking at" is something people paste to each other, and
+// a view nobody can link to gets re-derived by hand every time it is discussed.
+const range = useInsightsRange(7)
 
 const customRange = computed(() => Boolean(range.value.since || range.value.until))
 
@@ -616,18 +710,25 @@ async function load() {
   collecting.value = Boolean(health?.enabled)
 }
 
-watch(range, (value) => {
-  void router.replace({
-    query: {
-      days: String(value.days),
-      ...(value.since ? { since: value.since } : {}),
-      ...(value.until ? { until: value.until } : {})
-    }
-  })
-  void load()
+const { loading, failed, loadedAt, reload, busy } = useInsightsLoad(
+  load,
+  () => !top.value.length
+    && !rising.value.length
+    && !zeroResult.value.length
+    && !funnelHasData.value
+    && !quality.value?.searches
+    && !filters.value?.searches
+)
+
+// A tile reading 0 while the fetch is in flight is the false quiet week in
+// miniature, so the figures are withheld until there is something to trust.
+const settled = computed(() => !loading.value && !failed.value)
+
+watch(range, () => {
+  void reload()
 }, { deep: true })
 
 onMounted(() => {
-  void load()
+  void reload()
 })
 </script>

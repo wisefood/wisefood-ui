@@ -4,7 +4,11 @@
       :items="breadcrumbItems"
       class="mb-4"
     />
-    <ConsoleInsightsNav />
+    <ConsoleInsightsNav
+      :loaded-at="loadedAt"
+      :refreshing="busy"
+      @refresh="reload"
+    />
     <UPageHeader
       title="Audience"
       description="Who is calling, in what language, and from what."
@@ -17,8 +21,10 @@
 
     <UPageBody>
       <div class="space-y-6">
+        <!-- Only once the fetch has settled: a null report during the fetch, or
+             after a failed one, is not "analytics is off". -->
         <UAlert
-          v-if="loaded && !report"
+          v-if="settled && !report"
           color="info"
           variant="subtle"
           icon="i-lucide-power-off"
@@ -31,17 +37,17 @@
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <ConsoleStatsStatTile
             label="Signed-in events"
-            :value="report?.signed_in_events ?? 0"
+            :value="settled ? report?.signed_in_events ?? 0 : null"
             icon="i-lucide-user-round-check"
           />
           <ConsoleStatsStatTile
             label="Guest events"
-            :value="report?.guest_events ?? 0"
+            :value="settled ? report?.guest_events ?? 0 : null"
             icon="i-lucide-user-round"
           />
           <ConsoleStatsStatTile
             label="Households"
-            :value="report?.households ?? 0"
+            :value="settled ? report?.households ?? 0 : null"
             icon="i-lucide-home"
           />
           <UCard
@@ -52,7 +58,7 @@
               Signed-in share
             </p>
             <p class="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-white">
-              {{ signedInShare }}%
+              {{ settled ? `${signedInShare}%` : '—' }}
             </p>
             <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
               Of all events in the period
@@ -70,26 +76,63 @@
         -->
         <div class="grid gap-6 lg:grid-cols-3">
           <div class="space-y-6 lg:col-span-2">
-            <ConsoleInsightsAudienceSplit
-              title="By client"
-              subtitle="Browser, SDK, agent or our own services"
-              icon="i-lucide-monitor-smartphone"
-              :rows="byClient"
-              :names="CLIENT_NAMES"
-              empty="No clients recorded."
-              empty-hint="Every event carries the client that sent it, so an empty split means no events."
-              empty-icon="i-lucide-monitor-smartphone"
-            />
-            <ConsoleInsightsAudienceSplit
-              title="By language"
-              subtitle="The interface locale the event was sent from"
-              icon="i-lucide-languages"
-              :rows="byLocale"
-              :names="LOCALE_NAMES"
-              empty="No locales recorded."
-              empty-hint="A locale is attached by the client; older clients may send none at all."
-              empty-icon="i-lucide-languages"
-            />
+            <template v-if="loading">
+              <UCard
+                v-for="n in 2"
+                :key="n"
+                :ui="{ body: 'p-4' }"
+                class="border border-gray-200/70 dark:border-white/10"
+              >
+                <div
+                  class="animate-pulse space-y-3"
+                  role="status"
+                  aria-live="polite"
+                  aria-label="Loading audience splits"
+                >
+                  <span class="block h-3 w-1/4 rounded bg-gray-200 dark:bg-zinc-800" />
+                  <span
+                    v-for="row in 3"
+                    :key="row"
+                    class="block h-2 rounded bg-gray-200 dark:bg-zinc-800"
+                  />
+                </div>
+              </UCard>
+            </template>
+
+            <UCard
+              v-else-if="failed"
+              :ui="{ body: 'p-0' }"
+              class="border border-gray-200/70 dark:border-white/10"
+            >
+              <ConsoleInsightsEmptyState
+                failed
+                title="Audience splits could not be loaded"
+                hint="The request to the API failed. This is not an empty period — retry, and if it persists check the gateway."
+              />
+            </UCard>
+
+            <template v-else>
+              <ConsoleInsightsAudienceSplit
+                title="By client"
+                subtitle="Browser, SDK, agent or our own services"
+                icon="i-lucide-monitor-smartphone"
+                :rows="byClient"
+                :names="CLIENT_NAMES"
+                empty="No clients recorded."
+                empty-hint="Every event carries the client that sent it, so an empty split means no events."
+                empty-icon="i-lucide-monitor-smartphone"
+              />
+              <ConsoleInsightsAudienceSplit
+                title="By language"
+                subtitle="The interface locale the event was sent from"
+                icon="i-lucide-languages"
+                :rows="byLocale"
+                :names="LOCALE_NAMES"
+                empty="No locales recorded."
+                empty-hint="A locale is attached by the client; older clients may send none at all."
+                empty-icon="i-lucide-languages"
+              />
+            </template>
 
             <!-- A trilingual product: the split is a planning input, not trivia. -->
             <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -104,9 +147,11 @@
           <aside class="space-y-6 lg:sticky lg:top-6 lg:self-start">
             <ConsoleInsightsTablePanel
               title="By role"
-              subtitle="Experts against ordinary users"
+              subtitle="Experts against everyone else"
               :rows="byRole"
               :columns="roleColumns"
+              :loading="loading"
+              :failed="failed"
               empty="No roles recorded."
               empty-hint="Roles are attached only to signed-in events; a guest-only period shows none."
               empty-icon="i-lucide-shield-user"
@@ -123,8 +168,26 @@
                 The gap between the time a client stamped on an event and the time we received it
               </p>
 
+              <div
+                v-if="loading"
+                class="mt-4 grid animate-pulse gap-4 sm:grid-cols-2"
+                role="status"
+                aria-live="polite"
+                aria-label="Loading clock skew"
+              >
+                <span class="block h-8 rounded bg-gray-200 dark:bg-zinc-800" />
+                <span class="block h-8 rounded bg-gray-200 dark:bg-zinc-800" />
+              </div>
+
               <ConsoleInsightsEmptyState
-                v-if="!report"
+                v-else-if="failed"
+                failed
+                title="Clock skew could not be loaded"
+                hint="The request to the API failed. This is not an empty period — retry, and if it persists check the gateway."
+              />
+
+              <ConsoleInsightsEmptyState
+                v-else-if="!report"
                 title="No skew measured."
                 hint="Skew needs both timestamps; without a report there is nothing to compare."
                 icon="i-lucide-clock-alert"
@@ -177,14 +240,11 @@ const breadcrumbItems = consoleBreadcrumb(
   { label: 'Audience', icon: 'i-lucide-users' }
 )
 
-const route = useRoute()
-const router = useRouter()
-
-// The period lives in the query string so "the SDK share during the study" is
-// a link somebody else can open and see the same thing.
-const range = ref({ days: Number(route.query.days) || 30 })
+// The period is shared across the insights pages and mirrored into the URL,
+// so "the SDK share during the study" is a link somebody else can open and see
+// the same thing.
+const range = useInsightsRange(30)
 const report = ref<AudienceReport | null>(null)
-const loaded = ref(false)
 
 /** Machine values as they are recorded, said in words a reader recognises. */
 const CLIENT_NAMES: Record<string, string> = {
@@ -239,15 +299,22 @@ const worstGap = computed(() => {
 
 async function load() {
   report.value = await insightsApi.getAudience(range.value.days)
-  loaded.value = true
 }
 
+const { loading, failed, loadedAt, reload, busy } = useInsightsLoad(
+  load,
+  () => !byClient.value.length && !byLocale.value.length && !byRole.value.length
+)
+
+// A tile reading 0 while the fetch is in flight is the false quiet week in
+// miniature, so the figures are withheld until there is something to trust.
+const settled = computed(() => !loading.value && !failed.value)
+
 watch(range, () => {
-  void router.replace({
-    query: { ...(range.value.days === 30 ? {} : { days: String(range.value.days) }) }
-  })
-  void load()
+  void reload()
 }, { deep: true })
 
-onMounted(() => { void load() })
+onMounted(() => {
+  void reload()
+})
 </script>

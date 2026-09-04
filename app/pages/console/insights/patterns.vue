@@ -4,7 +4,11 @@
       :items="breadcrumbItems"
       class="mb-4"
     />
-    <ConsoleInsightsNav />
+    <ConsoleInsightsNav
+      :loaded-at="loadedAt"
+      :refreshing="busy"
+      @refresh="reload"
+    />
     <UPageHeader
       title="Usage patterns"
       description="When people use the platform, and how far they get once they are in."
@@ -17,8 +21,10 @@
 
     <UPageBody>
       <div class="space-y-6">
+        <!-- Only once the fetch has settled: a null report during the fetch, or
+             after a failed one, is not "analytics is off". -->
         <UAlert
-          v-if="loaded && !report"
+          v-if="settled && !report"
           color="info"
           variant="subtle"
           icon="i-lucide-power-off"
@@ -30,7 +36,7 @@
 
         <!--
           Two columns from lg up. The shapes — hours, weekdays, how deep a
-          visit gets — are what the page is for and they all want width; new
+          session gets — are what the page is for and they all want width; new
           against returning is a caveated subset of the same traffic, so it
           rides alongside as context instead of pushing the charts up a screen.
           It is short enough to pin, which keeps the caveat in view while the
@@ -39,7 +45,21 @@
         <div class="grid gap-6 lg:grid-cols-3">
           <div class="space-y-6 lg:col-span-2">
             <ConsoleStatsChartCard title="Hour of day">
+              <div
+                v-if="loading"
+                class="h-36 animate-pulse rounded bg-gray-200 dark:bg-zinc-800"
+                role="status"
+                aria-live="polite"
+                aria-label="Loading hour of day"
+              />
+              <ConsoleInsightsEmptyState
+                v-else-if="failed"
+                failed
+                title="Hour of day could not be loaded"
+                hint="The request to the API failed. This is not an empty period — retry, and if it persists check the gateway."
+              />
               <ConsoleInsightsPatternBarSeries
+                v-else
                 :bars="hourBars"
                 :highlight-index="busiestIndex"
                 :tick-every="3"
@@ -52,13 +72,27 @@
                   v-if="busiestLabel"
                   class="font-semibold text-gray-700 dark:text-gray-200"
                 >Busiest at {{ busiestLabel }}. </span>
-                Hours are read off the server's clock rather than the visitor's, and the quiet
+                Hours are read off the server's clock rather than the person's, and the quiet
                 ones are when a deploy costs least.
               </p>
             </ConsoleStatsChartCard>
 
             <ConsoleStatsChartCard title="Day of week">
+              <div
+                v-if="loading"
+                class="h-36 animate-pulse rounded bg-gray-200 dark:bg-zinc-800"
+                role="status"
+                aria-live="polite"
+                aria-label="Loading day of week"
+              />
+              <ConsoleInsightsEmptyState
+                v-else-if="failed"
+                failed
+                title="Day of week could not be loaded"
+                hint="The request to the API failed. This is not an empty period — retry, and if it persists check the gateway."
+              />
               <ConsoleInsightsPatternBarSeries
+                v-else
                 :bars="weekdayBars"
                 empty="No activity recorded in this period."
                 empty-hint="A week with no events is either a quiet week or a window shorter than a day."
@@ -76,15 +110,39 @@
             >
               <div class="flex flex-wrap items-baseline justify-between gap-2">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white">
-                  How far a visit gets
+                  How far a session gets
                 </h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
+                <p
+                  v-if="settled"
+                  class="text-xs text-gray-500 dark:text-gray-400"
+                >
                   {{ depth.sessions.toLocaleString() }} sessions in this period
                 </p>
               </div>
 
+              <div
+                v-if="loading"
+                class="mt-4 grid animate-pulse grid-cols-2 gap-4 sm:grid-cols-4"
+                role="status"
+                aria-live="polite"
+                aria-label="Loading session depth"
+              >
+                <span
+                  v-for="n in 4"
+                  :key="n"
+                  class="block h-8 rounded bg-gray-200 dark:bg-zinc-800"
+                />
+              </div>
+
               <ConsoleInsightsEmptyState
-                v-if="!depth.sessions"
+                v-else-if="failed"
+                failed
+                title="Session depth could not be loaded"
+                hint="The request to the API failed. This is not an empty period — retry, and if it persists check the gateway."
+              />
+
+              <ConsoleInsightsEmptyState
+                v-else-if="!depth.sessions"
                 title="No sessions recorded in this period."
                 hint="Depth is counted per client session, so this is empty when nothing was recorded at all."
                 icon="i-lucide-footprints"
@@ -171,9 +229,30 @@
                 Someone is returning when their first event anywhere predates this window
               </p>
 
+              <div
+                v-if="loading"
+                class="mt-4 animate-pulse space-y-4"
+                role="status"
+                aria-live="polite"
+                aria-label="Loading new against returning"
+              >
+                <span
+                  v-for="n in 3"
+                  :key="n"
+                  class="block h-8 w-1/2 rounded bg-gray-200 dark:bg-zinc-800"
+                />
+              </div>
+
               <ConsoleInsightsEmptyState
-                v-if="!retention.identified_users"
-                title="No named users were active in this period."
+                v-else-if="failed"
+                failed
+                title="New against returning could not be loaded"
+                hint="The request to the API failed. This is not an empty period — retry, and if it persists check the gateway."
+              />
+
+              <ConsoleInsightsEmptyState
+                v-else-if="!retention.identified_users"
+                title="No named people were active in this period."
                 hint="Activity is still counted — it simply cannot be attributed to a person without consent."
                 icon="i-lucide-user-round"
               />
@@ -215,14 +294,14 @@
                     {{ percent(retention.returning_rate) }}
                   </dd>
                   <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                    Of {{ retention.identified_users.toLocaleString() }} named users
+                    Of {{ retention.identified_users.toLocaleString() }} named people
                   </p>
                 </div>
               </dl>
 
-              <!-- On the page, not in a tooltip: a reader who takes these as user
-                   totals will understate the platform, and a tooltip is a footnote
-                   nobody opens. -->
+              <!-- On the page, not in a tooltip: a reader who takes these as
+                   headcounts will understate the platform, and a tooltip is a
+                   footnote nobody opens. -->
               <p class="mt-4 rounded-lg bg-gray-50 px-4 py-3 text-xs text-gray-600 dark:bg-white/5 dark:text-gray-300">
                 These counts cover only people who consented to being named. Everyone else is still
                 using the platform and their events are still recorded — they just have no user id
@@ -250,14 +329,11 @@ const breadcrumbItems = consoleBreadcrumb(
   { label: 'Usage patterns', icon: 'i-lucide-activity' }
 )
 
-const route = useRoute()
-const router = useRouter()
-
-// The period lives in the query string so a shape worth pointing at — "look at
-// the weekend on the 90 day view" — survives being pasted to somebody else.
-const range = ref({ days: Number(route.query.days) || 30 })
+// The period is shared across the insights pages and mirrored into the URL, so
+// a shape worth pointing at — "look at the weekend on the 90 day view" —
+// survives being pasted to somebody else.
+const range = useInsightsRange(30)
 const report = ref<EngagementPatterns | null>(null)
-const loaded = ref(false)
 
 /** Postgres counts the week from Sunday, and so does the report. */
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -345,15 +421,25 @@ const percent = (value: number | null | undefined) =>
 
 async function load() {
   report.value = await insightsApi.getPatterns(range.value.days)
-  loaded.value = true
 }
 
+const { loading, failed, loadedAt, reload, busy } = useInsightsLoad(
+  load,
+  () => !hourBars.value.length
+    && !weekdayBars.value.length
+    && !depth.value.sessions
+    && !retention.value.identified_users
+)
+
+// Subtitles that quote a count are withheld until there is a count to quote:
+// "0 sessions in this period" during the fetch is the false quiet week again.
+const settled = computed(() => !loading.value && !failed.value)
+
 watch(range, () => {
-  void router.replace({
-    query: { ...(range.value.days === 30 ? {} : { days: String(range.value.days) }) }
-  })
-  void load()
+  void reload()
 }, { deep: true })
 
-onMounted(() => { void load() })
+onMounted(() => {
+  void reload()
+})
 </script>

@@ -4,14 +4,18 @@
       :items="breadcrumbItems"
       class="mb-4"
     />
-    <ConsoleInsightsNav />
+    <ConsoleInsightsNav
+      :loaded-at="loadedAt"
+      :refreshing="busy"
+      @refresh="reload"
+    />
     <UPageHeader
       title="Expert activity"
-      description="Who used their privileges, and on what. Includes reading the userbase's questions, not only changing things."
+      description="Who used their privileges, and on what. Includes reading people's questions, not only changing things."
       :ui="{ root: 'relative py-8 border-b-0' }"
     >
       <template #links>
-        <ConsoleInsightsRangePicker v-model="days" />
+        <ConsoleInsightsRangePicker v-model="range.days" />
       </template>
     </UPageHeader>
 
@@ -22,6 +26,8 @@
           subtitle="Reviews recorded, answers read, settings changed"
           :rows="byActor"
           :columns="actorColumns"
+          :loading="loading"
+          :failed="failed"
           empty="No privileged activity recorded."
           empty-hint="Actions are recorded from the moment analytics is switched on."
           empty-icon="i-lucide-shield"
@@ -35,6 +41,8 @@
           title="Recent actions"
           :rows="recent"
           :columns="recentColumns"
+          :loading="loading"
+          :failed="failed"
           empty="Nothing recorded yet."
           empty-icon="i-lucide-history"
         >
@@ -42,7 +50,7 @@
             {{ formatWhen(row.occurred_at) }}
           </template>
           <template #cell-props="{ row }">
-            <span class="font-mono text-xs text-gray-500 dark:text-gray-400">
+            <span class="break-all font-mono text-xs text-gray-500 dark:text-gray-400">
               {{ summarise(row.props) }}
             </span>
           </template>
@@ -65,7 +73,10 @@ const breadcrumbItems = consoleBreadcrumb(
   { label: 'Expert activity', icon: 'i-lucide-shield' }
 )
 
-const days = ref(30)
+// Shared with every other insights page, so the window somebody picked there
+// is the window this opens on — a review count read here is comparable with
+// the question count read a page earlier.
+const range = useInsightsRange(30)
 const byActor = ref<Array<Record<string, unknown>>>([])
 const recent = ref<Array<Record<string, unknown>>>([])
 
@@ -99,11 +110,20 @@ const summarise = (props: unknown) => {
 }
 
 async function load() {
-  const result = await insightsApi.getExpertActivity(days.value, 100)
+  const result = await insightsApi.getExpertActivity(range.value.days, 100)
   byActor.value = result.by_actor as unknown as Array<Record<string, unknown>>
   recent.value = result.recent
 }
 
-watch(days, () => { void load() })
-onMounted(() => { void load() })
+const { loading, failed, loadedAt, reload, busy } = useInsightsLoad(
+  load,
+  () => !byActor.value.length && !recent.value.length
+)
+
+watch(range, () => {
+  void reload()
+}, { deep: true })
+onMounted(() => {
+  void reload()
+})
 </script>

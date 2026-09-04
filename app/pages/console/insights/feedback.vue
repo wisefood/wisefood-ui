@@ -4,7 +4,11 @@
       :items="breadcrumbItems"
       class="mb-4"
     />
-    <ConsoleInsightsNav />
+    <ConsoleInsightsNav
+      :loaded-at="loadedAt"
+      :refreshing="busy"
+      @refresh="reload"
+    />
     <UPageHeader
       title="Feedback inbox"
       description="Everything people told us, from every part of the platform, in one list."
@@ -13,18 +17,9 @@
       <template #links>
         <ConsoleInsightsExportButton
           report="feedback-targets"
-          :days="qualityDays"
+          :days="range.days"
           label="Targets CSV"
         />
-        <UButton
-          color="neutral"
-          variant="outline"
-          icon="i-lucide-refresh-cw"
-          :loading="loading"
-          @click="load"
-        >
-          Refresh
-        </UButton>
       </template>
     </UPageHeader>
 
@@ -36,27 +31,56 @@
           of the things we ship is drawing the complaints.
         -->
         <section class="space-y-4">
-          <div class="flex flex-wrap items-baseline justify-between gap-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
               Feedback quality
             </h2>
-            <span class="text-xs text-gray-500 dark:text-gray-400">
-              Last {{ qualityDays }} days
-            </span>
+            <!--
+              The period is the console's shared one, so the rate read here is
+              over the same window as the overview's. The inbox itself has no
+              period — a complaint does not stop mattering after thirty days.
+            -->
+            <ConsoleInsightsRangePicker v-model="range.days" />
+          </div>
+
+          <div
+            v-if="loading"
+            class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+            role="status"
+            aria-live="polite"
+            aria-label="Loading feedback quality"
+          >
+            <UCard
+              v-for="n in 4"
+              :key="n"
+              :ui="{ body: 'p-4' }"
+              class="animate-pulse border border-gray-200/70 dark:border-white/10"
+            >
+              <span class="block h-3 w-24 rounded bg-gray-200 dark:bg-zinc-800" />
+              <span class="mt-3 block h-7 w-20 rounded bg-gray-200 dark:bg-zinc-800" />
+              <span class="mt-3 block h-3 w-32 rounded bg-gray-200 dark:bg-zinc-800" />
+            </UCard>
           </div>
 
           <!--
             Three different silences, and the page names which one it is: the
-            service not answering, collection switched off, and nobody having
-            said anything.
+            request failing, collection switched off, and nobody having said
+            anything. Only the last two are read from a load that succeeded.
           -->
           <ConsoleInsightsEmptyState
-            v-if="!quality || !quality.score.responses && !backlogTotal"
+            v-else-if="failed"
+            failed
+            class="rounded-xl border border-gray-200/70 dark:border-white/10"
+            title="Feedback quality could not be loaded"
+            hint="The request to the API failed, so this says nothing about how much feedback arrived — retry, and if it persists check the gateway."
+          />
+          <ConsoleInsightsEmptyState
+            v-else-if="!quality || !quality.score.responses && !backlogTotal"
             class="rounded-xl border border-gray-200/70 dark:border-white/10"
             :title="quality ? 'No feedback recorded in this period.' : 'Feedback quality is unavailable.'"
             :hint="quality
               ? emptyHint
-              : 'The analytics service did not answer, so this says nothing about how much feedback arrived.'"
+              : 'The analytics service returned nothing for this period.'"
             :icon="quality ? 'i-lucide-message-square' : 'i-lucide-plug-zap'"
           />
           <template v-else>
@@ -156,6 +180,8 @@
               subtitle="Each scale judged on its own terms"
               :rows="quality.by_kind"
               :columns="kindColumns"
+              :loading="loading"
+              :failed="failed"
               empty="No ratings recorded."
               :empty-hint="emptyHint"
               empty-icon="i-lucide-scale"
@@ -202,6 +228,8 @@
                 subtitle="The reason picked alongside the rating"
                 :rows="quality.reasons"
                 :columns="reasonColumns"
+                :loading="loading"
+                :failed="failed"
                 empty="No reasons given."
                 empty-hint="The reason is optional, so it is only there when somebody chose one."
                 empty-icon="i-lucide-list"
@@ -211,6 +239,8 @@
                 subtitle="Volume, complaints and average score together"
                 :rows="dailyRows"
                 :columns="dailyColumns"
+                :loading="loading"
+                :failed="failed"
                 empty="No feedback in this period."
                 :empty-hint="emptyHint"
                 empty-icon="i-lucide-calendar"
@@ -233,10 +263,20 @@
               subtitle="The specific recipe, article or answer people objected to, worst rate first"
               :rows="targetRows"
               :columns="targetColumns"
+              :loading="loading"
+              :failed="failed"
               empty="Nothing has been complained about."
               :empty-hint="emptyHint"
               empty-icon="i-lucide-crosshair"
             >
+              <!--
+                An identifier wraps rather than truncates: the tail of a URN
+                is usually the part that says which recipe, and a clipped one
+                cannot be copied into a search.
+              -->
+              <template #cell-target_id="{ row }">
+                <span class="break-all">{{ row.target_id || '—' }}</span>
+              </template>
               <template #cell-negative_rate="{ row }">
                 <span :class="row.negative_rate >= 50 ? 'text-red-600 dark:text-red-400' : ''">
                   {{ pct(row.negative_rate) }}
@@ -253,12 +293,17 @@
           </template>
         </section>
 
-        <div class="flex flex-wrap items-center gap-2">
+        <div
+          class="flex flex-wrap items-center gap-2"
+          role="group"
+          aria-label="Filter the inbox"
+        >
           <UButton
             v-for="filter in filters"
             :key="filter.value"
             :color="status === filter.value ? 'primary' : 'neutral'"
             :variant="status === filter.value ? 'solid' : 'outline'"
+            :aria-pressed="status === filter.value"
             size="sm"
             @click="setStatus(filter.value)"
           >
@@ -268,6 +313,7 @@
           <UButton
             :color="negativeOnly ? 'error' : 'neutral'"
             :variant="negativeOnly ? 'solid' : 'outline'"
+            :aria-pressed="negativeOnly"
             size="sm"
             icon="i-lucide-thumbs-down"
             @click="toggleNegative"
@@ -280,8 +326,34 @@
           :ui="{ body: 'p-0' }"
           class="overflow-hidden border border-gray-200/70 dark:border-white/10"
         >
+          <div
+            v-if="loading"
+            class="animate-pulse divide-y divide-gray-100 px-5 dark:divide-zinc-800"
+            role="status"
+            aria-live="polite"
+            aria-label="Loading the inbox"
+          >
+            <div
+              v-for="n in 5"
+              :key="n"
+              class="space-y-2 py-4"
+            >
+              <div class="flex gap-2">
+                <span class="h-4 w-12 rounded bg-gray-200 dark:bg-zinc-800" />
+                <span class="h-4 w-20 rounded bg-gray-200 dark:bg-zinc-800" />
+                <span class="h-4 w-32 rounded bg-gray-200 dark:bg-zinc-800" />
+              </div>
+              <span class="block h-3 w-3/4 rounded bg-gray-200 dark:bg-zinc-800" />
+            </div>
+          </div>
           <ConsoleInsightsEmptyState
-            v-if="!items.length"
+            v-else-if="failed"
+            failed
+            title="The inbox could not be loaded"
+            hint="The request to the API failed. Feedback may well be waiting — retry, and if it persists check the gateway."
+          />
+          <ConsoleInsightsEmptyState
+            v-else-if="!items.length"
             :title="status === 'new' ? 'Nothing waiting.' : 'No feedback here.'"
             :hint="emptyHint"
             icon="i-lucide-message-square"
@@ -310,7 +382,7 @@
                     >
                       {{ row.app }}
                     </UBadge>
-                    <span class="text-xs text-gray-400 dark:text-gray-500">
+                    <span class="break-all text-xs text-gray-400 dark:text-gray-500">
                       {{ row.target_type }}<template v-if="row.target_id"> · {{ row.target_id }}</template>
                     </span>
                     <span class="text-xs text-gray-400 dark:text-gray-500">
@@ -319,13 +391,13 @@
                   </div>
                   <p
                     v-if="row.comment"
-                    class="mt-2 text-sm text-gray-800 dark:text-gray-200"
+                    class="mt-2 whitespace-pre-wrap break-words text-sm text-gray-800 dark:text-gray-200"
                   >
                     {{ row.comment }}
                   </p>
                   <p
                     v-else-if="row.reason"
-                    class="mt-2 text-sm text-gray-600 dark:text-gray-300"
+                    class="mt-2 break-words text-sm text-gray-600 dark:text-gray-300"
                   >
                     {{ row.reason }}
                   </p>
@@ -457,13 +529,15 @@ const filters = [
 type InboxRow = FeedbackRow & { client_session_id?: string | null }
 
 const pageSize = 25
-const qualityDays = 30
+// The quality section's window. Thirty days is the page's own default, but
+// the console's remembered choice wins so the rates here line up with the
+// overview's; the quality endpoints take a day count, so only `days` is read.
+const range = useInsightsRange(30)
 const status = ref('new')
 const negativeOnly = ref(false)
 const page = ref(1)
 const total = ref(0)
 const items = ref<InboxRow[]>([])
-const loading = ref(false)
 const saving = ref<number | null>(null)
 
 const quality = ref<FeedbackQuality | null>(null)
@@ -517,7 +591,7 @@ const dailyColumns = [
 ]
 const targetColumns = [
   { key: 'target_type', label: 'Kind' },
-  { key: 'target_id', label: 'What', truncate: true },
+  { key: 'target_id', label: 'What' },
   { key: 'app', label: 'Product' },
   { key: 'feedback', label: 'Ratings', align: 'right' as const },
   { key: 'negative', label: 'Negative', align: 'right' as const },
@@ -605,7 +679,6 @@ function toggleNegative() {
 }
 
 async function load() {
-  loading.value = true
   const [result, report, byTarget, health] = await Promise.all([
     insightsApi.getFeedback({
       limit: pageSize,
@@ -613,8 +686,8 @@ async function load() {
       status: status.value || undefined,
       negativeOnly: negativeOnly.value
     }),
-    insightsApi.getFeedbackQuality(qualityDays),
-    insightsApi.getFeedbackTargets(qualityDays, 25),
+    insightsApi.getFeedbackQuality(range.value.days),
+    insightsApi.getFeedbackTargets(range.value.days, 25),
     insightsApi.getHealth()
   ])
   total.value = result.total
@@ -622,8 +695,16 @@ async function load() {
   quality.value = report
   targets.value = byTarget
   collecting.value = Boolean(health?.enabled)
-  loading.value = false
 }
+
+// An empty inbox under a filter is not an empty period; "empty" here means
+// the inbox, the quality figures and the target list all came back bare.
+const { loading, failed, loadedAt, reload, busy } = useInsightsLoad(load, () =>
+  !items.value.length
+  && !quality.value?.score.responses
+  && !backlogTotal.value
+  && !targets.value.length
+)
 
 async function setRowStatus(row: FeedbackRow, next: 'triaged' | 'resolved') {
   saving.value = row.id
@@ -640,6 +721,13 @@ async function setRowStatus(row: FeedbackRow, next: 'triaged' | 'resolved') {
   }
 }
 
-watch([status, negativeOnly, page], () => { void load() })
-onMounted(() => { void load() })
+watch([status, negativeOnly, page], () => {
+  void reload()
+})
+watch(range, () => {
+  void reload()
+}, { deep: true })
+onMounted(() => {
+  void reload()
+})
 </script>

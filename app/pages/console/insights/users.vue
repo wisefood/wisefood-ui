@@ -6,7 +6,7 @@
     />
     <ConsoleInsightsNav
       :loaded-at="loadedAt"
-      :refreshing="loading"
+      :refreshing="busy"
       @refresh="reload"
     />
     <UPageHeader
@@ -216,7 +216,7 @@ async function load() {
   sessions.value = recent as unknown as Array<Record<string, unknown>>
 }
 
-const { loading, failed, loadedAt, reload } = useInsightsLoad(
+const { loading, failed, loadedAt, reload, busy } = useInsightsLoad(
   load,
   () => !users.value.length && !sessions.value.length
 )

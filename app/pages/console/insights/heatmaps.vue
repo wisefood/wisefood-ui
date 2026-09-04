@@ -6,7 +6,7 @@
     />
     <ConsoleInsightsNav
       :loaded-at="loadedAt"
-      :refreshing="loading"
+      :refreshing="busy"
       @refresh="reload"
     />
     <UPageHeader
@@ -400,13 +400,13 @@ const frustrationColumns = [
   { key: 'path', label: 'Page' },
   { key: 'element_key', label: 'Control' },
   { key: 'kind', label: 'Kind' },
-  { key: 'sessions', label: 'People', align: 'right' as const },
+  { key: 'sessions', label: 'Sessions', align: 'right' as const },
   { key: 'count', label: 'Times', align: 'right' as const }
 ]
 const elementColumns = [
   { key: 'element_key', label: 'Control' },
   { key: 'clicks', label: 'Clicks', align: 'right' as const },
-  { key: 'sessions', label: 'People', align: 'right' as const },
+  { key: 'sessions', label: 'Sessions', align: 'right' as const },
   { key: 'trouble', label: 'Trouble', align: 'right' as const }
 ]
 
@@ -438,7 +438,7 @@ async function load() {
   }
 }
 
-const { status, loading, failed, loadedAt, reload } = useInsightsLoad(
+const { status, loading, failed, loadedAt, reload, busy } = useInsightsLoad(
   load,
   () => !pageRows.value.length && !frustrationRows.value.length && !map.value?.clicks
 )

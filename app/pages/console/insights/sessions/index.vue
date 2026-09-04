@@ -6,7 +6,7 @@
     />
     <ConsoleInsightsNav
       :loaded-at="loadedAt"
-      :refreshing="loading"
+      :refreshing="busy"
       @refresh="reload"
     />
     <UPageHeader
@@ -614,7 +614,7 @@ async function load() {
 
 // Empty means the period held nothing at all — not merely that this page of
 // rows is blank, which the breakdowns would contradict.
-const { loading, failed, loadedAt, reload } = useInsightsLoad(load, () => {
+const { loading, failed, loadedAt, reload, busy } = useInsightsLoad(load, () => {
   const data = board.value
   if (!data) return true
   return !data.sessions.length && !data.by_device.length && !data.by_browser.length

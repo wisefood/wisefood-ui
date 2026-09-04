@@ -4,9 +4,13 @@
       :items="breadcrumbItems"
       class="mb-4"
     />
-    <ConsoleInsightsNav />
+    <ConsoleInsightsNav
+      :loaded-at="loadedAt"
+      :refreshing="busy"
+      @refresh="reload"
+    />
     <UPageHeader
-      title="Content"
+      title="Content & answers"
       description="What the answers, chats and pages actually look like — not how many there were."
       :ui="{ root: 'relative py-8 border-b-0' }"
     >
@@ -36,8 +40,10 @@
             anything else on this page — every count below is short by at least this many."
         />
 
+        <!-- Only once the fetch has settled: a null report during the fetch, or
+             after a failed one, is not "analytics is off". -->
         <UAlert
-          v-if="loaded && !report"
+          v-if="settled && !report"
           color="info"
           variant="subtle"
           icon="i-lucide-power-off"
@@ -50,27 +56,27 @@
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <ConsoleStatsStatTile
             label="Questions asked"
-            :value="qa.asked"
+            :value="settled ? qa.asked : null"
             icon="i-lucide-message-circle-question"
           />
           <ConsoleStatsStatTile
             label="Answered"
-            :value="qa.answered"
+            :value="settled ? qa.answered : null"
             icon="i-lucide-message-square-reply"
           />
           <ConsoleStatsStatTile
             label="No answer recorded"
-            :value="qa.unanswered"
+            :value="settled ? qa.unanswered : null"
             icon="i-lucide-message-square-off"
           />
           <ConsoleStatsStatTile
             label="Chat turns"
-            :value="chat.turns"
+            :value="settled ? chat.turns : null"
             icon="i-lucide-messages-square"
           />
           <ConsoleStatsStatTile
             label="Recipe searches"
-            :value="searchCache.searches"
+            :value="settled ? searchCache.searches : null"
             icon="i-lucide-search"
           />
         </div>
@@ -92,13 +98,37 @@
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white">
                   How the answers were made
                 </h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400">
+                <p
+                  v-if="settled"
+                  class="text-xs text-gray-500 dark:text-gray-400"
+                >
                   Every figure is over the {{ qa.answered.toLocaleString() }} answers in this period
                 </p>
               </div>
 
+              <div
+                v-if="loading"
+                class="mt-4 grid animate-pulse gap-4 sm:grid-cols-3"
+                role="status"
+                aria-live="polite"
+                aria-label="Loading how the answers were made"
+              >
+                <span
+                  v-for="n in 3"
+                  :key="n"
+                  class="block h-8 rounded bg-gray-200 dark:bg-zinc-800"
+                />
+              </div>
+
               <ConsoleInsightsEmptyState
-                v-if="!qa.answered"
+                v-else-if="failed"
+                failed
+                title="Answer figures could not be loaded"
+                hint="The request to the API failed. This is not an empty period — retry, and if it persists check the gateway."
+              />
+
+              <ConsoleInsightsEmptyState
+                v-else-if="!qa.answered"
                 title="No questions were answered in this period."
                 :hint="qa.asked
                   ? 'Questions were asked, so collection is working — the answers are the gap.'
@@ -153,8 +183,29 @@
                 Turns taken and how long each one kept somebody waiting
               </p>
 
+              <div
+                v-if="loading"
+                class="mt-4 grid animate-pulse gap-4 sm:grid-cols-3"
+                role="status"
+                aria-live="polite"
+                aria-label="Loading FoodChat"
+              >
+                <span
+                  v-for="n in 3"
+                  :key="n"
+                  class="block h-8 rounded bg-gray-200 dark:bg-zinc-800"
+                />
+              </div>
+
               <ConsoleInsightsEmptyState
-                v-if="!chat.turns"
+                v-else-if="failed"
+                failed
+                title="FoodChat figures could not be loaded"
+                hint="The request to the API failed. This is not an empty period — retry, and if it persists check the gateway."
+              />
+
+              <ConsoleInsightsEmptyState
+                v-else-if="!chat.turns"
                 title="No chat turns in this period."
                 hint="Chat turns are recorded by default; an empty panel here means nobody chatted."
                 icon="i-lucide-messages-square"
@@ -202,66 +253,104 @@
               :subtitle="`${pageViews.toLocaleString()} views across the pages listed`"
               :rows="pages"
               :columns="pageColumns"
+              :loading="loading"
+              :failed="failed"
               empty="No page views recorded."
               empty-hint="Page views are recorded by default — an empty table means nobody opened a page."
               empty-icon="i-lucide-file-text"
             >
               <template #cell-path="{ row }">
-                <span class="font-mono text-xs">{{ row.path }}</span>
+                <span class="break-all font-mono text-xs">{{ row.path }}</span>
               </template>
             </ConsoleInsightsTablePanel>
 
             <ConsoleInsightsTablePanel
               title="Where people land"
-              subtitle="First page of a visit — a view with no route before it"
+              subtitle="First page of a session — a view with no route before it"
               :rows="entryPages"
               :columns="entryColumns"
+              :loading="loading"
+              :failed="failed"
               empty="No entry pages recorded."
-              empty-hint="Every recorded view followed another one, which usually means no fresh visits."
+              empty-hint="Every recorded view followed another one, which usually means no fresh sessions."
               empty-icon="i-lucide-door-open"
             >
               <template #cell-path="{ row }">
-                <span class="font-mono text-xs">{{ row.path }}</span>
+                <span class="break-all font-mono text-xs">{{ row.path }}</span>
               </template>
             </ConsoleInsightsTablePanel>
           </div>
 
           <aside class="space-y-6">
-            <ConsoleInsightsContentBreakdown
-              title="By mode"
-              icon="i-lucide-sliders-horizontal"
-              :rows="qa.by_mode"
-              mono
-              empty="No answer modes recorded."
-              empty-hint="Answers are recorded with the mode they ran in; none were answered here."
-              empty-icon="i-lucide-sliders-horizontal"
-            />
-            <ConsoleInsightsContentBreakdown
-              title="By language"
-              icon="i-lucide-languages"
-              :rows="qa.by_language"
-              empty="No languages recorded."
-              empty-hint="The language of a question is recorded on the answer, so an empty split means no answers."
-              empty-icon="i-lucide-languages"
-            />
-            <ConsoleInsightsContentBreakdown
-              title="By model"
-              icon="i-lucide-cpu"
-              :rows="qa.by_model"
-              mono
-              empty="No models recorded."
-              empty-hint="A cached answer still names the model that first produced it."
-              empty-icon="i-lucide-cpu"
-            />
+            <UCard
+              v-if="loading"
+              :ui="{ body: 'p-4' }"
+              class="border border-gray-200/70 dark:border-white/10"
+            >
+              <div
+                class="animate-pulse space-y-3"
+                role="status"
+                aria-live="polite"
+                aria-label="Loading answer breakdowns"
+              >
+                <span class="block h-3 w-1/3 rounded bg-gray-200 dark:bg-zinc-800" />
+                <span
+                  v-for="n in 4"
+                  :key="n"
+                  class="block h-2 rounded bg-gray-200 dark:bg-zinc-800"
+                />
+              </div>
+            </UCard>
 
-            <ConsoleInsightsContentBreakdown
-              title="What people chat about"
-              icon="i-lucide-tags"
-              :rows="chat.by_intent"
-              empty="No intents recorded."
-              empty-hint="A turn carries an intent only once the classifier has labelled it."
-              empty-icon="i-lucide-tags"
-            />
+            <UCard
+              v-else-if="failed"
+              :ui="{ body: 'p-0' }"
+              class="border border-gray-200/70 dark:border-white/10"
+            >
+              <ConsoleInsightsEmptyState
+                failed
+                title="Answer breakdowns could not be loaded"
+                hint="The request to the API failed. This is not an empty period — retry, and if it persists check the gateway."
+              />
+            </UCard>
+
+            <template v-else>
+              <ConsoleInsightsContentBreakdown
+                title="By mode"
+                icon="i-lucide-sliders-horizontal"
+                :rows="qa.by_mode"
+                mono
+                empty="No answer modes recorded."
+                empty-hint="Answers are recorded with the mode they ran in; none were answered here."
+                empty-icon="i-lucide-sliders-horizontal"
+              />
+              <ConsoleInsightsContentBreakdown
+                title="By language"
+                icon="i-lucide-languages"
+                :rows="qa.by_language"
+                empty="No languages recorded."
+                empty-hint="The language of a question is recorded on the answer, so an empty split means no answers."
+                empty-icon="i-lucide-languages"
+              />
+              <ConsoleInsightsContentBreakdown
+                title="By model"
+                icon="i-lucide-cpu"
+                :rows="qa.by_model"
+                mono
+                empty="No models recorded."
+                empty-hint="A cached answer still names the model that first produced it."
+                empty-icon="i-lucide-cpu"
+              />
+
+              <ConsoleInsightsContentBreakdown
+                title="What people chat about"
+                icon="i-lucide-tags"
+                :rows="chat.by_intent"
+                empty="No intents recorded."
+                empty-hint="A turn carries an intent only once the classifier has labelled it."
+                empty-icon="i-lucide-tags"
+              />
+            </template>
 
             <UCard
               :ui="{ body: 'p-5' }"
@@ -271,8 +360,29 @@
                 Recipe search cache
               </h3>
 
+              <div
+                v-if="loading"
+                class="mt-4 animate-pulse space-y-4"
+                role="status"
+                aria-live="polite"
+                aria-label="Loading recipe search cache"
+              >
+                <span
+                  v-for="n in 3"
+                  :key="n"
+                  class="block h-8 w-1/2 rounded bg-gray-200 dark:bg-zinc-800"
+                />
+              </div>
+
               <ConsoleInsightsEmptyState
-                v-if="!searchCache.searches"
+                v-else-if="failed"
+                failed
+                title="Recipe search cache could not be loaded"
+                hint="The request to the API failed. This is not an empty period — retry, and if it persists check the gateway."
+              />
+
+              <ConsoleInsightsEmptyState
+                v-else-if="!searchCache.searches"
                 title="No recipe searches in this period."
                 hint="Searches are recorded by default, so this is quiet rather than unrecorded."
                 icon="i-lucide-search"
@@ -326,21 +436,18 @@ import insightsApi, { type ContentReport } from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({ layout: 'default' })
-useHead({ title: 'Content · Console' })
+useHead({ title: 'Content & answers · Console' })
 
 const breadcrumbItems = consoleBreadcrumb(
   { label: 'Analytics', icon: 'i-lucide-chart-column', to: '/console/insights' },
-  { label: 'Content', icon: 'i-lucide-file-text' }
+  { label: 'Content & answers', icon: 'i-lucide-file-text' }
 )
 
-const route = useRoute()
-const router = useRouter()
-
-// The period lives in the query string so a view can be pasted into a
-// conversation — "the week the model changed" is a link, not instructions.
-const range = ref({ days: Number(route.query.days) || 7 })
+// The period is shared across the insights pages and mirrored into the URL so
+// a view can be pasted into a conversation — "the week the model changed" is a
+// link, not instructions.
+const range = useInsightsRange(7)
 const report = ref<ContentReport | null>(null)
-const loaded = ref(false)
 
 const EMPTY_QA: ContentReport['qa'] = {
   asked: 0,
@@ -421,15 +528,27 @@ const entryColumns = [
 
 async function load() {
   report.value = await insightsApi.getContent(range.value.days, 20)
-  loaded.value = true
 }
 
+const { loading, failed, loadedAt, reload, busy } = useInsightsLoad(
+  load,
+  () => !qa.value.asked
+    && !qa.value.answered
+    && !chat.value.turns
+    && !searchCache.value.searches
+    && !pages.value.length
+    && !entryPages.value.length
+)
+
+// A tile reading 0 while the fetch is in flight is the false quiet week in
+// miniature, so the figures are withheld until there is something to trust.
+const settled = computed(() => !loading.value && !failed.value)
+
 watch(range, () => {
-  void router.replace({
-    query: { ...(range.value.days === 7 ? {} : { days: String(range.value.days) }) }
-  })
-  void load()
+  void reload()
 }, { deep: true })
 
-onMounted(() => { void load() })
+onMounted(() => {
+  void reload()
+})
 </script>
