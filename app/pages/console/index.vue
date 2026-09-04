@@ -247,8 +247,8 @@ const allQuickAccessCards = [
     iconClass: 'text-brand-600 dark:text-brand-300'
   },
   {
-    title: 'Prompt / LLM Controls',
-    description: 'Inspect prompt variants, telemetry, and operational controls for generative features.',
+    title: 'Prompts & content',
+    description: 'Prompt variants, curation content, and operational controls for generative features.',
     icon: 'i-lucide-sliders-horizontal',
     to: '/console/operations?tab=observability',
     available: true,
@@ -256,14 +256,20 @@ const allQuickAccessCards = [
     iconClass: 'text-brand-600 dark:text-brand-300'
   },
   {
-    title: 'Analytics Reports',
-    description: 'Open performance summaries, observability snapshots, and expert operations reports.',
+    // Points at the analytics console, not at Platform Operations. It used to
+    // point at the latter, which is why the analytics pages were hard to find
+    // from here: the card named Analytics led somewhere else.
+    title: 'Analytics',
+    description: 'Activity, search, sessions and devices, errors and page speed, feedback and Q&A review, and what the models cost.',
     icon: 'i-lucide-chart-column',
-    to: '/console/operations',
+    to: '/console/insights',
     available: true,
     iconWrapperClass: 'bg-brand-50 dark:bg-brand-500/10',
     iconClass: 'text-brand-600 dark:text-brand-300'
   },
+  // Q&A Review was a card of its own here. It is a section inside Analytics —
+  // one of fourteen — and promoting one of them to the top level implied the
+  // other thirteen did not exist.
   {
     title: 'Platform Operations',
     description: 'Index state, embedding coverage, and corpus-wide maintenance.',
@@ -284,9 +290,18 @@ const quickAccessCards = computed(() =>
 
 // Admins see a fourth card, so the column count follows the card count rather
 // than being fixed — otherwise one layout or the other ends with a dangling gap.
-const quickAccessGridClass = computed(() =>
-  quickAccessCards.value.length >= 4
+const quickAccessGridClass = computed(() => {
+  const count = quickAccessCards.value.length
+  // Pick a column count the cards fill exactly, so no layout ends with one
+  // card stranded on its own row.
+  if (count % 4 === 0) return 'sm:grid-cols-2 xl:grid-cols-4'
+  if (count % 3 === 0) return 'sm:grid-cols-2 xl:grid-cols-3'
+  // Neither divides evenly, so pick the column count that leaves the fullest
+  // last row rather than defaulting to three: five cards over three columns
+  // leaves a row of two, and over four leaves a row of one — but four also
+  // fits more above the fold, which is what the row is for.
+  return count % 4 >= count % 3
     ? 'sm:grid-cols-2 xl:grid-cols-4'
-    : 'md:grid-cols-2 xl:grid-cols-3'
-)
+    : 'sm:grid-cols-2 xl:grid-cols-3'
+})
 </script>

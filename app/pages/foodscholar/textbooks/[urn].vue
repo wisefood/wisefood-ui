@@ -315,6 +315,7 @@
 </template>
 
 <script setup lang="ts">
+import { track } from '~/composables/useTelemetry'
 import textbooksApi from '~/services/textbooksApi'
 import type { Textbook, TextbookPassage, TextbookReviewStatus, TextbookStatus } from '~/services/textbooksApi'
 
@@ -339,6 +340,8 @@ async function loadTextbook() {
   error.value = null
   try {
     textbook.value = await textbooksApi.getTextbook(urn.value)
+    // Only once the entry resolved: a dead urn is a broken link, not a view.
+    track('catalog.view', { entry_type: 'textbook', urn: urn.value }, 'catalog')
     textbooksApi.fetchPassages(urn.value).then(p => { passages.value = p }).catch(() => {})
   } catch (err: unknown) {
     error.value = err instanceof Error ? err.message : 'An unexpected error occurred'

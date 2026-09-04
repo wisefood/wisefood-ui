@@ -133,6 +133,12 @@
     "signIn": "Sign In",
     "legal": "Terms & Conditions | GDPR"
   },
+  "footer": {
+    "session": "Session",
+    "sessionHint": "Your session reference. Quote it when reporting a problem so we can find what happened. It resets when you sign out or after 30 minutes of inactivity.",
+    "copy": "Copy to clipboard",
+    "copied": "Copied"
+  },
   "header": {
     "console": "Console",
     "using": "Using",
@@ -1217,7 +1223,8 @@
       "foodDislikes": "Food Dislikes",
       "allergiesAndIntolerances": "Allergies & Intolerances",
       "memory": "What WiseFood remembers",
-      "dangerZone": "Danger Zone"
+      "dangerZone": "Danger Zone",
+      "privacy": "Privacy & Data"
     },
     "memory": {
       "learnedIn": "Learned in {app}",
@@ -1504,6 +1511,14 @@
           "detail": "the date, version and IP address of your acceptance. Kept as proof of lawful basis, and survives account deletion in pseudonymous form."
         }
       }
+    },
+    "privacy": {
+      "analyticsTitle": "Help improve WiseFood",
+      "analyticsDescription": "Let us record which features you use under your name, so we can see what works and fix what does not.",
+      "analyticsAggregateNote": "If you decline, we still count that something happened — we just do not record that it was you.",
+      "sessionLine": "Current session reference: {id}",
+      "readMore": "Read the privacy notice",
+      "analyticsUnavailable": "Your current setting could not be loaded. Try again in a moment."
     }
   },
   "featureGate": {
@@ -1861,9 +1876,10 @@
     }
   },
   "consent": {
-    "message": "We use cookies and process your personal data solely to provide the WiseFood service.",
+    "message": "We use cookies and process your personal data to provide the WiseFood service, and to count your activity under your account so we can improve it.",
     "privacyPolicy": "Privacy Policy",
-    "accept": "Accept"
+    "accept": "Accept",
+    "analyticsNote": "You can turn activity attribution off at any time in your profile."
   },
   "guidelines": {
     "facets": {

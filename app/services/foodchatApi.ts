@@ -1,4 +1,5 @@
 import { useAuthStore } from '~/stores/auth'
+import { analyticsHeaders } from '~/composables/useAnalyticsSession'
 import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 
 // ============================================================================
@@ -948,7 +949,10 @@ class FoodChatApiService {
         method,
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          // Which visit and which client. Identity stays in the bearer
+          // token; these only say which sitting the request belongs to.
+          ...analyticsHeaders()
         },
         body: data ? JSON.stringify(data) : undefined,
         signal: controller.signal

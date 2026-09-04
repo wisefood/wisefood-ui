@@ -1,4 +1,5 @@
 import { useAuthStore } from '~/stores/auth'
+import { analyticsHeaders } from '~/composables/useAnalyticsSession'
 import { getWisefoodApiUrl } from '~/utils/runtimeConfig'
 
 interface RequestOptions extends RequestInit {
@@ -30,6 +31,9 @@ class WiseFoodApiService {
     return {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
+      // Which visit and which client this request belongs to. Never identity —
+      // the bearer token is the only thing allowed to say who the caller is.
+      ...analyticsHeaders(),
     }
   }
 
@@ -103,11 +107,14 @@ class WiseFoodApiService {
 
     const response = await fetch(url, {
       method: 'GET',
+      ...fetchOptions,
+      // `...fetchOptions` goes FIRST: spread after `headers` it replaced
+      // the whole merged object, so any caller passing its own headers
+      // silently dropped Authorization along with everything else.
       headers: {
         ...this.getAuthHeaders(),
         ...fetchOptions.headers,
       },
-      ...fetchOptions,
     })
 
     return this.handleResponse<T>(response)
@@ -122,12 +129,15 @@ class WiseFoodApiService {
 
     const response = await fetch(url, {
       method: 'POST',
+      ...fetchOptions,
+      // `...fetchOptions` goes FIRST: spread after `headers` it replaced
+      // the whole merged object, so any caller passing its own headers
+      // silently dropped Authorization along with everything else.
       headers: {
         ...this.getAuthHeaders(),
         ...fetchOptions.headers,
       },
       body: data ? JSON.stringify(data) : undefined,
-      ...fetchOptions,
     })
 
     return this.handleResponse<T>(response)
@@ -142,12 +152,15 @@ class WiseFoodApiService {
 
     const response = await fetch(url, {
       method: 'PUT',
+      ...fetchOptions,
+      // `...fetchOptions` goes FIRST: spread after `headers` it replaced
+      // the whole merged object, so any caller passing its own headers
+      // silently dropped Authorization along with everything else.
       headers: {
         ...this.getAuthHeaders(),
         ...fetchOptions.headers,
       },
       body: data ? JSON.stringify(data) : undefined,
-      ...fetchOptions,
     })
 
     return this.handleResponse<T>(response)
@@ -162,12 +175,15 @@ class WiseFoodApiService {
 
     const response = await fetch(url, {
       method: 'PATCH',
+      ...fetchOptions,
+      // `...fetchOptions` goes FIRST: spread after `headers` it replaced
+      // the whole merged object, so any caller passing its own headers
+      // silently dropped Authorization along with everything else.
       headers: {
         ...this.getAuthHeaders(),
         ...fetchOptions.headers,
       },
       body: data ? JSON.stringify(data) : undefined,
-      ...fetchOptions,
     })
 
     return this.handleResponse<T>(response)
@@ -182,11 +198,14 @@ class WiseFoodApiService {
 
     const response = await fetch(url, {
       method: 'DELETE',
+      ...fetchOptions,
+      // `...fetchOptions` goes FIRST: spread after `headers` it replaced
+      // the whole merged object, so any caller passing its own headers
+      // silently dropped Authorization along with everything else.
       headers: {
         ...this.getAuthHeaders(),
         ...fetchOptions.headers,
       },
-      ...fetchOptions,
     })
 
     return this.handleResponse<T>(response)

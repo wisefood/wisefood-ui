@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { track } from '~/composables/useTelemetry'
 import foodscholarApi from '~/services/foodscholarApi'
 import type {
   QaAskRequest,
@@ -48,6 +49,13 @@ export function useFoodScholarQaStream() {
     streaming.value = true
     reset()
     let sawEvent = false
+    // Emitted before the answer, not after: a question the user gives up on
+    // mid-stream is exactly the one worth knowing about, and an event written
+    // only on success would never record it.
+    track('qa.ask', {
+      question_length: String(payload?.question ?? '').length,
+      streaming: true
+    }, 'foodscholar')
 
     try {
       let terminal: QaAskResult | null = null

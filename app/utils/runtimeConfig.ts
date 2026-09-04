@@ -26,6 +26,7 @@ interface RuntimeConfigWindow extends Window {
     flowsOrgId?: string
     flowsEnvironment?: string
     flowsApiUrl?: string
+    release?: string
   }
 }
 
@@ -83,6 +84,16 @@ export const isSentryEnabled = (): boolean => {
   const value = runtimeConfig?.sentryEnabled ?? config.public.sentryEnabled
 
   return value === true || value === 'true'
+}
+
+// Which build is running. Stamped on every error and every session row, so
+// "this stopped happening after Tuesday" is a question the console can answer
+// instead of a thing somebody remembers. Empty in development, where there is
+// no build to name.
+export const getClientRelease = (): string => {
+  const runtimeConfig = getWindowRuntimeConfig()
+  const config = useRuntimeConfig()
+  return String(runtimeConfig?.release || config.public.release || '').trim().slice(0, 64)
 }
 
 export const getFlowsOrgId = (): string => {

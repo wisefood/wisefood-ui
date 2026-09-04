@@ -25,7 +25,8 @@ window.__RUNTIME_CONFIG__ = {
   sentryEnabled: '${SENTRY_ENABLED_RUNTIME}',
   flowsOrgId: '${VITE_FLOWS_ORG_ID}',
   flowsEnvironment: '${VITE_FLOWS_ENVIRONMENT}',
-  flowsApiUrl: '${VITE_FLOWS_API_URL}'
+  flowsApiUrl: '${VITE_FLOWS_API_URL}',
+  release: '${NUXT_PUBLIC_RELEASE:-$VITE_APP_RELEASE}'
 };
 EOF
 

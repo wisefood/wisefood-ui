@@ -1,4 +1,5 @@
 import { useAuthStore } from '~/stores/auth'
+import { analyticsHeaders } from '~/composables/useAnalyticsSession'
 import { getRecipeWranglerMode, getWisefoodApiUrl, getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 
 // ============================================================================
@@ -1421,7 +1422,7 @@ class RecipeApiService {
       const token = await this.ensureAuthToken(authStore)
 
       const response = await fetch(url.toString(), {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}`, ...analyticsHeaders() }
       })
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
@@ -1558,6 +1559,11 @@ class RecipeApiService {
       const doRequest = async (authToken: string) => {
         const headers = new Headers(requestInit.headers || {})
         headers.set('Authorization', `Bearer ${authToken}`)
+        // Which visit and which client. Set after the caller's own headers so
+        // a stale id in requestInit cannot outlive the session it named.
+        for (const [key, value] of Object.entries(analyticsHeaders())) {
+          headers.set(key, value)
+        }
 
         return fetch(url, {
           ...requestInit,
@@ -1653,7 +1659,9 @@ class RecipeApiService {
           method,
           headers: {
             'Authorization': `Bearer ${authToken}`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            // Which visit and which client this request belongs to.
+            ...analyticsHeaders()
           },
           body: data ? JSON.stringify(data) : undefined,
           signal: controller.signal

@@ -359,6 +359,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { track } from '~/composables/useTelemetry'
 import { useRecipeStore } from '~/stores/recipe'
 import recipeApi from '~/services/recipeApi'
 import type { Recipe } from '~/services/recipeApi'
@@ -526,6 +527,16 @@ onMounted(() => {
   if (idsFromQuery.length > 0) {
     recipeStore.clearCompareList()
     idsFromQuery.forEach(id => recipeStore.addToCompare(id))
+  }
+
+  // Once per opening, and only with something to compare. The list is also
+  // watched below so a recipe removed here reloads the table, but that is the
+  // same comparison being narrowed, not a new one.
+  if (recipeStore.compareList.length > 0) {
+    track('recipe.compare', {
+      count: recipeStore.compareList.length,
+      from_link: idsFromQuery.length > 0
+    }, 'recipewrangler')
   }
 
   loadRecipes()

@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { onClickOutside } from '@vueuse/core'
+import platformFeedbackApi from '~/services/platformFeedbackApi'
 
 const { t } = useI18n()
 
@@ -77,19 +78,42 @@ function toggle() {
   }
 }
 
-function submit() {
+// The five faces, worst to best, as a number the reports can average. Stored
+// alongside the label so a rename of the face never silently shifts the scale.
+const RATING_SCORES: Record<string, number> = {
+  awful: 1,
+  bad: 2,
+  ok: 3,
+  good: 4,
+  great: 5
+}
+
+async function submit() {
   if (!selected.value) {
     return
   }
 
-  // Mock submission — no backend yet. Just log what we'd send.
-  console.info('[feedback] mock submit', {
-    rating: selected.value,
-    comment: comment.value.trim()
-  })
-
+  // Optimistic: the widget thanks them and closes either way. Someone who took
+  // the trouble to rate the product should not be shown a network error for
+  // their trouble — and the rating is not worth a retry loop.
+  const rating = selected.value
+  const text = comment.value.trim()
   submitted.value = true
   closeTimer = setTimeout(close, 2200)
+
+  try {
+    await platformFeedbackApi.submit({
+      rating_kind: 'likert5',
+      rating_value: rating,
+      rating_value_num: RATING_SCORES[rating],
+      comment: text || undefined,
+      target_type: 'platform',
+      target_id: typeof window !== 'undefined' ? window.location.pathname : undefined
+    })
+  } catch {
+    // Until this shipped, every rating collected here went to the browser
+    // console and nowhere else. A dropped one is no worse than that was.
+  }
 }
 
 onClickOutside(panel, () => {

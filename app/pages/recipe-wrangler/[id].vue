@@ -1304,6 +1304,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import { track } from '~/composables/useTelemetry'
 import { useRecipes } from '~/composables/useRecipes'
 import { useRecipeStore } from '~/stores/recipe'
 import { useHouseholdStore } from '~/stores/household'
@@ -1352,6 +1353,24 @@ const backLink = computed(() => {
   }
   return { to: '/recipe-wrangler', label: t('recipeWrangler.backToRecipes') }
 })
+
+/**
+ * Where the reader came from, as a handful of fixed labels.
+ *
+ * The previous path itself is not reported: it is a URL with ids in it, and
+ * the question the funnel asks is only ever "did they arrive from the results
+ * list, from a saved list, or cold?".
+ */
+const arrivalSource = (): string => {
+  const prev = router.options.history.state.back as string | undefined
+  if (!prev) return 'direct'
+  if (prev.startsWith('/recipe-wrangler/compare')) return 'compare'
+  if (prev.startsWith('/recipe-wrangler/collections')) return 'collection'
+  if (prev.startsWith('/recipe-wrangler')) return 'search'
+  if (prev.startsWith('/dashboard')) return 'dashboard'
+  if (prev.startsWith('/library')) return 'library'
+  return 'other'
+}
 
 // ============================================================================
 // State
@@ -2446,6 +2465,10 @@ const handleImageError = (event: Event) => {
 // ============================================================================
 onMounted(async () => {
   recipeStore.initialize()
+  // On open, not on every `loadRecipe()`: switching region or retrying a
+  // failed fetch reloads the same recipe, and counting those would inflate the
+  // last step of the search funnel against the click that led here.
+  track('recipe.view', { recipe_id: recipeId.value, source: arrivalSource() }, 'recipewrangler')
   try {
     await householdStore.initialize()
     selectedRegion.value = resolveRegion(householdStore.currentHousehold?.region)

@@ -11,6 +11,17 @@ interface ConsentState {
   grantedVersion: string | null
   /** user id the current state was loaded for (guards against user switches) */
   loadedForUserId: string | null
+  /**
+   * Whether this person has ever answered the analytics question.
+   *
+   * Distinct from "answered no". Somebody who accepted the banner before
+   * analytics attribution was part of it has never been asked, and under
+   * opt-in their activity is counted but never attributed — so the console
+   * shows sessions beside zero named people. Asking them once fixes that.
+   * Somebody who turned it off in their profile HAS answered, and asking
+   * again would be nagging them out of a decision they made.
+   */
+  analyticsDecided: boolean
 }
 
 // sessionStorage cache so navigations within a session don't refetch or
@@ -25,12 +36,22 @@ export const useConsentStore = defineStore('consent', {
     loading: false,
     accepting: false,
     grantedVersion: null,
-    loadedForUserId: null
+    loadedForUserId: null,
+    // Assumed answered until we learn otherwise, so a failed lookup never
+    // produces a banner somebody has already dealt with.
+    analyticsDecided: true
   }),
 
   getters: {
-    /** Show the consent bar: status is known and the current version isn't granted */
-    needsConsent: (state) => state.loaded && state.grantedVersion !== CONSENT_VERSION
+    /**
+     * Show the consent bar.
+     *
+     * Two reasons: the current terms are not granted, or the terms are granted
+     * but the analytics question has never been put to this person — which is
+     * everybody who accepted before attribution was part of the banner.
+     */
+    needsConsent: state => state.loaded
+      && (state.grantedVersion !== CONSENT_VERSION || !state.analyticsDecided)
   },
 
   actions: {
@@ -46,25 +67,38 @@ export const useConsentStore = defineStore('consent', {
       if (this.loaded && this.loadedForUserId === userId) return
 
       // Fast path: already accepted this version earlier in this session
-      if (
-        import.meta.client
+      // The session cache covers the terms only. It deliberately does not
+      // short-circuit the analytics check: the cache was written before that
+      // question existed, so trusting it here would hide the bar from exactly
+      // the people who still need to see it.
+      const cachedTerms = import.meta.client
         && window.sessionStorage.getItem(storageKey(userId, CONSENT_VERSION)) === 'granted'
-      ) {
-        this.grantedVersion = CONSENT_VERSION
-        this.loaded = true
-        this.loadedForUserId = userId
-        return
-      }
 
       this.loading = true
       try {
-        const status = await consentApi.getConsent()
-        this.grantedVersion = status.granted ? status.version : null
+        if (cachedTerms) {
+          this.grantedVersion = CONSENT_VERSION
+        } else {
+          const status = await consentApi.getConsent()
+          this.grantedVersion = status.granted ? status.version : null
+          if (import.meta.client && status.granted && status.version === CONSENT_VERSION) {
+            window.sessionStorage.setItem(storageKey(userId, CONSENT_VERSION), 'granted')
+          }
+        }
+
+        // Only under opt-in. Under opt-out an unanswered question already
+        // means "attribute me", so there is nothing to ask about.
+        try {
+          const analytics = await consentApi.getAnalyticsConsent()
+          this.analyticsDecided = analytics.mode !== 'opt_in' || analytics.decided
+        } catch {
+          // Unreachable or not deployed: assume answered rather than show a
+          // banner we cannot resolve.
+          this.analyticsDecided = true
+        }
+
         this.loaded = true
         this.loadedForUserId = userId
-        if (import.meta.client && status.granted && status.version === CONSENT_VERSION) {
-          window.sessionStorage.setItem(storageKey(userId, CONSENT_VERSION), 'granted')
-        }
       } catch (err) {
         // Keep loaded=false: on transient errors we hide the bar rather than
         // nag a user who may already have consented.
@@ -87,6 +121,30 @@ export const useConsentStore = defineStore('consent', {
         await consentApi.recordConsent()
         this.grantedVersion = CONSENT_VERSION
         this.loaded = true
+
+        /*
+         * Accepting here also turns analytics attribution on.
+         *
+         * The platform reads silence as "do not name me" (opt-in), so without
+         * this every per-person view stays empty however many people accept
+         * the banner — the console shows healthy session counts beside zero
+         * identified users, which reads as a fault rather than as a setting.
+         *
+         * It is a second, separate purpose, so the banner says so rather than
+         * folding it in quietly, and the profile toggle remains the way to
+         * withdraw it on its own. Recorded after the primary consent and
+         * never allowed to fail the accept: a person who clicked Accept has
+         * consented whether or not this second call succeeded, and blocking
+         * the banner on it would leave them unable to use the site.
+         */
+        try {
+          await consentApi.setAnalyticsConsent(true)
+          this.analyticsDecided = true
+        } catch (err) {
+          // Left undecided on failure, so the question is put again next time
+          // rather than silently lost.
+          console.warn('[ConsentStore] Analytics consent not recorded:', err)
+        }
         if (userId) {
           this.loadedForUserId = userId
           if (import.meta.client) {

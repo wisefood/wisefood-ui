@@ -1,4 +1,5 @@
 import { ref, computed, watch, type Ref } from 'vue'
+import { track } from '~/composables/useTelemetry'
 import { useHouseholdStore } from '~/stores/household'
 import memberSavedItemsApi, { type SavedItemType } from '~/services/memberSavedItemsApi'
 
@@ -76,6 +77,13 @@ export function useSavedItem(
       } else {
         await memberSavedItemsApi.addSavedItem(memberId, type, ref_)
       }
+      // After the write, not with the optimistic flip: the toggle reverts on
+      // failure, and an event recorded before the API answered would count
+      // saves that never happened.
+      track(wasSaved ? 'library.remove' : 'library.save', {
+        item_type: type,
+        item_ref: ref_
+      }, 'platform')
     } catch (e) {
       console.error('[useSavedItem] Failed to toggle saved item:', e)
       isSaved.value = wasSaved // revert

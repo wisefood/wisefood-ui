@@ -737,6 +737,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { track } from '~/composables/useTelemetry'
 import { useArticles } from '~/composables/useArticles'
 import { useReaderVisibility } from '~/composables/useReaderVisibility'
 import { useAuthStore } from '~/stores/auth'
@@ -1108,6 +1109,10 @@ onMounted(async () => {
       statusMessage: t('foodScholarArticle.notFound', 'Article not found')
     })
   }
+
+  // After the readability guard, so an entry the reader was never allowed to
+  // see is not counted as one they opened.
+  track('catalog.view', { entry_type: 'article', urn: urn.value }, 'catalog')
 
   if (highlightText.value) {
     isSimplified.value = false

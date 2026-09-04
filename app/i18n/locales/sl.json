@@ -133,6 +133,12 @@
     "signIn": "Prijava",
     "legal": "Pogoji uporabe | GDPR"
   },
+  "footer": {
+    "session": "Seja",
+    "sessionHint": "Oznaka tvoje seje. Navedi jo ob prijavi težave, da lahko poiščemo, kaj se je zgodilo. Ponastavi se ob odjavi ali po 30 minutah nedejavnosti.",
+    "copy": "Kopiraj v odložišče",
+    "copied": "Kopirano"
+  },
   "header": {
     "console": "Konzola",
     "using": "Uporablja",
@@ -1217,7 +1223,8 @@
       "foodDislikes": "Hrana, ki je ne maraš",
       "allergiesAndIntolerances": "Alergije in intolerance",
       "memory": "Kaj si WiseFood zapomni",
-      "dangerZone": "Nevarno območje"
+      "dangerZone": "Nevarno območje",
+      "privacy": "Zasebnost in podatki"
     },
     "memory": {
       "learnedIn": "Naučeno v aplikaciji {app}",
@@ -1504,6 +1511,14 @@
           "detail": "datum, različica in IP-naslov tvojega sprejema. Hranimo ga kot dokazilo o pravni podlagi in po izbrisu računa ostane v psevdonimni obliki."
         }
       }
+    },
+    "privacy": {
+      "analyticsTitle": "Pomagaj izboljšati WiseFood",
+      "analyticsDescription": "Dovoli, da pod tvojim imenom beležimo, katere funkcije uporabljaš, da vidimo, kaj deluje, in popravimo, kar ne.",
+      "analyticsAggregateNote": "Če zavrneš, še vedno štejemo, da se je nekaj zgodilo — le tega ne zabeležimo, da si bil to ti.",
+      "sessionLine": "Oznaka trenutne seje: {id}",
+      "readMore": "Preberi obvestilo o zasebnosti",
+      "analyticsUnavailable": "Trenutne nastavitve ni bilo mogoče naložiti. Poskusi znova čez trenutek."
     }
   },
   "foodChatHome": {
@@ -1839,9 +1854,10 @@
     }
   },
   "consent": {
-    "message": "Piškotke uporabljamo in vaše osebne podatke obdelujemo izključno za zagotavljanje storitve WiseFood.",
+    "message": "Piškotke uporabljamo in vaše osebne podatke obdelujemo za zagotavljanje storitve WiseFood ter za štetje vaše dejavnosti pod vašim računom, da jo lahko izboljšamo.",
     "privacyPolicy": "Politika zasebnosti",
-    "accept": "Sprejmi"
+    "accept": "Sprejmi",
+    "analyticsNote": "Pripisovanje dejavnosti lahko kadar koli izklopite v svojem profilu."
   },
   "featureGate": {
     "loading": "Nalaganje ...",

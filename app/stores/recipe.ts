@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { watch } from 'vue'
+import { track } from '~/composables/useTelemetry'
 import type { Recipe, RecipeDishType, RecipeFacetMap, RecipeParamSortBy, RecipeSearchResult, RecipeSource } from '~/services/recipeApi'
 import memberFavoritesApi from '~/services/memberFavoritesApi'
 import { useHouseholdStore } from '~/stores/household'
@@ -141,6 +142,10 @@ export const useRecipeStore = defineStore('recipe', {
       this.favorites.push(recipeId)
       this.persistFavorites()
       this.syncFavoriteAdd(recipeId)
+      // Here rather than in the sync helper: a member-less visitor's favorite
+      // never reaches the API, and leaving those out would make favouriting
+      // look like something only signed-in-with-a-member people do.
+      track('favorite.add', { recipe_id: recipeId }, 'recipewrangler')
     },
 
     /**
@@ -152,6 +157,7 @@ export const useRecipeStore = defineStore('recipe', {
       this.favorites.splice(index, 1)
       this.persistFavorites()
       this.syncFavoriteRemove(recipeId)
+      track('favorite.remove', { recipe_id: recipeId }, 'recipewrangler')
     },
 
     /**

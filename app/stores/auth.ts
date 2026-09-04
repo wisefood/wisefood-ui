@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { resetAnalyticsSession } from '~/composables/useAnalyticsSession'
 import KeycloakAuthService from '~/services/keycloak'
 import { canAccessConsole, includesAnyRole, includesRole, isAdmin } from '~/utils/authRoles'
 import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
@@ -301,6 +302,12 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async logout(redirectUri: string = '/login') {
+      // Start a fresh analytics session on the way out. `resolveSession` would
+      // do this anyway when it next sees a different owner, but doing it here
+      // means the id is gone the moment the person signs out rather than on
+      // their next request — and an id that spanned two accounts would link
+      // them to each other.
+      resetAnalyticsSession()
       if (this.guest) {
         this.clearGuestSession()
         this.isAuthenticated = false

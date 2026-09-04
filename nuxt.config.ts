@@ -83,7 +83,11 @@ export default defineNuxtConfig({
       recipeWranglerMode: process.env.VITE_RECIPE_WRANGLER_MODE,
       flowsOrgId: process.env.VITE_FLOWS_ORG_ID, // Flows.js organization id (interactive walkthroughs)
       flowsEnvironment: process.env.VITE_FLOWS_ENVIRONMENT || 'production',
-      flowsApiUrl: process.env.VITE_FLOWS_API_URL || '' // Override Flows apiUrl; empty => same-origin (proxied to api.flows-cloud.com)
+      flowsApiUrl: process.env.VITE_FLOWS_API_URL || '', // Override Flows apiUrl; empty => same-origin (proxied to api.flows-cloud.com)
+      // Build identifier for real user monitoring. Set it to the image tag or
+      // the commit sha at build time; an error group's release is how anyone
+      // tells a fixed crash from a live one.
+      release: process.env.NUXT_PUBLIC_RELEASE || process.env.VITE_APP_RELEASE || ''
     }
   },
   routeRules: {

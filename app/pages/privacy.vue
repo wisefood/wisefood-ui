@@ -69,6 +69,29 @@
       </section>
 
       <section class="space-y-3 mb-10">
+        <h2 class="text-xl font-semibold">Usage and your session reference</h2>
+        <p class="leading-7 text-zinc-700 dark:text-zinc-300">
+          To see which parts of WiseFood work and which do not, we record what
+          happens in the product: that a search was run, a question asked, a meal
+          plan generated, how long it took, and what it cost to run. Your name is
+          attached to those records only if you allow it — the switch is under
+          <NuxtLink to="/my-profile" class="text-primary hover:underline">Privacy &amp; Data</NuxtLink>
+          in your profile. If you decline, we still count that something happened;
+          we simply do not record that it was you, and the text you typed into a
+          search box is not kept.
+        </p>
+        <p class="leading-7 text-zinc-700 dark:text-zinc-300">
+          The short reference shown at the bottom of every page — something like
+          <span class="font-mono">k3f9-2xa7-lm4q</span> — groups everything done in
+          one sitting. Quote it if you report a problem and we can find what
+          happened. It is not an account number: it lives only in this browser tab,
+          changes after 30 minutes of inactivity, and changes again when you sign
+          in or out, so it can never connect two accounts. Only administrators and
+          nutrition experts can look up the activity behind it.
+        </p>
+      </section>
+
+      <section class="space-y-3 mb-10">
         <h2 class="text-xl font-semibold">Language models</h2>
         <p class="leading-7 text-zinc-700 dark:text-zinc-300">
           Answers, meal plans and recipe adaptations are produced with the help of

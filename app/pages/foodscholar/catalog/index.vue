@@ -614,6 +614,7 @@ import { useReaderVisibility } from '~/composables/useReaderVisibility'
 import { useAuthStore } from '~/stores/auth'
 import articlesApi, { type Article } from '~/services/articlesApi'
 import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
+import { analyticsHeaders } from '~/composables/useAnalyticsSession'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 
@@ -1562,6 +1563,10 @@ const fetchSearchSummary = async (query: string, results: Article[]) => {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
+        // This page calls the gateway directly instead of going through the
+        // shared client, so it needs the session headers explicitly — without
+        // them this search would be the one action missing from the session.
+        ...analyticsHeaders(),
       },
       body: JSON.stringify(requestBody)
     })

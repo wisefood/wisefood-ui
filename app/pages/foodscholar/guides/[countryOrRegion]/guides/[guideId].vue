@@ -631,6 +631,7 @@ import GuideArtifactList from '~/components/foodscholar/guides/GuideArtifactList
 import GuideMetadataPanel from '~/components/foodscholar/guides/GuideMetadataPanel.vue'
 import ReviewPdfViewport from '~/components/console/guides/ReviewPdfViewport.client.vue'
 import catalogApi from '~/services/catalogApi'
+import { track } from '~/composables/useTelemetry'
 import { useAuthStore } from '~/stores/auth'
 import {
   buildFacetSelectOptions,
@@ -1207,6 +1208,10 @@ async function loadGuideDetail() {
       await navigateTo({ path: canonicalPath, query: route.query }, { replace: true })
       return
     }
+
+    // Past the canonical redirect, which re-enters this function: counting
+    // before it would double every arrival on a non-canonical URL.
+    track('catalog.view', { entry_type: 'guide', urn: guide.urn }, 'catalog')
 
     suppressWatcher = true
     hydrateStateFromRoute()

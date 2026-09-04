@@ -672,6 +672,7 @@
               target="_blank"
               rel="noopener noreferrer"
               class="citation-source-card flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600 dark:hover:text-brand-400 transition-colors group"
+              @click="recordCitationOpened(citation.article_urn, getCitationSourceType(citation), 'sidebar')"
             >
               <UIcon :name="getQaSourceIcon(citation.article_urn, getCitationSourceType(citation))" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
               <span class="min-w-0 flex-1">
@@ -1179,6 +1180,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { track } from '~/composables/useTelemetry'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
@@ -2013,6 +2015,27 @@ const resolveQaSourceHref = (href: string): { url: URL, urn: string, sourceType:
   return null
 }
 
+/**
+ * A cited source the reader actually followed.
+ *
+ * `placement` keeps the two routes in apart: the marker inside the prose and
+ * the card in the sidebar answer different questions — whether inline markers
+ * are noticed at all, versus whether the sidebar is read as a bibliography —
+ * and a single combined count answers neither.
+ */
+const recordCitationOpened = (
+  urn: string,
+  sourceType: QaCitation['source_type'],
+  placement: 'inline' | 'sidebar'
+) => {
+  if (!urn) return
+  track('qa.citation_opened', {
+    urn,
+    source_type: normalizeQaSourceType(urn, sourceType),
+    placement
+  }, 'foodscholar')
+}
+
 const handleMarkdownClick = (event: MouseEvent) => {
   const anchor = (event.target as HTMLElement).closest('a')
   if (!anchor) return
@@ -2025,6 +2048,8 @@ const handleMarkdownClick = (event: MouseEvent) => {
 
   const { url, urn: targetUrn, sourceType, path: targetPath } = resolvedSource
   const citation = getCitationForUrn(targetUrn)
+
+  recordCitationOpened(targetUrn, sourceType, 'inline')
 
   event.preventDefault()
   event.stopPropagation()

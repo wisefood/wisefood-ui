@@ -38,6 +38,7 @@
         v-else
         class="space-y-6"
       >
+        <ConsoleInsightsAnalyticsControls />
         <UAlert
           v-if="error"
           color="error"

@@ -525,6 +525,45 @@
           </div>
         </UCard>
 
+        <!-- Privacy & Data -->
+        <UCard>
+          <template #header>
+            <div class="flex items-center gap-2">
+              <UIcon name="i-lucide-shield-check" class="w-5 h-5 text-gray-400" />
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.sections.privacy') }}</h2>
+            </div>
+          </template>
+
+          <div class="space-y-4">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <p class="font-medium text-gray-900 dark:text-white">{{ t('myProfile.privacy.analyticsTitle') }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('myProfile.privacy.analyticsDescription') }}</p>
+                <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">{{ t('myProfile.privacy.analyticsAggregateNote') }}</p>
+              </div>
+              <USwitch
+                v-model="analyticsConsent"
+                :loading="analyticsConsentSaving || analyticsConsentLoading"
+                :disabled="!analyticsConsentKnown || analyticsConsentSaving"
+                :aria-label="t('myProfile.privacy.analyticsTitle')"
+                @update:model-value="saveAnalyticsConsent"
+              />
+            </div>
+            <p
+              v-if="!analyticsConsentKnown && !analyticsConsentLoading"
+              class="text-xs text-amber-600 dark:text-amber-400"
+            >
+              {{ t('myProfile.privacy.analyticsUnavailable') }}
+            </p>
+            <p v-if="analyticsSessionId" class="text-xs text-gray-400 dark:text-gray-500">
+              {{ t('myProfile.privacy.sessionLine', { id: analyticsSessionId }) }}
+            </p>
+            <NuxtLink to="/privacy" class="inline-block text-sm text-primary hover:underline">
+              {{ t('myProfile.privacy.readMore') }}
+            </NuxtLink>
+          </div>
+        </UCard>
+
         <!-- Danger Zone -->
         <UCard
           :ui="{
@@ -1168,6 +1207,7 @@ import {
 } from '~/utils/foodPreferences'
 import householdsApi, { type MemberProfile, type NutritionalPreferences } from '~/services/householdsApi'
 import consentApi from '~/services/consentApi'
+import { useAnalyticsSession } from '~/composables/useAnalyticsSession'
 import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
@@ -1187,6 +1227,46 @@ const loading = ref(false)
 const isSaving = ref(false)
 const isDeleting = ref(false)
 const deleteError = ref<string | null>(null)
+
+// Analytics consent. The platform defaults to opt-in, so until someone says
+// yes their activity is counted but never attributed — this switch is the only
+// thing that turns "somebody searched for X" into "this person did".
+const analyticsConsent = ref(false)
+const analyticsConsentLoading = ref(false)
+const analyticsConsentSaving = ref(false)
+// Unknown until the first load succeeds. A switch showing "off" for a user
+// who is actually opted in — because the request failed — would be a lie in
+// the one place they come to check; so until we know, it is disabled and says
+// so.
+const analyticsConsentKnown = ref(false)
+const { sessionId: analyticsSessionId } = useAnalyticsSession()
+
+async function loadAnalyticsConsent() {
+  analyticsConsentLoading.value = true
+  try {
+    const status = await consentApi.getAnalyticsConsent()
+    analyticsConsent.value = status.enabled
+    analyticsConsentKnown.value = true
+  } catch {
+    analyticsConsentKnown.value = false
+  } finally {
+    analyticsConsentLoading.value = false
+  }
+}
+
+async function saveAnalyticsConsent(enabled: boolean) {
+  analyticsConsentSaving.value = true
+  try {
+    const status = await consentApi.setAnalyticsConsent(enabled)
+    analyticsConsent.value = status.enabled
+  } catch {
+    // Put the switch back where it was: a toggle that stays flipped after a
+    // failed save is a user believing they opted out when they have not.
+    analyticsConsent.value = !enabled
+  } finally {
+    analyticsConsentSaving.value = false
+  }
+}
 
 // Modal states
 const showAvatarEditor = ref(false)
@@ -1867,6 +1947,10 @@ onMounted(async () => {
   if (currentMember.value?.id) {
     await loadMemberProfile()
   }
+
+  // Not awaited with the rest: the privacy switch settling a moment later is
+  // better than the whole page waiting on it.
+  void loadAnalyticsConsent()
 })
 
 async function loadMemberProfile() {

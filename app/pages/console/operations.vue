@@ -5,8 +5,8 @@
       class="mb-4"
     />
     <UPageHeader
-      title="Analytics & Observability"
-      description="Catalog content statistics and LLM observability across Foodchat, RecipeWrangler and FoodScholar."
+      title="Analytics"
+      description="How the platform is being used, what the catalogue holds, and what the models cost."
       :ui="{ root: 'relative py-8 border-b-0' }"
     />
 
@@ -18,6 +18,36 @@
         class="w-full"
         :ui="{ content: 'w-full pt-6' }"
       >
+        <template #usage>
+          <!-- A signpost, not a second overview. -->
+          <UCard class="border border-gray-200/70 dark:border-white/10">
+            <div class="flex flex-col items-start gap-3 py-4">
+              <UIcon
+                name="i-lucide-chart-column"
+                class="h-8 w-8 text-brand-500"
+              />
+              <div>
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+                  Usage moved to the analytics console
+                </h3>
+                <p class="mt-1 max-w-prose text-sm text-gray-600 dark:text-gray-300">
+                  Activity, search, sessions and devices, browser errors, page speed,
+                  feedback, Q&amp;A review and model spend now live together, with their
+                  own sections. This page keeps the prompt and content work.
+                </p>
+              </div>
+              <UButton
+                to="/console/insights"
+                color="primary"
+                icon="i-lucide-arrow-right"
+                trailing
+              >
+                Open analytics
+              </UButton>
+            </div>
+          </UCard>
+        </template>
+
         <template #content>
           <div class="space-y-6">
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -143,29 +173,36 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useConsoleStats } from '~/composables/useConsoleStats'
 import observabilityApi, { type DashboardData, type DashboardRange } from '~/services/observabilityApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({ layout: 'default' })
-useHead({ title: 'Analytics & Observability' })
+useHead({ title: 'Prompts & content · Console' })
 
 const breadcrumbItems = consoleBreadcrumb({
-  label: 'Analytics & Observability',
-  icon: 'i-lucide-chart-column'
+  label: 'Prompts & content',
+  icon: 'i-lucide-sparkles'
 })
 
+// Usage no longer leads, and no longer holds a second copy of the analytics
+// overview: that page now lives at /console/insights with thirteen others
+// behind it, and two overviews disagreeing about the same numbers is worse
+// than one. What is left here is the prompt and content work this page is
+// actually for; the Usage tab is a signpost across.
 const tabs = [
   { label: 'Content', value: 'content', slot: 'content', icon: 'i-lucide-folder-open' },
-  { label: 'Observability', value: 'observability', slot: 'observability', icon: 'i-lucide-sparkles' }
+  { label: 'Observability', value: 'observability', slot: 'observability', icon: 'i-lucide-sparkles' },
+  { label: 'Usage', value: 'usage', slot: 'usage', icon: 'i-lucide-activity' }
 ]
 
 // Allow deep-linking to a tab via ?tab=observability (e.g. from the console
 // "Prompt / LLM Controls" card). Falls back to Content for any other value.
 const route = useRoute()
-const initialTab = route.query.tab === 'observability' ? 'observability' : 'content'
-const activeTab = ref(initialTab)
+const validTabs = ['usage', 'content', 'observability']
+const requested = String(route.query.tab ?? '')
+const activeTab = ref(validTabs.includes(requested) ? requested : 'usage')
 
 const { catalog, load } = useConsoleStats()
 
@@ -210,7 +247,10 @@ watch(activeTab, (tab) => {
   if (tab === 'observability' && !dashboardLoaded) void loadDashboard()
 }, { immediate: true })
 
-onMounted(() => {
-  void load()
-})
+// Catalog stats are only needed by the Content tab, which is no longer the
+// one that opens; loading them on mount would make every visit pay for a tab
+// most visits do not open.
+watch(activeTab, (tab) => {
+  if (tab === 'content') void load()
+}, { immediate: true })
 </script>

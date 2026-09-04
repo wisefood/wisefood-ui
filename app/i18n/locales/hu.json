@@ -133,6 +133,12 @@
     "signIn": "Bejelentkezés",
     "legal": "Felhasználási feltételek | GDPR"
   },
+  "footer": {
+    "session": "Munkamenet",
+    "sessionHint": "A munkamenet azonosítója. Hibabejelentéskor add meg, hogy megtaláljuk, mi történt. Kijelentkezéskor vagy 30 perc tétlenség után új azonosítót kapsz.",
+    "copy": "Másolás a vágólapra",
+    "copied": "Másolva"
+  },
   "header": {
     "console": "Konzol",
     "using": "Használatban",
@@ -1217,7 +1223,8 @@
       "foodDislikes": "Nem kedvelt ételek",
       "allergiesAndIntolerances": "Allergiák és intoleranciák",
       "memory": "Amit a WiseFood megjegyzett",
-      "dangerZone": "Veszélyzóna"
+      "dangerZone": "Veszélyzóna",
+      "privacy": "Adatvédelem és adatok"
     },
     "memory": {
       "learnedIn": "Innen tanulta: {app}",
@@ -1504,6 +1511,14 @@
           "detail": "az elfogadás dátuma, verziója és IP-címe. A jogalap bizonyítékaként megtartjuk, és a fiók törlése után pszeudonim formában fennmarad."
         }
       }
+    },
+    "privacy": {
+      "analyticsTitle": "Segíts jobbá tenni a WiseFoodot",
+      "analyticsDescription": "Engedélyezd, hogy a neveddel együtt rögzítsük, mely funkciókat használod, így látjuk, mi működik, és javíthatjuk, ami nem.",
+      "analyticsAggregateNote": "Ha nem engedélyezed, továbbra is számoljuk, hogy történt valami — csak azt nem rögzítjük, hogy te voltál.",
+      "sessionLine": "Aktuális munkamenet azonosítója: {id}",
+      "readMore": "Adatvédelmi tájékoztató",
+      "analyticsUnavailable": "A jelenlegi beállítás nem tölthető be. Próbáld újra egy pillanat múlva."
     }
   },
   "foodChatHome": {
@@ -1839,9 +1854,10 @@
     }
   },
   "consent": {
-    "message": "Sütiket használunk, és személyes adatait kizárólag a WiseFood szolgáltatás nyújtása érdekében kezeljük.",
+    "message": "Sütiket használunk, és személyes adatait a WiseFood szolgáltatás nyújtásához kezeljük, valamint azért, hogy tevékenységét a fiókjához rendelve fejleszthessük a szolgáltatást.",
     "privacyPolicy": "Adatvédelmi irányelvek",
-    "accept": "Elfogadom"
+    "accept": "Elfogadom",
+    "analyticsNote": "A tevékenység hozzárendelését bármikor kikapcsolhatja a profiljában."
   },
   "featureGate": {
     "loading": "Betöltés...",

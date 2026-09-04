@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { track } from '~/composables/useTelemetry'
 import recipeApi from '~/services/recipeApi'
 import type {
   Recipe,
@@ -67,6 +68,14 @@ export function useRecipes() {
         // the set being shown.
         paramSearchFacets.value = cachedResults.facets
         paramSearchTotal.value = cachedResults.total
+        // Counted too: a repeated search is still someone searching, and
+        // leaving cache hits out would make the busiest queries look rarest.
+        track('recipe.search', {
+          query_length: normalizedQuestion.length,
+          results: cachedResults.total,
+          zero_result: cachedResults.total === 0,
+          from_cache: true
+        }, 'recipewrangler')
         return cachedResults.results
       }
     }
@@ -86,6 +95,17 @@ export function useRecipes() {
       // the user could no longer see.
       paramSearchFacets.value = facets ?? {}
       paramSearchTotal.value = total || results.length
+
+      // The client's view of the search. RecipeWrangler reports its own,
+      // richer version — normalised constraints, whether it had to relax
+      // them — but only the browser knows this is what the person in front of
+      // the screen actually asked for and saw.
+      track('recipe.search', {
+        query_length: normalizedQuestion.length,
+        results: total || results.length,
+        zero_result: (total || results.length) === 0,
+        from_cache: false
+      }, 'recipewrangler')
 
       // Cache the results
       if (import.meta.client) {

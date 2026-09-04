@@ -546,6 +546,7 @@
                 ? 'ring-2 ring-brandg-500 ring-offset-2 ring-offset-transparent'
                 : ''
             ]"
+            @click="recordResultClick(recipe, index)"
           >
             <RecipesRecipeCard
               :recipe="recipe"
@@ -655,6 +656,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { track } from '~/composables/useTelemetry'
 import { useRecipes } from '~/composables/useRecipes'
 import { useRecipeStore } from '~/stores/recipe'
 import { useI18n } from 'vue-i18n'
@@ -945,6 +947,24 @@ const resolveRecipeIdentifier = (recipe: Pick<RecipeSearchResult, 'recipe_id' | 
   return typeof recipe?.id === 'string' ? recipe.id.trim() : ''
 }
 
+/**
+ * A result the user chose, and where it sat when they chose it.
+ *
+ * Rank is counted across the whole result set rather than the page on screen:
+ * folding every page's top row into "position 1" would erase precisely the
+ * drop-off the search funnel exists to show. The favourites view is a saved
+ * list, not a result set, so it reports nothing.
+ */
+const recordResultClick = (recipe: RecipeSearchResult | null | undefined, index: number) => {
+  if (showFavoritesView.value || index < 0) return
+  const recipeId = resolveRecipeIdentifier(recipe)
+  if (!recipeId) return
+  track('recipe.result_click', {
+    recipe_id: recipeId,
+    position: (currentPage.value - 1) * itemsPerPage + index + 1
+  }, 'recipewrangler')
+}
+
 const openRecipeResult = async (recipe: RecipeSearchResult | null | undefined) => {
   const recipeId = resolveRecipeIdentifier(recipe)
   if (!recipeId) {
@@ -1024,6 +1044,7 @@ const handleSearchEnter = () => {
 
   const nextRecipe = displayedRecipes.value[activeRecipeResultIndex.value]
   if (nextRecipe) {
+    recordResultClick(nextRecipe, activeRecipeResultIndex.value)
     void openRecipeResult(nextRecipe)
     return
   }

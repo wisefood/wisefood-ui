@@ -24,6 +24,16 @@ export interface ConsentReceipt {
   ip_address: string
 }
 
+export interface AnalyticsConsentStatus {
+  /** Whether this user's activity may be recorded under their name. */
+  enabled: boolean
+  /** False means they have never been asked, which is different from "no". */
+  decided: boolean
+  decided_at: string | null
+  /** `opt_in` or `opt_out` — how the platform reads never having answered. */
+  mode: string
+}
+
 class ConsentApiService {
   /**
    * Get the current user's latest consent status for a consent type
@@ -59,6 +69,26 @@ class ConsentApiService {
    */
   async deleteAccount(): Promise<AccountErasureReceipt> {
     return wisefoodRestApi.delete<AccountErasureReceipt>('/users/me')
+  }
+
+  /**
+   * Whether this user's activity may be recorded under their name.
+   *
+   * Separate from service-provision consent: that one is about running the
+   * service at all, this one is only about attaching an identity to usage
+   * records. Declining still leaves the platform counting what happened — it
+   * just stops recording who it was.
+   */
+  async getAnalyticsConsent(): Promise<AnalyticsConsentStatus> {
+    return wisefoodRestApi.get<AnalyticsConsentStatus>('/users/me/analytics-consent')
+  }
+
+  /** Allow or withdraw. Takes effect on the next recorded action. */
+  async setAnalyticsConsent(enabled: boolean): Promise<AnalyticsConsentStatus> {
+    return wisefoodRestApi.put<AnalyticsConsentStatus>('/users/me/analytics-consent', {
+      enabled,
+      version: CONSENT_VERSION
+    })
   }
 }
 

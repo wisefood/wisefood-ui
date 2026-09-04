@@ -20,13 +20,21 @@
               name="i-lucide-cookie"
               class="h-4 w-4 shrink-0 inline-block align-[-2px] mr-1.5 text-gray-500 dark:text-gray-400"
             />
-            {{ t('consent.message') || 'We use cookies and process your personal data solely to provide the WiseFood service.' }}
+            {{ t('consent.message') || 'We use cookies and process your personal data to provide the WiseFood service, and to count your activity under your account so we can improve it.' }}
             <NuxtLink
               to="/privacy"
               class="underline underline-offset-2 font-medium hover:text-gray-900 dark:hover:text-white"
             >
               {{ t('consent.privacyPolicy') || 'Privacy Policy' }}
             </NuxtLink>
+            <!--
+              Named here rather than buried, because accepting grants two
+              separate things and the second one can be withdrawn on its own.
+              A consent nobody knew they gave is not a consent.
+            -->
+            <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {{ t('consent.analyticsNote') || 'You can turn activity attribution off at any time in your profile.' }}
+            </span>
           </p>
           <UButton
             color="primary"
