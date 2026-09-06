@@ -466,7 +466,7 @@ const usd = (value: unknown) => {
 
 async function load() {
   const [report, health] = await Promise.all([
-    insightsApi.getLlmUsage(range.value.days),
+    insightsApi.getLlmUsage(range.value.days, range.value),
     insightsApi.getHealth()
   ])
   usage.value = report

@@ -420,7 +420,7 @@ const percent = (value: number | null | undefined) =>
   value === null || value === undefined ? '—' : `${value.toFixed(1)}%`
 
 async function load() {
-  report.value = await insightsApi.getPatterns(range.value.days)
+  report.value = await insightsApi.getPatterns(range.value.days, range.value)
 }
 
 const { loading, failed, loadedAt, reload, busy } = useInsightsLoad(

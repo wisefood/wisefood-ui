@@ -209,7 +209,7 @@ function lookUpSession() {
 
 async function load() {
   const [people, recent] = await Promise.all([
-    insightsApi.getUsers(days.value, 50),
+    insightsApi.getUsers(days.value, 50, range.value),
     insightsApi.getRecentSessions(50, days.value)
   ])
   users.value = people

@@ -7,8 +7,9 @@
  * look up. The user sees the id; only admins and experts can read the activity
  * behind it.
  *
- * What it is NOT: an identity. It lives in `sessionStorage`, so it dies with
- * the browser tab; it resets after a period of inactivity; and it resets when
+ * What it is NOT: an identity. It lives in `localStorage` so that every tab
+ * of one sitting shares it — per-tab storage made a person with five tabs look
+ * like five people; it resets after a period of inactivity; and it resets when
  * the signed-in user changes, so one id can never span two accounts.
  *
  * The logic here is deliberately pure — `resolveSession` takes the clock, the
@@ -103,12 +104,12 @@ export function resolveSession(
   now: number,
   owner: string | null,
   stored: unknown,
-  mintId: () => string = () => newSessionId(),
+  mintId: () => string = () => newSessionId()
 ): ResolveResult {
   const fresh = (reason: ResolveResult['reason']): ResolveResult => ({
     session: { id: mintId(), startedAt: now, lastSeenAt: now, owner },
     started: true,
-    reason,
+    reason
   })
 
   if (stored === null || stored === undefined) return fresh('no-session')
@@ -122,7 +123,7 @@ export function resolveSession(
 
   return {
     session: { ...stored, lastSeenAt: now, owner },
-    started: false,
+    started: false
   }
 }
 

@@ -231,6 +231,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import insightsApi, { type AudienceReport } from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
+import { humanize } from '~/utils/labels'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Audience · Console' })
@@ -284,7 +285,7 @@ const signedInShare = computed(() => {
 })
 
 const roleColumns = [
-  { key: 'role', label: 'Role' },
+  { key: 'role', label: 'Role', format: humanize },
   { key: 'users', label: 'People', align: 'right' as const },
   { key: 'events', label: 'Events', align: 'right' as const }
 ]
@@ -298,7 +299,7 @@ const worstGap = computed(() => {
 })
 
 async function load() {
-  report.value = await insightsApi.getAudience(range.value.days)
+  report.value = await insightsApi.getAudience(range.value.days, range.value)
 }
 
 const { loading, failed, loadedAt, reload, busy } = useInsightsLoad(

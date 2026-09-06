@@ -198,6 +198,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import insightsApi, { type VitalsReport } from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
+import { humanize } from '~/utils/labels'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Page speed · Console' })
@@ -241,7 +242,7 @@ const metrics = computed(() =>
 
 const deviceColumns = [
   { key: 'metric', label: 'Metric' },
-  { key: 'device_type', label: 'Screen' },
+  { key: 'device_type', label: 'Screen', format: humanize },
   { key: 'p75', label: '75th percentile', align: 'right' as const },
   { key: 'good_rate', label: 'Good %', align: 'right' as const },
   { key: 'poor_rate', label: 'Poor %', align: 'right' as const },
@@ -293,7 +294,7 @@ function display(metric: string, value: number | null | undefined): string {
 }
 
 async function load() {
-  report.value = await insightsApi.getVitals(range.value.days, 50)
+  report.value = await insightsApi.getVitals(range.value.days, 50, range.value)
 }
 
 const { status, loading, failed, loadedAt, reload, busy } = useInsightsLoad(

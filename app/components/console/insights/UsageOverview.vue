@@ -195,6 +195,7 @@ import insightsApi, {
   type UsageRow,
   type ZeroResultRow
 } from '~/services/insightsApi'
+import { appLabel } from '~/utils/labels'
 
 /**
  * The Usage tab of the console's analytics page.
@@ -225,12 +226,12 @@ const zeroColumns = [
   { key: 'sessions', label: 'People', align: 'right' as const }
 ]
 const feedbackColumns = [
-  { key: 'app', label: 'From' },
+  { key: 'app', label: 'From', format: appLabel },
   { key: 'rating', label: 'Rating' },
   { key: 'comment', label: 'Comment', truncate: true }
 ]
 const usageColumns = [
-  { key: 'app', label: 'Product' },
+  { key: 'app', label: 'Product', format: appLabel },
   { key: 'calls', label: 'Calls', align: 'right' as const },
   { key: 'cost_usd', label: 'Cost', align: 'right' as const, money: true }
 ]

@@ -410,7 +410,7 @@
                   class="border-t border-gray-100 dark:border-zinc-800"
                 >
                   <td class="px-5 py-2 align-top">
-                    {{ row.app }}
+                    {{ appLabel(row.app) }}
                   </td>
                   <td class="px-5 py-2 align-top">
                     <UBadge
@@ -484,6 +484,7 @@ import insightsApi, {
 } from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
 import { INSIGHTS_NAV } from '~/utils/insightsNav'
+import { appLabel } from '~/utils/labels'
 
 definePageMeta({ layout: 'default' })
 // Named the way the nav and the Control Panel card already name it. Three
@@ -560,11 +561,11 @@ const spendHint = computed(() =>
 
 async function load() {
   const [summary, queries, feedback, health, usage] = await Promise.all([
-    insightsApi.getOverview(range.value.days),
-    insightsApi.getTrending(range.value.days, 10),
+    insightsApi.getOverview(range.value.days, range.value),
+    insightsApi.getTrending(range.value.days, 10, range.value),
     insightsApi.getFeedback({ status: 'new', limit: 10 }),
     insightsApi.getHealth(),
-    insightsApi.getLlmUsage(range.value.days)
+    insightsApi.getLlmUsage(range.value.days, range.value)
   ])
   overview.value = summary
   trending.value = queries.top

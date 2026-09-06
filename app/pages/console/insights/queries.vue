@@ -561,6 +561,7 @@ import insightsApi, {
   type ZeroResultRow
 } from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
+import { surfaceLabel } from '~/utils/labels'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Search insights · Console' })
@@ -635,7 +636,7 @@ const zeroColumns = [
   { key: 'last_seen', label: 'Last tried', align: 'right' as const }
 ]
 const surfaceColumns = [
-  { key: 'surface', label: 'Surface' },
+  { key: 'surface', label: 'Surface', format: surfaceLabel },
   { key: 'searches', label: 'Searches', align: 'right' as const },
   { key: 'zero_result', label: 'Empty', align: 'right' as const },
   { key: 'zero_result_rate', label: 'Empty rate', align: 'right' as const },
@@ -694,11 +695,11 @@ function dropOff(index: number): { lost: number, text: string } {
 
 async function load() {
   const [trending, zero, searchQuality, stages, filterReport, health] = await Promise.all([
-    insightsApi.getTrending(windowDays.value, 50),
-    insightsApi.getZeroResult(windowDays.value, 50),
-    insightsApi.getSearchQuality(windowDays.value),
-    insightsApi.getFunnel(windowDays.value),
-    insightsApi.getSearchFilters(windowDays.value, 20),
+    insightsApi.getTrending(windowDays.value, 50, range.value),
+    insightsApi.getZeroResult(windowDays.value, 50, range.value),
+    insightsApi.getSearchQuality(windowDays.value, range.value),
+    insightsApi.getFunnel(windowDays.value, range.value),
+    insightsApi.getSearchFilters(windowDays.value, 20, range.value),
     insightsApi.getHealth()
   ])
   top.value = trending.top

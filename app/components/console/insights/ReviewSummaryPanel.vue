@@ -187,6 +187,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { ReviewSummary } from '~/services/insightsApi'
+import { targetTypeLabel } from '~/utils/labels'
 
 /*
  * The aggregate side of expert review.
@@ -221,7 +222,7 @@ const reviewerColumns = [
   { key: 'last_review', label: 'Last', align: 'right' as const }
 ]
 const targetColumns = [
-  { key: 'target_type', label: 'Kind' },
+  { key: 'target_type', label: 'Kind', format: targetTypeLabel },
   { key: 'reviews', label: 'Verdicts', align: 'right' as const },
   { key: 'targets', label: 'Things', align: 'right' as const }
 ]

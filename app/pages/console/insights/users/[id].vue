@@ -290,8 +290,8 @@ async function load() {
   // people page renders, so the row is picked out of it rather than counted
   // again here where it could disagree with that page.
   const [people, board] = await Promise.all([
-    insightsApi.getUsers(days.value, 200),
-    insightsApi.getSessionBoard({ userId, days: days.value, limit: 50 })
+    insightsApi.getUsers(days.value, 200, range.value),
+    insightsApi.getSessionBoard({ userId, days: days.value, since: range.value.since, until: range.value.until, limit: 50 })
   ])
   totals.value = people.find(row => row.user_id === userId) ?? null
   sessions.value = board?.sessions ?? []

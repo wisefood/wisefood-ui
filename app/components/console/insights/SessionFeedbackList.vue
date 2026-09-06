@@ -55,7 +55,7 @@
             size="sm"
             class="shrink-0"
           >
-            {{ row.app }}
+            {{ appLabel(row.app) }}
           </UBadge>
           <UBadge
             v-if="row.status !== 'new'"
@@ -64,7 +64,7 @@
             size="sm"
             class="shrink-0"
           >
-            {{ row.status }}
+            {{ statusLabel(row.status) }}
           </UBadge>
         </div>
 
@@ -75,7 +75,7 @@
           class="mt-2 text-sm text-gray-700 dark:text-gray-200"
         >
           <span class="text-gray-400 dark:text-gray-500">Reason</span>
-          {{ row.reason }}
+          {{ reasonLabel(row.reason) }}
         </p>
         <blockquote
           v-if="row.comment"
@@ -92,7 +92,7 @@
 
         <p class="mt-2 flex flex-wrap items-baseline gap-x-2 text-xs text-gray-400 dark:text-gray-500">
           <span>About</span>
-          <span class="text-gray-500 dark:text-gray-400">{{ row.target_type }}</span>
+          <span class="text-gray-500 dark:text-gray-400">{{ targetTypeLabel(row.target_type) }}</span>
           <!-- Target ids are URNs and can be long; they wrap rather than push
                the card sideways. -->
           <span
@@ -111,6 +111,7 @@
 
 <script setup lang="ts">
 import type { FeedbackRow } from '~/services/insightsApi'
+import { appLabel, reasonLabel, statusLabel, targetTypeLabel } from '~/utils/labels'
 
 /**
  * The feedback given during one session, in full.

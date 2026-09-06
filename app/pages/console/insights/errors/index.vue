@@ -158,7 +158,7 @@
                             variant="subtle"
                             size="xs"
                           >
-                            {{ group.status }}
+                            {{ statusLabel(group.status) }}
                           </UBadge>
                           <UBadge
                             v-if="isNew(group)"
@@ -174,7 +174,7 @@
                             variant="subtle"
                             size="xs"
                           >
-                            {{ group.kind }}
+                            {{ errorKindLabel(group.kind) }}
                           </UBadge>
                         </div>
                         <!--
@@ -319,6 +319,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import insightsApi, { type ErrorGroupRow, type ErrorReport } from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
+import { errorKindLabel, statusLabel } from '~/utils/labels'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Browser errors · Console' })

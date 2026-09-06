@@ -227,6 +227,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import insightsApi, { type RoutePerfRow } from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
+import { appLabel } from '~/utils/labels'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Service health · Console' })
@@ -244,7 +245,7 @@ const byStatus = ref<Array<{ status: number | null, count: number }>>([])
 
 const routeColumns = [
   { key: 'route', label: 'Endpoint' },
-  { key: 'app', label: 'Service' },
+  { key: 'app', label: 'Service', format: appLabel },
   { key: 'requests', label: 'Requests', align: 'right' as const },
   { key: 'p50_ms', label: 'Median', align: 'right' as const },
   { key: 'p95_ms', label: 'p95', align: 'right' as const },
@@ -283,7 +284,7 @@ function latencyClass(ms: number | null | undefined): string {
 const shortRoute = (route: string) => route.replace(/^\/api\/v1\//, '')
 
 async function load() {
-  const report = await insightsApi.getPerformance(range.value.days, 50)
+  const report = await insightsApi.getPerformance(range.value.days, 50, range.value)
   routes.value = report?.routes ?? []
   slowest.value = report?.slowest ?? []
   mostErrors.value = report?.most_errors ?? []

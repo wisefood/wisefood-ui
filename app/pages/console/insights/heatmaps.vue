@@ -341,7 +341,7 @@
                 variant="subtle"
                 size="xs"
               >
-                {{ row.kind }}
+                {{ clickKindLabel(row.kind) }}
               </UBadge>
             </template>
           </ConsoleInsightsTablePanel>
@@ -355,6 +355,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import insightsApi, { type ClickMap, type InteractionOverview } from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
+import { clickKindLabel } from '~/utils/labels'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Click maps · Console' })
@@ -399,7 +400,7 @@ const pageColumns = [
 const frustrationColumns = [
   { key: 'path', label: 'Page' },
   { key: 'element_key', label: 'Control' },
-  { key: 'kind', label: 'Kind' },
+  { key: 'kind', label: 'Kind', format: clickKindLabel },
   { key: 'sessions', label: 'Sessions', align: 'right' as const },
   { key: 'count', label: 'Times', align: 'right' as const }
 ]
@@ -426,11 +427,13 @@ const scrollSteps = computed(() => {
 })
 
 async function load() {
-  overview.value = await insightsApi.getInteractions(range.value.days, 50)
+  overview.value = await insightsApi.getInteractions(range.value.days, 50, range.value)
   if (selectedPath.value) {
     map.value = await insightsApi.getHeatmap({
       path: selectedPath.value,
       days: range.value.days,
+      since: range.value.since,
+      until: range.value.until,
       deviceType: deviceType.value || undefined
     })
   } else {

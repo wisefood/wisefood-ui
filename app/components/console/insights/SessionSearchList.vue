@@ -96,7 +96,7 @@
             v-if="row.surface"
             class="text-xs text-gray-400 dark:text-gray-500"
           >
-            {{ row.surface }}
+            {{ surfaceLabel(row.surface) }}
           </span>
         </div>
       </li>

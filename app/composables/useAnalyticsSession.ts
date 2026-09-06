@@ -15,7 +15,14 @@ import {
  * same id, and a ref created inside the composable would give each caller its
  * own.
  *
- * Storage is `sessionStorage`, so the id dies with the tab. Every read and
+ * Storage is `localStorage`, shared by every tab of the site. It used to be
+ * `sessionStorage`, which is per-tab: opening a recipe in a new tab minted a
+ * new id, so one person reading the site the ordinary way appeared as five
+ * sessions, and every per-session figure — actions per visit, the search
+ * funnel, the session board — was counting tabs. What still ends a session is
+ * the idle cutoff and a change of signed-in user, both applied on every read,
+ * so an id shared across tabs is still one sitting and never two people.
+ * Every read and
  * write is guarded — Safari in private mode throws on access, and an
  * analytics nicety must never be the reason a page fails to render.
  */
@@ -25,7 +32,7 @@ const current = ref<StoredSession | null>(null)
 function readStored(): unknown {
   if (typeof window === 'undefined') return null
   try {
-    const raw = window.sessionStorage.getItem(SESSION_STORAGE_KEY)
+    const raw = window.localStorage.getItem(SESSION_STORAGE_KEY)
     return raw ? JSON.parse(raw) : null
   } catch {
     return null
@@ -35,7 +42,7 @@ function readStored(): unknown {
 function writeStored(session: StoredSession): void {
   if (typeof window === 'undefined') return
   try {
-    window.sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session))
+    window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session))
   } catch {
     // Private browsing, or storage full. The id still works for this page
     // load; it just will not survive a reload.
@@ -139,7 +146,7 @@ export function resetAnalyticsSession(): void {
   current.value = null
   if (typeof window === 'undefined') return
   try {
-    window.sessionStorage.removeItem(SESSION_STORAGE_KEY)
+    window.localStorage.removeItem(SESSION_STORAGE_KEY)
   } catch {
     // nothing to do
   }

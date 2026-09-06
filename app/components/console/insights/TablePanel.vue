@@ -152,6 +152,13 @@ export interface PanelColumn {
   money?: boolean
   /** Columns are sortable unless a column says otherwise. */
   sortable?: boolean
+  /**
+   * How to show the value. Codes like `recipewrangler` or `wrong_quantities`
+   * are the right thing to store and the wrong thing to read; a column of
+   * them passes a label function here and the table does the translating,
+   * instead of every page growing a slot per column.
+   */
+  format?: (value: unknown) => string
 }
 
 const props = withDefaults(defineProps<{
@@ -235,6 +242,7 @@ defineSlots<{
 function format(row: Row, column: PanelColumn): string {
   const value = row[column.key]
   if (value === null || value === undefined || value === '') return '—'
+  if (column.format) return column.format(value)
   if (column.money) return `$${Number(value).toFixed(2)}`
   if (typeof value === 'number') return value.toLocaleString()
   return String(value)

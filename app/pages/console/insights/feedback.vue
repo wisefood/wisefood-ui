@@ -380,7 +380,7 @@
                       color="neutral"
                       variant="subtle"
                     >
-                      {{ row.app }}
+                      {{ appLabel(row.app) }}
                     </UBadge>
                     <span class="break-all text-xs text-gray-400 dark:text-gray-500">
                       {{ row.target_type }}<template v-if="row.target_id"> · {{ row.target_id }}</template>
@@ -399,7 +399,7 @@
                     v-else-if="row.reason"
                     class="mt-2 break-words text-sm text-gray-600 dark:text-gray-300"
                   >
-                    {{ row.reason }}
+                    {{ reasonLabel(row.reason) }}
                   </p>
                   <p
                     v-else
@@ -505,6 +505,7 @@ import insightsApi, {
   type FeedbackTargetRow
 } from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
+import { appLabel, ratingKindLabel, reasonLabel, targetTypeLabel } from '~/utils/labels'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Feedback inbox · Console' })
@@ -572,14 +573,14 @@ const targetRows = computed(() =>
 )
 
 const kindColumns = [
-  { key: 'rating_kind', label: 'Scale' },
+  { key: 'rating_kind', label: 'Scale', format: ratingKindLabel },
   { key: 'feedback', label: 'Ratings', align: 'right' as const },
   { key: 'negative', label: 'Negative', align: 'right' as const },
   { key: 'negative_rate', label: 'Negative rate', align: 'right' as const },
   { key: 'avg_score', label: 'Average', align: 'right' as const }
 ]
 const reasonColumns = [
-  { key: 'reason', label: 'Reason' },
+  { key: 'reason', label: 'Reason', format: reasonLabel },
   { key: 'count', label: 'Times', align: 'right' as const },
   { key: 'negative', label: 'Of those, negative', align: 'right' as const }
 ]
@@ -590,9 +591,9 @@ const dailyColumns = [
   { key: 'avg_score', label: 'Average score', align: 'right' as const }
 ]
 const targetColumns = [
-  { key: 'target_type', label: 'Kind' },
+  { key: 'target_type', label: 'Kind', format: targetTypeLabel },
   { key: 'target_id', label: 'What' },
-  { key: 'app', label: 'Product' },
+  { key: 'app', label: 'Product', format: appLabel },
   { key: 'feedback', label: 'Ratings', align: 'right' as const },
   { key: 'negative', label: 'Negative', align: 'right' as const },
   { key: 'negative_rate', label: 'Negative rate', align: 'right' as const },
@@ -686,8 +687,8 @@ async function load() {
       status: status.value || undefined,
       negativeOnly: negativeOnly.value
     }),
-    insightsApi.getFeedbackQuality(range.value.days),
-    insightsApi.getFeedbackTargets(range.value.days, 25),
+    insightsApi.getFeedbackQuality(range.value.days, range.value),
+    insightsApi.getFeedbackTargets(range.value.days, 25, range.value),
     insightsApi.getHealth()
   ])
   total.value = result.total

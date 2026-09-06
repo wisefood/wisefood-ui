@@ -330,7 +330,7 @@
                     <span
                       v-if="entry.reason"
                       class="ml-2 break-words text-gray-700 dark:text-gray-300"
-                    >{{ entry.reason }}</span>
+                    >{{ reasonLabel(entry.reason) }}</span>
                   </li>
                 </ul>
               </UCard>
@@ -444,6 +444,7 @@ import insightsApi, {
   type ReviewSummary
 } from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
+import { reasonLabel } from '~/utils/labels'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Q&A review · Console' })
@@ -519,7 +520,7 @@ function toggleWithFeedback() {
 }
 
 async function loadReviewSummary() {
-  reviewSummary.value = await insightsApi.getReviewSummary(range.value.days)
+  reviewSummary.value = await insightsApi.getReviewSummary(range.value.days, range.value)
 }
 
 async function loadQuestions() {

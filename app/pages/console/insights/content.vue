@@ -527,7 +527,7 @@ const entryColumns = [
 ]
 
 async function load() {
-  report.value = await insightsApi.getContent(range.value.days, 20)
+  report.value = await insightsApi.getContent(range.value.days, 20, range.value)
 }
 
 const { loading, failed, loadedAt, reload, busy } = useInsightsLoad(

@@ -55,7 +55,7 @@
           <!-- A minimum, not a fixed width: `expert.feedback_context_read` is
                longer than forty rem-units of column and was being clipped. -->
           <span class="min-w-40 shrink-0 break-all text-sm font-medium text-gray-900 dark:text-white">
-            {{ entry.event_type }}
+            {{ eventLabel(entry.event_type) }}
             <!-- The run is shown, not hidden: forty polls collapse to one line
                  that says forty, so nothing is lost but the scrolling. -->
             <span
@@ -70,7 +70,7 @@
             size="sm"
             class="shrink-0"
           >
-            {{ entry.app }}
+            {{ appLabel(entry.app) }}
           </UBadge>
 
           <!-- A failed action is the reason this page gets opened, so the code
@@ -153,6 +153,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { formatDuration } from '~/utils/deviceIcons'
+import { appLabel, eventLabel } from '~/utils/labels'
 
 /**
  * One session's actions in order, with the silences between them.

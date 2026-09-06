@@ -64,6 +64,7 @@
 import { onMounted, ref, watch } from 'vue'
 import insightsApi from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
+import { eventLabel } from '~/utils/labels'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Expert activity · Console' })
@@ -82,14 +83,14 @@ const recent = ref<Array<Record<string, unknown>>>([])
 
 const actorColumns = [
   { key: 'user_id', label: 'Person' },
-  { key: 'action', label: 'Action' },
+  { key: 'action', label: 'Action', format: eventLabel },
   { key: 'count', label: 'Times', align: 'right' as const },
   { key: 'last_seen', label: 'Last', align: 'right' as const }
 ]
 const recentColumns = [
   { key: 'occurred_at', label: 'When' },
   { key: 'user_id', label: 'Person' },
-  { key: 'event_type', label: 'Action' },
+  { key: 'event_type', label: 'Action', format: eventLabel },
   { key: 'props', label: 'Detail' }
 ]
 
@@ -110,7 +111,7 @@ const summarise = (props: unknown) => {
 }
 
 async function load() {
-  const result = await insightsApi.getExpertActivity(range.value.days, 100)
+  const result = await insightsApi.getExpertActivity(range.value.days, 100, range.value)
   byActor.value = result.by_actor as unknown as Array<Record<string, unknown>>
   recent.value = result.recent
 }

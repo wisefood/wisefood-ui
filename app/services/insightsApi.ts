@@ -399,6 +399,8 @@ export interface SessionBoard extends Window {
 
 export interface SessionBoardFilters {
   days?: number
+  since?: string
+  until?: string
   limit?: number
   offset?: number
   userId?: string
@@ -715,12 +717,46 @@ export const emptyOverview = (days = 7): Overview => ({
  */
 export const lastInsightsFailure = ref(0)
 
+/**
+ * The custom-range bounds as query parameters, or nothing.
+ *
+ * Every report on the gateway accepts `since`/`until` alongside `days`, and the
+ * range picker has produced them since it gained a Custom tab — but the client
+ * methods only ever sent `days`, so picking a custom range was cosmetic: the
+ * picker showed March, the numbers were the last seven days. Threaded here once
+ * so no fetcher can forget it again.
+ */
+export interface RangeBounds {
+  since?: string
+  until?: string
+}
+
+function rangeQuery(bounds?: RangeBounds): string {
+  if (!bounds) return ''
+  const parts: string[] = []
+  if (bounds.since) parts.push(`since=${encodeURIComponent(bounds.since)}`)
+  if (bounds.until) parts.push(`until=${encodeURIComponent(bounds.until)}`)
+  return parts.length ? `&${parts.join('&')}` : ''
+}
+
+/**
+ * Whether a failure was "this does not exist" rather than "the API is down".
+ *
+ * A 404 on a by-id read is an ordinary outcome: a session was pruned, a link
+ * is stale, an error group was trimmed by retention. It must not be counted
+ * as an outage — a page that says "could not be loaded" for a missing record
+ * sends somebody to check the gateway for a fault that is not there.
+ */
+function isNotFound(error: unknown): boolean {
+  return (error as { status?: number } | null)?.status === 404
+}
+
 class InsightsApiService {
   private readonly basePath = '/analytics'
 
-  async getOverview(days = 7): Promise<Overview> {
+  async getOverview(days = 7, bounds?: RangeBounds): Promise<Overview> {
     try {
-      const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/overview?days=${days}`)
+      const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/overview?days=${days}${rangeQuery(bounds)}`)
       return asResult<Overview>(payload, emptyOverview(days))
     } catch {
       lastInsightsFailure.value++
@@ -729,9 +765,9 @@ class InsightsApiService {
   }
 
   /** What is worth acting on, with the page that acts on it. */
-  async getAttention(days = 7): Promise<AttentionItem[]> {
+  async getAttention(days = 7, bounds?: RangeBounds): Promise<AttentionItem[]> {
     try {
-      const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/attention?days=${days}`)
+      const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/attention?days=${days}${rangeQuery(bounds)}`)
       return unwrap<AttentionItem[]>(payload, 'items', [])
     } catch {
       lastInsightsFailure.value++
@@ -739,10 +775,10 @@ class InsightsApiService {
     }
   }
 
-  async getTrending(days = 7, limit = 20): Promise<{ top: TrendingRow[], rising: TrendingRow[] }> {
+  async getTrending(days = 7, limit = 20, bounds?: RangeBounds): Promise<{ top: TrendingRow[], rising: TrendingRow[] }> {
     try {
       const payload = await wisefoodRestApi.get<unknown>(
-        `${this.basePath}/queries/trending?days=${days}&limit=${limit}`
+        `${this.basePath}/queries/trending?days=${days}&limit=${limit}${rangeQuery(bounds)}`
       )
       return {
         top: unwrap<TrendingRow[]>(payload, 'top', []),
@@ -754,10 +790,10 @@ class InsightsApiService {
     }
   }
 
-  async getZeroResult(days = 7, limit = 20): Promise<ZeroResultRow[]> {
+  async getZeroResult(days = 7, limit = 20, bounds?: RangeBounds): Promise<ZeroResultRow[]> {
     try {
       const payload = await wisefoodRestApi.get<unknown>(
-        `${this.basePath}/queries/zero-result?days=${days}&limit=${limit}`
+        `${this.basePath}/queries/zero-result?days=${days}&limit=${limit}${rangeQuery(bounds)}`
       )
       return unwrap<ZeroResultRow[]>(payload, 'queries', [])
     } catch {
@@ -766,10 +802,10 @@ class InsightsApiService {
     }
   }
 
-  async getUsers(days = 30, limit = 50): Promise<UserRow[]> {
+  async getUsers(days = 30, limit = 50, bounds?: RangeBounds): Promise<UserRow[]> {
     try {
       const payload = await wisefoodRestApi.get<unknown>(
-        `${this.basePath}/users?days=${days}&limit=${limit}`
+        `${this.basePath}/users?days=${days}&limit=${limit}${rangeQuery(bounds)}`
       )
       return unwrap<UserRow[]>(payload, 'users', [])
     } catch {
@@ -778,7 +814,7 @@ class InsightsApiService {
     }
   }
 
-  async getLlmUsage(days = 30): Promise<{
+  async getLlmUsage(days = 30, bounds?: RangeBounds): Promise<{
     by_model: UsageRow[]
     by_app: UsageRow[]
     by_feature: UsageRow[]
@@ -792,7 +828,7 @@ class InsightsApiService {
       pricing: null, daily: []
     }
     try {
-      const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/llm-usage?days=${days}`)
+      const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/llm-usage?days=${days}${rangeQuery(bounds)}`)
       return {
         by_model: unwrap(payload, 'by_model', []),
         by_app: unwrap(payload, 'by_app', []),
@@ -843,13 +879,13 @@ class InsightsApiService {
     }
   }
 
-  async getExpertActivity(days = 30, limit = 100): Promise<{
+  async getExpertActivity(days = 30, limit = 100, bounds?: RangeBounds): Promise<{
     by_actor: Array<{ user_id: string | null, action: string, count: number, last_seen: string | null }>
     recent: Array<Record<string, unknown>>
   }> {
     try {
       const payload = await wisefoodRestApi.get<unknown>(
-        `${this.basePath}/expert-activity?days=${days}&limit=${limit}`
+        `${this.basePath}/expert-activity?days=${days}&limit=${limit}${rangeQuery(bounds)}`
       )
       return {
         by_actor: unwrap(payload, 'by_actor', []),
@@ -874,8 +910,10 @@ class InsightsApiService {
         `${this.basePath}/sessions/${encodeURIComponent(sessionId)}?${query.toString()}`
       )
       return asResult<SessionSummary | null>(payload, null)
-    } catch {
-      lastInsightsFailure.value++
+    } catch (error) {
+      // Missing is not broken: a stale link and a dead gateway must not read
+      // the same. Only the latter is a failure.
+      if (!isNotFound(error)) lastInsightsFailure.value++
       return null
     }
   }
@@ -896,10 +934,10 @@ class InsightsApiService {
   }
 
   /** Latency and error rate per route. The operational half of the console. */
-  async getPerformance(days = 7, limit = 25): Promise<RoutePerformance | null> {
+  async getPerformance(days = 7, limit = 25, bounds?: RangeBounds): Promise<RoutePerformance | null> {
     try {
       const payload = await wisefoodRestApi.get<unknown>(
-        `${this.basePath}/performance?days=${days}&limit=${limit}`
+        `${this.basePath}/performance?days=${days}&limit=${limit}${rangeQuery(bounds)}`
       )
       return asResult<RoutePerformance | null>(payload, null)
     } catch {
@@ -908,10 +946,10 @@ class InsightsApiService {
     }
   }
 
-  async getSearchQuality(days = 7): Promise<SearchQuality | null> {
+  async getSearchQuality(days = 7, bounds?: RangeBounds): Promise<SearchQuality | null> {
     try {
       const payload = await wisefoodRestApi.get<unknown>(
-        `${this.basePath}/search-quality?days=${days}`
+        `${this.basePath}/search-quality?days=${days}${rangeQuery(bounds)}`
       )
       return asResult<SearchQuality | null>(payload, null)
     } catch {
@@ -920,9 +958,9 @@ class InsightsApiService {
     }
   }
 
-  async getFunnel(days = 7): Promise<FunnelStage[]> {
+  async getFunnel(days = 7, bounds?: RangeBounds): Promise<FunnelStage[]> {
     try {
-      const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/funnel?days=${days}`)
+      const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/funnel?days=${days}${rangeQuery(bounds)}`)
       return unwrap<FunnelStage[]>(payload, 'stages', [])
     } catch {
       lastInsightsFailure.value++
@@ -931,10 +969,10 @@ class InsightsApiService {
   }
 
   /** Which specific recipes, articles and answers draw complaints. */
-  async getFeedbackTargets(days = 30, limit = 25): Promise<FeedbackTargetRow[]> {
+  async getFeedbackTargets(days = 30, limit = 25, bounds?: RangeBounds): Promise<FeedbackTargetRow[]> {
     try {
       const payload = await wisefoodRestApi.get<unknown>(
-        `${this.basePath}/feedback/targets?days=${days}&limit=${limit}`
+        `${this.basePath}/feedback/targets?days=${days}&limit=${limit}${rangeQuery(bounds)}`
       )
       return unwrap<FeedbackTargetRow[]>(payload, 'targets', [])
     } catch {
@@ -961,6 +999,8 @@ class InsightsApiService {
       if (filters.hasErrors !== undefined) query.set('has_errors', String(filters.hasErrors))
       if (filters.search) query.set('search', filters.search)
       if (filters.includeBots) query.set('include_bots', 'true')
+      if (filters.since) query.set('since', filters.since)
+      if (filters.until) query.set('until', filters.until)
       return asResult<SessionBoard | null>(
         await wisefoodRestApi.get<unknown>(`${this.basePath}/board?${query.toString()}`), null
       )
@@ -978,8 +1018,10 @@ class InsightsApiService {
         ),
         null
       )
-    } catch {
-      lastInsightsFailure.value++
+    } catch (error) {
+      // Missing is not broken: a stale link and a dead gateway must not read
+      // the same. Only the latter is a failure.
+      if (!isNotFound(error)) lastInsightsFailure.value++
       return null
     }
   }
@@ -1011,8 +1053,10 @@ class InsightsApiService {
         ),
         null
       )
-    } catch {
-      lastInsightsFailure.value++
+    } catch (error) {
+      // Missing is not broken: a stale link and a dead gateway must not read
+      // the same. Only the latter is a failure.
+      if (!isNotFound(error)) lastInsightsFailure.value++
       return null
     }
   }
@@ -1030,11 +1074,11 @@ class InsightsApiService {
     }
   }
 
-  async getInteractions(days = 30, limit = 25): Promise<InteractionOverview | null> {
+  async getInteractions(days = 30, limit = 25, bounds?: RangeBounds): Promise<InteractionOverview | null> {
     try {
       return asResult<InteractionOverview | null>(
         await wisefoodRestApi.get<unknown>(
-          `${this.basePath}/interactions?days=${days}&limit=${limit}`
+          `${this.basePath}/interactions?days=${days}&limit=${limit}${rangeQuery(bounds)}`
         ),
         null
       )
@@ -1046,7 +1090,12 @@ class InsightsApiService {
 
   /** One page's click map. `path` is a route pattern, not a URL. */
   async getHeatmap(params: {
-    path: string, days?: number, grid?: number, deviceType?: string
+    path: string
+    days?: number
+    grid?: number
+    deviceType?: string
+    since?: string
+    until?: string
   }): Promise<ClickMap | null> {
     try {
       const query = new URLSearchParams({
@@ -1055,6 +1104,8 @@ class InsightsApiService {
         grid: String(params.grid ?? 40)
       })
       if (params.deviceType) query.set('device_type', params.deviceType)
+      if (params.since) query.set('since', params.since)
+      if (params.until) query.set('until', params.until)
       return asResult<ClickMap | null>(
         await wisefoodRestApi.get<unknown>(`${this.basePath}/heatmap?${query.toString()}`), null
       )
@@ -1064,10 +1115,10 @@ class InsightsApiService {
     }
   }
 
-  async getVitals(days = 7, limit = 25): Promise<VitalsReport | null> {
+  async getVitals(days = 7, limit = 25, bounds?: RangeBounds): Promise<VitalsReport | null> {
     try {
       return asResult<VitalsReport | null>(
-        await wisefoodRestApi.get<unknown>(`${this.basePath}/vitals?days=${days}&limit=${limit}`),
+        await wisefoodRestApi.get<unknown>(`${this.basePath}/vitals?days=${days}&limit=${limit}${rangeQuery(bounds)}`),
         null
       )
     } catch {
@@ -1076,10 +1127,10 @@ class InsightsApiService {
     }
   }
 
-  async getPatterns(days = 30): Promise<EngagementPatterns | null> {
+  async getPatterns(days = 30, bounds?: RangeBounds): Promise<EngagementPatterns | null> {
     try {
       return asResult<EngagementPatterns | null>(
-        await wisefoodRestApi.get<unknown>(`${this.basePath}/patterns?days=${days}`), null
+        await wisefoodRestApi.get<unknown>(`${this.basePath}/patterns?days=${days}${rangeQuery(bounds)}`), null
       )
     } catch {
       lastInsightsFailure.value++
@@ -1087,10 +1138,10 @@ class InsightsApiService {
     }
   }
 
-  async getContent(days = 7, limit = 20): Promise<ContentReport | null> {
+  async getContent(days = 7, limit = 20, bounds?: RangeBounds): Promise<ContentReport | null> {
     try {
       return asResult<ContentReport | null>(
-        await wisefoodRestApi.get<unknown>(`${this.basePath}/content?days=${days}&limit=${limit}`),
+        await wisefoodRestApi.get<unknown>(`${this.basePath}/content?days=${days}&limit=${limit}${rangeQuery(bounds)}`),
         null
       )
     } catch {
@@ -1099,10 +1150,10 @@ class InsightsApiService {
     }
   }
 
-  async getFeedbackQuality(days = 30): Promise<FeedbackQuality | null> {
+  async getFeedbackQuality(days = 30, bounds?: RangeBounds): Promise<FeedbackQuality | null> {
     try {
       return asResult<FeedbackQuality | null>(
-        await wisefoodRestApi.get<unknown>(`${this.basePath}/feedback/quality?days=${days}`), null
+        await wisefoodRestApi.get<unknown>(`${this.basePath}/feedback/quality?days=${days}${rangeQuery(bounds)}`), null
       )
     } catch {
       lastInsightsFailure.value++
@@ -1110,11 +1161,11 @@ class InsightsApiService {
     }
   }
 
-  async getSearchFilters(days = 30, limit = 20): Promise<SearchFilterReport | null> {
+  async getSearchFilters(days = 30, limit = 20, bounds?: RangeBounds): Promise<SearchFilterReport | null> {
     try {
       return asResult<SearchFilterReport | null>(
         await wisefoodRestApi.get<unknown>(
-          `${this.basePath}/search-filters?days=${days}&limit=${limit}`
+          `${this.basePath}/search-filters?days=${days}&limit=${limit}${rangeQuery(bounds)}`
         ),
         null
       )
@@ -1124,10 +1175,10 @@ class InsightsApiService {
     }
   }
 
-  async getAudience(days = 30): Promise<AudienceReport | null> {
+  async getAudience(days = 30, bounds?: RangeBounds): Promise<AudienceReport | null> {
     try {
       return asResult<AudienceReport | null>(
-        await wisefoodRestApi.get<unknown>(`${this.basePath}/audience?days=${days}`), null
+        await wisefoodRestApi.get<unknown>(`${this.basePath}/audience?days=${days}${rangeQuery(bounds)}`), null
       )
     } catch {
       lastInsightsFailure.value++
@@ -1135,10 +1186,10 @@ class InsightsApiService {
     }
   }
 
-  async getReviewSummary(days = 90): Promise<ReviewSummary | null> {
+  async getReviewSummary(days = 90, bounds?: RangeBounds): Promise<ReviewSummary | null> {
     try {
       return asResult<ReviewSummary | null>(
-        await wisefoodRestApi.get<unknown>(`${this.basePath}/reviews/summary?days=${days}`), null
+        await wisefoodRestApi.get<unknown>(`${this.basePath}/reviews/summary?days=${days}${rangeQuery(bounds)}`), null
       )
     } catch {
       lastInsightsFailure.value++
@@ -1153,10 +1204,12 @@ class InsightsApiService {
    * the file, the progress and the filename, and pulling a large CSV into
    * memory to re-offer it as a blob would achieve nothing but a memory spike.
    */
-  exportUrl(report: string, days = 30, limit = 1000): string {
+  exportUrl(report: string, days = 30, limit = 1000, bounds?: RangeBounds): string {
     const query = new URLSearchParams({
       report, days: String(days), limit: String(limit)
     })
+    if (bounds?.since) query.set('since', bounds.since)
+    if (bounds?.until) query.set('until', bounds.until)
     return `${getWisefoodRestApiUrl()}/analytics/export.csv?${query.toString()}`
   }
 
@@ -1230,8 +1283,10 @@ class InsightsApiService {
         ),
         null
       )
-    } catch {
-      lastInsightsFailure.value++
+    } catch (error) {
+      // Missing is not broken: a stale link and a dead gateway must not read
+      // the same. Only the latter is a failure.
+      if (!isNotFound(error)) lastInsightsFailure.value++
       return null
     }
   }
