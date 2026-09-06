@@ -252,7 +252,19 @@ export interface SessionSummary {
   }>
   /** Who the session belonged to. Usually empty under opt-in consent; the
    *  counts above hold either way, because none of them needed an identity. */
-  users: Array<{ user_id: string | null, member_id: string | null, events: number }>
+  users: Array<{
+    user_id: string | null
+    member_id: string | null
+    member_ids?: string[]
+    events: number
+    /** The consenting person's name — a full name, else their username, else
+     *  their short id. `resolved` says which, so a page can style a fallback
+     *  differently from a real name without string-matching. */
+    display_name?: string
+    username?: string | null
+    household_name?: string | null
+    resolved?: boolean
+  }>
   apps: Array<{ app: string, events: number }>
   duration_seconds: number | null
   errors: number

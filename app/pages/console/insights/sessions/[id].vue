@@ -102,13 +102,31 @@
           <div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
             <span class="text-gray-400 dark:text-gray-500">Person</span>
             <template v-if="people.length">
+              <!--
+                The name, when there is one. A subject reaches this row only
+                because the person consented to being named; showing them as a
+                UUID after that withholds the one thing they agreed to. The id
+                stays, smaller, because it is what the rest of the console links
+                on and what somebody quotes in a support message.
+              -->
               <NuxtLink
                 v-for="person in people"
                 :key="person.user_id || person.member_id || 'unknown'"
                 :to="`/console/insights/users/${encodeURIComponent(person.user_id || person.member_id || '')}`"
-                class="max-w-full break-all font-mono text-xs text-brand-600 hover:underline dark:text-brand-300"
+                class="group inline-flex max-w-full flex-wrap items-baseline gap-x-2 text-brand-600 hover:underline dark:text-brand-300"
               >
-                {{ person.user_id || person.member_id }}
+                <span
+                  v-if="person.display_name && person.resolved"
+                  class="font-medium"
+                >{{ person.display_name }}</span>
+                <span
+                  v-if="person.household_name"
+                  class="text-xs text-gray-500 dark:text-gray-400"
+                >· {{ person.household_name }}</span>
+                <span
+                  class="break-all font-mono text-xs"
+                  :class="person.resolved ? 'text-gray-400 dark:text-gray-500' : ''"
+                >{{ person.user_id || person.member_id }}</span>
               </NuxtLink>
             </template>
             <span
@@ -332,7 +350,16 @@ const breadcrumbItems = consoleBreadcrumb(
  * cache written before they existed — renders without throwing.
  */
 type SessionExtras = {
-  users: Array<{ user_id: string | null, member_id: string | null, events: number }>
+  users: Array<{
+    user_id: string | null
+    member_id: string | null
+    events: number
+    /** Present once the gateway has resolved the consenting person's account. */
+    display_name?: string
+    username?: string | null
+    household_name?: string | null
+    resolved?: boolean
+  }>
   apps: Array<{ app: string, events: number }>
   duration_seconds: number | null
   errors: number
