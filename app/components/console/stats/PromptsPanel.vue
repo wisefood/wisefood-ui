@@ -3,9 +3,34 @@
     :ui="{ body: 'p-5' }"
     class="border border-gray-200/70 dark:border-white/10"
   >
-    <h3 class="mb-4 text-base font-semibold text-gray-900 dark:text-white">
-      Prompts (read-only)
-    </h3>
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+        Prompts (read-only)
+      </h3>
+      <!--
+        Prompts are namespaced by the service that owns them
+        (foodchat/…, foodscholar/…), and the list is long enough that finding
+        one service's prompts means reading past the others. The folders are
+        read off the names rather than hardcoded, so a new service appears
+        here the day it registers its first prompt.
+      -->
+      <div
+        v-if="enabled && folders.length > 1"
+        class="flex flex-wrap items-center gap-1"
+      >
+        <UButton
+          v-for="folder in folders"
+          :key="folder.value"
+          :color="activeFolder === folder.value ? 'primary' : 'neutral'"
+          :variant="activeFolder === folder.value ? 'soft' : 'ghost'"
+          size="xs"
+          @click="activeFolder = folder.value"
+        >
+          {{ folder.label }}
+          <span class="ml-1 opacity-60">{{ folder.count }}</span>
+        </UButton>
+      </div>
+    </div>
     <p
       v-if="!enabled"
       class="text-sm text-gray-500 dark:text-gray-400"
@@ -18,12 +43,18 @@
     >
       No prompts registered.
     </p>
+    <p
+      v-else-if="!visiblePrompts.length"
+      class="text-sm text-gray-500 dark:text-gray-400"
+    >
+      No prompts in this folder.
+    </p>
     <ul
       v-else
       class="divide-y divide-gray-100 dark:divide-zinc-800"
     >
       <li
-        v-for="p in prompts"
+        v-for="p in visiblePrompts"
         :key="p.name"
       >
         <button
@@ -33,7 +64,7 @@
         >
           <div class="min-w-0">
             <p class="truncate text-sm font-medium text-gray-900 dark:text-white">
-              {{ p.name }}
+              {{ displayName(p.name) }}
             </p>
             <div class="mt-0.5 flex flex-wrap gap-1">
               <UBadge
@@ -348,6 +379,52 @@ const props = defineProps<{ prompts: PromptSummary[], enabled: boolean }>()
 const latestVersion = (p: PromptSummary): number | null => {
   if (!p.versions?.length) return null
   return Math.max(...p.versions)
+}
+
+/*
+ * Folder filter.
+ *
+ * A Langfuse prompt name is a path — `foodchat/batch_grader_user` — and the
+ * first segment is the service that owns it. Everything here is derived from
+ * the names actually registered: no list of services to keep in step with the
+ * platform, and a prompt with no folder is still reachable under "Other".
+ */
+const ALL = '__all__'
+const NO_FOLDER = '__root__'
+const activeFolder = ref(ALL)
+
+const folderOf = (name: string): string => {
+  const cut = name.indexOf('/')
+  return cut > 0 ? name.slice(0, cut) : NO_FOLDER
+}
+
+const folders = computed(() => {
+  const counts = new Map<string, number>()
+  for (const p of props.prompts) {
+    const key = folderOf(p.name)
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+  const named = [...counts.entries()]
+    .filter(([key]) => key !== NO_FOLDER)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([value, count]) => ({ value, label: value, count }))
+  const loose = counts.get(NO_FOLDER)
+  return [
+    { value: ALL, label: 'All', count: props.prompts.length },
+    ...named,
+    ...(loose ? [{ value: NO_FOLDER, label: 'Other', count: loose }] : [])
+  ]
+})
+
+const visiblePrompts = computed(() => {
+  if (activeFolder.value === ALL) return props.prompts
+  return props.prompts.filter(p => folderOf(p.name) === activeFolder.value)
+})
+
+/** Inside a folder the shared prefix is noise; across folders it is the point. */
+const displayName = (name: string): string => {
+  if (activeFolder.value === ALL || activeFolder.value === NO_FOLDER) return name
+  return name.slice(activeFolder.value.length + 1) || name
 }
 
 const drawerOpen = ref(false)
