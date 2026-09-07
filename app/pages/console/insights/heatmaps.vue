@@ -165,6 +165,7 @@
               :grid="map.grid"
               :peak="map.peak"
               :path="map.path"
+              :elements="map.elements"
             />
           </div>
 

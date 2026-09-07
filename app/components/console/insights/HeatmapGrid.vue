@@ -92,6 +92,21 @@
       every visit and every screen size, so the box above is a page-shaped canvas and nothing is
       drawn underneath it.
     </p>
+    <!-- What is actually there. A density plot with no reference points is
+           unreadable; these say which control each hot region is. -->
+    <div class="pointer-events-none absolute inset-0">
+      <div
+        v-for="e in labels"
+        :key="`label-${e.element_key}`"
+        class="absolute -translate-x-1/2 -translate-y-1/2"
+        :style="labelStyle(e)"
+      >
+        <span
+          class="whitespace-nowrap rounded bg-white/85 px-1.5 py-0.5 font-mono text-[10px] text-gray-700 shadow-sm ring-1 ring-black/5 dark:bg-black/70 dark:text-gray-200 dark:ring-white/10"
+          :class="e.rage ? 'text-fuchsia-700 dark:text-fuchsia-300' : ''"
+        >{{ e.element_key }}<span class="ml-1 text-gray-400">{{ e.clicks }}</span></span>
+      </div>
+    </div>
     <ul class="sr-only">
       <li
         v-for="cell in hottest"
@@ -120,12 +135,35 @@ import type { HeatmapCell } from '~/services/insightsApi'
  * open this page; if "very hot" and "people are angry here" looked alike, the
  * map would hide its own finding.
  */
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   cells: HeatmapCell[]
   grid: number
   peak: number
   path: string
-}>()
+  /** The controls that were clicked, with where they sit. Labels on the map —
+   *  without them the picture is an abstract cloud with nothing to read it
+   *  against, which is why it looked broken rather than empty. */
+  elements?: Array<{
+    element_key: string | null
+    clicks: number
+    rage: number
+    dead: number
+    x_pct: number | null
+    y_pct: number | null
+  }>
+}>(), { elements: () => [] })
+
+/** The few worth naming on the picture; more than this and the labels collide. */
+const labels = computed(() =>
+  props.elements
+    .filter(e => e.element_key && e.x_pct !== null && e.y_pct !== null)
+    .slice(0, 6)
+)
+
+const labelStyle = (e: { x_pct: number | null, y_pct: number | null }) => ({
+  left: `${(e.x_pct ?? 0) / 100}%`,
+  top: `${(e.y_pct ?? 0) / 100}%`
+})
 
 const gridStyle = computed(() => ({
   gridTemplateColumns: `repeat(${props.grid}, 1fr)`,

@@ -530,6 +530,10 @@ export interface ClickMap extends Window {
     sessions: number
     rage: number
     dead: number
+    /** Where the control sits, averaged over its clicks — same ten-thousandths
+     *  scale as the cells, so the map can label its hot regions. */
+    x_pct: number | null
+    y_pct: number | null
   }>
   scroll_depth: {
     measured: number

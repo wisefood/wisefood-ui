@@ -29,7 +29,7 @@
       variant="soft"
       icon="i-lucide-power-off"
       title="Collection is off for this deployment"
-      description="ANALYTICS_ENABLED is not set on the API. These switches can only narrow what a deployment already permits, so nothing here will start collection."
+      description="ANALYTICS_ENABLED is not set on the API, so the recording switches below are inert — they can only narrow what a deployment already permits. Set it in lib/pim.libsonnet, apply, and restart the gateway: the flag is read once at startup. Tracing and pricing still work."
     />
 
     <div
@@ -75,7 +75,7 @@
         </div>
         <USwitch
           :model-value="value(toggle.key, toggle.invert)"
-          :disabled="saving === toggle.key || !settings"
+          :disabled="saving === toggle.key || !settings || isInert(toggle.key)"
           :aria-label="toggle.label"
           @update:model-value="(next: boolean) => save(toggle.key, toggle.invert ? !next : next)"
         />
@@ -160,6 +160,21 @@ const toggles = [
 const settings = ref<Record<string, unknown> | null>(null)
 const health = ref<RecorderHealth | null>(null)
 const platformEnabled = ref(true)
+
+/*
+ * A switch that cannot do anything should not invite you to flip it.
+ *
+ * The settings table can only ever *narrow* what the deployment permits, so
+ * while ANALYTICS_ENABLED is unset on the API every recording switch here is
+ * inert — it saves, and nothing changes, which reads as the console being
+ * broken rather than as the deployment being off. The banner already said so;
+ * the controls now agree with it.
+ *
+ * Tracing and pricing are not gated by that flag — services read the tracing
+ * switch whether or not activity is being recorded — so those stay live.
+ */
+const isInert = (key: string) =>
+  !platformEnabled.value && (key === 'paused' || key.startsWith('capture.'))
 const loading = ref(false)
 const saving = ref<string | null>(null)
 const error = ref('')
