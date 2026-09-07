@@ -1931,5 +1931,12 @@
       "description": "Title or description is wrong",
       "other": "Something else"
     }
+  },
+  "maintenance": {
+    "title": "We'll be right back",
+    "body": "WiseFood is closed for a short while so we can carry out maintenance. Nothing you have saved is affected.",
+    "reassurance": "Your recipes, plans and conversations will be exactly where you left them.",
+    "retry": "Try again",
+    "adminSignIn": "Administrator sign-in"
   }
 }

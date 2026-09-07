@@ -1931,5 +1931,12 @@
       "description": "A cím vagy a leírás hibás",
       "other": "Valami más"
     }
+  },
+  "maintenance": {
+    "title": "Hamarosan visszatérünk",
+    "body": "A WiseFood rövid ideig karbantartás miatt nem érhető el. A mentett adataid nem érintettek.",
+    "reassurance": "A receptjeid, terveid és beszélgetéseid pontosan ott lesznek, ahol hagytad őket.",
+    "retry": "Próbáld újra",
+    "adminSignIn": "Rendszergazdai belépés"
   }
 }

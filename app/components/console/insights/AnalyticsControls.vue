@@ -82,6 +82,63 @@
       </div>
     </div>
 
+    <div class="mt-5 border-t border-gray-100 pt-4 dark:border-zinc-800">
+      <div class="flex items-start justify-between gap-4">
+        <div class="min-w-0">
+          <p class="text-sm font-medium text-gray-900 dark:text-white">
+            Maintenance mode
+          </p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            On closes WiseFood to everyone but admins: the API answers 503 and the browser
+            shows a maintenance page. You stay signed in. Reaches every replica within thirty
+            seconds; people already on a page see the sign on their next navigation.
+          </p>
+        </div>
+        <USwitch
+          :model-value="value('platform.maintenance_mode')"
+          :disabled="saving === 'platform.maintenance_mode' || !settings"
+          color="warning"
+          aria-label="Maintenance mode"
+          @update:model-value="(next: boolean) => confirmMaintenance(next)"
+        />
+      </div>
+      <UAlert
+        v-if="value('platform.maintenance_mode')"
+        class="mt-3"
+        color="warning"
+        variant="soft"
+        icon="i-lucide-construction"
+        title="The platform is closed to non-admins right now"
+        description="Only accounts with the admin role can sign in or use the API. Switch this off when the work is done."
+      />
+    </div>
+
+    <UModal
+      v-model:open="confirming"
+      title="Close WiseFood for maintenance?"
+      description="Every participant and expert who is not an admin will be signed out of the API and shown a maintenance page until you switch this off."
+    >
+      <template #footer>
+        <div class="flex w-full justify-end gap-2">
+          <UButton
+            color="neutral"
+            variant="ghost"
+            @click="confirming = false"
+          >
+            Keep it open
+          </UButton>
+          <UButton
+            color="warning"
+            icon="i-lucide-construction"
+            :loading="saving === 'platform.maintenance_mode'"
+            @click="closePlatform"
+          >
+            Close for maintenance
+          </UButton>
+        </div>
+      </template>
+    </UModal>
+
     <p
       v-if="error"
       class="mt-3 text-sm text-red-600 dark:text-red-400"
@@ -211,6 +268,26 @@ async function load() {
   loading.value = false
 }
 
+/*
+ * Closing the platform gets a confirmation; opening it does not. The
+ * asymmetry is the point: the costly mistake is the accidental close, and the
+ * fix for it must be one click, not two.
+ */
+const confirming = ref(false)
+
+function confirmMaintenance(next: boolean) {
+  if (next) {
+    confirming.value = true
+  } else {
+    void save('platform.maintenance_mode', false)
+  }
+}
+
+async function closePlatform() {
+  await save('platform.maintenance_mode', true)
+  confirming.value = false
+}
+
 async function save(key: string, next: boolean) {
   saving.value = key
   error.value = ''
@@ -223,5 +300,7 @@ async function save(key: string, next: boolean) {
   saving.value = null
 }
 
-onMounted(() => { void load() })
+onMounted(() => {
+  void load()
+})
 </script>

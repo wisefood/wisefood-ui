@@ -2,9 +2,16 @@
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
-  <ReportBugButton />
-  <FeedbackButton />
-  <ConsentBar />
+  <!--
+    None of these belong on the maintenance page: each is a door into an API
+    that is refusing everyone but admins, and a consent banner over a closed
+    sign asks a question nobody can act on yet.
+  -->
+  <template v-if="!isMaintenancePage">
+    <ReportBugButton />
+    <FeedbackButton />
+    <ConsentBar />
+  </template>
 
   <!-- Flows.js floating blocks (interactive walkthroughs) -->
   <flows-floating-blocks />
@@ -14,6 +21,8 @@
 import { useI18n } from 'vue-i18n'
 
 const { t, locale } = useI18n()
+const route = useRoute()
+const isMaintenancePage = computed(() => route.path === '/maintenance')
 
 useHead({
   meta: [

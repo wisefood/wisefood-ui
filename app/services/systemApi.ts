@@ -84,6 +84,19 @@ export interface HealthResponse {
   storage: { healthy: boolean, error?: string, [key: string]: unknown }
 }
 
+/**
+ * What `/system/info` says about this deployment. Public: the browser asks it
+ * before anyone has signed in, which is exactly when it needs to know whether
+ * the platform is open.
+ */
+export interface PlatformInfo {
+  service: string
+  version: string
+  keycloak: string
+  /** True while only admins may use the platform. */
+  maintenance: boolean
+}
+
 export interface BackfillResult {
   dry_run: boolean
   queued: number
@@ -110,6 +123,12 @@ function backfillParams(options: BackfillOptions = {}) {
 }
 
 class SystemApiService {
+  /** Deployment facts, including the maintenance flag. Unauthenticated. */
+  async getInfo(): Promise<PlatformInfo> {
+    const response = await wisefoodApi.get<Envelope<PlatformInfo>>('/v1/system/info')
+    return response.result
+  }
+
   /** Reachability of Elasticsearch, Redis and object storage. Not admin-gated. */
   async getHealth(): Promise<HealthResponse> {
     const response = await wisefoodApi.get<Envelope<HealthResponse>>('/v1/system/health')

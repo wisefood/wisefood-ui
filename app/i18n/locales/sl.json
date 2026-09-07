@@ -1931,5 +1931,12 @@
       "description": "Naslov ali opis je napačen",
       "other": "Nekaj drugega"
     }
+  },
+  "maintenance": {
+    "title": "Kmalu se vrnemo",
+    "body": "WiseFood je zaradi vzdrževanja za kratek čas zaprt. Vaši shranjeni podatki niso prizadeti.",
+    "reassurance": "Vaši recepti, načrti in pogovori bodo natanko tam, kjer ste jih pustili.",
+    "retry": "Poskusi znova",
+    "adminSignIn": "Prijava za skrbnike"
   }
 }
