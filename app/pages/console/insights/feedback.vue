@@ -374,7 +374,7 @@
                       :color="isNegative(row) ? 'error' : 'success'"
                       variant="subtle"
                     >
-                      {{ row.rating_value || row.rating_value_num || '—' }}
+                      {{ ratingLabel(row.rating_kind, row.rating_value, row.rating_value_num) }}
                     </UBadge>
                     <UBadge
                       color="neutral"
@@ -382,8 +382,17 @@
                     >
                       {{ appLabel(row.app) }}
                     </UBadge>
+                    <!-- The reviewer's next move is almost always "go look at
+                         the thing", so the thing is a link wherever the console
+                         has a page for it. -->
                     <span class="break-all text-xs text-gray-400 dark:text-gray-500">
-                      {{ row.target_type }}<template v-if="row.target_id"> · {{ row.target_id }}</template>
+                      {{ targetTypeLabel(row.target_type) }}<template v-if="row.target_id"> · </template>
+                      <NuxtLink
+                        v-if="row.target_id && targetLink(row.target_type, row.target_id)"
+                        :to="targetLink(row.target_type, row.target_id)!"
+                        class="font-mono text-brand-600 hover:underline dark:text-brand-300"
+                      >{{ row.target_id }}</NuxtLink>
+                      <template v-else-if="row.target_id">{{ row.target_id }}</template>
                     </span>
                     <span class="text-xs text-gray-400 dark:text-gray-500">
                       {{ formatWhen(row.occurred_at) }}
@@ -505,7 +514,7 @@ import insightsApi, {
   type FeedbackTargetRow
 } from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
-import { appLabel, ratingKindLabel, reasonLabel, targetTypeLabel } from '~/utils/labels'
+import { appLabel, ratingKindLabel, ratingLabel, reasonLabel, targetLink, targetTypeLabel } from '~/utils/labels'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Feedback inbox · Console' })

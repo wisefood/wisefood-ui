@@ -208,3 +208,71 @@ export function personLabel(value: unknown): string {
   const userId = String(value)
   return userId.length > 12 ? `${userId.slice(0, 8)}…` : userId
 }
+
+/*
+ * A rating as a person would say it.
+ *
+ * Feedback carries three fields — the scale, the word, the number — and a
+ * console that prints all three raw produces "likert5 great 5", which is the
+ * database's phrasing, not a sentence. One of the three is the answer and the
+ * others are how it was measured, so say the answer and add the scale only
+ * where the number needs one to mean anything.
+ */
+const RATING_VALUES: Record<string, string> = {
+  up: 'Thumbs up',
+  down: 'Thumbs down',
+  great: 'Great',
+  good: 'Good',
+  ok: 'Okay',
+  bad: 'Bad',
+  awful: 'Awful',
+  helpful: 'Helpful',
+  not_helpful: 'Not helpful',
+  a: 'Preferred A',
+  b: 'Preferred B'
+}
+
+export function ratingLabel(
+  kind: unknown,
+  value: unknown,
+  num: unknown = null
+): string {
+  const key = String(value ?? '').trim().toLowerCase()
+  const scale = String(kind ?? '').trim().toLowerCase()
+  const score = typeof num === 'number' ? num : null
+  const word = RATING_VALUES[key] ?? (key ? humanize(key) : '')
+
+  // A five-point score is meaningless without its ceiling; a thumb is not.
+  if (scale === 'likert5') {
+    if (word && score !== null) return `${word} — ${score} of 5`
+    if (score !== null) return `${score} of 5`
+    return word || 'Rated'
+  }
+  if (word) return word
+  if (score !== null) return String(score)
+  return 'Rated'
+}
+
+/**
+ * Where a rated thing lives in the console, so a complaint leads to the thing
+ * complained about. Null when this platform has no page for it — a link that
+ * goes nowhere is worse than no link.
+ */
+export function targetLink(targetType: unknown, targetId: unknown): string | null {
+  const id = String(targetId ?? '').trim()
+  if (!id) return null
+  switch (String(targetType ?? '').trim().toLowerCase()) {
+    case 'recipe':
+      return `/console/assets/recipes/${encodeURIComponent(id)}`
+    case 'article':
+      return `/console/assets/articles/${encodeURIComponent(id)}`
+    case 'guide':
+      return `/console/assets/guides/${encodeURIComponent(id)}`
+    case 'textbook':
+      return `/console/assets/textbooks/${encodeURIComponent(id)}`
+    case 'qa_answer':
+      return `/console/insights/qa?request=${encodeURIComponent(id)}`
+    default:
+      return null
+  }
+}

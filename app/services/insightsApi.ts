@@ -857,8 +857,16 @@ class InsightsApiService {
   }
 
   async getFeedback(params: {
-    limit?: number, offset?: number, status?: string, app?: string, negativeOnly?: boolean
-  } = {}): Promise<{ total: number, items: FeedbackRow[] }> {
+    limit?: number
+    offset?: number
+    status?: string
+    app?: string
+    negativeOnly?: boolean
+    /** Narrow to one rated thing, so a curator sees the reports on the recipe
+     *  they have open rather than the whole platform's inbox. */
+    targetType?: string
+    targetId?: string
+  } = {}): Promise<{ total: number, items: FeedbackRow[], failed: boolean }> {
     try {
       const query = new URLSearchParams({
         limit: String(params.limit ?? 50),
@@ -867,16 +875,21 @@ class InsightsApiService {
       if (params.status) query.set('status', params.status)
       if (params.app) query.set('app', params.app)
       if (params.negativeOnly) query.set('negative_only', 'true')
+      if (params.targetType) query.set('target_type', params.targetType)
+      if (params.targetId) query.set('target_id', params.targetId)
       const payload = await wisefoodRestApi.get<unknown>(
         `${this.basePath}/feedback/inbox?${query.toString()}`
       )
       return {
         total: unwrap<number>(payload, 'total', 0),
-        items: unwrap<FeedbackRow[]>(payload, 'items', [])
+        items: unwrap<FeedbackRow[]>(payload, 'items', []),
+        failed: false
       }
     } catch {
       lastInsightsFailure.value++
-      return { total: 0, items: [] }
+      // Said outright, not inferred: an empty inbox and an unreachable one are
+      // different facts, and on a curation page they lead to opposite actions.
+      return { total: 0, items: [], failed: true }
     }
   }
 

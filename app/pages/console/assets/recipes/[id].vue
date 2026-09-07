@@ -17,26 +17,41 @@
             class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-600 dark:text-gray-400"
           >
             <div class="flex items-center gap-1.5">
-              <UIcon name="i-lucide-fingerprint" class="h-4 w-4 shrink-0 text-brand-500 dark:text-brand-400" />
+              <UIcon
+                name="i-lucide-fingerprint"
+                class="h-4 w-4 shrink-0 text-brand-500 dark:text-brand-400"
+              />
               <span class="font-mono text-xs text-gray-500 dark:text-gray-400">{{ recipe.recipe_id }}</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <UIcon name="i-lucide-database" class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
+              <UIcon
+                name="i-lucide-database"
+                class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500"
+              />
               <span>{{ recipe.source || 'RecipeWrangler' }}</span>
             </div>
             <div
               v-if="recipe.region"
               class="flex items-center gap-1.5"
             >
-              <UIcon name="i-lucide-map-pin" class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
+              <UIcon
+                name="i-lucide-map-pin"
+                class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500"
+              />
               <span>{{ recipe.region }}</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <UIcon name="i-lucide-clock" class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
+              <UIcon
+                name="i-lucide-clock"
+                class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500"
+              />
               <span>{{ recipe.duration ? `${recipe.duration} min` : '—' }}</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <UIcon name="i-lucide-users" class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
+              <UIcon
+                name="i-lucide-users"
+                class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500"
+              />
               <span>{{ recipe.serves ? `${recipe.serves} servings` : '—' }}</span>
             </div>
           </div>
@@ -238,7 +253,10 @@
                     </UFormField>
 
                     <UFormField label="Source Collection">
-                      <div ref="sourceBoxRef" class="relative">
+                      <div
+                        ref="sourceBoxRef"
+                        class="relative"
+                      >
                         <UInput
                           v-model="sourceInput"
                           placeholder="Search collections…"
@@ -270,7 +288,10 @@
                             {{ col.title }}
                           </button>
                         </div>
-                        <p v-if="sourceIdValue" class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                        <p
+                          v-if="sourceIdValue"
+                          class="mt-1 text-xs text-gray-400 dark:text-gray-500"
+                        >
                           ID: {{ sourceIdValue }}
                         </p>
                       </div>
@@ -312,7 +333,10 @@
                             :disabled="savePending"
                             @click="removeAllergen(idx)"
                           >
-                            <UIcon name="i-lucide-x" class="h-3 w-3" />
+                            <UIcon
+                              name="i-lucide-x"
+                              class="h-3 w-3"
+                            />
                           </button>
                         </span>
                       </div>
@@ -360,7 +384,10 @@
                             :disabled="savePending"
                             @click="removeTag(idx)"
                           >
-                            <UIcon name="i-lucide-x" class="h-3 w-3" />
+                            <UIcon
+                              name="i-lucide-x"
+                              class="h-3 w-3"
+                            />
                           </button>
                         </span>
                       </div>
@@ -540,6 +567,111 @@
               </UCard>
             </div>
           </div>
+
+          <!--
+            What people said is wrong with this recipe.
+
+            The reports were reaching the platform inbox and stopping there, so
+            a curator opening a recipe had no idea anyone had complained about
+            it — and the person triaging the inbox could see the complaint but
+            not the dish. This is the other half of that link.
+          -->
+          <UCard
+            v-if="complaints.length || complaintsFailed"
+            :ui="{ body: 'p-0' }"
+            class="border border-gray-200/70 dark:border-white/10"
+          >
+            <div class="flex items-center justify-between gap-3 border-b border-gray-200/70 px-5 py-3 dark:border-white/10">
+              <div>
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+                  Reported problems
+                </h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ openComplaints }} open of {{ complaints.length }} on this recipe
+                </p>
+              </div>
+              <UBadge
+                v-if="openComplaints"
+                color="error"
+                variant="subtle"
+              >
+                {{ openComplaints }} to look at
+              </UBadge>
+            </div>
+
+            <p
+              v-if="complaintsFailed"
+              class="px-5 py-4 text-sm text-red-700 dark:text-red-300"
+            >
+              The reports for this recipe could not be loaded. This is not the
+              same as there being none.
+            </p>
+
+            <ul
+              v-else
+              class="divide-y divide-gray-100 dark:divide-zinc-800"
+            >
+              <li
+                v-for="report in complaints"
+                :key="report.id"
+                class="px-5 py-3"
+              >
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <UBadge
+                        :color="report.reason === 'wrong_allergens' ? 'error' : 'warning'"
+                        variant="subtle"
+                      >
+                        {{ reasonLabel(report.reason) }}
+                      </UBadge>
+                      <UBadge
+                        :color="report.status === 'resolved' ? 'success' : 'neutral'"
+                        variant="subtle"
+                      >
+                        {{ statusLabel(report.status) }}
+                      </UBadge>
+                      <span class="text-xs text-gray-400 dark:text-gray-500">
+                        {{ formatReportedAt(report.occurred_at) }}
+                      </span>
+                    </div>
+                    <p
+                      v-if="report.comment"
+                      class="mt-1 break-words text-sm text-gray-700 dark:text-gray-200"
+                    >
+                      {{ report.comment }}
+                    </p>
+                    <p
+                      v-else
+                      class="mt-1 text-sm italic text-gray-400 dark:text-gray-500"
+                    >
+                      No detail was written alongside it.
+                    </p>
+                  </div>
+                  <div class="flex shrink-0 items-center gap-2">
+                    <NuxtLink
+                      v-if="report.client_session_id"
+                      :to="`/console/insights/sessions/${report.client_session_id}`"
+                      class="text-xs text-brand-600 hover:underline dark:text-brand-300"
+                    >
+                      See the session
+                    </NuxtLink>
+                    <UButton
+                      v-if="report.status !== 'resolved'"
+                      color="neutral"
+                      variant="outline"
+                      size="xs"
+                      icon="i-lucide-check"
+                      :loading="resolving === report.id"
+                      @click="resolveReport(report.id)"
+                    >
+                      Mark fixed
+                    </UButton>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </UCard>
         </template>
       </UPageBody>
     </UPage>
@@ -549,7 +681,10 @@
         <UCard>
           <template #header>
             <div class="flex items-center gap-2">
-              <UIcon name="i-lucide-eye-off" class="h-5 w-5 text-rose-500" />
+              <UIcon
+                name="i-lucide-eye-off"
+                class="h-5 w-5 text-rose-500"
+              />
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                 Disable recipe
               </h3>
@@ -562,7 +697,10 @@
             The recipe data is kept and it can be re-enabled at any time.
           </p>
 
-          <UFormField label="Reason (optional)" class="mt-4">
+          <UFormField
+            label="Reason (optional)"
+            class="mt-4"
+          >
             <UInput
               v-model="disableReasonInput"
               placeholder="e.g. duplicate, quality issue, wrong nutrition"
@@ -608,6 +746,8 @@ import {
 } from '~/utils/consoleRecipes'
 import { formatDishTypeLabel, getDishTypeIcon, normalizeDishTypes } from '~/utils/dishTypes'
 import { assetSectionBreadcrumb, recordCrumb } from '~/utils/consoleBreadcrumbs'
+import insightsApi, { type FeedbackRow } from '~/services/insightsApi'
+import { reasonLabel, statusLabel } from '~/utils/labels'
 
 definePageMeta({
   layout: 'default'
@@ -733,7 +873,7 @@ const nutriProfile = computed(() => {
     fmt(r.total_fat_g_per_serving, 'g', 'fat'),
     fmt(r.total_fiber_g_per_serving, 'g', 'fiber'),
     fmt(r.total_sugar_g_per_serving, 'g', 'sugar'),
-    fmt(r.total_sodium_mg_per_serving, 'mg', 'sodium'),
+    fmt(r.total_sodium_mg_per_serving, 'mg', 'sodium')
   ].filter(Boolean) as { value: string, label: string }[]
 })
 
@@ -845,13 +985,15 @@ function selectCollection(suggestion: RecipeCollectionSuggestion) {
 function handleCollectionArrowDown() {
   if (!showCollectionDropdown.value || !collectionSuggestions.value.length) return
   activeCollectionIndex.value = activeCollectionIndex.value < collectionSuggestions.value.length - 1
-    ? activeCollectionIndex.value + 1 : 0
+    ? activeCollectionIndex.value + 1
+    : 0
 }
 
 function handleCollectionArrowUp() {
   if (!showCollectionDropdown.value || !collectionSuggestions.value.length) return
   activeCollectionIndex.value = activeCollectionIndex.value > 0
-    ? activeCollectionIndex.value - 1 : collectionSuggestions.value.length - 1
+    ? activeCollectionIndex.value - 1
+    : collectionSuggestions.value.length - 1
 }
 
 function handleCollectionEnter() {
@@ -1119,6 +1261,52 @@ async function saveRecipeEdits() {
 watch(recipeId, () => {
   void loadRecipe()
 }, { immediate: true })
+
+/*
+ * What people reported about this recipe.
+ *
+ * Read from the shared feedback record rather than a curation-only table, so
+ * a report made from the recipe page, the platform widget or a service all
+ * arrive in the same list. Failure is tracked apart from emptiness: "nobody
+ * complained" and "we could not ask" must not look alike on a page whose job
+ * is to show you what is wrong.
+ */
+const complaints = ref<FeedbackRow[]>([])
+const complaintsFailed = ref(false)
+const resolving = ref<number | null>(null)
+
+const openComplaints = computed(
+  () => complaints.value.filter(row => row.status !== 'resolved').length
+)
+
+const formatReportedAt = (value: string | null) => {
+  if (!value) return ''
+  const when = new Date(value)
+  return Number.isNaN(when.getTime()) ? '' : when.toLocaleString()
+}
+
+async function loadComplaints() {
+  const id = recipeId.value
+  if (!id) return
+  const result = await insightsApi.getFeedback({
+    targetType: 'recipe',
+    targetId: id,
+    limit: 50
+  })
+  complaints.value = result.items
+  // The fetcher swallows failure into an empty list, so an empty list with a
+  // bumped failure marker is an outage rather than a clean recipe.
+  complaintsFailed.value = result.failed
+}
+
+async function resolveReport(id: number) {
+  resolving.value = id
+  const ok = await insightsApi.setFeedbackStatus(id, 'resolved')
+  resolving.value = null
+  if (ok) await loadComplaints()
+}
+
+watch(recipeId, () => { void loadComplaints() }, { immediate: true })
 
 onMounted(() => {
   if (import.meta.client) {

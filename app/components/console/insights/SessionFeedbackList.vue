@@ -95,8 +95,16 @@
           <span class="text-gray-500 dark:text-gray-400">{{ targetTypeLabel(row.target_type) }}</span>
           <!-- Target ids are URNs and can be long; they wrap rather than push
                the card sideways. -->
+          <!-- A complaint that names a recipe should reach that recipe. Only
+               where the console actually has a page for it: a link that goes
+               nowhere is worse than no link. -->
+          <NuxtLink
+            v-if="row.target_id && targetLink(row.target_type, row.target_id)"
+            :to="targetLink(row.target_type, row.target_id)!"
+            class="min-w-0 break-all font-mono text-brand-600 hover:underline dark:text-brand-300"
+          >{{ row.target_id }}</NuxtLink>
           <span
-            v-if="row.target_id"
+            v-else-if="row.target_id"
             class="min-w-0 break-all font-mono text-gray-500 dark:text-gray-400"
           >{{ row.target_id }}</span>
           <span
@@ -110,8 +118,8 @@
 </template>
 
 <script setup lang="ts">
+import { ratingLabel, targetLink, targetTypeLabel, appLabel, reasonLabel, statusLabel } from '~/utils/labels'
 import type { FeedbackRow } from '~/services/insightsApi'
-import { appLabel, reasonLabel, statusLabel, targetTypeLabel } from '~/utils/labels'
 
 /**
  * The feedback given during one session, in full.
@@ -131,11 +139,9 @@ defineProps<{ items: FeedbackRow[] }>()
 const NEGATIVE = new Set(['down', 'negative', 'bad', 'no', 'unhelpful', 'thumbs_down'])
 const POSITIVE = new Set(['up', 'positive', 'good', 'yes', 'helpful', 'thumbs_up'])
 
-function label(row: FeedbackRow): string {
-  const parts = [row.rating_value, row.rating_value_num !== null ? String(row.rating_value_num) : '']
-    .filter(Boolean)
-  return parts.length ? `${row.rating_kind} ${parts.join(' ')}` : row.rating_kind
-}
+// "likert5 great 5" was the database's phrasing, not a sentence.
+const label = (row: FeedbackRow): string =>
+  ratingLabel(row.rating_kind, row.rating_value, row.rating_value_num)
 
 function verdict(row: FeedbackRow): { label: string, color: 'success' | 'error' | 'neutral', icon: string } {
   const value = (row.rating_value || '').trim().toLowerCase()
