@@ -101,6 +101,11 @@ export interface ZeroResultRow {
 }
 
 export interface UserRow {
+  /** The consenting person's name, resolved by the gateway. `resolved` says
+   *  whether it is a real name or a fallback to their short id. */
+  display_name?: string
+  username?: string | null
+  resolved?: boolean
   user_id: string
   events: number
   sessions: number
@@ -336,6 +341,9 @@ export interface SearchQuality extends Window {
 }
 
 export interface FeedbackTargetRow {
+  /** The dish or article by name. Absent when it could not be resolved, and
+   *  the caller falls back to the id. */
+  title?: string | null
   target_type: string
   target_id: string
   app: string
@@ -814,15 +822,24 @@ class InsightsApiService {
     }
   }
 
-  async getUsers(days = 30, limit = 50, bounds?: RangeBounds): Promise<UserRow[]> {
+  async getUsers(
+    days = 30,
+    limit = 50,
+    bounds?: RangeBounds,
+    offset = 0
+  ): Promise<{ users: UserRow[], total: number, offset: number }> {
     try {
       const payload = await wisefoodRestApi.get<unknown>(
-        `${this.basePath}/users?days=${days}&limit=${limit}${rangeQuery(bounds)}`
+        `${this.basePath}/users?days=${days}&limit=${limit}&offset=${offset}${rangeQuery(bounds)}`
       )
-      return unwrap<UserRow[]>(payload, 'users', [])
+      return {
+        users: unwrap<UserRow[]>(payload, 'users', []),
+        total: unwrap<number>(payload, 'total', 0),
+        offset: unwrap<number>(payload, 'offset', 0)
+      }
     } catch {
       lastInsightsFailure.value++
-      return []
+      return { users: [], total: 0, offset: 0 }
     }
   }
 

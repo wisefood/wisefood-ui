@@ -15,17 +15,21 @@
           {{ subtitle }}
         </p>
       </div>
-      <UButton
-        v-if="to"
-        :to="to"
-        color="neutral"
-        variant="ghost"
-        size="xs"
-        trailing-icon="i-lucide-arrow-right"
-        class="shrink-0"
-      >
-        {{ linkLabel }}
-      </UButton>
+      <div class="flex shrink-0 items-center gap-2">
+        <!-- Controls that act on this table — a pager, a filter — belong in
+             its own header rather than floating above the card. -->
+        <slot name="actions" />
+        <UButton
+          v-if="to"
+          :to="to"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          trailing-icon="i-lucide-arrow-right"
+        >
+          {{ linkLabel }}
+        </UButton>
+      </div>
     </div>
 
     <!--
@@ -237,6 +241,7 @@ const ariaSort = (column: PanelColumn) => {
 
 defineSlots<{
   [key: `cell-${string}`]: (props: { row: Row }) => unknown
+  actions?: () => unknown
 }>()
 
 function format(row: Row, column: PanelColumn): string {

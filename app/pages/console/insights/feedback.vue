@@ -274,8 +274,21 @@
                 is usually the part that says which recipe, and a clipped one
                 cannot be copied into a search.
               -->
+              <!-- The dish by name, and a way to open it. A curator cannot
+                   recognise `960c01f9-9a7b-…`, and the next move after reading
+                   this row is always to go and look at the thing. -->
               <template #cell-target_id="{ row }">
-                <span class="break-all">{{ row.target_id || '—' }}</span>
+                <NuxtLink
+                  v-if="row.target_id && targetLink(row.target_type, row.target_id)"
+                  :to="targetLink(row.target_type, row.target_id)!"
+                  class="break-words text-brand-600 hover:underline dark:text-brand-300"
+                >
+                  {{ row.title || row.target_id }}
+                </NuxtLink>
+                <span
+                  v-else
+                  class="break-all"
+                >{{ row.title || row.target_id || '—' }}</span>
               </template>
               <template #cell-negative_rate="{ row }">
                 <span :class="row.negative_rate >= 50 ? 'text-red-600 dark:text-red-400' : ''">

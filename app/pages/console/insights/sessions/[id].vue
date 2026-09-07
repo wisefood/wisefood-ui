@@ -120,10 +120,6 @@
                   class="font-medium"
                 >{{ person.display_name }}</span>
                 <span
-                  v-if="person.household_name"
-                  class="text-xs text-gray-500 dark:text-gray-400"
-                >· {{ person.household_name }}</span>
-                <span
                   class="break-all font-mono text-xs"
                   :class="person.resolved ? 'text-gray-400 dark:text-gray-500' : ''"
                 >{{ person.user_id || person.member_id }}</span>

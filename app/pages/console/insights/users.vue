@@ -46,6 +46,36 @@
               empty-hint="Activity is still counted — it just has no name attached."
               empty-icon="i-lucide-users"
             >
+              <!-- Paged, so the list is not a silent top-fifty. -->
+              <template #actions>
+                <div
+                  v-if="usersTotal > pageSize"
+                  class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400"
+                >
+                  <span>
+                    {{ (offset + 1).toLocaleString() }}–{{ Math.min(offset + pageSize, usersTotal).toLocaleString() }}
+                    of {{ usersTotal.toLocaleString() }}
+                  </span>
+                  <UButton
+                    color="neutral"
+                    variant="ghost"
+                    size="xs"
+                    icon="i-lucide-chevron-left"
+                    aria-label="Previous page of people"
+                    :disabled="offset === 0 || busy"
+                    @click="goToPage(offset - pageSize)"
+                  />
+                  <UButton
+                    color="neutral"
+                    variant="ghost"
+                    size="xs"
+                    icon="i-lucide-chevron-right"
+                    aria-label="Next page of people"
+                    :disabled="offset + pageSize >= usersTotal || busy"
+                    @click="goToPage(offset + pageSize)"
+                  />
+                </div>
+              </template>
               <!-- The whole point of the people list is getting from a name
                    to what that person actually did. -->
               <template #cell-user_id="{ row }">
@@ -53,7 +83,11 @@
                   :to="`/console/insights/users/${row.user_id}`"
                   class="break-all font-mono text-xs text-brand-600 hover:underline dark:text-brand-300"
                 >
-                  {{ row.user_id }}
+                  <span v-if="row.resolved && row.display_name">{{ row.display_name }}</span>
+                  <span
+                    v-else
+                    class="font-mono text-xs"
+                  >{{ row.user_id }}</span>
                 </NuxtLink>
               </template>
               <template #cell-cost_usd="{ row }">
@@ -179,6 +213,21 @@ const users = ref<UserRow[]>([])
 const sessions = ref<Array<Record<string, unknown>>>([])
 const lookup = ref('')
 
+/*
+ * The people list pages.
+ *
+ * It was a bare top-fifty with no way past it: an expert looking for one
+ * person could neither recognise them among the ids nor reach page two.
+ */
+const pageSize = 50
+const offset = ref(0)
+const usersTotal = ref(0)
+
+function goToPage(next: number) {
+  offset.value = Math.max(0, next)
+  void reload()
+}
+
 const userColumns = [
   { key: 'user_id', label: 'Person' },
   { key: 'events', label: 'Actions', align: 'right' as const },
@@ -209,10 +258,11 @@ function lookUpSession() {
 
 async function load() {
   const [people, recent] = await Promise.all([
-    insightsApi.getUsers(days.value, 50, range.value),
+    insightsApi.getUsers(days.value, pageSize, range.value, offset.value),
     insightsApi.getRecentSessions(50, days.value)
   ])
-  users.value = people
+  users.value = people.users
+  usersTotal.value = people.total
   sessions.value = recent as unknown as Array<Record<string, unknown>>
 }
 
