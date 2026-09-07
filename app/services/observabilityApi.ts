@@ -35,12 +35,38 @@ export interface PromptSummary {
   [k: string]: unknown
 }
 
+/** A message in a chat prompt: a real one, or a placeholder for a list of them. */
+export interface PromptMessage {
+  role?: string
+  content?: string
+  /** `placeholder` marks a slot the application fills with messages at runtime. */
+  type?: string
+  name?: string
+}
+
+/**
+ * What the gateway worked out about a template so the drawer can explain it.
+ *
+ * `convention` matters: Langfuse variables are `{{name}}`; FoodChat's prompts
+ * predate that and use Python `{name}` with `{{`/`}}` as literal braces, and
+ * FoodChat fills them itself. The two look alike and mean opposite things.
+ */
+export interface PromptTemplate {
+  convention: 'mustache' | 'format' | 'none'
+  variables: string[]
+  placeholders: string[]
+  references: Array<{ name: string, version?: string, label?: string }>
+  is_chat: boolean
+}
+
 export interface PromptDetail {
   name: string
   version?: number
   type?: string
   // `prompt` is a string for text prompts, or an array of chat messages.
-  prompt?: string | Array<{ role?: string, content?: string }>
+  prompt?: string | PromptMessage[]
+  /** How the gateway ended up fetching it — which label or version, resolved or raw. */
+  _fetched_with?: { label: string | null, version: number | null, resolved: boolean }
   labels?: string[]
   tags?: string[]
   config?: Record<string, unknown>
@@ -145,11 +171,20 @@ class ObservabilityApiService {
    * the read-only drawer. Prompt names can contain '/', which we keep as-is so
    * the gateway forwards the full path to Langfuse. Returns null on any failure.
    */
-  async getPromptDetail(name: string): Promise<PromptDetail | null> {
+  async getPromptDetail(
+    name: string,
+    pick: { version?: number, label?: string } = {}
+  ): Promise<{ prompt: PromptDetail, template: PromptTemplate | null } | null> {
     try {
       const encoded = name.split('/').map(encodeURIComponent).join('/')
-      const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/prompts/${encoded}`)
-      return unwrap<PromptDetail | null>(payload, 'prompt', null)
+      const query = new URLSearchParams()
+      if (pick.version != null) query.set('version', String(pick.version))
+      else if (pick.label) query.set('label', pick.label)
+      const suffix = query.size ? `?${query.toString()}` : ''
+      const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/prompts/${encoded}${suffix}`)
+      const prompt = unwrap<PromptDetail | null>(payload, 'prompt', null)
+      if (!prompt) return null
+      return { prompt, template: unwrap<PromptTemplate | null>(payload, 'template', null) }
     } catch {
       return null
     }
