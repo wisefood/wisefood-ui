@@ -6,6 +6,7 @@
  * server is the authority — the client gate is for clarity, not security.
  */
 import wisefoodApi from './wisefoodApi'
+import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 
 export interface ClusterState {
   reachable: boolean
@@ -123,10 +124,39 @@ function backfillParams(options: BackfillOptions = {}) {
 }
 
 class SystemApiService {
-  /** Deployment facts, including the maintenance flag. Unauthenticated. */
+  /**
+   * Deployment facts from the gateway, including the maintenance flag.
+   *
+   * A plain fetch against the REST base rather than `wisefoodApi`, for two
+   * reasons that both bit:
+   *
+   * 1. `wisefoodApi` points at the Data Catalog (`/dc/api`), and *both*
+   *    services answer `/v1/system/info`. The catalog's reply is a perfectly
+   *    good 200 that simply has no `maintenance` field, so reading it gave
+   *    `undefined` — "the platform is open" — and the maintenance guard waved
+   *    everyone straight through. A wrong endpoint that returns 200 is the
+   *    worst kind, because nothing anywhere reports an error.
+   * 2. That client throws when there is no token, and this is called before
+   *    sign-in and before the auth store has initialised — which is the whole
+   *    point of the endpoint being public.
+   *
+   * `maintenance` is read strictly: anything other than a boolean means we
+   * are talking to something that is not the gateway, and saying so is far
+   * better than silently deciding the platform is open.
+   */
   async getInfo(): Promise<PlatformInfo> {
-    const response = await wisefoodApi.get<Envelope<PlatformInfo>>('/v1/system/info')
-    return response.result
+    const response = await fetch(`${getWisefoodRestApiUrl()}/system/info`, {
+      headers: { Accept: 'application/json' }
+    })
+    if (!response.ok) {
+      throw new Error(`system/info responded ${response.status}`)
+    }
+    const body = await response.json() as { result?: Partial<PlatformInfo> }
+    const result = body?.result
+    if (typeof result?.maintenance !== 'boolean') {
+      throw new Error('system/info carried no maintenance flag — wrong service?')
+    }
+    return result as PlatformInfo
   }
 
   /** Reachability of Elasticsearch, Redis and object storage. Not admin-gated. */
