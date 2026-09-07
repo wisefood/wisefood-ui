@@ -114,11 +114,13 @@ const facts = computed(() => {
     { label: 'Connection', value: d.connection || '', hint: '' },
     { label: 'Release', value: d.release || '', hint: d.client || '' },
     {
-      label: 'Network',
+      // Whole addresses, since ANALYTICS_KEEP_FULL_IP is on for this
+      // deployment. Rows recorded before it was still read as `81.4.127.0/24`
+      // — those are the truncated networks they were stored as, not addresses
+      // this is hiding, so they are shown exactly as they are.
+      label: 'IP address',
       value: d.ip_prefix || '',
-      // Never an address: IPv4 is kept to /24 and IPv6 to /48, so this
-      // identifies roughly where a session came from and not who it was.
-      hint: 'the network, truncated — not an address'
+      hint: ''
     }
   ]
 })

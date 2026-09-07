@@ -229,7 +229,7 @@ function goToPage(next: number) {
 }
 
 const userColumns = [
-  { key: 'user_id', label: 'Person' },
+  { key: 'user_id', label: 'Person', nowrap: true },
   { key: 'events', label: 'Actions', align: 'right' as const },
   { key: 'sessions', label: 'Sessions', align: 'right' as const },
   { key: 'questions_asked', label: 'Questions', align: 'right' as const },
@@ -239,8 +239,8 @@ const userColumns = [
   { key: 'last_seen', label: 'Last seen', align: 'right' as const }
 ]
 const sessionColumns = [
-  { key: 'session_id', label: 'Session' },
-  { key: 'user_id', label: 'Person' },
+  { key: 'session_id', label: 'Session', nowrap: true },
+  { key: 'user_id', label: 'Person', nowrap: true },
   { key: 'events', label: 'Actions', align: 'right' as const },
   { key: 'started_at', label: 'Started', align: 'right' as const }
 ]

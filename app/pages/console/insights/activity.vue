@@ -82,14 +82,14 @@ const byActor = ref<Array<Record<string, unknown>>>([])
 const recent = ref<Array<Record<string, unknown>>>([])
 
 const actorColumns = [
-  { key: 'user_id', label: 'Person' },
+  { key: 'user_id', label: 'Person', nowrap: true },
   { key: 'action', label: 'Action', format: eventLabel },
   { key: 'count', label: 'Times', align: 'right' as const },
   { key: 'last_seen', label: 'Last', align: 'right' as const }
 ]
 const recentColumns = [
   { key: 'occurred_at', label: 'When' },
-  { key: 'user_id', label: 'Person' },
+  { key: 'user_id', label: 'Person', nowrap: true },
   { key: 'event_type', label: 'Action', format: eventLabel },
   { key: 'props', label: 'Detail' }
 ]

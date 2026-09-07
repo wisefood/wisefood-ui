@@ -80,7 +80,7 @@
             <th
               v-for="column in columns"
               :key="column.key"
-              class="px-5 py-2"
+              class="px-5 py-2 whitespace-nowrap"
               :class="[
                 column.align === 'right' ? 'text-right' : '',
                 column.sortable !== false
@@ -121,7 +121,8 @@
               :title="column.truncate ? format(row, column) : undefined"
               :class="[
                 column.align === 'right' ? 'text-right tabular-nums' : '',
-                column.truncate ? 'max-w-xs truncate' : ''
+                column.truncate ? 'max-w-xs truncate' : '',
+                column.nowrap ? 'whitespace-nowrap' : ''
               ]"
             >
               <slot
@@ -153,6 +154,16 @@ export interface PanelColumn {
   label: string
   align?: 'right'
   truncate?: boolean
+  /**
+   * Keep the value on one line.
+   *
+   * For a short label sharing a row with several number columns — a person's
+   * name beside seven counts. The flex sizing gives the text column whatever
+   * is left, which for "WiseFood Administrator" is one word per line. The
+   * table already scrolls sideways, so widening it costs nothing a reader
+   * notices, and a wrapped name is much harder to scan down.
+   */
+  nowrap?: boolean
   money?: boolean
   /** Columns are sortable unless a column says otherwise. */
   sortable?: boolean
