@@ -810,15 +810,24 @@ class InsightsApiService {
     }
   }
 
-  async getZeroResult(days = 7, limit = 20, bounds?: RangeBounds): Promise<ZeroResultRow[]> {
+  async getZeroResult(
+    days = 7,
+    limit = 20,
+    bounds?: RangeBounds,
+    offset = 0
+  ): Promise<{ queries: ZeroResultRow[], total: number, offset: number }> {
     try {
       const payload = await wisefoodRestApi.get<unknown>(
-        `${this.basePath}/queries/zero-result?days=${days}&limit=${limit}${rangeQuery(bounds)}`
+        `${this.basePath}/queries/zero-result?days=${days}&limit=${limit}&offset=${offset}${rangeQuery(bounds)}`
       )
-      return unwrap<ZeroResultRow[]>(payload, 'queries', [])
+      return {
+        queries: unwrap<ZeroResultRow[]>(payload, 'queries', []),
+        total: unwrap<number>(payload, 'total', 0),
+        offset: unwrap<number>(payload, 'offset', 0)
+      }
     } catch {
       lastInsightsFailure.value++
-      return []
+      return { queries: [], total: 0, offset: 0 }
     }
   }
 
@@ -1011,15 +1020,24 @@ class InsightsApiService {
   }
 
   /** Which specific recipes, articles and answers draw complaints. */
-  async getFeedbackTargets(days = 30, limit = 25, bounds?: RangeBounds): Promise<FeedbackTargetRow[]> {
+  async getFeedbackTargets(
+    days = 30,
+    limit = 25,
+    bounds?: RangeBounds,
+    offset = 0
+  ): Promise<{ targets: FeedbackTargetRow[], total: number, offset: number }> {
     try {
       const payload = await wisefoodRestApi.get<unknown>(
-        `${this.basePath}/feedback/targets?days=${days}&limit=${limit}${rangeQuery(bounds)}`
+        `${this.basePath}/feedback/targets?days=${days}&limit=${limit}&offset=${offset}${rangeQuery(bounds)}`
       )
-      return unwrap<FeedbackTargetRow[]>(payload, 'targets', [])
+      return {
+        targets: unwrap<FeedbackTargetRow[]>(payload, 'targets', []),
+        total: unwrap<number>(payload, 'total', 0),
+        offset: unwrap<number>(payload, 'offset', 0)
+      }
     } catch {
       lastInsightsFailure.value++
-      return []
+      return { targets: [], total: 0, offset: 0 }
     }
   }
 
@@ -1253,6 +1271,31 @@ class InsightsApiService {
     if (bounds?.since) query.set('since', bounds.since)
     if (bounds?.until) query.set('until', bounds.until)
     return `${getWisefoodRestApiUrl()}/analytics/export.csv?${query.toString()}`
+  }
+
+  /**
+   * How many reports stand against each of these things.
+   *
+   * For a badge on a curation list, so you can see which recipe to open rather
+   * than having to open one to find out. POST because a page of ids does not
+   * belong in a query string.
+   */
+  async getComplaintCounts(
+    targetType: string,
+    targetIds: string[]
+  ): Promise<Record<string, { total: number, open: number }>> {
+    if (!targetIds.length) return {}
+    try {
+      const payload = await wisefoodRestApi.post<unknown>(`${this.basePath}/feedback/counts`, {
+        target_type: targetType,
+        target_ids: targetIds.slice(0, 200)
+      })
+      return unwrap<Record<string, { total: number, open: number }>>(payload, 'counts', {})
+    } catch {
+      lastInsightsFailure.value++
+      // A badge is not worth failing the list it sits on.
+      return {}
+    }
   }
 
   async getHealth(): Promise<RecorderHealth | null> {

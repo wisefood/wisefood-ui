@@ -224,6 +224,35 @@
               :empty-hint="collecting ? 'No catalogue gaps in this period.' : emptyHint"
               empty-icon="i-lucide-check-circle-2"
             >
+              <template #actions>
+                <div
+                  v-if="zeroTotal > zeroPageSize"
+                  class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400"
+                >
+                  <span>
+                    {{ (zeroOffset + 1).toLocaleString() }}–{{ Math.min(zeroOffset + zeroPageSize, zeroTotal).toLocaleString() }}
+                    of {{ zeroTotal.toLocaleString() }}
+                  </span>
+                  <UButton
+                    color="neutral"
+                    variant="ghost"
+                    size="xs"
+                    icon="i-lucide-chevron-left"
+                    aria-label="Previous page of empty searches"
+                    :disabled="zeroOffset === 0 || busy"
+                    @click="goToZeroPage(zeroOffset - zeroPageSize)"
+                  />
+                  <UButton
+                    color="neutral"
+                    variant="ghost"
+                    size="xs"
+                    icon="i-lucide-chevron-right"
+                    aria-label="Next page of empty searches"
+                    :disabled="zeroOffset + zeroPageSize >= zeroTotal || busy"
+                    @click="goToZeroPage(zeroOffset + zeroPageSize)"
+                  />
+                </div>
+              </template>
               <template #cell-last_seen="{ row }">
                 {{ formatWhen(row.last_seen) }}
               </template>
@@ -601,6 +630,19 @@ const rangeLabel = computed(() => {
 const top = ref<TrendingRow[]>([])
 const rising = ref<TrendingRow[]>([])
 const zeroResult = ref<ZeroResultRow[]>([])
+
+/*
+ * The catalogue-gap list pages. It was a top-fifty with nothing saying so, and
+ * a gap on row fifty-one is exactly as much a gap as one on row one.
+ */
+const zeroPageSize = 50
+const zeroOffset = ref(0)
+const zeroTotal = ref(0)
+
+function goToZeroPage(next: number) {
+  zeroOffset.value = Math.max(0, next)
+  void reload()
+}
 const quality = ref<SearchQuality | null>(null)
 const funnel = ref<FunnelStage[]>([])
 const filters = ref<SearchFilterReport | null>(null)
@@ -696,7 +738,7 @@ function dropOff(index: number): { lost: number, text: string } {
 async function load() {
   const [trending, zero, searchQuality, stages, filterReport, health] = await Promise.all([
     insightsApi.getTrending(windowDays.value, 50, range.value),
-    insightsApi.getZeroResult(windowDays.value, 50, range.value),
+    insightsApi.getZeroResult(windowDays.value, zeroPageSize, range.value, zeroOffset.value),
     insightsApi.getSearchQuality(windowDays.value, range.value),
     insightsApi.getFunnel(windowDays.value, range.value),
     insightsApi.getSearchFilters(windowDays.value, 20, range.value),
@@ -704,7 +746,8 @@ async function load() {
   ])
   top.value = trending.top
   rising.value = trending.rising
-  zeroResult.value = zero
+  zeroResult.value = zero.queries
+  zeroTotal.value = zero.total
   quality.value = searchQuality
   funnel.value = stages
   filters.value = filterReport

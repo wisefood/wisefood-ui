@@ -269,6 +269,35 @@
               :empty-hint="emptyHint"
               empty-icon="i-lucide-crosshair"
             >
+              <template #actions>
+                <div
+                  v-if="targetsTotal > targetsPageSize"
+                  class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400"
+                >
+                  <span>
+                    {{ (targetsOffset + 1).toLocaleString() }}–{{ Math.min(targetsOffset + targetsPageSize, targetsTotal).toLocaleString() }}
+                    of {{ targetsTotal.toLocaleString() }}
+                  </span>
+                  <UButton
+                    color="neutral"
+                    variant="ghost"
+                    size="xs"
+                    icon="i-lucide-chevron-left"
+                    aria-label="Previous page of objected-to items"
+                    :disabled="targetsOffset === 0 || busy"
+                    @click="goToTargetsPage(targetsOffset - targetsPageSize)"
+                  />
+                  <UButton
+                    color="neutral"
+                    variant="ghost"
+                    size="xs"
+                    icon="i-lucide-chevron-right"
+                    aria-label="Next page of objected-to items"
+                    :disabled="targetsOffset + targetsPageSize >= targetsTotal || busy"
+                    @click="goToTargetsPage(targetsOffset + targetsPageSize)"
+                  />
+                </div>
+              </template>
               <!--
                 An identifier wraps rather than truncates: the tail of a URN
                 is usually the part that says which recipe, and a clipped one
@@ -565,6 +594,17 @@ const saving = ref<number | null>(null)
 
 const quality = ref<FeedbackQuality | null>(null)
 const targets = ref<FeedbackTargetRow[]>([])
+
+/* The complaints list pages: the worst offender is not always in the first
+   twenty-five, and a curator needs to reach the rest. */
+const targetsPageSize = 25
+const targetsOffset = ref(0)
+const targetsTotal = ref(0)
+
+function goToTargetsPage(next: number) {
+  targetsOffset.value = Math.max(0, next)
+  void reload()
+}
 const collecting = ref(true)
 
 // Nothing to show because nobody said anything, and nothing to show because
@@ -710,13 +750,14 @@ async function load() {
       negativeOnly: negativeOnly.value
     }),
     insightsApi.getFeedbackQuality(range.value.days, range.value),
-    insightsApi.getFeedbackTargets(range.value.days, 25, range.value),
+    insightsApi.getFeedbackTargets(range.value.days, targetsPageSize, range.value, targetsOffset.value),
     insightsApi.getHealth()
   ])
   total.value = result.total
   items.value = result.items
   quality.value = report
-  targets.value = byTarget
+  targets.value = byTarget.targets
+  targetsTotal.value = byTarget.total
   collecting.value = Boolean(health?.enabled)
 }
 

@@ -124,7 +124,13 @@
                     @click="showFacetPanel = !showFacetPanel"
                   >
                     Filters
-                    <UBadge v-if="activeFacetCount > 0" color="primary" variant="solid" size="xs" class="ml-1">
+                    <UBadge
+                      v-if="activeFacetCount > 0"
+                      color="primary"
+                      variant="solid"
+                      size="xs"
+                      class="ml-1"
+                    >
                       {{ activeFacetCount }}
                     </UBadge>
                   </UButton>
@@ -147,7 +153,10 @@
                 <!-- Exclude Allergens -->
                 <div>
                   <h3 class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">
-                    <UIcon name="i-lucide-shield-alert" class="h-3.5 w-3.5 text-amber-500" />
+                    <UIcon
+                      name="i-lucide-shield-alert"
+                      class="h-3.5 w-3.5 text-amber-500"
+                    />
                     Exclude Allergens
                   </h3>
                   <div class="flex flex-wrap gap-1.5">
@@ -171,10 +180,16 @@
                 <!-- Dish Type -->
                 <div>
                   <h3 class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">
-                    <UIcon name="i-lucide-utensils" class="h-3.5 w-3.5 text-brandg-500" />
+                    <UIcon
+                      name="i-lucide-utensils"
+                      class="h-3.5 w-3.5 text-brandg-500"
+                    />
                     Dish Type
                   </h3>
-                  <div v-if="dishTypeOptions.length" class="flex flex-wrap gap-1.5">
+                  <div
+                    v-if="dishTypeOptions.length"
+                    class="flex flex-wrap gap-1.5"
+                  >
                     <button
                       v-for="dishType in dishTypeOptions"
                       :key="dishType.value"
@@ -187,7 +202,10 @@
                       ]"
                       @click="toggleDishType(dishType.value)"
                     >
-                      <UIcon :name="dishType.icon" class="h-3 w-3" />
+                      <UIcon
+                        :name="dishType.icon"
+                        class="h-3 w-3"
+                      />
                       {{ dishType.label }}
                       <span
                         v-if="dishType.count !== null"
@@ -195,7 +213,10 @@
                       >{{ dishType.count }}</span>
                     </button>
                   </div>
-                  <p v-else class="text-xs text-gray-400 dark:text-gray-500">
+                  <p
+                    v-else
+                    class="text-xs text-gray-400 dark:text-gray-500"
+                  >
                     Run a search to see available dish types.
                   </p>
                 </div>
@@ -243,7 +264,10 @@
                 <!-- Source -->
                 <div>
                   <h3 class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">
-                    <UIcon name="i-lucide-database" class="h-3.5 w-3.5 text-blue-500" />
+                    <UIcon
+                      name="i-lucide-database"
+                      class="h-3.5 w-3.5 text-blue-500"
+                    />
                     Source
                   </h3>
                   <div class="flex flex-wrap gap-1.5">
@@ -267,7 +291,10 @@
                 <!-- Sort By + Visibility -->
                 <div>
                   <h3 class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">
-                    <UIcon name="i-lucide-arrow-up-down" class="h-3.5 w-3.5 text-blue-500" />
+                    <UIcon
+                      name="i-lucide-arrow-up-down"
+                      class="h-3.5 w-3.5 text-blue-500"
+                    />
                     Sort By
                   </h3>
                   <div class="flex flex-wrap gap-1.5">
@@ -283,13 +310,19 @@
                       ]"
                       @click="setSortBy(option.value)"
                     >
-                      <UIcon :name="option.icon" class="h-3 w-3" />
+                      <UIcon
+                        :name="option.icon"
+                        class="h-3 w-3"
+                      />
                       {{ option.label }}
                     </button>
                   </div>
 
                   <h3 class="mb-2 mt-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-gray-600 dark:text-gray-300">
-                    <UIcon name="i-lucide-eye-off" class="h-3.5 w-3.5 text-rose-500" />
+                    <UIcon
+                      name="i-lucide-eye-off"
+                      class="h-3.5 w-3.5 text-rose-500"
+                    />
                     Visibility
                   </h3>
                   <button
@@ -302,7 +335,10 @@
                     ]"
                     @click="toggleIncludeDisabled"
                   >
-                    <UIcon name="i-lucide-eye-off" class="h-3 w-3" />
+                    <UIcon
+                      name="i-lucide-eye-off"
+                      class="h-3 w-3"
+                    />
                     Include disabled
                   </button>
                 </div>
@@ -389,6 +425,30 @@
               :ui="recipeTableUi"
               class="min-h-[28rem] min-w-[52rem]"
             >
+              <template #reports-cell="{ row }">
+                <NuxtLink
+                  v-if="complaintCounts[String(row.original.id)]?.open"
+                  :to="`/console/assets/recipes/${encodeURIComponent(String(row.original.id))}`"
+                  class="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 hover:underline dark:bg-red-500/10 dark:text-red-300"
+                  @click.stop
+                >
+                  <UIcon
+                    name="i-lucide-flag"
+                    class="h-3 w-3"
+                  />
+                  {{ complaintCounts[String(row.original.id)]?.open }}
+                </NuxtLink>
+                <span
+                  v-else-if="complaintCounts[String(row.original.id)]?.total"
+                  class="text-xs text-gray-400 dark:text-gray-500"
+                  title="Reported and resolved"
+                >&check;</span>
+                <span
+                  v-else
+                  class="text-xs text-gray-300 dark:text-zinc-700"
+                >—</span>
+              </template>
+
               <template #select-header>
                 <div @click.stop>
                   <UCheckbox
@@ -530,7 +590,10 @@
               <!-- Pagination. Both search paths return a filtered total and
                    accept an offset, so this is no longer restricted to
                    param_search. -->
-              <nav v-if="currentPage > 1 || hasMore" class="flex items-center gap-1">
+              <nav
+                v-if="currentPage > 1 || hasMore"
+                class="flex items-center gap-1"
+              >
                 <UButton
                   color="neutral"
                   variant="outline"
@@ -543,8 +606,19 @@
                 <template v-if="visiblePages.length">
                   <!-- First + ellipsis -->
                   <template v-if="visiblePages[0] > 1">
-                    <UButton color="neutral" variant="outline" size="xs" :disabled="recipesLoading" @click="goToPage(1)">1</UButton>
-                    <span v-if="visiblePages[0] > 2" class="px-1 text-xs text-gray-400">…</span>
+                    <UButton
+                      color="neutral"
+                      variant="outline"
+                      size="xs"
+                      :disabled="recipesLoading"
+                      @click="goToPage(1)"
+                    >
+                      1
+                    </UButton>
+                    <span
+                      v-if="visiblePages[0] > 2"
+                      class="px-1 text-xs text-gray-400"
+                    >…</span>
                   </template>
 
                   <!-- Sliding window -->
@@ -562,11 +636,25 @@
 
                   <!-- Ellipsis + last -->
                   <template v-if="visiblePages[visiblePages.length - 1] < totalPages">
-                    <span v-if="visiblePages[visiblePages.length - 1] < totalPages - 1" class="px-1 text-xs text-gray-400">…</span>
-                    <UButton color="neutral" variant="outline" size="xs" :disabled="recipesLoading" @click="goToPage(totalPages)">{{ totalPages }}</UButton>
+                    <span
+                      v-if="visiblePages[visiblePages.length - 1] < totalPages - 1"
+                      class="px-1 text-xs text-gray-400"
+                    >…</span>
+                    <UButton
+                      color="neutral"
+                      variant="outline"
+                      size="xs"
+                      :disabled="recipesLoading"
+                      @click="goToPage(totalPages)"
+                    >
+                      {{ totalPages }}
+                    </UButton>
                   </template>
                 </template>
-                <span v-else class="px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-200">
+                <span
+                  v-else
+                  class="px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-200"
+                >
                   {{ currentPage }}
                 </span>
 
@@ -590,7 +678,10 @@
         <UCard>
           <template #header>
             <div class="flex items-center gap-2">
-              <UIcon name="i-lucide-eye-off" class="h-5 w-5 text-rose-500" />
+              <UIcon
+                name="i-lucide-eye-off"
+                class="h-5 w-5 text-rose-500"
+              />
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
                 {{ disableMode === 'single' ? 'Disable recipe' : 'Disable recipes' }}
               </h3>
@@ -612,7 +703,10 @@
             :title="`This disables every recipe matching the current filters (${queryDisableFilterSummary}), not just the visible page.`"
           />
 
-          <UFormField label="Reason (optional)" class="mt-4">
+          <UFormField
+            label="Reason (optional)"
+            class="mt-4"
+          >
             <UInput
               v-model="disableReason"
               placeholder="e.g. duplicate, quality issue, wrong nutrition"
@@ -857,13 +951,13 @@
                             :key="region"
                             type="button"
                             :disabled="createAnalysisLoading"
-                            @click="createForm.region = region"
                             :class="[
                               'px-3 py-1 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50',
                               createForm.region === region
                                 ? 'bg-brandg-500 text-white'
                                 : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                             ]"
+                            @click="createForm.region = region"
                           >
                             {{ region }}
                           </button>
@@ -1073,7 +1167,12 @@
                         <h4 class="text-sm font-semibold text-gray-900 dark:text-white">
                           Tags & Allergens
                         </h4>
-                        <UBadge v-if="createForm.nutrientsFromAnalysis" color="success" variant="soft" size="sm">
+                        <UBadge
+                          v-if="createForm.nutrientsFromAnalysis"
+                          color="success"
+                          variant="soft"
+                          size="sm"
+                        >
                           Auto-extracted
                         </UBadge>
                       </div>
@@ -1090,24 +1189,43 @@
                               class="flex-1"
                               @keydown.enter.prevent="() => { const t = createForm.tagDraft.trim(); if (t && !createForm.tags.map(x => x.toLowerCase()).includes(t.toLowerCase())) createForm.tags.push(t); createForm.tagDraft = '' }"
                             />
-                            <UButton type="button" color="neutral" variant="outline" icon="i-lucide-plus"
+                            <UButton
+                              type="button"
+                              color="neutral"
+                              variant="outline"
+                              icon="i-lucide-plus"
                               :disabled="!createForm.tagDraft.trim()"
                               @click="() => { const t = createForm.tagDraft.trim(); if (t && !createForm.tags.map(x => x.toLowerCase()).includes(t.toLowerCase())) createForm.tags.push(t); createForm.tagDraft = '' }"
                             />
                           </div>
-                          <div v-if="createForm.tags.length" class="flex flex-wrap gap-1.5">
-                            <span v-for="(tag, idx) in createForm.tags" :key="`ctag-${idx}`"
+                          <div
+                            v-if="createForm.tags.length"
+                            class="flex flex-wrap gap-1.5"
+                          >
+                            <span
+                              v-for="(tag, idx) in createForm.tags"
+                              :key="`ctag-${idx}`"
                               class="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:border-blue-700/40 dark:bg-blue-900/20 dark:text-blue-300"
                             >
                               {{ tag }}
-                              <button type="button" class="ml-0.5 flex items-center justify-center rounded-full p-0.5 hover:bg-blue-200 dark:hover:bg-blue-800/40"
+                              <button
+                                type="button"
+                                class="ml-0.5 flex items-center justify-center rounded-full p-0.5 hover:bg-blue-200 dark:hover:bg-blue-800/40"
                                 @click="createForm.tags.splice(idx, 1)"
                               >
-                                <UIcon name="i-lucide-x" class="h-3 w-3" />
+                                <UIcon
+                                  name="i-lucide-x"
+                                  class="h-3 w-3"
+                                />
                               </button>
                             </span>
                           </div>
-                          <p v-else class="text-xs text-gray-400 dark:text-gray-500">No tags added</p>
+                          <p
+                            v-else
+                            class="text-xs text-gray-400 dark:text-gray-500"
+                          >
+                            No tags added
+                          </p>
                         </div>
                       </UFormField>
 
@@ -1121,24 +1239,43 @@
                               class="flex-1"
                               @keydown.enter.prevent="() => { const a = createForm.allergenDraft.trim(); if (a && !createForm.allergens.map(x => x.toLowerCase()).includes(a.toLowerCase())) createForm.allergens.push(a); createForm.allergenDraft = '' }"
                             />
-                            <UButton type="button" color="neutral" variant="outline" icon="i-lucide-plus"
+                            <UButton
+                              type="button"
+                              color="neutral"
+                              variant="outline"
+                              icon="i-lucide-plus"
                               :disabled="!createForm.allergenDraft.trim()"
                               @click="() => { const a = createForm.allergenDraft.trim(); if (a && !createForm.allergens.map(x => x.toLowerCase()).includes(a.toLowerCase())) createForm.allergens.push(a); createForm.allergenDraft = '' }"
                             />
                           </div>
-                          <div v-if="createForm.allergens.length" class="flex flex-wrap gap-1.5">
-                            <span v-for="(allergen, idx) in createForm.allergens" :key="`callergen-${idx}`"
+                          <div
+                            v-if="createForm.allergens.length"
+                            class="flex flex-wrap gap-1.5"
+                          >
+                            <span
+                              v-for="(allergen, idx) in createForm.allergens"
+                              :key="`callergen-${idx}`"
                               class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:border-amber-700/40 dark:bg-amber-900/20 dark:text-amber-300"
                             >
                               {{ allergen }}
-                              <button type="button" class="ml-0.5 flex items-center justify-center rounded-full p-0.5 hover:bg-amber-200 dark:hover:bg-amber-800/40"
+                              <button
+                                type="button"
+                                class="ml-0.5 flex items-center justify-center rounded-full p-0.5 hover:bg-amber-200 dark:hover:bg-amber-800/40"
                                 @click="createForm.allergens.splice(idx, 1)"
                               >
-                                <UIcon name="i-lucide-x" class="h-3 w-3" />
+                                <UIcon
+                                  name="i-lucide-x"
+                                  class="h-3 w-3"
+                                />
                               </button>
                             </span>
                           </div>
-                          <p v-else class="text-xs text-gray-400 dark:text-gray-500">No allergens added</p>
+                          <p
+                            v-else
+                            class="text-xs text-gray-400 dark:text-gray-500"
+                          >
+                            No allergens added
+                          </p>
                         </div>
                       </UFormField>
                     </div>
@@ -1160,7 +1297,12 @@
                           {{ createForm.nutrientsFromAnalysis ? 'Pre-filled from analysis — review and adjust if needed. Providing values skips re-profiling on save.' : 'Leave blank to let the API auto-calculate from ingredients.' }}
                         </p>
                       </div>
-                      <UBadge v-if="createForm.nutrientsFromAnalysis" color="success" variant="soft" size="sm">
+                      <UBadge
+                        v-if="createForm.nutrientsFromAnalysis"
+                        color="success"
+                        variant="soft"
+                        size="sm"
+                      >
                         From analysis
                       </UBadge>
                     </div>
@@ -1168,28 +1310,84 @@
 
                   <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <UFormField label="Energy (kcal)">
-                      <UInput v-model="createForm.energy_kcal" type="number" min="0" step="0.01" placeholder="e.g. 450" class="w-full" />
+                      <UInput
+                        v-model="createForm.energy_kcal"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="e.g. 450"
+                        class="w-full"
+                      />
                     </UFormField>
                     <UFormField label="Protein (g)">
-                      <UInput v-model="createForm.protein_g" type="number" min="0" step="0.01" placeholder="e.g. 32" class="w-full" />
+                      <UInput
+                        v-model="createForm.protein_g"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="e.g. 32"
+                        class="w-full"
+                      />
                     </UFormField>
                     <UFormField label="Carbs (g)">
-                      <UInput v-model="createForm.carbohydrate_g" type="number" min="0" step="0.01" placeholder="e.g. 55" class="w-full" />
+                      <UInput
+                        v-model="createForm.carbohydrate_g"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="e.g. 55"
+                        class="w-full"
+                      />
                     </UFormField>
                     <UFormField label="Fat (g)">
-                      <UInput v-model="createForm.fat_g" type="number" min="0" step="0.01" placeholder="e.g. 18" class="w-full" />
+                      <UInput
+                        v-model="createForm.fat_g"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="e.g. 18"
+                        class="w-full"
+                      />
                     </UFormField>
                     <UFormField label="Sugar (g)">
-                      <UInput v-model="createForm.sugar_g" type="number" min="0" step="0.01" placeholder="e.g. 8" class="w-full" />
+                      <UInput
+                        v-model="createForm.sugar_g"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="e.g. 8"
+                        class="w-full"
+                      />
                     </UFormField>
                     <UFormField label="Saturated fat (g)">
-                      <UInput v-model="createForm.saturated_fat_g" type="number" min="0" step="0.01" placeholder="e.g. 4" class="w-full" />
+                      <UInput
+                        v-model="createForm.saturated_fat_g"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="e.g. 4"
+                        class="w-full"
+                      />
                     </UFormField>
                     <UFormField label="Sodium (mg)">
-                      <UInput v-model="createForm.sodium_mg" type="number" min="0" step="0.01" placeholder="e.g. 600" class="w-full" />
+                      <UInput
+                        v-model="createForm.sodium_mg"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="e.g. 600"
+                        class="w-full"
+                      />
                     </UFormField>
                     <UFormField label="Fibre (g)">
-                      <UInput v-model="createForm.fibre_g" type="number" min="0" step="0.01" placeholder="e.g. 5" class="w-full" />
+                      <UInput
+                        v-model="createForm.fibre_g"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="e.g. 5"
+                        class="w-full"
+                      />
                     </UFormField>
                   </div>
                 </UCard>
@@ -1247,6 +1445,7 @@ import type {
   RecipeSource
 } from '~/services/recipeApi'
 import recipeApi, { RECIPE_REGIONS, resolveRecipeRegion } from '~/services/recipeApi'
+import insightsApi from '~/services/insightsApi'
 import {
   buildConsoleRecipeRoutePath,
   normalizeRecipeImageUrl,
@@ -1327,7 +1526,7 @@ function toggleAnnotationFacet(
 
 const showFacetPanel = ref(true)
 
-const allergenOptions: { value: string; label: string }[] = [
+const allergenOptions: { value: string, label: string }[] = [
   { value: 'peanuts', label: 'Peanuts' },
   { value: 'tree nuts', label: 'Tree Nuts' },
   { value: 'dairy', label: 'Dairy' },
@@ -1346,7 +1545,7 @@ const paramSearchFacets = ref<RecipeFacetMap>({})
 // param_search, merged with any currently-selected values so users can
 // always deselect what they've chosen even when the current result set
 // doesn't include that bucket.
-const dishTypeOptions = computed<{ value: RecipeDishType; label: string; icon: string; count: number | null }[]>(() => {
+const dishTypeOptions = computed<{ value: RecipeDishType, label: string, icon: string, count: number | null }[]>(() => {
   // Backend keys the facet bucket by the Tag.category value, which is
   // 'dish-type' (hyphen), not 'dish_type'.
   const bucket = (paramSearchFacets.value?.['dish-type'] ?? {}) as Record<string, number>
@@ -1362,7 +1561,7 @@ const dishTypeOptions = computed<{ value: RecipeDishType; label: string; icon: s
     .sort((a, b) => a.label.localeCompare(b.label))
 })
 
-const sourceOptions: { value: RecipeSource; label: string }[] = [
+const sourceOptions: { value: RecipeSource, label: string }[] = [
   { value: 'healthyfoods', label: 'Healthy Foods' },
   { value: 'foodhero', label: 'Food Hero' },
   { value: 'myplate', label: 'MyPlate' },
@@ -1376,7 +1575,7 @@ const sourceOptions: { value: RecipeSource; label: string }[] = [
   { value: 'slovenian_kitchen', label: 'Slovenian Kitchen' }
 ]
 
-const sortByOptions: { value: RecipeParamSortBy; label: string; icon: string }[] = [
+const sortByOptions: { value: RecipeParamSortBy, label: string, icon: string }[] = [
   { value: 'title_asc', label: 'Title (A–Z)', icon: 'i-lucide-arrow-up-a-z' },
   { value: 'title_desc', label: 'Title (Z–A)', icon: 'i-lucide-arrow-down-z-a' },
   { value: 'time_asc', label: 'Quickest First', icon: 'i-lucide-clock' },
@@ -1431,8 +1630,8 @@ const activeFacetCount = computed(() => [
   filters.flavorProfiles,
   filters.foodGroups
 ].reduce((total, values) => total + values.length, 0)
-  + (filters.sortBy ? 1 : 0)
-  + (filters.includeDisabled ? 1 : 0))
++ (filters.sortBy ? 1 : 0)
++ (filters.includeDisabled ? 1 : 0))
 
 function toggleIncludeDisabled() {
   filters.includeDisabled = !filters.includeDisabled
@@ -1493,8 +1692,26 @@ const recipeColumns = [
   { accessorKey: 'serves', header: 'Serves' },
   { accessorKey: 'nutri_score', header: 'Nutri-Score' },
   { accessorKey: 'status', header: 'Status', enableSorting: false },
+  // A badge so the list says which recipe to open. Until this a report could
+  // only be found by opening the one you already suspected, which is backwards.
+  { id: 'reports', header: 'Reports', enableSorting: false },
   { id: 'actions', header: '', enableSorting: false }
 ]
+
+/*
+ * Open complaints per recipe on this page.
+ *
+ * Fetched for the page on screen, in one request, after the recipes land — a
+ * badge must never delay the list it sits on, nor blank it when it fails.
+ */
+const complaintCounts = ref<Record<string, { total: number, open: number }>>({})
+
+async function loadComplaintCounts() {
+  const ids = recipes.value.map(r => String(r.id ?? '')).filter(Boolean)
+  complaintCounts.value = ids.length
+    ? await insightsApi.getComplaintCounts('recipe', ids)
+    : {}
+}
 
 const recipeTableUi = {
   th: 'px-3 py-2 text-xs',
@@ -1878,7 +2095,7 @@ function applyCreateAnalysisToDraft(result: RecipeProfileResult) {
       ? result.instructions
       : []
   ).map(step => compactText(step)).filter(Boolean)
-    || extractInstructionStepsFromRecipeText(rawRecipe)
+  || extractInstructionStepsFromRecipeText(rawRecipe)
   const analyzedServes = toPositiveWholeNumber(result.serves) || extractServesFromRecipeText(rawRecipe)
 
   if (analyzedTitle) createForm.title = analyzedTitle
@@ -2067,6 +2284,8 @@ async function loadRecipes(page = currentPage.value) {
       }
     )
     recipes.value = results
+    // After the rows, never blocking them.
+    void loadComplaintCounts()
     paramSearchFacets.value = facets
     isNlSearch.value = Boolean(query)
     // One branch: both paths report a real filtered total. Previously the
@@ -2585,7 +2804,7 @@ function buildCreatePayload(): CreateRecipeRequest {
     ...structure,
     image_url: createForm.imageUrl.trim() || undefined,
     tags: createForm.tags.filter(Boolean),
-    allergens: createForm.allergens.filter(Boolean),
+    allergens: createForm.allergens.filter(Boolean)
   }
 
   // Only send nutrients if at least one is provided (API skips profiling when nutrients present)

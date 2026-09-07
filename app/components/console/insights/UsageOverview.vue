@@ -260,7 +260,7 @@ async function load() {
   overview.value = summary
   attention.value = items
   trending.value = queries.top
-  zeroResult.value = zero
+  zeroResult.value = zero.queries
   newFeedback.value = feedback.items
   usageByApp.value = usage.by_app
   collecting.value = Boolean(health?.enabled)
