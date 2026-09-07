@@ -179,11 +179,11 @@ import observabilityApi, { type DashboardData, type DashboardRange } from '~/ser
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({ layout: 'default' })
-useHead({ title: 'Prompts & content · Console' })
+useHead({ title: 'LLM observability · Console' })
 
 const breadcrumbItems = consoleBreadcrumb({
-  label: 'Prompts & content',
-  icon: 'i-lucide-sparkles'
+  label: 'LLM observability',
+  icon: 'i-lucide-brain-circuit'
 })
 
 // Usage no longer leads, and no longer holds a second copy of the analytics

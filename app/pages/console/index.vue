@@ -247,8 +247,8 @@ const allQuickAccessCards = [
     iconClass: 'text-brand-600 dark:text-brand-300'
   },
   {
-    title: 'Prompts & content',
-    description: 'Prompt variants, curation content, and operational controls for generative features.',
+    title: 'LLM observability',
+    description: 'Traces, prompt variants and model behaviour — what the models were asked, what they answered, and how they are performing.',
     icon: 'i-lucide-sliders-horizontal',
     to: '/console/operations?tab=observability',
     available: true,
