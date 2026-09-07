@@ -166,6 +166,7 @@
               :peak="map.peak"
               :path="map.path"
               :elements="map.elements"
+              :example-paths="map.example_paths"
             />
           </div>
 
@@ -178,11 +179,24 @@
               :loading="loading"
               :failed="failed"
               empty="No named controls were clicked."
-              empty-hint="Elements are named from a data-track attribute where the UI sets one."
+              empty-hint="Controls are named from their accessible name or their own text; a data-track attribute overrides both."
               empty-icon="i-lucide-mouse-pointer-click"
             >
+              <!-- What it calls itself, with the selector underneath for
+                   whoever has to go and find it in the source. -->
               <template #cell-element_key="{ row }">
-                <span class="break-all font-mono text-xs">{{ row.element_key || '—' }}</span>
+                <div class="min-w-0">
+                  <p class="truncate text-sm text-gray-900 dark:text-white">
+                    {{ row.element_label || (row.element_role ? `Unnamed ${row.element_role}` : 'Unnamed control') }}
+                  </p>
+                  <p
+                    v-if="row.element_key"
+                    class="truncate font-mono text-[11px] text-gray-400 dark:text-gray-500"
+                    :title="row.element_key"
+                  >
+                    {{ row.element_key }}
+                  </p>
+                </div>
               </template>
               <template #cell-trouble="{ row }">
                 <UBadge

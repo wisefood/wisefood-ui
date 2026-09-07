@@ -66,7 +66,11 @@ export interface RumInteraction {
   path: string
   kind: InteractionKind
   element_key: string
+  /** What the control calls itself — its accessible name or its own text. */
+  element_label: string
   element_role: string
+  /** One concrete address for `path`, so the console can draw over the page. */
+  page_path: string
   x_pct: number | null
   y_pct: number | null
   viewport_w: number

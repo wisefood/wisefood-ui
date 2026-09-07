@@ -201,6 +201,61 @@ function segment(element: Element): string {
  * which is imperfect but groups well enough to show that nine hundred people
  * clicked the same non-button.
  */
+/** Characters of an element's own words worth keeping. */
+const MAX_ELEMENT_LABEL = 60
+
+/**
+ * What a control calls itself, as a person reading the screen would say it.
+ *
+ * The CSS path in `elementKey` groups clicks correctly and tells a human
+ * nothing: `div.flex.items-center>button.px-3.py-1` names no control anybody
+ * can go and look at. This is the readable half — the accessible name first,
+ * because that is the string the interface already promises means something,
+ * then the visible text, then the fallbacks an icon-only control leaves.
+ *
+ * Only the element's own words. Text is taken from the control itself, not a
+ * container, and capped hard: a click on a card must not drag the card's
+ * contents — which on this platform can be somebody's meal plan — into a
+ * column that everybody with console access can read. The recorder redacts
+ * it again on the way in.
+ */
+export function elementLabel(target: Element | null): string {
+  if (!target) return ''
+  try {
+    const control = target.closest(
+      'button, a, [role="button"], [role="link"], [role="tab"], [role="menuitem"], input, select, summary'
+    ) ?? target
+
+    const attribute = (name: string) => (control.getAttribute(name) || '').trim()
+    const labelled = attribute('aria-label') || attribute('title') || attribute('alt')
+    if (labelled) return clean(labelled)
+
+    // The visible words, but only this control's own — a button's text, not
+    // the article it sits inside.
+    const own = Array.from(control.childNodes)
+      .filter(node => node.nodeType === Node.TEXT_NODE)
+      .map(node => node.textContent || '')
+      .join(' ')
+      .trim()
+    if (own) return clean(own)
+
+    // A control whose whole content is short is safe to read through: an
+    // icon button wrapping a single <span>Save</span>.
+    const text = (control.textContent || '').trim()
+    if (text && text.length <= MAX_ELEMENT_LABEL) return clean(text)
+
+    return clean(attribute('placeholder') || attribute('name'))
+  } catch {
+    return ''
+  }
+}
+
+/** One line, collapsed whitespace, capped. */
+function clean(value: string): string {
+  const flat = value.replace(/\s+/g, ' ').trim()
+  return flat.length > MAX_ELEMENT_LABEL ? `${flat.slice(0, MAX_ELEMENT_LABEL - 1)}…` : flat
+}
+
 export function elementKey(target: Element | null): string {
   if (!target) return ''
   try {

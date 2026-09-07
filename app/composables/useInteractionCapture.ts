@@ -5,6 +5,7 @@ import { currentRoutePattern } from '~/composables/useRumPath'
 import { analyticsSessionId } from '~/composables/useAnalyticsSession'
 import {
   elementKey,
+  elementLabel,
   elementRole,
   interactiveAncestor,
   pageBox,
@@ -74,7 +75,11 @@ function pageIsGoing(): boolean {
 interface Cluster {
   occurredAt: string
   path: string
+  /** The concrete address, so the console can load the page behind the map. */
+  pagePath: string
   key: string
+  /** What the control calls itself, for a reader rather than a grouper. */
+  label: string
   role: string
   xPage: number
   yPage: number
@@ -124,6 +129,18 @@ function recording(): boolean {
   return captureEnabled('interactions') && sampled()
 }
 
+/**
+ * The address in the bar, trimmed of query and hash.
+ *
+ * A query string carries whatever a page put there — a search someone typed,
+ * a filter naming a member — so it is dropped rather than trusted. The path
+ * alone is enough to reopen the page.
+ */
+function locationNow(): string {
+  if (typeof window === 'undefined') return ''
+  return (window.location.pathname || '').slice(0, 255)
+}
+
 function pathNow(): string {
   return currentPath || currentRoutePattern()
 }
@@ -156,7 +173,9 @@ export function finalizeCluster(): void {
       path: open.path,
       kind,
       element_key: open.key,
+      element_label: open.label,
       element_role: open.role,
+      page_path: open.pagePath,
       x_pct: open.xPct,
       y_pct: open.yPct,
       viewport_w: open.viewportW,
@@ -244,7 +263,14 @@ function onClick(event: MouseEvent): void {
       occurredAt: new Date(now).toISOString(),
       path: pathNow(),
       key: elementKey(target),
+      label: elementLabel(target),
       role: elementRole(target),
+      // The address actually in the bar, alongside the route pattern the rest
+      // of analytics groups by. The pattern is what makes a click map poolable
+      // across visits; a concrete example is what lets the console load the
+      // real page behind that map, and `/recipe-wrangler/:id()` cannot be
+      // navigated to.
+      pagePath: locationNow(),
       xPage,
       yPage,
       xPct: pagePercent(xPage, box.width),
@@ -309,7 +335,12 @@ export function emitScrollDepth(path: string = pathNow()): void {
       path,
       kind: 'scroll',
       element_key: '',
+      element_label: '',
       element_role: '',
+      // A scroll belongs to the page, not to a control — but it is the same
+      // page, and carrying the address here means a route whose only
+      // recorded activity is scrolling still has something to draw over.
+      page_path: locationNow(),
       x_pct: null,
       y_pct: null,
       viewport_w: box.viewportWidth,

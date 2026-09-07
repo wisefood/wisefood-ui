@@ -515,6 +515,14 @@ export interface HeatmapCell {
 
 export interface ClickMap extends Window {
   path: string
+  /**
+   * Real addresses this route pattern was seen at, newest first.
+   *
+   * The map is drawn over the page it describes, and a pattern like
+   * `/recipes/[id]` cannot be opened. Several are offered because the newest
+   * visit may have been to something since deleted.
+   */
+  example_paths: string[]
   grid: number
   clicks: number
   sessions: number
@@ -525,6 +533,8 @@ export interface ClickMap extends Window {
   cells: HeatmapCell[]
   elements: Array<{
     element_key: string | null
+    /** What the control calls itself. Null for clicks recorded before capture. */
+    element_label: string | null
     element_role: string | null
     clicks: number
     sessions: number
