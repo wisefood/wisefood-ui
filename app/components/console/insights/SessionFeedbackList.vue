@@ -100,7 +100,7 @@
                nowhere is worse than no link. -->
           <NuxtLink
             v-if="row.target_id && targetLink(row.target_type, row.target_id)"
-            :to="targetLink(row.target_type, row.target_id)!"
+            :to="targetLink(row.target_type, row.target_id) ?? ''"
             class="min-w-0 break-all font-mono text-brand-600 hover:underline dark:text-brand-300"
           >{{ row.target_id }}</NuxtLink>
           <span

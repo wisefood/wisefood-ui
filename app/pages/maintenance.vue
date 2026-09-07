@@ -1,7 +1,13 @@
 <template>
   <div class="w-full max-w-lg text-center">
+    <!--
+      A bare img, not <AppLogo>: that component links to the dashboard, and a
+      non-admin who clicked it would be sent straight back here by the guard.
+      The path is base-relative — Nuxt prepends the app base URL at build time,
+      so writing it out breaks `nuxt generate`.
+    -->
     <img
-      src="/app/logo.png"
+      src="/logo.png"
       alt="WiseFood"
       class="mx-auto h-20 w-auto"
       width="160"

@@ -309,7 +309,7 @@
               <template #cell-target_id="{ row }">
                 <NuxtLink
                   v-if="row.target_id && targetLink(row.target_type, row.target_id)"
-                  :to="targetLink(row.target_type, row.target_id)!"
+                  :to="targetLink(row.target_type, row.target_id) ?? ''"
                   class="break-words text-brand-600 hover:underline dark:text-brand-300"
                 >
                   {{ row.title || row.target_id }}
@@ -431,7 +431,7 @@
                       {{ targetTypeLabel(row.target_type) }}<template v-if="row.target_id"> · </template>
                       <NuxtLink
                         v-if="row.target_id && targetLink(row.target_type, row.target_id)"
-                        :to="targetLink(row.target_type, row.target_id)!"
+                        :to="targetLink(row.target_type, row.target_id) ?? ''"
                         class="font-mono text-brand-600 hover:underline dark:text-brand-300"
                       >{{ row.target_id }}</NuxtLink>
                       <template v-else-if="row.target_id">{{ row.target_id }}</template>
