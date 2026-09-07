@@ -41,14 +41,23 @@
       are, and how many of them were somebody stuck. Without this the grid is a
       few hundred empty divs to a screen reader.
     -->
-    <div
-      ref="frame"
-      class="relative w-full overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/15 dark:bg-zinc-900"
-      :style="{ aspectRatio: `${PAGE_W} / ${PAGE_H}` }"
-      role="img"
-      :aria-label="summary"
-    >
-      <!--
+    <!--
+      The page box is a scrolled page, not a viewport, so at any readable width
+      it is roughly twice as tall as the card wants to be — a metre of mostly
+      empty canvas that pushed everything else off the screen. The true shape
+      is kept, because the positions are fractions of it and squashing them
+      would put the heat in the wrong place; what is capped is how much of it
+      is shown at once, and the rest scrolls.
+    -->
+    <div class="relative max-h-[32rem] overflow-y-auto overscroll-contain rounded-xl border border-gray-200 bg-white dark:border-white/15 dark:bg-zinc-900">
+      <div
+        ref="frame"
+        class="relative w-full overflow-hidden"
+        :style="{ aspectRatio: `${PAGE_W} / ${PAGE_H}` }"
+        role="img"
+        :aria-label="summary"
+      >
+        <!--
         The page itself, underneath.
 
         Rendered live from the same origin rather than stored as a screenshot:
@@ -58,68 +67,68 @@
         drawn at a fixed desktop width scaled to fit, so the percentages the
         clicks were recorded in land in the same places for every reader.
       -->
-      <iframe
-        v-if="showPage && chosen"
-        :key="chosen"
-        :src="chosen"
-        class="pointer-events-none absolute left-0 top-0 origin-top-left border-0 bg-white"
-        :style="pageStyle"
-        :title="`${path} rendered behind the click map`"
-        loading="lazy"
-        tabindex="-1"
-        aria-hidden="true"
-        scrolling="no"
-      />
-      <div
-        v-if="showPage && chosen"
-        class="pointer-events-none absolute inset-0 bg-white/45 dark:bg-black/55"
-      />
+        <iframe
+          v-if="showPage && chosen"
+          :key="chosen"
+          :src="chosen"
+          class="pointer-events-none absolute left-0 top-0 origin-top-left border-0 bg-white"
+          :style="pageStyle"
+          :title="`${path} rendered behind the click map`"
+          loading="lazy"
+          tabindex="-1"
+          aria-hidden="true"
+          scrolling="no"
+        />
+        <div
+          v-if="showPage && chosen"
+          class="pointer-events-none absolute inset-0 bg-white/45 dark:bg-black/55"
+        />
 
-      <!-- Tenths of the page box, so a cell reads as a position rather than
+        <!-- Tenths of the page box, so a cell reads as a position rather than
            as a floating blob. Only when there is no page to read against. -->
-      <div
-        v-if="!showPage || !chosen"
-        class="pointer-events-none absolute inset-0"
-        :style="rulerStyle"
-      />
+        <div
+          v-if="!showPage || !chosen"
+          class="pointer-events-none absolute inset-0"
+          :style="rulerStyle"
+        />
 
-      <!-- Two layers over the same grid: heat is softened so neighbouring
+        <!-- Two layers over the same grid: heat is softened so neighbouring
            cells read as one region, markers stay crisp so a single rage cell
            is not blurred into the background. -->
-      <div
-        class="pointer-events-none absolute inset-0 grid blur-[3px]"
-        :style="gridStyle"
-      >
         <div
-          v-for="cell in cells"
-          :key="`heat-${cell.x}-${cell.y}`"
-          :style="{ ...place(cell), backgroundColor: heat(cell) }"
-        />
-      </div>
-
-      <div
-        class="absolute inset-0 grid"
-        :style="gridStyle"
-      >
-        <div
-          v-for="cell in cells"
-          :key="`mark-${cell.x}-${cell.y}`"
-          class="relative"
-          :style="place(cell)"
-          :title="describe(cell)"
+          class="pointer-events-none absolute inset-0 grid blur-[3px]"
+          :style="gridStyle"
         >
-          <span
-            v-if="cell.rage"
-            class="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-fuchsia-500 ring-1 ring-white/80 dark:ring-black/50"
-          />
-          <span
-            v-else-if="cell.dead"
-            class="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-cyan-400 bg-white/60 dark:bg-black/40"
+          <div
+            v-for="cell in cells"
+            :key="`heat-${cell.x}-${cell.y}`"
+            :style="{ ...place(cell), backgroundColor: heat(cell) }"
           />
         </div>
-      </div>
 
-      <!--
+        <div
+          class="absolute inset-0 grid"
+          :style="gridStyle"
+        >
+          <div
+            v-for="cell in cells"
+            :key="`mark-${cell.x}-${cell.y}`"
+            class="relative"
+            :style="place(cell)"
+            :title="describe(cell)"
+          >
+            <span
+              v-if="cell.rage"
+              class="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-fuchsia-500 ring-1 ring-white/80 dark:ring-black/50"
+            />
+            <span
+              v-else-if="cell.dead"
+              class="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-cyan-400 bg-white/60 dark:bg-black/40"
+            />
+          </div>
+        </div>
+
+        <!--
         One numbered pin per control, keyed to the list below.
 
         Numbers, not names: the names are long and the hotspots sit on top of
@@ -127,26 +136,27 @@
         recipe page — so labels drawn at their own coordinates pile into an
         unreadable heap. A pin is two characters wide and always legible.
       -->
-      <div class="pointer-events-none absolute inset-0">
-        <button
-          v-for="(e, i) in pins"
-          :key="`pin-${e.element_key}`"
-          type="button"
-          class="pointer-events-auto absolute flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-[10px] font-semibold tabular-nums shadow ring-2 ring-white transition-transform hover:scale-125 dark:ring-black/70"
-          :class="pinTone(e)"
-          :style="pinStyle(e)"
-          :title="pinTitle(e, i)"
-          @click="active = active === e.element_key ? null : e.element_key"
-        >
-          {{ i + 1 }}
-        </button>
-      </div>
+        <div class="pointer-events-none absolute inset-0">
+          <button
+            v-for="(e, i) in pins"
+            :key="`pin-${e.element_key}`"
+            type="button"
+            class="pointer-events-auto absolute flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-[10px] font-semibold tabular-nums shadow ring-2 ring-white transition-transform hover:scale-125 dark:ring-black/70"
+            :class="pinTone(e)"
+            :style="pinStyle(e)"
+            :title="pinTitle(e, i)"
+            @click="active = active === e.element_key ? null : e.element_key"
+          >
+            {{ i + 1 }}
+          </button>
+        </div>
 
-      <div
-        v-if="!cells.length"
-        class="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-gray-400 dark:text-gray-500"
-      >
-        No positioned clicks on this page in this period.
+        <div
+          v-if="!cells.length"
+          class="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-gray-400 dark:text-gray-500"
+        >
+          No positioned clicks on this page in this period.
+        </div>
       </div>
     </div>
 

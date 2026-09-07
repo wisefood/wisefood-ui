@@ -82,6 +82,38 @@
       </div>
     </div>
 
+    <!--
+      The one setting here that is not a switch, and the one whose absence was
+      most confusing: click maps can be on, the browser can be sending, and
+      three quarters of what it sends is still thrown away before it is
+      written. A switch that says "on" over a rate of 0.25 reads as broken.
+    -->
+    <div
+      v-if="settings"
+      class="mt-5 flex items-start justify-between gap-4 border-t border-gray-100 pt-4 dark:border-zinc-800"
+    >
+      <div class="min-w-0">
+        <p class="text-sm font-medium text-gray-900 dark:text-white">
+          How many clicks to keep
+        </p>
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          Ordinary clicks only — rage and dead clicks are never sampled, because a fault that
+          hits one person in a thousand is the one worth having. Keep all of them while a pilot
+          is small; lower it when the volume is real.
+        </p>
+      </div>
+      <USelectMenu
+        :model-value="clickRate"
+        :items="clickRates"
+        value-key="value"
+        size="xs"
+        class="w-32 shrink-0"
+        :disabled="saving === 'sample_rate.interactions'"
+        aria-label="How many clicks to keep"
+        @update:model-value="(next: number) => save('sample_rate.interactions', next)"
+      />
+    </div>
+
     <div class="mt-5 border-t border-gray-100 pt-4 dark:border-zinc-800">
       <div class="flex items-start justify-between gap-4">
         <div class="min-w-0">
@@ -273,6 +305,22 @@ async function load() {
  * asymmetry is the point: the costly mistake is the accidental close, and the
  * fix for it must be one click, not two.
  */
+const clickRates = [
+  { label: 'All', value: 1 },
+  { label: 'Half', value: 0.5 },
+  { label: 'A quarter', value: 0.25 },
+  { label: 'A tenth', value: 0.1 }
+]
+
+/** The stored rate, snapped to the nearest option so the menu always shows one. */
+const clickRate = computed(() => {
+  const raw = Number(settings.value?.['sample_rate.interactions'] ?? 1)
+  return clickRates.reduce(
+    (best, option) => Math.abs(option.value - raw) < Math.abs(best - raw) ? option.value : best,
+    1
+  )
+})
+
 const confirming = ref(false)
 
 function confirmMaintenance(next: boolean) {
@@ -288,7 +336,7 @@ async function closePlatform() {
   confirming.value = false
 }
 
-async function save(key: string, next: boolean) {
+async function save(key: string, next: boolean | number) {
   saving.value = key
   error.value = ''
   const failure = await insightsApi.setSetting(key, next)
