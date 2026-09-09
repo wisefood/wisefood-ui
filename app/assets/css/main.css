@@ -1,6 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap");
 @import "tailwindcss";
 @import "@nuxt/ui";
+/* Flows walkthrough theming — must precede other rules per the @import spec. */
+@import "./flows.css";
 
 /* System font stack - matches Nuxt UI default */
 :root {

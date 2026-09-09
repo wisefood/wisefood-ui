@@ -1,0 +1,69 @@
+/*
+ * Flows walkthrough theming.
+ *
+ * @flows/js-components ships ~70 custom properties under --flows-basicsV2-*
+ * and renders in the LIGHT DOM (its Lit elements override createRenderRoot to
+ * return `this`), so plain global CSS reaches them — no shadow-DOM piercing
+ * and no need to replace the components to restyle them.
+ *
+ * Two things shape how this file is written:
+ *
+ * 1. Specificity, not order. The plugin imports the package's index.css from
+ *    JavaScript (app/plugins/02.flows.client.ts), so Vite decides where that
+ *    sheet lands relative to this one and the order is not guaranteed. Their
+ *    declarations sit on `:root` (0,1,0); ours sit on `:root:root` (0,2,0) and
+ *    therefore win whichever sheet is parsed last.
+ *
+ * 2. One block covers both themes. Flows has its own `.dark` block keyed on
+ *    the same class Nuxt UI toggles, so anything mapped to a --ui-* semantic
+ *    token flips with the app for free. The exceptions are the brand colours
+ *    below, which are meant to stay brand-coloured in dark mode rather than
+ *    inverting the way the Flows default theme does — our (0,2,0) beats their
+ *    `.dark` (0,1,0), so they hold in both themes.
+ *
+ * Deliberately NOT overridden: every font-* variable. The tour keeps the
+ * system stack the package ships (-apple-system, BlinkMacSystemFont, …) rather
+ * than inheriting Quicksand. Note that main.css has a global
+ * `* { font-family: inherit }`, but that is specificity (0,0,0) and the Flows
+ * classes declare font-family at (0,1,0), so the tour font survives it.
+ * Shadows, gradients and button insets are also left alone — they already
+ * flip correctly via the package's own `.dark` block.
+ */
+:root:root {
+  /* Surfaces and text -> Nuxt UI semantic tokens, so these follow .dark */
+  --flows-basicsV2-bg-default: var(--ui-bg);
+  --flows-basicsV2-bg-subtle: var(--ui-bg-muted);
+  --flows-basicsV2-bg-strong: var(--ui-bg-accented);
+  --flows-basicsV2-bg-hover: var(--ui-bg-elevated);
+  --flows-basicsV2-fg-default: var(--ui-text-highlighted);
+  --flows-basicsV2-fg-muted: var(--ui-text-muted);
+
+  --flows-basicsV2-border: var(--flows-basicsV2-borderWidth) solid var(--ui-border);
+  --flows-basicsV2-border-strong: var(--flows-basicsV2-borderWidth) solid var(--ui-border-accented);
+  /* border-strong-hover is left at the packaged value: it is already a mid
+     grey that reads correctly against both themes, and every --ui-* token
+     strong enough to replace it is far too dark in light mode. */
+
+  /* Primary action -> WiseFood brand red, held across both themes. The Flows
+     default inverts primary in dark mode (near-white on dark); brand identity
+     should not invert, so these are pinned rather than tokenised. */
+  --flows-basicsV2-bg-primary: var(--color-brand-500);
+  --flows-basicsV2-bg-primary-hover: var(--color-brand-600);
+  --flows-basicsV2-fg-onPrimary: #fff;
+  --flows-basicsV2-border-primary: var(--flows-basicsV2-borderWidth) solid var(--color-brand-500);
+  /* Nuxt UI buttons are flat; drop the packaged sheen so the tour's primary
+     button reads as the same control as the rest of the app. */
+  --flows-basicsV2-primary-button-gradient: none;
+
+  /* Corner radii, scaled off the app's --radius (14px) the way the packaged
+     ramp scales off 12px, so cards match UCard and buttons match UButton. */
+  --flows-basicsV2-borderRadius-xs: 4px;
+  --flows-basicsV2-borderRadius-s: 8px;
+  --flows-basicsV2-borderRadius-m: 10px;
+  --flows-basicsV2-borderRadius-l: var(--radius);
+  --flows-basicsV2-borderRadius-xl: calc(var(--radius) + 4px);
+
+  /* Sit above the app's own overlays. UModal/UDropdownMenu land in the 50-ish
+     range and the tour must be able to point at anything they render. */
+  --flows-basicsV2-zIndex: 1500;
+}
