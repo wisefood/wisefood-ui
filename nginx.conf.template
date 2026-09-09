@@ -6,6 +6,15 @@ http {
     include       /etc/nginx/mime.types;
     default_type  application/octet-stream;
 
+    # Carry the WebSocket upgrade through the Flows live-update proxy below.
+    # A literal `Connection: upgrade` would break any plain HTTP request that
+    # reached the same location, so the value follows what the client asked
+    # for and stays empty when it asked for nothing.
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
     server {
         listen 80;
         server_name localhost;
@@ -49,6 +58,38 @@ http {
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
             proxy_pass_request_headers on;
+        }
+
+        # Flows live block updates. The SDK derives this from the same apiUrl
+        # as the REST calls, swapping the scheme for wss://, so it arrives here
+        # first-party and needs proxying on exactly like /v2/sdk/* above —
+        # matched at both / and /app for the optional context path.
+        #
+        # Without this location the request fell through to the SPA fallback,
+        # which answered 200 with index.html instead of a 101 upgrade. The SDK
+        # read that as a failed handshake and reconnected in a loop, filling
+        # the console with WebSocket errors. Tours themselves never depended on
+        # it — they render off the /v2/sdk/blocks response — but the retry
+        # noise buried every other console message.
+        location ~* ^/(app/)?(ws/sdk/.*)$ {
+            resolver 1.1.1.1 8.8.8.8 valid=300s;
+            set $flows_ws_upstream "https://api.flows-cloud.com/$2$is_args$args";
+
+            proxy_pass $flows_ws_upstream;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            proxy_set_header Host api.flows-cloud.com;
+            proxy_ssl_server_name on;
+            proxy_ssl_name api.flows-cloud.com;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # Live updates idle for long stretches; the default 60s read
+            # timeout would drop the socket and restart the retry loop this
+            # location exists to stop.
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
         }
 
         location = /runtime-config.js {
