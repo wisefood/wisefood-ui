@@ -1,0 +1,515 @@
+<!--
+  Source Integrator — research sources, review what it proposes, approve.
+
+  Two columns because there are two jobs: on the left a conversation that can
+  search the web and read the catalog, on the right the proposals it has filed
+  and the queue it is working from. The decision a curator makes lives on the
+  right and never inside the chat, which is the point — approving is an act
+  with a record, not a sentence typed at a model.
+-->
+<template>
+  <UPage class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <UBreadcrumb
+      :items="breadcrumbs"
+      class="mb-4"
+    />
+    <UPageHeader
+      title="Source Integrator"
+      description="Find candidate sources, check what their licence permits, and bring the good ones into the catalog."
+      :ui="{ root: 'relative py-6 border-b-0' }"
+    >
+      <template #links>
+        <UButton
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          icon="i-lucide-plus"
+          @click="startSession"
+        >
+          New conversation
+        </UButton>
+      </template>
+    </UPageHeader>
+
+    <UAlert
+      v-if="!writesEnabled"
+      class="mb-6"
+      color="info"
+      variant="soft"
+      icon="i-lucide-info"
+      title="Research only, for now"
+      description="The assistant can search, read and propose. Approving records your decision, and integration into the catalog is switched on separately — nothing is written yet."
+    />
+
+    <div class="grid gap-6 lg:grid-cols-3">
+      <!-- The conversation -->
+      <UCard
+        class="border border-gray-200/70 lg:col-span-2 dark:border-white/10"
+        :ui="{ body: 'p-0' }"
+      >
+        <template #header>
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <h2 class="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                {{ activeSession?.title || 'New conversation' }}
+              </h2>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Searches the web when it needs to. Every tool it runs is recorded.
+              </p>
+            </div>
+            <USelectMenu
+              v-if="sessions.length > 1"
+              :model-value="sessionId"
+              :items="sessionOptions"
+              value-key="value"
+              size="xs"
+              class="w-48 shrink-0"
+              aria-label="Conversation"
+              @update:model-value="(id: string) => openSession(id)"
+            />
+          </div>
+        </template>
+
+        <div
+          ref="transcript"
+          class="max-h-[30rem] min-h-[18rem] space-y-4 overflow-y-auto p-5"
+        >
+          <p
+            v-if="!messages.length && !thinking"
+            class="py-12 text-center text-sm text-gray-400 dark:text-gray-500"
+          >
+            Ask for sources — “what dietary guidance exists for Bulgaria, and may we use it?”
+          </p>
+
+          <div
+            v-for="message in visibleMessages"
+            :key="message.seq"
+            :class="message.role === 'user' ? 'flex justify-end' : ''"
+          >
+            <div
+              class="max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
+              :class="message.role === 'user'
+                ? 'bg-brand-600 text-white'
+                : 'bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-gray-100'"
+            >
+              <p class="whitespace-pre-wrap">
+                {{ message.content }}
+              </p>
+            </div>
+          </div>
+
+          <!-- What it did, between what it said. A curator who cannot see the
+               searches cannot judge the answer. -->
+          <div
+            v-if="toolTrail.length"
+            class="flex flex-wrap gap-1.5"
+          >
+            <UBadge
+              v-for="(call, i) in toolTrail"
+              :key="i"
+              size="xs"
+              variant="soft"
+              :color="call.ok ? 'neutral' : 'error'"
+              :icon="call.ok ? 'i-lucide-wrench' : 'i-lucide-alert-circle'"
+            >
+              {{ call.tool }}
+            </UBadge>
+          </div>
+
+          <div
+            v-if="thinking"
+            class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"
+          >
+            <UIcon
+              name="i-lucide-loader-2"
+              class="h-4 w-4 animate-spin"
+            />
+            Researching — this can take a minute.
+          </div>
+        </div>
+
+        <template #footer>
+          <form
+            class="flex items-end gap-2"
+            @submit.prevent="send"
+          >
+            <UTextarea
+              v-model="draft"
+              :rows="2"
+              autoresize
+              class="w-full"
+              placeholder="Ask for sources, or paste a URL to check"
+              :disabled="thinking"
+              @keydown.enter.exact.prevent="send"
+            />
+            <UButton
+              type="submit"
+              color="primary"
+              icon="i-lucide-send"
+              class="shrink-0"
+              :loading="thinking"
+              :disabled="!draft.trim()"
+            >
+              Send
+            </UButton>
+          </form>
+          <p
+            v-if="lastRun"
+            class="mt-2 text-[11px] text-gray-400 dark:text-gray-500"
+          >
+            {{ lastRun }}
+          </p>
+        </template>
+      </UCard>
+
+      <!-- Proposals and the queue -->
+      <div class="space-y-6">
+        <UCard
+          class="border border-gray-200/70 dark:border-white/10"
+          :ui="{ body: 'p-4' }"
+        >
+          <template #header>
+            <div class="flex items-center justify-between gap-2">
+              <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
+                Proposals
+              </h2>
+              <UButton
+                color="neutral"
+                variant="ghost"
+                size="xs"
+                icon="i-lucide-refresh-cw"
+                :loading="loadingProposals"
+                @click="loadProposals"
+              />
+            </div>
+          </template>
+
+          <p
+            v-if="!proposals.length"
+            class="py-6 text-center text-sm text-gray-400 dark:text-gray-500"
+          >
+            Nothing proposed yet.
+          </p>
+          <div
+            v-else
+            class="space-y-3"
+          >
+            <ConsoleIntegratorProposalCard
+              v-for="proposal in proposals"
+              :key="proposal.id"
+              :proposal="proposal"
+              :busy="busyProposal === proposal.id ? busyAction : null"
+              @approve="confirmApprove"
+              @reject="rejectProposal"
+            />
+          </div>
+        </UCard>
+
+        <UCard
+          class="border border-gray-200/70 dark:border-white/10"
+          :ui="{ body: 'p-4' }"
+        >
+          <template #header>
+            <div class="flex items-center justify-between gap-2">
+              <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
+                Queue
+              </h2>
+              <span class="text-xs text-gray-500 dark:text-gray-400">
+                {{ backlogTotal.toLocaleString() }} waiting
+              </span>
+            </div>
+          </template>
+          <div class="flex flex-wrap gap-1.5">
+            <UButton
+              v-for="option in kindFilters"
+              :key="option.value"
+              size="xs"
+              :color="backlogKind === option.value ? 'primary' : 'neutral'"
+              :variant="backlogKind === option.value ? 'soft' : 'ghost'"
+              @click="setBacklogKind(option.value)"
+            >
+              {{ option.label }}
+            </UButton>
+          </div>
+          <ul class="mt-3 divide-y divide-gray-100 dark:divide-zinc-800">
+            <li
+              v-for="item in backlog"
+              :key="item.id"
+              class="py-2"
+            >
+              <button
+                type="button"
+                class="w-full text-left"
+                @click="askAbout(item)"
+              >
+                <p class="truncate text-xs font-medium text-gray-900 dark:text-white">
+                  {{ item.title }}
+                </p>
+                <p class="truncate text-[11px] text-gray-500 dark:text-gray-400">
+                  {{ [item.country, item.language].filter(Boolean).join(' · ') || item.kind }}
+                </p>
+              </button>
+            </li>
+          </ul>
+        </UCard>
+      </div>
+    </div>
+
+    <!-- Approving an undetermined licence needs a reason, and the server
+         refuses without one. Asking here rather than showing that refusal. -->
+    <UModal
+      v-model:open="approving"
+      title="Approve this source?"
+      :description="pendingProposal?.title"
+    >
+      <template #body>
+        <div class="space-y-3">
+          <UAlert
+            v-if="needsReason"
+            color="warning"
+            variant="soft"
+            icon="i-lucide-alert-triangle"
+            title="The licence could not be established"
+            description="Approving anyway needs a reason. It is stored with your approval and is what makes the decision answerable later."
+          />
+          <UFormField
+            v-if="needsReason"
+            label="Why is this source usable?"
+            required
+          >
+            <UTextarea
+              v-model="overrideReason"
+              :rows="3"
+              class="w-full"
+              placeholder="e.g. the ministry confirmed reuse by email on 2026-09-01"
+            />
+          </UFormField>
+          <p
+            v-else
+            class="text-sm text-gray-600 dark:text-gray-300"
+          >
+            Your approval is recorded with your name and the licence evidence behind it.
+          </p>
+        </div>
+      </template>
+      <template #footer>
+        <div class="flex w-full justify-end gap-2">
+          <UButton
+            color="neutral"
+            variant="ghost"
+            @click="approving = false"
+          >
+            Cancel
+          </UButton>
+          <UButton
+            color="primary"
+            icon="i-lucide-check"
+            :loading="busyAction === 'approve'"
+            :disabled="needsReason && !overrideReason.trim()"
+            @click="approveProposal"
+          >
+            Approve
+          </UButton>
+        </div>
+      </template>
+    </UModal>
+  </UPage>
+</template>
+
+<script setup lang="ts">
+import { computed, nextTick, ref } from 'vue'
+import integratorApi, {
+  failureText, type BacklogItem, type IntegratorMessage, type IntegratorSession,
+  type Proposal, type SourceKind, type ToolCall
+} from '~/services/integratorApi'
+
+definePageMeta({ layout: 'default' })
+useHead({ title: 'Source Integrator · Console' })
+
+const toast = useToast()
+
+const breadcrumbs = [
+  { label: 'Console', to: '/console' },
+  { label: 'Source Integrator' }
+]
+
+const kindFilters: Array<{ label: string, value: SourceKind | '' }> = [
+  { label: 'All', value: '' },
+  { label: 'Guides', value: 'guide' },
+  { label: 'Articles', value: 'article' },
+  { label: 'Tables', value: 'fctable' },
+  { label: 'Textbooks', value: 'textbook' },
+  { label: 'Recipes', value: 'rcollection' }
+]
+
+/*
+ * Phase 1 ships with catalog writes off. The banner says so rather than
+ * letting a curator approve and wonder why nothing appeared; the flag comes
+ * from the server once the audit shows a write tool succeeding.
+ */
+const writesEnabled = ref(false)
+
+const sessions = ref<IntegratorSession[]>([])
+const sessionId = ref('')
+const messages = ref<IntegratorMessage[]>([])
+const toolTrail = ref<ToolCall[]>([])
+const draft = ref('')
+const thinking = ref(false)
+const lastRun = ref('')
+const transcript = ref<HTMLElement | null>(null)
+
+const proposals = ref<Proposal[]>([])
+const loadingProposals = ref(false)
+const backlog = ref<BacklogItem[]>([])
+const backlogTotal = ref(0)
+const backlogKind = ref<SourceKind | ''>('')
+
+const approving = ref(false)
+const pendingProposal = ref<Proposal | null>(null)
+const overrideReason = ref('')
+const busyProposal = ref<string | null>(null)
+const busyAction = ref<'approve' | 'reject' | null>(null)
+
+const activeSession = computed(() => sessions.value.find(s => s.id === sessionId.value))
+const sessionOptions = computed(() =>
+  sessions.value.map(s => ({ label: s.title || 'Untitled', value: s.id })))
+
+/** Tool turns are shown as the trail of badges, not as chat bubbles. */
+const visibleMessages = computed(() =>
+  messages.value.filter(m => m.role === 'user' || (m.role === 'assistant' && m.content)))
+
+const needsReason = computed(() => !pendingProposal.value?.licence)
+
+async function scrollDown() {
+  await nextTick()
+  if (transcript.value) transcript.value.scrollTop = transcript.value.scrollHeight
+}
+
+async function startSession() {
+  try {
+    const session = await integratorApi.createSession()
+    sessions.value = [session, ...sessions.value]
+    sessionId.value = session.id
+    messages.value = []
+    toolTrail.value = []
+    lastRun.value = ''
+  } catch (error) {
+    toast.add({ title: failureText(error, 'Could not start a conversation'), color: 'error' })
+  }
+}
+
+async function openSession(id: string) {
+  sessionId.value = id
+  messages.value = await integratorApi.history(id)
+  toolTrail.value = await integratorApi.audit({ sessionId: id })
+  await loadProposals()
+  await scrollDown()
+}
+
+async function send() {
+  const text = draft.value.trim()
+  if (!text || thinking.value) return
+  if (!sessionId.value) await startSession()
+  if (!sessionId.value) return
+
+  draft.value = ''
+  messages.value = [...messages.value, {
+    seq: (messages.value.at(-1)?.seq ?? -1) + 1,
+    role: 'user', content: text, tool_name: null, created_at: null
+  }]
+  thinking.value = true
+  await scrollDown()
+
+  try {
+    const turn = await integratorApi.chat(sessionId.value, text)
+    messages.value = await integratorApi.history(sessionId.value)
+    toolTrail.value = await integratorApi.audit({ sessionId: sessionId.value })
+    lastRun.value = turn.stop_reason === 'completed'
+      ? `${turn.steps} step${turn.steps === 1 ? '' : 's'} · ${turn.tokens.toLocaleString()} tokens · ${turn.model}`
+      : `Stopped: ${turn.stop_reason}`
+    await loadProposals()
+    if (!sessions.value.find(s => s.id === sessionId.value)?.title) {
+      sessions.value = await integratorApi.listSessions()
+    }
+  } catch (error) {
+    toast.add({ title: failureText(error, 'The assistant could not answer'), color: 'error' })
+  } finally {
+    thinking.value = false
+    await scrollDown()
+  }
+}
+
+/** Put a queued source into the conversation rather than a form. */
+function askAbout(item: BacklogItem) {
+  draft.value = `Look into "${item.title}"${item.country ? ` (${item.country})` : ''}`
+    + `${item.url ? ` — ${item.url}` : ''}. Check the licence and whether we already have it.`
+}
+
+async function loadProposals() {
+  loadingProposals.value = true
+  proposals.value = await integratorApi.listProposals(
+    sessionId.value ? { sessionId: sessionId.value } : {})
+  loadingProposals.value = false
+}
+
+async function loadBacklog() {
+  const page = await integratorApi.backlog({
+    kind: backlogKind.value || undefined, status: 'pending', limit: 20
+  })
+  backlog.value = page.items
+  backlogTotal.value = page.total
+}
+
+async function setBacklogKind(kind: SourceKind | '') {
+  backlogKind.value = kind
+  await loadBacklog()
+}
+
+function confirmApprove(proposal: Proposal) {
+  pendingProposal.value = proposal
+  overrideReason.value = ''
+  approving.value = true
+}
+
+async function approveProposal() {
+  const proposal = pendingProposal.value
+  if (!proposal) return
+  busyProposal.value = proposal.id
+  busyAction.value = 'approve'
+  try {
+    await integratorApi.approve(proposal.id, overrideReason.value.trim() || undefined)
+    approving.value = false
+    await loadProposals()
+    toast.add({ title: 'Approved', icon: 'i-lucide-check', color: 'success' })
+  } catch (error) {
+    toast.add({ title: failureText(error, 'Could not approve that'), color: 'error' })
+  } finally {
+    busyProposal.value = null
+    busyAction.value = null
+  }
+}
+
+async function rejectProposal(proposal: Proposal) {
+  busyProposal.value = proposal.id
+  busyAction.value = 'reject'
+  try {
+    await integratorApi.reject(proposal.id)
+    await loadProposals()
+  } catch (error) {
+    toast.add({ title: failureText(error, 'Could not reject that'), color: 'error' })
+  } finally {
+    busyProposal.value = null
+    busyAction.value = null
+  }
+}
+
+onMounted(async () => {
+  sessions.value = await integratorApi.listSessions()
+  if (sessions.value.length) {
+    await openSession(sessions.value[0]!.id)
+  } else {
+    await loadProposals()
+  }
+  await loadBacklog()
+})
+</script>
