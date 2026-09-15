@@ -1938,5 +1938,63 @@
     "reassurance": "Vaši recepti, načrti in pogovori bodo natanko tam, kjer ste jih pustili.",
     "retry": "Poskusi znova",
     "adminSignIn": "Prijava za skrbnike"
+  },
+  "claim": {
+    "cta": "Obdrži moj račun",
+    "title": "Obdrži vse, kar si ustvaril",
+    "subtitle": "Računu, ki ga že uporabljaš, dodaj e-pošto in geslo.",
+    "keepsTitle": "Nič se ne izgubi",
+    "keepsBody": "Tvoji jedilniki, pogovori in gospodinjstvo ostanejo natanko takšni — to je isti račun, le da ne poteče več.",
+    "email": "E-pošta",
+    "firstName": "Ime",
+    "lastName": "Priimek",
+    "password": "Geslo",
+    "passwordHint": "Vsaj 10 znakov",
+    "notNow": "Ne zdaj",
+    "submit": "Obdrži moj račun",
+    "doneTitle": "Račun je zdaj tvoj",
+    "doneBody": "Vse, kar si ustvaril, je še vedno tu in ne poteče več.",
+    "doneVerify": "Potrditveno povezavo smo poslali na {email}. Vse, kar si ustvaril, je še vedno tu.",
+    "failed": "Računa nismo mogli obdržati. Poskusi znova."
+  },
+  "share": {
+    "button": "Deli",
+    "title": "Deli ta jedilnik",
+    "subtitle": "Vsak s povezavo ga lahko vidi — račun ni potreben.",
+    "creating": "Ustvarjanje povezave…",
+    "linkLabel": "Povezava",
+    "copy": "Kopiraj",
+    "copied": "Kopirano",
+    "privacyNote": "Povezava prikazuje samo hrano — imena, starosti in prehranski podatki ne potujejo z njo. Ni nikjer navedena in iskalnike prosimo, naj jo prezrejo, a jo obravnavaj kot javno za vsakogar, ki mu jo pošlješ.",
+    "emailLabel": "Pošlji po e-pošti",
+    "emailHint": "Pusti prazno, da pošlješ sebi",
+    "send": "Pošlji",
+    "sentTitle": "Poslano",
+    "sentBody": "Jedilnik je na poti na {email}.",
+    "sendFailed": "E-pošte nismo mogli poslati.",
+    "revoke": "Ustavi deljenje",
+    "revoked": "Povezava ne deluje več.",
+    "revokeFailed": "Povezave nismo mogli preklicati.",
+    "done": "Končano",
+    "failed": "Za ta jedilnik nismo mogli ustvariti povezave."
+  },
+  "shared": {
+    "eyebrow": "Deljeno s tabo",
+    "fallbackTitle": "Jedilnik",
+    "loading": "Odpiranje jedilnika…",
+    "untitled": "Neimenovana jed",
+    "directions": "Priprava",
+    "discover": "O WiseFoodu",
+    "goneTitle": "Ta povezava ni na voljo",
+    "goneBody": "Morda jo je tisti, ki jo je delil, izklopil, ali pa je potekla.",
+    "goneCta": "Razišči WiseFood",
+    "ctaBody": "Bi želel takšne jedilnike za svoje gospodinjstvo?",
+    "ctaButton": "Preizkusi WiseFood",
+    "privacyNote": "Ta stran prikazuje samo hrano. Imena, starosti in prehranski podatki niso bili deljeni.",
+    "slots": {
+      "breakfast": "Zajtrk",
+      "lunch": "Kosilo",
+      "dinner": "Večerja"
+    }
   }
 }

@@ -178,12 +178,22 @@
             <div>
               <h2 class="text-xl font-light text-gray-900 dark:text-white">{{ t('dashboard.schedule.title') }}</h2>
             </div>
-            <NuxtLink
-              to="/foodchat"
-              class="text-sm font-medium text-brandp-500 dark:text-brandp-400 hover:underline"
-            >
-              {{ todayMealPlan ? t('dashboard.schedule.refineInFoodChat') : t('dashboard.schedule.createInFoodChat') }} →
-            </NuxtLink>
+            <div class="flex items-center gap-2">
+              <!-- Only once there is a plan: sharing nothing is not an offer. -->
+              <ShareSharePlanButton
+                v-if="todayMealPlan?.id"
+                :plan-id="todayMealPlan.id"
+                :title="t('dashboard.schedule.title')"
+                size="xs"
+                variant="ghost"
+              />
+              <NuxtLink
+                to="/foodchat"
+                class="text-sm font-medium text-brandp-500 dark:text-brandp-400 hover:underline"
+              >
+                {{ todayMealPlan ? t('dashboard.schedule.refineInFoodChat') : t('dashboard.schedule.createInFoodChat') }} →
+              </NuxtLink>
+            </div>
           </div>
 
           <!-- Upcoming Meals Grid -->

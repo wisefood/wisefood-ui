@@ -1938,5 +1938,63 @@
     "reassurance": "Your recipes, plans and conversations will be exactly where you left them.",
     "retry": "Try again",
     "adminSignIn": "Administrator sign-in"
+  },
+  "claim": {
+    "cta": "Keep my account",
+    "title": "Keep everything you've made",
+    "subtitle": "Add an email and a password to the account you're already using.",
+    "keepsTitle": "Nothing is lost",
+    "keepsBody": "Your meal plans, conversations and household stay exactly as they are — this is the same account, it just stops expiring.",
+    "email": "Email",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "password": "Password",
+    "passwordHint": "At least 10 characters",
+    "notNow": "Not now",
+    "submit": "Keep my account",
+    "doneTitle": "Your account is yours now",
+    "doneBody": "Everything you made is still here, and it no longer expires.",
+    "doneVerify": "We sent a confirmation link to {email}. Everything you made is still here.",
+    "failed": "We could not keep your account. Please try again."
+  },
+  "share": {
+    "button": "Share",
+    "title": "Share this meal plan",
+    "subtitle": "Anyone with the link can see it — no account needed.",
+    "creating": "Making a link…",
+    "linkLabel": "Link",
+    "copy": "Copy",
+    "copied": "Copied",
+    "privacyNote": "The link shows the food only — no names, ages or dietary details travel with it. It is not listed anywhere and search engines are asked to ignore it, but treat it as public to anyone you send it to.",
+    "emailLabel": "Send it by email",
+    "emailHint": "Leave empty to send it to yourself",
+    "send": "Send",
+    "sentTitle": "Sent",
+    "sentBody": "The plan is on its way to {email}.",
+    "sendFailed": "We could not send that email.",
+    "revoke": "Stop sharing",
+    "revoked": "The link no longer works.",
+    "revokeFailed": "We could not revoke that link.",
+    "done": "Done",
+    "failed": "We could not create a link for this plan."
+  },
+  "shared": {
+    "eyebrow": "Shared with you",
+    "fallbackTitle": "A meal plan",
+    "loading": "Opening the plan…",
+    "untitled": "Untitled dish",
+    "directions": "How to make it",
+    "discover": "About WiseFood",
+    "goneTitle": "This link isn't available",
+    "goneBody": "It may have been turned off by whoever shared it, or it may have expired.",
+    "goneCta": "Explore WiseFood",
+    "ctaBody": "Want plans like this for your own household?",
+    "ctaButton": "Try WiseFood",
+    "privacyNote": "This page shows the food only. No names, ages or dietary information were shared with it.",
+    "slots": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner"
+    }
   }
 }

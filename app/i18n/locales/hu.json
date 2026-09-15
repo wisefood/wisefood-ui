@@ -1938,5 +1938,63 @@
     "reassurance": "A receptjeid, terveid és beszélgetéseid pontosan ott lesznek, ahol hagytad őket.",
     "retry": "Próbáld újra",
     "adminSignIn": "Rendszergazdai belépés"
+  },
+  "claim": {
+    "cta": "Fiók megtartása",
+    "title": "Tartsd meg, amit készítettél",
+    "subtitle": "Adj meg egy e-mail-címet és jelszót a már használt fiókodhoz.",
+    "keepsTitle": "Semmi nem vész el",
+    "keepsBody": "Az étrendjeid, beszélgetéseid és háztartásod pontosan úgy maradnak — ugyanaz a fiók, csak már nem jár le.",
+    "email": "E-mail",
+    "firstName": "Keresztnév",
+    "lastName": "Vezetéknév",
+    "password": "Jelszó",
+    "passwordHint": "Legalább 10 karakter",
+    "notNow": "Most nem",
+    "submit": "Fiók megtartása",
+    "doneTitle": "A fiók mostantól a tiéd",
+    "doneBody": "Minden megmaradt, és már nem jár le.",
+    "doneVerify": "Megerősítő linket küldtünk ide: {email}. Minden megmaradt.",
+    "failed": "Nem sikerült megtartani a fiókot. Próbáld újra."
+  },
+  "share": {
+    "button": "Megosztás",
+    "title": "Étrend megosztása",
+    "subtitle": "Bárki megnézheti, akinek elküldöd a linket — fiók nem kell.",
+    "creating": "Link készítése…",
+    "linkLabel": "Link",
+    "copy": "Másolás",
+    "copied": "Másolva",
+    "privacyNote": "A link csak az ételeket mutatja — nevek, életkorok és étrendi adatok nem kerülnek bele. Sehol nincs listázva, és a keresőket megkérjük, hogy hagyják figyelmen kívül, de tekintsd nyilvánosnak bárki felé, akinek elküldöd.",
+    "emailLabel": "Küldés e-mailben",
+    "emailHint": "Hagyd üresen, ha magadnak küldenéd",
+    "send": "Küldés",
+    "sentTitle": "Elküldve",
+    "sentBody": "Az étrend úton van ide: {email}.",
+    "sendFailed": "Nem sikerült elküldeni az e-mailt.",
+    "revoke": "Megosztás leállítása",
+    "revoked": "A link már nem működik.",
+    "revokeFailed": "Nem sikerült visszavonni a linket.",
+    "done": "Kész",
+    "failed": "Nem sikerült linket készíteni ehhez az étrendhez."
+  },
+  "shared": {
+    "eyebrow": "Megosztva veled",
+    "fallbackTitle": "Egy étrend",
+    "loading": "Étrend megnyitása…",
+    "untitled": "Névtelen fogás",
+    "directions": "Elkészítés",
+    "discover": "A WiseFoodról",
+    "goneTitle": "Ez a link nem érhető el",
+    "goneBody": "Lehet, hogy a megosztó kikapcsolta, vagy lejárt.",
+    "goneCta": "Fedezd fel a WiseFoodot",
+    "ctaBody": "Szeretnél ilyen étrendeket a saját háztartásodnak?",
+    "ctaButton": "Kipróbálom",
+    "privacyNote": "Ez az oldal csak az ételeket mutatja. Nevek, életkorok és étrendi adatok nem kerültek megosztásra.",
+    "slots": {
+      "breakfast": "Reggeli",
+      "lunch": "Ebéd",
+      "dinner": "Vacsora"
+    }
   }
 }
