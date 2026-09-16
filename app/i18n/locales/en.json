@@ -1725,7 +1725,8 @@
           "cooking_time": "Cooking time",
           "difficulty": "Effort",
           "goal": "Goal",
-          "food_waste": "Food waste"
+          "food_waste": "Food waste",
+          "repeat_meals": "Repeat meals"
         },
         "options": {
           "easy": "Simple",
@@ -1736,7 +1737,13 @@
           "energy": "Energy boost",
           "off": "Off",
           "reuse": "Reuse ingredients",
-          "strict": "Minimal shopping"
+          "strict": "Minimal shopping",
+          "repeat_meals": {
+            "off": "All different",
+            "breakfast": "Repeat breakfasts",
+            "all": "Repeat any meal",
+            "leftovers": "Cook once, eat twice"
+          }
         }
       },
       "renameSession": "Rename this session",

@@ -1703,7 +1703,8 @@
           "cooking_time": "Čas kuhanja",
           "difficulty": "Zahtevnost",
           "goal": "Cilj",
-          "food_waste": "Zavržena hrana"
+          "food_waste": "Zavržena hrana",
+          "repeat_meals": "Ponavljanje jedi"
         },
         "options": {
           "easy": "Preprosto",
@@ -1714,7 +1715,13 @@
           "energy": "Energijsko",
           "off": "Izklopljeno",
           "reuse": "Ponovna uporaba sestavin",
-          "strict": "Minimalen nakup"
+          "strict": "Minimalen nakup",
+          "repeat_meals": {
+            "off": "Vse različno",
+            "breakfast": "Zajtrki se lahko ponovijo",
+            "all": "Katera koli jed se lahko ponovi",
+            "leftovers": "Skuhaj enkrat, jej dvakrat"
+          }
         }
       },
       "renameSession": "Preimenuj sejo",

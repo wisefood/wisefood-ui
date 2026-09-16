@@ -1703,7 +1703,8 @@
           "cooking_time": "Főzési idő",
           "difficulty": "Ráfordítás",
           "goal": "Cél",
-          "food_waste": "Élelmiszer-pazarlás"
+          "food_waste": "Élelmiszer-pazarlás",
+          "repeat_meals": "Ismétlődő ételek"
         },
         "options": {
           "easy": "Egyszerű",
@@ -1714,7 +1715,13 @@
           "energy": "Energizáló",
           "off": "Ki",
           "reuse": "Hozzávalók újrafelhasználása",
-          "strict": "Minimális bevásárlás"
+          "strict": "Minimális bevásárlás",
+          "repeat_meals": {
+            "off": "Mind különböző",
+            "breakfast": "Reggelik ismétlődhetnek",
+            "all": "Bármelyik étkezés ismétlődhet",
+            "leftovers": "Főzz egyszer, egyél kétszer"
+          }
         }
       },
       "renameSession": "Munkamenet átnevezése",

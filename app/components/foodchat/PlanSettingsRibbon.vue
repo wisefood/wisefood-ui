@@ -232,9 +232,17 @@ function paramLabel(param: PlanParameter): string {
 }
 
 function optionLabel(param: PlanParameter, option: PlanParameterOption): string {
-  const key = `foodChatHome.chat.planParams.options.${option.value}`
-  const translated = t(key)
-  return translated === key ? option.label : translated
+  // Scoped by parameter first, then the flat key, then what the manifest
+  // shipped. An option VALUE is only unique WITHIN its parameter: `off` is
+  // "Off" under food waste and "All different" under repeat meals, and a flat
+  // lookup gives whichever was written first to both.
+  const scoped = `foodChatHome.chat.planParams.options.${param.key}.${option.value}`
+  const flat = `foodChatHome.chat.planParams.options.${option.value}`
+  for (const key of [scoped, flat]) {
+    const translated = t(key)
+    if (translated !== key) return translated
+  }
+  return option.label
 }
 </script>
 
