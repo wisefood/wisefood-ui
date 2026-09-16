@@ -1847,6 +1847,30 @@
     },
     "splitter": {
       "hint": "Drag to resize · double-click to reset"
+    },
+    "pantryPicker": {
+      "open": "From my kitchen",
+      "title": "Cook from what you have",
+      "subtitle": "Pick what is in, and FoodChat plans around it",
+      "searchPlaceholder": "Search, or type anything you have…",
+      "add": "Add",
+      "close": "Close",
+      "clear": "Clear",
+      "cook": "Plan from these",
+      "planning": "Planning…",
+      "empty": "Nothing picked yet",
+      "count": "{n} thing selected | {n} things selected",
+      "noMatches": "Nothing here matches “{query}” — add it anyway, it still counts.",
+      "groups": {
+        "vegetables": "Vegetables",
+        "protein": "Protein",
+        "dairy": "Dairy & eggs",
+        "grains": "Grains & bread",
+        "cupboard": "Cupboard",
+        "fruit": "Fruit",
+        "herbs": "Herbs & spices",
+        "yours": "Yours"
+      }
     }
   },
   "a11y": {

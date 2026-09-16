@@ -476,6 +476,15 @@
                   <UIcon name="i-lucide-plus" class="w-2.5 h-2.5" />
                   {{ t('foodChatHome.planningState.pantryAdd') }}
                 </button>
+                <!-- Typing is fine for one thing. Picking is what you want when
+                     you are standing in front of the fridge. -->
+                <button
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[11px] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
+                  @click="pantryPickerOpen = true"
+                >
+                  <UIcon name="i-lucide-refrigerator" class="w-2.5 h-2.5" />
+                  {{ t('foodChatHome.pantryPicker.open') }}
+                </button>
               </div>
             </div>
 
@@ -1603,12 +1612,22 @@
     @remove-facet="handleRemoveFacet"
     @replan="handleReplan"
     />
+
           </div>
         </div>
 
         </div><!-- end fc-split-wrap -->
       </div>
     </Transition>
+
+    <!-- Cook from what is in the kitchen: pick, then one action plans from it -->
+    <FoodchatPantryPicker
+      v-if="pantryPickerOpen"
+      :items="pantryItems"
+      :busy="sending"
+      @close="pantryPickerOpen = false"
+      @cook="handleCookFromPantry"
+    />
 
     <!-- Adapt popup -->
     <FoodchatAdaptRecipeModal
@@ -1713,6 +1732,7 @@ const {
   pendingStateChanges,
   loadPlanningState,
   addPantryItems,
+  setPantry,
   removePantryItem,
   addFacets,
   removeFacet,
@@ -3000,6 +3020,7 @@ function resetSplit() {
 
 // ── The pantry strip above the composer ──────────────────────────────────
 const pantryStripOpen = ref(false)
+const pantryPickerOpen = ref(false)
 const pantryDraft = ref('')
 
 const pantryItems = computed(() => planningState.value?.pantry ?? [])
@@ -3109,6 +3130,28 @@ function formatPlanDate(dateStr: string): string {
 async function handleAddPantry(items: string[]) {
   try {
     await addPantryItems(items)
+  } catch { /* the store surfaces the error */ }
+}
+
+/**
+ * Replace the pantry with exactly what was picked, then plan from it.
+ *
+ * Two calls rather than one endpoint, because both already exist and mean
+ * exactly this: `setPantry` REPLACES (a picker whose deselection did not
+ * remove anything is a picker that lies), and `replan` runs one turn from the
+ * standing state through the same funnel every other turn uses — so the
+ * canvas, the message list and the plan history all update the way they do
+ * after a chat turn.
+ *
+ * One turn, not one per ingredient. The strip adds items without re-planning
+ * for the same reason: a member ticking eight things wants one plan.
+ */
+async function handleCookFromPantry(items: string[]) {
+  pantryPickerOpen.value = false
+  try {
+    await setPantry(items)
+    await replan(canvasMode.value)
+    scrollToBottom()
   } catch { /* the store surfaces the error */ }
 }
 

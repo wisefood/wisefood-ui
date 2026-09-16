@@ -138,6 +138,49 @@ class RCollectionsApiService {
     }
   }
 
+  /**
+   * Search as well as page. The list endpoint is the only way in, so a
+   * console section that could not search would be unusable past the first
+   * few dozen collections.
+   */
+  async searchCollections(params: RCollectionListParams & { q?: string } = {}): Promise<RCollectionListResult> {
+    const query: Record<string, unknown> = {
+      limit: params.limit ?? 20,
+      offset: params.offset ?? 0
+    }
+    if (params.q?.trim()) query['q'] = params.q.trim()
+    const payload = await wisefoodRestApi.get<unknown>(this.basePath, { params: query })
+    const record = asRecord(payload)
+    const result = asRecord(record?.['result']) ?? record ?? {}
+    const items = Array.isArray(result['items'])
+      ? result['items']
+      : Array.isArray(result['rcollections'])
+        ? result['rcollections']
+        : Array.isArray(payload)
+          ? payload as unknown[]
+          : []
+    return {
+      collections: items.map(normalizeCollection),
+      total: asNumber(result['total']) ?? items.length
+    }
+  }
+
+  async createCollection(payload: Partial<RecipeCollection>): Promise<RecipeCollection> {
+    const res = await wisefoodRestApi.post<unknown>(this.basePath, payload)
+    return normalizeCollection(asRecord(res)?.['result'] ?? res)
+  }
+
+  async updateCollection(urn: string, payload: Partial<RecipeCollection>): Promise<RecipeCollection> {
+    const res = await wisefoodRestApi.patch<unknown>(
+      `${this.basePath}/${encodeURIComponent(urn)}`, payload
+    )
+    return normalizeCollection(asRecord(res)?.['result'] ?? res)
+  }
+
+  async deleteCollection(urn: string): Promise<void> {
+    await wisefoodRestApi.delete(`${this.basePath}/${encodeURIComponent(urn)}`)
+  }
+
   async autocompleteCollections(q: string, limit = 8): Promise<Array<{ urn: string; title: string }>> {
     if (q.trim().length < 2) return []
     const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/autocomplete`, {

@@ -135,6 +135,18 @@ export function useFoodChat() {
     if ((store.planningState?.pantry.length ?? 0) !== before) pendingStateChanges.value += 1
   }
 
+  /**
+   * Replace the pantry with exactly these — deselection has to remove.
+   *
+   * No `pendingStateChanges` bump, unlike its siblings: that counter exists to
+   * tell the member a standing change is waiting for the next plan, and the
+   * only caller of this plans immediately.
+   */
+  async function setPantry(items: string[]) {
+    if (!store.activeSessionId || !memberId.value) return
+    await store.setPantry(store.activeSessionId, memberId.value, items)
+  }
+
   async function removePantryItem(item: string) {
     if (!store.activeSessionId || !memberId.value) return
     const before = store.planningState?.pantry.length ?? 0
@@ -257,6 +269,7 @@ export function useFoodChat() {
     pendingStateChanges,
     loadPlanningState,
     addPantryItems,
+    setPantry,
     removePantryItem,
     addFacets,
     removeFacet,

@@ -1825,6 +1825,30 @@
     },
     "splitter": {
       "hint": "Povleci za spremembo velikosti · dvojni klik za ponastavitev"
+    },
+    "pantryPicker": {
+      "open": "Iz moje kuhinje",
+      "title": "Kuhaj iz tega, kar imaš",
+      "subtitle": "Izberi, kaj imaš doma, in FoodChat načrtuje okoli tega",
+      "searchPlaceholder": "Išči ali vpiši, kar imaš…",
+      "add": "Dodaj",
+      "close": "Zapri",
+      "clear": "Počisti",
+      "cook": "Načrtuj iz tega",
+      "planning": "Načrtujem…",
+      "empty": "Nič še ni izbrano",
+      "count": "{n} izbrano | {n} izbranih",
+      "noMatches": "Za »{query}« ni zadetkov — vseeno dodaj, šteje enako.",
+      "groups": {
+        "vegetables": "Zelenjava",
+        "protein": "Beljakovine",
+        "dairy": "Mlečno in jajca",
+        "grains": "Žita in kruh",
+        "cupboard": "Shramba",
+        "fruit": "Sadje",
+        "herbs": "Zelišča in začimbe",
+        "yours": "Tvoje"
+      }
     }
   },
   "a11y": {

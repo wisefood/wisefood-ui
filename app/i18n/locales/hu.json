@@ -1825,6 +1825,30 @@
     },
     "splitter": {
       "hint": "Húzd az átméretezéshez · dupla kattintás a visszaállításhoz"
+    },
+    "pantryPicker": {
+      "open": "A konyhámból",
+      "title": "Főzz abból, ami van",
+      "subtitle": "Jelöld be, mi van itthon, a FoodChat pedig arra tervez",
+      "searchPlaceholder": "Keress, vagy írd be, mid van…",
+      "add": "Hozzáadás",
+      "close": "Bezárás",
+      "clear": "Törlés",
+      "cook": "Tervezz ezekből",
+      "planning": "Tervezés…",
+      "empty": "Még nincs kiválasztva semmi",
+      "count": "{n} kiválasztva | {n} kiválasztva",
+      "noMatches": "Erre nincs találat: „{query}” — add hozzá így is, ugyanúgy számít.",
+      "groups": {
+        "vegetables": "Zöldségek",
+        "protein": "Fehérje",
+        "dairy": "Tejtermék és tojás",
+        "grains": "Gabona és kenyér",
+        "cupboard": "Kamra",
+        "fruit": "Gyümölcs",
+        "herbs": "Fűszerek",
+        "yours": "A tieid"
+      }
     }
   },
   "a11y": {
