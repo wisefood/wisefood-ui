@@ -131,7 +131,12 @@
               leave-to-class="opacity-0 max-h-0"
             >
               <div v-if="descriptionExpanded" class="px-5 pb-5 border-t border-zinc-100 dark:border-zinc-800">
-                <div class="collection-markdown prose prose-sm dark:prose-invert max-w-none pt-4 text-zinc-700 dark:text-zinc-300 leading-relaxed" v-html="descriptionHtml" />
+                <!-- Collection copy is stored English; there is no generation
+                     step to ask for another language. -->
+                <TranslationNotice class="pt-4" />
+                <TranslatableContent>
+                  <div class="collection-markdown prose prose-sm dark:prose-invert max-w-none pt-4 text-zinc-700 dark:text-zinc-300 leading-relaxed" v-html="descriptionHtml" />
+                </TranslatableContent>
               </div>
             </Transition>
           </div>

@@ -2041,7 +2041,9 @@
       "translating": "Fordítás folyamatban…",
       "showOriginal": "Eredeti megjelenítése",
       "provider": "A fordítást a Google Fordító végzi; használatakor az oldal szövege elküldésre kerül a Google-nak.",
-      "unavailable": "A fordítás jelenleg nem érhető el. Az alábbi tartalom angol nyelvű."
+      "unavailable": "A fordítás jelenleg nem érhető el. Az alábbi tartalom angol nyelvű.",
+      "confirm": "Küldés a Google-nak és fordítás",
+      "cancel": "Mégse"
     }
   }
 }

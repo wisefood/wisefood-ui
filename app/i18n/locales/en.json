@@ -2041,7 +2041,9 @@
       "translating": "Translating…",
       "showOriginal": "Show original",
       "provider": "Translation is performed by Google Translate; the text on this page is sent to Google when you use it.",
-      "unavailable": "Translation is unavailable right now. The content below is in English."
+      "unavailable": "Translation is unavailable right now. The content below is in English.",
+      "confirm": "Send to Google and translate",
+      "cancel": "Cancel"
     }
   }
 }

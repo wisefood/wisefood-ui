@@ -479,6 +479,10 @@
 
             <!-- Guidelines list -->
             <div class="flex-1 overflow-y-auto pb-8">
+              <!-- Above the v-if chain, so the control exists whichever arm
+                   renders and the reader can start a translation from here. -->
+              <TranslationNotice class="mx-4 mt-4" />
+
               <!-- Loading skeletons -->
               <div
                 v-if="guidelinesLoading && !guidelines.length"
@@ -513,8 +517,15 @@
                 </p>
               </div>
 
+              <!-- Guideline rule_text is stored English. This is the last arm
+                   of a v-if chain, so it carries translate="yes" directly
+                   rather than being wrapped — TranslatableContent is only a
+                   div with that attribute, and inserting one here would break
+                   the chain. The list is never filtered or re-keyed, so the
+                   text nodes Google rewrites are not ones Vue replaces. -->
               <div
                 v-else
+                translate="yes"
                 class="divide-y divide-gray-100/80 dark:divide-white/5"
               >
                 <button

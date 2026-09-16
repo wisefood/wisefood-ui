@@ -249,23 +249,29 @@
             </div>
 
             <!-- Abstract Text with Glossary Tooltips -->
-            <div
-              ref="abstractContainerEl"
-              class="text-gray-700 dark:text-gray-300 leading-relaxed transition-opacity duration-300"
-              :class="{ 'opacity-50': isSimplifying }"
-            >
-              <p
-                v-if="isSimplified"
-                class="font-light"
+            <!-- Abstracts come from publishers, in English. Both branches below
+                 are that text, so the whole container opts in rather than one
+                 arm of the v-if — splitting the pair breaks it. -->
+            <TranslationNotice />
+            <TranslatableContent>
+              <div
+                ref="abstractContainerEl"
+                class="text-gray-700 dark:text-gray-300 leading-relaxed transition-opacity duration-300"
+                :class="{ 'opacity-50': isSimplifying }"
               >
-                {{ simplifiedAbstract }}
-              </p>
-              <p
-                v-else
-                class="font-light abstract-content"
-                v-html="abstractWithTooltips"
-              />
-            </div>
+                <p
+                  v-if="isSimplified"
+                  class="font-light"
+                >
+                  {{ simplifiedAbstract }}
+                </p>
+                <p
+                  v-else
+                  class="font-light abstract-content"
+                  v-html="abstractWithTooltips"
+                />
+              </div>
+            </TranslatableContent>
           </div>
 
           <!-- Key Takeaways -->

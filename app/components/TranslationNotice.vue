@@ -17,14 +17,33 @@
         {{ isActive ? t('common.translation.machineTranslated') : t('common.translation.englishOnly') }}
       </span>
 
-      <button
-        v-if="!isActive"
-        :disabled="isLoading"
-        class="ml-auto rounded-md border border-amber-300 px-2 py-1 font-medium text-amber-900 transition-colors hover:bg-amber-100 disabled:opacity-50 dark:border-amber-800 dark:text-amber-200 dark:hover:bg-amber-900/30"
-        @click="onTranslate"
-      >
-        {{ isLoading ? t('common.translation.translating') : t('common.translation.translate') }}
-      </button>
+      <template v-if="!isActive && !confirming">
+        <button
+          :disabled="isLoading"
+          class="ml-auto rounded-md border border-amber-300 px-2 py-1 font-medium text-amber-900 transition-colors hover:bg-amber-100 disabled:opacity-50 dark:border-amber-800 dark:text-amber-200 dark:hover:bg-amber-900/30"
+          @click="onTranslate"
+        >
+          {{ isLoading ? t('common.translation.translating') : t('common.translation.translate') }}
+        </button>
+      </template>
+
+      <!-- First use only: the reader confirms once, having been told where the
+           text goes, and the answer is remembered. Afterwards Translate acts
+           immediately. -->
+      <template v-else-if="confirming">
+        <button
+          class="ml-auto rounded-md bg-amber-600 px-2 py-1 font-medium text-white transition-colors hover:bg-amber-700"
+          @click="onConfirm"
+        >
+          {{ t('common.translation.confirm') }}
+        </button>
+        <button
+          class="rounded-md border border-amber-300 px-2 py-1 font-medium text-amber-900 transition-colors hover:bg-amber-100 dark:border-amber-800 dark:text-amber-200 dark:hover:bg-amber-900/30"
+          @click="confirming = false"
+        >
+          {{ t('common.translation.cancel') }}
+        </button>
+      </template>
       <button
         v-else
         class="ml-auto rounded-md border border-amber-300 px-2 py-1 font-medium text-amber-900 transition-colors hover:bg-amber-100 dark:border-amber-800 dark:text-amber-200 dark:hover:bg-amber-900/30"
@@ -48,12 +67,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGoogleTranslate, TRANSLATABLE_LOCALES } from '~/composables/useGoogleTranslate'
 
 const { t, locale } = useI18n()
-const { isActive, isLoading, hasFailed, translateTo, showOriginal } = useGoogleTranslate()
+const { isActive, isLoading, hasFailed, hasAcknowledged, refreshAck, acknowledge, translateTo, showOriginal } = useGoogleTranslate()
 
 // Only offered for locales we actually ship an interface in — otherwise the
 // notice would appear for a reader whose interface is already English.
@@ -61,7 +80,23 @@ const showNotice = computed(() =>
   (TRANSLATABLE_LOCALES as readonly string[]).includes(locale.value)
 )
 
+const confirming = ref(false)
+
+onMounted(refreshAck)
+
 const onTranslate = () => {
+  // Asked once, then remembered. A reader who has already been told where the
+  // text goes should not be re-prompted on every recipe.
+  if (!hasAcknowledged.value) {
+    confirming.value = true
+    return
+  }
+  void translateTo(locale.value)
+}
+
+const onConfirm = () => {
+  acknowledge()
+  confirming.value = false
   void translateTo(locale.value)
 }
 </script>

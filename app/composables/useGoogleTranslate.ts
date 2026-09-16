@@ -43,6 +43,39 @@ export const TRANSLATABLE_LOCALES = ['hu', 'sl', 'el'] as const
 const scriptState = ref<'idle' | 'loading' | 'ready' | 'failed'>('idle')
 const activeLanguage = ref<string | null>(null)
 
+/**
+ * Whether this reader has been told, once, that pressing Translate sends the
+ * text to Google.
+ *
+ * Deliberately a local preference and not a consent record. The platform
+ * records consent server-side for analytics, at /users/me/analytics-consent,
+ * because analytics happens TO somebody passively. Translation only happens
+ * when they press a button that names the processor, so what is needed here is
+ * an informed first use and a way to stop — not an auditable grant. If a
+ * recorded, revocable consent is wanted, it belongs beside the analytics one
+ * rather than in localStorage.
+ */
+const ACK_KEY = 'wisefood_translation_ack'
+const acknowledged = ref(false)
+
+function readAck(): boolean {
+  // Storage throws in some privacy modes, and a failure here must not block
+  // translation — it only means we ask again.
+  try {
+    return window.localStorage.getItem(ACK_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function writeAck(): void {
+  try {
+    window.localStorage.setItem(ACK_KEY, '1')
+  } catch {
+    // Non-fatal: the reader is asked once more next time.
+  }
+}
+
 function injectScript(): Promise<void> {
   if (scriptState.value === 'ready') return Promise.resolve()
   if (typeof document === 'undefined') return Promise.reject(new Error('client only'))
@@ -138,5 +171,27 @@ export function useGoogleTranslate() {
     activeLanguage.value = null
   }
 
-  return { isActive, isLoading, hasFailed, activeLanguage, translateTo, showOriginal }
+  /** True once the reader has been told where the text goes. */
+  const hasAcknowledged = computed(() => acknowledged.value)
+
+  const refreshAck = () => {
+    if (import.meta.client) acknowledged.value = readAck()
+  }
+
+  const acknowledge = () => {
+    acknowledged.value = true
+    if (import.meta.client) writeAck()
+  }
+
+  return {
+    isActive,
+    isLoading,
+    hasFailed,
+    activeLanguage,
+    hasAcknowledged,
+    refreshAck,
+    acknowledge,
+    translateTo,
+    showOriginal
+  }
 }

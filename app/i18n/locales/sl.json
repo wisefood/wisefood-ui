@@ -2041,7 +2041,9 @@
       "translating": "Prevajanje …",
       "showOriginal": "Pokaži izvirnik",
       "provider": "Prevod izvede Google Prevajalnik; ob uporabi se besedilo te strani pošlje Googlu.",
-      "unavailable": "Prevod trenutno ni na voljo. Spodnja vsebina je v angleščini."
+      "unavailable": "Prevod trenutno ni na voljo. Spodnja vsebina je v angleščini.",
+      "confirm": "Pošlji Googlu in prevedi",
+      "cancel": "Prekliči"
     }
   }
 }
