@@ -518,7 +518,10 @@
       },
       "nutrientChart": {
         "reset": "Ponastavi",
-        "minSelectionWarning": "Za prikaz grafa izberi vsaj 3 hranila"
+        "minSelectionWarning": "Za prikaz grafa izberi vsaj 3 hranila",
+        "ringsExplainer": "Vsak obroč je 20 % dnevnega referenčnega vnosa odraslega (2000 kcal) za en obrok. Zunanji obroč pomeni cel dan.",
+        "lowerIsBetter": "označuje hranila, pri katerih je nižja vrednost boljša — manjši lik na teh oseh je dober.",
+        "fibreNote": "Referenčni vnosi sledijo Uredbi EU 1169/2011. Za vlaknine ni uradnega referenčnega vnosa; 25 g je EFSA ustrezen vnos za odrasle."
       },
       "substitution": {
         "title": "Zamenjava sestavine",

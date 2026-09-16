@@ -34,7 +34,9 @@
         class="w-full h-full transition-all duration-300 ease-out"
         preserveAspectRatio="xMidYMid meet"
       >
-        <!-- Background grid circles -->
+        <!-- Background grid circles, each labelled with the share of the
+             daily reference intake it represents. Unlabelled rings were the
+             literal complaint: "grid levels ... are unclear". -->
         <g class="text-zinc-200 dark:text-zinc-700">
           <circle
             v-for="level in 5"
@@ -47,6 +49,15 @@
             stroke-width="1"
             :opacity="0.5 + (level * 0.1)"
           />
+        </g>
+        <g class="text-[9px] fill-zinc-400 dark:fill-zinc-500">
+          <text
+            v-for="level in 5"
+            :key="`ring-${level}`"
+            x="203"
+            :y="200 - level * 20 + 3"
+            text-anchor="start"
+          >{{ level * 20 }}%</text>
         </g>
 
         <!-- Axis lines for visible nutrients -->
@@ -94,13 +105,22 @@
             dominant-baseline="middle"
             class="fill-zinc-700 dark:fill-zinc-300 transition-all duration-300"
           >
-            <tspan>{{ nutrient.label }}</tspan>
+            <tspan>{{ nutrient.lowerIsBetter ? '▼ ' : '' }}{{ nutrient.label }}</tspan>
             <tspan
               :x="getLabelX(index, visibleNutrients.length)"
               :dy="12"
               class="fill-zinc-500 dark:fill-zinc-400 text-[10px]"
             >
               {{ nutrient.displayValue }}
+            </tspan>
+            <tspan
+              :x="getLabelX(index, visibleNutrients.length)"
+              :dy="11"
+              :class="nutrient.overRi
+                ? 'fill-amber-600 dark:fill-amber-400 text-[10px] font-semibold'
+                : 'fill-zinc-400 dark:fill-zinc-500 text-[10px]'"
+            >
+              {{ Math.round(nutrient.percentRi) }}%{{ nutrient.overRi ? '+' : '' }} RI
             </tspan>
           </text>
         </g>
@@ -135,8 +155,25 @@
         </div>
         <div class="text-[11px] mt-1 text-zinc-500 dark:text-zinc-400">
           {{ nutrient.displayValue }}
+          <span :class="nutrient.overRi ? 'text-amber-600 dark:text-amber-400 font-semibold' : ''">
+            · {{ Math.round(nutrient.percentRi) }}%{{ nutrient.overRi ? '+' : '' }} RI
+          </span>
         </div>
       </button>
+    </div>
+
+    <!-- What the rings mean, and which direction is the good one. Without
+         this the chart implies one direction is better for every axis, while
+         it plots fibre (more is better) next to sodium (less is better). -->
+    <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 px-3 py-2.5 text-[11px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+      <p>{{ t('recipeWrangler.detail.nutrientChart.ringsExplainer') }}</p>
+      <p class="mt-1">
+        <span class="font-semibold text-zinc-700 dark:text-zinc-300">▼</span>
+        {{ t('recipeWrangler.detail.nutrientChart.lowerIsBetter') }}
+      </p>
+      <p class="mt-1">
+        {{ t('recipeWrangler.detail.nutrientChart.fibreNote') }}
+      </p>
     </div>
 
     <!-- Minimum selection warning -->
@@ -154,9 +191,49 @@ interface NutrientData {
   key: string
   label: string
   value: number
+  /** Daily reference intake, in this nutrient's own unit. */
   max: number
   displayValue: string
+  /** Percentage of the reference intake this serving provides. */
+  percentRi: number
+  /** True where a smaller number is the better one. */
+  lowerIsBetter: boolean
+  /** Set when the serving exceeds the whole daily reference. */
+  overRi: boolean
 }
+
+// Daily reference intakes for an average adult (8400 kJ / 2000 kcal), from
+// EU Regulation 1169/2011 Annex XIII — the same basis as the "%RI" figures on
+// a supermarket label, so the numbers here mean what a shopper already expects
+// them to mean.
+//
+// Every axis was previously normalised against a different and undeclared
+// basis: calories against 800 (a meal), sodium against 2000 mg (most of a day),
+// fibre against 30 g. Plotting a meal-sized cap and a day-sized cap on the same
+// rings makes the shape of the polygon meaningless, which is what "scaling
+// across different units is unclear" was describing.
+//
+// Fibre has no RI in Annex XIII; 25 g is the EFSA adequate intake for adults
+// and is labelled as such in the explainer rather than passed off as an RI.
+const REFERENCE_INTAKE = {
+  // kcal
+  calories: 2000,
+  // grams
+  fat: 70,
+  carbs: 260,
+  sugar: 90,
+  protein: 50,
+  // grams — EFSA adequate intake, not an Annex XIII reference intake
+  fiber: 25,
+  // milligrams, equivalent to 6 g of salt
+  sodium: 2400
+} as const
+
+// Nutrients where the advice is to keep the number down. The chart cannot show
+// a single "further out is better" direction because it plots both kinds at
+// once — fibre outward is good, sodium outward is not — so the axis says which
+// it is instead of leaving the reader to assume.
+const LOWER_IS_BETTER = new Set(['fat', 'sugar', 'sodium'])
 
 type MaybeNumber = number | null | undefined
 
@@ -228,15 +305,35 @@ const toggleNutrient = (key: string) => {
   zoomLevel.value = 1
 }
 
-// Define all nutrients with their max values for normalization
+// Define all nutrients against their reference intake
+const buildNutrient = (
+  key: keyof typeof REFERENCE_INTAKE,
+  value: MaybeNumber,
+  displayValue: string
+): NutrientData => {
+  const max = REFERENCE_INTAKE[key]
+  const safe = safeNumber(value)
+  const percentRi = max > 0 ? (safe / max) * 100 : 0
+  return {
+    key,
+    label: t(`recipeWrangler.detail.${key}`),
+    value: safe,
+    max,
+    displayValue,
+    percentRi,
+    lowerIsBetter: LOWER_IS_BETTER.has(key),
+    overRi: percentRi > 100
+  }
+}
+
 const allNutrients = computed<NutrientData[]>(() => [
-  { key: 'calories', label: t('recipeWrangler.detail.calories'), value: props.calories, max: 800, displayValue: `${Math.round(props.calories)} kcal` },
-  { key: 'protein', label:  t('recipeWrangler.detail.protein'), value: props.protein, max: 50, displayValue: `${props.protein.toFixed(1)}g` },
-  { key: 'carbs', label: t('recipeWrangler.detail.carbs'), value: props.carbs, max: 100, displayValue: `${props.carbs.toFixed(1)}g` },
-  { key: 'fat', label: t('recipeWrangler.detail.fat'), value: props.fat, max: 50, displayValue: `${props.fat.toFixed(1)}g` },
-  { key: 'fiber', label: t('recipeWrangler.detail.fiber'), value: props.fiber, max: 30, displayValue: `${props.fiber.toFixed(1)}g` },
-  { key: 'sugar', label: t('recipeWrangler.detail.sugar'), value: props.sugar, max: 50, displayValue: `${props.sugar.toFixed(1)}g` },
-  { key: 'sodium', label: t('recipeWrangler.detail.sodium'), value: props.sodium, max: 2000, displayValue: `${props.sodium.toFixed(0)}mg` }
+  buildNutrient('calories', props.calories, fmtRounded(props.calories, 'kcal')),
+  buildNutrient('protein', props.protein, fmtFixed(props.protein, 1, ' g')),
+  buildNutrient('carbs', props.carbs, fmtFixed(props.carbs, 1, ' g')),
+  buildNutrient('fat', props.fat, fmtFixed(props.fat, 1, ' g')),
+  buildNutrient('fiber', props.fiber, fmtFixed(props.fiber, 1, ' g')),
+  buildNutrient('sugar', props.sugar, fmtFixed(props.sugar, 1, ' g')),
+  buildNutrient('sodium', props.sodium, fmtRounded(props.sodium, 'mg'))
 ])
 
 // Filtered visible nutrients
@@ -254,11 +351,19 @@ const getAngle = (index: number, total: number): number => {
   return angleStep * index - Math.PI / 2 // Start from top
 }
 
-// Get normalized value (0 to 1)
+// Get normalized value (0 to 1), where 1 is the full daily reference intake.
+//
+// Linear, deliberately. This was Math.sqrt(value / max) to "make low but valid
+// values easier to read", which bought legibility with honesty: a point three
+// rings out of five reads as 60% and was actually 36%. On a chart whose rings
+// are labelled as percentages of a reference intake, the radius has to be the
+// percentage.
+//
+// A single serving usually lands in the inner half, and that is the true and
+// useful answer — one meal is a fraction of a day. Anything past the rim is
+// clamped and flagged via `overRi` rather than drawn outside the chart.
 const getNormalizedValue = (nutrient: NutrientData): number => {
-  const linear = Math.max(nutrient.value / nutrient.max, 0)
-  // Gentle nonlinear scaling makes low but valid values easier to read.
-  return Math.min(Math.sqrt(linear), 1)
+  return Math.min(Math.max(nutrient.percentRi / 100, 0), 1)
 }
 
 // Calculate point coordinates for a given nutrient

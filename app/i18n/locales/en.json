@@ -518,7 +518,10 @@
       },
       "nutrientChart": {
         "reset": "Reset",
-        "minSelectionWarning": "Select at least 3 nutrients to display the chart"
+        "minSelectionWarning": "Select at least 3 nutrients to display the chart",
+        "ringsExplainer": "Each ring is 20% of an adult's daily reference intake (2000 kcal), for one serving. The outer ring is a full day.",
+        "lowerIsBetter": "marks nutrients where a lower number is the better one — a smaller shape on those axes is good.",
+        "fibreNote": "Reference intakes follow EU Regulation 1169/2011. Fibre has no official reference intake; 25 g is the EFSA adequate intake for adults."
       },
       "substitution": {
         "title": "Ingredient Substitution",

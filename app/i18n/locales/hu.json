@@ -518,7 +518,10 @@
       },
       "nutrientChart": {
         "reset": "Visszaállítás",
-        "minSelectionWarning": "A diagram megjelenítéséhez válassz legalább 3 tápanyagot"
+        "minSelectionWarning": "A diagram megjelenítéséhez válassz legalább 3 tápanyagot",
+        "ringsExplainer": "Minden gyűrű egy felnőtt napi referenciabevitelének (2000 kcal) 20%-a, egy adagra vetítve. A külső gyűrű a teljes napi mennyiség.",
+        "lowerIsBetter": "azokat a tápanyagokat jelöli, ahol az alacsonyabb érték a jobb — ezeken a tengelyeken a kisebb alakzat a kedvező.",
+        "fibreNote": "A referenciabevitelek az 1169/2011/EU rendeletet követik. A rostra nincs hivatalos referenciabevitel; a 25 g az EFSA felnőttekre vonatkozó megfelelő beviteli értéke."
       },
       "substitution": {
         "title": "Hozzávaló helyettesítése",
