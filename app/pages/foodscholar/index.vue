@@ -85,14 +85,23 @@
                       :content="chatSettingsContent"
                       :ui="chatSettingsUi"
                     >
+                      <!-- Was icon-only: the label lived in aria-label and
+                           title, so it reached a screen reader and a hovering
+                           mouse but not someone looking at the page. Reported
+                           as not obvious to users unfamiliar with the
+                           interface. The text shows from sm up; below that the
+                           composer has no room and the icon stands alone. -->
                       <button
                         type="button"
-                        class="chat-settings-button h-10 w-10 flex items-center justify-center rounded-xl border border-gray-200/80 dark:border-zinc-700/80 bg-white/80 dark:bg-zinc-900/80 text-gray-600 dark:text-zinc-300 shadow-sm transition-colors hover:text-brand-600 dark:hover:text-brand-400"
+                        class="chat-settings-button h-10 w-10 sm:w-auto sm:px-3 flex items-center justify-center gap-1.5 rounded-xl border border-gray-200/80 dark:border-zinc-700/80 bg-white/80 dark:bg-zinc-900/80 text-gray-700 dark:text-zinc-200 shadow-sm transition-colors hover:text-brand-600 dark:hover:text-brand-400"
                         :class="{ 'is-active': isAdvancedMode }"
                         :aria-label="t('foodScholarHome.qa.advanced.title')"
                         :title="t('foodScholarHome.qa.advanced.title')"
                       >
-                        <UIcon name="i-lucide-sliders-horizontal" class="w-4 h-4" />
+                        <UIcon name="i-lucide-sliders-horizontal" class="w-4 h-4 shrink-0" />
+                        <span class="hidden sm:inline text-xs font-medium whitespace-nowrap">
+                          {{ t('foodScholarHome.qa.advanced.title') }}
+                        </span>
                       </button>
                     </UDropdownMenu>
                     <button
@@ -319,12 +328,16 @@
             <UIcon :name="memoryPanelOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3 h-3" />
           </button>
           <span v-else />
+          <!-- The label was always here, at 11px in gray-500 against a light
+               background — present and unreadable, which is why it was
+               reported as not obvious. Same words, given a button's outline
+               and enough contrast to find. -->
           <button
             type="button"
-            class="inline-flex items-center gap-1 text-[11px] font-medium text-gray-500 dark:text-zinc-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+            class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 px-2.5 py-1 text-xs font-medium text-gray-700 dark:text-zinc-200 hover:border-brand-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
             @click="startNewThread"
           >
-            <UIcon name="i-lucide-plus" class="w-3.5 h-3.5" />
+            <UIcon name="i-lucide-plus" class="w-3.5 h-3.5 shrink-0" />
             {{ t('foodScholarHome.qa.thread.new') }}
           </button>
         </div>
