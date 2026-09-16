@@ -94,6 +94,18 @@ const breadcrumbItems = assetBreadcrumb()
 
 const assetSections = [
   {
+    // First, because it is the way in: the other four are libraries of what
+    // this brought in.
+    title: 'Source Integrator',
+    description: 'Research candidate sources with an assistant, check what their licence permits, and integrate the approved ones with their provenance.',
+    summary: '',
+    to: '/console/assets/integrator',
+    icon: 'i-lucide-radar',
+    available: true,
+    iconWrapperClass: 'bg-brand-50 dark:bg-brand-500/10',
+    iconClass: 'text-brand-600 dark:text-brand-300'
+  },
+  {
     title: 'Dietary Guides',
     description: 'Manage guide records and work with each guide’s extracted guidelines and artifacts.',
     summary: '',

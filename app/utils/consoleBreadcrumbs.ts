@@ -46,6 +46,11 @@ export const consoleAssetSections = {
     label: 'Textbooks',
     icon: 'i-lucide-book-open',
     to: '/console/assets/textbooks'
+  },
+  integrator: {
+    label: 'Source Integrator',
+    icon: 'i-lucide-radar',
+    to: '/console/assets/integrator'
   }
 } satisfies Record<string, BreadcrumbItem>
 

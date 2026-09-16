@@ -238,17 +238,8 @@ const kpis = computed(() => [
 
 const allQuickAccessCards = [
   {
-    title: 'Source Integrator',
-    description: 'Research new sources, check what their licence permits, and bring the good ones into the catalog.',
-    icon: 'i-lucide-radar',
-    to: '/console/integrator',
-    available: true,
-    iconWrapperClass: 'bg-brand-50 dark:bg-brand-500/10',
-    iconClass: 'text-brand-600 dark:text-brand-300'
-  },
-  {
     title: 'Asset Manager',
-    description: 'Browse and curate articles, dietary guidelines, and knowledge assets.',
+    description: 'Browse and curate articles, guides, recipes and textbooks — and bring new sources in with the Source Integrator.',
     icon: 'i-lucide-folder-open',
     to: '/console/assets',
     available: true,

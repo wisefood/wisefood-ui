@@ -88,6 +88,47 @@ export interface Proposal {
   result: Record<string, unknown>
 }
 
+/**
+ * One attempt at integrating an approved proposal.
+ *
+ * `status` may read `stalled`, which the server computes rather than stores:
+ * a run whose heartbeat stopped looks identical to a working one from the
+ * status column alone, and the difference is the whole point — one of them
+ * needs somebody.
+ *
+ * `wrote_anything` is what a failed run is judged by. A failure that created
+ * a guide before it gave up has left something in the catalog.
+ */
+export interface IntegrationRun {
+  id: string
+  proposal_id: string
+  session_id: string | null
+  status: 'queued' | 'running' | 'succeeded' | 'failed' | 'stalled'
+  stage: string | null
+  steps: IntegratorStep[]
+  error: string | null
+  result: {
+    urn?: string
+    artifact_id?: string
+    extraction?: { status?: string, current_page?: number, total_pages?: number }
+    guidelines_extracted?: number
+    guidelines_created?: number
+    guidelines_skipped?: number
+    preview?: { candidates?: number, would_create?: number, would_skip?: number }
+  }
+  wrote_anything: boolean
+  dry_run: boolean
+  started_by: string | null
+  created_at: string | null
+  heartbeat_at: string | null
+  finished_at: string | null
+}
+
+/** A run that is still going, and worth polling. */
+export function runIsLive(run: IntegrationRun | null): boolean {
+  return run?.status === 'queued' || run?.status === 'running'
+}
+
 export interface ChatTurn {
   session_id: string
   reply: string
@@ -240,6 +281,43 @@ class IntegratorApiService {
       )
     } catch {
       return empty
+    }
+  }
+
+  /**
+   * Start integrating an approved proposal. Returns at once with a run to
+   * poll — the extraction behind it takes minutes, not a request.
+   */
+  async integrate(proposalId: string, dryRun = false): Promise<IntegrationRun> {
+    return unwrap(
+      await wisefoodRestApi.post<unknown>(
+        `${this.base}/proposals/${encodeURIComponent(proposalId)}/integrate`,
+        { dry_run: dryRun }
+      ),
+      {} as IntegrationRun
+    )
+  }
+
+  async run(runId: string): Promise<IntegrationRun | null> {
+    try {
+      return unwrap(
+        await wisefoodRestApi.get<unknown>(`${this.base}/runs/${encodeURIComponent(runId)}`),
+        {} as IntegrationRun
+      )
+    } catch {
+      return null
+    }
+  }
+
+  /** Every attempt at a proposal, newest first — the failed ones included. */
+  async runs(proposalId: string): Promise<IntegrationRun[]> {
+    try {
+      const payload = await wisefoodRestApi.get<unknown>(
+        `${this.base}/runs?proposal_id=${encodeURIComponent(proposalId)}`
+      )
+      return unwrap<{ runs: IntegrationRun[] }>(payload, { runs: [] }).runs ?? []
+    } catch {
+      return []
     }
   }
 

@@ -233,6 +233,7 @@
               @approve="confirmApprove"
               @reject="rejectProposal"
               @move="moveProposal"
+              @integrated="loadProposals"
             />
           </div>
         </UCard>
@@ -354,16 +355,14 @@ import integratorApi, {
   failureText, type BacklogItem, type IntegratorMessage, type IntegratorSession,
   type IntegratorStep, type Proposal, type SourceKind
 } from '~/services/integratorApi'
+import { assetBreadcrumb, consoleAssetSections } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Source Integrator · Console' })
 
 const toast = useToast()
 
-const breadcrumbs = [
-  { label: 'Console', to: '/console' },
-  { label: 'Source Integrator' }
-]
+const breadcrumbs = assetBreadcrumb(consoleAssetSections.integrator)
 
 /* Said in the empty state, and true of the tools the agent is actually given
    — this list and the tool registry have to stay in step. */

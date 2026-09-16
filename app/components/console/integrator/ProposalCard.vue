@@ -191,8 +191,22 @@
       </template>
     </div>
 
+    <!-- Approved: the decision is made, and this is where it gets carried
+         out. Shown on the card rather than on a page of its own, because
+         what was approved and what the integration did are the same story. -->
     <template
-      v-if="actionable"
+      v-if="proposal.status === 'approved' || proposal.status === 'imported'
+        || proposal.status === 'failed'"
+      #footer
+    >
+      <ConsoleIntegratorRunPanel
+        :proposal="proposal"
+        @finished="$emit('integrated', proposal)"
+      />
+    </template>
+
+    <template
+      v-else-if="actionable"
       #footer
     >
       <div class="flex flex-wrap items-center justify-end gap-2">
@@ -236,6 +250,8 @@ defineEmits<{
   approve: [Proposal]
   reject: [Proposal]
   move: [{ proposal: Proposal, direction: -1 | 1 }]
+  /** A run finished, so the list's copy of this proposal is now stale. */
+  integrated: [Proposal]
 }>()
 
 const showScore = ref(false)
