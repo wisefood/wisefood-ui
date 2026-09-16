@@ -229,8 +229,10 @@
               :key="proposal.id"
               :proposal="proposal"
               :busy="busyProposal === proposal.id ? busyAction : null"
+              :reorderable="proposals.length > 1"
               @approve="confirmApprove"
               @reject="rejectProposal"
+              @move="moveProposal"
             />
           </div>
         </UCard>
@@ -535,6 +537,31 @@ async function approveProposal() {
   } finally {
     busyProposal.value = null
     busyAction.value = null
+  }
+}
+
+/**
+ * Move a proposal up or down, and persist the whole order.
+ *
+ * The list is sent rather than the one move, because `expert_rank` is a
+ * position and positions are only meaningful together — sending "this one is
+ * now third" leaves whatever used to be third also claiming it.
+ */
+async function moveProposal({ proposal, direction }: { proposal: Proposal, direction: -1 | 1 }) {
+  const order = [...proposals.value]
+  const from = order.findIndex(p => p.id === proposal.id)
+  const to = from + direction
+  if (from < 0 || to < 0 || to >= order.length) return
+
+  const [moved] = order.splice(from, 1)
+  order.splice(to, 0, moved!)
+  proposals.value = order // optimistic: the arrows should feel immediate
+
+  try {
+    await integratorApi.rerank(order.map(p => p.id))
+  } catch (error) {
+    await loadProposals() // put it back the way the server has it
+    toast.add({ title: failureText(error, 'Could not save that order'), color: 'error' })
   }
 }
 

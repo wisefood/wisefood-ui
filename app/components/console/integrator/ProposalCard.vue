@@ -46,14 +46,42 @@
       </div>
       <div
         v-if="rankLabel"
-        class="shrink-0 text-right"
+        class="flex shrink-0 items-center gap-1"
       >
-        <p class="text-[10px] uppercase tracking-wide text-gray-400">
-          Rank
-        </p>
-        <p class="text-sm font-semibold tabular-nums text-gray-700 dark:text-gray-200">
-          {{ rankLabel }}
-        </p>
+        <!-- Moving a proposal writes expert_rank beside the agent's score,
+             never over it — so anyone can later ask whether the rubric
+             actually agrees with the people using it. -->
+        <div
+          v-if="reorderable"
+          class="flex flex-col"
+        >
+          <UButton
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            icon="i-lucide-chevron-up"
+            :ui="{ base: 'p-0.5' }"
+            aria-label="Move up"
+            @click="$emit('move', { proposal, direction: -1 })"
+          />
+          <UButton
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            icon="i-lucide-chevron-down"
+            :ui="{ base: 'p-0.5' }"
+            aria-label="Move down"
+            @click="$emit('move', { proposal, direction: 1 })"
+          />
+        </div>
+        <div class="text-right">
+          <p class="text-[10px] uppercase tracking-wide text-gray-400">
+            {{ proposal.expert_rank != null ? 'Your order' : 'Score' }}
+          </p>
+          <p class="text-sm font-semibold tabular-nums text-gray-700 dark:text-gray-200">
+            {{ rankLabel }}
+          </p>
+        </div>
       </div>
     </div>
 
@@ -101,6 +129,43 @@
     >
       {{ proposal.rationale }}
     </p>
+
+    <!-- The arithmetic behind the score, so a curator can disagree with a
+         clause rather than with a number. -->
+    <UCollapsible
+      v-if="breakdown.length"
+      v-model:open="showScore"
+      class="mt-3"
+    >
+      <button
+        type="button"
+        class="flex w-full items-center gap-1.5 text-[11px] text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+      >
+        <UIcon
+          :name="showScore ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
+          class="h-3 w-3"
+        />
+        Why this score
+      </button>
+      <template #content>
+        <ul class="mt-2 space-y-1">
+          <li
+            v-for="row in breakdown"
+            :key="row.component"
+            class="flex items-baseline gap-2 text-[11px]"
+          >
+            <span class="w-24 shrink-0 text-gray-400">{{ label(row.component) }}</span>
+            <span class="w-10 shrink-0 tabular-nums text-gray-600 dark:text-gray-300">
+              {{ row.score.toFixed(2) }}
+            </span>
+            <span class="w-12 shrink-0 tabular-nums text-gray-400">
+              ×{{ row.weight.toFixed(2) }}
+            </span>
+            <span class="min-w-0 flex-1 text-gray-500 dark:text-gray-400">{{ row.why }}</span>
+          </li>
+        </ul>
+      </template>
+    </UCollapsible>
 
     <div v-if="proposal.plan?.length">
       <p class="mt-3 text-[10px] uppercase tracking-wide text-gray-400">
@@ -156,16 +221,40 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { Proposal } from '~/services/integratorApi'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   proposal: Proposal
   /** Which action is in flight, so only that button spins. */
   busy?: 'approve' | 'reject' | null
+  /** Up/down arrows. Off for a single card or a decided proposal. */
+  reorderable?: boolean
+}>(), { busy: null, reorderable: false })
+
+defineEmits<{
+  approve: [Proposal]
+  reject: [Proposal]
+  move: [{ proposal: Proposal, direction: -1 | 1 }]
 }>()
 
-defineEmits<{ approve: [Proposal], reject: [Proposal] }>()
+const showScore = ref(false)
+
+interface ScoreRow { component: string, score: number, weight: number, why: string }
+
+const COMPONENT_LABELS: Record<string, string> = {
+  licence: 'Licence',
+  coverage_gap: 'Coverage',
+  authority: 'Authority',
+  tractability: 'Effort',
+  completeness: 'Detail'
+}
+const label = (component: string) => COMPONENT_LABELS[component] || component
+
+const breakdown = computed<ScoreRow[]>(() => {
+  const ranking = props.proposal.metadata?.ranking as { breakdown?: ScoreRow[] } | undefined
+  return ranking?.breakdown ?? []
+})
 
 const KIND_LABELS: Record<string, string> = {
   guide: 'Dietary guide',
