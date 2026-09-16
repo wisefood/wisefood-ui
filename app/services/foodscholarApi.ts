@@ -25,8 +25,20 @@ export interface QaAskRequest {
 }
 
 export interface QaCitation {
+  /**
+   * The UI's names for a citation's identity.
+   *
+   * FoodScholar sends `source_id` / `source_title`; twenty-five read sites
+   * across six files expect `article_urn` / `article_title`. Rather than
+   * rename all of them, citations are normalised once on the way in — see
+   * `normalizeQaCitations`.
+   */
   article_urn: string
   article_title: string
+  /** As sent by FoodScholar; kept so nothing downstream loses the original. */
+  source_id?: string
+  source_title?: string
+  source_url?: string
   source_type?: 'article' | 'guide' | 'guideline' | null
   authors?: string[] | null
   year?: number | null
@@ -224,6 +236,36 @@ export interface QaFeedbackRequest {
  * Parse one SSE frame ("event: name\ndata: {...}") into a QaStreamEvent.
  * Comment frames (keep-alives, ": keep-alive") and unparseable data yield null.
  */
+/**
+ * Give every citation the identity fields the UI reads.
+ *
+ * FoodScholar's Citation model is `source_id` / `source_title`; this client's
+ * type and every consumer of it use `article_urn` / `article_title`. The
+ * mismatch is invisible for hovering — `quote`, `section` and the context
+ * fields have matching names, which is why the passage preview always worked —
+ * and fatal for opening one, because `article_urn` was `undefined` and the
+ * router was handed `/foodscholar/undefined`. Evaluators reported exactly
+ * that: the hover is useful, the click goes nowhere.
+ *
+ * Normalising here rather than renaming the consumers keeps one contract in
+ * one place, and leaves the original fields on the object.
+ */
+export function normalizeQaCitations<T>(payload: T): T {
+  const cites = (payload as { citations?: unknown })?.citations
+  if (!Array.isArray(cites)) return payload
+  for (const c of cites) {
+    if (!c || typeof c !== 'object') continue
+    const cite = c as Record<string, unknown>
+    if (!cite.article_urn && typeof cite.source_id === 'string') {
+      cite.article_urn = cite.source_id
+    }
+    if (!cite.article_title && typeof cite.source_title === 'string') {
+      cite.article_title = cite.source_title
+    }
+  }
+  return payload
+}
+
 function parseSseFrame(frame: string): QaStreamEvent | null {
   let eventName = ''
   const dataLines: string[] = []
@@ -234,7 +276,9 @@ function parseSseFrame(frame: string): QaStreamEvent | null {
   }
   if (!eventName || !dataLines.length) return null
   try {
-    return { event: eventName, data: JSON.parse(dataLines.join('\n')) }
+    // Citations arrive on their own event and inside the terminal `done`
+    // payload, so both go through the same normalisation.
+    return { event: eventName, data: normalizeQaCitations(JSON.parse(dataLines.join('\n'))) }
   } catch {
     return null
   }
@@ -244,7 +288,8 @@ class FoodScholarApiService {
   private readonly basePath = '/foodscholar/qa'
 
   async askQuestion(payload: QaAskRequest): Promise<QaAskResult> {
-    return wisefoodRestApi.post<QaAskResult, QaAskRequest>(`${this.basePath}/ask`, payload)
+    const result = await wisefoodRestApi.post<QaAskResult, QaAskRequest>(`${this.basePath}/ask`, payload)
+    return normalizeQaCitations(result)
   }
 
   /**
