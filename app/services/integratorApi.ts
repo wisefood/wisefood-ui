@@ -111,6 +111,7 @@ export interface IntegrationRun {
     urn?: string
     artifact_id?: string
     extraction?: { status?: string, current_page?: number, total_pages?: number }
+    enrichment?: { status?: string, wrote?: string[] }
     guidelines_extracted?: number
     guidelines_created?: number
     guidelines_skipped?: number

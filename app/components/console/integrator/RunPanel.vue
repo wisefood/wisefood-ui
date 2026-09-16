@@ -165,10 +165,13 @@ const canRetry = computed(() =>
 const canRun = computed(() =>
   run.value?.status === 'succeeded' && run.value.dry_run)
 
+const PITCHES: Record<string, string> = {
+  guide: 'Create the guide, attach the source PDF, extract its guidelines and import them — with every step recorded against this proposal.',
+  article: 'Create the article from the publisher\'s own Crossref record, then enrich it — keywords, study type, glossary and Q&A.'
+}
 const pitch = computed(() =>
-  props.proposal.kind === 'guide'
-    ? 'Create the guide, attach the source PDF, extract its guidelines and import them — with every step recorded against this proposal.'
-    : 'Create the catalog entry from this proposal, with its provenance and licence attached.')
+  PITCHES[props.proposal.kind]
+  ?? 'Create the catalog entry from this proposal, with its provenance and licence attached.')
 
 const STAGES: Record<string, string> = {
   queued: 'Queued',
@@ -179,6 +182,8 @@ const STAGES: Record<string, string> = {
   extracting: 'Reading the document',
   preview: 'Working out what is new',
   import: 'Importing the guidelines',
+  enrich: 'Queuing the enrichment',
+  enriching: 'Enriching the article',
   done: 'Done'
 }
 
@@ -227,6 +232,9 @@ const landed = computed(() => {
   }
   if (result.guidelines_created != null) {
     rows.push({ label: 'Guidelines imported', value: String(result.guidelines_created) })
+  }
+  if (result.enrichment?.wrote?.length) {
+    rows.push({ label: 'Enriched', value: result.enrichment.wrote.join(', ') })
   }
   return rows
 })
