@@ -1239,12 +1239,27 @@ const performSearch = async (options: { openFirstResult?: boolean } = {}) => {
       ...facetFilters
     } = buildFilterParams()
 
+    // The member's profile diet joins the sidebar's on the HARD filter, not on
+    // the soft `diet_tags` boost it used to ride. Someone who has told us they
+    // are vegan is not expressing a preference to be ranked against — the
+    // Round 2 evaluators were shown chicken and yoghurt for a vegan profile,
+    // and a neutral query like "creamy pasta dinner" came back 5/8 meat.
+    // Ticking the same diet in the sidebar always filtered properly, so the
+    // profile was the weaker signal of the two, which is backwards.
+    //
+    // Union rather than either/or: vegan on the profile and gluten-free on the
+    // chip means both, which is what `require_diet_tags` already does with the
+    // diet the question itself stated.
+    const requiredDietTags = [...new Set([
+      ...(sidebarDietTags || []),
+      ...(personalization.dietTags || [])
+    ])]
+
     const nlParams: RecipeSearchParams = {
       question: searchQuery.value,
       ...facetFilters,
-      require_diet_tags: sidebarDietTags,
+      require_diet_tags: requiredDietTags.length > 0 ? requiredDietTags : undefined,
       exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined,
-      diet_tags: personalization.dietTags?.length ? personalization.dietTags : undefined,
       preferred_ingredients: personalization.preferredIngredients?.length ? personalization.preferredIngredients : undefined,
       region: personalization.region
     }
@@ -1470,7 +1485,8 @@ const handleQuickFilter = async (filterType: string) => {
     const quickParams: RecipeSearchParams = {
       question: query,
       exclude_allergens: mergedAllergens.length > 0 ? mergedAllergens : undefined,
-      diet_tags: personalization.dietTags?.length ? personalization.dietTags : undefined,
+      // Same as the main search above: a profile diet is a requirement here.
+      require_diet_tags: personalization.dietTags?.length ? personalization.dietTags : undefined,
       preferred_ingredients: personalization.preferredIngredients?.length ? personalization.preferredIngredients : undefined,
       region: personalization.region
     }
