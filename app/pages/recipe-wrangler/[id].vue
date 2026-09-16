@@ -714,6 +714,11 @@
             </div>
           </section>
 
+          <!-- Recipe text is stored English — there is no generation step to
+               ask for Hungarian, the way there is for a FoodScholar tip. The
+               notice says so and offers a machine translation. -->
+          <TranslationNotice />
+
           <!-- Instructions -->
           <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 sm:p-10 border border-zinc-200 dark:border-zinc-700 shadow-lg">
             <h2 class="text-xl font-claude text-zinc-900 dark:text-white mb-8 flex items-center gap-3">
@@ -724,40 +729,42 @@
               {{ t('recipeWrangler.detail.instructions') }}
             </h2>
 
-            <ol class="space-y-6">
-              <li
-                v-for="(instruction, index) in recipe.instructions"
-                :key="index"
-                class="flex gap-5 group cursor-pointer"
-                @click="toggleInstruction(index)"
-              >
-                <div
-                  :class="[
-                    'flex-shrink-0 w-10 h-10 rounded-full text-white flex items-center justify-center font-bold text-base shadow-md transition-all',
-                    checkedInstructions[index]
-                      ? 'bg-zinc-400 dark:bg-zinc-600 group-hover:scale-100'
-                      : 'bg-gradient-to-br from-brandg-500 to-brandg-600 dark:from-brandg-600 dark:to-brandg-700 group-hover:scale-110'
-                  ]"
+            <TranslatableContent>
+              <ol class="space-y-6">
+                <li
+                  v-for="(instruction, index) in recipe.instructions"
+                  :key="index"
+                  class="flex gap-5 group cursor-pointer"
+                  @click="toggleInstruction(index)"
                 >
-                  <UIcon
-                    v-if="checkedInstructions[index]"
-                    name="i-lucide-check"
-                    class="w-5 h-5"
-                  />
-                  <span v-else>{{ index + 1 }}</span>
-                </div>
-                <p
-                  :class="[
-                    'flex-1 text-base leading-relaxed pt-2 transition-all',
-                    checkedInstructions[index]
-                      ? 'line-through text-zinc-400 dark:text-zinc-600'
-                      : 'text-zinc-700 dark:text-zinc-300'
-                  ]"
-                >
-                  {{ instruction }}
-                </p>
-              </li>
-            </ol>
+                  <div
+                    :class="[
+                      'flex-shrink-0 w-10 h-10 rounded-full text-white flex items-center justify-center font-bold text-base shadow-md transition-all',
+                      checkedInstructions[index]
+                        ? 'bg-zinc-400 dark:bg-zinc-600 group-hover:scale-100'
+                        : 'bg-gradient-to-br from-brandg-500 to-brandg-600 dark:from-brandg-600 dark:to-brandg-700 group-hover:scale-110'
+                    ]"
+                  >
+                    <UIcon
+                      v-if="checkedInstructions[index]"
+                      name="i-lucide-check"
+                      class="w-5 h-5"
+                    />
+                    <span v-else>{{ index + 1 }}</span>
+                  </div>
+                  <p
+                    :class="[
+                      'flex-1 text-base leading-relaxed pt-2 transition-all',
+                      checkedInstructions[index]
+                        ? 'line-through text-zinc-400 dark:text-zinc-600'
+                        : 'text-zinc-700 dark:text-zinc-300'
+                    ]"
+                  >
+                    {{ instruction }}
+                  </p>
+                </li>
+              </ol>
+            </TranslatableContent>
           </section>
         </div>
 

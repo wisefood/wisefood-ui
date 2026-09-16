@@ -2032,5 +2032,16 @@
       "lunch": "Kosilo",
       "dinner": "Večerja"
     }
+  },
+  "common": {
+    "translation": {
+      "englishOnly": "Ta vsebina je na voljo samo v angleščini.",
+      "machineTranslated": "Strojno prevedeno. Izvirnik je v angleščini.",
+      "translate": "Prevedi",
+      "translating": "Prevajanje …",
+      "showOriginal": "Pokaži izvirnik",
+      "provider": "Prevod izvede Google Prevajalnik; ob uporabi se besedilo te strani pošlje Googlu.",
+      "unavailable": "Prevod trenutno ni na voljo. Spodnja vsebina je v angleščini."
+    }
   }
 }

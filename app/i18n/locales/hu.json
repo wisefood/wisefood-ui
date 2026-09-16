@@ -2032,5 +2032,16 @@
       "lunch": "Ebéd",
       "dinner": "Vacsora"
     }
+  },
+  "common": {
+    "translation": {
+      "englishOnly": "Ez a tartalom csak angolul érhető el.",
+      "machineTranslated": "Gépi fordítás. Az eredeti angol nyelvű.",
+      "translate": "Fordítás",
+      "translating": "Fordítás folyamatban…",
+      "showOriginal": "Eredeti megjelenítése",
+      "provider": "A fordítást a Google Fordító végzi; használatakor az oldal szövege elküldésre kerül a Google-nak.",
+      "unavailable": "A fordítás jelenleg nem érhető el. Az alábbi tartalom angol nyelvű."
+    }
   }
 }

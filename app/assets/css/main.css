@@ -314,3 +314,32 @@ html.a11y-contrast-high,
 .a11y-large-cursor textarea {
   cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><path d='M14 2 v16 M6 10 h16 M14 18 c-6 0 -10 5 -10 12 h20 c0 -7 -4 -12 -10 -12 z' fill='white' stroke='black' stroke-width='2' stroke-linejoin='round'/></svg>") 14 14, pointer !important;
 }
+
+/* ---------------------------------------------------------------------------
+   Google Translate widget (see composables/useGoogleTranslate.ts)
+
+   The widget injects a banner iframe that shifts the whole document down by
+   ~40px and re-applies `top` to <body> on every translation, which breaks the
+   sticky header. These two rules are the documented way to suppress it; the
+   `!important` is load-bearing because the widget sets the same properties
+   inline after we have painted.
+
+   The widget's own hidden <select> host stays in the DOM — it is the only
+   handle for driving the translation, so it must not be display:none, which
+   is why it is clipped rather than hidden.
+   --------------------------------------------------------------------------- */
+body {
+  top: 0 !important;
+}
+
+.skiptranslate iframe,
+iframe.skiptranslate {
+  display: none !important;
+}
+
+/* Google marks every translated run with these; left unstyled they inherit a
+   yellow highlight and a dotted underline that read as an error state. */
+font.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}

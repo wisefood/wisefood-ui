@@ -2032,5 +2032,16 @@
       "lunch": "Lunch",
       "dinner": "Dinner"
     }
+  },
+  "common": {
+    "translation": {
+      "englishOnly": "This content is available in English only.",
+      "machineTranslated": "Machine-translated. The original is in English.",
+      "translate": "Translate",
+      "translating": "Translating…",
+      "showOriginal": "Show original",
+      "provider": "Translation is performed by Google Translate; the text on this page is sent to Google when you use it.",
+      "unavailable": "Translation is unavailable right now. The content below is in English."
+    }
   }
 }
