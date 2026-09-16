@@ -167,7 +167,9 @@ const canRun = computed(() =>
 
 const PITCHES: Record<string, string> = {
   guide: 'Create the guide, attach the source PDF, extract its guidelines and import them — with every step recorded against this proposal.',
-  article: 'Create the article from the publisher\'s own Crossref record, then enrich it — keywords, study type, glossary and Q&A.'
+  article: 'Create the article from the publisher\'s own Crossref record, then enrich it — keywords, study type, glossary and Q&A.',
+  textbook: 'Create the textbook, attach the PDF, and read it into retrievable passages that keep their chapter and section headings.',
+  fctable: 'Read the composition table to count its entries and nutrient columns, then register it with those figures measured rather than typed.'
 }
 const pitch = computed(() =>
   PITCHES[props.proposal.kind]
@@ -184,6 +186,8 @@ const STAGES: Record<string, string> = {
   import: 'Importing the guidelines',
   enrich: 'Queuing the enrichment',
   enriching: 'Enriching the article',
+  profile: 'Reading the composition table',
+  chunk: 'Reading the textbook into passages',
   done: 'Done'
 }
 
@@ -235,6 +239,15 @@ const landed = computed(() => {
   }
   if (result.enrichment?.wrote?.length) {
     rows.push({ label: 'Enriched', value: result.enrichment.wrote.join(', ') })
+  }
+  if (result.passages != null) {
+    rows.push({ label: 'Passages', value: String(result.passages) })
+  }
+  if (result.profile?.number_of_entries != null) {
+    rows.push({ label: 'Entries', value: result.profile.number_of_entries.toLocaleString() })
+  }
+  if (result.profile?.nutrient_coverage?.length) {
+    rows.push({ label: 'Nutrients', value: String(result.profile.nutrient_coverage.length) })
   }
   return rows
 })
