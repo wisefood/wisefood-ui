@@ -120,3 +120,62 @@ export function searchCountries(query: string): Country[] {
 export function formatCountry(country: Country): string {
   return `${country.flag} ${country.name}`
 }
+
+// --------------------------------------------------------------------------- //
+// Localised names
+// --------------------------------------------------------------------------- //
+//
+// The `name`/`label` fields above are English, and they are what the selector
+// rendered in every locale — so a Hungarian user got a Hungarian field label and
+// placeholder above a list reading "Austria, Belgium, Bulgaria". Two sources of
+// truth for one control, which is what WF-08 reported.
+//
+// `Intl.DisplayNames` is the localised source: it ships with the runtime, covers
+// every ISO region code here, and needs no translation files of our own. The
+// English name stays as the fallback for a runtime built without full ICU data,
+// where the constructor throws or `of()` returns the code back.
+
+const _displayNamesCache = new Map<string, Intl.DisplayNames | null>()
+
+function regionDisplayNames(locale: string): Intl.DisplayNames | null {
+  if (!_displayNamesCache.has(locale)) {
+    try {
+      _displayNamesCache.set(locale, new Intl.DisplayNames([locale], { type: 'region' }))
+    } catch {
+      _displayNamesCache.set(locale, null)
+    }
+  }
+  return _displayNamesCache.get(locale) ?? null
+}
+
+/** The country's name in `locale`, falling back to the English name. */
+export function localizedCountryName(code: string, locale: string): string {
+  const fallback = getCountryByCode(code)?.name ?? code
+  const dn = regionDisplayNames(locale)
+  if (!dn) return fallback
+  try {
+    const resolved = dn.of(code)
+    // `of()` hands the code straight back when it has no entry for it, which is
+    // not a name — treat it as a miss rather than showing the user "AT".
+    return resolved && resolved !== code ? resolved : fallback
+  } catch {
+    return fallback
+  }
+}
+
+/**
+ * Every supported country with its name in `locale`, sorted by that name.
+ *
+ * Sorted with `localeCompare` in the same locale, because sorting localised
+ * names by the English order is its own kind of wrong: in Hungarian, Austria
+ * ("Ausztria") and Belgium ("Belgium") keep their places but Germany
+ * ("Németország") does not.
+ */
+export function localizedCountries(locale: string): Country[] {
+  return countries
+    .map(c => {
+      const name = localizedCountryName(c.code, locale)
+      return { ...c, name, label: `${c.flag} ${name}` }
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, locale))
+}

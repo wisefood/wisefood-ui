@@ -1,7 +1,7 @@
 <template>
   <USelectMenu
     v-model="selectedCode"
-    :items="countries"
+    :items="localizedList"
     searchable
     :search-placeholder="searchPlaceholder"
     :placeholder="placeholder"
@@ -28,7 +28,14 @@
 </template>
 
 <script setup lang="ts">
-import { countries, getCountryByCode } from '~/utils/countries'
+import { useI18n } from 'vue-i18n'
+import { localizedCountries } from '~/utils/countries'
+
+const { locale } = useI18n()
+
+// Names come from the active locale, and the trigger reads from this same list
+// rather than from the English table — the two disagreeing is WF-08.
+const localizedList = computed(() => localizedCountries(locale.value))
 
 interface Props {
   modelValue?: string  // ISO country code
@@ -60,6 +67,8 @@ const selectedCode = computed({
 
 // Get the full country object for display in the trigger
 const selectedCountry = computed(() => {
-  return props.modelValue ? getCountryByCode(props.modelValue) : undefined
+  return props.modelValue
+    ? localizedList.value.find(c => c.code === props.modelValue)
+    : undefined
 })
 </script>

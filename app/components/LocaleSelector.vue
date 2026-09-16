@@ -40,7 +40,8 @@ onClickOutside(dropdown, () => {
     >
       <img
         :src="currentLanguage.flagSrc"
-        :alt="currentLanguage.code.toUpperCase()"
+        alt=""
+        aria-hidden="true"
         class="h-4 w-6 rounded-[2px] object-cover shadow-sm"
       >
       <span>{{ currentLanguage.name }}</span>
@@ -67,7 +68,8 @@ onClickOutside(dropdown, () => {
         >
           <img
             :src="lang.flagSrc"
-            :alt="lang.code.toUpperCase()"
+            alt=""
+            aria-hidden="true"
             class="h-4 w-6 rounded-[2px] object-cover shadow-sm"
           >
           <span>{{ lang.name }}</span>
