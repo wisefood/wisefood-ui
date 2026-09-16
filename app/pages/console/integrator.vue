@@ -74,18 +74,59 @@
           ref="transcript"
           class="max-h-[30rem] min-h-[18rem] space-y-4 overflow-y-auto p-5"
         >
-          <p
+          <!-- What it can do, said before it is asked. A curator meeting an
+               empty box guesses at its range; saying it removes the guessing
+               and sets the expectation that it proposes rather than acts. -->
+          <div
             v-if="!messages.length && !thinking"
-            class="py-12 text-center text-sm text-gray-400 dark:text-gray-500"
+            class="py-8"
           >
-            Ask for sources — “what dietary guidance exists for Bulgaria, and may we use it?”
-          </p>
+            <p class="text-center text-sm text-gray-500 dark:text-gray-400">
+              I look for sources and check whether we may use them.
+            </p>
+            <ul class="mx-auto mt-4 max-w-md space-y-2">
+              <li
+                v-for="item in capabilities"
+                :key="item.text"
+                class="flex items-start gap-2.5 text-xs text-gray-600 dark:text-gray-300"
+              >
+                <UIcon
+                  :name="item.icon"
+                  class="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-400"
+                />
+                <span>{{ item.text }}</span>
+              </li>
+            </ul>
+            <p class="mx-auto mt-4 max-w-md text-center text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
+              I cannot approve anything or write to the catalog myself — I propose, you decide.
+            </p>
+            <div class="mt-5 flex flex-wrap justify-center gap-2">
+              <UButton
+                v-for="example in examples"
+                :key="example"
+                color="neutral"
+                variant="soft"
+                size="xs"
+                @click="draft = example"
+              >
+                {{ example }}
+              </UButton>
+            </div>
+          </div>
 
           <div
             v-for="message in visibleMessages"
             :key="message.seq"
-            :class="message.role === 'user' ? 'flex justify-end' : ''"
+            class="space-y-2"
+            :class="message.role === 'user' ? 'flex flex-col items-end' : ''"
           >
+            <!-- The work comes before the answer it produced, so the reading
+                 order matches the order things happened. -->
+            <ConsoleIntegratorStepTimeline
+              v-if="message.role === 'assistant' && message.steps?.length"
+              :steps="message.steps"
+              class="w-full"
+            />
             <div
               class="max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
               :class="message.role === 'user'
@@ -98,33 +139,22 @@
             </div>
           </div>
 
-          <!-- What it did, between what it said. A curator who cannot see the
-               searches cannot judge the answer. -->
-          <div
-            v-if="toolTrail.length"
-            class="flex flex-wrap gap-1.5"
-          >
-            <UBadge
-              v-for="(call, i) in toolTrail"
-              :key="i"
-              size="xs"
-              variant="soft"
-              :color="call.ok ? 'neutral' : 'error'"
-              :icon="call.ok ? 'i-lucide-wrench' : 'i-lucide-alert-circle'"
-            >
-              {{ call.tool }}
-            </UBadge>
-          </div>
-
           <div
             v-if="thinking"
-            class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"
+            class="space-y-2"
           >
-            <UIcon
-              name="i-lucide-loader-2"
-              class="h-4 w-4 animate-spin"
+            <ConsoleIntegratorStepTimeline
+              v-if="liveSteps.length"
+              :steps="liveSteps"
+              running
             />
-            Researching — this can take a minute.
+            <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <UIcon
+                name="i-lucide-loader-2"
+                class="h-4 w-4 animate-spin"
+              />
+              Searching and reading — this can take a minute.
+            </div>
           </div>
         </div>
 
@@ -320,7 +350,7 @@
 import { computed, nextTick, ref } from 'vue'
 import integratorApi, {
   failureText, type BacklogItem, type IntegratorMessage, type IntegratorSession,
-  type Proposal, type SourceKind, type ToolCall
+  type IntegratorStep, type Proposal, type SourceKind
 } from '~/services/integratorApi'
 
 definePageMeta({ layout: 'default' })
@@ -331,6 +361,21 @@ const toast = useToast()
 const breadcrumbs = [
   { label: 'Console', to: '/console' },
   { label: 'Source Integrator' }
+]
+
+/* Said in the empty state, and true of the tools the agent is actually given
+   — this list and the tool registry have to stay in step. */
+const capabilities = [
+  { icon: 'i-lucide-globe', text: 'Search the web and open pages and PDFs' },
+  { icon: 'i-lucide-library', text: 'Check what the catalog already holds, and where the gaps are' },
+  { icon: 'i-lucide-scale', text: 'Work out a licence from the source\'s own words, or from Unpaywall for a DOI' },
+  { icon: 'i-lucide-clipboard-list', text: 'File a proposal for you to review, with its evidence attached' }
+]
+
+const examples = [
+  'What dietary guidance exists for Bulgaria?',
+  'Find open-licensed food composition tables for Greece',
+  'Check the licence on who.int/publications/i/item/9789240073876'
 ]
 
 const kindFilters: Array<{ label: string, value: SourceKind | '' }> = [
@@ -352,7 +397,9 @@ const writesEnabled = ref(false)
 const sessions = ref<IntegratorSession[]>([])
 const sessionId = ref('')
 const messages = ref<IntegratorMessage[]>([])
-const toolTrail = ref<ToolCall[]>([])
+/* Steps from the turn in flight. The timeline for a finished turn rides
+   its assistant message; this is only for while it is running. */
+const liveSteps = ref<IntegratorStep[]>([])
 const draft = ref('')
 const thinking = ref(false)
 const lastRun = ref('')
@@ -391,7 +438,7 @@ async function startSession() {
     sessions.value = [session, ...sessions.value]
     sessionId.value = session.id
     messages.value = []
-    toolTrail.value = []
+    liveSteps.value = []
     lastRun.value = ''
   } catch (error) {
     toast.add({ title: failureText(error, 'Could not start a conversation'), color: 'error' })
@@ -401,7 +448,7 @@ async function startSession() {
 async function openSession(id: string) {
   sessionId.value = id
   messages.value = await integratorApi.history(id)
-  toolTrail.value = await integratorApi.audit({ sessionId: id })
+  liveSteps.value = []
   await loadProposals()
   await scrollDown()
 }
@@ -413,9 +460,11 @@ async function send() {
   if (!sessionId.value) return
 
   draft.value = ''
+  // Shown immediately so the question does not vanish while the turn runs;
+  // replaced by the server's copy when it lands.
   messages.value = [...messages.value, {
     seq: (messages.value.at(-1)?.seq ?? -1) + 1,
-    role: 'user', content: text, tool_name: null, created_at: null
+    role: 'user', content: text, tool_name: null, steps: null, created_at: null
   }]
   thinking.value = true
   await scrollDown()
@@ -423,7 +472,7 @@ async function send() {
   try {
     const turn = await integratorApi.chat(sessionId.value, text)
     messages.value = await integratorApi.history(sessionId.value)
-    toolTrail.value = await integratorApi.audit({ sessionId: sessionId.value })
+    liveSteps.value = []
     lastRun.value = turn.stop_reason === 'completed'
       ? `${turn.steps} step${turn.steps === 1 ? '' : 's'} · ${turn.tokens.toLocaleString()} tokens · ${turn.model}`
       : `Stopped: ${turn.stop_reason}`

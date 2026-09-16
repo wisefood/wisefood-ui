@@ -23,12 +23,33 @@ export interface IntegratorSession {
   updated_at: string | null
 }
 
+/**
+ * One thing the assistant did, in words a curator can check.
+ *
+ * `detail` is what was attempted — the query, the URL — and survives a
+ * failure; `outcome` is what came of it. Keeping them apart is deliberate:
+ * a failed search that has lost its query cannot be judged.
+ */
+export interface IntegratorStep {
+  id: string
+  kind: 'plan' | 'search' | 'read' | 'licence' | 'catalog' | 'write' | 'stop' | 'tool'
+  status: 'running' | 'done'
+  title: string
+  detail: string | null
+  outcome: string | null
+  ok?: boolean
+  elapsed_ms: number | null
+  data: Record<string, unknown>
+}
+
 export interface IntegratorMessage {
   seq: number
   role: 'user' | 'assistant' | 'tool' | 'system'
   content: string | null
   /** Set on tool turns — which tool produced this. */
   tool_name: string | null
+  /** On the final assistant turn: what it did to get there. */
+  steps: IntegratorStep[] | null
   created_at: string | null
 }
 
@@ -70,6 +91,8 @@ export interface Proposal {
 export interface ChatTurn {
   session_id: string
   reply: string
+  /** What it did, in order. The same list that rides the assistant turn. */
+  timeline: IntegratorStep[]
   /** 'completed', or why the run stopped early — a step or token ceiling. */
   stop_reason: string
   steps: number
