@@ -136,6 +136,26 @@ const assetSections = [
     iconClass: 'text-brandp-500 dark:text-brandp-300'
   },
   {
+    title: 'Recipe Collections',
+    description: 'Curate the sources recipes come from — what each collection covers, who compiled it, and what its licence permits.',
+    summary: '',
+    to: '/console/assets/collections',
+    icon: 'i-lucide-library',
+    available: true,
+    iconWrapperClass: 'bg-brandp-50 dark:bg-brandp-500/10',
+    iconClass: 'text-brandp-600 dark:text-brandp-300'
+  },
+  {
+    title: 'Composition Tables',
+    description: 'Food composition tables the platform references, with what each one covers and how complete it is.',
+    summary: '',
+    to: '/console/assets/fctables',
+    icon: 'i-lucide-table-2',
+    available: true,
+    iconWrapperClass: 'bg-brandg-50 dark:bg-brandg-500/10',
+    iconClass: 'text-brandg-600 dark:text-brandg-300'
+  },
+  {
     title: 'Textbooks',
     description: 'Curate reference textbooks and ingest the chunked passages FoodScholar retrieves from them.',
     summary: '',

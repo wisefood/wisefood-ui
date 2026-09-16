@@ -144,7 +144,7 @@ class RCollectionsApiService {
    * few dozen collections.
    */
   async searchCollections(params: RCollectionListParams & { q?: string } = {}): Promise<RCollectionListResult> {
-    const query: Record<string, unknown> = {
+    const query: Record<string, string | number> = {
       limit: params.limit ?? 20,
       offset: params.offset ?? 0
     }

@@ -124,7 +124,7 @@ class FCTablesApiService {
   }
 
   async listTables(params: FCTableListParams = {}): Promise<FCTableListResult> {
-    const query: Record<string, unknown> = {
+    const query: Record<string, string | number> = {
       limit: params.limit ?? 20,
       offset: params.offset ?? 0
     }

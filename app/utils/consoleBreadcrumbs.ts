@@ -47,6 +47,16 @@ export const consoleAssetSections = {
     icon: 'i-lucide-book-open',
     to: '/console/assets/textbooks'
   },
+  collections: {
+    label: 'Recipe Collections',
+    icon: 'i-lucide-library',
+    to: '/console/assets/collections'
+  },
+  fctables: {
+    label: 'Composition Tables',
+    icon: 'i-lucide-table-2',
+    to: '/console/assets/fctables'
+  },
   integrator: {
     label: 'Source Integrator',
     icon: 'i-lucide-radar',
