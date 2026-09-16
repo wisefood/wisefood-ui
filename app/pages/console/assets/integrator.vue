@@ -285,6 +285,12 @@
             </li>
           </ul>
         </UCard>
+
+        <!-- What the agent actually ran, scoped by the server to this
+             curator unless they are an admin. Placed last because it is the
+             surface people reach for when something looks wrong, not when
+             they are working normally. -->
+        <ConsoleIntegratorAuditTrail :session-id="sessionId" />
       </div>
     </div>
 
