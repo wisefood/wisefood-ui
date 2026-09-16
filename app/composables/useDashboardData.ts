@@ -43,8 +43,11 @@ export const sustainability = {
   img: "/img/chickpea.jpg"
 }
 
+// Shown only when the FoodScholar tips call fails. The text lives in the i18n
+// bundles rather than here: it sits under a translated caption, so an English
+// string hardcoded at this layer reproduced WF-10 on every API failure.
 export const discoveries = [
-  { id: 1, title: "New study on fiber intake", summary: "Recent research shows that increasing fiber intake to 30g daily can improve gut health and reduce inflammation markers by up to 25%.", source: "Nature Food", date: "2025-11-01" }
+  { id: 1, titleKey: "dashboard.insights.fallbackTitle", summaryKey: "dashboard.insights.fallbackSummary", source: "EFSA", date: "2025-11-01" }
 ]
 
 export function useDashboardData() {

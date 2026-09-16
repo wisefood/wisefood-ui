@@ -400,7 +400,7 @@ import type { HouseholdMember } from '~/services/householdsApi'
 import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
 import { buildGuideDetailPath } from '~/utils/guidesCatalog'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 definePageMeta({
   middleware: ['auth', 'profile']
@@ -500,7 +500,8 @@ const activeInsightIndex = ref(0)
 const insightRotationMs = 5500
 
 const fallbackInsightSlides = computed<InsightSlide[]>(() => {
-  const fallbackSummary = discoveries[0]?.summary?.trim()
+  const fallbackKey = discoveries[0]?.summaryKey
+  const fallbackSummary = fallbackKey ? t(fallbackKey).trim() : ''
   if (!fallbackSummary) return []
 
   return [{
@@ -1073,7 +1074,7 @@ const loadFoodScholarInsights = async () => {
   try {
     // Personalized to the active member's accumulated profile when one
     // exists; FoodScholar falls back to generic daily tips otherwise.
-    const response = await foodscholarApi.listTips(currentMemberId.value)
+    const response = await foodscholarApi.listTips(currentMemberId.value, locale.value)
     const slides = normalizeInsightSlides(response)
     insightSlides.value = await resolveGuideEvidencePaths(slides)
   } catch (err) {
@@ -1087,6 +1088,13 @@ const loadFoodScholarInsights = async () => {
 
 // Tips are member-contextual — refresh when the active member switches.
 watch(currentMemberId, () => {
+  void loadFoodScholarInsights()
+})
+
+// ...and they are generated IN a language, so switching locale has to refetch
+// rather than leave the previous language's sentence under a translated
+// caption — which is the mixed-language dashboard WF-10 reported.
+watch(locale, () => {
   void loadFoodScholarInsights()
 })
 

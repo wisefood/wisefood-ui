@@ -98,7 +98,9 @@
     "insights": {
       "didYouKnow": "Ali ste vedeli?",
       "tipsOfTheDay": "Nasveti dneva",
-      "learnMore": "Izvedi več v FoodScholar"
+      "learnMore": "Izvedi več v FoodScholar",
+      "fallbackTitle": "Vlaknine in zdravje črevesja",
+      "fallbackSummary": "Večina odraslih zaužije manj vlaknin, kot je priporočeno. Polnozrnata žita, stročnice, sadje in zelenjava so najpreprostejši način, da jih dodaš več."
     },
     "sustainability": {
       "title": "Trajnostna izbira"

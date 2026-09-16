@@ -98,7 +98,9 @@
     "insights": {
       "didYouKnow": "Did you know?",
       "tipsOfTheDay": "Tips of the day",
-      "learnMore": "Learn more in FoodScholar"
+      "learnMore": "Learn more in FoodScholar",
+      "fallbackTitle": "Fibre and gut health",
+      "fallbackSummary": "Most adults eat less fibre than recommended. Wholegrains, pulses, fruit and vegetables are the simplest ways to add more."
     },
     "sustainability": {
       "title": "Sustainable Choice"

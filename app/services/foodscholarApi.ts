@@ -305,11 +305,19 @@ class FoodScholarApiService {
     })
   }
 
-  async listTips(memberId?: string | null): Promise<QaTipsResult> {
+  async listTips(memberId?: string | null, language?: string | null): Promise<QaTipsResult> {
     // member_id personalizes tips to the member's accumulated profile;
     // without it FoodScholar serves the shared generic daily tips.
+    //
+    // language decides what the tip is WRITTEN in. The caption above it is
+    // translated by vue-i18n, so without this the dashboard showed a Hungarian
+    // heading over an English sentence. It is also part of FoodScholar's cache
+    // key, so it has to be sent rather than left to a default.
+    const params: Record<string, string> = {}
+    if (memberId) params.member_id = memberId
+    if (language) params.language = language
     return wisefoodRestApi.get<QaTipsResult>(`${this.basePath}/tips`, {
-      params: memberId ? { member_id: memberId } : undefined
+      params: Object.keys(params).length ? params : undefined
     })
   }
 }

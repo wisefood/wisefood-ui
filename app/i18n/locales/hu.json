@@ -98,7 +98,9 @@
     "insights": {
       "didYouKnow": "Tudtad?",
       "tipsOfTheDay": "A nap tippjei",
-      "learnMore": "Tudj meg többet a FoodScholarban"
+      "learnMore": "Tudj meg többet a FoodScholarban",
+      "fallbackTitle": "Rost és bélrendszeri egészség",
+      "fallbackSummary": "A legtöbb felnőtt a javasoltnál kevesebb rostot fogyaszt. A teljes kiőrlésű gabonák, hüvelyesek, gyümölcsök és zöldségek a legegyszerűbb módjai a rostbevitel növelésének."
     },
     "sustainability": {
       "title": "Fenntartható választás"
