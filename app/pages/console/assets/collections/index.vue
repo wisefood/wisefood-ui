@@ -20,14 +20,25 @@
           description="The sources recipes come from: what each covers, who compiled it, and what its licence permits."
           :ui="{ root: 'relative py-0 border-b-0' }"
         />
-        <UButton
-          color="primary"
-          icon="i-lucide-plus"
-          class="self-start cursor-pointer"
-          @click="openCreate"
-        >
-          Add Collection
-        </UButton>
+        <div class="flex shrink-0 gap-2 self-start">
+          <UButton
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-download"
+            class="cursor-pointer"
+            to="/console/assets/collections/import"
+          >
+            Import a source
+          </UButton>
+          <UButton
+            color="primary"
+            icon="i-lucide-plus"
+            class="cursor-pointer"
+            @click="openCreate"
+          >
+            Add Collection
+          </UButton>
+        </div>
       </div>
 
       <UPageBody class="space-y-6">
