@@ -890,7 +890,9 @@
       },
       "sourceMeta": {
         "guideline": "Smernica",
-        "citations": "citati: {count}"
+        "citations": "citati: {count}",
+        "openAccess": "Prosto dostopno",
+        "subscription": "Naročnina"
       },
       "headings": {
         "h1": "Kaj vas zanima{greeting}?",

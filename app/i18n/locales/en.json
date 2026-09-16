@@ -890,7 +890,9 @@
       },
       "sourceMeta": {
         "guideline": "Guideline",
-        "citations": "citations: {count}"
+        "citations": "citations: {count}",
+        "openAccess": "Free to read",
+        "subscription": "Subscription"
       },
       "headings": {
         "h1": "What's on your mind{greeting}?",

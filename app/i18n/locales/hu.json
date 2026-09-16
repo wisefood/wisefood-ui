@@ -890,7 +890,9 @@
       },
       "sourceMeta": {
         "guideline": "Irányelv",
-        "citations": "hivatkozások: {count}"
+        "citations": "hivatkozások: {count}",
+        "openAccess": "Szabadon olvasható",
+        "subscription": "Előfizetéses"
       },
       "headings": {
         "h1": "Mi jár a fejében{greeting}?",

@@ -1796,6 +1796,17 @@ const retrievedMetaLine = (article: QaRetrievedArticle | undefined | null): stri
   const year = String(article.publication_year || '').slice(0, 4)
   if (year) parts.push(year)
   if (article.study_type) parts.push(article.study_type)
+  // Non-human work is named, so a mouse study is not read as a human result.
+  if (article.is_human_evidence === false && article.evidence_label) {
+    parts.push(article.evidence_label)
+  }
+  // Readers could not tell which sources they would be able to open until
+  // they clicked and hit a paywall.
+  if (typeof article.open_access === 'boolean') {
+    parts.push(article.open_access
+      ? t('foodScholarHome.qa.sourceMeta.openAccess')
+      : t('foodScholarHome.qa.sourceMeta.subscription'))
+  }
   if (typeof article.citation_count === 'number') {
     parts.push(
       t('foodScholarHome.qa.sourceMeta.citations', { count: article.citation_count })

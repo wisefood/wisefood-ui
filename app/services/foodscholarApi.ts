@@ -92,6 +92,16 @@ export interface QaRetrievedArticle {
   citation_count?: number | null
   influential_citation_count?: number | null
   study_type?: string | null
+  /**
+   * Whether the full text is free to read, and the identifier that resolves
+   * to the paper. The stored `url` always points at Semantic Scholar rather
+   * than the publisher, so the DOI is the only link to the article itself.
+   */
+  open_access?: boolean | null
+  doi?: string | null
+  /** Plain-language study design, e.g. "animal study", for labelling. */
+  evidence_label?: string | null
+  is_human_evidence?: boolean | null
 }
 
 export interface QaClarificationOption {
