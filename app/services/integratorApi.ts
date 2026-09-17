@@ -51,6 +51,26 @@ export function stepSuggestion(step: IntegratorStep): SourceSuggestion | null {
   return found?.title ? found : null
 }
 
+/** One proposal a turn actually filed. */
+export interface FiledProposal {
+  proposal_id: string
+  title?: string
+  kind?: SourceKind
+}
+
+/**
+ * What a turn really filed, taken from the calls rather than the reply.
+ *
+ * Asked to summarise its own work the assistant has written out eight
+ * filings for five calls, then produced ids for the difference when
+ * challenged. This is the record that cannot do that.
+ */
+export function filedIn(steps: IntegratorStep[] | null): FiledProposal[] {
+  return (steps ?? [])
+    .map(step => step.data?.filed as FiledProposal | undefined)
+    .filter((filed): filed is FiledProposal => Boolean(filed?.proposal_id))
+}
+
 export interface IntegratorStep {
   id: string
   kind: 'plan' | 'search' | 'read' | 'licence' | 'catalog' | 'write' | 'stop' | 'tool'

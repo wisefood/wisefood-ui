@@ -99,17 +99,21 @@
           class="text-xs opacity-70"
         >confidence {{ Math.round(proposal.licence_confidence * 100) }}%</span>
       </div>
+      <!-- Only evidence that says something. A Crossref lookup that found a
+           publisher but no licence returns a row with nothing in it, and
+           rendering that as "crossref:" followed by blank reads as a bug and
+           tells a curator less than leaving it out. -->
       <ul
-        v-if="proposal.licence_evidence?.length"
+        v-if="shownEvidence.length"
         class="mt-2 space-y-1"
       >
         <li
-          v-for="(item, i) in proposal.licence_evidence.slice(0, 3)"
+          v-for="(item, i) in shownEvidence"
           :key="i"
           class="text-xs leading-relaxed opacity-80"
         >
           <span class="font-medium">{{ item.where || 'evidence' }}:</span>
-          {{ item.quote || item.url || item.licence }}
+          {{ item.text }}
         </li>
       </ul>
       <p
@@ -255,6 +259,24 @@ defineEmits<{
 }>()
 
 const showScore = ref(false)
+
+/**
+ * Licence evidence with something to show, in a form the template can render.
+ *
+ * An evidence row carries whichever of quote, url or licence its source
+ * produced, and sometimes none of them — Crossref answering with a publisher
+ * and no licence is the common case. Those rows were rendering as a label and
+ * an empty space.
+ */
+const shownEvidence = computed(() =>
+  (props.proposal.licence_evidence ?? [])
+    .map(item => ({
+      where: item.where,
+      text: item.quote || item.url || item.licence
+        || (item as { publisher?: string }).publisher || ''
+    }))
+    .filter(item => item.text)
+    .slice(0, 3))
 
 interface ScoreRow { component: string, score: number, weight: number, why: string }
 

@@ -155,6 +155,34 @@
               />
             </div>
 
+            <!--
+              What this turn actually filed, from the calls rather than the
+              reply. The assistant has claimed eight filings for five calls
+              and invented the ids when asked; this is the line that cannot.
+            -->
+            <div
+              v-if="filedIn(message.steps).length"
+              class="flex w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-green-50/70 px-3 py-2 text-xs text-green-800 dark:bg-green-500/10 dark:text-green-300"
+            >
+              <UIcon
+                name="i-lucide-check"
+                class="h-3.5 w-3.5 shrink-0"
+              />
+              <span class="font-medium">
+                {{ filedIn(message.steps).length }} filed this turn:
+              </span>
+              <button
+                v-for="filed in filedIn(message.steps)"
+                :key="filed.proposal_id"
+                type="button"
+                class="cursor-pointer truncate underline decoration-current/40 underline-offset-2 hover:decoration-current"
+                :title="filed.title"
+                @click="openFiled(filed.proposal_id)"
+              >
+                {{ filed.title || filed.proposal_id }}
+              </button>
+            </div>
+
             <!-- Candidates it is offering rather than filing. Placed after
                  the reply, which is where the decision naturally falls. -->
             <ConsoleIntegratorSuggestionCard
@@ -476,7 +504,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
 import integratorApi, {
-  failureText, stepSuggestion, type BacklogItem, type ChatTurn,
+  failureText, filedIn, stepSuggestion, type BacklogItem, type ChatTurn,
   type IntegratorMessage, type IntegratorSession,
   type IntegratorStep, type Proposal, type SourceKind, type SourceSuggestion
 } from '~/services/integratorApi'
@@ -566,6 +594,13 @@ const openProposalId = ref<string | null>(null)
  */
 const openProposal = computed(() =>
   proposals.value.find(p => p.id === openProposalId.value) ?? null)
+
+/** Open a proposal this turn filed, by id, switching to the panel it is on. */
+function openFiled(proposalId: string) {
+  panel.value = 'proposals'
+  openProposalId.value = proposalId
+  detailOpen.value = true
+}
 
 function showProposal(proposal: Proposal) {
   openProposalId.value = proposal.id
