@@ -66,6 +66,24 @@
           >
           <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
+          <!--
+            Top right of the image. It used to sit under the ingredients,
+            which is a long way down a recipe and past the part most people
+            came to read — so the report nobody filed was mostly the report
+            nobody found. Up here it is reachable the moment something looks
+            wrong, and it is still visually quiet: the title and the meta row
+            own the bottom of the image, this owns a corner.
+          -->
+          <div
+            v-if="recipeId"
+            class="absolute right-3 top-3 sm:right-4 sm:top-4"
+          >
+            <ReportProblemButton
+              :recipe-id="recipeId"
+              on-image
+            />
+          </div>
+
           <!-- Title Overlay on Image -->
           <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8">
             <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-white mb-3 drop-shadow-lg">
@@ -118,9 +136,17 @@
           v-else
           class="mb-6"
         >
-          <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-zinc-900 dark:text-white mb-4">
-            {{ recipe.title }}
-          </h1>
+          <div class="mb-4 flex items-start justify-between gap-4">
+            <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-zinc-900 dark:text-white">
+              {{ recipe.title }}
+            </h1>
+            <!-- No image to sit on, so it keeps the same corner. -->
+            <ReportProblemButton
+              v-if="recipeId"
+              :recipe-id="recipeId"
+              class="shrink-0"
+            />
+          </div>
           <!-- Meta Info for no-image case -->
           <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-zinc-600 dark:text-zinc-400">
             <div
@@ -1641,17 +1667,6 @@
         </template>
       </UModal>
 
-      <!--
-        At the foot of the recipe, not beside the title: somebody reports a
-        problem after reading the thing, and a flag next to the heading invites
-        a reaction to the dish rather than a report of a fault in it.
-      -->
-      <div
-        v-if="recipe && recipeId"
-        class="mx-auto mt-8 flex max-w-5xl justify-end px-4 pb-8"
-      >
-        <ReportProblemButton :recipe-id="recipeId" />
-      </div>
     </main>
   </div>
 </template>

@@ -2046,6 +2046,7 @@
       "unavailable": "Translation is unavailable right now. The content below is in English.",
       "confirm": "Send to Google and translate",
       "cancel": "Cancel"
-    }
+    },
+    "cancel": "Cancel"
   }
 }

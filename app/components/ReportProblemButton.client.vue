@@ -1,13 +1,23 @@
 <template>
   <div>
+    <!--
+      Over a photograph the neutral ghost button is invisible, so on an image
+      it gets a translucent dark plate and white text — the same treatment the
+      meta chips on the hero already use, rather than a second visual language
+      in the same corner.
+    -->
     <UButton
       color="neutral"
-      variant="ghost"
+      :variant="onImage ? 'solid' : 'ghost'"
       size="xs"
       icon="i-lucide-flag"
+      :class="onImage
+        ? 'bg-black/35 text-white backdrop-blur-sm hover:bg-black/55 ring-1 ring-white/20'
+        : ''"
+      :aria-label="t('report.trigger')"
       @click="open = true"
     >
-      {{ t('report.trigger') || 'Report a problem' }}
+      <span :class="onImage ? 'hidden sm:inline' : ''">{{ t('report.trigger') }}</span>
     </UButton>
 
     <UModal v-model:open="open">
@@ -15,10 +25,10 @@
         <UCard>
           <template #header>
             <h3 class="text-base font-semibold text-gray-900 dark:text-white">
-              {{ t('report.title') || 'What is wrong with this recipe?' }}
+              {{ t('report.title') }}
             </h3>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              {{ t('report.subtitle') || 'A curator reads these. Tell us what you saw and we will fix it.' }}
+              {{ t('report.subtitle') }}
             </p>
           </template>
 
@@ -31,7 +41,7 @@
               class="mx-auto h-8 w-8 text-emerald-500"
             />
             <p class="mt-3 text-sm text-gray-700 dark:text-gray-200">
-              {{ t('report.thanks') || 'Thank you — a curator will look at this.' }}
+              {{ t('report.thanks') }}
             </p>
           </div>
 
@@ -41,14 +51,14 @@
           >
             <div>
               <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                {{ t('report.whatKind') || 'What kind of problem?' }}
+                {{ t('report.whatKind') }}
               </p>
               <!-- A choice of one, announced as such: each option says whether it
                    is the chosen one, and the group has a name. -->
               <div
                 class="grid gap-2 sm:grid-cols-2"
                 role="group"
-                :aria-label="t('report.whatKind') || 'What kind of problem?'"
+                :aria-label="t('report.whatKind')"
               >
                 <button
                   v-for="option in REASONS"
@@ -73,18 +83,18 @@
               </div>
             </div>
 
-            <UFormField :label="t('report.details') || 'Anything else? (optional)'">
+            <UFormField :label="t('report.details')">
               <UTextarea
                 v-model="comment"
                 :rows="3"
                 :maxlength="2000"
-                :placeholder="t('report.placeholder') || 'What did you expect, and what did you see?'"
+                :placeholder="t('report.placeholder')"
                 class="w-full"
               />
             </UFormField>
 
             <p class="text-xs text-gray-400 dark:text-gray-500">
-              {{ t('report.privacy') || 'Only what you write here is sent, along with which recipe it is about.' }}
+              {{ t('report.privacy') }}
             </p>
           </div>
 
@@ -98,7 +108,7 @@
                 variant="ghost"
                 @click="open = false"
               >
-                {{ t('common.cancel') || 'Cancel' }}
+                {{ t('common.cancel') }}
               </UButton>
               <UButton
                 color="primary"
@@ -106,7 +116,7 @@
                 :disabled="!reason"
                 @click="submit"
               >
-                {{ t('report.send') || 'Send report' }}
+                {{ t('report.send') }}
               </UButton>
             </div>
           </template>
@@ -134,10 +144,12 @@ import platformFeedbackApi from '~/services/platformFeedbackApi'
  * recipe, the triage states, the attention panel — instead of a parallel
  * channel that would need all of that built again.
  */
-const props = defineProps<{
+const props = withDefaults(defineProps<{
+  /** Sits on the hero image, so it needs to be legible over a photo. */
+  onImage?: boolean
   /** The recipe this is about. Sent as the feedback target. */
   recipeId: string
-}>()
+}>(), { onImage: false })
 
 const { t } = useI18n()
 
