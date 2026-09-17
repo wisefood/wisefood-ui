@@ -14,6 +14,14 @@ export function useFoodChat() {
   const activeSession = computed(() => store.activeSession)
   const messages = computed(() => store.sortedMessages)
   const mealPlans = computed(() => store.activeMealPlans)
+  /**
+   * The turn's own answer, including WHICH plan version it left current.
+   *
+   * The canvas selects by plan id from this — a turn can move the pointer
+   * ("go back to the first version") without creating a plan, and the list is
+   * ordered oldest-first, so position says nothing about what to show.
+   */
+  const lastResponse = computed(() => store.lastResponse)
   const weeklyMealPlans = computed(() => store.activeWeeklyMealPlans)
   const hasMealPlans = computed(() => store.hasMealPlans)
   const hasWeeklyMealPlans = computed(() => store.hasWeeklyMealPlans)
@@ -229,6 +237,7 @@ export function useFoodChat() {
     activeSession,
     messages,
     mealPlans,
+    lastResponse,
     weeklyMealPlans,
     hasMealPlans,
     hasWeeklyMealPlans,
