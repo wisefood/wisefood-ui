@@ -246,6 +246,8 @@ class IntegratorApiService {
     message: string,
     handlers: {
       onStep?: (step: IntegratorStep) => void
+      /** One fragment of the reply, as the model writes it. */
+      onText?: (delta: string) => void
       onDone?: (turn: ChatTurn) => void
       onError?: (detail: string) => void
     } = {}
@@ -276,7 +278,13 @@ class IntegratorApiService {
         for (const line of frame.split('\n')) {
           if (line.startsWith(':')) continue // heartbeat comment
           if (line.startsWith('event:')) event = line.slice(6).trim()
-          else if (line.startsWith('data:')) data.push(line.slice(5).trim())
+          // Only the one leading space the spec allows is stripped. Trimming
+          // the line would eat the spaces inside a streamed text fragment,
+          // and the reply would arrive with its words run together.
+          else if (line.startsWith('data:')) {
+            const rest = line.slice(5)
+            data.push(rest.startsWith(' ') ? rest.slice(1) : rest)
+          }
         }
         if (!event || !data.length) continue
 
@@ -288,6 +296,7 @@ class IntegratorApiService {
         }
 
         if (event === 'step') handlers.onStep?.(payload as IntegratorStep)
+        else if (event === 'text') handlers.onText?.((payload as { delta: string }).delta)
         else if (event === 'done') handlers.onDone?.(payload as ChatTurn)
         else if (event === 'error') {
           handlers.onError?.((payload as { detail?: string }).detail

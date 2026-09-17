@@ -1,16 +1,13 @@
 <!--
   One candidate source, and the decision a curator has to make about it.
+  This is the detail behind a row in the table — opened, not always on.
 
   The licence is the top line rather than a detail, because it is the thing
   that decides whether this can be used at all — and it is shown with the
   evidence behind it, so approving is reading rather than trusting.
 -->
 <template>
-  <UCard
-    :ui="{ body: 'p-4' }"
-    class="border"
-    :class="borderTone"
-  >
+  <div>
     <div class="flex items-start justify-between gap-3">
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-2">
@@ -24,9 +21,9 @@
           <UBadge
             size="sm"
             variant="soft"
-            :color="statusTone"
+            :color="tone"
           >
-            {{ proposal.status }}
+            {{ statusLabel }}
           </UBadge>
           <span
             v-if="proposal.country"
@@ -194,20 +191,20 @@
     <!-- Approved: the decision is made, and this is where it gets carried
          out. Shown on the card rather than on a page of its own, because
          what was approved and what the integration did are the same story. -->
-    <template
+    <div
       v-if="proposal.status === 'approved' || proposal.status === 'imported'
-        || proposal.status === 'failed'"
-      #footer
+        || proposal.status === 'failed' || proposal.status === 'running'"
+      class="mt-4 border-t border-gray-100 pt-4 dark:border-zinc-800"
     >
       <ConsoleIntegratorRunPanel
         :proposal="proposal"
         @finished="$emit('integrated', proposal)"
       />
-    </template>
+    </div>
 
-    <template
+    <div
       v-else-if="actionable"
-      #footer
+      class="mt-4 border-t border-gray-100 pt-4 dark:border-zinc-800"
     >
       <div class="flex flex-wrap items-center justify-end gap-2">
         <UButton
@@ -230,13 +227,16 @@
           Approve
         </UButton>
       </div>
-    </template>
-  </UCard>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { Proposal } from '~/services/integratorApi'
+import {
+  KIND_LABELS, LICENCE_STATE, STATUS_LABELS, licenceState, stageOf, statusTone
+} from '~/utils/integratorSources'
 
 const props = withDefaults(defineProps<{
   proposal: Proposal
@@ -272,37 +272,15 @@ const breakdown = computed<ScoreRow[]>(() => {
   return ranking?.breakdown ?? []
 })
 
-const KIND_LABELS: Record<string, string> = {
-  guide: 'Dietary guide',
-  article: 'Article',
-  textbook: 'Textbook',
-  fctable: 'Food composition table',
-  rcollection: 'Recipe collection'
-}
+const kindLabel = computed(() =>
+  KIND_LABELS[props.proposal.kind] || props.proposal.kind)
 
-/*
- * Which licences allow the content itself to be brought in. The server is the
- * authority — this only decides how the card reads, so a curator is not
- * surprised by a refusal after clicking approve.
- */
-const CONTENT_OK = new Set([
-  'CC-BY-4.0', 'CC-BY-SA-4.0', 'CCBY', 'CCBYSA', 'CCBYNC', 'CCBYNCSA',
-  'CC0', 'public-domain', 'MIT', 'Apache-2.0', 'GPL-3.0'
-])
+const actionable = computed(() => stageOf(props.proposal) === 'review')
 
-const kindLabel = computed(() => KIND_LABELS[props.proposal.kind] || props.proposal.kind)
+const statusLabel = computed(() =>
+  STATUS_LABELS[props.proposal.status] || props.proposal.status)
 
-const actionable = computed(() =>
-  props.proposal.status === 'proposed' || props.proposal.status === 'researching')
-
-const statusTone = computed(() => {
-  switch (props.proposal.status) {
-    case 'approved': case 'imported': return 'success' as const
-    case 'rejected': case 'failed': return 'error' as const
-    case 'running': return 'info' as const
-    default: return 'neutral' as const
-  }
-})
+const tone = computed(() => statusTone(props.proposal.status))
 
 const rankLabel = computed(() => {
   if (props.proposal.expert_rank != null) return `#${props.proposal.expert_rank}`
@@ -310,31 +288,18 @@ const rankLabel = computed(() => {
   return ''
 })
 
-const licenceState = computed(() => {
-  const licence = props.proposal.licence
-  if (!licence) return 'unknown'
-  return CONTENT_OK.has(licence) ? 'permitted' : 'restricted'
-})
+const state = computed(() => licenceState(props.proposal.licence))
 
-const licenceLabel = computed(() => {
-  switch (licenceState.value) {
-    case 'permitted': return `${props.proposal.licence} — content may be brought in`
-    case 'restricted': return `${props.proposal.licence} — pointer only, content may not be copied`
-    default: return 'Licence undetermined'
-  }
-})
+const licenceLabel = computed(() =>
+  LICENCE_STATE[state.value].long(props.proposal.licence))
 
-const licenceIcon = computed(() => ({
-  permitted: 'i-lucide-check-circle-2',
-  restricted: 'i-lucide-alert-triangle',
-  unknown: 'i-lucide-help-circle'
-}[licenceState.value]))
+const licenceIcon = computed(() => LICENCE_STATE[state.value].icon)
 
 const licenceTone = computed(() => ({
   permitted: 'bg-green-50 text-green-900 dark:bg-green-500/10 dark:text-green-200',
   restricted: 'bg-amber-50 text-amber-900 dark:bg-amber-500/10 dark:text-amber-200',
   unknown: 'bg-gray-50 text-gray-700 dark:bg-white/5 dark:text-gray-300'
-}[licenceState.value]))
+}[state.value]))
 
 /** "Approved by X on <date>." Built here so the template stays one line. */
 const approvalLine = computed(() => {
@@ -344,10 +309,4 @@ const approvalLine = computed(() => {
     : ''
   return `Approved by ${who}${when}.`
 })
-
-const borderTone = computed(() => ({
-  permitted: 'border-gray-200/70 dark:border-white/10',
-  restricted: 'border-amber-200 dark:border-amber-500/30',
-  unknown: 'border-gray-200/70 dark:border-white/10'
-}[licenceState.value]))
 </script>

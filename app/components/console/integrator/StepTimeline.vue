@@ -166,6 +166,7 @@ const KIND_LABELS: Record<string, string> = {
   read: 'read',
   licence: 'licence',
   catalog: 'catalog',
+  propose: 'proposed',
   write: 'write',
   stop: 'stopped',
   tool: 'tool'

@@ -125,45 +125,34 @@
               class="w-full"
             />
             <div
-              class="max-w-[85%] min-w-0 rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
+              class="min-w-0 rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
               :class="message.role === 'user'
-                ? 'bg-brand-600 text-white'
-                : 'bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-gray-100'"
+                ? 'max-w-[85%] bg-brand-600 text-white'
+                : 'w-full bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-gray-100'"
             >
+              <!-- The assistant writes markdown — tables of candidate
+                   sources, headings, links — so it is rendered as markdown.
+                   Showing it raw showed a curator pipes and asterisks where a
+                   table of eight sources was meant.
+
+                   Sanitised before it gets here: the text comes from a model,
+                   and `renderMarkdown` runs it through DOMPurify, which is the
+                   same treatment FoodChat gives the same class of content.
+                   What somebody typed is never rendered as markup — only
+                   assistant turns take this branch. -->
+              <div
+                v-if="message.role === 'assistant'"
+                class="integrator-prose [overflow-wrap:anywhere]"
+                v-html="renderMarkdown(message.content || '')"
+              />
               <!-- `anywhere` rather than `break-words`: a pasted URL has no
                    break opportunity at all, and is exactly what people paste
                    here. -->
-              <!-- The assistant cites sources by URL constantly; leaving them
-                   as text means copying them out by hand to check one, which
-                   is the action this whole surface is for.
-
-                   Rendered as segments rather than with `v-html`: this text
-                   comes from a model, and the safest way to put a link in it
-                   is to never build markup from it at all. User messages are
-                   one plain segment — nothing somebody typed becomes
-                   clickable. -->
-              <p class="whitespace-pre-wrap [overflow-wrap:anywhere]">
-                <template
-                  v-for="(part, i) in segments(message)"
-                  :key="i"
-                >
-                  <a
-                    v-if="part.href"
-                    :href="part.href"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="underline decoration-current/40 underline-offset-2 hover:decoration-current"
-                  >{{ part.text }}</a>
-                  <!-- `v-text`, not interpolation: the linter wants a line
-                       break around element content, and inside
-                       `whitespace-pre-wrap` that break becomes a visible
-                       space in the reply. -->
-                  <span
-                    v-else
-                    v-text="part.text"
-                  />
-                </template>
-              </p>
+              <p
+                v-else
+                class="whitespace-pre-wrap [overflow-wrap:anywhere]"
+                v-text="message.content"
+              />
             </div>
           </div>
 
@@ -176,11 +165,26 @@
               :steps="liveSteps"
               running
             />
+            <!-- The answer as it is written. Plain text while it streams —
+                 links are resolved once the turn lands, because a URL being
+                 typed out is not yet a URL. -->
+            <div
+              v-if="liveReply"
+              class="max-w-[85%] min-w-0 rounded-2xl bg-gray-100 px-4 py-2.5 text-sm leading-relaxed text-gray-800 dark:bg-zinc-800 dark:text-gray-100"
+            >
+              <p
+                class="whitespace-pre-wrap [overflow-wrap:anywhere]"
+                v-text="liveReply"
+              />
+            </div>
             <!-- Names what it is doing right now rather than saying it is
                  busy. "Searching the web · Bulgaria dietary guidelines" is a
                  thing somebody can judge; a spinner is a thing they wait
                  behind. -->
-            <div class="flex items-start gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <div
+              v-if="!liveReply"
+              class="flex items-start gap-2 text-sm text-gray-500 dark:text-gray-400"
+            >
               <UIcon
                 name="i-lucide-loader-2"
                 class="mt-0.5 h-4 w-4 shrink-0 animate-spin"
@@ -274,35 +278,19 @@
           </div>
         </template>
 
-        <!-- Proposals: a table, because a curator compares them. Cards made
-             every row as tall as its longest field and put the decision below
-             the fold. -->
         <div
           v-show="panel === 'proposals'"
           class="max-h-[min(62vh,44rem)] overflow-y-auto"
         >
-          <p
-            v-if="!proposals.length"
-            class="px-5 py-10 text-center text-sm text-gray-400 dark:text-gray-500"
-          >
-            Nothing proposed yet.
-          </p>
-          <div
-            v-else
-            class="space-y-3 p-4"
-          >
-            <ConsoleIntegratorProposalCard
-              v-for="proposal in proposals"
-              :key="proposal.id"
-              :proposal="proposal"
-              :busy="busyProposal === proposal.id ? busyAction : null"
-              :reorderable="proposals.length > 1"
-              @approve="confirmApprove"
-              @reject="rejectProposal"
-              @move="moveProposal"
-              @integrated="loadProposals"
-            />
-          </div>
+          <ConsoleIntegratorProposalTable
+            :proposals="proposals"
+            :selected-id="openProposal?.id ?? null"
+            :busy-id="busyProposal"
+            :busy-action="busyAction"
+            @open="showProposal"
+            @approve="confirmApprove"
+            @reject="rejectProposal"
+          />
         </div>
 
         <!-- Queue: a table. Country and language are columns, so the eye can
@@ -388,6 +376,31 @@
       </UCard>
     </div>
 
+    <!--
+      The detail behind a row. A drawer rather than a page: what a curator is
+      reading here is the evidence for a decision they make in the same
+      motion, and a route change would lose the conversation that produced it.
+    -->
+    <USlideover
+      v-model:open="detailOpen"
+      :title="openProposal?.title || 'Proposal'"
+      :description="openProposal ? KIND_LABELS[openProposal.kind] : ''"
+      :ui="{ content: 'max-w-2xl' }"
+    >
+      <template #body>
+        <ConsoleIntegratorProposalCard
+          v-if="openProposal"
+          :proposal="openProposal"
+          :busy="busyProposal === openProposal.id ? busyAction : null"
+          :reorderable="proposals.length > 1"
+          @approve="confirmApprove"
+          @reject="rejectProposal"
+          @move="moveProposal"
+          @integrated="loadProposals"
+        />
+      </template>
+    </USlideover>
+
     <!-- Approving an undetermined licence needs a reason, and the server
          refuses without one. Asking here rather than showing that refusal. -->
     <UModal
@@ -457,6 +470,8 @@ import integratorApi, {
   type IntegratorStep, type Proposal, type SourceKind
 } from '~/services/integratorApi'
 import { assetBreadcrumb, consoleAssetSections } from '~/utils/consoleBreadcrumbs'
+import { KIND_LABELS, stageOf } from '~/utils/integratorSources'
+import { renderMarkdown } from '~/utils/markdown'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Source Integrator · Console' })
@@ -495,6 +510,9 @@ const messages = ref<IntegratorMessage[]>([])
 /* Steps from the turn in flight. The timeline for a finished turn rides
    its assistant message; this is only for while it is running. */
 const liveSteps = ref<IntegratorStep[]>([])
+/* The reply as it is being written, replaced by the server's copy when the
+   turn lands. */
+const liveReply = ref('')
 const draft = ref('')
 const thinking = ref(false)
 const lastRun = ref('')
@@ -504,8 +522,16 @@ const proposals = ref<Proposal[]>([])
 const loadingProposals = ref(false)
 const panel = ref<'proposals' | 'queue' | 'activity'>('proposals')
 
+/*
+ * The proposal count is how many need a decision, not how many rows exist.
+ * A badge that keeps counting things already dealt with stops meaning
+ * anything, and this one is the reason to look at the tab at all.
+ */
+const awaitingReview = computed(() =>
+  proposals.value.filter(p => stageOf(p) === 'review').length)
+
 const TABS = computed(() => [
-  { value: 'proposals' as const, label: 'Proposals', count: proposals.value.length },
+  { value: 'proposals' as const, label: 'Proposals', count: awaitingReview.value },
   { value: 'queue' as const, label: 'Queue', count: backlogTotal.value },
   { value: 'activity' as const, label: 'Activity', count: 0 }
 ])
@@ -517,6 +543,23 @@ function refreshPanel() {
 const backlog = ref<BacklogItem[]>([])
 const backlogTotal = ref(0)
 const backlogKind = ref<SourceKind | ''>('')
+
+const detailOpen = ref(false)
+const openProposalId = ref<string | null>(null)
+
+/*
+ * Read through the list rather than held as its own copy, so a row that
+ * changes — a run finishing, a status moving on — updates the open drawer
+ * too. A snapshot here would show a curator the proposal as it was when
+ * they clicked it.
+ */
+const openProposal = computed(() =>
+  proposals.value.find(p => p.id === openProposalId.value) ?? null)
+
+function showProposal(proposal: Proposal) {
+  openProposalId.value = proposal.id
+  detailOpen.value = true
+}
 
 const approving = ref(false)
 const pendingProposal = ref<Proposal | null>(null)
@@ -556,34 +599,6 @@ const liveDetail = computed(() => {
   return running?.detail ?? ''
 })
 
-/**
- * Split a reply into plain text and links.
- *
- * No HTML is built from model output — the template renders each segment as
- * text or as an anchor, so there is nothing to escape and nothing to get
- * wrong. Only assistant messages are scanned.
- */
-function segments(message: IntegratorMessage): Array<{ text: string, href?: string }> {
-  const text = message.content ?? ''
-  if (message.role !== 'assistant') return [{ text }]
-
-  const out: Array<{ text: string, href?: string }> = []
-  const pattern = /https?:\/\/[^\s<]+/g
-  let cursor = 0
-  for (const match of text.matchAll(pattern)) {
-    const at = match.index ?? 0
-    if (at > cursor) out.push({ text: text.slice(cursor, at) })
-    // Trailing punctuation belongs to the sentence, not the address.
-    const raw = match[0]
-    const href = raw.replace(/[.,;:)\]]+$/, '')
-    out.push({ text: href, href })
-    if (href.length < raw.length) out.push({ text: raw.slice(href.length) })
-    cursor = at + raw.length
-  }
-  if (cursor < text.length) out.push({ text: text.slice(cursor) })
-  return out.length ? out : [{ text }]
-}
-
 const needsReason = computed(() => !pendingProposal.value?.licence)
 
 async function scrollDown() {
@@ -598,6 +613,7 @@ async function startSession() {
     sessionId.value = session.id
     messages.value = []
     liveSteps.value = []
+    liveReply.value = ''
     lastRun.value = ''
   } catch (error) {
     toast.add({ title: failureText(error, 'Could not start a conversation'), color: 'error' })
@@ -608,6 +624,7 @@ async function openSession(id: string) {
   sessionId.value = id
   messages.value = await integratorApi.history(id)
   liveSteps.value = []
+  liveReply.value = ''
   await loadProposals()
   await scrollDown()
 }
@@ -651,6 +668,10 @@ async function send() {
           : liveSteps.value.map((s, i) => (i === at ? step : s))
         void scrollDown()
       },
+      onText: (delta) => {
+        liveReply.value += delta
+        void scrollDown()
+      },
       onDone: (finished) => { outcome.turn = finished },
       onError: (detail) => { outcome.failure = detail }
     })
@@ -660,10 +681,15 @@ async function send() {
 
     messages.value = await integratorApi.history(sessionId.value)
     liveSteps.value = []
+    liveReply.value = ''
+    const before = proposals.value.length
     lastRun.value = turn.stop_reason === 'completed'
       ? `${turn.steps} step${turn.steps === 1 ? '' : 's'} · ${turn.tokens.toLocaleString()} tokens · ${turn.model}`
       : `Stopped: ${turn.stop_reason}`
     await loadProposals()
+    // A turn that filed something says so by showing it. Leaving the panel on
+    // whichever tab it was on is how somebody concludes nothing was filed.
+    if (proposals.value.length > before) panel.value = 'proposals'
     if (!sessions.value.find(s => s.id === sessionId.value)?.title) {
       sessions.value = await integratorApi.listSessions()
     }
@@ -671,6 +697,7 @@ async function send() {
     toast.add({ title: failureText(error, 'The assistant could not answer'), color: 'error' })
   } finally {
     thinking.value = false
+    liveReply.value = ''
     await scrollDown()
   }
 }
@@ -774,3 +801,106 @@ onMounted(async () => {
   await loadBacklog()
 })
 </script>
+
+<!--
+  Styling for the rendered markdown. Scoped styles do not reach `v-html`
+  output, which carries no scope attribute, so these are deliberately global
+  and namespaced under one class instead.
+-->
+<style>
+.integrator-prose > :first-child { margin-top: 0; }
+.integrator-prose > :last-child { margin-bottom: 0; }
+
+.integrator-prose p,
+.integrator-prose ul,
+.integrator-prose ol { margin: 0.5rem 0; }
+
+.integrator-prose ul { list-style: disc; padding-left: 1.15rem; }
+.integrator-prose ol { list-style: decimal; padding-left: 1.35rem; }
+.integrator-prose li { margin: 0.15rem 0; }
+
+.integrator-prose h1,
+.integrator-prose h2,
+.integrator-prose h3,
+.integrator-prose h4 {
+  margin: 0.9rem 0 0.35rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.integrator-prose h1 { font-size: 1rem; }
+.integrator-prose h2 { font-size: 0.9375rem; }
+.integrator-prose h3,
+.integrator-prose h4 { font-size: 0.875rem; }
+
+.integrator-prose a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+}
+.integrator-prose a:hover { text-decoration-color: currentColor; }
+
+.integrator-prose code {
+  border-radius: 0.25rem;
+  background: rgb(0 0 0 / 6%);
+  padding: 0.05rem 0.3rem;
+  font-size: 0.8125em;
+}
+.integrator-prose pre {
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  background: rgb(0 0 0 / 6%);
+  padding: 0.6rem 0.75rem;
+  margin: 0.5rem 0;
+}
+.integrator-prose pre code { background: none; padding: 0; }
+
+/*
+  The assistant answers a "what exists for this country" question with a
+  table, so the table is the answer and has to read as one. It scrolls in its
+  own container: a comparison of eight sources is wider than a chat column,
+  and the alternative to scrolling here is the page scrolling sideways.
+*/
+.integrator-prose .table-scroll {
+  overflow-x: auto;
+  margin: 0.6rem 0;
+}
+.integrator-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  /* Long URLs in a cell would otherwise set the column's width. */
+  table-layout: auto;
+}
+.integrator-prose th,
+.integrator-prose td {
+  border: 1px solid rgb(0 0 0 / 10%);
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+.integrator-prose th {
+  background: rgb(0 0 0 / 4%);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.integrator-prose blockquote {
+  border-left: 2px solid rgb(0 0 0 / 15%);
+  padding-left: 0.65rem;
+  margin: 0.5rem 0;
+  opacity: 0.85;
+}
+.integrator-prose hr {
+  border: 0;
+  border-top: 1px solid rgb(0 0 0 / 10%);
+  margin: 0.75rem 0;
+}
+
+.dark .integrator-prose code,
+.dark .integrator-prose pre,
+.dark .integrator-prose th { background: rgb(255 255 255 / 8%); }
+.dark .integrator-prose th,
+.dark .integrator-prose td,
+.dark .integrator-prose hr { border-color: rgb(255 255 255 / 12%); }
+.dark .integrator-prose blockquote { border-left-color: rgb(255 255 255 / 20%); }
+</style>
