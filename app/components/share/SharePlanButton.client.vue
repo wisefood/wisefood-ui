@@ -144,7 +144,7 @@ import sharingApi, { failureText } from '~/services/sharingApi'
 const props = withDefaults(defineProps<{
   /** Which plan, and which table it lives in. */
   planId: string
-  kind?: 'meal_plan' | 'saved_meal_plan' | 'weekly_meal_plan'
+  kind?: 'meal_plan' | 'saved_meal_plan' | 'daily_meal_plan' | 'weekly_meal_plan'
   /** Required when sharing a weekly plan: it lives in FoodChat and is
    *  reachable only as a given member's current plan. */
   memberId?: string

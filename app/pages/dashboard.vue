@@ -725,13 +725,15 @@ const todayMealPlan = computed<MealPlan | null>(() => {
  * was built from one, so the kind has to match or the server looks in the
  * wrong place.
  */
-const shareKind = computed<'meal_plan' | 'weekly_meal_plan'>(() => {
+const shareKind = computed<'daily_meal_plan' | 'weekly_meal_plan'>(() => {
   const memberId = currentMemberId.value
   const plans = memberId ? memberCurrentPlansById.value[memberId] : null
+  // Never `meal_plan`: that is the gateway's own table, and nothing shown
+  // here comes from it. Every plan on this card is FoodChat's.
   return plans?.plan_type === 'weekly' && plans.weekly_meal_plan
     && plans.weekly_meal_plan.id === todayMealPlan.value?.id
     ? 'weekly_meal_plan'
-    : 'meal_plan'
+    : 'daily_meal_plan'
 })
 
 const membersByMealType = computed<Record<'breakfast' | 'lunch' | 'dinner', HouseholdMember[]>>(() => {

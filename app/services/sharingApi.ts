@@ -92,7 +92,7 @@ class SharingApiService {
   }
 
   async createShare(body: {
-    kind: 'meal_plan' | 'saved_meal_plan' | 'weekly_meal_plan'
+    kind: 'meal_plan' | 'saved_meal_plan' | 'daily_meal_plan' | 'weekly_meal_plan'
     id: string
     /** Required for a weekly plan: it lives in FoodChat and is reachable
      *  only as a given member's current plan. */

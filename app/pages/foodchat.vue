@@ -866,11 +866,16 @@
                     <!-- Sharing belongs here rather than only on the
                          dashboard: this is where a plan is made and refined,
                          so it is where somebody decides it is worth sending. -->
+                    <!-- The plan's owner is the session's member. The store's
+                         selected member is a different thing and can be null
+                         here, which is what kept this button from ever
+                         rendering. Both FoodChat kinds are FoodChat-backed:
+                         these plans do not exist in the gateway's own table. -->
                     <ShareSharePlanButton
-                      v-if="displayedPlanId && currentMemberId"
+                      v-if="displayedPlanId && activeSession?.member_id"
                       :plan-id="displayedPlanId"
-                      :kind="canvasMode === 'weekly' ? 'weekly_meal_plan' : 'meal_plan'"
-                      :member-id="currentMemberId"
+                      :kind="canvasMode === 'weekly' ? 'weekly_meal_plan' : 'daily_meal_plan'"
+                      :member-id="activeSession.member_id"
                       :title="canvasMode === 'weekly'
                         ? t('foodChatHome.planHeader.weeklyPlan')
                         : t('foodChatHome.planHeader.dailyPlan')"
@@ -1715,6 +1720,7 @@ const {
   activeSession,
   messages,
   mealPlans,
+  lastResponse,
   weeklyMealPlans,
   hasMealPlans,
   hasWeeklyMealPlans,
@@ -3384,6 +3390,37 @@ async function openFromQuery() {
     selectedWeeklyPlanIdx.value = weeklyIdx
   }
 }
+
+/**
+ * The canvas follows the turn, by plan ID rather than by position.
+ *
+ * A turn can change WHICH version is current without creating one: "go back to
+ * the first version" moves the canvas pointer, and "put the snack before lunch"
+ * rearranges the plan. The list is ordered oldest-first, so index 0 is not "the
+ * one to show" — after a restore the member was left looking at the newest
+ * version while the backend had already moved them to v1.
+ *
+ * Watches the LIST, not the response: `ingestTurnResponse` records the response
+ * first and refreshes the plans after, so a watcher on the response alone fires
+ * before the plan it names exists here.
+ */
+watch(mealPlans, () => {
+  const planId = lastResponse.value?.meal_plan?.id
+  if (!planId) return
+  const idx = mealPlans.value.findIndex(plan => plan.id === planId)
+  if (idx !== -1) {
+    selectedDailyPlanIdx.value = idx
+  }
+})
+
+watch(weeklyMealPlans, () => {
+  const planId = lastResponse.value?.weekly_meal_plan?.id
+  if (!planId) return
+  const idx = weeklyMealPlans.value.findIndex(plan => plan.id === planId)
+  if (idx !== -1) {
+    selectedWeeklyPlanIdx.value = idx
+  }
+})
 
 // ── Watch messages to auto-scroll ──
 watch(messages, () => scrollToBottom(), { deep: true, flush: 'post' })
