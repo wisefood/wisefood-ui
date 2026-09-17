@@ -11,9 +11,12 @@
   everyone's. That is not a display decision and is not re-implemented here.
 -->
 <template>
-  <UCard
-    class="border border-gray-200/70 dark:border-white/10"
-    :ui="{ body: 'p-0', header: 'p-4 sm:p-5' }"
+  <component
+    :is="embedded ? 'div' : UCard"
+    v-bind="embedded ? {} : {
+      class: 'border border-gray-200/70 dark:border-white/10',
+      ui: { body: 'p-0', header: 'p-4 sm:p-5' }
+    }"
   >
     <template #header>
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -130,17 +133,22 @@
         >{{ JSON.stringify(call.arguments ?? {}, null, 2) }}</pre>
       </li>
     </ul>
-  </UCard>
+  </component>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, resolveComponent, watch } from 'vue'
 import integratorApi, { type ToolCall } from '~/services/integratorApi'
 
-const props = defineProps<{
+const UCard = resolveComponent('UCard')
+
+const props = withDefaults(defineProps<{
   sessionId?: string | null
   proposalId?: string | null
-}>()
+  /** Inside the tabbed panel there is already a card and a header; a second
+   *  set of both is chrome around chrome. */
+  embedded?: boolean
+}>(), { sessionId: null, proposalId: null, embedded: false })
 
 const calls = ref<ToolCall[]>([])
 const loading = ref(false)

@@ -8,7 +8,7 @@
   with a record, not a sentence typed at a model.
 -->
 <template>
-  <UPage class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+  <UPage class="mx-auto max-w-[105rem] px-4 py-8 sm:px-6 lg:px-8">
     <UBreadcrumb
       :items="breadcrumbs"
       class="mb-4"
@@ -37,10 +37,10 @@
       a long URN in a step detail — makes the track wider than its share and
       the conversation runs underneath the cards beside it.
     -->
-    <div class="grid items-start gap-6 lg:grid-cols-3">
+    <div class="grid items-start gap-6 lg:grid-cols-5">
       <!-- The conversation -->
       <UCard
-        class="flex min-w-0 flex-col border border-gray-200/70 lg:col-span-2 dark:border-white/10"
+        class="flex min-w-0 flex-col border border-gray-200/70 lg:col-span-3 dark:border-white/10"
         :ui="{ body: 'p-0' }"
       >
         <template #header>
@@ -230,37 +230,66 @@
         </template>
       </UCard>
 
-      <!-- Proposals and the queue -->
-      <div class="min-w-0 space-y-6">
-        <UCard
-          class="border border-gray-200/70 dark:border-white/10"
-          :ui="{ body: 'p-4' }"
-        >
-          <template #header>
-            <div class="flex items-center justify-between gap-2">
-              <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
-                Proposals
-              </h2>
-              <UButton
-                color="neutral"
-                variant="ghost"
-                size="xs"
-                icon="i-lucide-refresh-cw"
-                :loading="loadingProposals"
-                @click="loadProposals"
-              />
+      <!--
+        One panel, three tables, switched by a tab — not three cards stacked
+        down the page. Stacking meant the queue and the activity log were
+        below the fold on every screen, each with its own header eating
+        vertical space the tables needed, and each collapsing its own
+        subtitle. A tab costs one click and gives every table the full height
+        of the column.
+      -->
+      <UCard
+        class="min-w-0 border border-gray-200/70 lg:col-span-2 dark:border-white/10"
+        :ui="{ body: 'p-0', header: 'px-4 py-3 sm:px-5' }"
+      >
+        <template #header>
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex gap-1">
+              <button
+                v-for="tab in TABS"
+                :key="tab.value"
+                type="button"
+                class="rounded-lg px-2.5 py-1.5 text-xs font-medium transition"
+                :class="panel === tab.value
+                  ? 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-200'
+                  : 'text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-white/5'"
+                @click="panel = tab.value"
+              >
+                {{ tab.label }}
+                <span
+                  v-if="tab.count"
+                  class="ml-1 tabular-nums opacity-60"
+                >{{ tab.count }}</span>
+              </button>
             </div>
-          </template>
+            <UButton
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              icon="i-lucide-refresh-cw"
+              class="cursor-pointer"
+              :loading="loadingProposals"
+              @click="refreshPanel"
+            />
+          </div>
+        </template>
 
+        <!-- Proposals: a table, because a curator compares them. Cards made
+             every row as tall as its longest field and put the decision below
+             the fold. -->
+        <div
+          v-show="panel === 'proposals'"
+          class="max-h-[min(62vh,44rem)] overflow-y-auto"
+        >
           <p
             v-if="!proposals.length"
-            class="py-6 text-center text-sm text-gray-400 dark:text-gray-500"
+            class="px-5 py-10 text-center text-sm text-gray-400 dark:text-gray-500"
           >
             Nothing proposed yet.
           </p>
           <div
             v-else
-            class="max-h-[min(62vh,44rem)] space-y-3 overflow-y-auto pr-1"
+            class="space-y-3 p-4"
           >
             <ConsoleIntegratorProposalCard
               v-for="proposal in proposals"
@@ -274,27 +303,20 @@
               @integrated="loadProposals"
             />
           </div>
-        </UCard>
+        </div>
 
-        <UCard
-          class="border border-gray-200/70 dark:border-white/10"
-          :ui="{ body: 'p-4' }"
+        <!-- Queue: a table. Country and language are columns, so the eye can
+             run down them instead of reading each row as a sentence. -->
+        <div
+          v-show="panel === 'queue'"
+          class="max-h-[min(62vh,44rem)] overflow-y-auto"
         >
-          <template #header>
-            <div class="flex items-center justify-between gap-2">
-              <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
-                Queue
-              </h2>
-              <span class="text-xs text-gray-500 dark:text-gray-400">
-                {{ backlogTotal.toLocaleString() }} waiting
-              </span>
-            </div>
-          </template>
-          <div class="flex flex-wrap gap-1.5">
+          <div class="flex flex-wrap gap-1.5 border-b border-gray-100 px-4 py-3 dark:border-zinc-800">
             <UButton
               v-for="option in kindFilters"
               :key="option.value"
               size="xs"
+              class="cursor-pointer"
               :color="backlogKind === option.value ? 'primary' : 'neutral'"
               :variant="backlogKind === option.value ? 'soft' : 'ghost'"
               @click="setBacklogKind(option.value)"
@@ -302,34 +324,68 @@
               {{ option.label }}
             </UButton>
           </div>
-          <ul class="mt-3 divide-y divide-gray-100 dark:divide-zinc-800">
-            <li
-              v-for="item in backlog"
-              :key="item.id"
-              class="py-2"
-            >
-              <button
-                type="button"
-                class="w-full text-left"
-                @click="askAbout(item)"
+          <table class="w-full text-left text-xs">
+            <thead class="sticky top-0 bg-white/95 backdrop-blur dark:bg-zinc-900/95">
+              <tr class="border-b border-gray-100 text-[10px] uppercase tracking-wide text-gray-400 dark:border-zinc-800 dark:text-gray-500">
+                <th class="px-4 py-2 font-medium">
+                  Source
+                </th>
+                <th class="px-2 py-2 font-medium">
+                  Country
+                </th>
+                <th class="px-2 py-2 font-medium">
+                  Lang
+                </th>
+                <th class="px-4 py-2" />
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50 dark:divide-zinc-800/70">
+              <tr
+                v-for="item in backlog"
+                :key="item.id"
+                class="transition hover:bg-gray-50 dark:hover:bg-white/5"
               >
-                <p class="truncate text-xs font-medium text-gray-900 dark:text-white">
-                  {{ item.title }}
-                </p>
-                <p class="truncate text-[11px] text-gray-500 dark:text-gray-400">
-                  {{ [item.country, item.language].filter(Boolean).join(' · ') || item.kind }}
-                </p>
-              </button>
-            </li>
-          </ul>
-        </UCard>
+                <td class="max-w-0 px-4 py-2">
+                  <span
+                    class="block truncate font-medium text-gray-900 dark:text-white"
+                    :title="item.title"
+                  >{{ item.title }}</span>
+                </td>
+                <td class="whitespace-nowrap px-2 py-2 text-gray-500 dark:text-gray-400">
+                  {{ item.country || '—' }}
+                </td>
+                <td class="whitespace-nowrap px-2 py-2 text-gray-500 dark:text-gray-400">
+                  {{ item.language || '—' }}
+                </td>
+                <td class="px-4 py-2 text-right">
+                  <UButton
+                    color="neutral"
+                    variant="ghost"
+                    size="xs"
+                    icon="i-lucide-search"
+                    class="cursor-pointer"
+                    :title="`Ask about ${item.title}`"
+                    @click="askAbout(item)"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p
+            v-if="!backlog.length"
+            class="px-5 py-10 text-center text-sm text-gray-400 dark:text-gray-500"
+          >
+            Nothing in the queue.
+          </p>
+        </div>
 
-        <!-- What the agent actually ran, scoped by the server to this
-             curator unless they are an admin. Placed last because it is the
-             surface people reach for when something looks wrong, not when
-             they are working normally. -->
-        <ConsoleIntegratorAuditTrail :session-id="sessionId" />
-      </div>
+        <div v-show="panel === 'activity'">
+          <ConsoleIntegratorAuditTrail
+            :session-id="sessionId"
+            embedded
+          />
+        </div>
+      </UCard>
     </div>
 
     <!-- Approving an undetermined licence needs a reason, and the server
@@ -446,6 +502,18 @@ const transcript = ref<HTMLElement | null>(null)
 
 const proposals = ref<Proposal[]>([])
 const loadingProposals = ref(false)
+const panel = ref<'proposals' | 'queue' | 'activity'>('proposals')
+
+const TABS = computed(() => [
+  { value: 'proposals' as const, label: 'Proposals', count: proposals.value.length },
+  { value: 'queue' as const, label: 'Queue', count: backlogTotal.value },
+  { value: 'activity' as const, label: 'Activity', count: 0 }
+])
+
+function refreshPanel() {
+  if (panel.value === 'queue') return loadBacklog()
+  return loadProposals()
+}
 const backlog = ref<BacklogItem[]>([])
 const backlogTotal = ref(0)
 const backlogKind = ref<SourceKind | ''>('')
