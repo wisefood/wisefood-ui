@@ -1856,6 +1856,14 @@
         "herbs": "Fűszerek",
         "yours": "A tieid"
       }
+    },
+    "planScore": {
+      "title": "A terved, pontozva",
+      "read": "{meals} étkezés · {days} nap",
+      "notMeasured": "nincs mérve",
+      "howRead": "Így olvastuk ({n})",
+      "approximate": "{n} közelítő",
+      "unparsed": "{n} sort nem tudtunk értelmezni:"
     }
   },
   "a11y": {

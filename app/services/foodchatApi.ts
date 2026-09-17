@@ -152,6 +152,42 @@ export interface ComposeRequest {
   message?: string | null
 }
 
+/** One row of the score card. Every metric has this shape, so rows render
+ *  without the UI knowing metric names — which is how the backend designed it. */
+export interface PlanScoreMetric {
+  key: string
+  label: string
+  /** null = not measured, which is different from zero and shown differently. */
+  score?: number | null
+  max?: number | null
+  detail?: string | null
+}
+
+/** How one pasted dish was read. `state` is matched | approximate | unresolved. */
+export interface PlanScoreGroundingRow {
+  day?: number | null
+  slot: string
+  title_given: string
+  title_matched?: string | null
+  recipe_id?: string | null
+  state: string
+  ingredients_source: string
+}
+
+/** A plan the member WROTE, scored with FoodChat's own plan metrics. */
+export interface PlanScore {
+  plan_type: string
+  days_scored: number
+  meals_scored: number
+  metrics?: PlanScoreMetric[]
+  constraints_applied?: ConstraintApplied[]
+  grounding?: PlanScoreGroundingRow[]
+  /** Lines the parser could not read, verbatim — the member's own words. */
+  unparsed?: string[]
+  warnings?: string[]
+  context?: string | null
+}
+
 export interface ChatMessage {
   id?: number
   role: 'user' | 'assistant'
@@ -173,6 +209,8 @@ export interface ChatMessage {
   memory_suggestions?: MemorySuggestion[]
   changed_slots?: ChangedSlot[]
   plan_parameters?: PlanParameterCard
+  /** A pasted plan as the scorer read it (`intent === 'score_plan'`). */
+  plan_score?: PlanScore | null
 }
 
 /** The stored form of a turn's non-text output. */
@@ -549,6 +587,8 @@ export interface UnifiedChatResponse {
   memory_suggestions?: MemorySuggestion[]
   changed_slots?: ChangedSlot[]
   plan_parameters?: PlanParameterCard
+  /** A pasted plan as the scorer read it (`intent === 'score_plan'`). */
+  plan_score?: PlanScore | null
 }
 
 export interface ConversationResponse {

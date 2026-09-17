@@ -1856,6 +1856,14 @@
         "herbs": "Zelišča in začimbe",
         "yours": "Tvoje"
       }
+    },
+    "planScore": {
+      "title": "Tvoj načrt, ocenjen",
+      "read": "{meals} obrokov · {days} dni",
+      "notMeasured": "ni izmerjeno",
+      "howRead": "Kako smo ga prebrali ({n})",
+      "approximate": "{n} približnih",
+      "unparsed": "{n} vrstic nismo mogli prebrati:"
     }
   },
   "a11y": {

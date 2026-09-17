@@ -1878,6 +1878,14 @@
         "herbs": "Herbs & spices",
         "yours": "Yours"
       }
+    },
+    "planScore": {
+      "title": "Your plan, scored",
+      "read": "{meals} meals · {days} day(s)",
+      "notMeasured": "not measured",
+      "howRead": "How we read it ({n})",
+      "approximate": "{n} approximate",
+      "unparsed": "{n} line(s) we couldn't read:"
     }
   },
   "a11y": {

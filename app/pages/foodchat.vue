@@ -236,6 +236,15 @@
                   <div v-else class="fc-bubble fc-bubble-assistant group/msg">
                     <div class="fc-md text-gray-800 dark:text-gray-200" v-html="renderMarkdown(msg.content)" />
 
+                    <!-- A plan the member PASTED, as the scorer read and judged
+                         it. Persisted on the message like the attribution
+                         below, so it survives a reload — the prose was all the
+                         UI showed, and the card behind it was dropped. -->
+                    <FoodchatPlanScoreCard
+                      v-if="msg.plan_score"
+                      :score="msg.plan_score"
+                    />
+
                     <!-- FoodScholar attribution (persisted with the message; survives reloads) -->
                     <div v-if="msg.attribution?.source === 'foodscholar'" class="mt-2 pt-2 border-t border-gray-100 dark:border-zinc-700/50">
                       <div class="flex items-center gap-1.5 flex-wrap">
