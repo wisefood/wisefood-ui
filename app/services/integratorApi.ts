@@ -30,6 +30,27 @@ export interface IntegratorSession {
  * failure; `outcome` is what came of it. Keeping them apart is deliberate:
  * a failed search that has lost its query cannot be judged.
  */
+/** A candidate the assistant offered rather than filed. */
+export interface SourceSuggestion {
+  kind: SourceKind
+  title: string
+  source_url?: string
+  doi?: string
+  rationale?: string
+  country?: string
+  language?: string
+  population_group?: string
+  licence?: string | null
+  licence_evidence?: LicenceEvidence[]
+  plan?: string[]
+}
+
+/** The suggestion a step carries, if it is one. */
+export function stepSuggestion(step: IntegratorStep): SourceSuggestion | null {
+  const found = step.data?.suggestion as SourceSuggestion | undefined
+  return found?.title ? found : null
+}
+
 export interface IntegratorStep {
   id: string
   kind: 'plan' | 'search' | 'read' | 'licence' | 'catalog' | 'write' | 'stop' | 'tool'
@@ -332,6 +353,22 @@ class IntegratorApiService {
     } catch {
       return []
     }
+  }
+
+  /**
+   * File a suggestion the assistant offered, as the curator's own decision.
+   *
+   * The assistant can suggest without filing — that is the point of the
+   * button — so this is the only path by which one of those becomes a
+   * proposal, and it is a person pressing it.
+   */
+  async createProposal(
+    suggestion: SourceSuggestion, sessionId?: string
+  ): Promise<Proposal> {
+    const payload = await wisefoodRestApi.post<Record<string, unknown>, unknown>(
+      `${this.base}/proposals`,
+      { ...suggestion, session_id: sessionId ?? null })
+    return unwrap<Proposal>(payload, {} as Proposal)
   }
 
   /**

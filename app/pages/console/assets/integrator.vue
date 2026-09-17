@@ -154,6 +154,17 @@
                 v-text="message.content"
               />
             </div>
+
+            <!-- Candidates it is offering rather than filing. Placed after
+                 the reply, which is where the decision naturally falls. -->
+            <ConsoleIntegratorSuggestionCard
+              v-for="offer in suggestionsIn(message)"
+              :key="offer.key"
+              :suggestion="offer.suggestion"
+              :session-id="sessionId"
+              class="w-full"
+              @filed="loadProposals"
+            />
           </div>
 
           <div
@@ -465,9 +476,9 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
 import integratorApi, {
-  failureText, type BacklogItem, type ChatTurn, type IntegratorMessage,
-  type IntegratorSession,
-  type IntegratorStep, type Proposal, type SourceKind
+  failureText, stepSuggestion, type BacklogItem, type ChatTurn,
+  type IntegratorMessage, type IntegratorSession,
+  type IntegratorStep, type Proposal, type SourceKind, type SourceSuggestion
 } from '~/services/integratorApi'
 import { assetBreadcrumb, consoleAssetSections } from '~/utils/consoleBreadcrumbs'
 import { KIND_LABELS, stageOf } from '~/utils/integratorSources'
@@ -598,6 +609,22 @@ const liveDetail = computed(() => {
   const running = [...liveSteps.value].reverse().find(s => s.status === 'running')
   return running?.detail ?? ''
 })
+
+/**
+ * The candidates a turn offered, read off its steps.
+ *
+ * They ride on the step rather than in a table of their own: a suggestion is
+ * something that happened in this turn, it is already persisted and already
+ * streamed, and nothing about it needs to outlive the conversation until a
+ * person presses the button.
+ */
+function suggestionsIn(message: IntegratorMessage):
+Array<{ key: string, suggestion: SourceSuggestion }> {
+  return (message.steps ?? [])
+    .map(step => ({ key: `${message.seq}:${step.id}`, suggestion: stepSuggestion(step) }))
+    .filter((row): row is { key: string, suggestion: SourceSuggestion } =>
+      row.suggestion !== null)
+}
 
 const needsReason = computed(() => !pendingProposal.value?.licence)
 
