@@ -169,7 +169,8 @@ const PITCHES: Record<string, string> = {
   guide: 'Create the guide, attach the source PDF, extract its guidelines and import them — with every step recorded against this proposal.',
   article: 'Create the article from the publisher\'s own Crossref record, then enrich it — keywords, study type, glossary and Q&A.',
   textbook: 'Create the textbook, attach the PDF, and read it into retrievable passages that keep their chapter and section headings.',
-  fctable: 'Read the composition table to count its entries and nutrient columns, then register it with those figures measured rather than typed.'
+  fctable: 'Read the composition table to count its entries and nutrient columns, then register it with those figures measured rather than typed.',
+  rcollection: 'Read the site once without writing anything, to see how many recipes it really carries — then import them if that holds up.'
 }
 const pitch = computed(() =>
   PITCHES[props.proposal.kind]
@@ -188,6 +189,8 @@ const STAGES: Record<string, string> = {
   enriching: 'Enriching the article',
   profile: 'Reading the composition table',
   chunk: 'Reading the textbook into passages',
+  harvest: 'Starting the recipe import',
+  harvesting: 'Reading recipes from the site',
   done: 'Done'
 }
 
@@ -242,6 +245,17 @@ const landed = computed(() => {
   }
   if (result.passages != null) {
     rows.push({ label: 'Passages', value: String(result.passages) })
+  }
+  // The dry pass first: what it found is the number a curator judges the
+  // real import against, and it is the only number a preview produces.
+  if (result.dry_run_harvest?.found != null) {
+    rows.push({ label: 'Recipes found', value: String(result.dry_run_harvest.found) })
+  }
+  if (result.harvest?.written != null) {
+    rows.push({ label: 'Recipes imported', value: String(result.harvest.written) })
+  }
+  if (result.harvest?.skipped) {
+    rows.push({ label: 'Skipped', value: String(result.harvest.skipped) })
   }
   if (result.profile?.number_of_entries != null) {
     rows.push({ label: 'Entries', value: result.profile.number_of_entries.toLocaleString() })

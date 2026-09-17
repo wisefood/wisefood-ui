@@ -124,6 +124,11 @@ export interface IntegrationRun {
     guidelines_created?: number
     guidelines_skipped?: number
     preview?: { candidates?: number, would_create?: number, would_skip?: number }
+    /** A recipe collection is harvested rather than created and filled, so
+     *  its run reports what the site yielded instead of a catalog urn. The
+     *  dry pass always happens; `harvest` only on a real import. */
+    dry_run_harvest?: RecipeHarvest
+    harvest?: RecipeHarvest
   }
   wrote_anything: boolean
   dry_run: boolean
@@ -131,6 +136,16 @@ export interface IntegrationRun {
   created_at: string | null
   heartbeat_at: string | null
   finished_at: string | null
+}
+
+/** What one pass over a recipe site found and wrote. */
+export interface RecipeHarvest {
+  status?: string
+  found?: number
+  written?: number
+  skipped?: number
+  failed?: number
+  error?: string | null
 }
 
 /** A run that is still going, and worth polling. */
