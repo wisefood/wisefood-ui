@@ -880,7 +880,7 @@
                          here, which is what kept this button from ever
                          rendering. Both FoodChat kinds are FoodChat-backed:
                          these plans do not exist in the gateway's own table. -->
-                    <ShareSharePlanButton
+                    <SharePlanButton
                       v-if="displayedPlanId && activeSession?.member_id"
                       :plan-id="displayedPlanId"
                       :kind="canvasMode === 'weekly' ? 'weekly_meal_plan' : 'daily_meal_plan'"

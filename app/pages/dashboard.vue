@@ -180,7 +180,7 @@
             </div>
             <div class="flex items-center gap-2">
               <!-- Only once there is a plan: sharing nothing is not an offer. -->
-              <ShareSharePlanButton
+              <SharePlanButton
                 v-if="todayMealPlan?.id"
                 :plan-id="todayMealPlan.id"
                 :kind="shareKind"
