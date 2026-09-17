@@ -62,15 +62,32 @@
               <span class="text-xs font-medium text-gray-900 dark:text-white">
                 {{ step.title }}
               </span>
+              <!-- What kind of work this was, in a word. The icon alone says
+                   it to whoever already knows the vocabulary. -->
+              <span
+                class="rounded px-1 py-px text-[9px] font-medium uppercase tracking-wide"
+                :class="kindTone(step)"
+              >{{ KIND_LABELS[step.kind] || step.kind }}</span>
               <span
                 v-if="step.elapsed_ms != null && step.elapsed_ms > 0"
                 class="text-[10px] tabular-nums text-gray-400"
               >{{ elapsed(step.elapsed_ms) }}</span>
             </div>
             <!-- What was attempted. Kept even when the step failed: the query
-                 is the part that makes a failure checkable. -->
+                 is the part that makes a failure checkable. A URL is opened
+                 rather than read out — checking a source means visiting it,
+                 and copying it out of a truncated line is friction for the
+                 one action somebody actually wants here. -->
+            <a
+              v-if="step.detail && isUrl(step.detail)"
+              :href="step.detail"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="block truncate font-mono text-[11px] text-brand-600 hover:underline dark:text-brand-300"
+              :title="step.detail"
+            >{{ prettyUrl(step.detail) }}</a>
             <p
-              v-if="step.detail"
+              v-else-if="step.detail"
               class="truncate font-mono text-[11px] text-gray-500 dark:text-gray-400"
               :title="step.detail"
             >
@@ -142,6 +159,37 @@ function tone(step: IntegratorStep): string {
 }
 
 const elapsed = (ms: number) => (ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`)
+
+const KIND_LABELS: Record<string, string> = {
+  plan: 'plan',
+  search: 'web',
+  read: 'read',
+  licence: 'licence',
+  catalog: 'catalog',
+  write: 'write',
+  stop: 'stopped',
+  tool: 'tool'
+}
+
+function kindTone(step: IntegratorStep): string {
+  if (step.ok === false) return 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300'
+  if (step.kind === 'write') return 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300'
+  return 'bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-400'
+}
+
+const isUrl = (value: string) => /^https?:\/\//i.test(value.trim())
+
+/** Host plus a trimmed path: the whole URL is in the title attribute. */
+function prettyUrl(value: string): string {
+  try {
+    const url = new URL(value)
+    const path = decodeURIComponent(url.pathname)
+    const tail = path.length > 42 ? `…${path.slice(-40)}` : path
+    return `${url.hostname}${tail === '/' ? '' : tail}`
+  } catch {
+    return value
+  }
+}
 
 /** "Searched the web, read 2 pages and checked a licence" — the turn in a line. */
 const summary = computed(() => {

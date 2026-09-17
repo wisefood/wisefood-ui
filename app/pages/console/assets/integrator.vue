@@ -133,8 +133,36 @@
               <!-- `anywhere` rather than `break-words`: a pasted URL has no
                    break opportunity at all, and is exactly what people paste
                    here. -->
+              <!-- The assistant cites sources by URL constantly; leaving them
+                   as text means copying them out by hand to check one, which
+                   is the action this whole surface is for.
+
+                   Rendered as segments rather than with `v-html`: this text
+                   comes from a model, and the safest way to put a link in it
+                   is to never build markup from it at all. User messages are
+                   one plain segment — nothing somebody typed becomes
+                   clickable. -->
               <p class="whitespace-pre-wrap [overflow-wrap:anywhere]">
-                {{ message.content }}
+                <template
+                  v-for="(part, i) in segments(message)"
+                  :key="i"
+                >
+                  <a
+                    v-if="part.href"
+                    :href="part.href"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="underline decoration-current/40 underline-offset-2 hover:decoration-current"
+                  >{{ part.text }}</a>
+                  <!-- `v-text`, not interpolation: the linter wants a line
+                       break around element content, and inside
+                       `whitespace-pre-wrap` that break becomes a visible
+                       space in the reply. -->
+                  <span
+                    v-else
+                    v-text="part.text"
+                  />
+                </template>
               </p>
             </div>
           </div>
@@ -148,12 +176,22 @@
               :steps="liveSteps"
               running
             />
-            <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <!-- Names what it is doing right now rather than saying it is
+                 busy. "Searching the web · Bulgaria dietary guidelines" is a
+                 thing somebody can judge; a spinner is a thing they wait
+                 behind. -->
+            <div class="flex items-start gap-2 text-sm text-gray-500 dark:text-gray-400">
               <UIcon
                 name="i-lucide-loader-2"
-                class="h-4 w-4 animate-spin"
+                class="mt-0.5 h-4 w-4 shrink-0 animate-spin"
               />
-              Searching and reading — this can take a minute.
+              <span class="min-w-0">
+                <span class="text-gray-700 dark:text-gray-200">{{ liveStatus }}</span>
+                <span
+                  v-if="liveDetail"
+                  class="ml-1 truncate font-mono text-xs opacity-70"
+                >{{ liveDetail }}</span>
+              </span>
             </div>
           </div>
         </div>
@@ -358,7 +396,8 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
 import integratorApi, {
-  failureText, type BacklogItem, type IntegratorMessage, type IntegratorSession,
+  failureText, type BacklogItem, type ChatTurn, type IntegratorMessage,
+  type IntegratorSession,
   type IntegratorStep, type Proposal, type SourceKind
 } from '~/services/integratorApi'
 import { assetBreadcrumb, consoleAssetSections } from '~/utils/consoleBreadcrumbs'
@@ -436,6 +475,47 @@ const latestAssistantSeq = computed(() => {
   return withSteps.length ? withSteps[withSteps.length - 1]!.seq : -1
 })
 
+/** The step in flight, for the line under the transcript. */
+const liveStatus = computed(() => {
+  const running = [...liveSteps.value].reverse().find(s => s.status === 'running')
+  if (running) return running.title
+  const last = liveSteps.value.at(-1)
+  return last ? last.title : 'Working out what to look for'
+})
+
+const liveDetail = computed(() => {
+  const running = [...liveSteps.value].reverse().find(s => s.status === 'running')
+  return running?.detail ?? ''
+})
+
+/**
+ * Split a reply into plain text and links.
+ *
+ * No HTML is built from model output — the template renders each segment as
+ * text or as an anchor, so there is nothing to escape and nothing to get
+ * wrong. Only assistant messages are scanned.
+ */
+function segments(message: IntegratorMessage): Array<{ text: string, href?: string }> {
+  const text = message.content ?? ''
+  if (message.role !== 'assistant') return [{ text }]
+
+  const out: Array<{ text: string, href?: string }> = []
+  const pattern = /https?:\/\/[^\s<]+/g
+  let cursor = 0
+  for (const match of text.matchAll(pattern)) {
+    const at = match.index ?? 0
+    if (at > cursor) out.push({ text: text.slice(cursor, at) })
+    // Trailing punctuation belongs to the sentence, not the address.
+    const raw = match[0]
+    const href = raw.replace(/[.,;:)\]]+$/, '')
+    out.push({ text: href, href })
+    if (href.length < raw.length) out.push({ text: raw.slice(href.length) })
+    cursor = at + raw.length
+  }
+  if (cursor < text.length) out.push({ text: text.slice(cursor) })
+  return out.length ? out : [{ text }]
+}
+
 const needsReason = computed(() => !pendingProposal.value?.licence)
 
 async function scrollDown() {
@@ -481,7 +561,35 @@ async function send() {
   await scrollDown()
 
   try {
-    const turn = await integratorApi.chat(sessionId.value, text)
+    /*
+     * Streamed, so the timeline fills as the assistant works. A turn can run
+     * for minutes across a web search and several fetches; waiting for the
+     * whole thing before showing anything is what made it look hung, and is
+     * what every proxy in between eventually decided was a dead connection.
+     */
+    /* A holder rather than two `let`s: TypeScript's control-flow analysis
+       assumes a callback never ran, so assigning to a local from inside one
+       narrows it to `never` at every later use. */
+    const outcome: { turn: ChatTurn | null, failure: string } = {
+      turn: null, failure: ''
+    }
+    await integratorApi.chatStream(sessionId.value, text, {
+      onStep: (step) => {
+        // A step arrives twice: once running, once finished. Replace by id so
+        // the row updates in place rather than the list growing duplicates.
+        const at = liveSteps.value.findIndex(s => s.id === step.id)
+        liveSteps.value = at === -1
+          ? [...liveSteps.value, step]
+          : liveSteps.value.map((s, i) => (i === at ? step : s))
+        void scrollDown()
+      },
+      onDone: (finished) => { outcome.turn = finished },
+      onError: (detail) => { outcome.failure = detail }
+    })
+    if (outcome.failure) throw new Error(outcome.failure)
+    if (!outcome.turn) throw new Error('The assistant stopped without answering.')
+    const turn = outcome.turn
+
     messages.value = await integratorApi.history(sessionId.value)
     liveSteps.value = []
     lastRun.value = turn.stop_reason === 'completed'

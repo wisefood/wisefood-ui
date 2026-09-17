@@ -229,6 +229,74 @@ class IntegratorApiService {
     )
   }
 
+  /**
+   * The same turn, streamed.
+   *
+   * `onStep` fires as each step starts and again as it finishes, so the
+   * timeline fills while the assistant works instead of appearing all at
+   * once at the end. That is the difference between a minute of a spinner
+   * and a minute of watching it search — and it is also what stops a long
+   * turn looking like a hang.
+   *
+   * Heartbeats arrive as SSE comment lines and are skipped by the parser
+   * below; they exist so proxies do not close a quiet stream.
+   */
+  async chatStream(
+    sessionId: string,
+    message: string,
+    handlers: {
+      onStep?: (step: IntegratorStep) => void
+      onDone?: (turn: ChatTurn) => void
+      onError?: (detail: string) => void
+    } = {}
+  ): Promise<void> {
+    const response = await wisefoodRestApi.postStream(
+      `${this.base}/sessions/${encodeURIComponent(sessionId)}/chat/stream`,
+      { message }
+    )
+
+    const reader = response.body!.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+
+      // Frames are separated by a blank line. Anything after the last one is
+      // a partial frame and stays in the buffer until the rest arrives —
+      // chunk boundaries do not respect message boundaries.
+      const frames = buffer.split('\n\n')
+      buffer = frames.pop() ?? ''
+
+      for (const frame of frames) {
+        let event = ''
+        const data: string[] = []
+        for (const line of frame.split('\n')) {
+          if (line.startsWith(':')) continue // heartbeat comment
+          if (line.startsWith('event:')) event = line.slice(6).trim()
+          else if (line.startsWith('data:')) data.push(line.slice(5).trim())
+        }
+        if (!event || !data.length) continue
+
+        let payload: unknown
+        try {
+          payload = JSON.parse(data.join('\n'))
+        } catch {
+          continue
+        }
+
+        if (event === 'step') handlers.onStep?.(payload as IntegratorStep)
+        else if (event === 'done') handlers.onDone?.(payload as ChatTurn)
+        else if (event === 'error') {
+          handlers.onError?.((payload as { detail?: string }).detail
+            || 'The assistant stopped unexpectedly.')
+        }
+      }
+    }
+  }
+
   async listProposals(params: { sessionId?: string, status?: ProposalStatus } = {}): Promise<Proposal[]> {
     try {
       const query = new URLSearchParams()
