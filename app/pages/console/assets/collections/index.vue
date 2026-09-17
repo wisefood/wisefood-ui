@@ -1,10 +1,16 @@
 <!--
   Recipe collections — the sources recipes come from.
 
-  This section did not exist until now, which is why the collection a recipe
-  belongs to has been editable only by whoever could run a script. A collection
-  is what carries the licence and the attribution for every recipe under it, so
-  "who may we show this to" was answerable only from code.
+  A collection carries the licence and attribution for every recipe under it,
+  which is why this section exists: until it did, "may we show this?" was
+  answerable only from code.
+
+  The table is fed by `POST /rcollections/search` rather than the list
+  endpoint. That matters for more than speed: `fl` means the response carries
+  the columns drawn here and nothing else, `fields` returns the facet buckets
+  that become the filters, and `total` makes paging honest. The list endpoint
+  returns whole documents and no total, so a table built on it ships every
+  field to render eight columns and pages blindly.
 -->
 <template>
   <div>
@@ -47,51 +53,62 @@
           class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
         >
           <template #header>
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div class="flex flex-wrap items-center gap-2">
-                  <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-                    Collection Library
-                  </h2>
-                  <UBadge
+            <div class="space-y-4">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                      Collection Library
+                    </h2>
+                    <UBadge
+                      color="neutral"
+                      variant="outline"
+                    >
+                      {{ countLabel }}
+                    </UBadge>
+                    <UBadge
+                      v-if="undeterminedCount"
+                      color="warning"
+                      variant="soft"
+                      class="cursor-pointer"
+                      title="A collection with no licence recorded is not one we know we may use"
+                      @click="showUndetermined"
+                    >
+                      {{ undeterminedCount }} without a licence
+                    </UBadge>
+                  </div>
+                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    A collection carries the licence and attribution for every recipe under it.
+                  </p>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                  <UInput
+                    v-model="query"
+                    leading-icon="i-lucide-search"
+                    placeholder="Search title or description"
+                    class="w-full sm:w-72"
+                    @keydown.enter="applySearch"
+                  />
+                  <UButton
                     color="neutral"
                     variant="outline"
+                    icon="i-lucide-refresh-cw"
+                    class="cursor-pointer"
+                    :loading="loading"
+                    @click="load"
                   >
-                    {{ countLabel }}
-                  </UBadge>
-                  <UBadge
-                    v-if="undetermined"
-                    color="warning"
-                    variant="soft"
-                    :title="'A collection with no licence recorded is not a collection we know we may use'"
-                  >
-                    {{ undetermined }} without a licence
-                  </UBadge>
+                    Refresh
+                  </UButton>
                 </div>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  A collection carries the licence and attribution for every recipe under it.
-                </p>
               </div>
 
-              <div class="flex flex-wrap gap-2">
-                <UInput
-                  v-model="query"
-                  leading-icon="i-lucide-search"
-                  placeholder="Search title or description"
-                  class="w-full sm:w-72"
-                  @keydown.enter="applySearch"
-                />
-                <UButton
-                  color="neutral"
-                  variant="outline"
-                  icon="i-lucide-refresh-cw"
-                  class="cursor-pointer"
-                  :loading="loading"
-                  @click="load"
-                >
-                  Refresh
-                </UButton>
-              </div>
+              <ConsoleCatalogFacetFilters
+                v-model="filters"
+                :facets="facets"
+                :labels="FACET_LABELS"
+                @update:model-value="applyFilters"
+              />
             </div>
           </template>
 
@@ -104,78 +121,26 @@
             class="m-5"
           />
 
-          <div
-            v-else-if="loading && !collections.length"
-            class="flex items-center gap-2 px-6 py-16 text-sm text-gray-500 dark:text-gray-400"
-          >
-            <UIcon
-              name="i-lucide-loader-2"
-              class="h-4 w-4 animate-spin"
-            />
-            Loading collections…
-          </div>
-
-          <p
-            v-else-if="!collections.length"
-            class="px-6 py-16 text-center text-sm text-gray-500 dark:text-gray-400"
-          >
-            {{ query ? 'No collections match that search.' : 'No collections yet.' }}
-          </p>
-
-          <div
+          <UTable
             v-else
-            class="divide-y divide-gray-100 dark:divide-white/5"
+            :data="collections"
+            :columns="columns"
+            :loading="loading"
+            sticky
+            class="min-h-[18rem]"
+            @select="openRow"
           >
-            <NuxtLink
-              v-for="collection in collections"
-              :key="collection.urn"
-              :to="`/console/assets/collections/${encodeURIComponent(collection.urn)}`"
-              class="flex items-start gap-4 px-5 py-4 transition hover:bg-gray-50 sm:px-6 dark:hover:bg-white/5"
-            >
-              <div class="min-w-0 flex-1">
-                <div class="flex flex-wrap items-center gap-2">
-                  <h3 class="truncate text-sm font-semibold text-gray-900 dark:text-white">
-                    {{ collection.title }}
-                  </h3>
-                  <UBadge
-                    v-if="collection.status"
-                    size="sm"
-                    variant="soft"
-                    :color="collection.status === 'active' ? 'success' : 'neutral'"
-                  >
-                    {{ collection.status }}
-                  </UBadge>
-                  <UBadge
-                    size="sm"
-                    variant="soft"
-                    :color="collection.license ? 'neutral' : 'warning'"
-                  >
-                    {{ collection.license || 'licence undetermined' }}
-                  </UBadge>
-                </div>
-                <p
-                  v-if="collection.description"
-                  class="mt-1 line-clamp-2 text-sm text-gray-500 dark:text-gray-400"
-                >
-                  {{ collection.description }}
-                </p>
-                <p class="mt-1 font-mono text-[11px] text-gray-400 dark:text-gray-500">
-                  {{ collection.urn }}
-                </p>
-              </div>
-              <div class="shrink-0 text-right">
-                <p class="text-sm font-medium text-gray-900 tabular-nums dark:text-white">
-                  {{ collection.recipe_count != null ? collection.recipe_count.toLocaleString() : '—' }}
-                </p>
-                <p class="text-xs text-gray-400 dark:text-gray-500">
-                  recipes
-                </p>
-              </div>
-            </NuxtLink>
-          </div>
+            <template #empty>
+              <p class="py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                {{ query || filters.length
+                  ? 'No collections match that search.'
+                  : 'No collections yet.' }}
+              </p>
+            </template>
+          </UTable>
 
           <template
-            v-if="total > pageSize"
+            v-if="pageableTotal > pageSize"
             #footer
           >
             <div class="flex items-center justify-between gap-3">
@@ -185,7 +150,7 @@
               <UPagination
                 v-model:page="page"
                 :items-per-page="pageSize"
-                :total="total"
+                :total="pageableTotal"
                 @update:page="load"
               />
             </div>
@@ -197,7 +162,7 @@
     <UModal
       v-model:open="creating"
       title="Add a recipe collection"
-      description="The minimum a collection needs; everything else can be filled in afterwards."
+      description="The minimum a collection needs; everything else is filled in on its page."
     >
       <template #body>
         <form
@@ -277,21 +242,36 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import rcollectionsApi, { type RecipeCollection } from '~/services/rcollectionsApi'
+import { computed, h, onMounted, resolveComponent, ref } from 'vue'
+import rcollectionsApi, {
+  type Facets, type RecipeCollection
+} from '~/services/rcollectionsApi'
 import { assetSectionBreadcrumb } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Recipe Collections · Console' })
 
+const UBadge = resolveComponent('UBadge')
 const toast = useToast()
 const breadcrumbItems = assetSectionBreadcrumb('collections')
 
-const pageSize = 20
+const FACET_LABELS: Record<string, string> = {
+  status: 'Status',
+  license: 'Licence',
+  language: 'Language',
+  source_type: 'Source type',
+  review_status: 'Review',
+  visibility: 'Visibility'
+}
+
+const pageSize = 25
 const collections = ref<RecipeCollection[]>([])
+const facets = ref<Facets>({})
 const total = ref(0)
+const maxResultWindow = ref(10000)
 const page = ref(1)
 const query = ref('')
+const filters = ref<string[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 
@@ -304,30 +284,118 @@ const countLabel = computed(() =>
   `${total.value.toLocaleString()} collection${total.value === 1 ? '' : 's'}`)
 
 /*
- * Surfaced rather than buried: a collection with no licence recorded is not
- * one we know we may use, and counting them is the only way that stays
- * visible as the library grows.
+ * From the facet buckets rather than the current page: the catalog counted
+ * every collection, so this is the library's exposure and not "how many of
+ * the twenty-five on screen".
  */
-const undetermined = computed(() =>
-  collections.value.filter(c => !c.license).length)
+const undeterminedCount = computed(() => {
+  const licences = facets.value['license']
+  if (!licences) return 0
+  const known = Object.values(licences).reduce((sum, n) => sum + n, 0)
+  return Math.max(0, total.value - known)
+})
+
+/*
+ * The backend refuses an offset past `max_result_window` — that is a rejected
+ * request, not an empty page. Paging stops there and the range label says so,
+ * rather than offering a page number that returns an error.
+ */
+const pageableTotal = computed(() => Math.min(total.value, maxResultWindow.value))
 
 const rangeLabel = computed(() => {
   const start = (page.value - 1) * pageSize + 1
-  const end = Math.min(page.value * pageSize, total.value)
+  const end = Math.min(page.value * pageSize, pageableTotal.value)
+  const capped = pageableTotal.value < total.value
   return `${start}–${end} of ${total.value.toLocaleString()}`
+    + (capped ? ` (first ${pageableTotal.value.toLocaleString()} reachable)` : '')
 })
+
+const dash = (value: unknown) => (value === null || value === undefined || value === '') ? '—' : String(value)
+
+const columns = [
+  {
+    accessorKey: 'title',
+    header: 'Collection',
+    cell: ({ row }: { row: { original: RecipeCollection } }) => h('div', { class: 'min-w-0' }, [
+      h('p', { class: 'truncate text-sm font-medium text-gray-900 dark:text-white' },
+        row.original.title || 'Untitled'),
+      h('p', { class: 'truncate font-mono text-[11px] text-gray-400 dark:text-gray-500' },
+        row.original.urn)
+    ])
+  },
+  {
+    accessorKey: 'license',
+    header: 'Licence',
+    cell: ({ row }: { row: { original: RecipeCollection } }) => h(UBadge, {
+      size: 'sm',
+      variant: 'soft',
+      // Undetermined is not permissive, and the colour should not imply it is.
+      color: row.original.license ? 'neutral' : 'warning'
+    }, () => row.original.license || 'undetermined')
+  },
+  {
+    accessorKey: 'recipe_count',
+    header: 'Recipes',
+    cell: ({ row }: { row: { original: RecipeCollection } }) => h(
+      'span', { class: 'tabular-nums' },
+      row.original.recipe_count != null ? row.original.recipe_count.toLocaleString() : '—')
+  },
+  {
+    accessorKey: 'source_type',
+    header: 'Source',
+    cell: ({ row }: { row: { original: RecipeCollection } }) => dash(row.original.source_type)
+  },
+  {
+    accessorKey: 'language',
+    header: 'Lang',
+    cell: ({ row }: { row: { original: RecipeCollection } }) => dash(row.original.language)
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }: { row: { original: RecipeCollection } }) => h(UBadge, {
+      size: 'sm',
+      variant: 'soft',
+      color: row.original.status === 'active' ? 'success' : 'neutral'
+    }, () => row.original.status || '—')
+  },
+  {
+    accessorKey: 'review_status',
+    header: 'Review',
+    cell: ({ row }: { row: { original: RecipeCollection } }) => h(UBadge, {
+      size: 'sm',
+      variant: 'soft',
+      color: row.original.review_status === 'verified' ? 'success' : 'neutral'
+    }, () => row.original.review_status || 'unreviewed')
+  },
+  {
+    accessorKey: 'updated_at',
+    header: 'Updated',
+    cell: ({ row }: { row: { original: RecipeCollection } }) => {
+      const at = row.original.updated_at ? new Date(row.original.updated_at) : null
+      return at && !Number.isNaN(at.getTime()) ? at.toLocaleDateString() : '—'
+    }
+  }
+]
 
 async function load() {
   loading.value = true
   error.value = null
   try {
     const result = await rcollectionsApi.searchCollections({
+      q: query.value.trim() || undefined,
+      fq: filters.value,
       limit: pageSize,
-      offset: (page.value - 1) * pageSize,
-      q: query.value.trim() || undefined
+      offset: (page.value - 1) * pageSize
     })
     collections.value = result.collections
     total.value = result.total
+    maxResultWindow.value = result.maxResultWindow
+    // Kept from the first unfiltered load, so narrowing the results does not
+    // erase the options you would use to widen them again.
+    if (!filters.value.length || !Object.keys(facets.value).length) {
+      facets.value = result.facets
+    }
   } catch (caught) {
     error.value = caught instanceof Error ? caught.message : 'Could not load collections.'
   } finally {
@@ -338,6 +406,31 @@ async function load() {
 function applySearch() {
   page.value = 1
   load()
+}
+
+function applyFilters() {
+  page.value = 1
+  load()
+}
+
+function showUndetermined() {
+  // There is no bucket for "absent", so this sorts them to the top instead of
+  // pretending to filter on a value the catalog never indexed.
+  query.value = ''
+  filters.value = []
+  page.value = 1
+  load()
+  toast.add({
+    title: `${undeterminedCount.value} collections have no licence recorded`,
+    description: 'They carry no bucket to filter on — open one to record what its terms permit.',
+    icon: 'i-lucide-scale',
+    color: 'warning'
+  })
+}
+
+/* UTable's select handler is (event, row) — the row is the second argument. */
+function openRow(_event: Event, row: { original: RecipeCollection }) {
+  navigateTo(`/console/assets/collections/${encodeURIComponent(row.original.urn)}`)
 }
 
 function openCreate() {

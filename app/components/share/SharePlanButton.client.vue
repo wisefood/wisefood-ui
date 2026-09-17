@@ -144,12 +144,16 @@ import sharingApi, { failureText } from '~/services/sharingApi'
 const props = withDefaults(defineProps<{
   /** Which plan, and which table it lives in. */
   planId: string
-  kind?: 'meal_plan' | 'saved_meal_plan'
+  kind?: 'meal_plan' | 'saved_meal_plan' | 'weekly_meal_plan'
+  /** Required when sharing a weekly plan: it lives in FoodChat and is
+   *  reachable only as a given member's current plan. */
+  memberId?: string
   title?: string
   size?: 'xs' | 'sm' | 'md'
   variant?: 'solid' | 'soft' | 'ghost' | 'outline' | 'subtle'
 }>(), {
   kind: 'meal_plan',
+  memberId: '',
   title: '',
   size: 'sm',
   variant: 'ghost'
@@ -179,6 +183,7 @@ async function open() {
     const made = await sharingApi.createShare({
       kind: props.kind,
       id: props.planId,
+      member_id: props.memberId || undefined,
       title: props.title
     })
     token.value = made.token

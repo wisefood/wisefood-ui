@@ -46,15 +46,40 @@ export interface FCTable {
   extras: unknown | null
 }
 
-export interface FCTableListParams {
+/** What the table shows, and therefore what the wire carries. */
+export const FCTABLE_TABLE_FIELDS = [
+  'urn', 'id', 'title', 'status', 'license', 'language', 'region',
+  'compiling_institution', 'database_name', 'number_of_entries',
+  'completeness_percent', 'nutrient_coverage', 'updated_at'
+]
+
+/** Aggregated into buckets by the same request; these become the filters. */
+export const FCTABLE_FACET_FIELDS = [
+  'status', 'license', 'language', 'region', 'compiling_institution'
+]
+
+export interface FCTableSearchParams {
+  q?: string
   limit?: number
   offset?: number
-  q?: string
+  fl?: string[]
+  fq?: string[]
+  sort?: string
+  fields?: string[]
+  facet_limit?: number
 }
 
-export interface FCTableListResult {
+export type Facets = Record<string, Record<string, number>>
+
+export interface FCTableSearchResult {
+  /**
+   * The deepest offset+limit the backend will serve. Paging past it is a
+   * rejected request, not an empty page, so the pages clamp against it.
+   */
+  maxResultWindow: number
   tables: FCTable[]
   total: number
+  facets: Facets
 }
 
 type UnknownRecord = Record<string, unknown>
@@ -77,6 +102,34 @@ const asNumber = (value: unknown): number | null => {
 
 const asStringArray = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : []
+
+/** `{field: {value: count}}`, whichever shape the store returned. */
+export function normalizeFacets(value: unknown): Facets {
+  const source = asRecord(value)
+  if (!source) return {}
+  const out: Facets = {}
+  for (const [field, raw] of Object.entries(source)) {
+    const counts: Record<string, number> = {}
+    if (Array.isArray(raw)) {
+      for (const bucket of raw) {
+        const b = asRecord(bucket)
+        const key = asString(b?.['value']) ?? asString(b?.['key'])
+        const count = asNumber(b?.['count']) ?? asNumber(b?.['doc_count'])
+        if (key) counts[key] = count ?? 0
+      }
+    } else {
+      const map = asRecord(raw)
+      if (map) {
+        for (const [key, count] of Object.entries(map)) {
+          const n = asNumber(count)
+          if (n !== null) counts[key] = n
+        }
+      }
+    }
+    if (Object.keys(counts).length) out[field] = counts
+  }
+  return out
+}
 
 export function normalizeFCTable(value: unknown): FCTable {
   const record = asRecord(value) || {}
@@ -123,25 +176,29 @@ class FCTablesApiService {
     return normalizeFCTable(asRecord(payload)?.['result'] ?? payload)
   }
 
-  async listTables(params: FCTableListParams = {}): Promise<FCTableListResult> {
-    const query: Record<string, string | number> = {
-      limit: params.limit ?? 20,
-      offset: params.offset ?? 0
-    }
-    if (params.q?.trim()) query['q'] = params.q.trim()
-    const payload = await wisefoodRestApi.get<unknown>(this.basePath, { params: query })
-    const record = asRecord(payload)
-    const result = asRecord(record?.['result']) ?? record ?? {}
-    const items = Array.isArray(result['items'])
-      ? result['items']
-      : Array.isArray(result['fctables'])
-        ? result['fctables']
-        : Array.isArray(payload)
-          ? payload as unknown[]
-          : []
+  /**
+   * The catalog's uniform search contract. `fl` keeps the response to the
+   * columns the table draws, and `fields` returns the facet buckets that
+   * become its filters — in the same round trip, not a second query.
+   */
+  async searchTables(params: FCTableSearchParams = {}): Promise<FCTableSearchResult> {
+    const payload = await wisefoodRestApi.post<unknown>(`${this.basePath}/search`, {
+      q: params.q?.trim() || null,
+      limit: params.limit ?? 25,
+      offset: params.offset ?? 0,
+      fl: params.fl ?? FCTABLE_TABLE_FIELDS,
+      fq: params.fq?.length ? params.fq : undefined,
+      sort: params.sort ?? 'updated_at desc',
+      fields: params.fields ?? FCTABLE_FACET_FIELDS,
+      facet_limit: params.facet_limit ?? 50
+    })
+    const result = asRecord(asRecord(payload)?.['result']) ?? asRecord(payload) ?? {}
+    const items = Array.isArray(result['results']) ? result['results'] as unknown[] : []
     return {
       tables: items.map(normalizeFCTable),
-      total: asNumber(result['total']) ?? items.length
+      total: asNumber(result['total']) ?? items.length,
+      facets: normalizeFacets(result['facets']),
+      maxResultWindow: asNumber(result['max_result_window']) ?? 10000
     }
   }
 

@@ -1,11 +1,14 @@
 <!--
-  One composition table.
+  Editing one food composition table.
 
-  The figures here are measured, not typed: `profile_fctable` counts the
-  entries, recognises the nutrient columns and works out how much of the grid
-  carries a value. Shown read-only for that reason — editing a measurement by
-  hand would make it a claim again, and the point of measuring was that nobody
-  should have to take the number on trust.
+  The figures under "Measured" are counted from the source file by
+  `profile_fctable` — entries, nutrient columns, how much of the grid carries a
+  value — and are read-only for that reason. Letting somebody retype a
+  measurement turns it back into a claim, which is exactly what measuring was
+  for. Everything a person legitimately decides is editable.
+
+  Saves send only what changed, so one never rewrites a field this form does
+  not show or one another curator edited while the page was open.
 -->
 <template>
   <UPage class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -40,16 +43,16 @@
           :description="table.urn"
           :ui="{ root: 'relative py-0 border-b-0', description: 'font-mono text-xs' }"
         />
-        <div class="flex shrink-0 gap-2">
+        <div class="flex shrink-0 items-center gap-2">
           <UButton
             v-if="table.url"
             color="neutral"
-            variant="outline"
+            variant="ghost"
             icon="i-lucide-external-link"
             :to="table.url"
             target="_blank"
           >
-            Visit source
+            Source
           </UButton>
           <UButton
             color="primary"
@@ -59,7 +62,7 @@
             :disabled="!dirty"
             @click="save"
           >
-            {{ dirty ? 'Save changes' : 'Saved' }}
+            {{ saveLabel }}
           </UButton>
         </div>
       </div>
@@ -69,10 +72,10 @@
           <template #header>
             <div class="flex items-center justify-between gap-2">
               <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
-                What it covers
+                Measured
               </h2>
               <span class="text-xs text-gray-400 dark:text-gray-500">
-                measured from the source file
+                counted from the source file
               </span>
             </div>
           </template>
@@ -103,7 +106,7 @@
             class="mt-4"
           >
             <p class="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
-              Nutrients
+              Nutrients recognised
             </p>
             <div class="flex flex-wrap gap-1.5">
               <UBadge
@@ -117,17 +120,51 @@
               </UBadge>
             </div>
           </div>
+        </UCard>
 
-          <div
-            v-if="table.measurement_units.length || table.reference_portions.length"
-            class="mt-4 flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400"
+        <UCard
+          class="border"
+          :class="form.license
+            ? 'border-gray-200/70 dark:border-white/10'
+            : 'border-amber-200 dark:border-amber-500/30'"
+          :ui="{ body: 'p-5 sm:p-6' }"
+        >
+          <template #header>
+            <div class="flex items-center gap-2">
+              <UIcon
+                :name="form.license ? 'i-lucide-scale' : 'i-lucide-alert-triangle'"
+                class="h-4 w-4"
+                :class="form.license ? 'text-gray-400' : 'text-amber-500'"
+              />
+              <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
+                Licence
+              </h2>
+            </div>
+          </template>
+          <p
+            v-if="!form.license"
+            class="mb-4 text-sm leading-relaxed text-amber-800 dark:text-amber-200"
           >
-            <span v-if="table.measurement_units.length">
-              Units: {{ table.measurement_units.join(', ') }}
-            </span>
-            <span v-if="table.reference_portions.length">
-              Reported {{ table.reference_portions.join(', ') }}
-            </span>
+            Empty means undetermined, not permissive — the question has not been asked.
+          </p>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <UFormField label="Licence">
+              <UInput
+                v-model="form.license"
+                class="w-full"
+                placeholder="CC-BY-4.0"
+              />
+            </UFormField>
+            <UFormField
+              label="Source URL"
+              hint="Where the table and its terms live"
+            >
+              <UInput
+                v-model="form.url"
+                class="w-full"
+                placeholder="https://…"
+              />
+            </UFormField>
           </div>
         </UCard>
 
@@ -176,27 +213,94 @@
                   class="w-full"
                 />
               </UFormField>
-              <UFormField
-                label="Licence"
-                hint="Empty means undetermined, not permissive"
-              >
-                <UInput
-                  v-model="form.license"
+              <UFormField label="Status">
+                <USelectMenu
+                  v-model="form.status"
+                  value-key="value"
+                  :items="STATUSES"
                   class="w-full"
-                  placeholder="CC-BY-4.0"
                 />
               </UFormField>
-              <UFormField label="Source URL">
+              <UFormField label="External id">
                 <UInput
-                  v-model="form.url"
+                  v-model="form.external_id"
                   class="w-full"
                 />
               </UFormField>
             </div>
           </div>
         </UCard>
+
+        <UCard :ui="{ body: 'p-5 sm:p-6' }">
+          <template #header>
+            <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
+              Classification and formats
+            </h2>
+          </template>
+          <div class="grid gap-5 sm:grid-cols-2">
+            <UFormField
+              v-for="field in LIST_FIELDS"
+              :key="field.key"
+              :label="field.label"
+            >
+              <ConsoleCatalogTagListInput
+                v-model="lists[field.key]"
+                :placeholder="field.placeholder"
+              />
+            </UFormField>
+          </div>
+        </UCard>
+
+        <div class="flex items-center justify-between gap-3 rounded-xl border border-red-200 p-4 dark:border-red-500/30">
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-gray-900 dark:text-white">
+              Delete this table
+            </p>
+            <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+              This removes the reference. The table itself lives at its source.
+            </p>
+          </div>
+          <UButton
+            color="error"
+            variant="soft"
+            icon="i-lucide-trash-2"
+            class="shrink-0 cursor-pointer"
+            :loading="deleting"
+            @click="confirmDelete = true"
+          >
+            Delete
+          </UButton>
+        </div>
       </UPageBody>
     </template>
+
+    <UModal
+      v-model:open="confirmDelete"
+      title="Delete this composition table?"
+      :description="`${table?.title || 'This table'} will be removed from the catalog.`"
+    >
+      <template #footer>
+        <div class="flex w-full justify-end gap-2">
+          <UButton
+            color="neutral"
+            variant="ghost"
+            class="cursor-pointer"
+            @click="confirmDelete = false"
+          >
+            Cancel
+          </UButton>
+          <UButton
+            color="error"
+            icon="i-lucide-trash-2"
+            class="cursor-pointer"
+            :loading="deleting"
+            @click="remove"
+          >
+            Delete
+          </UButton>
+        </div>
+      </template>
+    </UModal>
   </UPage>
 </template>
 
@@ -214,24 +318,63 @@ const urn = computed(() => String(route.params.urn ?? ''))
 const table = ref<FCTable | null>(null)
 const loading = ref(true)
 const saving = ref(false)
+const deleting = ref(false)
+const confirmDelete = ref(false)
 const error = ref<string | null>(null)
 
-const EDITABLE = [
+const TEXT_FIELDS = [
   'title', 'description', 'compiling_institution', 'database_name',
-  'region', 'language', 'license', 'url'
+  'region', 'language', 'license', 'url', 'status', 'external_id'
 ] as const
 
+const LIST_FIELDS = [
+  { key: 'classification_schemes', label: 'Classification schemes', placeholder: 'FoodEx2' },
+  { key: 'standardization_schemes', label: 'Standardisation schemes', placeholder: 'INFOODS' },
+  { key: 'data_formats', label: 'Data formats', placeholder: 'xlsx' },
+  { key: 'tasks_supported', label: 'Tasks supported', placeholder: 'nutrient lookup' },
+  { key: 'measurement_units', label: 'Measurement units', placeholder: 'mg' },
+  { key: 'reference_portions', label: 'Reference portions', placeholder: 'per 100 g' },
+  { key: 'tags', label: 'Tags', placeholder: 'national' }
+] as const
+
+const LIST_KEYS = LIST_FIELDS.map(f => f.key) as readonly string[]
+
 const form = reactive<Record<string, string>>(
-  Object.fromEntries(EDITABLE.map(key => [key, ''])))
+  Object.fromEntries(TEXT_FIELDS.map(key => [key, ''])))
+const lists = reactive<Record<string, string[]>>(
+  Object.fromEntries(LIST_FIELDS.map(f => [f.key, [] as string[]])))
 const original = ref<Record<string, string>>({})
+const originalLists = ref<Record<string, string[]>>({})
+
+const STATUSES = [
+  { label: 'Active', value: 'active' },
+  { label: 'Draft', value: 'draft' },
+  { label: 'Archived', value: 'archived' },
+  { label: 'Deprecated', value: 'deprecated' }
+]
 
 useHead({ title: () => `${table.value?.title || 'Composition table'} · Console` })
 
 const breadcrumbItems = computed(() => assetSectionBreadcrumb(
   'fctables', [recordCrumb(table.value?.title, 'Table')]))
 
-const dirty = computed(() =>
-  EDITABLE.some(key => (form[key] ?? '') !== (original.value[key] ?? '')))
+const changed = computed(() => {
+  const keys: string[] = []
+  for (const key of TEXT_FIELDS) {
+    if ((form[key] ?? '') !== (original.value[key] ?? '')) keys.push(key)
+  }
+  for (const key of LIST_KEYS) {
+    if (JSON.stringify(lists[key] ?? []) !== JSON.stringify(originalLists.value[key] ?? [])) {
+      keys.push(key)
+    }
+  }
+  return keys
+})
+const dirty = computed(() => changed.value.length > 0)
+const saveLabel = computed(() => {
+  const n = changed.value.length
+  return n ? `Save ${n} change${n === 1 ? '' : 's'}` : 'Saved'
+})
 
 const facts = computed(() => {
   const t = table.value
@@ -254,12 +397,21 @@ const facts = computed(() => {
 
 function fill(record: FCTable) {
   const snapshot: Record<string, string> = {}
-  for (const key of EDITABLE) {
+  for (const key of TEXT_FIELDS) {
     const value = (record as unknown as Record<string, unknown>)[key]
     snapshot[key] = typeof value === 'string' ? value : ''
     form[key] = snapshot[key]
   }
   original.value = snapshot
+
+  const listSnapshot: Record<string, string[]> = {}
+  for (const key of LIST_KEYS) {
+    const value = (record as unknown as Record<string, unknown>)[key]
+    const items = Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : []
+    listSnapshot[key] = [...items]
+    lists[key] = [...items]
+  }
+  originalLists.value = listSnapshot
 }
 
 async function load() {
@@ -280,11 +432,11 @@ async function save() {
   if (!dirty.value) return
   saving.value = true
   try {
-    // Only what changed, so a save never overwrites a field this form does
-    // not show or one another curator edited while the page was open.
-    const payload: Record<string, string | null> = {}
-    for (const key of EDITABLE) {
-      if ((form[key] ?? '') !== (original.value[key] ?? '')) {
+    const payload: Record<string, unknown> = {}
+    for (const key of changed.value) {
+      if (LIST_KEYS.includes(key)) {
+        payload[key] = lists[key]
+      } else {
         payload[key] = form[key]?.trim() ? form[key].trim() : null
       }
     }
@@ -300,6 +452,24 @@ async function save() {
     })
   } finally {
     saving.value = false
+  }
+}
+
+async function remove() {
+  deleting.value = true
+  try {
+    await fctablesApi.deleteTable(urn.value)
+    toast.add({ title: 'Table deleted', icon: 'i-lucide-check', color: 'success' })
+    await navigateTo('/console/assets/fctables')
+  } catch (caught) {
+    toast.add({
+      title: caught instanceof Error ? caught.message : 'Could not delete that table.',
+      color: 'error',
+      icon: 'i-lucide-alert-circle'
+    })
+  } finally {
+    deleting.value = false
+    confirmDelete.value = false
   }
 }
 

@@ -31,20 +31,16 @@
       </template>
     </UPageHeader>
 
-    <UAlert
-      v-if="!writesEnabled"
-      class="mb-6"
-      color="info"
-      variant="soft"
-      icon="i-lucide-info"
-      title="Research only, for now"
-      description="The assistant can search, read and propose. Approving records your decision, and integration into the catalog is switched on separately — nothing is written yet."
-    />
-
-    <div class="grid gap-6 lg:grid-cols-3">
+    <!--
+      `min-w-0` on both columns is load-bearing, not tidying. A grid item
+      defaults to `min-width: auto`, so one unbreakable string — a pasted URL,
+      a long URN in a step detail — makes the track wider than its share and
+      the conversation runs underneath the cards beside it.
+    -->
+    <div class="grid items-start gap-6 lg:grid-cols-3">
       <!-- The conversation -->
       <UCard
-        class="border border-gray-200/70 lg:col-span-2 dark:border-white/10"
+        class="flex min-w-0 flex-col border border-gray-200/70 lg:col-span-2 dark:border-white/10"
         :ui="{ body: 'p-0' }"
       >
         <template #header>
@@ -72,7 +68,7 @@
 
         <div
           ref="transcript"
-          class="max-h-[30rem] min-h-[18rem] space-y-4 overflow-y-auto p-5"
+          class="h-[min(62vh,44rem)] min-h-[22rem] space-y-4 overflow-y-auto overflow-x-hidden p-5"
         >
           <!-- What it can do, said before it is asked. A curator meeting an
                empty box guesses at its range; saying it removes the guessing
@@ -125,15 +121,19 @@
             <ConsoleIntegratorStepTimeline
               v-if="message.role === 'assistant' && message.steps?.length"
               :steps="message.steps"
+              :default-open="message.seq === latestAssistantSeq"
               class="w-full"
             />
             <div
-              class="max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
+              class="max-w-[85%] min-w-0 rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
               :class="message.role === 'user'
                 ? 'bg-brand-600 text-white'
                 : 'bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-gray-100'"
             >
-              <p class="whitespace-pre-wrap">
+              <!-- `anywhere` rather than `break-words`: a pasted URL has no
+                   break opportunity at all, and is exactly what people paste
+                   here. -->
+              <p class="whitespace-pre-wrap [overflow-wrap:anywhere]">
                 {{ message.content }}
               </p>
             </div>
@@ -193,7 +193,7 @@
       </UCard>
 
       <!-- Proposals and the queue -->
-      <div class="space-y-6">
+      <div class="min-w-0 space-y-6">
         <UCard
           class="border border-gray-200/70 dark:border-white/10"
           :ui="{ body: 'p-4' }"
@@ -222,7 +222,7 @@
           </p>
           <div
             v-else
-            class="space-y-3"
+            class="max-h-[min(62vh,44rem)] space-y-3 overflow-y-auto pr-1"
           >
             <ConsoleIntegratorProposalCard
               v-for="proposal in proposals"
@@ -394,13 +394,6 @@ const kindFilters: Array<{ label: string, value: SourceKind | '' }> = [
   { label: 'Recipes', value: 'rcollection' }
 ]
 
-/*
- * Phase 1 ships with catalog writes off. The banner says so rather than
- * letting a curator approve and wonder why nothing appeared; the flag comes
- * from the server once the audit shows a write tool succeeding.
- */
-const writesEnabled = ref(false)
-
 const sessions = ref<IntegratorSession[]>([])
 const sessionId = ref('')
 const messages = ref<IntegratorMessage[]>([])
@@ -431,6 +424,17 @@ const sessionOptions = computed(() =>
 /** Tool turns are shown as the trail of badges, not as chat bubbles. */
 const visibleMessages = computed(() =>
   messages.value.filter(m => m.role === 'user' || (m.role === 'assistant' && m.content)))
+
+/*
+ * The newest assistant turn shows its work expanded. Older ones collapse to a
+ * summary — what it did most recently is what a curator is judging, and
+ * making them click to see it is making transparency opt-in.
+ */
+const latestAssistantSeq = computed(() => {
+  const withSteps = visibleMessages.value
+    .filter(m => m.role === 'assistant' && m.steps?.length)
+  return withSteps.length ? withSteps[withSteps.length - 1]!.seq : -1
+})
 
 const needsReason = computed(() => !pendingProposal.value?.licence)
 

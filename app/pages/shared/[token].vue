@@ -80,9 +80,28 @@
         </p>
       </header>
 
+      <!-- A weekly share carries `days`; a daily one carries `meals`. Same
+           dish cards either way, grouped by day when there is more than one,
+           so a week reads as a week rather than as one very long day. -->
       <section
-        v-for="slot in slots"
-        :key="slot.name"
+        v-for="day in days"
+        :key="day.key"
+        class="mb-10"
+      >
+        <h2
+          v-if="day.label"
+          class="mb-4 border-b border-gray-100 pb-2 text-sm font-semibold text-gray-900 dark:border-zinc-800 dark:text-white"
+        >
+          {{ day.label }}
+          <span
+            v-if="day.summary"
+            class="ml-2 font-normal text-gray-400 dark:text-gray-500"
+          >{{ day.summary }}</span>
+        </h2>
+
+      <section
+        v-for="slot in day.slots"
+        :key="`${day.key}-${slot.name}`"
         class="mb-8"
       >
         <h2 class="mb-3 text-xs font-semibold uppercase tracking-[0.08em] text-gray-400 dark:text-gray-500">
@@ -140,6 +159,7 @@
             </details>
           </div>
         </article>
+      </section>
       </section>
 
       <footer class="mt-10 rounded-2xl bg-gray-50 p-6 text-center dark:bg-zinc-900/60">
@@ -202,16 +222,41 @@ onMounted(async () => {
   pending.value = false
 })
 
+const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
+                  'Saturday', 'Sunday']
+
 /** Slots in the order anyone eats them, each normalised to a list. */
-const slots = computed(() => {
-  const meals = plan.value?.payload?.meals ?? {}
-  return (['breakfast', 'lunch', 'dinner'] as const)
+function slotsOf(meals: Record<string, unknown>) {
+  const known = ['breakfast', 'lunch', 'dinner']
+  // Any slot the plan actually used, with the familiar three first: a week
+  // can carry a snack or a dessert, and dropping them would silently lose
+  // food the sender meant to share.
+  const names = [...known, ...Object.keys(meals).filter(n => !known.includes(n))]
+  return names
     .map(name => ({
       name,
       dishes: (Array.isArray(meals[name]) ? meals[name] : [meals[name]])
         .filter(Boolean) as SharedDish[]
     }))
     .filter(slot => slot.dishes.length)
+}
+
+/**
+ * One entry per day. A daily share becomes a single unlabelled day, so it
+ * renders exactly as it did before; a weekly one gets a heading per day.
+ */
+const days = computed(() => {
+  const payload = plan.value?.payload
+  if (payload?.days?.length) {
+    return payload.days.map(day => ({
+      key: String(day.day),
+      label: WEEKDAYS[(Number(day.day) - 1) % 7] ?? `Day ${day.day}`,
+      summary: day.summary || '',
+      slots: slotsOf((day.meals ?? {}) as Record<string, unknown>)
+    })).filter(day => day.slots.length)
+  }
+  const slots = slotsOf((payload?.meals ?? {}) as Record<string, unknown>)
+  return slots.length ? [{ key: 'day', label: '', summary: '', slots }] : []
 })
 
 function kcal(dish: SharedDish): string {

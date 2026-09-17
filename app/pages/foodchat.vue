@@ -863,6 +863,20 @@
                         ? t('foodChatHome.planHeader.savedPlan')
                         : t('foodChatHome.planHeader.savePlan') }}
                     </UButton>
+                    <!-- Sharing belongs here rather than only on the
+                         dashboard: this is where a plan is made and refined,
+                         so it is where somebody decides it is worth sending. -->
+                    <ShareSharePlanButton
+                      v-if="displayedPlanId && currentMemberId"
+                      :plan-id="displayedPlanId"
+                      :kind="canvasMode === 'weekly' ? 'weekly_meal_plan' : 'meal_plan'"
+                      :member-id="currentMemberId"
+                      :title="canvasMode === 'weekly'
+                        ? t('foodChatHome.planHeader.weeklyPlan')
+                        : t('foodChatHome.planHeader.dailyPlan')"
+                      size="xs"
+                      variant="subtle"
+                    />
                     <FoodchatPlanToolsMenu
                       v-if="tools.length"
                       :tools="tools"

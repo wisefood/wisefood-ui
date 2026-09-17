@@ -43,6 +43,79 @@ export interface RCollectionListParams {
   offset?: number
 }
 
+/**
+ * What the table shows, and therefore what the wire carries. Adding a column
+ * means adding it here — which is the point: the cost of a column is visible
+ * rather than free.
+ */
+export const COLLECTION_TABLE_FIELDS = [
+  'urn', 'id', 'title', 'status', 'license', 'language', 'source_type',
+  'recipe_count', 'review_status', 'visibility', 'is_curated',
+  'has_nutritional_data', 'updated_at'
+]
+
+/** Fields the catalog aggregates into buckets, which become the filters. */
+export const COLLECTION_FACET_FIELDS = [
+  'status', 'license', 'language', 'source_type', 'review_status', 'visibility'
+]
+
+export interface RCollectionSearchParams {
+  q?: string
+  limit?: number
+  offset?: number
+  fl?: string[]
+  fq?: string[]
+  sort?: string
+  fields?: string[]
+  facet_limit?: number
+}
+
+/** `{field: {value: count}}`, straight from the catalog's aggregation. */
+export type Facets = Record<string, Record<string, number>>
+
+export interface RCollectionSearchResult {
+  /**
+   * The deepest offset+limit the backend will serve. Paging past it is a
+   * rejected request, not an empty page, so the pages clamp against it.
+   */
+  maxResultWindow: number
+  collections: RecipeCollection[]
+  total: number
+  facets: Facets
+}
+
+/**
+ * Facets arrive in more than one shape depending on the backing store — a
+ * bucket list, or a plain count map. Normalised here so the page only ever
+ * sees `{field: {value: count}}`.
+ */
+export function normalizeFacets(value: unknown): Facets {
+  const source = asRecord(value)
+  if (!source) return {}
+  const out: Facets = {}
+  for (const [field, raw] of Object.entries(source)) {
+    const counts: Record<string, number> = {}
+    if (Array.isArray(raw)) {
+      for (const bucket of raw) {
+        const b = asRecord(bucket)
+        const key = asString(b?.['value']) ?? asString(b?.['key'])
+        const count = asNumber(b?.['count']) ?? asNumber(b?.['doc_count'])
+        if (key) counts[key] = count ?? 0
+      }
+    } else {
+      const map = asRecord(raw)
+      if (map) {
+        for (const [key, count] of Object.entries(map)) {
+          const n = asNumber(count)
+          if (n !== null) counts[key] = n
+        }
+      }
+    }
+    if (Object.keys(counts).length) out[field] = counts
+  }
+  return out
+}
+
 export interface RCollectionListResult {
   collections: RecipeCollection[]
   total: number
@@ -139,29 +212,34 @@ class RCollectionsApiService {
   }
 
   /**
-   * Search as well as page. The list endpoint is the only way in, so a
-   * console section that could not search would be unusable past the first
-   * few dozen collections.
+   * The catalog's uniform search contract, which is what this section should
+   * have used from the start.
+   *
+   * `GET /rcollections` returns whole documents and no total, so a table built
+   * on it pages blindly and ships every field to render eight columns.
+   * `POST /search` takes `fl` — the fields to actually return — so the wire
+   * carries the columns and nothing else, and `fields`, which aggregates
+   * facet buckets in the same round trip. The filters on the page are those
+   * buckets; they are not a second query.
    */
-  async searchCollections(params: RCollectionListParams & { q?: string } = {}): Promise<RCollectionListResult> {
-    const query: Record<string, string | number> = {
-      limit: params.limit ?? 20,
-      offset: params.offset ?? 0
-    }
-    if (params.q?.trim()) query['q'] = params.q.trim()
-    const payload = await wisefoodRestApi.get<unknown>(this.basePath, { params: query })
-    const record = asRecord(payload)
-    const result = asRecord(record?.['result']) ?? record ?? {}
-    const items = Array.isArray(result['items'])
-      ? result['items']
-      : Array.isArray(result['rcollections'])
-        ? result['rcollections']
-        : Array.isArray(payload)
-          ? payload as unknown[]
-          : []
+  async searchCollections(params: RCollectionSearchParams = {}): Promise<RCollectionSearchResult> {
+    const payload = await wisefoodRestApi.post<unknown>(`${this.basePath}/search`, {
+      q: params.q?.trim() || null,
+      limit: params.limit ?? 25,
+      offset: params.offset ?? 0,
+      fl: params.fl ?? COLLECTION_TABLE_FIELDS,
+      fq: params.fq?.length ? params.fq : undefined,
+      sort: params.sort ?? 'updated_at desc',
+      fields: params.fields ?? COLLECTION_FACET_FIELDS,
+      facet_limit: params.facet_limit ?? 50
+    })
+    const result = asRecord(asRecord(payload)?.['result']) ?? asRecord(payload) ?? {}
+    const items = Array.isArray(result['results']) ? result['results'] as unknown[] : []
     return {
       collections: items.map(normalizeCollection),
-      total: asNumber(result['total']) ?? items.length
+      total: asNumber(result['total']) ?? items.length,
+      facets: normalizeFacets(result['facets']),
+      maxResultWindow: asNumber(result['max_result_window']) ?? 10000
     }
   }
 
@@ -181,14 +259,14 @@ class RCollectionsApiService {
     await wisefoodRestApi.delete(`${this.basePath}/${encodeURIComponent(urn)}`)
   }
 
-  async autocompleteCollections(q: string, limit = 8): Promise<Array<{ urn: string; title: string }>> {
+  async autocompleteCollections(q: string, limit = 8): Promise<Array<{ urn: string, title: string }>> {
     if (q.trim().length < 2) return []
     const payload = await wisefoodRestApi.get<unknown>(`${this.basePath}/autocomplete`, {
       params: { q: q.trim(), limit }
     })
     const record = asRecord(payload)
     const items = Array.isArray(record?.['result']) ? record['result'] as unknown[] : []
-    return items.map(item => {
+    return items.map((item) => {
       const r = asRecord(item) || {}
       return { urn: asString(r['urn']) || '', title: asString(r['title']) || '' }
     })

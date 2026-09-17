@@ -25,6 +25,10 @@
       <span class="min-w-0 flex-1 truncate text-xs text-gray-600 dark:text-gray-300">
         {{ summary }}
       </span>
+      <span
+        v-if="!running && steps.length"
+        class="shrink-0 text-[10px] tabular-nums text-gray-400 dark:text-gray-500"
+      >{{ steps.length }} step{{ steps.length === 1 ? '' : 's' }}</span>
       <UIcon
         :name="open ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
         class="h-4 w-4 shrink-0 text-gray-400"
@@ -89,16 +93,30 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { IntegratorStep } from '~/services/integratorApi'
 
 const props = withDefaults(defineProps<{
   steps: IntegratorStep[]
   /** Open while the turn is still running, so progress is visible live. */
   running?: boolean
-}>(), { running: false })
+  /** Open once finished too — used for the newest turn, so what the
+   *  assistant just did is visible without asking for it. */
+  defaultOpen?: boolean
+}>(), { running: false, defaultOpen: false })
 
-const open = ref(props.running)
+const open = ref(props.running || props.defaultOpen)
+
+/*
+ * Kept in sync, not just seeded. Messages are keyed by `seq`, so Vue reuses
+ * these components across a reload — without this, every turn that was once
+ * the newest stays expanded, and after a few exchanges the transcript is a
+ * wall of timelines. The cost is that manually expanding an older turn does
+ * not survive the next answer, which is the lesser surprise.
+ */
+watch(() => props.defaultOpen, (isLatest) => {
+  open.value = props.running || isLatest
+})
 
 const KIND_ICONS: Record<string, string> = {
   plan: 'i-lucide-brain',

@@ -2,10 +2,13 @@
   Food composition tables.
 
   A registered reference to a table, not a copy of one — there is no row store
-  behind this entity anywhere in the platform. So the figures shown here are
-  descriptive: what the table covers and how complete it is. The Source
-  Integrator measures them from the file; before this page existed there was
-  nowhere to see what it had measured.
+  behind this entity anywhere in the platform. So the figures here describe the
+  table: how many entries, which nutrients, how much of the grid carries a
+  value. The Source Integrator measures them from the file; before this section
+  existed there was nowhere to see what it had measured.
+
+  Fed by `POST /fctables/search`: `fl` keeps the response to the columns drawn
+  below, `fields` returns the facet buckets that become the filters.
 -->
 <template>
   <div>
@@ -37,43 +40,52 @@
           class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
         >
           <template #header>
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div class="flex flex-wrap items-center gap-2">
-                  <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-                    Table Library
-                  </h2>
-                  <UBadge
+            <div class="space-y-4">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                      Table Library
+                    </h2>
+                    <UBadge
+                      color="neutral"
+                      variant="outline"
+                    >
+                      {{ countLabel }}
+                    </UBadge>
+                  </div>
+                  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    These are references. The platform records what a table covers, not its rows.
+                  </p>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                  <UInput
+                    v-model="query"
+                    leading-icon="i-lucide-search"
+                    placeholder="Search title or institution"
+                    class="w-full sm:w-72"
+                    @keydown.enter="applySearch"
+                  />
+                  <UButton
                     color="neutral"
                     variant="outline"
+                    icon="i-lucide-refresh-cw"
+                    class="cursor-pointer"
+                    :loading="loading"
+                    @click="load"
                   >
-                    {{ countLabel }}
-                  </UBadge>
+                    Refresh
+                  </UButton>
                 </div>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  These are references. The platform records what a table covers, not its rows.
-                </p>
               </div>
 
-              <div class="flex flex-wrap gap-2">
-                <UInput
-                  v-model="query"
-                  leading-icon="i-lucide-search"
-                  placeholder="Search title or institution"
-                  class="w-full sm:w-72"
-                  @keydown.enter="applySearch"
-                />
-                <UButton
-                  color="neutral"
-                  variant="outline"
-                  icon="i-lucide-refresh-cw"
-                  class="cursor-pointer"
-                  :loading="loading"
-                  @click="load"
-                >
-                  Refresh
-                </UButton>
-              </div>
+              <ConsoleCatalogFacetFilters
+                v-model="filters"
+                :facets="facets"
+                :labels="FACET_LABELS"
+                @update:model-value="applyFilters"
+              />
             </div>
           </template>
 
@@ -86,80 +98,26 @@
             class="m-5"
           />
 
-          <div
-            v-else-if="loading && !tables.length"
-            class="flex items-center gap-2 px-6 py-16 text-sm text-gray-500 dark:text-gray-400"
-          >
-            <UIcon
-              name="i-lucide-loader-2"
-              class="h-4 w-4 animate-spin"
-            />
-            Loading tables…
-          </div>
-
-          <p
-            v-else-if="!tables.length"
-            class="px-6 py-16 text-center text-sm text-gray-500 dark:text-gray-400"
-          >
-            {{ query ? 'No tables match that search.' : 'No composition tables yet.' }}
-          </p>
-
-          <div
+          <UTable
             v-else
-            class="divide-y divide-gray-100 dark:divide-white/5"
+            :data="tables"
+            :columns="columns"
+            :loading="loading"
+            sticky
+            class="min-h-[18rem]"
+            @select="openRow"
           >
-            <NuxtLink
-              v-for="table in tables"
-              :key="table.urn"
-              :to="`/console/assets/fctables/${encodeURIComponent(table.urn)}`"
-              class="flex items-start gap-4 px-5 py-4 transition hover:bg-gray-50 sm:px-6 dark:hover:bg-white/5"
-            >
-              <div class="min-w-0 flex-1">
-                <div class="flex flex-wrap items-center gap-2">
-                  <h3 class="truncate text-sm font-semibold text-gray-900 dark:text-white">
-                    {{ table.title }}
-                  </h3>
-                  <UBadge
-                    size="sm"
-                    variant="soft"
-                    :color="table.license ? 'neutral' : 'warning'"
-                  >
-                    {{ table.license || 'licence undetermined' }}
-                  </UBadge>
-                  <span
-                    v-if="table.region"
-                    class="text-xs text-gray-500 dark:text-gray-400"
-                  >{{ table.region }}</span>
-                </div>
-                <p
-                  v-if="table.compiling_institution"
-                  class="mt-1 truncate text-sm text-gray-500 dark:text-gray-400"
-                >
-                  {{ table.compiling_institution }}
-                </p>
-                <p class="mt-1 font-mono text-[11px] text-gray-400 dark:text-gray-500">
-                  {{ table.urn }}
-                </p>
-              </div>
-              <div class="shrink-0 space-y-0.5 text-right">
-                <p class="text-sm font-medium text-gray-900 tabular-nums dark:text-white">
-                  {{ table.number_of_entries != null ? table.number_of_entries.toLocaleString() : '—' }}
-                </p>
-                <p class="text-xs text-gray-400 dark:text-gray-500">
-                  entries
-                </p>
-                <p
-                  v-if="table.nutrient_coverage.length"
-                  class="text-xs text-gray-400 dark:text-gray-500"
-                >
-                  {{ table.nutrient_coverage.length }} nutrients
-                </p>
-              </div>
-            </NuxtLink>
-          </div>
+            <template #empty>
+              <p class="py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                {{ query || filters.length
+                  ? 'No tables match that search.'
+                  : 'No composition tables yet.' }}
+              </p>
+            </template>
+          </UTable>
 
           <template
-            v-if="total > pageSize"
+            v-if="pageableTotal > pageSize"
             #footer
           >
             <div class="flex items-center justify-between gap-3">
@@ -169,7 +127,7 @@
               <UPagination
                 v-model:page="page"
                 :items-per-page="pageSize"
-                :total="total"
+                :total="pageableTotal"
                 @update:page="load"
               />
             </div>
@@ -262,21 +220,33 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import fctablesApi, { type FCTable } from '~/services/fctablesApi'
+import { computed, h, onMounted, resolveComponent, ref } from 'vue'
+import fctablesApi, { type Facets, type FCTable } from '~/services/fctablesApi'
 import { assetSectionBreadcrumb } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Composition Tables · Console' })
 
+const UBadge = resolveComponent('UBadge')
 const toast = useToast()
 const breadcrumbItems = assetSectionBreadcrumb('fctables')
 
-const pageSize = 20
+const FACET_LABELS: Record<string, string> = {
+  status: 'Status',
+  license: 'Licence',
+  region: 'Region',
+  language: 'Language',
+  compiling_institution: 'Institution'
+}
+
+const pageSize = 25
 const tables = ref<FCTable[]>([])
+const facets = ref<Facets>({})
 const total = ref(0)
+const maxResultWindow = ref(10000)
 const page = ref(1)
 const query = ref('')
+const filters = ref<string[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 
@@ -290,23 +260,110 @@ const draft = ref({
 const countLabel = computed(() =>
   `${total.value.toLocaleString()} table${total.value === 1 ? '' : 's'}`)
 
+/*
+ * The backend refuses an offset past `max_result_window` — that is a rejected
+ * request, not an empty page. Paging stops there and the range label says so,
+ * rather than offering a page number that returns an error.
+ */
+const pageableTotal = computed(() => Math.min(total.value, maxResultWindow.value))
+
 const rangeLabel = computed(() => {
   const start = (page.value - 1) * pageSize + 1
-  const end = Math.min(page.value * pageSize, total.value)
+  const end = Math.min(page.value * pageSize, pageableTotal.value)
+  const capped = pageableTotal.value < total.value
   return `${start}–${end} of ${total.value.toLocaleString()}`
+    + (capped ? ` (first ${pageableTotal.value.toLocaleString()} reachable)` : '')
 })
+
+const dash = (value: unknown) => (value === null || value === undefined || value === '') ? '—' : String(value)
+
+const columns = [
+  {
+    accessorKey: 'title',
+    header: 'Table',
+    cell: ({ row }: { row: { original: FCTable } }) => h('div', { class: 'min-w-0' }, [
+      h('p', { class: 'truncate text-sm font-medium text-gray-900 dark:text-white' },
+        row.original.title || 'Untitled'),
+      h('p', { class: 'truncate text-[11px] text-gray-400 dark:text-gray-500' },
+        row.original.compiling_institution || row.original.urn)
+    ])
+  },
+  {
+    accessorKey: 'number_of_entries',
+    header: 'Entries',
+    cell: ({ row }: { row: { original: FCTable } }) => h(
+      'span', { class: 'tabular-nums' },
+      row.original.number_of_entries != null
+        ? row.original.number_of_entries.toLocaleString()
+        : '—')
+  },
+  {
+    accessorKey: 'nutrient_coverage',
+    header: 'Nutrients',
+    cell: ({ row }: { row: { original: FCTable } }) => h(
+      'span', { class: 'tabular-nums' },
+      row.original.nutrient_coverage.length || '—')
+  },
+  {
+    accessorKey: 'completeness_percent',
+    header: 'Complete',
+    // A bar rather than a number: completeness is the field somebody scans a
+    // table of these to compare, and a percentage read down a column is work.
+    cell: ({ row }: { row: { original: FCTable } }) => {
+      const pct = row.original.completeness_percent
+      if (pct == null) return '—'
+      return h('div', { class: 'flex items-center gap-2' }, [
+        h('div', { class: 'h-1.5 w-16 overflow-hidden rounded-full bg-gray-100 dark:bg-white/10' }, [
+          h('div', {
+            class: 'h-full rounded-full bg-brandg-500',
+            style: `width: ${Math.min(100, Math.max(0, pct))}%`
+          })
+        ]),
+        h('span', { class: 'text-xs tabular-nums text-gray-500 dark:text-gray-400' },
+          `${Math.round(pct)}%`)
+      ])
+    }
+  },
+  {
+    accessorKey: 'region',
+    header: 'Region',
+    cell: ({ row }: { row: { original: FCTable } }) => dash(row.original.region)
+  },
+  {
+    accessorKey: 'license',
+    header: 'Licence',
+    cell: ({ row }: { row: { original: FCTable } }) => h(UBadge, {
+      size: 'sm',
+      variant: 'soft',
+      color: row.original.license ? 'neutral' : 'warning'
+    }, () => row.original.license || 'undetermined')
+  },
+  {
+    accessorKey: 'updated_at',
+    header: 'Updated',
+    cell: ({ row }: { row: { original: FCTable } }) => {
+      const at = row.original.updated_at ? new Date(row.original.updated_at) : null
+      return at && !Number.isNaN(at.getTime()) ? at.toLocaleDateString() : '—'
+    }
+  }
+]
 
 async function load() {
   loading.value = true
   error.value = null
   try {
-    const result = await fctablesApi.listTables({
+    const result = await fctablesApi.searchTables({
+      q: query.value.trim() || undefined,
+      fq: filters.value,
       limit: pageSize,
-      offset: (page.value - 1) * pageSize,
-      q: query.value.trim() || undefined
+      offset: (page.value - 1) * pageSize
     })
     tables.value = result.tables
     total.value = result.total
+    maxResultWindow.value = result.maxResultWindow
+    if (!filters.value.length || !Object.keys(facets.value).length) {
+      facets.value = result.facets
+    }
   } catch (caught) {
     error.value = caught instanceof Error ? caught.message : 'Could not load tables.'
   } finally {
@@ -317,6 +374,16 @@ async function load() {
 function applySearch() {
   page.value = 1
   load()
+}
+
+function applyFilters() {
+  page.value = 1
+  load()
+}
+
+/* UTable's select handler is (event, row) — the row is the second argument. */
+function openRow(_event: Event, row: { original: FCTable }) {
+  navigateTo(`/console/assets/fctables/${encodeURIComponent(row.original.urn)}`)
 }
 
 function openCreate() {

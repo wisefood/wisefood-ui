@@ -68,7 +68,7 @@
 
     <ul
       v-else
-      class="divide-y divide-gray-100 dark:divide-white/5"
+      class="max-h-96 divide-y divide-gray-100 overflow-y-auto dark:divide-white/5"
     >
       <li
         v-for="call in visible"
@@ -126,7 +126,7 @@
              somebody checking an integration actually needs to read. -->
         <pre
           v-if="expanded === call.id"
-          class="overflow-x-auto border-t border-gray-100 bg-gray-50 px-4 py-3 text-[11px] leading-relaxed text-gray-700 sm:px-5 dark:border-white/5 dark:bg-zinc-900/60 dark:text-gray-300"
+          class="max-h-64 overflow-auto whitespace-pre-wrap border-t border-gray-100 bg-gray-50 px-4 py-3 text-[11px] leading-relaxed text-gray-700 [overflow-wrap:anywhere] sm:px-5 dark:border-white/5 dark:bg-zinc-900/60 dark:text-gray-300"
         >{{ JSON.stringify(call.arguments ?? {}, null, 2) }}</pre>
       </li>
     </ul>

@@ -50,7 +50,13 @@ export interface SharedPlan {
   payload: {
     date?: string
     /** A slot holds one dish, or several — main, side, dessert. */
-    meals: Record<string, SharedDish | SharedDish[]>
+    meals?: Record<string, SharedDish | SharedDish[]>
+    /** A weekly share carries days instead; each holds the same slot map. */
+    days?: Array<{
+      day: number
+      summary?: string
+      meals: Record<string, SharedDish | SharedDish[]>
+    }>
   }
 }
 
@@ -86,8 +92,11 @@ class SharingApiService {
   }
 
   async createShare(body: {
-    kind: 'meal_plan' | 'saved_meal_plan'
+    kind: 'meal_plan' | 'saved_meal_plan' | 'weekly_meal_plan'
     id: string
+    /** Required for a weekly plan: it lives in FoodChat and is reachable
+     *  only as a given member's current plan. */
+    member_id?: string
     title?: string
     expires_in_days?: number | null
   }): Promise<{ token: string, title: string | null, expires_at: string | null }> {

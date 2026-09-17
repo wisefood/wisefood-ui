@@ -12,7 +12,58 @@
         :ui="{ root: 'relative py-8 border-b-0' }"
       />
 
-      <UPageBody>
+      <UPageBody class="space-y-6">
+        <!--
+          The integrator spans the row rather than sitting in it, because it
+          is not a fifth library: the sections below are what it brought in.
+          Laid out horizontally rather than as a stretched card, so the width
+          reads as deliberate.
+        -->
+        <NuxtLink
+          to="/console/assets/integrator"
+          class="group block rounded-xl border border-brand-200/70 bg-gradient-to-r from-brand-50/80 to-white p-5 shadow-sm ring-1 ring-brand-200/50 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-6 dark:border-brand-500/25 dark:from-brand-500/10 dark:to-zinc-900/80 dark:ring-brand-500/20"
+        >
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div class="shrink-0 rounded-xl bg-brand-100/80 p-3 dark:bg-brand-500/15">
+              <UIcon
+                name="i-lucide-radar"
+                class="h-6 w-6 text-brand-600 dark:text-brand-300"
+              />
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                  Source Integrator
+                </h2>
+                <UBadge
+                  size="sm"
+                  variant="soft"
+                  color="primary"
+                >
+                  Assistant
+                </UBadge>
+              </div>
+              <p class="mt-1 max-w-3xl text-sm leading-6 text-gray-600 dark:text-gray-300">
+                Research candidate sources with an assistant, check what their licence
+                permits, and integrate the approved ones with their provenance. Nothing
+                reaches the catalog without a person approving it.
+              </p>
+            </div>
+
+            <UButton
+              color="primary"
+              variant="soft"
+              size="sm"
+              trailing-icon="i-lucide-arrow-right"
+              class="shrink-0 self-start sm:self-center"
+              tabindex="-1"
+            >
+              Open
+            </UButton>
+          </div>
+        </NuxtLink>
+
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <UCard
             v-for="asset in assetSections"
@@ -93,18 +144,6 @@ useSeoMeta({
 const breadcrumbItems = assetBreadcrumb()
 
 const assetSections = [
-  {
-    // First, because it is the way in: the other four are libraries of what
-    // this brought in.
-    title: 'Source Integrator',
-    description: 'Research candidate sources with an assistant, check what their licence permits, and integrate the approved ones with their provenance.',
-    summary: '',
-    to: '/console/assets/integrator',
-    icon: 'i-lucide-radar',
-    available: true,
-    iconWrapperClass: 'bg-brand-50 dark:bg-brand-500/10',
-    iconClass: 'text-brand-600 dark:text-brand-300'
-  },
   {
     title: 'Dietary Guides',
     description: 'Manage guide records and work with each guide’s extracted guidelines and artifacts.',

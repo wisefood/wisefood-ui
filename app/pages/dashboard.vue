@@ -183,6 +183,8 @@
               <ShareSharePlanButton
                 v-if="todayMealPlan?.id"
                 :plan-id="todayMealPlan.id"
+                :kind="shareKind"
+                :member-id="currentMemberId || undefined"
                 :title="t('dashboard.schedule.title')"
                 size="xs"
                 variant="ghost"
@@ -679,6 +681,10 @@ const currentTime = ref(new Date())
 const currentMemberId = computed(() => householdStore.currentMember?.id ?? null)
 const householdMembers = computed(() => householdStore.householdMembers)
 const memberMealPlansById = ref<Record<string, MealPlan | null>>({})
+/* The raw response too: `extractTodayPlan` flattens a week into one day, so
+   the plan *type* — which decides how a share is scrubbed — is only knowable
+   from what the API actually returned. */
+const memberCurrentPlansById = ref<Record<string, MemberCurrentPlans | null>>({})
 
 const mealDescriptionFromRecipe = (recipe: MealRecipe | undefined, fallback: string): string => {
   if (!recipe) return fallback
@@ -711,6 +717,21 @@ const getMemberAvatarForDisplay = (member: HouseholdMember): AvatarConfig => {
 const todayMealPlan = computed<MealPlan | null>(() => {
   if (!currentMemberId.value) return null
   return memberMealPlansById.value[currentMemberId.value] ?? null
+})
+
+/*
+ * Which kind the share is. A weekly plan lives in FoodChat and is scrubbed
+ * differently — the id on `todayMealPlan` is the weekly plan's when the card
+ * was built from one, so the kind has to match or the server looks in the
+ * wrong place.
+ */
+const shareKind = computed<'meal_plan' | 'weekly_meal_plan'>(() => {
+  const memberId = currentMemberId.value
+  const plans = memberId ? memberCurrentPlansById.value[memberId] : null
+  return plans?.plan_type === 'weekly' && plans.weekly_meal_plan
+    && plans.weekly_meal_plan.id === todayMealPlan.value?.id
+    ? 'weekly_meal_plan'
+    : 'meal_plan'
 })
 
 const membersByMealType = computed<Record<'breakfast' | 'lunch' | 'dinner', HouseholdMember[]>>(() => {
@@ -813,6 +834,7 @@ const extractTodayPlan = (plans: MemberCurrentPlans): MealPlan | null => {
 const loadHouseholdMealPlans = async () => {
   if (!householdMembers.value.length) {
     memberMealPlansById.value = {}
+    memberCurrentPlansById.value = {}
     return
   }
 
@@ -820,19 +842,22 @@ const loadHouseholdMealPlans = async () => {
     householdMembers.value.map(async (member) => {
       try {
         const plans = await foodchatApi.getMemberCurrentPlans(member.id)
-        return [member.id, extractTodayPlan(plans)] as const
+        return [member.id, extractTodayPlan(plans), plans] as const
       } catch {
-        return [member.id, null] as const
+        return [member.id, null, null] as const
       }
     })
   )
 
   const next: Record<string, MealPlan | null> = {}
-  for (const [memberId, mealPlan] of entries) {
+  const raw: Record<string, MemberCurrentPlans | null> = {}
+  for (const [memberId, mealPlan, plans] of entries) {
     next[memberId] = mealPlan
+    raw[memberId] = plans
   }
 
   memberMealPlansById.value = next
+  memberCurrentPlansById.value = raw
 }
 
 watch(
