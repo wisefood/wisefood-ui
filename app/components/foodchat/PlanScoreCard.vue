@@ -50,11 +50,18 @@
               :style="{ width: barWidth(metric) }"
             />
           </div>
-          <!-- Not measured is not zero. A bar at 0% reads as "judged, badly". -->
+          <!-- Not measured is not zero. A bar at 0% reads as "judged, badly".
+               Only when there is NO score, though: a metric with a value and no
+               ceiling (a count, like 13 distinct foods) was printing "not
+               measured" directly beside its own number. -->
           <span
-            v-else
+            v-else-if="metric.score == null"
             class="flex-1 text-[10px] text-gray-400 dark:text-zinc-500"
           >{{ t('foodChatHome.planScore.notMeasured') }}</span>
+          <span
+            v-else
+            class="flex-1"
+          />
           <span
             v-if="metric.score != null"
             class="text-[11px] text-gray-700 dark:text-zinc-200 tabular-nums shrink-0"
