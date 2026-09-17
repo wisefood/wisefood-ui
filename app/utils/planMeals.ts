@@ -15,18 +15,6 @@
 
 import type { MealPlan, MealRecipe } from '~/services/foodchatApi'
 
-/** Display order for slots. Anything unlisted sorts after, alphabetically. */
-const SLOT_ORDER: readonly string[] = [
-  'breakfast',
-  'brunch',
-  'lunch',
-  'snack',
-  'dinner',
-  'side',
-  'dessert',
-  'drink'
-]
-
 /**
  * Suggested clock times, used only as a display hint.
  *
@@ -87,11 +75,6 @@ export function humaniseSlot(slot: string): string {
     .replace(/\b\w/g, char => char.toUpperCase())
 }
 
-function sortIndex(slot: string): number {
-  const index = SLOT_ORDER.indexOf(String(slot || '').toLowerCase())
-  return index === -1 ? SLOT_ORDER.length : index
-}
-
 /**
  * Every plate in a plan's first day, in display order, from either shape.
  *
@@ -148,10 +131,12 @@ export function planMeals(plan: MealPlan | null | undefined): NormalisedMeal[] {
       icon: slotIcon(meal.slot),
       partOfMultiCourse: (perSlot.get(meal.slot) ?? 0) > 1
     }))
-    .sort((a, b) => {
-      const order = sortIndex(a.slot) - sortIndex(b.slot)
-      return order !== 0 ? order : a.slot.localeCompare(b.slot)
-    })
+  // NOT sorted. `raw` is built in the plan's OWN order — `days[0].meals` as the
+  // backend serialised them — and that order is now something a member can
+  // change ("put the snack before lunch"). Re-sorting by slot NAME put it
+  // straight back, which is half of why a day could not be rearranged: two
+  // independent sorters, this one and `slot_sort_key`, both insisting that a
+  // snack belongs between lunch and dinner whatever the member's day is.
 }
 
 /** Meals grouped by slot, preserving order — one entry per meal, N plates each. */
@@ -272,7 +257,6 @@ export function mealGridColumns(count: number): string {
   if (count >= 5) return 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
   return 'grid grid-cols-1 sm:grid-cols-3'
 }
-
 
 /**
  * Every day of a plan, each with its meals grouped and totalled.
