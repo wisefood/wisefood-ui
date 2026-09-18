@@ -2173,7 +2173,9 @@
       "noEvidence": "Temu vozlišču ni pripet noben odlomek.",
       "moreEvidence": "Naloži več",
       "loadFailed": "Tega vozlišča ni bilo mogoče naložiti.",
-      "describes": "{kind}, ki jo to opisuje"
+      "describes": "{kind}, ki jo to opisuje",
+      "ontologyTerm": "Ontološki pojem",
+      "entityMentions": "{mentions} omemb v {chunks} odlomkih"
     },
     "legend": {
       "title": "Legenda",

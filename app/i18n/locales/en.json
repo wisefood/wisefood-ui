@@ -2173,7 +2173,9 @@
       "noEvidence": "No passages are attached to this node.",
       "moreEvidence": "Load more",
       "loadFailed": "This node could not be loaded.",
-      "describes": "The {kind} this describes"
+      "describes": "The {kind} this describes",
+      "ontologyTerm": "Ontology term",
+      "entityMentions": "{mentions} mentions across {chunks} passages"
     },
     "legend": {
       "title": "Legend",

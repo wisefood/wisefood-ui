@@ -292,6 +292,48 @@
             </p>
           </section>
 
+          <!--
+            The ontology term behind the category.
+            A shelf is derived FROM FoodOn, it is not FoodOn: the graph folds
+            intermediate terms together and renames them for reading. Showing
+            the source term is what makes a shelf checkable against the
+            ontology rather than something to take on trust — and the synonyms
+            are the other words the corpus was searched under, which is often
+            the answer to "why is this passage here".
+          -->
+          <section
+            v-if="entity"
+            class="border-b border-zinc-200 dark:border-zinc-800 p-4"
+          >
+            <h4 class="mb-1.5 text-[0.6rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+              {{ t('graph.inspector.ontologyTerm') }}
+            </h4>
+            <p class="flex items-baseline gap-2">
+              <span class="font-mono text-[0.7rem] text-zinc-500 dark:text-zinc-400">{{ entity.ontology_id }}</span>
+              <span class="min-w-0 flex-1 truncate text-sm text-zinc-800 dark:text-zinc-100">{{ entity.label }}</span>
+            </p>
+            <p
+              v-if="entity.synonyms.length"
+              class="mt-1.5 flex flex-wrap gap-1"
+            >
+              <span
+                v-for="synonym in entity.synonyms.slice(0, 8)"
+                :key="synonym"
+                class="rounded-md bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 text-[0.7rem] text-zinc-600 dark:text-zinc-300"
+              >{{ synonym }}</span>
+              <span
+                v-if="entity.synonyms.length > 8"
+                class="px-1 py-0.5 text-[0.7rem] text-zinc-400"
+              >+{{ entity.synonyms.length - 8 }}</span>
+            </p>
+            <p class="mt-1.5 text-[0.65rem] text-zinc-400 dark:text-zinc-500">
+              {{ t('graph.inspector.entityMentions', {
+                mentions: entity.mention_count.toLocaleString(),
+                chunks: entity.chunk_count.toLocaleString()
+              }) }}
+            </p>
+          </section>
+
           <!-- Structure: children and themes, each a way further in. -->
           <section
             v-if="children.length || themes.length"
@@ -442,6 +484,7 @@ import graphApi from '~/services/graphApi'
 import type {
   GraphCard,
   GraphChunk,
+  GraphEntity,
   GraphNodeKind,
   GraphNodeSummary,
   GraphShelfDetail,
@@ -480,6 +523,7 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const detail = ref<GraphShelfDetail | GraphThemeDetail | null>(null)
 const card = ref<GraphCard | null>(null)
+const entity = ref<GraphEntity | null>(null)
 
 const evidenceOpen = ref(false)
 const chunks = ref<GraphChunk[]>([])
@@ -575,6 +619,7 @@ async function load() {
   error.value = null
   detail.value = null
   card.value = null
+  entity.value = null
   chunks.value = []
   chunksHasMore.value = false
   try {
@@ -590,6 +635,7 @@ async function load() {
       card.value = (result as GraphShelfDetail).card ?? null
     }
     if (evidenceOpen.value) loadChunks()
+    loadEntity()
   } catch (err) {
     if (props.nodeId !== id) return
     error.value = (err as { data?: { detail?: string } })?.data?.detail
@@ -597,6 +643,27 @@ async function load() {
       || t('graph.inspector.loadFailed')
   } finally {
     if (props.nodeId === id) loading.value = false
+  }
+}
+
+/**
+ * The FoodOn term a shelf came from.
+ *
+ * Fire-and-forget, and never surfaced as an error: the ontology is a nice-to-
+ * have beside the card and the evidence, and a node whose term has been
+ * retired should still open. A theme has no single term — it spans shelves —
+ * so there is nothing to ask for.
+ */
+async function loadEntity() {
+  const node = detail.value as GraphShelfDetail | null
+  const id = node?.foodon_id
+  const forNode = props.nodeId
+  if (!id) return
+  try {
+    const found = await graphApi.entity(id)
+    if (props.nodeId === forNode) entity.value = found
+  } catch {
+    // Left null; the section simply does not render.
   }
 }
 
@@ -630,6 +697,7 @@ watch(() => props.nodeId, (id) => {
   else {
     detail.value = null
     card.value = null
+    entity.value = null
     error.value = null
   }
 }, { immediate: true })

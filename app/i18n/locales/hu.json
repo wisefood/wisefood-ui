@@ -2173,7 +2173,9 @@
       "noEvidence": "Ehhez a csomóponthoz nem tartozik részlet.",
       "moreEvidence": "Továbbiak",
       "loadFailed": "Ezt a csomópontot nem sikerült betölteni.",
-      "describes": "A leírt {kind}"
+      "describes": "A leírt {kind}",
+      "ontologyTerm": "Ontológiai fogalom",
+      "entityMentions": "{mentions} említés {chunks} részletben"
     },
     "legend": {
       "title": "Jelmagyarázat",

@@ -278,6 +278,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
 import { track } from '~/composables/useTelemetry'
@@ -305,6 +306,8 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const route = useRoute()
+const router = useRouter()
 const authStore = useAuthStore()
 const { isAdmin } = storeToRefs(authStore)
 
@@ -450,6 +453,7 @@ async function bootstrap() {
     summary.value = await graphApi.summary()
     if (summary.value.built) {
       await Promise.all([refreshSearch(), reload()])
+      await hydrateFromQuery()
     }
   } catch (error) {
     const status = (error as { status?: number })?.status
@@ -519,6 +523,48 @@ function onSelect(nodeId: string) {
   selectedId.value = nodeId || null
   if (nodeId) {
     track('graph.select', { node_id: nodeId, view: view.value }, 'foodscholar')
+  }
+}
+
+/**
+ * The selection and the view, in the URL.
+ *
+ * The thing people do with a graph browser is find something and send it to
+ * someone. Without this, the link they send opens an empty map and the finding
+ * has to be described in prose. `replace` rather than `push`, because clicking
+ * through twenty nodes should not mean pressing Back twenty times to leave.
+ */
+function syncQuery() {
+  const query: Record<string, string> = { ...(route.query as Record<string, string>) }
+  if (selectedId.value) query.node = selectedId.value
+  else delete query.node
+  if (view.value !== 'split') query.view = view.value
+  else delete query.view
+  router.replace({ query })
+}
+
+watch([selectedId, view], syncQuery)
+
+/**
+ * Open on the node a link named.
+ *
+ * Runs after the summary is known: a node link that arrives while the graph is
+ * switched off should land on the message that says so, not on a spinner that
+ * never resolves.
+ */
+async function hydrateFromQuery() {
+  const wanted = route.query.view
+  if (wanted === 'tree' || wanted === 'map' || wanted === 'split') view.value = wanted
+
+  const node = route.query.node
+  if (typeof node !== 'string' || !node) return
+  onSelect(node)
+  treeRef.value?.reveal(node)
+  if (view.value !== 'tree') {
+    // The default depth-2 slice will not contain a deep node, so the link has
+    // to bring its neighbourhood with it rather than centring on nothing.
+    if (stream.nodes.has(node)) canvasRef.value?.centerOn(node)
+    else await onExpand(node)
   }
 }
 
