@@ -872,6 +872,12 @@ function resize() {
   if (!wrap || !canvas) return
   const rect = wrap.getBoundingClientRect()
   if (!rect.width || !rect.height) return
+  // Going from no size to a size is the interesting transition, not just a
+  // window resize: the map starts inside a `v-show`ed pane, so in tree view it
+  // measures 0×0 and the fit that runs when the first nodes land is a no-op.
+  // Without this, switching to the map showed a graph at whatever scale and
+  // offset the initial values happened to be.
+  const firstSize = !width || !height
   width = rect.width
   height = rect.height
   // Capped at 2: a 3x display doubles the pixel count again for a difference
@@ -884,7 +890,8 @@ function resize() {
     minimap.width = 144 * dpr
     minimap.height = 96 * dpr
   }
-  requestDraw()
+  if (firstSize && draw.length) fit(false)
+  else requestDraw()
 }
 
 function syncTheme() {
