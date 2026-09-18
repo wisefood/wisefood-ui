@@ -875,7 +875,14 @@ class InsightsApiService {
     limit = 50,
     bounds?: RangeBounds,
     offset = 0
-  ): Promise<{ users: UserRow[], total: number, offset: number }> {
+  ): Promise<{
+    users: UserRow[]
+    total: number
+    offset: number
+    /** How the time figures were arrived at. Carried through so a page can
+     *  quote the real idle gap rather than hardcoding one that drifts. */
+    time_basis?: TimeBasis
+  }> {
     try {
       const payload = await wisefoodRestApi.get<unknown>(
         `${this.basePath}/users?days=${days}&limit=${limit}&offset=${offset}${rangeQuery(bounds)}`
@@ -883,7 +890,8 @@ class InsightsApiService {
       return {
         users: unwrap<UserRow[]>(payload, 'users', []),
         total: unwrap<number>(payload, 'total', 0),
-        offset: unwrap<number>(payload, 'offset', 0)
+        offset: unwrap<number>(payload, 'offset', 0),
+        time_basis: unwrap<TimeBasis | undefined>(payload, 'time_basis', undefined)
       }
     } catch {
       lastInsightsFailure.value++

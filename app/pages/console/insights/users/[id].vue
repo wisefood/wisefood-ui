@@ -160,6 +160,46 @@
                always the shorter column, so it follows the scroll rather than
                scrolling off the top of it. -->
           <aside class="min-w-0 space-y-6 lg:sticky lg:top-6 lg:self-start">
+            <!-- Where their time went. A single total cannot answer "did they
+                 spend it in FoodScholar or FoodChat?", which is the question
+                 this page gets opened for. -->
+            <UCard
+              v-if="byApp.length"
+              :ui="{ body: 'p-4' }"
+              class="border border-gray-200/70 dark:border-white/10"
+            >
+              <h3 class="text-sm font-semibold text-gray-900 dark:text-white">
+                Where their time went
+              </h3>
+              <ul class="mt-3 space-y-2.5">
+                <li
+                  v-for="row in byApp"
+                  :key="row.app"
+                >
+                  <div class="flex items-baseline justify-between gap-3 text-xs">
+                    <span class="truncate font-medium text-gray-700 dark:text-gray-200">
+                      {{ row.app }}
+                    </span>
+                    <span class="shrink-0 tabular-nums text-gray-500 dark:text-gray-400">
+                      {{ row.label }} · {{ row.share }}%
+                    </span>
+                  </div>
+                  <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-zinc-800">
+                    <div
+                      class="h-full rounded-full bg-brand-500"
+                      :style="{ width: `${row.share}%` }"
+                    />
+                  </div>
+                </li>
+              </ul>
+              <!-- Said on the surface that shows the number, not only in the
+                   API: a bar chart of hours reads as measured. -->
+              <p class="mt-3 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
+                Estimated from what they did, not from when a tab was open. A visit
+                ends after {{ idleGapMinutes }} minutes of silence.
+              </p>
+            </UCard>
+
             <div
               v-if="totals"
               class="grid gap-4 sm:grid-cols-3 lg:grid-cols-1"
@@ -212,7 +252,9 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useInsightsLoad } from '~/composables/useInsightsLoad'
 import { useInsightsRange } from '~/composables/useInsightsRange'
-import insightsApi, { type ClientSessionRow, type UserRow } from '~/services/insightsApi'
+import insightsApi, {
+  humanDuration, type ClientSessionRow, type UserRow
+} from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
 
 /**
@@ -264,9 +306,33 @@ const stats = computed(() => {
     { label: 'Questions', value: row.questions_asked, icon: 'i-lucide-message-circle-question' },
     { label: 'Searches', value: row.searches, icon: 'i-lucide-search' },
     { label: 'Chat turns', value: row.chat_turns, icon: 'i-lucide-messages-square' },
-    { label: 'Sessions on file', value: boardTotal.value, icon: 'i-lucide-list' }
+    { label: 'Time', value: humanDuration(row.seconds_active), icon: 'i-lucide-clock' }
   ]
 })
+
+/**
+ * What this person spent where, longest first.
+ *
+ * The question that prompted this page was "54 comments in FoodScholar and 5
+ * in FoodChat — how much time did each person actually give each one?". A
+ * single total cannot answer it; the split can.
+ */
+const byApp = computed(() => {
+  const spent = totals.value?.time_by_app ?? {}
+  const rows = Object.entries(spent)
+    .map(([app, value]) => ({ app, ...value }))
+    .sort((a, b) => b.seconds - a.seconds)
+  const total = rows.reduce((sum, row) => sum + row.seconds, 0)
+  return rows.map(row => ({
+    ...row,
+    label: humanDuration(row.seconds),
+    share: total ? Math.round((row.seconds / total) * 100) : 0
+  }))
+})
+
+/** Quoted from the response rather than repeated here, so the page and the
+ *  report can never disagree about how the figure was arrived at. */
+const idleGapMinutes = ref(30)
 
 const showingLabel = computed(() => {
   if (!boardTotal.value) return 'nothing to show'
@@ -294,6 +360,9 @@ async function load() {
     insightsApi.getSessionBoard({ userId, days: days.value, since: range.value.since, until: range.value.until, limit: 50 })
   ])
   totals.value = people.users.find(row => row.user_id === userId) ?? null
+  if (people.time_basis?.idle_gap_minutes) {
+    idleGapMinutes.value = people.time_basis.idle_gap_minutes
+  }
   sessions.value = board?.sessions ?? []
   boardTotal.value = board?.total ?? 0
 }

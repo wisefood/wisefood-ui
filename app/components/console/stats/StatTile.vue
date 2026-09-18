@@ -25,11 +25,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps<{ label: string, value: number | null | undefined, icon: string }>()
+const props = defineProps<{
+  label: string
+  /** A count, which is abbreviated, or an already-formatted string for the
+   *  things counting does not suit — a duration reads as "3h 20m", never as
+   *  "12.0K" seconds. */
+  value: number | string | null | undefined
+  icon: string
+}>()
 
 const display = computed(() => {
   const n = props.value
-  if (n === null || n === undefined || n < 0) return '—'
+  if (n === null || n === undefined) return '—'
+  if (typeof n === 'string') return n || '—'
+  if (n < 0) return '—'
   return n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n)
 })
 </script>
