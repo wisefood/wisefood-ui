@@ -347,8 +347,9 @@
     },
     "analyzer": {
       "title": "MI receptelemző",
-      "description": "Illessz be bármilyen recept URL-t vagy hozzávalólistát az azonnali táplálkozási elemzéshez",
-      "placeholder": "Illeszd be ide a recept URL-t, hozzávalókat vagy receptszöveget...",
+      "description": "Illeszd be a receptet szövegként — a címet, utána a hozzávalókat mennyiségekkel, végül az elkészítést. Egy recept URL-je nem működik; magát a receptet másold be.",
+      "placeholder": "Fokhagymás vajas garnéla\n\nHozzávalók:\n200 g garnéla\n2 ek vaj\n2 gerezd fokhagyma\n\nElkészítés:\nOlvaszd fel a vajat, add hozzá a fokhagymát…",
+      "formatHint": "A mennyiség számít: a „2 ek vaj” mért, a „vaj” csak becsült.",
       "analyze": "Recept elemzése",
       "analyzing": "Elemzés...",
       "results": "Elemzés eredménye",
@@ -480,6 +481,7 @@
     "detail": {
       "nutritionalInfo": "Tápérték információ",
       "perServing": "adagonként",
+      "servingWeight": "egy adag ≈ {value} g",
       "profilePending": {
         "message": "A recept tápanyagprofilja még készül. Ez általában egy percet vesz igénybe.",
         "reload": "Frissítés"
@@ -588,7 +590,9 @@
           "moderate": "Közepes",
           "high": "Magas lábnyom"
         }
-      }
+      },
+      "copyRecipe": "Recept másolása",
+      "copiedRecipe": "Másolva — illeszd be az elemzőbe"
     },
     "comparePage": {
       "pageTitle": "Receptek összehasonlítása - RecipeWrangler",

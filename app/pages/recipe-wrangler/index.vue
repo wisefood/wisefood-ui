@@ -118,10 +118,10 @@
           <div class="flex items-start justify-between gap-4">
             <div>
               <h2 class="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white">
-                AI Recipe Analyzer
+                {{ t('recipeWrangler.analyzer.title') }}
               </h2>
               <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
-                Paste recipe text to see nutrient totals and detailed ingredient-level calculation matches.
+                {{ t('recipeWrangler.analyzer.description') }}
               </p>
             </div>
           </div>
@@ -129,10 +129,13 @@
           <div class="mt-4">
             <textarea
               v-model="analysisInput"
-              rows="5"
-              placeholder="Garlic Butter Shrimp&#10;Ingredients: 200g shrimp, 2 tbsp butter..."
+              rows="8"
+              :placeholder="t('recipeWrangler.analyzer.placeholder')"
               class="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brandg-500"
             />
+            <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+              {{ t('recipeWrangler.analyzer.formatHint') }}
+            </p>
           </div>
 
           <div class="mt-4 flex items-center gap-3 flex-wrap">
@@ -144,7 +147,7 @@
             >
               <UIcon v-if="analysisLoading" name="i-lucide-loader-2" class="w-4 h-4 animate-spin" />
               <UIcon v-else name="i-lucide-flask-conical" class="w-4 h-4" />
-              <span>{{ analysisLoading ? 'Analyzing...' : 'Analyze Recipe' }}</span>
+              <span>{{ analysisLoading ? t('recipeWrangler.analyzer.analyzing') : t('recipeWrangler.analyzer.analyze') }}</span>
             </button>
 
             <div class="flex items-center rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/40 p-1 gap-1">

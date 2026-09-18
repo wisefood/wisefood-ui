@@ -461,7 +461,9 @@
               </div>
             </div>
             <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-8">
-              {{ t('recipeWrangler.detail.perServing') }} · <span class="italic">{{ compositionTableLabel }}</span>
+              {{ t('recipeWrangler.detail.perServing') }}
+              <span v-if="servingWeightLabel">· {{ servingWeightLabel }}</span>
+              · <span class="italic">{{ compositionTableLabel }}</span>
             </p>
 
             <!-- Profile still being computed in the background -->
@@ -806,20 +808,33 @@
                 />
                 {{ t('recipeWrangler.detail.ingredients') }}
               </h2>
-              <UTooltip :text="adaptAvailable ? t('recipeWrangler.detail.adaptation.action') : t('recipeWrangler.detail.adaptation.unavailable')">
+              <div class="flex items-center gap-2">
                 <button
                   type="button"
-                  :disabled="!adaptAvailable"
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-brandg-50 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300 border border-brandg-200 dark:border-brandg-700 hover:bg-brandg-100 dark:hover:bg-brandg-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  @click="openAdaptModal"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-zinc-50 dark:bg-zinc-900/40 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-900/60 transition-colors"
+                  @click="copyRecipeForAnalyzer"
                 >
                   <UIcon
-                    name="i-lucide-sparkles"
+                    :name="recipeCopied ? 'i-lucide-check' : 'i-lucide-copy'"
                     class="w-3.5 h-3.5"
                   />
-                  {{ t('recipeWrangler.detail.adaptation.improve') }}
+                  {{ recipeCopied ? t('recipeWrangler.detail.copiedRecipe') : t('recipeWrangler.detail.copyRecipe') }}
                 </button>
-              </UTooltip>
+                <UTooltip :text="adaptAvailable ? t('recipeWrangler.detail.adaptation.action') : t('recipeWrangler.detail.adaptation.unavailable')">
+                  <button
+                    type="button"
+                    :disabled="!adaptAvailable"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-brandg-50 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300 border border-brandg-200 dark:border-brandg-700 hover:bg-brandg-100 dark:hover:bg-brandg-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    @click="openAdaptModal"
+                  >
+                    <UIcon
+                      name="i-lucide-sparkles"
+                      class="w-3.5 h-3.5"
+                    />
+                    {{ t('recipeWrangler.detail.adaptation.improve') }}
+                  </button>
+                </UTooltip>
+              </div>
             </div>
 
             <!-- Saved adapted version indicator -->
@@ -1858,6 +1873,81 @@ const nutriScoreGrade = computed(() => getNutriScoreGrade(
   ?? recipe.value?.nutri_score_raw
   ?? recipe.value?.nutri_score
 ))
+
+// --- Copy recipe, for pasting into the Analyzer (Round 2 row 22) ---
+// Laid out to match the format the Analyzer's own placeholder documents:
+// title, then quantities with names, then numbered steps. The Analyzer takes
+// text only, so this is the transfer route between the two.
+const recipeAsText = computed<string>(() => {
+  const current = recipe.value
+  if (!current) return ''
+  const lines: string[] = []
+  const title = String(current.title || '').trim()
+  if (title) lines.push(title)
+
+  const ingredients = Array.isArray(current.ingredients) ? current.ingredients : []
+  const ingredientLines = ingredients
+    .map((ingredient) => {
+      const name = String(ingredient?.name || '').trim()
+      if (!name) return ''
+      const measurement = String(ingredient?.measurement || '').trim()
+      return measurement ? `${measurement} ${name}` : name
+    })
+    .filter(Boolean)
+  if (ingredientLines.length) {
+    lines.push('', `${t('recipeWrangler.detail.ingredients')}:`, ...ingredientLines)
+  }
+
+  const instructions = Array.isArray(current.instructions) ? current.instructions : []
+  const steps = instructions.map(step => String(step || '').trim()).filter(Boolean)
+  if (steps.length) {
+    lines.push('', `${t('recipeWrangler.detail.instructions')}:`)
+    steps.forEach((step, index) => {
+      lines.push(`${index + 1}. ${step}`)
+    })
+  }
+
+  const serves = toNullableNumber(current.serves)
+  if (serves !== null && serves > 0) {
+    lines.push('', `${serves} ${t('recipeWrangler.recipe.servings', serves)}`)
+  }
+  return lines.join('\n')
+})
+
+const recipeCopied = ref(false)
+let copiedResetTimer: ReturnType<typeof setTimeout> | null = null
+
+const copyRecipeForAnalyzer = async () => {
+  const text = recipeAsText.value
+  if (!text) return
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch {
+    // No clipboard outside a secure context. Say nothing rather than claim a
+    // copy that did not happen.
+    return
+  }
+  recipeCopied.value = true
+  if (copiedResetTimer) clearTimeout(copiedResetTimer)
+  copiedResetTimer = setTimeout(() => {
+    recipeCopied.value = false
+  }, 2500)
+}
+
+onBeforeUnmount(() => {
+  if (copiedResetTimer) clearTimeout(copiedResetTimer)
+})
+
+// --- What one serving weighs (Round 2 row 9) ---
+// Round 2 asked what "per serving" refers to. The backend sends null whenever
+// any ingredient weight is missing, so an absent value means "we cannot say"
+// rather than a total that quietly omits ingredients. Rounded to 5 g because
+// this is raw weight and reads high for anything that cooks down.
+const servingWeightLabel = computed<string | null>(() => {
+  const grams = toNullableNumber(recipe.value?.serving_weight_g)
+  if (grams === null || grams <= 0) return null
+  return t('recipeWrangler.detail.servingWeight', { value: Math.round(grams / 5) * 5 })
+})
 
 // --- Sustainability (kg CO2e per serving, from the stored profiling trace) ---
 const sustainabilityPerServing = computed<number | null>(() => {

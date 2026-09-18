@@ -347,8 +347,9 @@
     },
     "analyzer": {
       "title": "AI Recipe Analyzer",
-      "description": "Paste any recipe URL or ingredients list to get instant nutritional analysis",
-      "placeholder": "Paste recipe URL, ingredients, or recipe text here...",
+      "description": "Paste the recipe as text — the title, then the ingredients with their quantities, then the method. A link to a recipe page will not work; copy the recipe itself.",
+      "placeholder": "Garlic Butter Shrimp\n\nIngredients:\n200 g shrimp\n2 tbsp butter\n2 cloves garlic\n\nMethod:\nMelt the butter, add the garlic…",
+      "formatHint": "Quantities matter: “2 tbsp butter” is measured, “butter” is estimated.",
       "analyze": "Analyze Recipe",
       "analyzing": "Analyzing...",
       "results": "Analysis Results",
@@ -480,6 +481,7 @@
     "detail": {
       "nutritionalInfo": "Nutritional Information",
       "perServing": "per serving",
+      "servingWeight": "one serving ≈ {value} g",
       "profilePending": {
         "message": "The nutrition profile for this recipe is still being generated. This usually takes a minute.",
         "reload": "Check again"
@@ -588,7 +590,9 @@
           "moderate": "Moderate",
           "high": "High impact"
         }
-      }
+      },
+      "copyRecipe": "Copy recipe",
+      "copiedRecipe": "Copied — paste it into the Analyzer"
     },
     "comparePage": {
       "pageTitle": "Compare Recipes - RecipeWrangler",

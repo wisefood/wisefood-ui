@@ -73,6 +73,8 @@ export interface Recipe {
   instructions: string[]
   duration: number | null
   serves: number | null
+  /** Approximate raw grams in one serving; null when any ingredient weight is unknown. */
+  serving_weight_g?: number | null
   total_kcal_per_serving: number | null
   total_protein_g_per_serving: number | null
   total_carbs_g_per_serving: number | null

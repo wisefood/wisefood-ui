@@ -347,8 +347,9 @@
     },
     "analyzer": {
       "title": "AI analizator receptov",
-      "description": "Prilepi URL recepta ali seznam sestavin za takojšnjo prehransko analizo",
-      "placeholder": "Sem prilepi URL recepta, sestavine ali besedilo recepta...",
+      "description": "Prilepi recept kot besedilo — naslov, nato sestavine s količinami in na koncu postopek. Povezava do strani z receptom ne deluje; prilepi sam recept.",
+      "placeholder": "Škampi z česnovim maslom\n\nSestavine:\n200 g škampov\n2 žlici masla\n2 stroka česna\n\nPostopek:\nStopi maslo, dodaj česen…",
+      "formatHint": "Količine so pomembne: »2 žlici masla« je izmerjeno, »maslo« je ocenjeno.",
       "analyze": "Analiziraj recept",
       "analyzing": "Analiziranje...",
       "results": "Rezultati analize",
@@ -480,6 +481,7 @@
     "detail": {
       "nutritionalInfo": "Prehranske informacije",
       "perServing": "na porcijo",
+      "servingWeight": "ena porcija ≈ {value} g",
       "profilePending": {
         "message": "Prehranski profil tega recepta se še pripravlja. To običajno traja minuto.",
         "reload": "Preveri znova"
@@ -588,7 +590,9 @@
           "moderate": "Zmerno",
           "high": "Velik odtis"
         }
-      }
+      },
+      "copyRecipe": "Kopiraj recept",
+      "copiedRecipe": "Kopirano — prilepi v analizator"
     },
     "comparePage": {
       "pageTitle": "Primerjava receptov - RecipeWrangler",
