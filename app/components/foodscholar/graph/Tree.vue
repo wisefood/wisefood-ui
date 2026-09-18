@@ -405,13 +405,17 @@ async function reveal(nodeId: string) {
   try {
     const trail = await graphApi.breadcrumb(nodeId)
     const node = trail.length ? trail[0]! : await graphApi.node(nodeId) as GraphNodeSummary
-    const facet = node.facet
+    // Narrowed to a plain string before it is used as a key and a label.
+    // `facet` is optional AND nullable on the wire, and the row type is
+    // neither — the tree has no place to put a node whose facet is unknown,
+    // which is exactly the case the early return covers.
+    const facet = node.facet ?? undefined
     if (!facet && !props.under) return
 
     let key = props.under ? 'scope' : `facet:${facet}`
     if (!props.under) {
       const facetRow: Row = {
-        key, type: 'facet', level: 0, facet, label: facet!, count: 0, expandable: true
+        key, type: 'facet', level: 0, facet, label: facet ?? '', count: 0, expandable: true
       }
       expanded.value = new Set(expanded.value).add(key)
       await loadChildren(facetRow)

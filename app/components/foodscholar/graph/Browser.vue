@@ -399,7 +399,12 @@ const viewOptions = computed(() => ([
 const unavailable = computed(() => {
   if (booting.value) return null
   const failure = stream.failure.value
-  const kind = bootError.value ?? failure?.kind
+  // The summary is the authority on "switched off": it is the only response
+  // that knows, because every other browse route reads the projected index and
+  // cannot tell.
+  const kind = summary.value?.enabled === false
+    ? 'disabled'
+    : bootError.value ?? failure?.kind
   if (summary.value?.built && !bootError.value && kind !== 'disabled') return null
 
   switch (kind) {

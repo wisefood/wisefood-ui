@@ -141,6 +141,17 @@ export interface GraphFacetSummary {
 }
 
 export interface GraphSummary {
+  /**
+   * Whether this deployment serves the graph at all.
+   *
+   * Distinct from `built`, and it has to be: the browse routes read an
+   * Elasticsearch index, not the source stores, so they would happily serve an
+   * index left behind by a deployment that has since switched the graph off.
+   * Without this the interface cannot tell "not enabled here" from "nobody has
+   * run the projector", and would send people looking for a button that does
+   * not exist.
+   */
+  enabled?: boolean
   built: boolean
   alias?: string | null
   documents: number

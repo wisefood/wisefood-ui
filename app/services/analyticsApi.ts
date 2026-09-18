@@ -39,6 +39,14 @@ export type ClientEventType =
   | 'favorite.remove'
   | 'catalog.view'
   | 'console.view'
+  // Knowledge graph browsing. Mirrors CLIENT_EVENT_TYPES in the gateway's
+  // schemas.py, which is the allowlist that actually decides: a type missing
+  // there is a 422, and a whole batch is rejected together.
+  | 'graph.select'
+  | 'graph.expand'
+  | 'graph.scope'
+  | 'graph.search'
+  | 'graph.ask_bridge'
 
 export type AnalyticsApp =
   | 'foodchat'
