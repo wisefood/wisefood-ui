@@ -39,7 +39,7 @@
           :ui="{ body: 'p-5' }"
           class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"
         >
-          <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+          <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
             {{ tile.label }}
           </p>
           <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">

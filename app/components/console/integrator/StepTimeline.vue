@@ -27,7 +27,7 @@
       </span>
       <span
         v-if="!running && steps.length"
-        class="shrink-0 text-[10px] tabular-nums text-gray-400 dark:text-gray-500"
+        class="shrink-0 text-[0.625rem] tabular-nums text-gray-400 dark:text-gray-500"
       >{{ steps.length }} step{{ steps.length === 1 ? '' : 's' }}</span>
       <UIcon
         :name="open ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
@@ -65,12 +65,12 @@
               <!-- What kind of work this was, in a word. The icon alone says
                    it to whoever already knows the vocabulary. -->
               <span
-                class="rounded px-1 py-px text-[9px] font-medium uppercase tracking-wide"
+                class="rounded px-1 py-px text-[0.5625rem] font-medium uppercase tracking-wide"
                 :class="kindTone(step)"
               >{{ KIND_LABELS[step.kind] || step.kind }}</span>
               <span
                 v-if="step.elapsed_ms != null && step.elapsed_ms > 0"
-                class="text-[10px] tabular-nums text-gray-400"
+                class="text-[0.625rem] tabular-nums text-gray-400"
               >{{ elapsed(step.elapsed_ms) }}</span>
             </div>
             <!-- What was attempted. Kept even when the step failed: the query
@@ -83,19 +83,19 @@
               :href="step.detail"
               target="_blank"
               rel="noopener noreferrer"
-              class="block truncate font-mono text-[11px] text-brand-600 hover:underline dark:text-brand-300"
+              class="block truncate font-mono text-[0.6875rem] text-brand-600 hover:underline dark:text-brand-300"
               :title="step.detail"
             >{{ prettyUrl(step.detail) }}</a>
             <p
               v-else-if="step.detail"
-              class="truncate font-mono text-[11px] text-gray-500 dark:text-gray-400"
+              class="truncate font-mono text-[0.6875rem] text-gray-500 dark:text-gray-400"
               :title="step.detail"
             >
               {{ step.detail }}
             </p>
             <p
               v-if="step.outcome"
-              class="text-[11px] leading-relaxed"
+              class="text-[0.6875rem] leading-relaxed"
               :class="step.ok === false
                 ? 'text-red-600 dark:text-red-400'
                 : 'text-gray-600 dark:text-gray-300'"

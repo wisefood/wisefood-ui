@@ -14,7 +14,7 @@
       <span
         v-for="topic in visibleTopics"
         :key="topic"
-        class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800"
+        class="inline-flex items-center gap-1 px-2 py-0.5 text-[0.6875rem] rounded-full bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800"
       >
         <UIcon name="i-lucide-compass" class="w-3 h-3" />
         {{ topic }}
@@ -25,7 +25,7 @@
         :delay-duration="100"
       >
         <span
-          class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 border border-gray-200 dark:border-zinc-600 cursor-help"
+          class="inline-flex items-center gap-1 px-2 py-0.5 text-[0.6875rem] rounded-full bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 border border-gray-200 dark:border-zinc-600 cursor-help"
           @click.prevent.stop
         >
           {{ t('foodScholarCatalog.card.moreTopics', { count: hiddenTopics.length }) }}

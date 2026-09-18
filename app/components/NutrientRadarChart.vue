@@ -50,7 +50,7 @@
             :opacity="0.5 + (level * 0.1)"
           />
         </g>
-        <g class="text-[9px] fill-zinc-400 dark:fill-zinc-500">
+        <g class="text-[0.5625rem] fill-zinc-400 dark:fill-zinc-500">
           <text
             v-for="level in 5"
             :key="`ring-${level}`"
@@ -109,7 +109,7 @@
             <tspan
               :x="getLabelX(index, visibleNutrients.length)"
               :dy="12"
-              class="fill-zinc-500 dark:fill-zinc-400 text-[10px]"
+              class="fill-zinc-500 dark:fill-zinc-400 text-[0.625rem]"
             >
               {{ nutrient.displayValue }}
             </tspan>
@@ -117,8 +117,8 @@
               :x="getLabelX(index, visibleNutrients.length)"
               :dy="11"
               :class="nutrient.overRi
-                ? 'fill-amber-600 dark:fill-amber-400 text-[10px] font-semibold'
-                : 'fill-zinc-400 dark:fill-zinc-500 text-[10px]'"
+                ? 'fill-amber-600 dark:fill-amber-400 text-[0.625rem] font-semibold'
+                : 'fill-zinc-400 dark:fill-zinc-500 text-[0.625rem]'"
             >
               {{ Math.round(nutrient.percentRi) }}%{{ nutrient.overRi ? '+' : '' }} RI
             </tspan>
@@ -153,7 +153,7 @@
             {{ nutrient.label }}
           </span>
         </div>
-        <div class="text-[11px] mt-1 text-zinc-500 dark:text-zinc-400">
+        <div class="text-[0.6875rem] mt-1 text-zinc-500 dark:text-zinc-400">
           {{ nutrient.displayValue }}
           <span :class="nutrient.overRi ? 'text-amber-600 dark:text-amber-400 font-semibold' : ''">
             · {{ Math.round(nutrient.percentRi) }}%{{ nutrient.overRi ? '+' : '' }} RI
@@ -165,7 +165,7 @@
     <!-- What the rings mean, and which direction is the good one. Without
          this the chart implies one direction is better for every axis, while
          it plots fibre (more is better) next to sodium (less is better). -->
-    <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 px-3 py-2.5 text-[11px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+    <div class="rounded-lg bg-zinc-50 dark:bg-zinc-800/50 px-3 py-2.5 text-[0.6875rem] leading-relaxed text-zinc-600 dark:text-zinc-400">
       <p>{{ t('recipeWrangler.detail.nutrientChart.ringsExplainer') }}</p>
       <p class="mt-1">
         <span class="font-semibold text-zinc-700 dark:text-zinc-300">▼</span>

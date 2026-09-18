@@ -101,7 +101,7 @@ const emit = defineEmits<{
   (event: 'submit'): void
 }>()
 
-const inputClass = 'w-full h-14 rounded-2xl border border-gray-200/80 bg-gradient-to-r from-white via-earth-1/50 to-brandg-50/40 pl-11 pr-16 text-sm text-gray-900 shadow-sm shadow-slate-900/5 placeholder:text-gray-500 focus:border-brand-400/70 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-zinc-700/80 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800 dark:text-zinc-100 dark:shadow-black/20 dark:placeholder:text-zinc-400 dark:focus:border-brand-500/70 dark:focus:ring-brand-500/20 sm:text-[15px]'
+const inputClass = 'w-full h-14 rounded-2xl border border-gray-200/80 bg-gradient-to-r from-white via-earth-1/50 to-brandg-50/40 pl-11 pr-16 text-sm text-gray-900 shadow-sm shadow-slate-900/5 placeholder:text-gray-500 focus:border-brand-400/70 focus:outline-none focus:ring-4 focus:ring-brand-500/10 dark:border-zinc-700/80 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800 dark:text-zinc-100 dark:shadow-black/20 dark:placeholder:text-zinc-400 dark:focus:border-brand-500/70 dark:focus:ring-brand-500/20 sm:text-[0.9375rem]'
 </script>
 
 <style scoped>

@@ -33,11 +33,11 @@
            is what everyone gets and is not news. A member who asked for three
            days with a side at dinner should be able to see that standing. -->
       <section v-if="state && !state.plan_shape_is_default && state.plan_shape_summary">
-        <h4 class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 mb-1.5 flex items-center gap-1">
+        <h4 class="text-[0.625rem] uppercase tracking-wide text-gray-400 dark:text-zinc-500 mb-1.5 flex items-center gap-1">
           <UIcon name="i-lucide-layout-grid" class="w-3 h-3" />
           {{ t('foodChatHome.planningState.shapeLabel') }}
         </h4>
-        <p class="text-[11px] text-gray-600 dark:text-zinc-300">
+        <p class="text-[0.6875rem] text-gray-600 dark:text-zinc-300">
           {{ state.plan_shape_summary }}
         </p>
       </section>
@@ -51,11 +51,11 @@
            two controls for one number is how they end up disagreeing. The hint
            says where to go. -->
       <section v-if="state && state.max_minutes">
-        <h4 class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 mb-1.5 flex items-center gap-1">
+        <h4 class="text-[0.625rem] uppercase tracking-wide text-gray-400 dark:text-zinc-500 mb-1.5 flex items-center gap-1">
           <UIcon name="i-lucide-timer" class="w-3 h-3" />
           {{ t('foodChatHome.planningState.timeLabel') }}
         </h4>
-        <p class="text-[11px] text-gray-600 dark:text-zinc-300">
+        <p class="text-[0.6875rem] text-gray-600 dark:text-zinc-300">
           {{ t('foodChatHome.planningState.timeValue', { minutes: state.max_minutes }) }}
           <span class="text-gray-400 dark:text-zinc-500 font-light">
             — {{ t('foodChatHome.planningState.timeHint') }}
@@ -66,14 +66,14 @@
       <!-- ── In your kitchen ─────────────────────────────────────────── -->
       <section>
         <div class="flex items-baseline gap-2 mb-1.5">
-          <h4 class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 flex items-center gap-1">
+          <h4 class="text-[0.625rem] uppercase tracking-wide text-gray-400 dark:text-zinc-500 flex items-center gap-1">
             <UIcon
               name="i-lucide-refrigerator"
               class="w-3 h-3"
             />
             {{ t('foodChatHome.planningState.pantryLabel') }}
           </h4>
-          <span class="text-[10px] text-gray-400 dark:text-zinc-500 font-light truncate">
+          <span class="text-[0.625rem] text-gray-400 dark:text-zinc-500 font-light truncate">
             {{ t('foodChatHome.planningState.pantryHint') }}
           </span>
         </div>
@@ -82,7 +82,7 @@
           <span
             v-for="item in pantry"
             :key="`pantry-${item}`"
-            class="group inline-flex items-center gap-1 pl-2 pr-1 py-0.5 text-[11px] rounded-full border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
+            class="group inline-flex items-center gap-1 pl-2 pr-1 py-0.5 text-[0.6875rem] rounded-full border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
           >
             {{ item }}
             <button
@@ -100,7 +100,7 @@
 
           <span
             v-if="!pantry.length"
-            class="text-[11px] text-gray-400 dark:text-zinc-500 font-light"
+            class="text-[0.6875rem] text-gray-400 dark:text-zinc-500 font-light"
           >
             {{ t('foodChatHome.planningState.pantryEmpty') }}
           </span>
@@ -136,14 +136,14 @@
       <!-- ── Heard from you: the removable facet chips ───────────────── -->
       <section v-if="facets.length || vocabularyOptions.length">
         <div class="flex items-baseline gap-2 mb-1.5">
-          <h4 class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 flex items-center gap-1">
+          <h4 class="text-[0.625rem] uppercase tracking-wide text-gray-400 dark:text-zinc-500 flex items-center gap-1">
             <UIcon
               name="i-lucide-ear"
               class="w-3 h-3"
             />
             {{ t('foodChatHome.planningState.facetsLabel') }}
           </h4>
-          <span class="text-[10px] text-gray-400 dark:text-zinc-500 font-light truncate">
+          <span class="text-[0.625rem] text-gray-400 dark:text-zinc-500 font-light truncate">
             {{ t('foodChatHome.planningState.facetsHint') }}
           </span>
         </div>
@@ -155,7 +155,7 @@
             :text="familyLabel(chip.family)"
           >
             <span
-              class="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 text-[11px] rounded-full border border-sky-200 dark:border-sky-800/60 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300"
+              class="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 text-[0.6875rem] rounded-full border border-sky-200 dark:border-sky-800/60 bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300"
             >
               {{ humanise(chip.value) }}
               <button
@@ -174,7 +174,7 @@
 
           <span
             v-if="!facets.length"
-            class="text-[11px] text-gray-400 dark:text-zinc-500 font-light"
+            class="text-[0.6875rem] text-gray-400 dark:text-zinc-500 font-light"
           >{{ t('foodChatHome.planningState.facetsEmpty') }}</span>
         </div>
 
@@ -209,14 +209,14 @@
       >
         <div v-if="dietTags.length">
           <div class="flex items-baseline gap-2 mb-1.5">
-            <h4 class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 flex items-center gap-1">
+            <h4 class="text-[0.625rem] uppercase tracking-wide text-gray-400 dark:text-zinc-500 flex items-center gap-1">
               <UIcon
                 name="i-lucide-leaf"
                 class="w-3 h-3"
               />
               {{ t('foodChatHome.planningState.dietLabel') }}
             </h4>
-            <span class="text-[10px] text-gray-400 dark:text-zinc-500 font-light truncate">
+            <span class="text-[0.625rem] text-gray-400 dark:text-zinc-500 font-light truncate">
               {{ t('foodChatHome.planningState.dietHint') }}
             </span>
           </div>
@@ -224,7 +224,7 @@
             <span
               v-for="tag in dietTags"
               :key="`diet-${tag}`"
-              class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full border border-violet-200 dark:border-violet-800/60 bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300"
+              class="inline-flex items-center gap-1 px-2 py-0.5 text-[0.6875rem] rounded-full border border-violet-200 dark:border-violet-800/60 bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300"
             >
               <UIcon
                 name="i-lucide-shield-check"
@@ -236,7 +236,7 @@
         </div>
 
         <div v-if="claimTags.length">
-          <h4 class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 mb-1.5 flex items-center gap-1">
+          <h4 class="text-[0.625rem] uppercase tracking-wide text-gray-400 dark:text-zinc-500 mb-1.5 flex items-center gap-1">
             <UIcon
               name="i-lucide-target"
               class="w-3 h-3"
@@ -247,7 +247,7 @@
             <span
               v-for="tag in claimTags"
               :key="`claim-${tag}`"
-              class="inline-flex items-center px-2 py-0.5 text-[11px] rounded-full border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300"
+              class="inline-flex items-center px-2 py-0.5 text-[0.6875rem] rounded-full border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300"
             >
               {{ humanise(tag) }}
             </span>
@@ -259,7 +259,7 @@
            no" is a decision the member made and should be able to see. -->
       <p
         v-if="state && state.use_favorites === false"
-        class="text-[11px] text-gray-400 dark:text-zinc-500 font-light flex items-center gap-1"
+        class="text-[0.6875rem] text-gray-400 dark:text-zinc-500 font-light flex items-center gap-1"
       >
         <UIcon
           name="i-lucide-heart-off"
@@ -270,7 +270,7 @@
 
       <p
         v-if="!summaryCount"
-        class="text-[11px] text-gray-400 dark:text-zinc-500 font-light"
+        class="text-[0.6875rem] text-gray-400 dark:text-zinc-500 font-light"
       >
         {{ t('foodChatHome.planningState.empty') }}
       </p>
@@ -289,13 +289,13 @@
         >
           {{ busy ? t('foodChatHome.planningState.replanning') : t('foodChatHome.planningState.replan') }}
         </UButton>
-        <span class="text-[10px] text-gray-400 dark:text-zinc-500 font-light">
+        <span class="text-[0.625rem] text-gray-400 dark:text-zinc-500 font-light">
           {{ t('foodChatHome.planningState.pendingChanges', { count: pendingChanges }) }}
         </span>
       </div>
       <p
         v-else-if="summaryCount > 0"
-        class="text-[10px] text-gray-400 dark:text-zinc-500 font-light pt-1 border-t border-gray-100 dark:border-zinc-800"
+        class="text-[0.625rem] text-gray-400 dark:text-zinc-500 font-light pt-1 border-t border-gray-100 dark:border-zinc-800"
       >
         {{ t('foodChatHome.planningState.replanHint') }}
       </p>

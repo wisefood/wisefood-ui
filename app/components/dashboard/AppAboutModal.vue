@@ -61,7 +61,7 @@
                 :key="stat.label"
                 class="rounded-xl bg-gray-50 dark:bg-zinc-800/60 px-3 py-2.5 text-center"
               >
-                <dt class="text-[11px] text-gray-500 dark:text-gray-400 mb-0.5">
+                <dt class="text-[0.6875rem] text-gray-500 dark:text-gray-400 mb-0.5">
                   {{ stat.label }}
                 </dt>
                 <dd class="text-lg font-semibold text-gray-900 dark:text-white tabular-nums">
@@ -73,7 +73,7 @@
 
           <p
             v-if="footnote"
-            class="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed"
+            class="text-[0.6875rem] text-gray-400 dark:text-gray-500 leading-relaxed"
           >
             {{ footnote }}
           </p>

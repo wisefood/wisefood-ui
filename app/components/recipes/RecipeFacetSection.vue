@@ -28,7 +28,7 @@
       {{ title }}
       <span
         v-if="selected.length"
-        class="ml-auto text-[10px] font-normal text-brandg-600 dark:text-brandg-400"
+        class="ml-auto text-[0.625rem] font-normal text-brandg-600 dark:text-brandg-400"
       >{{ selected.length }} selected</span>
     </h3>
 
@@ -54,7 +54,7 @@
           {{ option.label }}
           <span
             v-if="option.count !== null"
-            class="text-[10px] font-normal opacity-70 tabular-nums"
+            class="text-[0.625rem] font-normal opacity-70 tabular-nums"
           >{{ option.count }}</span>
         </span>
       </button>

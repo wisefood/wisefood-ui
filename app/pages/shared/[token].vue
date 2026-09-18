@@ -173,7 +173,7 @@
         >
           {{ t('shared.ctaButton') }}
         </UButton>
-        <p class="mt-4 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
+        <p class="mt-4 text-[0.6875rem] leading-relaxed text-gray-400 dark:text-gray-500">
           {{ t('shared.privacyNote') }}
         </p>
       </footer>

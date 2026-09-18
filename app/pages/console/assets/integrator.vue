@@ -93,7 +93,7 @@
                 <span>{{ item.text }}</span>
               </li>
             </ul>
-            <p class="mx-auto mt-4 max-w-md text-center text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
+            <p class="mx-auto mt-4 max-w-md text-center text-[0.6875rem] leading-relaxed text-gray-400 dark:text-gray-500">
               I cannot approve anything or write to the catalog myself — I propose, you decide.
             </p>
             <div class="mt-5 flex flex-wrap justify-center gap-2">
@@ -266,7 +266,7 @@
           </form>
           <p
             v-if="lastRun"
-            class="mt-2 text-[11px] text-gray-400 dark:text-gray-500"
+            class="mt-2 text-[0.6875rem] text-gray-400 dark:text-gray-500"
           >
             {{ lastRun }}
           </p>
@@ -353,7 +353,7 @@
           </div>
           <table class="w-full text-left text-xs">
             <thead class="sticky top-0 bg-white/95 backdrop-blur dark:bg-zinc-900/95">
-              <tr class="border-b border-gray-100 text-[10px] uppercase tracking-wide text-gray-400 dark:border-zinc-800 dark:text-gray-500">
+              <tr class="border-b border-gray-100 text-[0.625rem] uppercase tracking-wide text-gray-400 dark:border-zinc-800 dark:text-gray-500">
                 <th class="px-4 py-2 font-medium">
                   Source
                 </th>

@@ -141,7 +141,7 @@
             v-for="(e, i) in pins"
             :key="`pin-${e.element_key}`"
             type="button"
-            class="pointer-events-auto absolute flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-[10px] font-semibold tabular-nums shadow ring-2 ring-white transition-transform hover:scale-125 dark:ring-black/70"
+            class="pointer-events-auto absolute flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-[0.625rem] font-semibold tabular-nums shadow ring-2 ring-white transition-transform hover:scale-125 dark:ring-black/70"
             :class="pinTone(e)"
             :style="pinStyle(e)"
             :title="pinTitle(e, i)"
@@ -195,7 +195,7 @@
         :class="active === e.element_key ? 'bg-gray-100 dark:bg-white/5' : ''"
       >
         <span
-          class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold tabular-nums ring-1 ring-inset"
+          class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[0.625rem] font-semibold tabular-nums ring-1 ring-inset"
           :class="pinTone(e)"
         >{{ i + 1 }}</span>
         <div class="min-w-0 flex-1">

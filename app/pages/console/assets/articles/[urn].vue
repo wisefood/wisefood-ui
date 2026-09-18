@@ -908,7 +908,7 @@
                       :key="item.label"
                       class="rounded-xl border border-gray-200/80 bg-gray-50/70 px-4 py-3 dark:border-white/10 dark:bg-white/5"
                     >
-                      <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                      <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                         {{ item.label }}
                       </p>
                       <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
@@ -1085,7 +1085,7 @@
                   <p class="font-medium text-gray-900 dark:text-white">
                     {{ row.original.title }}
                   </p>
-                  <p class="mt-0.5 truncate text-[11px] text-gray-500 dark:text-gray-400">
+                  <p class="mt-0.5 truncate text-[0.6875rem] text-gray-500 dark:text-gray-400">
                     {{ row.original.description || 'No description' }}
                   </p>
                 </div>
@@ -1195,7 +1195,7 @@
           <div class="flex flex-col gap-3">
             <div class="flex items-center justify-between gap-3">
               <div>
-                <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+                <p class="text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
                   Article changes
                 </p>
                 <p

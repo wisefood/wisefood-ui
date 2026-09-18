@@ -38,7 +38,7 @@
           :href="proposal.source_url"
           target="_blank"
           rel="noopener noreferrer"
-          class="mt-0.5 block truncate font-mono text-[11px] text-brand-600 hover:underline dark:text-brand-300"
+          class="mt-0.5 block truncate font-mono text-[0.6875rem] text-brand-600 hover:underline dark:text-brand-300"
         >{{ proposal.source_url }}</a>
       </div>
       <div
@@ -72,7 +72,7 @@
           />
         </div>
         <div class="text-right">
-          <p class="text-[10px] uppercase tracking-wide text-gray-400">
+          <p class="text-[0.625rem] uppercase tracking-wide text-gray-400">
             {{ proposal.expert_rank != null ? 'Your order' : 'Score' }}
           </p>
           <p class="text-sm font-semibold tabular-nums text-gray-700 dark:text-gray-200">
@@ -140,7 +140,7 @@
     >
       <button
         type="button"
-        class="flex w-full items-center gap-1.5 text-[11px] text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        class="flex w-full items-center gap-1.5 text-[0.6875rem] text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
       >
         <UIcon
           :name="showScore ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
@@ -153,7 +153,7 @@
           <li
             v-for="row in breakdown"
             :key="row.component"
-            class="flex items-baseline gap-2 text-[11px]"
+            class="flex items-baseline gap-2 text-[0.6875rem]"
           >
             <span class="w-24 shrink-0 text-gray-400">{{ label(row.component) }}</span>
             <span class="w-10 shrink-0 tabular-nums text-gray-600 dark:text-gray-300">
@@ -169,7 +169,7 @@
     </UCollapsible>
 
     <div v-if="proposal.plan?.length">
-      <p class="mt-3 text-[10px] uppercase tracking-wide text-gray-400">
+      <p class="mt-3 text-[0.625rem] uppercase tracking-wide text-gray-400">
         Integration steps
       </p>
       <ol class="mt-1 list-decimal space-y-0.5 pl-4 text-xs text-gray-500 dark:text-gray-400">

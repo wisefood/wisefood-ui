@@ -167,13 +167,20 @@ body {
   --a11y-font-scale: 1;
 }
 
-/* Scale the root font size — Tailwind's rem-based typography follows.
-   Also scale `body` explicitly so descendants using `em` units inherit. */
+/* Scale the root font size — Tailwind's rem-based typography follows, and so
+   do `em` descendants, because `rem` and `em` both resolve against this.
+
+   `body` must NOT multiply by the scale again. It used to, and by that point
+   `1rem` already included the scale, so body text came out at scale squared:
+   2.25x at the largest setting instead of 1.5x, and 0.72x at the smallest
+   instead of 0.85x. Anything sized in rem by Tailwind scaled once and
+   anything inheriting from body scaled twice, so the page pulled apart as
+   soon as the control was touched. */
 html {
   font-size: calc(100% * var(--a11y-font-scale));
 }
 body {
-  font-size: calc(1rem * var(--a11y-font-scale));
+  font-size: 1rem;
   line-height: 1.55;
 }
 

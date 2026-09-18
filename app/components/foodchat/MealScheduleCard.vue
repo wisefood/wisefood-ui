@@ -18,7 +18,7 @@
              where two cards otherwise share a heading and look like a bug. -->
         <span
           v-if="courseLabel"
-          class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-brandp-50 dark:bg-brandp-900/30 text-brandp-600 dark:text-brandp-400"
+          class="text-[0.6875rem] font-medium px-2 py-0.5 rounded-full bg-brandp-50 dark:bg-brandp-900/30 text-brandp-600 dark:text-brandp-400"
         >{{ courseLabel }}</span>
       </div>
       <div class="flex items-center gap-1.5">
@@ -127,7 +127,7 @@
              what distinguishes the dishes is which plate each one is. -->
         <span
           v-if="isMultiPlate"
-          class="inline-flex items-center px-1.5 py-0.5 mb-1 text-[10px] font-semibold uppercase tracking-wide rounded"
+          class="inline-flex items-center px-1.5 py-0.5 mb-1 text-[0.625rem] font-semibold uppercase tracking-wide rounded"
           :class="roleBadgeClass(recipe)"
         >{{ roleLabel(recipe) }}</span>
         <NuxtLink
@@ -179,7 +179,7 @@
         </NuxtLink>
         <div class="flex-1 min-w-0">
           <span
-            class="inline-flex items-center px-1.5 py-0.5 mb-0.5 text-[10px] font-semibold uppercase tracking-wide rounded"
+            class="inline-flex items-center px-1.5 py-0.5 mb-0.5 text-[0.625rem] font-semibold uppercase tracking-wide rounded"
             :class="roleBadgeClass(plate)"
           >{{ roleLabel(plate) }}</span>
           <NuxtLink
@@ -204,12 +204,12 @@
       class="flex items-center gap-2 flex-wrap pr-16 border-t border-gray-100 dark:border-zinc-700/60 pt-3"
     >
       <UIcon name="i-lucide-flame" class="w-3.5 h-3.5 text-brandp-400 shrink-0" />
-      <span class="text-[11px] text-gray-600 dark:text-zinc-300 tabular-nums font-light">
+      <span class="text-[0.6875rem] text-gray-600 dark:text-zinc-300 tabular-nums font-light">
         {{ mealMacroLine }}
       </span>
       <span
         v-if="!mealMacros.complete"
-        class="text-[10px] text-amber-600 dark:text-amber-400"
+        class="text-[0.625rem] text-amber-600 dark:text-amber-400"
       >{{ t('foodChatHome.mealCard.partialMeal') }}</span>
     </div>
 
@@ -218,16 +218,16 @@
       v-if="!isMultiPlate && recipe.nutrition"
       class="flex items-center gap-1.5 flex-wrap pr-16 -mt-1"
     >
-      <span class="inline-flex items-center px-2 py-1 text-[11px] rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-300 font-light">
+      <span class="inline-flex items-center px-2 py-1 text-[0.6875rem] rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-300 font-light">
         {{ nutritionSummary }}
       </span>
       <span
         v-if="macroSummary"
-        class="inline-flex items-center px-2 py-1 text-[11px] rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-300 font-light"
+        class="inline-flex items-center px-2 py-1 text-[0.6875rem] rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-300 font-light"
       >{{ macroSummary }}</span>
       <span
         v-if="nutriScoreGrade"
-        class="inline-flex items-center justify-center w-[18px] h-[18px] rounded text-[10px] font-bold leading-none"
+        class="inline-flex items-center justify-center w-[18px] h-[18px] rounded text-[0.625rem] font-bold leading-none"
         :class="nutriScoreClass"
         :title="t('foodChatHome.mealCard.nutriScore', { label: nutriScoreGrade })"
       >{{ nutriScoreGrade }}</span>
@@ -243,7 +243,7 @@
         :key="rIdx"
         :text="reasonTooltip(reason.kind)"
       >
-        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] rounded-full border border-gray-200/80 dark:border-zinc-700/70 text-gray-400 dark:text-zinc-500 font-light">
+        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[0.5625rem] rounded-full border border-gray-200/80 dark:border-zinc-700/70 text-gray-400 dark:text-zinc-500 font-light">
           <UIcon
             :name="reasonIcon(reason.kind)"
             class="w-2.5 h-2.5 shrink-0"
@@ -302,15 +302,15 @@
       <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         <span
           v-if="nutritionLoading && !macros"
-          class="text-[9px] text-gray-400"
+          class="text-[0.5625rem] text-gray-400"
         >···</span>
         <template v-else-if="macros">
-          <span class="text-[10px] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ centerValue }}</span>
-          <span class="text-[8px] text-gray-400 dark:text-zinc-500 leading-none mt-0.5">{{ centerLabel }}</span>
+          <span class="text-[0.625rem] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ centerValue }}</span>
+          <span class="text-[0.5rem] text-gray-400 dark:text-zinc-500 leading-none mt-0.5">{{ centerLabel }}</span>
         </template>
         <span
           v-else
-          class="text-[9px] text-gray-300"
+          class="text-[0.5625rem] text-gray-300"
         >—</span>
       </div>
     </div>

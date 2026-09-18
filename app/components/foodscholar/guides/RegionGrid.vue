@@ -28,7 +28,7 @@
 
             <div class="grid grid-cols-2 gap-3 text-sm">
               <div class="rounded-xl border border-gray-200/70 bg-gray-50/80 px-3 py-2 dark:border-white/10 dark:bg-white/5">
-                <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                   Guides
                 </p>
                 <p class="mt-1 font-semibold text-gray-900 dark:text-white">
@@ -37,7 +37,7 @@
               </div>
 
               <div class="rounded-xl border border-gray-200/70 bg-gray-50/80 px-3 py-2 dark:border-white/10 dark:bg-white/5">
-                <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                   Rules
                 </p>
                 <p class="mt-1 font-semibold text-gray-900 dark:text-white">

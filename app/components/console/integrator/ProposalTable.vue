@@ -28,7 +28,7 @@
       class="w-full text-left text-xs"
     >
       <thead class="sticky top-0 z-10 bg-white/95 backdrop-blur dark:bg-zinc-900/95">
-        <tr class="border-b border-gray-100 text-[10px] uppercase tracking-wide text-gray-400 dark:border-zinc-800 dark:text-gray-500">
+        <tr class="border-b border-gray-100 text-[0.625rem] uppercase tracking-wide text-gray-400 dark:border-zinc-800 dark:text-gray-500">
           <th class="px-4 py-2 font-medium">
             Source
           </th>
@@ -67,7 +67,7 @@
                 :title="proposal.title"
               >{{ proposal.title }}</span>
             </div>
-            <span class="mt-0.5 block truncate text-[10px] text-gray-400 dark:text-gray-500">
+            <span class="mt-0.5 block truncate text-[0.625rem] text-gray-400 dark:text-gray-500">
               {{ KIND_SHORT[proposal.kind] || proposal.kind }}<template v-if="proposal.country"> · {{ proposal.country }}</template><template v-if="proposal.language"> · {{ proposal.language }}</template>
             </span>
           </td>
@@ -83,7 +83,7 @@
           </td>
           <td class="whitespace-nowrap px-2 py-2.5">
             <span
-              class="text-[11px]"
+              class="text-[0.6875rem]"
               :class="proposal.status === 'imported'
                 ? 'text-green-600 dark:text-green-400'
                 : 'text-gray-500 dark:text-gray-400'"

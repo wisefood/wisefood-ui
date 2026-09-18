@@ -147,7 +147,7 @@
                 <p class="truncate font-medium text-gray-900 dark:text-white">
                   {{ row.original.title }}
                 </p>
-                <p class="mt-0.5 truncate text-[11px] text-gray-500 dark:text-gray-400">
+                <p class="mt-0.5 truncate text-[0.6875rem] text-gray-500 dark:text-gray-400">
                   {{ compactGuideMeta(row.original) }}
                 </p>
               </div>

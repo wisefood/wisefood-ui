@@ -191,7 +191,7 @@
                   </p>
                   <p
                     v-if="row.element_key"
-                    class="truncate font-mono text-[11px] text-gray-400 dark:text-gray-500"
+                    class="truncate font-mono text-[0.6875rem] text-gray-400 dark:text-gray-500"
                     :title="row.element_key"
                   >
                     {{ row.element_key }}

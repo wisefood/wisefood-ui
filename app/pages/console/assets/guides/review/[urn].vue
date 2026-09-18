@@ -443,7 +443,7 @@
                             <span
                               v-for="chip in ruleChips(row.original)"
                               :key="`${chip.field}:${chip.value}`"
-                              class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-white/10 dark:text-gray-300"
+                              class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-[0.625rem] font-medium text-gray-600 dark:bg-white/10 dark:text-gray-300"
                               :title="chip.aiGenerated ? $t('guidelines.facets.aiSuggested') : chip.label"
                             >
                               <UIcon

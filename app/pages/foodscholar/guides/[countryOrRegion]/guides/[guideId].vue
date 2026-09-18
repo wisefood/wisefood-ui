@@ -562,7 +562,7 @@
                         <span
                           v-for="chip in guidelineChips(guideline)"
                           :key="`${chip.field}:${chip.value}`"
-                          class="inline-flex items-center gap-0.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-white/5 dark:text-gray-400"
+                          class="inline-flex items-center gap-0.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-[0.625rem] font-medium text-gray-600 dark:bg-white/5 dark:text-gray-400"
                         >
                           <UIcon
                             :name="chip.icon"

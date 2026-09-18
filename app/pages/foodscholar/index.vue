@@ -70,7 +70,7 @@
                 v-model="chatQuery"
                 :disabled="asking"
                 :placeholder="qaPlaceholder"
-                input-class="w-full h-12 pl-11 pr-28 rounded-xl bg-transparent text-[15px] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
+                input-class="w-full h-12 pl-11 pr-28 rounded-xl bg-transparent text-[0.9375rem] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
                 @enter="askScholarQA"
                 @focus="composerFocused = true"
                 @blur="composerFocused = false"
@@ -117,10 +117,10 @@
               </FoodscholarNLInput>
             </div>
             <div class="mt-2 px-1 flex items-center justify-between">
-              <p class="text-[11px] text-gray-500 dark:text-gray-400">
+              <p class="text-[0.6875rem] text-gray-500 dark:text-gray-400">
                 {{ composerFocused ? t('foodScholarHome.qa.composer.focusedHint') : t('foodScholarHome.qa.composer.idleHint') }}
               </p>
-              <span class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
+              <span class="text-[0.625rem] uppercase tracking-wide text-gray-400 dark:text-gray-500">
                 {{ t('foodScholarHome.qa.composer.enterKey') }}
               </span>
             </div>
@@ -160,22 +160,22 @@
                   <USelectMenu v-model="selectedModelValue" :items="modelOptions" class="w-full" size="lg" :ui="advancedSelectUi" :content="advancedSelectContent" value-key="value" label-key="label" :search-input="false" :placeholder="t('foodScholarHome.qa.model.auto')" :disabled="modelsLoading || asking">
                     <template #leading><UIcon :name="selectedModelOption.icon" class="w-4 h-4 text-gray-500 dark:text-gray-400" /></template>
                   </USelectMenu>
-                  <p v-if="!modelsLoading && modelOptions.length <= 1" class="mt-2 text-[11px] text-amber-700 dark:text-amber-300">{{ t('foodScholarHome.qa.model.noProviderModels') }}</p>
-                  <p v-else class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.model.autoHint') }}</p>
+                  <p v-if="!modelsLoading && modelOptions.length <= 1" class="mt-2 text-[0.6875rem] text-amber-700 dark:text-amber-300">{{ t('foodScholarHome.qa.model.noProviderModels') }}</p>
+                  <p v-else class="mt-2 text-[0.6875rem] text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.model.autoHint') }}</p>
                 </div>
                 <div class="space-y-2">
                   <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.sourceDepth') }}</label>
                   <USelectMenu v-model="selectedTopKValue" :items="topKOptions" class="w-full" size="lg" :ui="advancedSelectUi" :content="advancedSelectContent" value-key="value" label-key="label" :search-input="false" :disabled="asking || !ragEnabled">
                     <template #leading><UIcon :name="selectedTopKOption.icon" class="w-4 h-4 text-gray-500 dark:text-gray-400" /></template>
                   </USelectMenu>
-                  <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">{{ ragEnabled ? selectedTopKOption.description : t('foodScholarHome.qa.advanced.enableRetrievalToAdjust') }}</p>
+                  <p class="mt-2 text-[0.6875rem] text-gray-500 dark:text-gray-400">{{ ragEnabled ? selectedTopKOption.description : t('foodScholarHome.qa.advanced.enableRetrievalToAdjust') }}</p>
                 </div>
                 <div class="space-y-2">
                   <label class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2 block">{{ t('foodScholarHome.qa.advanced.explanationStyle') }}</label>
                   <USelectMenu v-model="selectedExpertiseValue" :items="expertiseOptions" class="w-full" size="lg" :ui="advancedSelectUi" :content="advancedSelectContent" value-key="value" label-key="label" :search-input="false" :disabled="asking">
                     <template #leading><UIcon :name="selectedExpertiseOption.icon" class="w-4 h-4 text-gray-500 dark:text-gray-400" /></template>
                   </USelectMenu>
-                  <p class="mt-2 text-[11px] text-gray-500 dark:text-gray-400">{{ selectedExpertiseOption.description }}</p>
+                  <p class="mt-2 text-[0.6875rem] text-gray-500 dark:text-gray-400">{{ selectedExpertiseOption.description }}</p>
                 </div>
               </div>
             </div>
@@ -226,7 +226,7 @@
                 v-model="chatQuery"
                 :disabled="asking"
                 :placeholder="qaPlaceholder"
-                input-class="w-full h-12 pl-11 pr-28 rounded-xl bg-transparent text-[15px] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
+                input-class="w-full h-12 pl-11 pr-28 rounded-xl bg-transparent text-[0.9375rem] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
                 @enter="askScholarQA"
                 @focus="composerFocused = true"
                 @blur="composerFocused = false"
@@ -265,10 +265,10 @@
               </FoodscholarNLInput>
             </div>
             <div class="mt-2 px-1 flex items-center justify-between">
-              <p class="text-[11px] text-gray-500 dark:text-gray-400">
+              <p class="text-[0.6875rem] text-gray-500 dark:text-gray-400">
                 {{ composerFocused ? t('foodScholarHome.qa.composer.focusedHint') : t('foodScholarHome.qa.composer.idleHint') }}
               </p>
-              <span class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
+              <span class="text-[0.625rem] uppercase tracking-wide text-gray-400 dark:text-gray-500">
                 {{ t('foodScholarHome.qa.composer.enterKey') }}
               </span>
             </div>
@@ -290,7 +290,7 @@
                     v-for="option in retrievalOptions"
                     :key="option.value"
                     type="button"
-                    :class="['inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-full transition-colors', retrievalButtonClass(option.value)]"
+                    :class="['inline-flex items-center gap-1 px-2.5 py-1 text-[0.6875rem] font-semibold rounded-full transition-colors', retrievalButtonClass(option.value)]"
                     :title="option.description"
                     @click="retrievalMode = option.value"
                   >
@@ -319,7 +319,7 @@
           <button
             v-if="hasCarriedContext"
             type="button"
-            class="inline-flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-zinc-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+            class="inline-flex items-center gap-1.5 text-[0.6875rem] text-gray-500 dark:text-zinc-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
             :aria-expanded="memoryPanelOpen"
             @click="memoryPanelOpen = !memoryPanelOpen"
           >
@@ -349,7 +349,7 @@
             <span
               v-for="(note, nIdx) in carriedContext.notes.slice(0, 8)"
               :key="`cnote-${nIdx}`"
-              class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300"
+              class="inline-flex items-center gap-1 px-2 py-0.5 text-[0.6875rem] rounded-full border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300"
             >
               <UIcon :name="note.kind === 'gap' ? 'i-lucide-circle-alert' : note.kind === 'lead' ? 'i-lucide-compass' : 'i-lucide-check'" class="w-2.5 h-2.5 opacity-70" />
               {{ note.text }}
@@ -385,7 +385,7 @@
         <div v-if="asking" class="space-y-4 session-answer-enter">
           <div class="flex justify-end">
             <div class="chat-flow-bubble chat-flow-bubble-user">
-              <p class="text-[10px] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
+              <p class="text-[0.625rem] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
               <p class="text-sm leading-relaxed">{{ pendingQuestion || chatQuery }}</p>
             </div>
           </div>
@@ -428,7 +428,7 @@
         <div v-if="pendingClarification && !asking" class="space-y-4 session-answer-enter">
           <div class="flex justify-end">
             <div class="chat-flow-bubble chat-flow-bubble-user">
-              <p class="text-[10px] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
+              <p class="text-[0.625rem] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
               <p class="text-sm leading-relaxed">{{ pendingQuestion }}</p>
             </div>
           </div>
@@ -524,7 +524,7 @@
         <div v-if="qaResult && primaryAnswer" ref="latestExchangeRef" class="space-y-4 session-answer-enter">
           <div class="flex justify-end">
             <div class="chat-flow-bubble chat-flow-bubble-user">
-              <p class="text-[10px] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
+              <p class="text-[0.625rem] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
               <p class="text-sm leading-relaxed">{{ qaResult.question }}</p>
             </div>
           </div>
@@ -583,7 +583,7 @@
 
             <!-- The boundary has to be on the answer itself: this is the surface
                  where people ask health questions about their own bodies. -->
-            <p class="mt-3 flex items-start gap-1.5 text-[11px] text-gray-400 dark:text-gray-500">
+            <p class="mt-3 flex items-start gap-1.5 text-[0.6875rem] text-gray-400 dark:text-gray-500">
               <UIcon name="i-lucide-info" class="w-3 h-3 mt-0.5 shrink-0" />
               {{ t('foodScholarHome.qa.medicalBoundary') }}
             </p>
@@ -635,7 +635,7 @@
                 <span class="flex-1 min-w-0 text-xs font-light leading-snug">{{ sug.statement }}</span>
                 <button
                   type="button"
-                  class="px-2.5 py-1 text-[11px] font-medium rounded-full bg-brand-500 text-white hover:bg-brand-600 transition-colors disabled:opacity-50"
+                  class="px-2.5 py-1 text-[0.6875rem] font-medium rounded-full bg-brand-500 text-white hover:bg-brand-600 transition-colors disabled:opacity-50"
                   :disabled="memoryChipState[sug.id] === 'pending'"
                   @click="handleMemoryDecision(sug, 'accept')"
                 >
@@ -644,7 +644,7 @@
                 </button>
                 <button
                   type="button"
-                  class="px-2.5 py-1 text-[11px] rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors disabled:opacity-50"
+                  class="px-2.5 py-1 text-[0.6875rem] rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors disabled:opacity-50"
                   :disabled="memoryChipState[sug.id] === 'pending'"
                   @click="handleMemoryDecision(sug, 'decline')"
                 >{{ t('foodChatHome.chat.memory.noThanks') }}</button>
@@ -690,7 +690,7 @@
               <UIcon :name="getQaSourceIcon(citation.article_urn, getCitationSourceType(citation))" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
               <span class="min-w-0 flex-1">
                 <span class="block text-xs text-gray-800 dark:text-gray-200 leading-snug line-clamp-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ citation.article_title }}</span>
-                <span v-if="citationMetaLine(citation)" class="block text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{{ citationMetaLine(citation) }}</span>
+                <span v-if="citationMetaLine(citation)" class="block text-[0.625rem] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{{ citationMetaLine(citation) }}</span>
               </span>
               <span class="text-[0.6rem] font-bold text-brand-400 dark:text-brand-500 shrink-0 mt-0.5 ml-auto">[{{ idx + 1 }}]</span>
             </NuxtLink>
@@ -708,7 +708,7 @@
                 <UIcon :name="getQaSourceIcon(article.urn, article.source_type)" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
                 <span class="min-w-0 flex-1">
                   <span class="block text-xs text-gray-700 dark:text-gray-300 leading-snug line-clamp-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ article.title }}</span>
-                  <span v-if="retrievedMetaLine(article)" class="block text-[10px] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{{ retrievedMetaLine(article) }}</span>
+                  <span v-if="retrievedMetaLine(article)" class="block text-[0.625rem] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{{ retrievedMetaLine(article) }}</span>
                 </span>
               </NuxtLink>
             </template>

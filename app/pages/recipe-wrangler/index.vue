@@ -323,13 +323,13 @@
                                 <div class="px-6 py-4 bg-zinc-50/80 dark:bg-zinc-800/30 border-b border-zinc-200 dark:border-zinc-700">
                                   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-3">
                                     <div>
-                                      <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Raw Measurement</p>
+                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Raw Measurement</p>
                                       <p class="font-mono text-zinc-700 dark:text-zinc-300">{{ analysisWeightDetails[idx]?.measurement_raw || '—' }}</p>
                                     </div>
                                     <div>
-                                      <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Match Source</p>
+                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Match Source</p>
                                       <span v-if="analysisWeightDetails[idx]?.match_type" :class="[
-                                        'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border',
+                                        'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[0.6875rem] font-medium border',
                                         getMatchSourceStyle(analysisWeightDetails[idx]?.match_type)
                                       ]">
                                         <UIcon :name="getMatchSourceIcon(analysisWeightDetails[idx]?.match_type)" class="w-3 h-3" />
@@ -338,11 +338,11 @@
                                       <span v-else class="text-zinc-400">—</span>
                                     </div>
                                     <div>
-                                      <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">USDA ID</p>
+                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">USDA ID</p>
                                       <p class="font-mono text-zinc-600 dark:text-zinc-400">{{ analysisWeightDetails[idx]?.usda_id || '—' }}</p>
                                     </div>
                                     <div>
-                                      <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Inferred</p>
+                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Inferred</p>
                                       <div class="flex items-center gap-2">
                                         <span v-if="analysisWeightDetails[idx]?.quantity_inferred" class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
                                           <UIcon name="i-lucide-zap" class="w-3 h-3" /> Qty
@@ -354,15 +354,15 @@
                                       </div>
                                     </div>
                                     <div>
-                                      <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Matched Nutrition</p>
+                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Matched Nutrition</p>
                                       <p class="text-zinc-700 dark:text-zinc-300 truncate" :title="String(item.matched_nutritional_ingredient || '')">{{ item.matched_nutritional_ingredient || '—' }}</p>
                                     </div>
                                     <div>
-                                      <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Matched Sustainability</p>
+                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Matched Sustainability</p>
                                       <p class="text-zinc-700 dark:text-zinc-300 truncate" :title="String(item.matched_sustainability_ingredient || '')">{{ item.matched_sustainability_ingredient || '—' }}</p>
                                     </div>
                                     <div v-if="analysisWeightDetails[idx]?.error" class="col-span-2">
-                                      <p class="text-[10px] font-semibold uppercase tracking-wider text-red-400 dark:text-red-500 mb-0.5">Error</p>
+                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-red-400 dark:text-red-500 mb-0.5">Error</p>
                                       <p class="text-red-600 dark:text-red-400">{{ analysisWeightDetails[idx]?.error }}</p>
                                     </div>
                                   </div>

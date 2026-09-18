@@ -12,7 +12,7 @@
       <span v-else class="text-xs font-semibold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
         Textbook
       </span>
-      <span v-if="props.textbook.review_status === 'verified'" class="inline-flex items-center gap-1 text-[10px] font-semibold text-green-700 dark:text-green-400">
+      <span v-if="props.textbook.review_status === 'verified'" class="inline-flex items-center gap-1 text-[0.625rem] font-semibold text-green-700 dark:text-green-400">
         <UIcon name="i-lucide-shield-check" class="w-3 h-3" />
         Verified
       </span>
@@ -23,7 +23,7 @@
       <span
         v-for="topic in displayTopics"
         :key="topic"
-        class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded-full bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800"
+        class="inline-flex items-center gap-1 px-2 py-0.5 text-[0.6875rem] rounded-full bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800"
       >
         <UIcon name="i-lucide-compass" class="w-3 h-3" />
         {{ topic }}

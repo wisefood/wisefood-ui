@@ -238,7 +238,7 @@
                       </div>
                       <table class="w-full text-left text-xs border-t border-zinc-200">
                         <thead>
-                          <tr class="bg-zinc-50 text-[10px] uppercase tracking-wider text-zinc-500">
+                          <tr class="bg-zinc-50 text-[0.625rem] uppercase tracking-wider text-zinc-500">
                             <th class="px-3 py-1.5 font-medium">
                               {{ t('mockups.foodchat.table.mealHeader') }}
                             </th>
@@ -339,12 +339,12 @@
                       </i18n-t>
                     </p>
                     <div class="border-t border-dashed border-zinc-200 pt-3">
-                      <div class="text-[9px] tracking-[0.2em] uppercase text-zinc-400 font-medium mb-2">
+                      <div class="text-[0.5625rem] tracking-[0.2em] uppercase text-zinc-600 font-medium mb-2">
                         {{ t('mockups.foodscholar.sources') }}
                       </div>
                       <ul class="space-y-1.5">
-                        <li class="flex items-center gap-2 text-[11px] text-zinc-700">
-                          <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-500 text-white text-[9px] font-bold shrink-0">1</span>
+                        <li class="flex items-center gap-2 text-[0.6875rem] text-zinc-700">
+                          <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-500 text-white text-[0.5625rem] font-bold shrink-0">1</span>
                           <UIcon
                             name="i-lucide-compass"
                             class="w-3 h-3 text-brand-600 shrink-0"
@@ -352,8 +352,8 @@
                           <span class="font-medium text-zinc-800">{{ t('mockups.foodscholar.guideLabel') }}</span>
                           <span class="text-zinc-500 truncate">· {{ t('mockups.foodscholar.guideTitle') }}</span>
                         </li>
-                        <li class="flex items-center gap-2 text-[11px] text-zinc-700">
-                          <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-500 text-white text-[9px] font-bold shrink-0">2</span>
+                        <li class="flex items-center gap-2 text-[0.6875rem] text-zinc-700">
+                          <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-500 text-white text-[0.5625rem] font-bold shrink-0">2</span>
                           <UIcon
                             name="i-lucide-file-text"
                             class="w-3 h-3 text-brand-600 shrink-0"
@@ -361,8 +361,8 @@
                           <span class="font-medium text-zinc-800">{{ t('mockups.foodscholar.articleLabel') }}</span>
                           <span class="text-zinc-500 truncate">· {{ t('mockups.foodscholar.articleTitle') }}</span>
                         </li>
-                        <li class="flex items-center gap-2 text-[11px] text-zinc-700">
-                          <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-500 text-white text-[9px] font-bold shrink-0">3</span>
+                        <li class="flex items-center gap-2 text-[0.6875rem] text-zinc-700">
+                          <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-500 text-white text-[0.5625rem] font-bold shrink-0">3</span>
                           <UIcon
                             name="i-lucide-book-marked"
                             class="w-3 h-3 text-brand-600 shrink-0"
@@ -387,7 +387,7 @@
                         alt=""
                         class="absolute inset-0 w-full h-full object-cover"
                       >
-                      <span class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-white/90 text-[10px] font-medium text-zinc-800">
+                      <span class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-white/90 text-[0.625rem] font-medium text-zinc-800">
                         {{ t('mockups.recipewrangler.duration') }}
                       </span>
                     </div>
@@ -396,7 +396,7 @@
                     </h4>
                     <div class="grid grid-cols-3 gap-2 mb-3">
                       <div class="rounded-lg bg-zinc-50 border border-zinc-200 px-2 py-1.5 text-center">
-                        <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-medium">
+                        <div class="text-[0.625rem] uppercase tracking-wider text-zinc-500 font-medium">
                           {{ t('mockups.recipewrangler.protein') }}
                         </div>
                         <div class="text-sm font-semibold text-zinc-900">
@@ -404,7 +404,7 @@
                         </div>
                       </div>
                       <div class="rounded-lg bg-zinc-50 border border-zinc-200 px-2 py-1.5 text-center">
-                        <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-medium">
+                        <div class="text-[0.625rem] uppercase tracking-wider text-zinc-500 font-medium">
                           {{ t('mockups.recipewrangler.carbs') }}
                         </div>
                         <div class="text-sm font-semibold text-zinc-900">
@@ -412,7 +412,7 @@
                         </div>
                       </div>
                       <div class="rounded-lg bg-zinc-50 border border-zinc-200 px-2 py-1.5 text-center">
-                        <div class="text-[10px] uppercase tracking-wider text-zinc-500 font-medium">
+                        <div class="text-[0.625rem] uppercase tracking-wider text-zinc-500 font-medium">
                           {{ t('mockups.recipewrangler.fat') }}
                         </div>
                         <div class="text-sm font-semibold text-zinc-900">
@@ -420,7 +420,7 @@
                         </div>
                       </div>
                     </div>
-                    <div class="flex items-center justify-between text-[11px] text-zinc-500">
+                    <div class="flex items-center justify-between text-[0.6875rem] text-zinc-500">
                       <span class="inline-flex items-center gap-1">
                         <UIcon
                           name="i-lucide-leaf"
@@ -439,7 +439,7 @@
                   </div>
                 </div>
 
-                <div class="absolute top-5 left-6 right-6 flex items-center justify-between text-[10px] tracking-[0.3em] uppercase text-zinc-500 dark:text-zinc-400 font-medium">
+                <div class="absolute top-5 left-6 right-6 flex items-center justify-between text-[0.625rem] tracking-[0.3em] uppercase text-zinc-500 dark:text-zinc-400 font-medium">
                   <span>{{ t(`pillars.items.${pillar.key}.tag`) }}</span>
                   <span>0{{ index + 1 }} / 03</span>
                 </div>

@@ -35,7 +35,7 @@
         :key="metric.key"
         class="flex items-center gap-2"
       >
-        <span class="w-24 shrink-0 text-[11px] font-light text-gray-500 dark:text-zinc-400">
+        <span class="w-24 shrink-0 text-[0.6875rem] font-light text-gray-500 dark:text-zinc-400">
           {{ metric.label }}
         </span>
         <template v-if="metric.max != null">
@@ -45,13 +45,13 @@
               :style="{ width: `${Math.min(Math.max(metric.value / metric.max, 0), 1) * 100}%` }"
             />
           </div>
-          <span class="w-9 shrink-0 text-right text-[11px] font-medium text-gray-700 dark:text-zinc-200">
+          <span class="w-9 shrink-0 text-right text-[0.6875rem] font-medium text-gray-700 dark:text-zinc-200">
             {{ metric.value }}/{{ metric.max }}
           </span>
         </template>
         <span
           v-else
-          class="flex-1 text-right text-[11px] font-medium text-gray-700 dark:text-zinc-200"
+          class="flex-1 text-right text-[0.6875rem] font-medium text-gray-700 dark:text-zinc-200"
         >
           {{ t('foodChatHome.quality.varietyValue', { count: metric.value }) }}
         </span>

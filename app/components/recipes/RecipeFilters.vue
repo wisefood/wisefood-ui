@@ -56,7 +56,7 @@
             {{ dishType.label }}
             <span
               v-if="dishType.count !== null"
-              class="text-[10px] font-normal opacity-70 tabular-nums"
+              class="text-[0.625rem] font-normal opacity-70 tabular-nums"
             >{{ dishType.count }}</span>
           </span>
         </button>
@@ -145,7 +145,7 @@
           <UIcon name="i-lucide-timer" class="w-4 h-4 text-blue-500" />
           {{ t('recipeWrangler.filters.timeRange') }}
         </h3>
-        <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500">
+        <span class="text-[0.625rem] font-medium px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500">
           {{ t('recipeWrangler.filters.timeRangeComingSoon') }}
         </span>
       </div>
@@ -162,7 +162,7 @@
           ]"
         >
           <span>{{ range.label }}</span>
-          <span v-if="range.hint" class="text-[10px] font-normal opacity-70">{{ range.hint }}</span>
+          <span v-if="range.hint" class="text-[0.625rem] font-normal opacity-70">{{ range.hint }}</span>
         </button>
       </div>
     </div>

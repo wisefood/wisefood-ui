@@ -45,7 +45,7 @@
       >
         <span
           v-if="ordered"
-          class="tabular-nums text-[10px] text-gray-400 dark:text-gray-500"
+          class="tabular-nums text-[0.625rem] text-gray-400 dark:text-gray-500"
         >{{ index + 1 }}</span>
         {{ item }}
         <button

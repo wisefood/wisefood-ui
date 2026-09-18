@@ -72,13 +72,13 @@
           class="mt-3"
         />
 
-        <div class="mt-2 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+        <div class="mt-2 flex items-center justify-between text-[0.6875rem] text-gray-500 dark:text-gray-400">
           <span>{{ $t('guidelines.filters.birth') }}</span>
           <span class="font-medium text-gray-700 dark:text-gray-300">{{ ageRangeLabel }}</span>
           <span>{{ formatAgeMonths(AGE_SLIDER_MAX_MONTHS) }}+</span>
         </div>
 
-        <label class="mt-2 flex cursor-pointer items-start gap-2 text-[11px] leading-4 text-gray-500 dark:text-gray-400">
+        <label class="mt-2 flex cursor-pointer items-start gap-2 text-[0.6875rem] leading-4 text-gray-500 dark:text-gray-400">
           <UCheckbox
             :model-value="includeUnstatedAge"
             @update:model-value="$emit('include-unstated-age', Boolean($event))"

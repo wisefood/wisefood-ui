@@ -242,7 +242,7 @@
                       {{ indexingTierBadge(row.original)!.label }}
                     </UBadge>
                   </div>
-                  <p class="mt-0.5 truncate text-[11px] text-gray-500 dark:text-gray-400">
+                  <p class="mt-0.5 truncate text-[0.6875rem] text-gray-500 dark:text-gray-400">
                     {{ compactArticleMeta(row.original) }}
                   </p>
                 </div>
@@ -264,7 +264,7 @@
                   </UBadge>
                   <span
                     v-if="rowEnrichedAt(row.original)"
-                    class="text-[11px] text-gray-500 dark:text-gray-400"
+                    class="text-[0.6875rem] text-gray-500 dark:text-gray-400"
                   >
                     {{ formatEnrichmentTimestamp(rowEnrichedAt(row.original)) }}
                   </span>

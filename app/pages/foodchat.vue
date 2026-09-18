@@ -48,7 +48,7 @@
                   rows="1"
                   :disabled="sending"
                   :placeholder="t('foodChatHome.input.placeholderInitial')"
-                  class="flex-1 resize-none overflow-hidden bg-transparent px-3 py-2.5 text-[15px] text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 focus:outline-none max-h-32 font-light transition-colors leading-relaxed"
+                  class="flex-1 resize-none overflow-hidden bg-transparent px-3 py-2.5 text-[0.9375rem] text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 focus:outline-none max-h-32 font-light transition-colors leading-relaxed"
                   @input="autoResize($event, idleInputRef)"
                   @keydown="handleKeydown"
                   @focus="inputFocused = true"
@@ -86,14 +86,14 @@
                 </div>
                 <div v-else />
               </Transition>
-              <p class="text-[11px] text-gray-400 dark:text-zinc-500 shrink-0">
+              <p class="text-[0.6875rem] text-gray-400 dark:text-zinc-500 shrink-0">
                 {{ t('foodChatHome.input.enterHint') }}
               </p>
             </div>
 
             <!-- Diner picker (multi-member households only) -->
             <div v-if="showDinerPicker" class="mt-3 px-1 flex items-center gap-2 flex-wrap">
-              <span class="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-zinc-500 shrink-0">
+              <span class="inline-flex items-center gap-1 text-[0.6875rem] text-gray-400 dark:text-zinc-500 shrink-0">
                 <UIcon name="i-lucide-users" class="w-3 h-3" />
                 {{ t('foodChatHome.diners.label') }}
               </span>
@@ -108,7 +108,7 @@
                     @click="toggleDiner(member)"
                   >
                     <ProfileAvatar :avatar="getMemberAvatarForDisplay(member)" size="xs" />
-                    <span class="text-[10px] max-w-16 truncate">{{ member.name }}</span>
+                    <span class="text-[0.625rem] max-w-16 truncate">{{ member.name }}</span>
                     <UIcon v-if="member.id === currentMemberId" name="i-lucide-lock" class="w-2.5 h-2.5 opacity-50" />
                   </button>
                 </UTooltip>
@@ -134,7 +134,7 @@
                These are real capabilities and every one of them needs a plan to
                act on, so they are said rather than offered as buttons that
                would answer "there is no plan yet". -->
-          <p class="mt-4 text-[11px] text-gray-400 dark:text-zinc-500 font-light leading-relaxed">
+          <p class="mt-4 text-[0.6875rem] text-gray-400 dark:text-zinc-500 font-light leading-relaxed">
             {{ t('foodChatHome.suggestedQuestions.thenWhat') }}
           </p>
         </div>
@@ -249,13 +249,13 @@
                     <div v-if="msg.attribution?.source === 'foodscholar'" class="mt-2 pt-2 border-t border-gray-100 dark:border-zinc-700/50">
                       <div class="flex items-center gap-1.5 flex-wrap">
                         <span
-                          class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full border border-brandp-100 dark:border-brandp-900/60 bg-brandp-50 dark:bg-brandp-950/40 text-brandp-600 dark:text-brandp-300"
+                          class="inline-flex items-center gap-1 px-2 py-0.5 text-[0.625rem] rounded-full border border-brandp-100 dark:border-brandp-900/60 bg-brandp-50 dark:bg-brandp-950/40 text-brandp-600 dark:text-brandp-300"
                           :title="msg.attribution.confidence ? `${t('foodChatHome.chat.attribution.confidence')}: ${msg.attribution.confidence}` : undefined"
                         >
                           <UIcon name="i-lucide-graduation-cap" class="w-3 h-3" />
                           {{ t('foodChatHome.chat.attribution.answeredWith') }}
                         </span>
-                        <span v-if="msg.attribution.confidence" class="text-[10px] text-gray-400 dark:text-zinc-500">
+                        <span v-if="msg.attribution.confidence" class="text-[0.625rem] text-gray-400 dark:text-zinc-500">
                           {{ t('foodChatHome.chat.attribution.confidence') }}: {{ msg.attribution.confidence }}
                         </span>
                       </div>
@@ -266,14 +266,14 @@
                           <NuxtLink
                             v-if="citation.url"
                             :to="citation.url"
-                            :class="['px-2 py-0.5 text-[10px] rounded-full border transition-colors hover:underline', citationChipClass(citation)]"
+                            :class="['px-2 py-0.5 text-[0.625rem] rounded-full border transition-colors hover:underline', citationChipClass(citation)]"
                             :title="citation.title"
                           >
                             {{ citationLabel(citation) }}
                           </NuxtLink>
                           <span
                             v-else
-                            :class="['px-2 py-0.5 text-[10px] rounded-full border', citationChipClass(citation)]"
+                            :class="['px-2 py-0.5 text-[0.625rem] rounded-full border', citationChipClass(citation)]"
                             :title="citation.title"
                           >
                             {{ citationLabel(citation) }}
@@ -285,7 +285,7 @@
                       <NuxtLink
                         v-if="msg.attribution.learn_more_url"
                         :to="msg.attribution.learn_more_url"
-                        class="mt-1.5 inline-flex items-center gap-1 text-[11px] text-brandp-500 dark:text-brandp-400 hover:text-brandp-600 dark:hover:text-brandp-300 hover:underline transition-colors"
+                        class="mt-1.5 inline-flex items-center gap-1 text-[0.6875rem] text-brandp-500 dark:text-brandp-400 hover:text-brandp-600 dark:hover:text-brandp-300 hover:underline transition-colors"
                       >
                         {{ t('foodChatHome.chat.attribution.learnMore') }}
                         <UIcon name="i-lucide-arrow-right" class="w-3 h-3" />
@@ -300,7 +300,7 @@
                         class="flex items-start gap-1.5 px-2 py-1 rounded-lg border border-gray-100 dark:border-zinc-700/60 bg-gray-50/80 dark:bg-zinc-800/40"
                       >
                         <UIcon name="i-lucide-replace" class="w-3 h-3 mt-0.5 text-brandp-400 dark:text-brandp-300 shrink-0" />
-                        <span class="flex-1 min-w-0 text-[11px] font-light leading-snug text-gray-600 dark:text-zinc-300">
+                        <span class="flex-1 min-w-0 text-[0.6875rem] font-light leading-snug text-gray-600 dark:text-zinc-300">
                           <span class="font-medium">{{ changedSlotLabel(changedSlot) }}:</span>
                           <span class="line-through opacity-60"> {{ changedSlot.old.title }}</span>
                           <span> → </span>
@@ -311,7 +311,7 @@
                         </span>
                         <span
                           v-if="changedSlot.verified"
-                          class="inline-flex items-center gap-0.5 mt-0.5 text-[10px] text-emerald-600 dark:text-emerald-400 shrink-0"
+                          class="inline-flex items-center gap-0.5 mt-0.5 text-[0.625rem] text-emerald-600 dark:text-emerald-400 shrink-0"
                           :title="changedSlot.directive"
                         >
                           <UIcon name="i-lucide-check" class="w-3 h-3" />
@@ -337,7 +337,7 @@
                             class="w-3 h-3 shrink-0"
                             :class="sug.kind === 'allergy_hint' ? 'text-amber-500 dark:text-amber-400' : 'text-brandp-400 dark:text-brandp-300'"
                           />
-                          <span class="flex-1 min-w-0 text-[11px] font-light leading-snug">{{ sug.statement }}</span>
+                          <span class="flex-1 min-w-0 text-[0.6875rem] font-light leading-snug">{{ sug.statement }}</span>
                           <button
                             class="fc-memory-btn fc-memory-btn-accept"
                             :disabled="memoryChipState[sug.id] === 'pending'"
@@ -356,7 +356,7 @@
                         </template>
                         <template v-else>
                           <UIcon name="i-lucide-check" class="w-3 h-3 text-emerald-500 shrink-0" />
-                          <span class="text-[11px] text-emerald-600 dark:text-emerald-400 font-light">
+                          <span class="text-[0.6875rem] text-emerald-600 dark:text-emerald-400 font-light">
                             {{ t('foodChatHome.chat.memory.saved') }}
                           </span>
                         </template>
@@ -391,7 +391,7 @@
                             <button
                               v-for="reason in negativeFeedbackReasons"
                               :key="reason"
-                              :class="['px-2 py-0.5 text-[10px] rounded-full border transition-colors',
+                              :class="['px-2 py-0.5 text-[0.625rem] rounded-full border transition-colors',
                                 selectedFeedbackReason[msg.id] === reason
                                   ? 'border-red-400 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300'
                                   : 'border-gray-300 dark:border-zinc-600 text-gray-500 dark:text-gray-400 hover:border-red-300']"
@@ -403,7 +403,7 @@
                         </Transition>
                       </template>
 
-                      <span v-else class="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <span v-else class="text-[0.625rem] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                         <UIcon name="i-lucide-check" class="w-3 h-3" />
                         {{ t('foodChatHome.chat.feedbackSaved') }}
                       </span>
@@ -444,7 +444,7 @@
                 <span
                   v-for="item in pantryItems"
                   :key="`strip-${item}`"
-                  class="group inline-flex items-center gap-1 pl-2 pr-1 py-0.5 text-[11px] rounded-full border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
+                  class="group inline-flex items-center gap-1 pl-2 pr-1 py-0.5 text-[0.6875rem] rounded-full border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
                 >
                   {{ item }}
                   <button
@@ -479,7 +479,7 @@
                 </form>
                 <button
                   v-else
-                  class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[11px] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[0.6875rem] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
                   @click="pantryStripOpen = true"
                 >
                   <UIcon name="i-lucide-plus" class="w-2.5 h-2.5" />
@@ -488,7 +488,7 @@
                 <!-- Typing is fine for one thing. Picking is what you want when
                      you are standing in front of the fridge. -->
                 <button
-                  class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[11px] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[0.6875rem] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
                   @click="pantryPickerOpen = true"
                 >
                   <UIcon name="i-lucide-refrigerator" class="w-2.5 h-2.5" />
@@ -510,7 +510,7 @@
                   @click="toggleDiner(member)"
                 >
                   <ProfileAvatar :avatar="getMemberAvatarForDisplay(member)" size="xs" />
-                  <span class="text-[10px] max-w-14 truncate">{{ member.name }}</span>
+                  <span class="text-[0.625rem] max-w-14 truncate">{{ member.name }}</span>
                   <UIcon v-if="member.id === currentMemberId" name="i-lucide-lock" class="w-2.5 h-2.5 opacity-50" />
                 </button>
               </UTooltip>
@@ -526,7 +526,7 @@
                     rows="1"
                     :disabled="sending"
                     :placeholder="t('foodChatHome.input.placeholderChat')"
-                    class="flex-1 resize-none overflow-hidden bg-transparent px-2 py-2 text-[14px] text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 focus:outline-none max-h-28 font-light leading-relaxed"
+                    class="flex-1 resize-none overflow-hidden bg-transparent px-2 py-2 text-[0.875rem] text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 focus:outline-none max-h-28 font-light leading-relaxed"
                     @input="autoResize($event, sessionInputRef)"
                     @keydown="handleKeydown"
                     @focus="sessionInputFocused = true"
@@ -591,7 +591,7 @@
               <span>{{ t('foodChatHome.planSettings.title') }}</span>
               <span
                 v-if="!settingsOpen && appliedSettingsSummary"
-                class="text-[11px] text-gray-400 dark:text-zinc-500 font-light truncate"
+                class="text-[0.6875rem] text-gray-400 dark:text-zinc-500 font-light truncate"
               >· {{ appliedSettingsSummary }}</span>
               <UIcon
                 :name="settingsOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
@@ -608,7 +608,7 @@
           <!-- "Cooking for" banner (when more than one diner) -->
           <Transition name="chips-fade">
             <div v-if="showCookingForBanner" class="px-4 sm:px-6 pt-3 shrink-0">
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] rounded-full border border-brandp-100 dark:border-brandp-900/60 bg-brandp-50 dark:bg-brandp-950/40 text-brandp-600 dark:text-brandp-300">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[0.6875rem] rounded-full border border-brandp-100 dark:border-brandp-900/60 bg-brandp-50 dark:bg-brandp-950/40 text-brandp-600 dark:text-brandp-300">
                 <UIcon name="i-lucide-users" class="w-3 h-3" />
                 {{ t('foodChatHome.diners.cookingFor', { names: cookingForNames.join(', ') }) }}
               </span>
@@ -703,7 +703,7 @@
                     :key="group.day ?? 'daily'"
                     class="rounded-xl border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-800/40 p-3"
                   >
-                    <p v-if="group.day" class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-zinc-500 mb-2">
+                    <p v-if="group.day" class="text-[0.625rem] font-semibold uppercase tracking-wide text-gray-400 dark:text-zinc-500 mb-2">
                       {{ weekdayName(group.day) }}
                     </p>
                     <div class="space-y-2">
@@ -713,7 +713,7 @@
                           <span class="w-20 shrink-0 text-xs text-gray-500 dark:text-zinc-400 capitalize">{{ t(`foodChatHome.meals.${mealType}`) }}</span>
                           <template v-if="draftPicks[draftSlotKey(group.day, mealType)]">
                             <span class="flex-1 min-w-0 truncate text-sm font-medium text-gray-800 dark:text-gray-200">{{ draftPicks[draftSlotKey(group.day, mealType)]!.title }}</span>
-                            <span class="shrink-0 px-1.5 py-0.5 text-[9px] rounded-full bg-brandp-50 dark:bg-brandp-950/40 text-brandp-500 dark:text-brandp-300">{{ t('foodChatHome.manual.yourPick') }}</span>
+                            <span class="shrink-0 px-1.5 py-0.5 text-[0.5625rem] rounded-full bg-brandp-50 dark:bg-brandp-950/40 text-brandp-500 dark:text-brandp-300">{{ t('foodChatHome.manual.yourPick') }}</span>
                             <button
                               class="shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
                               @click="draftPicks[draftSlotKey(group.day, mealType)] = null"
@@ -723,7 +723,7 @@
                           </template>
                           <button
                             v-else-if="draftPickerOpen !== draftSlotKey(group.day, mealType)"
-                            class="inline-flex items-center gap-1 px-2 py-1 text-[11px] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-brandp-300 hover:text-brandp-500 transition-colors"
+                            class="inline-flex items-center gap-1 px-2 py-1 text-[0.6875rem] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-brandp-300 hover:text-brandp-500 transition-colors"
                             @click="openDraftPicker(draftSlotKey(group.day, mealType))"
                           >
                             <UIcon name="i-lucide-plus" class="w-3 h-3" />
@@ -736,7 +736,7 @@
                             <button
                               v-for="fav in draftFavorites"
                               :key="fav.recipe_id"
-                              class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full border border-brandp-100 dark:border-brandp-900/50 bg-brandp-50/60 dark:bg-brandp-950/30 text-brandp-600 dark:text-brandp-300 hover:bg-brandp-100 dark:hover:bg-brandp-900/40 transition-colors"
+                              class="inline-flex items-center gap-1 px-2 py-0.5 text-[0.625rem] rounded-full border border-brandp-100 dark:border-brandp-900/50 bg-brandp-50/60 dark:bg-brandp-950/30 text-brandp-600 dark:text-brandp-300 hover:bg-brandp-100 dark:hover:bg-brandp-900/40 transition-colors"
                               @click="pickDraftRecipe(draftSlotKey(group.day, mealType), fav)"
                             >
                               <UIcon name="i-lucide-heart" class="w-2.5 h-2.5" />
@@ -766,7 +766,7 @@
                           </div>
                           <p
                             v-else-if="draftQuery.trim().length >= 3 && !draftSearching"
-                            class="mt-1 text-[11px] text-gray-400 dark:text-zinc-500"
+                            class="mt-1 text-[0.6875rem] text-gray-400 dark:text-zinc-500"
                           >
                             {{ t('foodChatHome.manual.noMatches') }}
                           </p>
@@ -777,7 +777,7 @@
                 </div>
 
                 <div class="flex items-center justify-between gap-3">
-                  <p class="flex-1 text-[11px] font-light text-gray-400 dark:text-zinc-500 leading-snug">{{ t('foodChatHome.manual.hint') }}</p>
+                  <p class="flex-1 text-[0.6875rem] font-light text-gray-400 dark:text-zinc-500 leading-snug">{{ t('foodChatHome.manual.hint') }}</p>
                   <button
                     class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-full font-medium transition-colors
                            bg-brandp-500 text-white hover:bg-brandp-600
@@ -949,7 +949,7 @@
                           <span class="tabular-nums">{{ line.value }}</span>
                         </li>
                       </ul>
-                      <p v-if="toolResult.caveat" class="text-[10px] text-gray-400 dark:text-zinc-500 font-light">
+                      <p v-if="toolResult.caveat" class="text-[0.625rem] text-gray-400 dark:text-zinc-500 font-light">
                         {{ toolResult.caveat }}
                       </p>
                     </template>
@@ -960,7 +960,7 @@
                 <template v-if="canvasMode === 'daily' && displayedMealPlan">
                   <!-- Constraint ledger -->
                   <div v-if="displayedMealPlan.constraints_applied?.length" class="mb-3 px-1 flex items-center gap-1.5 flex-wrap">
-                    <span class="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 shrink-0">
+                    <span class="inline-flex items-center gap-1 text-[0.625rem] uppercase tracking-wide text-gray-400 dark:text-zinc-500 shrink-0">
                       <UIcon name="i-lucide-sliders-horizontal" class="w-3 h-3" />
                       {{ t('foodChatHome.constraints.label') }}
                     </span>
@@ -970,7 +970,7 @@
                       :text="constraint.detail || constraintTooltip(constraint)"
                     >
                       <span
-                        class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full border cursor-help"
+                        class="inline-flex items-center gap-1 px-2 py-0.5 text-[0.625rem] rounded-full border cursor-help"
                         :class="ledgerRowClass(constraint)"
                       >
                         <UIcon v-if="ledgerRowIcon(constraint)" :name="ledgerRowIcon(constraint) || ''" class="w-3 h-3 shrink-0" />
@@ -1018,7 +1018,7 @@
                         </span>
                         <span
                           v-if="mealsNutritionTotal(group.meals)"
-                          class="text-[10px] text-gray-400 dark:text-zinc-500 tabular-nums"
+                          class="text-[0.625rem] text-gray-400 dark:text-zinc-500 tabular-nums"
                         >
                           {{ Math.round(mealsNutritionTotal(group.meals)!.calories) }} kcal
                         </span>
@@ -1083,7 +1083,7 @@
                     </span>
                     <span
                       v-if="!displayedPlanTotals.complete"
-                      class="text-[10px] text-amber-600 dark:text-amber-400"
+                      class="text-[0.625rem] text-amber-600 dark:text-amber-400"
                     >{{ t('foodChatHome.dayTotal.partial') }}</span>
                   </div>
 
@@ -1096,7 +1096,7 @@
                   <div v-if="personalizationParts.length" class="mb-4 px-1">
                     <NuxtLink
                       to="/my-profile"
-                      class="inline-flex items-center gap-1.5 text-[11px] font-light text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:underline transition-colors"
+                      class="inline-flex items-center gap-1.5 text-[0.6875rem] font-light text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:underline transition-colors"
                     >
                       <UIcon name="i-lucide-sparkles" class="w-3 h-3 shrink-0" />
                       {{ t('foodChatHome.personalization.prefix') }} {{ personalizationParts.join(' · ') }}
@@ -1128,7 +1128,7 @@
                           </button>
                         </UTooltip>
                       </template>
-                      <span v-else class="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <span v-else class="text-[0.625rem] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                         <UIcon name="i-lucide-check" class="w-3 h-3" />
                         {{ t('foodChatHome.chat.feedbackSaved') }}
                       </span>
@@ -1164,7 +1164,7 @@
 
                   <!-- Measured constraint ledger (weekly rows can be relaxed/violated) -->
                   <div v-if="weeklyLedger.length" class="mb-3 px-1 flex items-center gap-1.5 flex-wrap">
-                    <span class="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 shrink-0">
+                    <span class="inline-flex items-center gap-1 text-[0.625rem] uppercase tracking-wide text-gray-400 dark:text-zinc-500 shrink-0">
                       <UIcon name="i-lucide-sliders-horizontal" class="w-3 h-3" />
                       {{ t('foodChatHome.constraints.label') }}
                     </span>
@@ -1174,7 +1174,7 @@
                       :text="constraint.detail || constraintTooltip(constraint)"
                     >
                       <span
-                        class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full border cursor-help"
+                        class="inline-flex items-center gap-1 px-2 py-0.5 text-[0.625rem] rounded-full border cursor-help"
                         :class="ledgerRowClass(constraint)"
                       >
                         <UIcon v-if="ledgerRowIcon(constraint)" :name="ledgerRowIcon(constraint) || ''" class="w-3 h-3 shrink-0" />
@@ -1190,7 +1190,7 @@
                   <!-- Collapsible days — one row per day, meals reviewable inline -->
                   <div class="flex justify-end mb-1.5 px-1">
                     <button
-                      class="inline-flex items-center gap-1 text-[10px] text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 transition-colors"
+                      class="inline-flex items-center gap-1 text-[0.625rem] text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 transition-colors"
                       @click="toggleAllWeeklyDays"
                     >
                       <UIcon :name="allWeeklyDaysExpanded ? 'i-lucide-chevrons-down-up' : 'i-lucide-chevrons-up-down'" class="w-3 h-3" />
@@ -1209,8 +1209,8 @@
                         @click="toggleWeeklyDay(day.dayIndex)"
                       >
                         <span class="w-20 shrink-0 text-xs font-semibold text-gray-700 dark:text-zinc-200">{{ weeklyDayLabel(day) }}</span>
-                        <span class="flex-1 min-w-0 truncate text-[11px] font-light text-gray-500 dark:text-zinc-400">{{ weeklyDaySummary(day.dayIndex) }}</span>
-                        <span v-if="weeklyDayKcal(day.dayIndex) != null" class="shrink-0 text-[10px] text-gray-400 dark:text-zinc-500 tabular-nums">
+                        <span class="flex-1 min-w-0 truncate text-[0.6875rem] font-light text-gray-500 dark:text-zinc-400">{{ weeklyDaySummary(day.dayIndex) }}</span>
+                        <span v-if="weeklyDayKcal(day.dayIndex) != null" class="shrink-0 text-[0.625rem] text-gray-400 dark:text-zinc-500 tabular-nums">
                           {{ t('foodChatHome.mealCard.kcal', { kcal: Math.round(weeklyDayKcal(day.dayIndex)!) }) }}
                         </span>
                         <span class="flex -space-x-1.5 shrink-0">
@@ -1271,7 +1271,7 @@
                           >
                             <div class="flex items-center gap-1">
                               <UIcon :name="mealTypeIcon(cell.mealType)" class="w-3 h-3 text-brandp-400 shrink-0" />
-                              <span class="text-[10px] text-gray-400 dark:text-zinc-500">{{ cell.label }}</span>
+                              <span class="text-[0.625rem] text-gray-400 dark:text-zinc-500">{{ cell.label }}</span>
                               <button
                                 v-if="getWeeklyRecipeId(cellMain(cell))"
                                 type="button"
@@ -1351,11 +1351,11 @@
                                   v-if="getWeeklyRecipeId(cellMain(cell))"
                                   :to="`/recipe-wrangler/${getWeeklyRecipeId(cellMain(cell))}`"
                                   target="_blank"
-                                  class="text-[11px] font-medium text-brandp-600 dark:text-brandp-400 leading-tight line-clamp-2 hover:underline"
+                                  class="text-[0.6875rem] font-medium text-brandp-600 dark:text-brandp-400 leading-tight line-clamp-2 hover:underline"
                                 >
                                   {{ getWeeklyRecipeTitle(cellMain(cell)) }}
                                 </NuxtLink>
-                                <p v-else class="text-[11px] font-medium text-gray-800 dark:text-gray-200 leading-tight line-clamp-2">
+                                <p v-else class="text-[0.6875rem] font-medium text-gray-800 dark:text-gray-200 leading-tight line-clamp-2">
                                   {{ getWeeklyRecipeTitle(cellMain(cell)) }}
                                 </p>
                                 <!-- The MEAL's calories, not the main's: a
@@ -1363,7 +1363,7 @@
                                      main alone understates what gets eaten. -->
                                 <span
                                   v-if="weeklyMealKcal(cell.plates) != null"
-                                  class="text-[9px] text-gray-400 dark:text-zinc-500 leading-none"
+                                  class="text-[0.5625rem] text-gray-400 dark:text-zinc-500 leading-none"
                                 >
                                   {{ t('foodChatHome.mealCard.kcal', { kcal: weeklyMealKcal(cell.plates) }) }}
                                 </span>
@@ -1391,7 +1391,7 @@
                                   />
                                 </svg>
                                 <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                  <span class="text-[7px] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ getWeeklyCenterValue(getWeeklyRecipeId(cellMain(cell))!, cell.key) }}</span>
+                                  <span class="text-[0.4375rem] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ getWeeklyCenterValue(getWeeklyRecipeId(cellMain(cell))!, cell.key) }}</span>
                                 </div>
                               </div>
                             </div>
@@ -1425,18 +1425,18 @@
                                   </div>
                                 </NuxtLink>
                                 <span
-                                  class="shrink-0 inline-flex items-center px-1 py-px text-[8px] font-semibold uppercase tracking-wide rounded"
+                                  class="shrink-0 inline-flex items-center px-1 py-px text-[0.5rem] font-semibold uppercase tracking-wide rounded"
                                   :class="plateBadgeClass(plate)"
                                 >{{ plateRoleLabel(plate) }}</span>
                                 <NuxtLink
                                   v-if="getWeeklyRecipeId(plate)"
                                   :to="`/recipe-wrangler/${getWeeklyRecipeId(plate)}`"
                                   target="_blank"
-                                  class="min-w-0 text-[10px] font-medium text-gray-700 dark:text-zinc-200 leading-tight line-clamp-1 hover:underline"
+                                  class="min-w-0 text-[0.625rem] font-medium text-gray-700 dark:text-zinc-200 leading-tight line-clamp-1 hover:underline"
                                 >{{ getWeeklyRecipeTitle(plate) }}</NuxtLink>
                                 <span
                                   v-else
-                                  class="min-w-0 text-[10px] font-medium text-gray-700 dark:text-zinc-200 leading-tight line-clamp-1"
+                                  class="min-w-0 text-[0.625rem] font-medium text-gray-700 dark:text-zinc-200 leading-tight line-clamp-1"
                                 >{{ getWeeklyRecipeTitle(plate) }}</span>
                               </div>
                             </div>
@@ -1450,7 +1450,7 @@
                               <span
                                 v-for="(reason, rIdx) in weeklyEntryReasons(cellMain(cell))"
                                 :key="rIdx"
-                                class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] rounded-full border border-brandp-100 dark:border-brandp-900/50 bg-brandp-50/60 dark:bg-brandp-950/30 text-brandp-600 dark:text-brandp-300"
+                                class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[0.5625rem] rounded-full border border-brandp-100 dark:border-brandp-900/50 bg-brandp-50/60 dark:bg-brandp-950/30 text-brandp-600 dark:text-brandp-300"
                               >
                                 <UIcon :name="reasonIcon(reason.kind)" class="w-2.5 h-2.5 shrink-0" />
                                 {{ reason.label }}
@@ -1482,7 +1482,7 @@
                         {{ t('foodChatHome.weekly.glanceTitle') }}
                         <span
                           v-if="weeklyChecklist.length"
-                          class="px-1.5 py-0.5 text-[9px] rounded-full font-medium tabular-nums"
+                          class="px-1.5 py-0.5 text-[0.5625rem] rounded-full font-medium tabular-nums"
                           :class="weeklyChecklistMet === weeklyChecklist.length
                             ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
                             : 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400'"
@@ -1497,7 +1497,7 @@
                           :class="check.met ? 'text-emerald-500' : 'text-amber-500'"
                           class="w-3.5 h-3.5 shrink-0"
                         />
-                        <span class="flex-1 text-[11px] font-light text-gray-500 dark:text-zinc-400">
+                        <span class="flex-1 text-[0.6875rem] font-light text-gray-500 dark:text-zinc-400">
                           {{ check.rule }}
                           <!-- Whose rule this is. Absent on the built-in
                                fallbacks, which are not anyone's national
@@ -1507,15 +1507,15 @@
                             class="text-gray-400 dark:text-zinc-500"
                           >· {{ check.source }}</span>
                         </span>
-                        <span class="shrink-0 text-[11px] font-medium text-gray-700 dark:text-zinc-200 tabular-nums">{{ check.actual }} · {{ check.target }}</span>
+                        <span class="shrink-0 text-[0.6875rem] font-medium text-gray-700 dark:text-zinc-200 tabular-nums">{{ check.actual }} · {{ check.target }}</span>
                       </div>
                       <div v-if="weeklyVariety?.reasoning" class="flex items-start gap-2 pt-1.5 border-t border-gray-100 dark:border-zinc-800">
                         <UIcon name="i-lucide-shuffle" class="w-3.5 h-3.5 text-brandp-400 mt-0.5 shrink-0" />
-                        <span class="text-[11px] font-light text-gray-500 dark:text-zinc-400 leading-relaxed">{{ weeklyVariety.reasoning }}</span>
+                        <span class="text-[0.6875rem] font-light text-gray-500 dark:text-zinc-400 leading-relaxed">{{ weeklyVariety.reasoning }}</span>
                       </div>
                       <div v-if="weeklyNutrition?.daily_average_kcal != null" class="flex items-start gap-2">
                         <UIcon name="i-lucide-flame" class="w-3.5 h-3.5 text-brandp-400 mt-0.5 shrink-0" />
-                        <span class="text-[11px] font-light text-gray-500 dark:text-zinc-400 leading-relaxed">
+                        <span class="text-[0.6875rem] font-light text-gray-500 dark:text-zinc-400 leading-relaxed">
                           {{ t('foodChatHome.weekly.dailyAverage', { kcal: Math.round(weeklyNutrition.daily_average_kcal) }) }}
                           <template v-if="weeklyNutrition.budget_used_pct != null">
                             · {{ t('foodChatHome.weekly.budgetUsed', { pct: weeklyNutrition.budget_used_pct }) }}
@@ -1530,7 +1530,7 @@
                   <div v-if="weeklyPersonalizationParts.length" class="mb-4 px-1">
                     <NuxtLink
                       to="/my-profile"
-                      class="inline-flex items-center gap-1.5 text-[11px] font-light text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:underline transition-colors"
+                      class="inline-flex items-center gap-1.5 text-[0.6875rem] font-light text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:underline transition-colors"
                     >
                       <UIcon name="i-lucide-sparkles" class="w-3 h-3 shrink-0" />
                       {{ t('foodChatHome.personalization.prefix') }} {{ weeklyPersonalizationParts.join(' · ') }}
@@ -1559,7 +1559,7 @@
                           </button>
                         </UTooltip>
                       </template>
-                      <span v-else class="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                      <span v-else class="text-[0.625rem] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                         <UIcon name="i-lucide-check" class="w-3 h-3" />
                         {{ t('foodChatHome.chat.feedbackSaved') }}
                       </span>
@@ -1619,7 +1619,7 @@
             </span>
             <span
               v-if="standingCount"
-              class="text-[10px] px-1.5 py-0.5 rounded-full bg-brandp-50 dark:bg-brandp-900/30 text-brandp-600 dark:text-brandp-300 tabular-nums shrink-0"
+              class="text-[0.625rem] px-1.5 py-0.5 rounded-full bg-brandp-50 dark:bg-brandp-900/30 text-brandp-600 dark:text-brandp-300 tabular-nums shrink-0"
             >{{ standingCount }}</span>
             <UIcon
               v-if="railOpen"
@@ -1666,7 +1666,7 @@
 
     <!-- Disclaimer -->
     <div class="pb-4 text-center">
-      <p class="text-[10px] text-gray-400 dark:text-gray-500 font-light">{{ t('foodChatHome.disclaimer') }}</p>
+      <p class="text-[0.625rem] text-gray-400 dark:text-gray-500 font-light">{{ t('foodChatHome.disclaimer') }}</p>
     </div>
 
     <!-- Error toast -->

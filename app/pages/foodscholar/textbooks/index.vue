@@ -94,7 +94,7 @@
                           @click="toggleTopic(facet.value)"
                         >
                           <span class="truncate max-w-[10rem]">{{ facet.value }}</span>
-                          <span class="text-[10px] opacity-70">{{ facet.count }}</span>
+                          <span class="text-[0.625rem] opacity-70">{{ facet.count }}</span>
                         </button>
                         <button
                           v-if="topicFacets.length > TOP_PILLS"
@@ -151,7 +151,7 @@
                           @click="toggleTag(String(facet.value))"
                         >
                           <span class="truncate max-w-[10rem]">{{ facet.value }}</span>
-                          <span class="text-[10px] opacity-70">{{ facet.count }}</span>
+                          <span class="text-[0.625rem] opacity-70">{{ facet.count }}</span>
                         </button>
                       </div>
                     </div>
@@ -184,7 +184,7 @@
                           :min-steps-between-thumbs="0"
                           class="mt-3"
                         />
-                        <div class="mt-2 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+                        <div class="mt-2 flex items-center justify-between text-[0.6875rem] text-gray-500 dark:text-gray-400">
                           <span>{{ yearBounds.min }}</span>
                           <span class="font-medium text-gray-700 dark:text-gray-300">{{ yearRangeLabel }}</span>
                           <span>{{ yearBounds.max }}</span>
@@ -241,7 +241,7 @@
             >
               <UIcon :name="showFilters ? 'i-lucide-panel-left-close' : 'i-lucide-panel-left-open'" class="w-4 h-4" />
               {{ showFilters ? 'Hide filters' : 'Show filters' }}
-              <span v-if="facetsActiveCount" class="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full text-[11px] font-semibold bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300">
+              <span v-if="facetsActiveCount" class="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full text-[0.6875rem] font-semibold bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300">
                 {{ facetsActiveCount }}
               </span>
             </button>
@@ -254,7 +254,7 @@
               <FoodscholarNLInput
                 v-model="nlQuery"
                 placeholder="Search textbooks by title, author, topic…"
-                input-class="w-full h-12 pl-11 pr-16 rounded-xl bg-transparent text-[15px] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
+                input-class="w-full h-12 pl-11 pr-16 rounded-xl bg-transparent text-[0.9375rem] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
                 @enter="performSearch"
               >
                 <template #left>
@@ -274,7 +274,7 @@
               <button
                 v-for="example in exampleQueries"
                 :key="example"
-                class="px-2 py-1 text-[11px] rounded-full text-gray-600 dark:text-gray-300 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
+                class="px-2 py-1 text-[0.6875rem] rounded-full text-gray-600 dark:text-gray-300 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
                 @click="nlQuery = example; performSearch()"
               >
                 {{ example }}

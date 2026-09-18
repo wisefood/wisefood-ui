@@ -34,7 +34,7 @@
           </UBadge>
           <span
             v-if="suggestion.country"
-            class="text-[11px] text-gray-500 dark:text-gray-400"
+            class="text-[0.6875rem] text-gray-500 dark:text-gray-400"
           >{{ suggestion.country }}<template v-if="suggestion.language"> · {{ suggestion.language }}</template></span>
         </div>
         <p class="mt-1.5 text-sm font-medium text-gray-900 dark:text-white">
@@ -45,7 +45,7 @@
           :href="suggestion.source_url"
           target="_blank"
           rel="noopener noreferrer"
-          class="mt-0.5 block truncate font-mono text-[11px] text-brand-600 hover:underline dark:text-brand-300"
+          class="mt-0.5 block truncate font-mono text-[0.6875rem] text-brand-600 hover:underline dark:text-brand-300"
         >{{ suggestion.source_url }}</a>
         <p
           v-if="suggestion.rationale"
@@ -86,10 +86,10 @@
       v-if="suggestion.plan?.length"
       class="mt-2"
     >
-      <summary class="cursor-pointer text-[11px] text-gray-500 hover:text-gray-700 dark:text-gray-400">
+      <summary class="cursor-pointer text-[0.6875rem] text-gray-500 hover:text-gray-700 dark:text-gray-400">
         What integrating it would do
       </summary>
-      <ol class="mt-1 list-decimal space-y-0.5 pl-4 text-[11px] text-gray-500 dark:text-gray-400">
+      <ol class="mt-1 list-decimal space-y-0.5 pl-4 text-[0.6875rem] text-gray-500 dark:text-gray-400">
         <li
           v-for="(step, i) in suggestion.plan"
           :key="i"

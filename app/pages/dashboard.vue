@@ -227,7 +227,7 @@
                     :key="plate.id"
                     class="flex items-baseline gap-1.5 text-xs"
                   >
-                    <span class="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">{{ plate.role }}</span>
+                    <span class="shrink-0 text-[0.5625rem] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">{{ plate.role }}</span>
                     <span class="min-w-0 truncate text-gray-600 dark:text-gray-300">{{ plate.title }}</span>
                   </li>
                 </ul>
@@ -246,7 +246,7 @@
                       />
                       <div
                         v-else
-                        class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white text-[10px] font-semibold flex items-center justify-center ring-1 ring-white dark:ring-zinc-800"
+                        class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white text-[0.625rem] font-semibold flex items-center justify-center ring-1 ring-white dark:ring-zinc-800"
                       >
                         {{ memberInitials(member.name) }}
                       </div>
@@ -292,7 +292,7 @@
                       />
                       <div
                         v-else
-                        class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white text-[10px] font-semibold flex items-center justify-center ring-1 ring-white dark:ring-zinc-800"
+                        class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white text-[0.625rem] font-semibold flex items-center justify-center ring-1 ring-white dark:ring-zinc-800"
                       >
                         {{ memberInitials(member.name) }}
                       </div>

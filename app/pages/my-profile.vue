@@ -438,7 +438,7 @@
                     </div>
                     <div class="flex gap-2">
                       <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-28">{{ t('myProfile.memory.why.storedLabel') }}</dt>
-                      <dd class="text-gray-700 dark:text-gray-200 font-mono text-[11px]">{{ memoryStoredIn(item.entry) }}</dd>
+                      <dd class="text-gray-700 dark:text-gray-200 font-mono text-[0.6875rem]">{{ memoryStoredIn(item.entry) }}</dd>
                     </div>
                     <div
                       v-if="item.entry.edited_at"
@@ -451,7 +451,7 @@
                     </div>
                   </dl>
 
-                  <p class="text-[11px] text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-200/70 dark:border-white/10">
+                  <p class="text-[0.6875rem] text-gray-500 dark:text-gray-400 pt-1 border-t border-gray-200/70 dark:border-white/10">
                     {{ t('myProfile.memory.why.control') }}
                   </p>
                 </div>
@@ -496,7 +496,7 @@
                     >
                       {{ memoryDraft.kind === 'like' ? t('myProfile.memory.edit.isLike') : t('myProfile.memory.edit.isDislike') }}
                     </UButton>
-                    <span class="text-[11px] text-gray-500 dark:text-gray-400">{{ t('myProfile.memory.edit.flipHint') }}</span>
+                    <span class="text-[0.6875rem] text-gray-500 dark:text-gray-400">{{ t('myProfile.memory.edit.flipHint') }}</span>
                   </div>
 
                   <div class="flex items-center gap-2 pt-1">

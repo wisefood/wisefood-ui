@@ -161,7 +161,7 @@
               <p class="text-sm font-medium text-gray-900 dark:text-white">
                 {{ headline }}
               </p>
-              <p class="mt-0.5 truncate font-mono text-[11px] text-gray-400 dark:text-gray-500">
+              <p class="mt-0.5 truncate font-mono text-[0.6875rem] text-gray-400 dark:text-gray-500">
                 {{ run.location }}
               </p>
             </div>

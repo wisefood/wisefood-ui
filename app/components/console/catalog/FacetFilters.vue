@@ -20,7 +20,7 @@
       :key="group.field"
       class="min-w-0"
     >
-      <p class="mb-1 text-[11px] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+      <p class="mb-1 text-[0.6875rem] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
         {{ group.label }}
       </p>
       <div class="flex flex-wrap gap-1.5">

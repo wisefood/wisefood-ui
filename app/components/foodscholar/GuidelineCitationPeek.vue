@@ -18,7 +18,7 @@
     </div>
 
     <div v-else-if="guideline">
-      <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400">
+      <div class="mb-2 flex items-center gap-1.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400">
         <UIcon name="i-lucide-list-checks" class="h-3.5 w-3.5" />
         {{ $t('guidelines.peek.title') }}
       </div>
@@ -40,7 +40,7 @@
         <span
           v-for="chip in chips"
           :key="`${chip.field}:${chip.value}`"
-          class="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300"
+          class="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[0.6875rem] font-medium text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300"
           :title="chip.aiGenerated ? $t('guidelines.facets.aiSuggested') : chip.label"
         >
           <UIcon :name="chip.icon" class="h-3 w-3 shrink-0 opacity-70" />

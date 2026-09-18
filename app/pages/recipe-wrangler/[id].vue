@@ -523,7 +523,7 @@
                           name="i-lucide-flame"
                           class="w-4 h-4 text-brand-500 dark:text-brand-400"
                         />
-                        <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                        <p class="text-[0.6875rem] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                           {{ t('recipeWrangler.detail.calories') }}
                         </p>
                       </div>
@@ -538,7 +538,7 @@
                           name="i-lucide-dumbbell"
                           class="w-4 h-4 text-brandg-500 dark:text-brandg-400"
                         />
-                        <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                        <p class="text-[0.6875rem] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                           {{ t('recipeWrangler.detail.protein') }}
                         </p>
                       </div>
@@ -553,7 +553,7 @@
                           name="i-lucide-wheat"
                           class="w-4 h-4 text-brandp-400 dark:text-brandp-300"
                         />
-                        <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                        <p class="text-[0.6875rem] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                           {{ t('recipeWrangler.detail.carbs') }}
                         </p>
                       </div>
@@ -568,7 +568,7 @@
                           name="i-lucide-droplet"
                           class="w-4 h-4 text-terracotta dark:text-orange-400"
                         />
-                        <p class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
+                        <p class="text-[0.6875rem] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide">
                           {{ t('recipeWrangler.detail.fat') }}
                         </p>
                       </div>
@@ -586,7 +586,7 @@
                           name="i-lucide-leaf"
                           class="w-3.5 h-3.5 text-brandg-500 dark:text-brandg-400"
                         />
-                        <p class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
+                        <p class="text-[0.625rem] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
                           Fiber
                         </p>
                       </div>
@@ -600,7 +600,7 @@
                           name="i-lucide-candy"
                           class="w-3.5 h-3.5 text-brand-400 dark:text-brand-300"
                         />
-                        <p class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
+                        <p class="text-[0.625rem] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
                           Sugar
                         </p>
                       </div>
@@ -614,7 +614,7 @@
                           name="i-lucide-droplets"
                           class="w-3.5 h-3.5 text-brandp-400 dark:text-brandp-300"
                         />
-                        <p class="text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
+                        <p class="text-[0.625rem] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">
                           Sodium
                         </p>
                       </div>
@@ -938,7 +938,7 @@
                   {{ t('recipeWrangler.detail.adaptation.remove') }}
                 </button>
               </div>
-              <p class="text-[10px] text-brandg-700/80 dark:text-brandg-300/80 mt-1 ml-6">
+              <p class="text-[0.625rem] text-brandg-700/80 dark:text-brandg-300/80 mt-1 ml-6">
                 {{ t('recipeWrangler.detail.adaptation.savedNote') }}
               </p>
             </div>
@@ -1003,7 +1003,7 @@
                     >
                       <span
                         v-if="profilingFor(ingredient.name)?.weight_g || weightDetailFor(ingredient.name)?.weight_grams"
-                        class="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-brandg-100 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300"
+                        class="inline-flex items-center gap-1 text-[0.625rem] font-medium px-1.5 py-0.5 rounded bg-brandg-100 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300"
                       >
                         <UIcon
                           name="i-lucide-weight"
@@ -1057,14 +1057,14 @@
                     <div class="rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-3 space-y-2.5">
                       <!-- Weight row -->
                       <div class="flex items-center justify-between gap-2">
-                        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Weight used</span>
+                        <span class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Weight used</span>
                         <span class="font-mono text-xs font-semibold text-brandg-700 dark:text-brandg-300">
                           {{ formatNumber(profilingFor(ingredient.name)?.weight_g || weightDetailFor(ingredient.name)?.weight_grams) }} g
                         </span>
                       </div>
                       <!-- Parsed qty -->
                       <div class="flex items-center justify-between gap-2">
-                        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Parsed qty</span>
+                        <span class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Parsed qty</span>
                         <span class="font-mono text-xs text-zinc-700 dark:text-zinc-300">
                           {{ profilingFor(ingredient.name)?.parsed_quantity || weightDetailFor(ingredient.name)?.parsed_quantity || '—' }}
                           {{ profilingFor(ingredient.name)?.parsed_unit || weightDetailFor(ingredient.name)?.parsed_unit || '' }}
@@ -1081,10 +1081,10 @@
                       </div>
                       <!-- Match source -->
                       <div class="flex items-center justify-between gap-2">
-                        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Match source</span>
+                        <span class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Match source</span>
                         <span
                           :class="[
-                            'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border',
+                            'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[0.625rem] font-medium border',
                             getMatchSourceStyle(String(profilingFor(ingredient.name)?.weight_source || profilingFor(ingredient.name)?.nutrition_match_source || weightDetailFor(ingredient.name)?.match_type || ''))
                           ]"
                         >
@@ -1097,14 +1097,14 @@
                       </div>
                       <!-- Matched ingredient -->
                       <div class="flex items-start justify-between gap-2">
-                        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mt-0.5 shrink-0">Matched to</span>
+                        <span class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mt-0.5 shrink-0">Matched to</span>
                         <span class="text-xs text-zinc-700 dark:text-zinc-300 text-right">
                           {{ profilingFor(ingredient.name)?.matched_nutritional_ingredient || profilingFor(ingredient.name)?.weight_match || '—' }}
                         </span>
                       </div>
                       <!-- Nutrition source -->
                       <div class="flex items-start justify-between gap-2">
-                        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mt-0.5 shrink-0">Source</span>
+                        <span class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mt-0.5 shrink-0">Source</span>
                         <span class="text-xs text-zinc-600 dark:text-zinc-400 text-right">
                           {{ formatNutritionSourceLabel(profilingFor(ingredient.name)?.nutrition_source || profilingFor(ingredient.name)?.source_nutrition || profilingFor(ingredient.name)?.source) }}
                         </span>
@@ -1114,7 +1114,7 @@
                         v-if="profilingFor(ingredient.name)?.similarity !== null && profilingFor(ingredient.name)?.similarity !== undefined"
                         class="flex items-center justify-between gap-2"
                       >
-                        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Similarity</span>
+                        <span class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Similarity</span>
                         <span
                           :class="[
                             'font-mono text-xs font-semibold',
@@ -1131,8 +1131,8 @@
                         v-if="profilingFor(ingredient.name)?.canonical_food_id || weightDetailFor(ingredient.name)?.usda_id"
                         class="flex items-center justify-between gap-2"
                       >
-                        <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">USDA ID</span>
-                        <span class="font-mono text-[10px] text-zinc-500 dark:text-zinc-400">
+                        <span class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">USDA ID</span>
+                        <span class="font-mono text-[0.625rem] text-zinc-500 dark:text-zinc-400">
                           #{{ profilingFor(ingredient.name)?.canonical_food_id || weightDetailFor(ingredient.name)?.usda_id }}
                         </span>
                       </div>
@@ -1142,7 +1142,7 @@
                         class="pt-2 border-t border-zinc-200 dark:border-zinc-700 grid grid-cols-3 gap-2"
                       >
                         <div class="text-center">
-                          <p class="text-[9px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                          <p class="text-[0.5625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                             Protein
                           </p>
                           <p class="font-mono text-xs font-semibold text-zinc-700 dark:text-zinc-300">
@@ -1150,7 +1150,7 @@
                           </p>
                         </div>
                         <div class="text-center">
-                          <p class="text-[9px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                          <p class="text-[0.5625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                             Carbs
                           </p>
                           <p class="font-mono text-xs font-semibold text-zinc-700 dark:text-zinc-300">
@@ -1158,7 +1158,7 @@
                           </p>
                         </div>
                         <div class="text-center">
-                          <p class="text-[9px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                          <p class="text-[0.5625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                             Fat
                           </p>
                           <p class="font-mono text-xs font-semibold text-zinc-700 dark:text-zinc-300">
@@ -1171,7 +1171,7 @@
                         v-if="weightDetailFor(ingredient.name)?.error"
                         class="pt-1 border-t border-red-200 dark:border-red-800"
                       >
-                        <p class="text-[10px] font-semibold uppercase tracking-wider text-red-400 mb-0.5">
+                        <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-red-400 mb-0.5">
                           Error
                         </p>
                         <p class="text-xs text-red-600 dark:text-red-400">
@@ -1364,7 +1364,7 @@
               <div class="rounded-2xl border border-zinc-200 dark:border-zinc-700 p-4">
                 <div class="flex items-center justify-between gap-3">
                   <div class="flex-1 min-w-0 text-center">
-                    <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1">
+                    <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1">
                       {{ t('recipeWrangler.detail.substitution.original') }}
                     </p>
                     <p class="font-medium text-zinc-500 dark:text-zinc-400 line-through truncate">
@@ -1376,7 +1376,7 @@
                     class="w-5 h-5 text-brandg-500 flex-shrink-0"
                   />
                   <div class="flex-1 min-w-0 text-center">
-                    <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1">
+                    <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-1">
                       {{ t('recipeWrangler.detail.substitution.substitute') }}
                     </p>
                     <p class="font-semibold text-brandg-700 dark:text-brandg-300 truncate">
@@ -1385,7 +1385,7 @@
                   </div>
                 </div>
                 <div class="mt-3 flex justify-center">
-                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[0.625rem] font-medium border bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700">
                     <UIcon
                       :name="substituteResult.substitution_source === 'graph_direct' ? 'i-lucide-database' : 'i-lucide-network'"
                       class="w-2.5 h-2.5"
@@ -1431,7 +1431,7 @@
                     :key="row.key"
                     class="rounded-lg border border-zinc-200 dark:border-zinc-700 p-2.5 text-center"
                   >
-                    <p class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                    <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                       {{ row.label }}
                     </p>
                     <p class="font-mono text-xs mt-1 text-zinc-500 dark:text-zinc-400 line-through">
@@ -1657,36 +1657,36 @@
                 <div class="flex flex-wrap items-center gap-1.5">
                   <span
                     v-if="formatAdaptGrade(suggestion.simulated_nutri_score)"
-                    class="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+                    class="inline-flex items-center gap-1 text-[0.625rem] font-medium px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
                   >
                     {{ t('recipeWrangler.detail.adaptation.newScore') }}
                     <span
-                      :class="['w-4 h-4 rounded-sm flex items-center justify-center text-[10px] font-bold text-white', getNutriScoreColorBg(formatAdaptGrade(suggestion.simulated_nutri_score))]"
+                      :class="['w-4 h-4 rounded-sm flex items-center justify-center text-[0.625rem] font-bold text-white', getNutriScoreColorBg(formatAdaptGrade(suggestion.simulated_nutri_score))]"
                     >
                       {{ formatAdaptGrade(suggestion.simulated_nutri_score) }}
                     </span>
                   </span>
                   <span
                     v-if="suggestion.nutri_score_points_saved"
-                    class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-brandg-100 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300"
+                    class="text-[0.625rem] font-medium px-1.5 py-0.5 rounded bg-brandg-100 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300"
                   >
                     −{{ suggestion.nutri_score_points_saved }} {{ t('recipeWrangler.detail.adaptation.points') }}
                   </span>
                   <span
                     v-if="suggestion.co2e_reduction_pct"
-                    class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-brandg-100 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300"
+                    class="text-[0.625rem] font-medium px-1.5 py-0.5 rounded bg-brandg-100 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300"
                   >
                     −{{ formatNumber(suggestion.co2e_reduction_pct) }}% CO2e
                   </span>
                   <span
                     v-if="suggestion.reduction_pct"
-                    class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-brandg-100 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300"
+                    class="text-[0.625rem] font-medium px-1.5 py-0.5 rounded bg-brandg-100 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300"
                   >
                     −{{ Math.round((suggestion.reduction_pct || 0) * 100) }}%
                   </span>
                   <span
                     v-if="typeof suggestion.flavor_similarity === 'number'"
-                    class="text-[10px] font-medium px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                    class="text-[0.625rem] font-medium px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
                   >
                     {{ Math.round(suggestion.flavor_similarity * 100) }}% {{ t('recipeWrangler.detail.adaptation.flavorMatch') }}
                   </span>
@@ -1734,7 +1734,7 @@
                   </p>
                   <p
                     v-else
-                    class="text-[10px] text-zinc-400 dark:text-zinc-500 truncate"
+                    class="text-[0.625rem] text-zinc-400 dark:text-zinc-500 truncate"
                   >
                     {{ savedAdaptation
                       ? t('recipeWrangler.detail.adaptation.saveHintReplace')

@@ -150,7 +150,7 @@
 
             <div class="mt-4 grid gap-3 sm:grid-cols-3">
               <div class="rounded-xl border border-gray-200/80 bg-gray-50/70 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                   Total
                 </p>
                 <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
@@ -159,7 +159,7 @@
               </div>
 
               <div class="rounded-xl border border-gray-200/80 bg-gray-50/70 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                   Ready
                 </p>
                 <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
@@ -168,7 +168,7 @@
               </div>
 
               <div class="rounded-xl border border-gray-200/80 bg-gray-50/70 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                   Pending
                 </p>
                 <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
@@ -181,7 +181,7 @@
               <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div class="flex flex-wrap items-center gap-2">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                    <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                       Latest PDF Extraction
                     </p>
 
@@ -232,7 +232,7 @@
                 class="mt-4 grid gap-3 sm:grid-cols-3"
               >
                 <div class="rounded-xl border border-gray-200/70 bg-white/80 px-3 py-3 dark:border-white/10 dark:bg-black/10">
-                  <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                  <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                     Progress
                   </p>
                   <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
@@ -241,7 +241,7 @@
                 </div>
 
                 <div class="rounded-xl border border-gray-200/70 bg-white/80 px-3 py-3 dark:border-white/10 dark:bg-black/10">
-                  <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                  <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                     Extracted
                   </p>
                   <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
@@ -250,7 +250,7 @@
                 </div>
 
                 <div class="rounded-xl border border-gray-200/70 bg-white/80 px-3 py-3 dark:border-white/10 dark:bg-black/10">
-                  <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                  <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                     Completed
                   </p>
                   <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
@@ -320,7 +320,7 @@
                     <p class="truncate font-medium text-gray-900 dark:text-white">
                       {{ row.original.title }}
                     </p>
-                    <p class="mt-0.5 truncate text-[11px] text-gray-500 dark:text-gray-400">
+                    <p class="mt-0.5 truncate text-[0.6875rem] text-gray-500 dark:text-gray-400">
                       {{ row.original.description || row.original.language?.toUpperCase() || 'No description' }}
                     </p>
                   </div>
@@ -860,7 +860,7 @@
               class="grid gap-3 sm:grid-cols-2"
             >
               <div class="rounded-xl border border-gray-200/80 bg-gray-50/70 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                   {{ guidelineImportResult ? 'Created' : 'Can Be Imported' }}
                 </p>
                 <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
@@ -869,7 +869,7 @@
               </div>
 
               <div class="rounded-xl border border-gray-200/80 bg-gray-50/70 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                   Skipped
                 </p>
                 <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">

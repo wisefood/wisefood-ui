@@ -297,7 +297,7 @@
               >
                 Open RecipeWrangler
               </UButton>
-              <div v-if="collection.created_at || collection.updated_at" class="shrink-0 space-y-0.5 text-[11px] leading-snug text-brandg-700 dark:text-brandg-300 sm:text-right">
+              <div v-if="collection.created_at || collection.updated_at" class="shrink-0 space-y-0.5 text-[0.6875rem] leading-snug text-brandg-700 dark:text-brandg-300 sm:text-right">
                 <p v-if="collection.created_at">Created {{ formatDate(collection.created_at) }}</p>
                 <p v-if="collection.updated_at">Updated {{ formatDate(collection.updated_at) }}</p>
               </div>

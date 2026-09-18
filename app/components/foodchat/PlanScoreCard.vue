@@ -10,7 +10,7 @@
       <p class="text-xs font-medium text-gray-900 dark:text-white">
         {{ t('foodChatHome.planScore.title') }}
       </p>
-      <span class="text-[10px] text-gray-400 dark:text-zinc-500 ml-auto tabular-nums">
+      <span class="text-[0.625rem] text-gray-400 dark:text-zinc-500 ml-auto tabular-nums">
         {{ t('foodChatHome.planScore.read', { meals: score.meals_scored, days: score.days_scored }) }}
       </span>
     </div>
@@ -19,7 +19,7 @@
       <!-- The member's own aim, if they gave one. -->
       <p
         v-if="score.context"
-        class="text-[11px] text-gray-500 dark:text-zinc-400 italic"
+        class="text-[0.6875rem] text-gray-500 dark:text-zinc-400 italic"
       >
         {{ score.context }}
       </p>
@@ -36,7 +36,7 @@
           class="flex items-center gap-2"
         >
           <span
-            class="text-[11px] text-gray-600 dark:text-zinc-300 w-32 shrink-0 truncate"
+            class="text-[0.6875rem] text-gray-600 dark:text-zinc-300 w-32 shrink-0 truncate"
             :title="metric.label"
           >
             {{ metric.label }}
@@ -56,7 +56,7 @@
                measured" directly beside its own number. -->
           <span
             v-else-if="metric.score == null"
-            class="flex-1 text-[10px] text-gray-400 dark:text-zinc-500"
+            class="flex-1 text-[0.625rem] text-gray-400 dark:text-zinc-500"
           >{{ t('foodChatHome.planScore.notMeasured') }}</span>
           <span
             v-else
@@ -64,7 +64,7 @@
           />
           <span
             v-if="metric.score != null"
-            class="text-[11px] text-gray-700 dark:text-zinc-200 tabular-nums shrink-0"
+            class="text-[0.6875rem] text-gray-700 dark:text-zinc-200 tabular-nums shrink-0"
           >{{ formatScore(metric) }}</span>
           <UTooltip
             v-if="metric.detail"
@@ -89,7 +89,7 @@
           :text="row.detail || row.constraint"
         >
           <span
-            class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full border cursor-help"
+            class="inline-flex items-center gap-1 px-2 py-0.5 text-[0.625rem] rounded-full border cursor-help"
             :class="ledgerClass(row)"
           >{{ row.constraint }}</span>
         </UTooltip>
@@ -99,7 +99,7 @@
            above means anything, so it is shown rather than hidden. -->
       <div v-if="grounding.length">
         <button
-          class="flex items-center gap-1 text-[10px] text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300"
+          class="flex items-center gap-1 text-[0.625rem] text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300"
           @click="groundingOpen = !groundingOpen"
         >
           <UIcon
@@ -121,7 +121,7 @@
           <li
             v-for="(row, idx) in grounding"
             :key="`g-${idx}`"
-            class="flex items-start gap-1.5 text-[11px]"
+            class="flex items-start gap-1.5 text-[0.6875rem]"
           >
             <UIcon
               :name="stateIcon(row.state)"
@@ -149,13 +149,13 @@
         v-if="score.unparsed?.length"
         class="rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 px-2 py-1.5"
       >
-        <p class="text-[10px] text-amber-800 dark:text-amber-300">
+        <p class="text-[0.625rem] text-amber-800 dark:text-amber-300">
           {{ t('foodChatHome.planScore.unparsed', { n: score.unparsed.length }) }}
         </p>
         <p
           v-for="(line, idx) in score.unparsed.slice(0, 4)"
           :key="`u-${idx}`"
-          class="text-[11px] text-amber-900 dark:text-amber-200 truncate"
+          class="text-[0.6875rem] text-amber-900 dark:text-amber-200 truncate"
         >
           {{ line }}
         </p>
@@ -164,7 +164,7 @@
       <p
         v-for="(warning, idx) in score.warnings || []"
         :key="`w-${idx}`"
-        class="text-[10px] text-gray-500 dark:text-zinc-400"
+        class="text-[0.625rem] text-gray-500 dark:text-zinc-400"
       >
         {{ warning }}
       </p>

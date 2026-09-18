@@ -52,7 +52,7 @@
         {{ t('common.translation.showOriginal') }}
       </button>
 
-      <p class="w-full text-[11px] text-amber-700/80 dark:text-amber-300/70">
+      <p class="w-full text-[0.6875rem] text-amber-700/80 dark:text-amber-300/70">
         {{ t('common.translation.provider') }}
       </p>
     </div>

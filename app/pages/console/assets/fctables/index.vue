@@ -284,7 +284,7 @@ const columns = [
     cell: ({ row }: { row: { original: FCTable } }) => h('div', { class: 'min-w-0' }, [
       h('p', { class: 'truncate text-sm font-medium text-gray-900 dark:text-white' },
         row.original.title || 'Untitled'),
-      h('p', { class: 'truncate text-[11px] text-gray-400 dark:text-gray-500' },
+      h('p', { class: 'truncate text-[0.6875rem] text-gray-400 dark:text-gray-500' },
         row.original.compiling_institution || row.original.urn)
     ])
   },

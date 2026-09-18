@@ -70,7 +70,7 @@
           </div>
           <span
             v-if="run.dry_run"
-            class="shrink-0 text-[10px] uppercase tracking-wide opacity-70"
+            class="shrink-0 text-[0.625rem] uppercase tracking-wide opacity-70"
           >preview</span>
         </div>
 
@@ -98,7 +98,7 @@
           <dt class="shrink-0 text-gray-500 dark:text-gray-400">
             {{ item.label }}
           </dt>
-          <dd class="min-w-0 truncate font-mono text-[11px] text-gray-700 dark:text-gray-200">
+          <dd class="min-w-0 truncate font-mono text-[0.6875rem] text-gray-700 dark:text-gray-200">
             {{ item.value }}
           </dd>
         </div>

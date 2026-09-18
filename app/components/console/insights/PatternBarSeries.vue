@@ -31,7 +31,7 @@
       <span
         v-for="(bar, index) in bars"
         :key="`tick-${bar.label}`"
-        class="flex-1 truncate text-center text-[10px] leading-tight tabular-nums"
+        class="flex-1 truncate text-center text-[0.625rem] leading-tight tabular-nums"
         :class="index === highlightIndex
           ? 'font-semibold text-gray-900 dark:text-white'
           : 'text-gray-400 dark:text-gray-500'"

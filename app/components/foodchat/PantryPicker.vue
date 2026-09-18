@@ -18,7 +18,7 @@
           <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
             {{ t('foodChatHome.pantryPicker.title') }}
           </p>
-          <p class="text-[11px] text-gray-400 dark:text-zinc-500 truncate">
+          <p class="text-[0.6875rem] text-gray-400 dark:text-zinc-500 truncate">
             {{ t('foodChatHome.pantryPicker.subtitle') }}
           </p>
         </div>
@@ -66,7 +66,7 @@
           :key="group.key"
           class="mb-4 last:mb-0"
         >
-          <p class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 mb-1.5">
+          <p class="text-[0.625rem] uppercase tracking-wide text-gray-400 dark:text-zinc-500 mb-1.5">
             {{ t(`foodChatHome.pantryPicker.groups.${group.key}`) }}
           </p>
           <div class="flex flex-wrap gap-1.5">
@@ -91,7 +91,7 @@
 
         <!-- Anything typed that is not on the grid still belongs to the member. -->
         <div v-if="extras.length" class="mb-1">
-          <p class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-zinc-500 mb-1.5">
+          <p class="text-[0.625rem] uppercase tracking-wide text-gray-400 dark:text-zinc-500 mb-1.5">
             {{ t('foodChatHome.pantryPicker.groups.yours') }}
           </p>
           <div class="flex flex-wrap gap-1.5">

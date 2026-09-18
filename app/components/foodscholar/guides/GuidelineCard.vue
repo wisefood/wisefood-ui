@@ -11,7 +11,7 @@
       <span
         v-for="chip in facetChips"
         :key="`${chip.field}:${chip.value}`"
-        class="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[11px] font-medium text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300"
+        class="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[0.6875rem] font-medium text-gray-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300"
         :title="chip.aiGenerated ? $t('guidelines.facets.aiSuggested') : chip.label"
       >
         <UIcon :name="chip.icon" class="h-3 w-3 shrink-0 opacity-70" />
@@ -42,7 +42,7 @@
         <div class="mt-2 rounded-lg bg-gray-50 p-3 dark:bg-white/5">
           <p
             v-if="guideline.section_label"
-            class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+            class="mb-1 text-[0.6875rem] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400"
           >
             {{ guideline.section_label }}
           </p>

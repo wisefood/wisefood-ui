@@ -19,7 +19,7 @@
           <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
             {{ t('foodChatHome.adaptModal.title') }}
           </p>
-          <p class="text-[11px] text-gray-400 dark:text-zinc-500 truncate">
+          <p class="text-[0.6875rem] text-gray-400 dark:text-zinc-500 truncate">
             {{ recipe?.title || '…' }}
           </p>
         </div>
@@ -78,7 +78,7 @@
           </p>
           <p
             v-if="currentGrade"
-            class="text-[11px] text-gray-400 dark:text-zinc-500"
+            class="text-[0.6875rem] text-gray-400 dark:text-zinc-500"
           >
             Nutri-Score {{ currentGrade }}
           </p>
@@ -101,21 +101,21 @@
                 </p>
                 <p
                   v-if="suggestion.explanation?.reason"
-                  class="mt-0.5 text-[11px] font-light text-gray-500 dark:text-zinc-400 leading-snug"
+                  class="mt-0.5 text-[0.6875rem] font-light text-gray-500 dark:text-zinc-400 leading-snug"
                 >
                   {{ suggestion.explanation.reason }}
                 </p>
               </div>
               <span
                 v-if="formatGrade(suggestion.simulated_nutri_score)"
-                class="shrink-0 px-1.5 py-0.5 text-[10px] rounded font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"
+                class="shrink-0 px-1.5 py-0.5 text-[0.625rem] rounded font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"
               >
                 → {{ formatGrade(suggestion.simulated_nutri_score) }}
               </span>
             </div>
             <p
               v-if="suggestion.introduces_allergen && suggestion.new_allergens?.length"
-              class="flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400"
+              class="flex items-center gap-1 text-[0.625rem] text-amber-600 dark:text-amber-400"
             >
               <UIcon
                 name="i-lucide-alert-triangle"
@@ -126,7 +126,7 @@
             <div class="flex justify-end">
               <span
                 v-if="savedRank === suggestion.rank"
-                class="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400"
+                class="inline-flex items-center gap-1 text-[0.6875rem] text-emerald-600 dark:text-emerald-400"
               >
                 <UIcon
                   name="i-lucide-check"
@@ -136,7 +136,7 @@
               </span>
               <button
                 v-else
-                class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] rounded-full font-medium transition-colors
+                class="inline-flex items-center gap-1 px-2.5 py-1 text-[0.6875rem] rounded-full font-medium transition-colors
                        bg-brandp-500 text-white hover:bg-brandp-600
                        disabled:bg-gray-200 disabled:text-gray-400 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-500"
                 :disabled="savingRank !== null || savedRank !== null"
@@ -153,13 +153,13 @@
           </div>
           <p
             v-if="saveError"
-            class="text-[11px] text-red-500 dark:text-red-400"
+            class="text-[0.6875rem] text-red-500 dark:text-red-400"
           >
             {{ saveError }}
           </p>
           <p
             v-if="savedRank !== null"
-            class="text-[11px] font-light text-gray-400 dark:text-zinc-500 leading-snug"
+            class="text-[0.6875rem] font-light text-gray-400 dark:text-zinc-500 leading-snug"
           >
             {{ t('foodChatHome.adaptModal.savedHint') }}
           </p>
@@ -171,7 +171,7 @@
         <NuxtLink
           :to="`/recipe-wrangler/${recipeId}`"
           target="_blank"
-          class="inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:underline transition-colors"
+          class="inline-flex items-center gap-1 text-[0.6875rem] text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:underline transition-colors"
         >
           {{ t('foodChatHome.adaptModal.openFull') }}
           <UIcon
@@ -180,7 +180,7 @@
           />
         </NuxtLink>
         <button
-          class="text-[11px] text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors"
+          class="text-[0.6875rem] text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors"
           @click="emit('close')"
         >
           {{ t('foodChatHome.adaptModal.close') }}

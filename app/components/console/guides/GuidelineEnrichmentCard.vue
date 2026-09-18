@@ -111,8 +111,8 @@
           <p class="mb-1 text-xs font-semibold text-gray-700 dark:text-gray-200">
             Context the facets were inferred from
           </p>
-          <pre class="max-h-40 overflow-y-auto whitespace-pre-wrap rounded-lg bg-gray-50 p-3 text-[11px] leading-5 text-gray-600 dark:bg-white/5 dark:text-gray-300">{{ preview.guide_context }}</pre>
-          <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+          <pre class="max-h-40 overflow-y-auto whitespace-pre-wrap rounded-lg bg-gray-50 p-3 text-[0.6875rem] leading-5 text-gray-600 dark:bg-white/5 dark:text-gray-300">{{ preview.guide_context }}</pre>
+          <p class="mt-1 text-[0.6875rem] text-gray-500 dark:text-gray-400">
             If this is wrong, every facet under this guide will be wrong the same way — fix the guide record before enriching.
           </p>
         </div>
@@ -133,7 +133,7 @@
               <span
                 v-for="chip in facetChips(proposal.facets)"
                 :key="chip"
-                class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-white/10 dark:text-gray-300"
+                class="rounded-full bg-gray-100 px-2 py-0.5 text-[0.625rem] font-medium text-gray-600 dark:bg-white/10 dark:text-gray-300"
               >{{ chip }}</span>
             </div>
           </div>
@@ -149,7 +149,7 @@
           v-for="tile in progressTiles"
           :key="tile.label"
         >
-          <dt class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <dt class="text-[0.6875rem] uppercase tracking-wide text-gray-500 dark:text-gray-400">
             {{ tile.label }}
           </dt>
           <dd class="mt-0.5 text-lg font-semibold tabular-nums text-gray-900 dark:text-white">

@@ -209,7 +209,7 @@
                       {{ dishType.label }}
                       <span
                         v-if="dishType.count !== null"
-                        class="text-[10px] font-normal opacity-70 tabular-nums"
+                        class="text-[0.625rem] font-normal opacity-70 tabular-nums"
                       >{{ dishType.count }}</span>
                     </button>
                   </div>
@@ -481,7 +481,7 @@
                   <p class="truncate font-medium text-gray-900 dark:text-white">
                     {{ row.original.title }}
                   </p>
-                  <p class="mt-0.5 truncate text-[11px] text-gray-500 dark:text-gray-400">
+                  <p class="mt-0.5 truncate text-[0.6875rem] text-gray-500 dark:text-gray-400">
                     {{ compactRecipeMeta(row.original) }}
                   </p>
                 </div>
@@ -881,7 +881,7 @@
                       class="grid gap-3 sm:grid-cols-3"
                     >
                       <div class="rounded-xl border border-gray-200/80 bg-white/90 px-4 py-3 dark:border-white/10 dark:bg-zinc-950/50">
-                        <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                        <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                           Title
                         </p>
                         <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
@@ -890,7 +890,7 @@
                       </div>
 
                       <div class="rounded-xl border border-gray-200/80 bg-white/90 px-4 py-3 dark:border-white/10 dark:bg-zinc-950/50">
-                        <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                        <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                           Ingredients
                         </p>
                         <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
@@ -899,7 +899,7 @@
                       </div>
 
                       <div class="rounded-xl border border-gray-200/80 bg-white/90 px-4 py-3 dark:border-white/10 dark:bg-zinc-950/50">
-                        <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                        <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                           Steps
                         </p>
                         <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
@@ -1053,7 +1053,7 @@
               <div class="space-y-5">
                 <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   <div class="rounded-xl border border-gray-200/80 bg-gray-50/80 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                    <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                       Recipe
                     </p>
                     <p class="mt-1 truncate text-sm font-semibold text-gray-900 dark:text-white">
@@ -1062,7 +1062,7 @@
                   </div>
 
                   <div class="rounded-xl border border-gray-200/80 bg-gray-50/80 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                    <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                       Ingredients
                     </p>
                     <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
@@ -1071,7 +1071,7 @@
                   </div>
 
                   <div class="rounded-xl border border-gray-200/80 bg-gray-50/80 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                    <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                       Steps
                     </p>
                     <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
@@ -1080,7 +1080,7 @@
                   </div>
 
                   <div class="rounded-xl border border-gray-200/80 bg-gray-50/80 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                    <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                    <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
                       Serves / Duration
                     </p>
                     <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">

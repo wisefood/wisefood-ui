@@ -116,7 +116,7 @@
         <span
           v-for="chip in dishTypeChips"
           :key="chip.value"
-          class="inline-flex items-center gap-1 rounded-full bg-brandg-50 dark:bg-brandg-900/30 px-2 py-0.5 text-[11px] font-medium text-brandg-700 dark:text-brandg-300 border border-brandg-100 dark:border-brandg-800"
+          class="inline-flex items-center gap-1 rounded-full bg-brandg-50 dark:bg-brandg-900/30 px-2 py-0.5 text-[0.6875rem] font-medium text-brandg-700 dark:text-brandg-300 border border-brandg-100 dark:border-brandg-800"
         >
           <UIcon :name="chip.icon" class="w-3 h-3" />
           {{ chip.label }}
@@ -130,7 +130,7 @@
         <span
           v-for="chip in annotationChips"
           :key="chip.key"
-          class="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:text-amber-300 border border-amber-100 dark:border-amber-800/60"
+          class="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 text-[0.6875rem] font-medium text-amber-800 dark:text-amber-300 border border-amber-100 dark:border-amber-800/60"
         >
           <span
             v-if="chip.emoji"

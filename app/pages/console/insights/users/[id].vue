@@ -194,7 +194,7 @@
               </ul>
               <!-- Said on the surface that shows the number, not only in the
                    API: a bar chart of hours reads as measured. -->
-              <p class="mt-3 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
+              <p class="mt-3 text-[0.6875rem] leading-relaxed text-gray-500 dark:text-gray-400">
                 Estimated from what they did, not from when a tab was open. A visit
                 ends after {{ idleGapMinutes }} minutes of silence.
               </p>

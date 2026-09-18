@@ -10,7 +10,7 @@
     @mouseenter="$emit('pointer-enter')"
     @mouseleave="$emit('pointer-leave')"
   >
-    <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-400">
+    <div class="mb-2 flex items-center gap-1.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-400">
       <UIcon
         name="i-lucide-quote"
         class="h-3.5 w-3.5"

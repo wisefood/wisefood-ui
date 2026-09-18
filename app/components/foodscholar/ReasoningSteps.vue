@@ -26,7 +26,7 @@
       </span>
       <span
         v-if="!open"
-        class="text-[10px] px-1.5 py-0.5 rounded-full bg-brandp-50 dark:bg-brandp-900/30 text-brandp-600 dark:text-brandp-300 tabular-nums shrink-0"
+        class="text-[0.625rem] px-1.5 py-0.5 rounded-full bg-brandp-50 dark:bg-brandp-900/30 text-brandp-600 dark:text-brandp-300 tabular-nums shrink-0"
       >{{ steps.length }}</span>
       <UIcon
         :name="open ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
@@ -63,7 +63,7 @@
             </p>
             <p
               v-if="step.detail"
-              class="text-[11px] text-gray-400 dark:text-zinc-500 font-light leading-snug"
+              class="text-[0.6875rem] text-gray-400 dark:text-zinc-500 font-light leading-snug"
             >
               {{ step.detail }}
             </p>

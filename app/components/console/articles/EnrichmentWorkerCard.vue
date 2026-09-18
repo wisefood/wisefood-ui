@@ -112,7 +112,7 @@
           :key="tile.label"
           class="rounded-xl border border-gray-200/80 bg-gray-50/70 px-4 py-3 dark:border-white/10 dark:bg-white/5"
         >
-          <p class="text-[11px] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+          <p class="text-[0.6875rem] uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
             {{ tile.label }}
           </p>
           <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
@@ -120,7 +120,7 @@
           </p>
           <p
             v-if="tile.hint"
-            class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400"
+            class="mt-0.5 text-[0.6875rem] text-gray-500 dark:text-gray-400"
           >
             {{ tile.hint }}
           </p>

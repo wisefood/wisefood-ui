@@ -107,7 +107,7 @@
                           ]"
                         >
                           <span class="truncate max-w-[11rem]">{{ facet.label }}</span>
-                          <span class="text-[10px] opacity-70">{{ facet.count }}</span>
+                          <span class="text-[0.625rem] opacity-70">{{ facet.count }}</span>
                         </button>
                         <button
                           v-if="topicFacets.length > TOP_FACET_PILLS"
@@ -169,7 +169,7 @@
                           ]"
                         >
                           <span class="truncate max-w-[11rem]">{{ facet.label }}</span>
-                          <span class="text-[10px] opacity-70">{{ facet.count }}</span>
+                          <span class="text-[0.625rem] opacity-70">{{ facet.count }}</span>
                         </button>
                         <button
                           v-if="tagSelectFacets.length > TOP_FACET_PILLS"
@@ -238,7 +238,7 @@
                           :min-steps-between-thumbs="0"
                           class="mt-3"
                         />
-                        <div class="mt-2 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+                        <div class="mt-2 flex items-center justify-between text-[0.6875rem] text-gray-500 dark:text-gray-400">
                           <span>{{ yearBounds.min }}</span>
                           <span class="font-medium text-gray-700 dark:text-gray-300">{{ yearRangeChipLabel }}</span>
                           <span>{{ yearBounds.max }}</span>
@@ -279,7 +279,7 @@
                           :min-steps-between-thumbs="0"
                           class="mt-3"
                         />
-                        <div class="mt-2 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400">
+                        <div class="mt-2 flex items-center justify-between text-[0.6875rem] text-gray-500 dark:text-gray-400">
                           <span>{{ citationBounds.min }}</span>
                           <span class="font-medium text-gray-700 dark:text-gray-300">{{ citationRangeChipLabel || `${citationBounds.min}-${citationBounds.max}` }}</span>
                           <span>{{ citationBounds.max }}</span>
@@ -365,7 +365,7 @@
               {{ showFilters ? t('foodScholarCatalog.filters.hide') : t('foodScholarCatalog.filters.show') }}
               <span
                 v-if="facetsActiveCount"
-                class="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full text-[11px] font-semibold bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300"
+                class="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full text-[0.6875rem] font-semibold bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300"
               >
                 {{ facetsActiveCount }}
               </span>
@@ -380,7 +380,7 @@
               v-model="nlQuery"
               @enter="performNLSearch"
               :placeholder="t('foodScholarCatalog.search.placeholder')"
-              input-class="w-full h-12 pl-11 pr-16 rounded-xl bg-transparent text-[15px] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
+              input-class="w-full h-12 pl-11 pr-16 rounded-xl bg-transparent text-[0.9375rem] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
             >
               <template #left>
                 <UIcon name="i-lucide-search" class="w-4.5 h-4.5 text-gray-500 dark:text-gray-400" />
@@ -404,7 +404,7 @@
                 v-for="example in exampleQueries"
                 :key="example"
                 @click="nlQuery = example; performNLSearch()"
-                class="px-2 py-1 text-[11px] rounded-full text-gray-600 dark:text-gray-300 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
+                class="px-2 py-1 text-[0.6875rem] rounded-full text-gray-600 dark:text-gray-300 hover:text-brand-700 dark:hover:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition-colors"
               >
                 {{ example }}
               </button>
@@ -490,7 +490,7 @@
                     >
                       <div class="flex items-start gap-2.5">
                         <div class="w-5 h-5 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center shrink-0 mt-0.5">
-                          <span class="text-[10px] font-semibold text-brand-700 dark:text-brand-300">{{ Number(idx) + 1 }}</span>
+                          <span class="text-[0.625rem] font-semibold text-brand-700 dark:text-brand-300">{{ Number(idx) + 1 }}</span>
                         </div>
                         <div class="flex-1 min-w-0">
                           <div class="text-sm text-gray-700 dark:text-gray-300 prose prose-sm dark:prose-invert max-w-none [&_p]:leading-relaxed [&_p]:mb-2" v-html="renderMarkdown(finding.finding)"></div>

@@ -207,11 +207,11 @@
                 <div class="mb-1 flex items-center gap-2">
                   <span
                     v-if="passage.structure_path.length"
-                    class="text-[11px] font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400"
+                    class="text-[0.6875rem] font-semibold uppercase tracking-wide text-primary-600 dark:text-primary-400"
                   >
                     {{ passage.structure_path.join(' · ') }}
                   </span>
-                  <span class="ml-auto text-[11px] tabular-nums text-gray-400 dark:text-gray-500">
+                  <span class="ml-auto text-[0.6875rem] tabular-nums text-gray-400 dark:text-gray-500">
                     #{{ passage.sequence_no }}<template v-if="passage.page_no"> · p.{{ passage.page_no }}</template>
                   </span>
                 </div>
@@ -324,7 +324,7 @@
                 <p class="truncate text-sm font-medium text-gray-900 dark:text-white">
                   {{ artifact.title || artifact.file_type }}
                 </p>
-                <p class="mt-0.5 truncate font-mono text-[11px] text-gray-400 dark:text-gray-500">
+                <p class="mt-0.5 truncate font-mono text-[0.6875rem] text-gray-400 dark:text-gray-500">
                   {{ artifact.id }}
                 </p>
               </li>

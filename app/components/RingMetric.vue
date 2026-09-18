@@ -36,7 +36,7 @@
           </span>
         </div>
       </div>
-      <div class="text-[11px] text-gray-600 dark:text-gray-400 text-center leading-tight">
+      <div class="text-[0.6875rem] text-gray-600 dark:text-gray-400 text-center leading-tight">
         {{ label }}
       </div>
     </div>
