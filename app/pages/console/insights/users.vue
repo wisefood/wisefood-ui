@@ -90,6 +90,14 @@
                   >{{ row.user_id }}</span>
                 </NuxtLink>
               </template>
+              <!-- The apps behind the number, because "who used what" is
+                   the question this column gets asked next. -->
+              <template #cell-seconds_active="{ row }">
+                <span
+                  class="tabular-nums"
+                  :title="appBreakdown(row as unknown as UserRow)"
+                >{{ humanDuration((row as unknown as UserRow).seconds_active) }}</span>
+              </template>
               <template #cell-cost_usd="{ row }">
                 ${{ Number(row.cost_usd).toFixed(3) }}
               </template>
@@ -187,7 +195,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useInsightsLoad } from '~/composables/useInsightsLoad'
 import { useInsightsRange } from '~/composables/useInsightsRange'
-import insightsApi, { type UserRow } from '~/services/insightsApi'
+import insightsApi, { humanDuration, type UserRow } from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
 
 definePageMeta({ layout: 'default' })
@@ -232,6 +240,9 @@ const userColumns = [
   { key: 'user_id', label: 'Person', nowrap: true },
   { key: 'events', label: 'Actions', align: 'right' as const },
   { key: 'sessions', label: 'Sessions', align: 'right' as const },
+  // Estimated from event timestamps — the header says so, because a column
+  // of hours reads as measured unless it is told not to.
+  { key: 'seconds_active', label: 'Time', align: 'right' as const },
   { key: 'questions_asked', label: 'Questions', align: 'right' as const },
   { key: 'searches', label: 'Searches', align: 'right' as const },
   { key: 'total_tokens', label: 'Tokens', align: 'right' as const },
@@ -244,6 +255,14 @@ const sessionColumns = [
   { key: 'events', label: 'Actions', align: 'right' as const },
   { key: 'started_at', label: 'Started', align: 'right' as const }
 ]
+
+/** "FoodScholar 3h 20m · FoodChat 55m", for the column's tooltip. */
+function appBreakdown(row: UserRow): string {
+  const apps = Object.entries(row.time_by_app ?? {})
+    .sort(([, a], [, b]) => b.seconds - a.seconds)
+  if (!apps.length) return 'No app activity in this window'
+  return apps.map(([app, spent]) => `${app} ${humanDuration(spent.seconds)}`).join(' · ')
+}
 
 const formatWhen = (value: unknown) => {
   if (!value) return '—'

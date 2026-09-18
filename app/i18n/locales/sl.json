@@ -592,7 +592,14 @@
         }
       },
       "copyRecipe": "Kopiraj recept",
-      "copiedRecipe": "Kopirano — prilepi v analizator"
+      "copiedRecipe": "Kopirano — prilepi v analizator",
+      "scale": {
+        "label": "Porcije",
+        "adjusted": "prvotno {original}",
+        "reset": "Ponastavi",
+        "nutritionNote": "Vrednosti na porcijo ostanejo enake — pripravljaš več porcij, ne večjih.",
+        "failed": "Količin ni bilo mogoče prilagoditi. Prikazan je izvirni recept."
+      }
     },
     "comparePage": {
       "pageTitle": "Primerjava receptov - RecipeWrangler",

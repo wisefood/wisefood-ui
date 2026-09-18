@@ -592,7 +592,14 @@
         }
       },
       "copyRecipe": "Recept másolása",
-      "copiedRecipe": "Másolva — illeszd be az elemzőbe"
+      "copiedRecipe": "Másolva — illeszd be az elemzőbe",
+      "scale": {
+        "label": "Adagok",
+        "adjusted": "eredetileg {original}",
+        "reset": "Visszaállítás",
+        "nutritionNote": "Az egy adagra jutó értékek nem változnak — több adag készül, nem nagyobb.",
+        "failed": "A mennyiségek módosítása nem sikerült. Az eredeti recept látható."
+      }
     },
     "comparePage": {
       "pageTitle": "Receptek összehasonlítása - RecipeWrangler",

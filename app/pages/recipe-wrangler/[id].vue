@@ -837,6 +837,78 @@
               </div>
             </div>
 
+            <!-- Servings (Round 2 row 10) -->
+            <div
+              v-if="originalServes"
+              class="mb-4"
+            >
+              <div class="flex flex-wrap items-center gap-3">
+                <span class="text-sm text-zinc-600 dark:text-zinc-300">
+                  {{ t('recipeWrangler.detail.scale.label') }}
+                </span>
+                <div class="inline-flex items-center rounded-full border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                  <button
+                    type="button"
+                    :disabled="(effectiveServes || 1) <= 1"
+                    class="px-3 py-1.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    :aria-label="t('recipeWrangler.detail.scale.label')"
+                    @click="adjustServes(-1)"
+                  >
+                    <UIcon
+                      name="i-lucide-minus"
+                      class="w-3.5 h-3.5"
+                    />
+                  </button>
+                  <span class="px-3 py-1.5 text-sm font-semibold tabular-nums text-zinc-900 dark:text-white min-w-10 text-center">
+                    {{ effectiveServes }}
+                  </span>
+                  <button
+                    type="button"
+                    :disabled="(effectiveServes || 1) >= 100"
+                    class="px-3 py-1.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    :aria-label="t('recipeWrangler.detail.scale.label')"
+                    @click="adjustServes(1)"
+                  >
+                    <UIcon
+                      name="i-lucide-plus"
+                      class="w-3.5 h-3.5"
+                    />
+                  </button>
+                </div>
+                <UIcon
+                  v-if="scaleBusy"
+                  name="i-lucide-loader-2"
+                  class="w-3.5 h-3.5 animate-spin text-zinc-400"
+                />
+                <span
+                  v-if="isScaled"
+                  class="text-xs text-zinc-500 dark:text-zinc-400"
+                >
+                  {{ t('recipeWrangler.detail.scale.adjusted', { original: originalServes }) }}
+                </span>
+                <button
+                  v-if="isScaled"
+                  type="button"
+                  class="text-xs font-medium text-brandg-700 dark:text-brandg-300 underline hover:text-brandg-900 dark:hover:text-brandg-100 transition-colors"
+                  @click="resetServes"
+                >
+                  {{ t('recipeWrangler.detail.scale.reset') }}
+                </button>
+              </div>
+              <p
+                v-if="isScaled"
+                class="mt-2 text-xs text-zinc-500 dark:text-zinc-400"
+              >
+                {{ t('recipeWrangler.detail.scale.nutritionNote') }}
+              </p>
+              <p
+                v-if="scaleFailed"
+                class="mt-2 text-xs text-red-600 dark:text-red-400"
+              >
+                {{ t('recipeWrangler.detail.scale.failed') }}
+              </p>
+            </div>
+
             <!-- Saved adapted version indicator -->
             <div
               v-if="savedAdaptation"
@@ -909,7 +981,7 @@
                           : 'text-zinc-500 dark:text-zinc-400'
                       ]"
                     >
-                      {{ ingredient.measurement }}
+                      {{ measurementFor(index, ingredient.measurement) }}
                     </p>
                     <!-- Profiling summary pill (visible when loaded, not expanded) -->
                     <div
@@ -1687,7 +1759,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { track } from '~/composables/useTelemetry'
@@ -1874,6 +1946,98 @@ const nutriScoreGrade = computed(() => getNutriScoreGrade(
   ?? recipe.value?.nutri_score
 ))
 
+// --- Serving scaling (Round 2 row 10) ---
+// The quantity parsing lives on the server, so this holds the requested count
+// and the measurements that came back for it. `scaledMeasurements` is
+// index-aligned with recipe.ingredients; null means "show the original".
+const originalServes = computed<number | null>(() => {
+  const value = toNullableNumber(recipe.value?.serves)
+  return value !== null && value > 0 ? value : null
+})
+const targetServes = ref<number | null>(null)
+const scaledMeasurements = ref<string[] | null>(null)
+const scaleBusy = ref(false)
+const scaleFailed = ref(false)
+let scaleTimer: ReturnType<typeof setTimeout> | null = null
+// A stepper can be clicked faster than the round trip returns, so responses
+// are only accepted if no later request has been issued since.
+let scaleRequestToken = 0
+
+const effectiveServes = computed<number | null>(
+  () => targetServes.value ?? originalServes.value
+)
+const isScaled = computed<boolean>(() =>
+  originalServes.value !== null
+  && targetServes.value !== null
+  && targetServes.value !== originalServes.value
+)
+
+const measurementFor = (index: number, original: unknown): string => {
+  const scaled = scaledMeasurements.value?.[index]
+  return scaled !== undefined ? scaled : String(original ?? '')
+}
+
+const resetServes = () => {
+  targetServes.value = null
+  scaledMeasurements.value = null
+  scaleFailed.value = false
+}
+
+const adjustServes = (delta: number) => {
+  const base = effectiveServes.value
+  if (base === null) return
+  targetServes.value = Math.max(1, Math.min(100, Math.round(base + delta)))
+}
+
+const requestScale = async () => {
+  const from = originalServes.value
+  const to = targetServes.value
+  if (from === null || to === null) return
+  if (to === from) {
+    scaledMeasurements.value = null
+    scaleFailed.value = false
+    return
+  }
+  const ingredients = Array.isArray(recipe.value?.ingredients) ? recipe.value.ingredients : []
+  if (!ingredients.length) return
+
+  const token = ++scaleRequestToken
+  scaleBusy.value = true
+  scaleFailed.value = false
+  try {
+    const result = await recipeApi.scaleRecipe(
+      ingredients.map(ingredient => String(ingredient?.measurement || '')),
+      from,
+      to
+    )
+    if (token !== scaleRequestToken) return
+    scaledMeasurements.value = result.measurements
+  } catch {
+    if (token !== scaleRequestToken) return
+    // Show the original quantities rather than a half-scaled recipe.
+    scaledMeasurements.value = null
+    scaleFailed.value = true
+  } finally {
+    if (token === scaleRequestToken) scaleBusy.value = false
+  }
+}
+
+watch(targetServes, () => {
+  if (scaleTimer) clearTimeout(scaleTimer)
+  scaleTimer = setTimeout(() => {
+    void requestScale()
+  }, 250)
+})
+
+// A different recipe is a different serving count.
+watch(() => recipe.value?.recipe_id, () => {
+  resetServes()
+})
+
+onBeforeUnmount(() => {
+  if (scaleTimer) clearTimeout(scaleTimer)
+})
+
 // --- Copy recipe, for pasting into the Analyzer (Round 2 row 22) ---
 // Laid out to match the format the Analyzer's own placeholder documents:
 // title, then quantities with names, then numbered steps. The Analyzer takes
@@ -1887,10 +2051,11 @@ const recipeAsText = computed<string>(() => {
 
   const ingredients = Array.isArray(current.ingredients) ? current.ingredients : []
   const ingredientLines = ingredients
-    .map((ingredient) => {
+    .map((ingredient, index) => {
       const name = String(ingredient?.name || '').trim()
       if (!name) return ''
-      const measurement = String(ingredient?.measurement || '').trim()
+      // Whatever the page is showing, including a scaled quantity.
+      const measurement = measurementFor(index, ingredient?.measurement).trim()
       return measurement ? `${measurement} ${name}` : name
     })
     .filter(Boolean)
@@ -1907,7 +2072,7 @@ const recipeAsText = computed<string>(() => {
     })
   }
 
-  const serves = toNullableNumber(current.serves)
+  const serves = effectiveServes.value
   if (serves !== null && serves > 0) {
     lines.push('', `${serves} ${t('recipeWrangler.recipe.servings', serves)}`)
   }

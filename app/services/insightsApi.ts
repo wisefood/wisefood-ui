@@ -116,6 +116,31 @@ export interface UserRow {
   chat_turns: number
   total_tokens: number
   cost_usd: number
+  /** Estimated, not measured: nothing records a closed tab, so this is read
+   *  from the events somebody produced. See `time_basis` on the response. */
+  seconds_active: number
+  visits: number
+  /** app name -> what they spent there. The answer to "FoodScholar or
+   *  FoodChat?" is this, per person. */
+  time_by_app: Record<string, { seconds: number, visits: number }>
+}
+
+/** How the time figures were arrived at, so every surface says the same. */
+export interface TimeBasis {
+  estimated: boolean
+  idle_gap_minutes: number
+  tail_seconds: number
+  note: string
+}
+
+/** Hours and minutes, for a column that has to stay narrow. */
+export function humanDuration(seconds: number | null | undefined): string {
+  const total = Math.max(0, Math.round(Number(seconds) || 0))
+  if (total < 60) return `${total}s`
+  const minutes = Math.round(total / 60)
+  if (minutes < 60) return `${minutes}m`
+  const hours = Math.floor(minutes / 60)
+  return minutes % 60 ? `${hours}h ${minutes % 60}m` : `${hours}h`
 }
 
 export interface UsageRow {

@@ -592,7 +592,14 @@
         }
       },
       "copyRecipe": "Copy recipe",
-      "copiedRecipe": "Copied — paste it into the Analyzer"
+      "copiedRecipe": "Copied — paste it into the Analyzer",
+      "scale": {
+        "label": "Servings",
+        "adjusted": "adjusted from {original}",
+        "reset": "Reset",
+        "nutritionNote": "Per-serving values stay the same — you are making more servings, not bigger ones.",
+        "failed": "Could not adjust the quantities. Showing the original recipe."
+      }
     },
     "comparePage": {
       "pageTitle": "Compare Recipes - RecipeWrangler",

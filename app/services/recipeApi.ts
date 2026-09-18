@@ -188,6 +188,14 @@ export const resolveRecipeRegion = (raw: string | null | undefined): RecipeRegio
 // values (e.g. "side-dish") don't require a frontend type bump.
 export type RecipeDishType = string
 
+export interface RecipeScaleResult {
+  from_serves: number
+  to_serves: number
+  factor: number
+  /** Index-aligned with the measurements sent; unparseable entries come back unchanged. */
+  measurements: string[]
+}
+
 export interface RecipeParamSearchParams {
   include_ingredients?: string[]
   exclude_ingredients?: string[]
@@ -1188,6 +1196,33 @@ class RecipeApiService {
       )
     } catch (error) {
       throw this.handleError(error, 'Failed to analyze recipe')
+    }
+  }
+
+  /**
+   * Rewrite a recipe's measurements for a different serving count.
+   *
+   * Server-side because the quantity parser lives there: "1 1/2 cups" has to
+   * come back as "3 cups" and not "3 cup" or "1.5 cups", and a second parser
+   * in TypeScript would be a second dialect to keep in step. No model call
+   * and no catalog read upstream, so it is cheap to call from a stepper.
+   */
+  async scaleRecipe(
+    measurements: string[],
+    fromServes: number,
+    toServes: number
+  ): Promise<RecipeScaleResult> {
+    try {
+      const transport = this.resolveTransport()
+      return await this.fetchWithTimeout<RecipeScaleResult>(
+        `${this.getRecipeBasePath(transport)}/scale`,
+        'POST',
+        { measurements, from_serves: fromServes, to_serves: toServes },
+        DEFAULT_TIMEOUT,
+        transport
+      )
+    } catch (error) {
+      throw this.handleError(error, 'Failed to scale recipe')
     }
   }
 
