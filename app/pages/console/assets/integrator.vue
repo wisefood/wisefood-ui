@@ -744,14 +744,12 @@ async function send() {
     messages.value = await integratorApi.history(sessionId.value)
     liveSteps.value = []
     liveReply.value = ''
-    const before = proposals.value.length
     lastRun.value = turn.stop_reason === 'completed'
       ? `${turn.steps} step${turn.steps === 1 ? '' : 's'} · ${turn.tokens.toLocaleString()} tokens · ${turn.model}`
       : `Stopped: ${turn.stop_reason}`
-    await loadProposals()
-    // A turn that filed something says so by showing it. Leaving the panel on
-    // whichever tab it was on is how somebody concludes nothing was filed.
-    if (proposals.value.length > before) panel.value = 'proposals'
+    // The reload, and the switch to the proposals tab when a turn filed
+    // something, happen in `finally` — a turn that stopped early filed just
+    // as much as one that finished.
     if (!sessions.value.find(s => s.id === sessionId.value)?.title) {
       sessions.value = await integratorApi.listSessions()
     }
@@ -760,6 +758,13 @@ async function send() {
   } finally {
     thinking.value = false
     liveReply.value = ''
+    // However the turn ended. A turn that files four proposals and then runs
+    // out of tokens throws before the reload above, so the count stayed at
+    // what it was before the turn — the proposals were there, the panel said
+    // otherwise, and the assistant was believed over the database.
+    const before = proposals.value.length
+    await loadProposals()
+    if (proposals.value.length > before) panel.value = 'proposals'
     await scrollDown()
   }
 }
