@@ -5,7 +5,7 @@
     <div class="flex h-[calc(100dvh-4rem)] flex-col overflow-hidden bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
       <FoodscholarMicroHeader
         :show-back="true"
-        :back-to="resolvedRegion ? buildGuidesRegionPath(resolvedRegion) : buildGuidesCatalogPath()"
+        :back-to="backRegion ? buildGuidesRegionPath(backRegion) : buildGuidesCatalogPath()"
         :back-label="backLabel"
         back-icon="i-lucide-arrow-left"
         brand-title="FoodScholar"
@@ -747,7 +747,13 @@ let refreshTimeout: ReturnType<typeof setTimeout> | null = null
 
 const guideTitle = computed(() => selectedGuide.value?.title || 'Guide detail')
 const regionTitle = computed(() => getRegionPresentation(resolvedRegion.value || regionParam.value).label)
-const backLabel = computed(() => resolvedRegion.value ? `Back to ${getRegionPresentation(resolvedRegion.value).label}` : 'Back to Guides')
+// The country to go back to. `resolvedRegion` is only set once the guide has
+// loaded, so on its own it sends a reader who arrives, or leaves, before that
+// to the catalog — every country's guidelines instead of the one they came
+// from. `regionParam` is in the URL and known synchronously, and is the same
+// fallback syncRouteQuery() already uses.
+const backRegion = computed(() => resolvedRegion.value || regionParam.value)
+const backLabel = computed(() => backRegion.value ? `Back to ${getRegionPresentation(backRegion.value).label}` : 'Back to Guides')
 const guidePublisher = computed(() => selectedGuide.value ? getGuidePublisher(selectedGuide.value) : null)
 const guidePublicationLabel = computed(() => selectedGuide.value ? getGuidePublicationLabel(selectedGuide.value) : null)
 
