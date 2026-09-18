@@ -1714,6 +1714,7 @@ import {
   planMealsBySlot,
   planNutritionTotal,
   slotIcon,
+  slotKind,
   type NormalisedMeal
 } from '~/utils/planMeals'
 import type { HouseholdMember } from '~/services/householdsApi'
@@ -3137,7 +3138,13 @@ const displayedPlanTotals = computed(() => planNutritionTotal(displayedMealPlan.
 function slotLabel(slot: string): string {
   const key = `foodChatHome.meals.${slot}`
   const translated = t(key)
-  return translated === key ? humaniseSlot(slot) : translated
+  if (translated !== key) return translated
+  // A repeated slot (`snack_2`) has no key of its own and should not need one:
+  // it is a snack, in every language. Falling straight through to
+  // `humaniseSlot` would have shown an English "Snack" on a Hungarian plan.
+  const kindKey = `foodChatHome.meals.${slotKind(slot)}`
+  const byKind = t(kindKey)
+  return byKind === kindKey ? humaniseSlot(slot) : byKind
 }
 
 // The plate's role — "Main", "Side", "Dessert" — is what distinguishes two

@@ -31,6 +31,16 @@ const SLOT_TIMES: Record<string, string> = {
   dessert: '20:30'
 }
 
+/**
+ * Slots whose clock time comes from their POSITION, never from the table.
+ *
+ * `SLOT_TIMES` lists 16:00 for a snack, which was only ever true of a day with
+ * one snack in the afternoon. A member can now ask for two ("include two snack
+ * as well in-between"), and can move one, so the name stopped being evidence
+ * of the hour.
+ */
+const IN_BETWEEN = new Set(['snack'])
+
 const SLOT_ICONS: Record<string, string> = {
   breakfast: 'i-lucide-coffee',
   brunch: 'i-lucide-croissant',
@@ -56,8 +66,21 @@ export interface NormalisedMeal {
   partOfMultiCourse: boolean
 }
 
+/**
+ * A repeated slot's kind. `snack_2` -> `snack`.
+ *
+ * A day can now hold more than one of a meal — "two snacks in-between" — and
+ * the backend names the second one `snack_2`. The suffix is an identity, not a
+ * label: it keeps two snacks apart in the plan, and every place that looks a
+ * slot up by name (the icon table, the i18n key, the clock hint) wants the
+ * kind, which is the word that has a translation and a cookie icon.
+ */
+export function slotKind(slot: string): string {
+  return String(slot || '').toLowerCase().replace(/_[2-9]$/, '')
+}
+
 export function slotIcon(slot: string): string {
-  const key = String(slot || '').toLowerCase()
+  const key = slotKind(slot)
   if (SLOT_ICONS[key]) return SLOT_ICONS[key]
   // Substring match keeps "second breakfast" and "late dinner" sensible.
   const match = Object.keys(SLOT_ICONS).find(known => key.includes(known))
@@ -65,14 +88,77 @@ export function slotIcon(slot: string): string {
 }
 
 export function slotTime(slot: string): string | null {
-  return SLOT_TIMES[String(slot || '').toLowerCase()] ?? null
+  return SLOT_TIMES[slotKind(slot)] ?? null
 }
 
-/** `main-dish` -> `Main Dish`, `breakfast` -> `Breakfast`. */
+/** `main-dish` -> `Main Dish`, `breakfast` -> `Breakfast`, `snack_2` -> `Snack`. */
 export function humaniseSlot(slot: string): string {
   return String(slot || '')
+    .replace(/_[2-9]$/, '')
     .replace(/[_-]+/g, ' ')
     .replace(/\b\w/g, char => char.toUpperCase())
+}
+
+/** `08:00` -> 480. `null` for anything that is not a clock time. */
+function minutesOf(time: string | null): number | null {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(String(time || ''))
+  if (!match) return null
+  return Number(match[1]) * 60 + Number(match[2])
+}
+
+function clockOf(minutes: number): string {
+  const whole = Math.round(minutes)
+  return `${String(Math.floor(whole / 60)).padStart(2, '0')}:${String(whole % 60).padStart(2, '0')}`
+}
+
+/**
+ * Clock hints for a day, read from its ORDER rather than from slot names alone.
+ *
+ * `SLOT_TIMES` is a table of typical times, and it was the whole answer: every
+ * snack showed 16:00 because the word "snack" maps to 16:00. That was already
+ * wrong for a day the member had rearranged ("put the snack before lunch"),
+ * and it becomes visibly wrong the moment a day has two snacks — both would
+ * claim the same afternoon.
+ *
+ * So an anchor meal keeps its own time while the plan's order agrees with it,
+ * and everything else is placed evenly between the nearest anchors on either
+ * side. A slot with no anchor before it or none after gets no time at all,
+ * which is the honest answer: inventing "14:45" for a snack asserts something
+ * about someone's day that nobody told us.
+ */
+export function slotTimes(slots: string[]): Array<string | null> {
+  // A snack has no hour of its own. It is defined by where it sits — that is
+  // what "in-between" means — so taking 16:00 from the table put the day's
+  // first snack after its lunch, and pushed the lunch to 17:10 to make room.
+  // Lunch is at lunchtime; a snack is whenever the gap is.
+  const times: Array<number | null> = slots.map(
+    slot => (IN_BETWEEN.has(slotKind(slot)) ? null : minutesOf(slotTime(slot)))
+  )
+
+  // Drop any anchor that does not sit after the last one kept — the plan's
+  // order is the member's, and the table is only a hint. A day whose breakfast
+  // the member moved after dinner gets an interpolated time for it rather than
+  // an 08:00 contradicting the card above it.
+  let last = -1
+  for (let i = 0; i < times.length; i++) {
+    const at = times[i] ?? null
+    if (at === null) continue
+    if (at <= last) times[i] = null
+    else last = at
+  }
+
+  const out: Array<string | null> = times.map(at => (at === null ? null : clockOf(at)))
+  for (let i = 0; i < times.length; i++) {
+    if ((times[i] ?? null) !== null) continue
+    let before = i - 1
+    while (before >= 0 && times[before] === null) before--
+    let after = i + 1
+    while (after < times.length && times[after] === null) after++
+    if (before < 0 || after >= times.length) continue
+    const span = times[after]! - times[before]!
+    out[i] = clockOf(times[before]! + (span * (i - before)) / (after - before))
+  }
+  return out
 }
 
 /**
@@ -121,13 +207,18 @@ export function planMeals(plan: MealPlan | null | undefined): NormalisedMeal[] {
     perSlot.set(meal.slot, (perSlot.get(meal.slot) ?? 0) + 1)
   }
 
+  // Times for the day as a whole, because a slot's hour depends on where it
+  // sits: the second snack of a day is not at the same hour as the first, and
+  // neither is a snack the member moved before lunch.
+  const times = slotTimes(raw.map(meal => meal.slot))
+
   return raw
     .map((meal, index) => ({
       key: `${meal.slot}-${meal.recipe.recipe_id}-${index}`,
       slot: meal.slot,
       role: meal.role,
       recipe: meal.recipe,
-      time: slotTime(meal.slot),
+      time: times[index] ?? null,
       icon: slotIcon(meal.slot),
       partOfMultiCourse: (perSlot.get(meal.slot) ?? 0) > 1
     }))
