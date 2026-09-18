@@ -95,7 +95,7 @@
                  making them open a drawer to agree is a click spent on
                  nothing. Everything else lives in the detail. -->
             <div
-              v-if="stageOf(proposal) === 'review'"
+              v-if="stageOf(proposal) === 'review' || proposal.status === 'failed'"
               class="flex items-center justify-end gap-0.5"
             >
               <UButton
@@ -112,9 +112,9 @@
                 color="primary"
                 variant="ghost"
                 size="xs"
-                icon="i-lucide-check"
-                aria-label="Approve"
-                title="Approve"
+                :icon="proposal.status === 'failed' ? 'i-lucide-rotate-ccw' : 'i-lucide-check'"
+                :aria-label="proposal.status === 'failed' ? 'Approve again' : 'Approve'"
+                :title="proposal.status === 'failed' ? 'Approve again' : 'Approve'"
                 :loading="busyId === proposal.id && busyAction === 'approve'"
                 @click.stop="$emit('approve', proposal)"
               />

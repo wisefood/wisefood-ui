@@ -206,8 +206,12 @@
       />
     </div>
 
+    <!-- `v-if`, not `v-else-if`: a failed proposal shows its run history AND
+         the way to try again. While this was chained to the block above, a
+         failure rendered the run panel alone, so the only button on the card
+         was the one that 403s. -->
     <div
-      v-else-if="actionable"
+      v-if="actionable || retryable"
       class="mt-4 border-t border-gray-100 pt-4 dark:border-zinc-800"
     >
       <div class="flex flex-wrap items-center justify-end gap-2">
@@ -228,7 +232,7 @@
           :loading="busy === 'approve'"
           @click="$emit('approve', proposal)"
         >
-          Approve
+          {{ retryable ? 'Approve again' : 'Approve' }}
         </UButton>
       </div>
     </div>
@@ -298,6 +302,10 @@ const kindLabel = computed(() =>
   KIND_LABELS[props.proposal.kind] || props.proposal.kind)
 
 const actionable = computed(() => stageOf(props.proposal) === 'review')
+// A failed run is retryable by re-approving it, which records who asked for
+// the second attempt. Integrate refuses anything that is not `approved`, so
+// this is the only route back.
+const retryable = computed(() => props.proposal.status === 'failed')
 
 const statusLabel = computed(() =>
   STATUS_LABELS[props.proposal.status] || props.proposal.status)
