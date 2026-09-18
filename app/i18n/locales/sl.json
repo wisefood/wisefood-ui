@@ -2172,7 +2172,8 @@
       "evidencePassages": "Odlomki iz virov",
       "noEvidence": "Temu vozlišču ni pripet noben odlomek.",
       "moreEvidence": "Naloži več",
-      "loadFailed": "Tega vozlišča ni bilo mogoče naložiti."
+      "loadFailed": "Tega vozlišča ni bilo mogoče naložiti.",
+      "describes": "{kind}, ki jo to opisuje"
     },
     "legend": {
       "title": "Legenda",

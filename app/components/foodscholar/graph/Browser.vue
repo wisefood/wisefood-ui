@@ -225,7 +225,6 @@
             :revision="stream.revision.value"
             :selected-id="selectedId"
             :highlight-ids="highlightIds"
-            :streaming="stream.streaming.value"
             @select="onSelect"
             @expand="onExpand"
           />
@@ -479,7 +478,11 @@ async function reload() {
  */
 async function refreshSearch() {
   try {
-    const page = await graphApi.search(filters.value, { limit: 200 })
+    // 100 is the route's ceiling, not a preference. The hits drive the search
+    // highlight, so more would be nicer — but the counts, which drive the whole
+    // filter panel, are aggregations over the entire match set and do not
+    // depend on how many hits come back.
+    const page = await graphApi.search(filters.value, { limit: 100 })
     filterCounts.value = page.facets || {}
     if (filters.value.q?.trim()) {
       searchTotal.value = page.total

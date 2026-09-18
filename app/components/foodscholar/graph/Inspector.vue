@@ -230,8 +230,35 @@
             </div>
           </section>
 
+          <!-- The card as a node of its own. Reached by clicking one on the
+               map, where it is a mark like any other. It has no hierarchy and
+               no evidence list of its own — what it describes has both — so
+               the useful thing to offer is the way back to its subject. -->
+          <section
+            v-if="isCardOnly"
+            class="border-b border-zinc-200 dark:border-zinc-800 p-4"
+          >
+            <button
+              v-if="card?.target_id"
+              type="button"
+              class="flex w-full items-center gap-2 rounded-lg border border-zinc-200 dark:border-zinc-700 px-2.5 py-2 text-left transition-colors hover:border-brand-400"
+              @click="emit('select', card!.target_id)"
+            >
+              <UIcon
+                name="i-lucide-corner-up-left"
+                class="h-3.5 w-3.5 shrink-0 text-zinc-400"
+              />
+              <span class="min-w-0 flex-1 text-xs text-zinc-700 dark:text-zinc-200">
+                {{ t('graph.inspector.describes', { kind: t(`graph.kind.${card!.target_type}`) }) }}
+              </span>
+            </button>
+          </section>
+
           <!-- Facts. A definition list because that is what it is. -->
-          <section class="border-b border-zinc-200 dark:border-zinc-800 p-4">
+          <section
+            v-else
+            class="border-b border-zinc-200 dark:border-zinc-800 p-4"
+          >
             <dl class="grid grid-cols-2 gap-x-3 gap-y-2">
               <div
                 v-for="fact in facts"
@@ -325,8 +352,17 @@
           </section>
 
           <!-- Evidence. Loaded on demand: a page of passages is the heaviest
-               thing here and most selections never open it. -->
-          <section class="p-4">
+               thing here and most selections never open it.
+
+               Hidden for a card, because the chunks route filters by what a
+               passage is ATTACHED to, and nothing is attached to a card — its
+               passages are the ones it cites, by id, and no route fetches
+               those. The section would say "no passages" every time, which is
+               false: the card cites several, they just belong to its target. -->
+          <section
+            v-if="!isCardOnly"
+            class="p-4"
+          >
             <button
               type="button"
               class="flex w-full items-center justify-between gap-2 text-left"
@@ -453,7 +489,9 @@ const chunksHasMore = ref(false)
 const palette = computed(() => (props.isDark ? GRAPH_THEME_DARK : GRAPH_THEME_LIGHT))
 const colorFor = (kind: GraphNodeKind) => palette.value.kind[kind]
 
-const kind = computed<GraphNodeKind>(() => detail.value?.kind ?? 'shelf')
+/** Landed on a card directly, rather than on a node that has one. */
+const isCardOnly = computed(() => !detail.value && !!card.value)
+const kind = computed<GraphNodeKind>(() => (isCardOnly.value ? 'card' : detail.value?.kind ?? 'shelf'))
 const kindColor = computed(() => colorFor(kind.value))
 const title = computed(() => detail.value?.label ?? card.value?.title ?? '')
 const status = computed(() => detail.value?.status ?? null)

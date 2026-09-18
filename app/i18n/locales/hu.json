@@ -2172,7 +2172,8 @@
       "evidencePassages": "Forrásrészletek",
       "noEvidence": "Ehhez a csomóponthoz nem tartozik részlet.",
       "moreEvidence": "Továbbiak",
-      "loadFailed": "Ezt a csomópontot nem sikerült betölteni."
+      "loadFailed": "Ezt a csomópontot nem sikerült betölteni.",
+      "describes": "A leírt {kind}"
     },
     "legend": {
       "title": "Jelmagyarázat",

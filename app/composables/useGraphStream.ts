@@ -48,9 +48,6 @@ export function useGraphStream() {
   // ── the graph itself, deliberately outside reactivity ──────────────────
   const nodes = new Map<string, VizNode>()
   const edges: VizEdge[] = []
-  /** Adjacency, built as edges land. The inspector and the canvas both need
-   *  "what touches this node" and neither should scan the edge list for it. */
-  const neighbors = new Map<string, Set<string>>()
 
   // ── what the interface watches ─────────────────────────────────────────
   const revision = ref(0)
@@ -80,7 +77,6 @@ export function useGraphStream() {
   function clear() {
     nodes.clear()
     edges.length = 0
-    neighbors.clear()
     sentNodes.value = 0
     sentEdges.value = 0
     totalNodes.value = 0
@@ -97,15 +93,6 @@ export function useGraphStream() {
     controller?.abort()
     controller = null
     streaming.value = false
-  }
-
-  function link(edge: VizEdge) {
-    let out = neighbors.get(edge.source)
-    if (!out) neighbors.set(edge.source, (out = new Set()))
-    out.add(edge.target)
-    let back = neighbors.get(edge.target)
-    if (!back) neighbors.set(edge.target, (back = new Set()))
-    back.add(edge.source)
   }
 
   /**
@@ -162,10 +149,7 @@ export function useGraphStream() {
             break
           }
           case 'edges': {
-            for (const edge of frame.data.edges) {
-              edges.push(edge)
-              link(edge)
-            }
+            for (const edge of frame.data.edges) edges.push(edge)
             sentEdges.value = edges.length
             revision.value++
             break
@@ -249,18 +233,12 @@ export function useGraphStream() {
     }
   }
 
-  /** Edge list for one node, without scanning. */
-  function neighborsOf(nodeId: string): string[] {
-    return Array.from(neighbors.get(nodeId) || [])
-  }
-
   onScopeDispose(stop)
 
   return {
     // raw, non-reactive — read these after watching `revision`
     nodes,
     edges,
-    neighborsOf,
     // reactive
     revision,
     streaming,

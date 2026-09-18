@@ -20,8 +20,6 @@
       @wheel.prevent="onWheel"
       @dblclick.prevent="onDoubleClick"
       @keydown="onKeyDown"
-      @focus="keyboardHint = true"
-      @blur="keyboardHint = false"
     />
 
     <!--
@@ -189,11 +187,9 @@ const props = withDefaults(defineProps<{
   /** Search hits. Everything else dims, so a result set is visible in place
    *  rather than only in a list beside the graph. */
   highlightIds?: Set<string> | null
-  streaming?: boolean
 }>(), {
   selectedId: null,
-  highlightIds: null,
-  streaming: false
+  highlightIds: null
 })
 
 const emit = defineEmits<{
@@ -234,6 +230,14 @@ let bounds = { minX: 0, minY: 0, maxX: 1, maxY: 1 }
 /** Hit grid: world space bucketed into fixed cells. */
 let grid = new Map<string, DrawNode[]>()
 let cellSize = 64
+/** node id -> the ids it touches. Rebuilt with the draw list. */
+let adjacency = new Map<string, Set<string>>()
+
+function link(map: Map<string, Set<string>>, from: string, to: string) {
+  const bucket = map.get(from)
+  if (bucket) bucket.add(to)
+  else map.set(from, new Set([to]))
+}
 
 const nodeCount = ref(0)
 
@@ -306,13 +310,20 @@ function rebuild() {
   }
 
   drawEdges = []
+  adjacency = new Map()
   for (const edge of props.edges) {
     const a = byId.get(edge.source)
     const b = byId.get(edge.target)
     // An edge whose endpoints are not both drawn is skipped rather than
     // clamped. The server holds edges back until both ends have been sent, so
     // this only ever catches the tail it reported as `dropped_edges`.
-    if (a && b) drawEdges.push({ a, b, kind: edge.kind })
+    if (!a || !b) continue
+    drawEdges.push({ a, b, kind: edge.kind })
+    // Built here rather than in render(): "what touches the selection" is
+    // needed on every frame, and deriving it by walking the edge list each
+    // time made selecting a node in a large graph cost a full scan per frame.
+    link(adjacency, a.id, b.id)
+    link(adjacency, b.id, a.id)
   }
 
   buildGrid()
@@ -432,7 +443,6 @@ const theme = computed<GraphTheme>(() => (isDark.value ? GRAPH_THEME_DARK : GRAP
 const hovered = shallowRef<DrawNode | null>(null)
 const hoverScreen = ref({ x: 0, y: 0 })
 const dragging = ref(false)
-const keyboardHint = ref(false)
 const labelsSuppressed = ref(false)
 
 let pending = false
@@ -474,10 +484,7 @@ function render() {
   const related = new Set<string>()
   if (selected) {
     related.add(selected.id)
-    for (const edge of drawEdges) {
-      if (edge.a.id === selected.id) related.add(edge.b.id)
-      else if (edge.b.id === selected.id) related.add(edge.a.id)
-    }
+    for (const id of adjacency.get(selected.id) || []) related.add(id)
   }
 
   const margin = 64
@@ -495,7 +502,10 @@ function render() {
   ctx.beginPath()
   for (const edge of drawEdges) {
     if (!visible(edge.a) && !visible(edge.b)) continue
-    if (selected && (related.has(edge.a.id) || related.has(edge.b.id))) continue
+    // Skip only what the opaque pass below will redraw — edges touching the
+    // SELECTION. Testing `related` here skipped edges between two neighbours
+    // as well, and the second pass does not draw those, so they vanished.
+    if (selected && (edge.a.id === selected.id || edge.b.id === selected.id)) continue
     ctx.moveTo(toScreenX(edge.a.x), toScreenY(edge.a.y))
     ctx.lineTo(toScreenX(edge.b.x), toScreenY(edge.b.y))
   }
