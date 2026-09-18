@@ -2063,13 +2063,20 @@ const recipeAsText = computed<string>(() => {
   if (title) lines.push(title)
 
   const ingredients = Array.isArray(current.ingredients) ? current.ingredients : []
+  // One line per row the page renders, and only a row with nothing at all in
+  // it is dropped. This used to skip any ingredient with an empty `name`,
+  // which the list above still draws — so a recipe whose names did not parse
+  // was copied as a single ingredient while the page showed all of them.
   const ingredientLines = ingredients
     .map((ingredient, index) => {
       const name = String(ingredient?.name || '').trim()
-      if (!name) return ''
       // Whatever the page is showing, including a scaled quantity.
       const measurement = measurementFor(index, ingredient?.measurement).trim()
-      return measurement ? `${measurement} ${name}` : name
+      if (!name) return measurement
+      if (!measurement) return name
+      // A measurement that is just the whole line repeated back is what the
+      // splitter stores when it found no quantity; do not print it twice.
+      return measurement === name ? name : `${measurement} ${name}`
     })
     .filter(Boolean)
   if (ingredientLines.length) {
