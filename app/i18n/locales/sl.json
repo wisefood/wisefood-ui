@@ -885,7 +885,8 @@
       },
       "tabs": {
         "askQuestions": "Zastavi vprašanje",
-        "library": "Knjižnica"
+        "library": "Knjižnica",
+        "graph": "Graf"
       },
       "clarify": {
         "yourAnswer": "Vaš odgovor …",
@@ -2067,5 +2068,142 @@
       "cancel": "Prekliči"
     },
     "cancel": "Prekliči"
+  },
+  "graph": {
+    "tabLabel": "Graf znanja",
+    "retry": "Poskusi znova",
+    "kind": {
+      "shelf": "Kategorija",
+      "theme": "Tema",
+      "card": "Povzetek"
+    },
+    "kindHint": {
+      "shelf": "iz ontologije živil",
+      "theme": "odkrita skupina",
+      "card": "napisano na podlagi dokazov"
+    },
+    "facets": {
+      "foods": "Živila",
+      "health": "Zdravje",
+      "sustainability": "Trajnostnost",
+      "dietary_patterns": "Prehranski vzorci",
+      "allergies": "Alergije",
+      "nutrients": "Hranila"
+    },
+    "quality": {
+      "high": "Močni dokazi",
+      "medium": "Zmerni dokazi",
+      "low": "Omejeni dokazi",
+      "debated": "Sporno",
+      "unclear": "Nejasno"
+    },
+    "view": {
+      "label": "Pogled",
+      "tree": "Drevo",
+      "split": "Deljeno",
+      "map": "Zemljevid"
+    },
+    "search": {
+      "placeholder": "Iskanje po grafu — živilo, hranilo, tema",
+      "clear": "Počisti iskanje"
+    },
+    "filters": {
+      "title": "Filtri",
+      "clear": "Počisti ({count})",
+      "scope": "Omejeno na",
+      "clearScope": "Odstrani omejitev",
+      "facet": "Vidik",
+      "kind": "Vrsta",
+      "evidenceQuality": "Kakovost dokazov",
+      "discoveredBy": "Odkrito z",
+      "depth": "Globina",
+      "depthHint": "Kako globoko zemljevid nariše hierarhijo. Vsaka raven stane več.",
+      "minEvidence": "Najmanj dokazov",
+      "onlyWithCard": "Samo kjer obstaja povzetek",
+      "showFolded": "Pokaži združene kategorije",
+      "foldedHint": "Združena kategorija je vsrkala vmesni korak. Ohranjena je zato, da se noben ontološki identifikator ne izgubi."
+    },
+    "tree": {
+      "title": "Hierarhija",
+      "scopedTitle": "Pod {label}",
+      "collapseAll": "Strni vse",
+      "collapse": "Strni",
+      "expand": "Razširi",
+      "empty": "Trenutnim filtrom ne ustreza nič.",
+      "hasCard": "Ima napisan povzetek"
+    },
+    "canvas": {
+      "help": "Povleci za premik, drsaj za povečavo. Puščice premikajo, plus in minus povečata, 0 prilagodi graf, Enter odpre izbrano vozlišče, Escape počisti izbiro.",
+      "ariaLabel": "Zemljevid grafa znanja, izrisanih {count} vozlišč",
+      "evidenceCount": "{count} odlomkov iz virov",
+      "doubleClickToExpand": "Dvoklik odpre njegovo soseščino",
+      "zoomIn": "Povečaj",
+      "zoomOut": "Pomanjšaj",
+      "fit": "Prilagodi graf",
+      "minimap": "Pregled",
+      "scale": "{percent}%",
+      "labelsHidden": "pregosto za oznake"
+    },
+    "inspector": {
+      "title": "Podrobnosti",
+      "emptyTitle": "Nič ni izbrano",
+      "emptyHint": "Izberi vozlišče na zemljevidu ali vrstico v hierarhiji, da vidiš, kaj o njem pravijo dokazi.",
+      "breadcrumb": "Predniki",
+      "close": "Zapri",
+      "expand": "Odpri soseščino",
+      "scopeHere": "Omeji na to",
+      "askAbout": "Vprašaj o tem",
+      "askTemplate": "Kaj dokazi pravijo o tem: {topic}?",
+      "folded": "Združeno",
+      "foldedHint": "Ta kategorija je vsrkala vmesni korak.",
+      "facet": "Vidik",
+      "evidence": "Dokazi",
+      "children": "Podkategorije",
+      "themes": "Teme",
+      "depth": "Globina",
+      "foodonId": "FoodOn identifikator",
+      "supportLifted": "Podedovana podpora",
+      "discoveredBy": "Odkrito z",
+      "spansShelves": "Zajema kategorij",
+      "keywords": "Ključne besede",
+      "tip": "Nasvet.",
+      "safetyFlag": "Ta tema je varnostno občutljiva. Povzetek obravnavaj kot ozadje, ne kot nasvet za posameznika.",
+      "citedChunks": "{count} navedenih odlomkov",
+      "evidencePassages": "Odlomki iz virov",
+      "noEvidence": "Temu vozlišču ni pripet noben odlomek.",
+      "moreEvidence": "Naloži več",
+      "loadFailed": "Tega vozlišča ni bilo mogoče naložiti."
+    },
+    "legend": {
+      "title": "Legenda",
+      "colourIsKind": "Barva — katera vrsta vozlišča",
+      "shapeIsFacet": "Oblika — kateri vidik",
+      "sizeIsEvidence": "Velikost pove, koliko korpusa stoji za vozliščem."
+    },
+    "status": {
+      "drawing": "Izris {nodes} od {total}…",
+      "drawn": "{nodes} vozlišč, {edges} povezav, {ms} ms",
+      "truncated": "Prikazan je del grafa",
+      "droppedEdges": "{count} povezav ni izrisanih",
+      "droppedEdgesHint": "Povezave, katerih drugi konec je bil odfiltriran ali je padel čez omejitev.",
+      "matches": "{count} zadetkov",
+      "build": "gradnja",
+      "buildHint": "Katera gradnja grafa se streže."
+    },
+    "unavailable": {
+      "disabledTitle": "Graf znanja je tukaj izklopljen",
+      "disabledBody": "Ta namestitev ne streže grafa. Z vašim računom ni nič narobe — funkcija ni omogočena.",
+      "notBuiltTitle": "Graf še ni indeksiran",
+      "notBuiltBody": "Graf se gradi zunaj povezave in se nato preslika v brskalni indeks. Ta preslikava še ni tekla, zato ni česa brskati.",
+      "forbiddenTitle": "Grafa ne morete brskati",
+      "forbiddenBody": "Vaš račun nima dostopa do grafa znanja."
+    },
+    "admin": {
+      "reindex": "Ponovno zgradi indeks",
+      "reindexing": "Gradnja…",
+      "reindexRunning": "Beremo celoten graf. To traja, naenkrat pa teče samo ena gradnja.",
+      "reindexDone": "Zgrajeno: indeksiranih {documents} dokumentov.",
+      "reindexFailed": "Ponovna gradnja ni uspela."
+    }
   }
 }

@@ -885,7 +885,8 @@
       },
       "tabs": {
         "askQuestions": "Ask Questions",
-        "library": "Library"
+        "library": "Library",
+        "graph": "Graph"
       },
       "clarify": {
         "yourAnswer": "Your answer…",
@@ -2067,5 +2068,142 @@
       "cancel": "Cancel"
     },
     "cancel": "Cancel"
+  },
+  "graph": {
+    "tabLabel": "Knowledge Graph",
+    "retry": "Try again",
+    "kind": {
+      "shelf": "Category",
+      "theme": "Theme",
+      "card": "Summary"
+    },
+    "kindHint": {
+      "shelf": "from the food ontology",
+      "theme": "a discovered cluster",
+      "card": "written from the evidence"
+    },
+    "facets": {
+      "foods": "Foods",
+      "health": "Health",
+      "sustainability": "Sustainability",
+      "dietary_patterns": "Dietary patterns",
+      "allergies": "Allergies",
+      "nutrients": "Nutrients"
+    },
+    "quality": {
+      "high": "Strong evidence",
+      "medium": "Moderate evidence",
+      "low": "Limited evidence",
+      "debated": "Debated",
+      "unclear": "Unclear"
+    },
+    "view": {
+      "label": "View",
+      "tree": "Tree",
+      "split": "Split",
+      "map": "Map"
+    },
+    "search": {
+      "placeholder": "Search the graph — a food, a nutrient, a topic",
+      "clear": "Clear the search"
+    },
+    "filters": {
+      "title": "Filters",
+      "clear": "Clear ({count})",
+      "scope": "Scoped to",
+      "clearScope": "Remove the scope",
+      "facet": "Facet",
+      "kind": "Kind",
+      "evidenceQuality": "Evidence quality",
+      "discoveredBy": "Discovered by",
+      "depth": "Depth",
+      "depthHint": "How far down the hierarchy the map draws. Each level costs more to load.",
+      "minEvidence": "Minimum evidence",
+      "onlyWithCard": "Only where a summary exists",
+      "showFolded": "Show folded categories",
+      "foldedHint": "A folded category absorbed an intermediate step. Kept so no ontology id is lost, not because it is worth navigating."
+    },
+    "tree": {
+      "title": "Hierarchy",
+      "scopedTitle": "Under {label}",
+      "collapseAll": "Collapse everything",
+      "collapse": "Collapse",
+      "expand": "Expand",
+      "empty": "Nothing here matches the current filters.",
+      "hasCard": "Has a written summary"
+    },
+    "canvas": {
+      "help": "Drag to pan, scroll to zoom. Arrow keys pan, plus and minus zoom, 0 fits the graph, Enter opens the selected node, Escape clears the selection.",
+      "ariaLabel": "Knowledge graph map, {count} nodes drawn",
+      "evidenceCount": "{count} source passages",
+      "doubleClickToExpand": "Double-click to open its neighbourhood",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "fit": "Fit the graph",
+      "minimap": "Overview",
+      "scale": "{percent}%",
+      "labelsHidden": "too dense for labels"
+    },
+    "inspector": {
+      "title": "Details",
+      "emptyTitle": "Nothing selected",
+      "emptyHint": "Pick a node on the map or a row in the hierarchy to see what the evidence says about it.",
+      "breadcrumb": "Ancestors",
+      "close": "Close",
+      "expand": "Open neighbourhood",
+      "scopeHere": "Narrow to this",
+      "askAbout": "Ask about this",
+      "askTemplate": "What does the evidence say about {topic}?",
+      "folded": "Folded",
+      "foldedHint": "This category absorbed an intermediate step.",
+      "facet": "Facet",
+      "evidence": "Evidence",
+      "children": "Sub-categories",
+      "themes": "Themes",
+      "depth": "Depth",
+      "foodonId": "FoodOn id",
+      "supportLifted": "Inherited support",
+      "discoveredBy": "Discovered by",
+      "spansShelves": "Spans categories",
+      "keywords": "Keywords",
+      "tip": "Tip.",
+      "safetyFlag": "This topic is safety-sensitive. Treat the summary as background, not as advice for an individual.",
+      "citedChunks": "{count} passages cited",
+      "evidencePassages": "Source passages",
+      "noEvidence": "No passages are attached to this node.",
+      "moreEvidence": "Load more",
+      "loadFailed": "This node could not be loaded."
+    },
+    "legend": {
+      "title": "Legend",
+      "colourIsKind": "Colour — what kind of node",
+      "shapeIsFacet": "Shape — which facet",
+      "sizeIsEvidence": "Size is how much of the corpus sits behind a node."
+    },
+    "status": {
+      "drawing": "Drawing {nodes} of {total}…",
+      "drawn": "{nodes} nodes, {edges} links, {ms} ms",
+      "truncated": "Showing part of the graph",
+      "droppedEdges": "{count} links not drawn",
+      "droppedEdgesHint": "Links whose other end was filtered out or fell past the limit.",
+      "matches": "{count} matches",
+      "build": "build",
+      "buildHint": "Which graph build is being served."
+    },
+    "unavailable": {
+      "disabledTitle": "The knowledge graph is switched off here",
+      "disabledBody": "This deployment does not serve the graph. Nothing is wrong with your account — the feature is not enabled.",
+      "notBuiltTitle": "The graph has not been indexed yet",
+      "notBuiltBody": "The graph is built offline and then projected into a browse index. That projection has not run, so there is nothing to browse yet.",
+      "forbiddenTitle": "You cannot browse the graph",
+      "forbiddenBody": "Your account does not have access to the knowledge graph."
+    },
+    "admin": {
+      "reindex": "Rebuild the index",
+      "reindexing": "Rebuilding…",
+      "reindexRunning": "Reading the whole graph. This takes a while and only one rebuild runs at a time.",
+      "reindexDone": "Rebuilt: {documents} documents indexed.",
+      "reindexFailed": "The rebuild failed."
+    }
   }
 }

@@ -208,6 +208,64 @@ class WiseFoodRestApiService {
   }
 
   /**
+   * Makes an authenticated GET request and returns the raw streaming Response.
+   *
+   * The GET twin of postStream(), for streams whose whole input fits in a
+   * query string — the knowledge graph's `/graph/stream`, where the filter set
+   * IS the request. Same reason EventSource is not used: it cannot carry an
+   * Authorization header, and it reconnects on its own, which for a stream
+   * that replays a whole graph means redrawing it from scratch on a blip.
+   *
+   * `options.signal` is the one that matters here. A graph stream is long, and
+   * the caller aborts it whenever the filters change or the view unmounts;
+   * without that the old stream keeps pushing nodes into a view that has moved
+   * on, and two streams race to draw different graphs.
+   */
+  async getStream(endpoint: string, options: RequestOptions = {}): Promise<Response> {
+    const { params, ...fetchOptions } = options
+    const url = this.buildUrl(endpoint, params)
+
+    const doFetch = () => fetch(url, {
+      ...fetchOptions,
+      method: 'GET',
+      headers: {
+        ...this.getAuthHeaders(),
+        Accept: 'text/event-stream',
+        ...fetchOptions.headers,
+      },
+    })
+
+    let response = await doFetch()
+
+    if (response.status === 401) {
+      const authStore = useAuthStore()
+      const refreshed = await authStore.refreshToken()
+      if (refreshed) {
+        response = await doFetch()
+      } else if (import.meta.client) {
+        await authStore.logout()
+      }
+    }
+
+    if (!response.ok || !response.body) {
+      let errorData: unknown
+      try {
+        errorData = await response.json()
+      } catch {
+        errorData = await response.text().catch(() => undefined)
+      }
+      const error: ApiError = {
+        message: `API request failed with status ${response.status}`,
+        status: response.status,
+        data: errorData
+      }
+      throw error
+    }
+
+    return response
+  }
+
+  /**
    * Makes an authenticated PUT request
    */
   async put<T, D = unknown>(endpoint: string, data?: D, options: RequestOptions = {}): Promise<T> {

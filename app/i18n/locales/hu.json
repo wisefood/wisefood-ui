@@ -885,7 +885,8 @@
       },
       "tabs": {
         "askQuestions": "Kérdésfeltevés",
-        "library": "Könyvtár"
+        "library": "Könyvtár",
+        "graph": "Gráf"
       },
       "clarify": {
         "yourAnswer": "Az Ön válasza…",
@@ -2067,5 +2068,142 @@
       "cancel": "Mégse"
     },
     "cancel": "Mégse"
+  },
+  "graph": {
+    "tabLabel": "Tudásgráf",
+    "retry": "Újra",
+    "kind": {
+      "shelf": "Kategória",
+      "theme": "Téma",
+      "card": "Összefoglaló"
+    },
+    "kindHint": {
+      "shelf": "az élelmiszer-ontológiából",
+      "theme": "felfedezett csoport",
+      "card": "a bizonyítékok alapján írva"
+    },
+    "facets": {
+      "foods": "Élelmiszerek",
+      "health": "Egészség",
+      "sustainability": "Fenntarthatóság",
+      "dietary_patterns": "Étrendi minták",
+      "allergies": "Allergiák",
+      "nutrients": "Tápanyagok"
+    },
+    "quality": {
+      "high": "Erős bizonyíték",
+      "medium": "Közepes bizonyíték",
+      "low": "Korlátozott bizonyíték",
+      "debated": "Vitatott",
+      "unclear": "Nem egyértelmű"
+    },
+    "view": {
+      "label": "Nézet",
+      "tree": "Fa",
+      "split": "Osztott",
+      "map": "Térkép"
+    },
+    "search": {
+      "placeholder": "Keresés a gráfban — élelmiszer, tápanyag, téma",
+      "clear": "Keresés törlése"
+    },
+    "filters": {
+      "title": "Szűrők",
+      "clear": "Törlés ({count})",
+      "scope": "Szűkítve erre",
+      "clearScope": "Szűkítés megszüntetése",
+      "facet": "Nézőpont",
+      "kind": "Típus",
+      "evidenceQuality": "Bizonyíték erőssége",
+      "discoveredBy": "Felfedezés módja",
+      "depth": "Mélység",
+      "depthHint": "Meddig rajzolja a térkép a hierarchiát. Minden szint többe kerül.",
+      "minEvidence": "Minimális bizonyíték",
+      "onlyWithCard": "Csak ahol van összefoglaló",
+      "showFolded": "Összevont kategóriák mutatása",
+      "foldedHint": "Az összevont kategória magába olvasztott egy közbenső lépést. Azért marad meg, hogy egyetlen ontológiai azonosító se vesszen el."
+    },
+    "tree": {
+      "title": "Hierarchia",
+      "scopedTitle": "{label} alatt",
+      "collapseAll": "Minden összecsukása",
+      "collapse": "Összecsukás",
+      "expand": "Kibontás",
+      "empty": "A jelenlegi szűrőknek semmi sem felel meg.",
+      "hasCard": "Van írott összefoglalója"
+    },
+    "canvas": {
+      "help": "Húzással mozgatható, görgetéssel nagyítható. A nyilak mozgatnak, a plusz és mínusz nagyít, a 0 illeszti a gráfot, az Enter megnyitja a kijelölt csomópontot, az Escape törli a kijelölést.",
+      "ariaLabel": "Tudásgráf térkép, {count} csomópont kirajzolva",
+      "evidenceCount": "{count} forrásrészlet",
+      "doubleClickToExpand": "Dupla kattintás a környezetéhez",
+      "zoomIn": "Nagyítás",
+      "zoomOut": "Kicsinyítés",
+      "fit": "Gráf illesztése",
+      "minimap": "Áttekintés",
+      "scale": "{percent}%",
+      "labelsHidden": "túl sűrű a feliratokhoz"
+    },
+    "inspector": {
+      "title": "Részletek",
+      "emptyTitle": "Nincs kijelölve semmi",
+      "emptyHint": "Válassz egy csomópontot a térképen vagy egy sort a hierarchiában, hogy lásd, mit mondanak róla a bizonyítékok.",
+      "breadcrumb": "Felmenők",
+      "close": "Bezárás",
+      "expand": "Környezet megnyitása",
+      "scopeHere": "Szűkítés erre",
+      "askAbout": "Kérdezz erről",
+      "askTemplate": "Mit mondanak a bizonyítékok erről: {topic}?",
+      "folded": "Összevont",
+      "foldedHint": "Ez a kategória magába olvasztott egy közbenső lépést.",
+      "facet": "Nézőpont",
+      "evidence": "Bizonyíték",
+      "children": "Alkategóriák",
+      "themes": "Témák",
+      "depth": "Mélység",
+      "foodonId": "FoodOn azonosító",
+      "supportLifted": "Örökölt alátámasztás",
+      "discoveredBy": "Felfedezés módja",
+      "spansShelves": "Átfogott kategóriák",
+      "keywords": "Kulcsszavak",
+      "tip": "Tipp.",
+      "safetyFlag": "Ez a téma biztonsági szempontból érzékeny. Az összefoglalót háttérinformációként kezeld, ne egyéni tanácsként.",
+      "citedChunks": "{count} hivatkozott részlet",
+      "evidencePassages": "Forrásrészletek",
+      "noEvidence": "Ehhez a csomóponthoz nem tartozik részlet.",
+      "moreEvidence": "Továbbiak",
+      "loadFailed": "Ezt a csomópontot nem sikerült betölteni."
+    },
+    "legend": {
+      "title": "Jelmagyarázat",
+      "colourIsKind": "Szín — a csomópont típusa",
+      "shapeIsFacet": "Alak — melyik nézőpont",
+      "sizeIsEvidence": "A méret azt mutatja, mekkora korpusz áll a csomópont mögött."
+    },
+    "status": {
+      "drawing": "Kirajzolva {nodes} / {total}…",
+      "drawn": "{nodes} csomópont, {edges} kapcsolat, {ms} ms",
+      "truncated": "A gráf egy része látszik",
+      "droppedEdges": "{count} kapcsolat nincs kirajzolva",
+      "droppedEdgesHint": "Olyan kapcsolatok, amelyek másik vége kiszűrődött vagy a korláton kívül esett.",
+      "matches": "{count} találat",
+      "build": "build",
+      "buildHint": "Melyik gráfverzió van kiszolgálva."
+    },
+    "unavailable": {
+      "disabledTitle": "A tudásgráf itt ki van kapcsolva",
+      "disabledBody": "Ez a telepítés nem szolgálja ki a gráfot. A fiókoddal semmi baj — a funkció nincs engedélyezve.",
+      "notBuiltTitle": "A gráf még nincs indexelve",
+      "notBuiltBody": "A gráf offline épül, majd böngészési indexbe kerül. Ez a vetítés még nem futott le, így nincs mit böngészni.",
+      "forbiddenTitle": "Nem böngészheted a gráfot",
+      "forbiddenBody": "A fiókodnak nincs hozzáférése a tudásgráfhoz."
+    },
+    "admin": {
+      "reindex": "Index újraépítése",
+      "reindexing": "Újraépítés…",
+      "reindexRunning": "A teljes gráf beolvasása folyik. Ez eltart egy ideig, és egyszerre csak egy újraépítés fut.",
+      "reindexDone": "Kész: {documents} dokumentum indexelve.",
+      "reindexFailed": "Az újraépítés nem sikerült."
+    }
   }
 }
