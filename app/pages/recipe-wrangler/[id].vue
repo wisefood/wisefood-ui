@@ -86,7 +86,10 @@
 
           <!-- Title Overlay on Image -->
           <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8">
-            <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-white mb-3 drop-shadow-lg">
+            <h1
+              translate="yes"
+              class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-white mb-3 drop-shadow-lg"
+            >
               {{ recipe.title }}
             </h1>
 
@@ -137,7 +140,10 @@
           class="mb-6"
         >
           <div class="mb-4 flex items-start justify-between gap-4">
-            <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-zinc-900 dark:text-white">
+            <h1
+              translate="yes"
+              class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-zinc-900 dark:text-white"
+            >
               {{ recipe.title }}
             </h1>
             <!-- No image to sit on, so it keeps the same corner. -->
@@ -962,7 +968,14 @@
                     />
                   </div>
                   <div class="flex-1 min-w-0">
+                    <!-- The NAME is translatable; the measurement below is
+                         deliberately not. Google rewrites text nodes in place
+                         and the serving stepper rewrites the measurement
+                         through Vue, so a translated measurement is the one
+                         node here that would collide. The name only changes
+                         when the page navigates. -->
                     <p
+                      translate="yes"
                       :class="[
                         'font-medium text-base transition-all',
                         checkedIngredients[index]
