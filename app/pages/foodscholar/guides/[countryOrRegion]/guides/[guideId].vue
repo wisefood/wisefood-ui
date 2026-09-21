@@ -261,6 +261,38 @@
                   {{ currentPage }} / {{ pdfTotalPages }}
                 </span>
 
+                <!--
+                  What this page of the document says, as the extractor
+                  summarised it. It sits in the toolbar behind a hover rather
+                  than in the page: inline it would either push the viewer down
+                  and change the aspect the document is rendered at, or add a
+                  paragraph to every row of a dense rule list.
+                -->
+                <UPopover
+                  v-if="currentPageSummary"
+                  mode="hover"
+                  :content="{ side: 'bottom', align: 'end' }"
+                >
+                  <UButton
+                    color="neutral"
+                    variant="ghost"
+                    size="xs"
+                    icon="i-lucide-text-search"
+                    :aria-label="`Summary of page ${currentPage}`"
+                    title="What is on this page"
+                  />
+                  <template #content>
+                    <div class="max-w-sm p-3">
+                      <p class="text-[0.6875rem] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        Page {{ currentPage }}
+                      </p>
+                      <p class="mt-1 text-xs leading-5 text-gray-700 dark:text-gray-200">
+                        {{ currentPageSummary }}
+                      </p>
+                    </div>
+                  </template>
+                </UPopover>
+
                 <div class="mx-1 h-4 w-px bg-gray-200 dark:bg-white/10" />
 
                 <!-- Fit mode: the comfortable default, rather than making the
@@ -782,6 +814,20 @@ const pdfArtifactOptions = computed(() => {
 })
 
 const hasPageAssociations = computed(() => hasGuidePageAssociations(allGuideGuidelines.value))
+
+/*
+ * `page_summary` is carried by each guideline, describing the page it was
+ * extracted from — so every rule on a page repeats the same summary. Read the
+ * first one that has it rather than showing it per rule.
+ */
+const currentPageSummary = computed(() => {
+  for (const guideline of allGuideGuidelines.value) {
+    const summary = guideline.page_summary?.trim()
+    if (!summary) continue
+    if (getGuidelinePageReferences(guideline).includes(currentPage.value)) return summary
+  }
+  return ''
+})
 
 // Age spans for the filter histogram. Taken from the full guide set already
 // loaded for pagination, not the current page, so the distribution does not
