@@ -59,7 +59,7 @@
             icon="i-lucide-save"
             class="cursor-pointer"
             :loading="saving"
-            :disabled="!dirty || Boolean(urlError)"
+            :disabled="!dirty || urlBlocksSave"
             @click="save"
           >
             {{ saveLabel }}
@@ -102,15 +102,11 @@
               label="Licence"
               hint="SPDX-style identifier where there is one"
             >
-              <UInputMenu
+              <ConsoleCatalogVocabularyInput
                 v-model="form.license"
-                :items="licenceItems"
-                value-key="value"
-                label-key="label"
-                create-item="always"
-                class="w-full"
+                :options="licenseOptions"
                 placeholder="CC-BY-4.0"
-                @create="form.license = String($event).trim()"
+                :allow-custom="false"
               />
             </UFormField>
             <UFormField
@@ -173,15 +169,10 @@
                 />
               </UFormField>
               <UFormField label="Language">
-                <UInputMenu
+                <ConsoleCatalogVocabularyInput
                   v-model="form.language"
-                  :items="languageItems"
-                  value-key="value"
-                  label-key="label"
-                  create-item="always"
-                  class="w-full"
+                  :options="languageOptions"
                   placeholder="en"
-                  @create="form.language = String($event).trim()"
                 />
               </UFormField>
               <UFormField label="Version">
@@ -315,7 +306,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import rcollectionsApi, { type RecipeCollection } from '~/services/rcollectionsApi'
 import { assetSectionBreadcrumb, recordCrumb } from '~/utils/consoleBreadcrumbs'
 import { languageOptions, licenseOptions } from '~/utils/consoleArticleVocabulary'
-import { httpUrlError, withCurrentOption } from '~/utils/consoleCatalogFields'
+import { httpUrlError } from '~/utils/consoleCatalogFields'
 
 definePageMeta({ layout: 'default' })
 
@@ -400,13 +391,15 @@ const dirty = computed(() => changed.value.length > 0)
 const urlError = computed(() => httpUrlError(form.url))
 
 /*
- * Offered as suggestions rather than a closed list — these two fields are the
- * ones a curator is most likely to have a legitimate value for that predates
- * the list, and the record's own value has to stay selectable or the next save
- * writes an emptiness nobody asked for.
+ * A stored URL that fails this rule must not strand the record. Harvested
+ * collections carry scheme-less values like `www.example.org/recipes`, and
+ * blocking on one would mean the licence — the thing this page exists to
+ * record — could not be saved until somebody repaired a field in another card
+ * that they were not editing.
  */
-const licenceItems = computed(() => withCurrentOption(licenseOptions, form.license))
-const languageItems = computed(() => withCurrentOption(languageOptions, form.language))
+const urlBlocksSave = computed(() =>
+  Boolean(urlError.value) && form.url !== (original.value['url'] ?? ''))
+
 const saveLabel = computed(() => {
   const n = changed.value.length
   return n ? `Save ${n} change${n === 1 ? '' : 's'}` : 'Saved'
@@ -458,7 +451,7 @@ async function load() {
 }
 
 async function save() {
-  if (!dirty.value || urlError.value) return
+  if (!dirty.value || urlBlocksSave.value) return
   saving.value = true
   try {
     const payload: Record<string, unknown> = {}

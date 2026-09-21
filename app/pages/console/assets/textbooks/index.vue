@@ -230,6 +230,10 @@
                   v-model="createForm.urn"
                   placeholder="human-nutrition-science-for-healthy-living"
                   class="w-full"
+                  :ui="{
+                    base: 'ps-28',
+                    leading: 'pointer-events-none ps-2.5'
+                  }"
                   @update:model-value="urnEdited = true"
                 >
                   <template #leading>
@@ -264,15 +268,10 @@
                   label="Publisher"
                   help="Existing publishers are offered first — picking one keeps the name spelled the same way."
                 >
-                  <UInputMenu
+                  <ConsoleCatalogVocabularyInput
                     v-model="createForm.publisher"
-                    :items="publisherItems"
-                    value-key="value"
-                    label-key="label"
-                    create-item="always"
+                    :options="publisherSuggestions"
                     placeholder="Start typing a publisher"
-                    class="w-full"
-                    @create="createForm.publisher = String($event).trim()"
                   />
                 </UFormField>
                 <UFormField label="Edition">
@@ -288,8 +287,6 @@
                 >
                   <UInputNumber
                     v-model="createForm.publication_year"
-                    :min="PUBLICATION_YEAR_MIN"
-                    :max="yearMax"
                     :step="1"
                     :format-options="{ useGrouping: false }"
                     placeholder="e.g. 2019"
@@ -349,23 +346,21 @@
 
               <div class="grid gap-4 sm:grid-cols-2">
                 <UFormField label="Audience">
-                  <UInputMenu
+                  <ConsoleCatalogVocabularyInput
                     v-model="createForm.audience"
-                    :items="audienceItems"
-                    value-key="value"
-                    label-key="label"
-                    create-item="always"
-                    class="w-full"
-                    @create="createForm.audience = String($event).trim()"
+                    :options="readerGroupOptions"
+                    placeholder="Select or type an audience"
                   />
                 </UFormField>
-                <UFormField label="Licence">
-                  <USelectMenu
+                <UFormField
+                  label="Licence"
+                  help="Leave empty if nobody has established it."
+                >
+                  <ConsoleCatalogVocabularyInput
                     v-model="createForm.license"
-                    :items="licenseOptions"
-                    value-key="value"
-                    label-key="label"
-                    class="w-full"
+                    :options="licenseOptions"
+                    placeholder="Select or type a licence"
+                    :allow-custom="false"
                   />
                 </UFormField>
               </div>
@@ -420,15 +415,12 @@ import {
   readerGroupOptions
 } from '~/utils/consoleArticleVocabulary'
 import {
-  PUBLICATION_YEAR_MIN,
   doiError,
   isbn13Error,
   normalizeDoi,
   normalizeIsbn,
   publicationYearError,
-  publicationYearMax,
-  suggestionsFromFacet,
-  withCurrentOption
+  suggestionsFromFacet
 } from '~/utils/consoleCatalogFields'
 import {
   formatConsoleDate as formatDate,
@@ -457,7 +449,6 @@ const createModalOpen = ref(false)
 const createPending = ref(false)
 const createError = ref<string | null>(null)
 const urnEdited = ref(false)
-const yearMax = publicationYearMax()
 
 /*
  * Facet buckets from the same search that fills the table, so the create form
@@ -466,6 +457,7 @@ const yearMax = publicationYearMax()
  */
 const facets = ref<Record<string, FacetBucket[]>>({})
 const topicSuggestions = computed(() => suggestionsFromFacet(facets.value['topics']))
+const publisherSuggestions = computed(() => suggestionsFromFacet(facets.value['publisher']))
 
 const createForm = reactive({
   title: '',
@@ -481,17 +473,6 @@ const createForm = reactive({
   audience: '',
   license: ''
 })
-
-/*
- * `withCurrentOption` is not decoration: these menus resolve their display text
- * by looking the value up among their items, so a freshly typed publisher or
- * audience disappears from the box the moment it is accepted while the form
- * quietly still holds it.
- */
-const publisherItems = computed(() => withCurrentOption(
-  suggestionsFromFacet(facets.value['publisher']), createForm.publisher))
-const audienceItems = computed(() => withCurrentOption(
-  readerGroupOptions, createForm.audience))
 
 const breadcrumbItems = assetSectionBreadcrumb('textbooks')
 

@@ -22,11 +22,21 @@
         />
         <div class="flex flex-wrap gap-2 self-start">
           <UBadge
-            :color="statusColor(form.status || 'draft')"
+            :color="statusColor(textbook?.status || 'draft')"
             variant="subtle"
           >
-            {{ formatEnumLabel(form.status || 'draft') }}
+            {{ formatEnumLabel(textbook?.status || 'draft') }}
           </UBadge>
+          <UButton
+            v-if="textbook"
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-external-link"
+            :to="publicTextbookRoute"
+            target="_blank"
+          >
+            Public view
+          </UButton>
           <UButton
             color="primary"
             :loading="savePending"
@@ -99,8 +109,6 @@
                 >
                   <UInputNumber
                     v-model="form.publication_year"
-                    :min="PUBLICATION_YEAR_MIN"
-                    :max="yearMax"
                     :step="1"
                     :format-options="{ useGrouping: false }"
                     placeholder="e.g. 2019"
@@ -114,6 +122,17 @@
                     value-key="value"
                     label-key="label"
                     class="w-full"
+                  />
+                </UFormField>
+                <UFormField
+                  label="Licence"
+                  help="Leave empty if nobody has established it."
+                >
+                  <ConsoleCatalogVocabularyInput
+                    v-model="form.license"
+                    :options="licenseOptions"
+                    placeholder="Select or type a licence"
+                    :allow-custom="false"
                   />
                 </UFormField>
                 <UFormField
@@ -515,7 +534,7 @@
                 v-model="ingestJson"
                 :rows="12"
                 class="w-full font-mono text-xs"
-                placeholder='[{"page_no": 1, "sequence_no": 1, "text": "…", "char_start": 0, "char_end": 512, "structure_path": ["Chapter 1"]}]'
+                :placeholder="ingestPlaceholder"
               />
             </UFormField>
 
@@ -572,15 +591,13 @@ import textbooksApi, {
   type TextbookUpdatePayload
 } from '~/services/textbooksApi'
 import ConsoleArticleTokenInput from '~/components/console/ArticleTokenInput.vue'
-import { languageOptions } from '~/utils/consoleArticleVocabulary'
+import { languageOptions, licenseOptions } from '~/utils/consoleArticleVocabulary'
 import {
-  PUBLICATION_YEAR_MIN,
   doiError,
   isbn13Error,
   normalizeDoi,
   normalizeIsbn,
   publicationYearError,
-  publicationYearMax,
   withCurrentOption
 } from '~/utils/consoleCatalogFields'
 import {
@@ -604,6 +621,9 @@ const textbookUrn = computed(() => {
   return decodeURIComponent(Array.isArray(raw) ? raw[0] ?? '' : raw ?? '')
 })
 
+const publicTextbookRoute = computed(() =>
+  `/foodscholar/textbooks/${encodeURIComponent(textbookUrn.value)}`)
+
 const textbook = ref<Textbook | null>(null)
 const loadError = ref<string | null>(null)
 const savePending = ref(false)
@@ -622,6 +642,14 @@ const ingestArtifactId = ref('')
 const ingestExtractorName = ref('')
 const ingestRunId = ref('')
 const ingestJson = ref('')
+
+/*
+ * Bound rather than inline: as a literal attribute this JSON sample has to be
+ * either single-quoted (which the template lint rule rejects) or written with
+ * `&quot;` entities (which the template type-checker then fails to parse).
+ */
+const ingestPlaceholder = '[{"page_no": 1, "sequence_no": 1, "text": "…", '
+  + '"char_start": 0, "char_end": 512, "structure_path": ["Chapter 1"]}]'
 
 /*
  * Attaching the source PDF. The empty state here has always said to add one,
@@ -646,6 +674,7 @@ const form = reactive({
   edition: '',
   publication_year: null as number | null,
   language: '',
+  license: '',
   isbn13: '',
   doi: '',
   topics: [] as string[],
@@ -678,9 +707,17 @@ const artifactOptions = computed(() =>
 const canUpload = computed(() =>
   Boolean(uploadFile.value) && Boolean(uploadTitle.value.trim()) && !uploadPending.value)
 
-const hasChanges = computed(() => JSON.stringify({ ...form }) !== snapshot)
+/*
+ * The number control writes `undefined` when its box is emptied, and
+ * JSON.stringify drops an undefined key entirely — so a year typed and then
+ * deleted left the form structurally different from a snapshot holding null and
+ * the page permanently dirty over a field that had not changed.
+ */
+function formFingerprint(): string {
+  return JSON.stringify({ ...form, publication_year: form.publication_year ?? null })
+}
 
-const yearMax = publicationYearMax()
+const hasChanges = computed(() => formFingerprint() !== snapshot)
 
 /*
  * A stored language outside the offered list would otherwise render as an empty
@@ -693,8 +730,27 @@ const yearError = computed(() => publicationYearError(form.publication_year))
 const isbnError = computed(() => isbn13Error(form.isbn13))
 const doiFieldError = computed(() => doiError(form.doi))
 
-const hasFieldErrors = computed(() =>
-  Boolean(yearError.value || isbnError.value || doiFieldError.value))
+/*
+ * Only a field the editor has actually touched can block the save.
+ *
+ * These rules are stricter than the ones the corpus was ingested under — an
+ * ISBN-13 whose check digit does not compute, a DOI that is not `10.x/y` — so
+ * validating what merely arrived from the API would strand those records: no
+ * edit to the title, the status or the topics could be saved until someone
+ * rewrote an identifier they were never asked to touch. The error still shows;
+ * it just does not hold the record hostage.
+ */
+const hasFieldErrors = computed(() => {
+  const record = textbook.value
+  const yearEdited = (form.publication_year ?? null) !== (record?.publication_year ?? null)
+  const isbnEdited = form.isbn13 !== (record?.isbn13 ?? '')
+  const doiEdited = form.doi !== (record?.doi ?? '')
+  return Boolean(
+    (yearEdited && yearError.value)
+    || (isbnEdited && isbnError.value)
+    || (doiEdited && doiFieldError.value)
+  )
+})
 
 const saveLabel = computed(() => {
   if (hasFieldErrors.value) return 'Fix the fields above'
@@ -776,6 +832,7 @@ function populate(record: Textbook) {
   form.edition = record.edition || ''
   form.publication_year = record.publication_year ?? null
   form.language = record.language || ''
+  form.license = record.license || ''
   form.isbn13 = record.isbn13 || ''
   form.doi = record.doi || ''
   form.topics = [...(record.topics ?? [])]
@@ -783,7 +840,7 @@ function populate(record: Textbook) {
   form.status = record.status || 'draft'
   form.review_status = record.review_status || 'unreviewed'
   form.visibility = record.visibility || 'internal'
-  snapshot = JSON.stringify({ ...form })
+  snapshot = formFingerprint()
 }
 
 async function save() {
@@ -796,6 +853,7 @@ async function save() {
       publisher: form.publisher.trim() || null,
       edition: form.edition.trim() || null,
       language: form.language.trim() || null,
+      license: form.license.trim() || null,
       doi: normalizeDoi(form.doi) || null,
       topics: form.topics,
       keywords: form.keywords,

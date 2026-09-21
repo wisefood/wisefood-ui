@@ -202,15 +202,11 @@
             label="Licence"
             hint="Leave empty if nobody has established it — that is not the same as permissive"
           >
-            <UInputMenu
+            <ConsoleCatalogVocabularyInput
               v-model="draft.license"
-              :items="licenceSuggestions"
-              value-key="value"
-              label-key="label"
-              create-item="always"
-              class="w-full"
+              :options="licenseOptions"
               placeholder="CC-BY-4.0"
-              @create="draft.license = String($event).trim()"
+              :allow-custom="false"
             />
           </UFormField>
           <UAlert
@@ -255,7 +251,7 @@ import rcollectionsApi, {
 } from '~/services/rcollectionsApi'
 import { assetSectionBreadcrumb } from '~/utils/consoleBreadcrumbs'
 import { licenseOptions } from '~/utils/consoleArticleVocabulary'
-import { httpUrlError, suggestionsFromFacet, withCurrentOption } from '~/utils/consoleCatalogFields'
+import { httpUrlError } from '~/utils/consoleCatalogFields'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Recipe Collections · Console' })
@@ -293,25 +289,6 @@ const countLabel = computed(() =>
   `${total.value.toLocaleString()} collection${total.value === 1 ? '' : 's'}`)
 
 const urlError = computed(() => httpUrlError(draft.value.url))
-
-/*
- * The licences already recorded, then the curated list. Typed as a free field
- * this is how one collection ends up "CC-BY-4.0" and the next "cc by 4.0",
- * which makes the licence facet useless for the one question this page exists
- * to answer.
- *
- * `withCurrentOption` is not decoration: the menu resolves its display text by
- * looking the value up among its items, so a licence typed into a `create-item`
- * menu vanishes from the box the moment it is accepted while the draft quietly
- * still holds it.
- */
-const licenceSuggestions = computed(() => withCurrentOption(
-  suggestionsFromFacet(
-    Object.entries(facets.value['license'] ?? {}).map(([value, count]) => ({ value, count })),
-    licenseOptions
-  ),
-  draft.value.license
-))
 
 /*
  * From the facet buckets rather than the current page: the catalog counted
