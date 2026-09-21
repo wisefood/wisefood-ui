@@ -636,7 +636,7 @@
       </section>
 
       <!-- Categories Section -->
-      <section v-if="activeTab === 'search'" class="bg-gradient-to-br from-brandg-50 to-brandg-100 dark:from-brandg-900/20 dark:to-brandg-800/20 border border-brandg-200 dark:border-brandg-800 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12">
+      <section v-if="activeTab === 'search'" class="mb-12 sm:mb-16 bg-gradient-to-br from-brandg-50 to-brandg-100 dark:from-brandg-900/20 dark:to-brandg-800/20 border border-brandg-200 dark:border-brandg-800 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12">
         <h2 class="text-2xl sm:text-3xl font-claude mb-6 sm:mb-8 text-zinc-900 dark:text-white">Browse by Category</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
           <button
