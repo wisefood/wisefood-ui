@@ -136,20 +136,38 @@ export function withCurrentOption(
 
 /**
  * Suggestions drawn from what the corpus already contains, then from the
- * curated list. Values in use come first so the form teaches the vocabulary
+ * curated list. Values in use come first, so the form teaches the vocabulary
  * that exists rather than the one somebody once guessed at.
+ *
+ * Where a bucket and a curated option are the same value in different casing,
+ * the curated one wins. That matters more than it looks: matching them
+ * case-insensitively and letting the bucket win meant one legacy `proprietary`
+ * row removed the canonical `Proprietary` from the menu altogether, so every
+ * editor who picked from the list propagated the bad casing — the opposite of
+ * what offering a list is for. For a closed enum the bucket value can be one
+ * the API rejects outright.
  */
 export function suggestionsFromFacet(
   buckets: ReadonlyArray<{ value: string | number, count: number }> | undefined,
   extra: readonly CatalogSelectOption[] = []
 ): CatalogSelectOption[] {
+  const canonical = new Map(extra.map(option => [option.value.toLowerCase(), option]))
   const seen = new Map<string, CatalogSelectOption>()
+
   for (const bucket of buckets ?? []) {
     const value = String(bucket.value ?? '').trim()
-    if (value) seen.set(value.toLowerCase(), { label: value, value })
+    if (!value) continue
+    const key = value.toLowerCase()
+    if (seen.has(key)) continue
+    const known = canonical.get(key)
+    seen.set(key, known ? { ...known } : { label: value, value })
   }
+
   for (const option of extra) {
-    if (!seen.has(option.value.toLowerCase())) seen.set(option.value.toLowerCase(), { ...option })
+    if (!seen.has(option.value.toLowerCase())) {
+      seen.set(option.value.toLowerCase(), { ...option })
+    }
   }
+
   return [...seen.values()]
 }
