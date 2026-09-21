@@ -164,20 +164,25 @@
           </UFormField>
           <div class="grid gap-4 sm:grid-cols-2">
             <UFormField label="Region">
-              <UInput
+              <ConsoleCatalogVocabularyInput
                 v-model="draft.region"
-                class="w-full"
+                :options="countryCodeOptions"
+                placeholder="Select or type a code"
               />
             </UFormField>
             <UFormField label="Licence">
-              <UInput
+              <ConsoleCatalogVocabularyInput
                 v-model="draft.license"
-                class="w-full"
+                :options="licenseOptions"
+                :allow-custom="false"
                 placeholder="CC-BY-4.0"
               />
             </UFormField>
           </div>
-          <UFormField label="Source URL">
+          <UFormField
+            label="Source URL"
+            :error="urlError"
+          >
             <UInput
               v-model="draft.url"
               class="w-full"
@@ -223,6 +228,14 @@
 import { computed, h, onMounted, resolveComponent, ref } from 'vue'
 import fctablesApi, { type Facets, type FCTable } from '~/services/fctablesApi'
 import { assetSectionBreadcrumb } from '~/utils/consoleBreadcrumbs'
+import { licenseOptions } from '~/utils/consoleArticleVocabulary'
+import { httpUrlError } from '~/utils/consoleCatalogFields'
+import { countries } from '~/utils/countries'
+
+const countryCodeOptions = countries.map(country => ({
+  label: `${country.label} (${country.code})`,
+  value: country.code
+}))
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Composition Tables · Console' })
@@ -256,6 +269,8 @@ const createError = ref<string | null>(null)
 const draft = ref({
   title: '', compiling_institution: '', region: '', license: '', url: ''
 })
+
+const urlError = computed(() => httpUrlError(draft.value.url))
 
 const countLabel = computed(() =>
   `${total.value.toLocaleString()} table${total.value === 1 ? '' : 's'}`)

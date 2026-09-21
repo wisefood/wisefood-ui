@@ -967,11 +967,12 @@
                       <UFormField
                         label="Duration"
                         required
+                        :error="createDurationError"
                       >
-                        <UInput
+                        <UInputNumber
                           v-model="createForm.duration"
-                          type="number"
-                          min="1"
+                          :step="1"
+                          :format-options="{ useGrouping: false }"
                           placeholder="e.g. 35"
                           class="w-full"
                         />
@@ -980,11 +981,12 @@
                       <UFormField
                         label="Serves"
                         required
+                        :error="createServesError"
                       >
-                        <UInput
+                        <UInputNumber
                           v-model="createForm.serves"
-                          type="number"
-                          min="1"
+                          :step="1"
+                          :format-options="{ useGrouping: false }"
                           placeholder="e.g. 4"
                           class="w-full"
                         />
@@ -1124,7 +1126,10 @@
                         @change="handleCreateImageSelection"
                       >
 
-                      <UFormField label="Image URL">
+                      <UFormField
+                        label="Image URL"
+                        :error="createImageUrlError"
+                      >
                         <UInput
                           v-model="createForm.imageUrl"
                           placeholder="https://..."
@@ -1310,81 +1315,73 @@
 
                   <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <UFormField label="Energy (kcal)">
-                      <UInput
+                      <UInputNumber
                         v-model="createForm.energy_kcal"
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        :step="0.01"
+                        :format-options="{ useGrouping: false }"
                         placeholder="e.g. 450"
                         class="w-full"
                       />
                     </UFormField>
                     <UFormField label="Protein (g)">
-                      <UInput
+                      <UInputNumber
                         v-model="createForm.protein_g"
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        :step="0.01"
+                        :format-options="{ useGrouping: false }"
                         placeholder="e.g. 32"
                         class="w-full"
                       />
                     </UFormField>
                     <UFormField label="Carbs (g)">
-                      <UInput
+                      <UInputNumber
                         v-model="createForm.carbohydrate_g"
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        :step="0.01"
+                        :format-options="{ useGrouping: false }"
                         placeholder="e.g. 55"
                         class="w-full"
                       />
                     </UFormField>
                     <UFormField label="Fat (g)">
-                      <UInput
+                      <UInputNumber
                         v-model="createForm.fat_g"
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        :step="0.01"
+                        :format-options="{ useGrouping: false }"
                         placeholder="e.g. 18"
                         class="w-full"
                       />
                     </UFormField>
                     <UFormField label="Sugar (g)">
-                      <UInput
+                      <UInputNumber
                         v-model="createForm.sugar_g"
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        :step="0.01"
+                        :format-options="{ useGrouping: false }"
                         placeholder="e.g. 8"
                         class="w-full"
                       />
                     </UFormField>
                     <UFormField label="Saturated fat (g)">
-                      <UInput
+                      <UInputNumber
                         v-model="createForm.saturated_fat_g"
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        :step="0.01"
+                        :format-options="{ useGrouping: false }"
                         placeholder="e.g. 4"
                         class="w-full"
                       />
                     </UFormField>
                     <UFormField label="Sodium (mg)">
-                      <UInput
+                      <UInputNumber
                         v-model="createForm.sodium_mg"
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        :step="0.01"
+                        :format-options="{ useGrouping: false }"
                         placeholder="e.g. 600"
                         class="w-full"
                       />
                     </UFormField>
                     <UFormField label="Fibre (g)">
-                      <UInput
+                      <UInputNumber
                         v-model="createForm.fibre_g"
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        :step="0.01"
+                        :format-options="{ useGrouping: false }"
                         placeholder="e.g. 5"
                         class="w-full"
                       />
@@ -1461,6 +1458,7 @@ import {
 } from '~/utils/facetPresentation'
 import RecipeFacetSection from '~/components/recipes/RecipeFacetSection.vue'
 import { assetSectionBreadcrumb } from '~/utils/consoleBreadcrumbs'
+import { httpUrlError } from '~/utils/consoleCatalogFields'
 
 type EditableIngredient = {
   name: string
@@ -1664,8 +1662,8 @@ const CREATE_REGIONS = RECIPE_REGIONS
 const createForm = reactive({
   title: '',
   region: 'EU',
-  duration: '30',
-  serves: '4',
+  duration: 30 as number | null,
+  serves: 4 as number | null,
   ingredients: [] as EditableIngredient[],
   instructions: [] as string[],
   imageUrl: '',
@@ -1674,14 +1672,14 @@ const createForm = reactive({
   tagDraft: '',
   allergenDraft: '',
   // Nutrients — populated from analysis, editable by user
-  protein_g: '',
-  carbohydrate_g: '',
-  fat_g: '',
-  energy_kcal: '',
-  sugar_g: '',
-  saturated_fat_g: '',
-  sodium_mg: '',
-  fibre_g: '',
+  protein_g: null as number | null,
+  carbohydrate_g: null as number | null,
+  fat_g: null as number | null,
+  energy_kcal: null as number | null,
+  sugar_g: null as number | null,
+  saturated_fat_g: null as number | null,
+  sodium_mg: null as number | null,
+  fibre_g: null as number | null,
   nutrientsFromAnalysis: false
 })
 
@@ -1772,6 +1770,21 @@ const resultSummary = computed(() => {
 })
 
 const createPreviewImageUrl = computed(() => normalizeRecipeImageUrl(createForm.imageUrl))
+
+/*
+ * Per-field, beside the box. Duration and serves were only ever reported by
+ * `buildCreatePayload` throwing, so the editor learned about a bad value one
+ * problem at a time, after pressing Create.
+ */
+const createImageUrlError = computed(() => httpUrlError(createForm.imageUrl))
+const createDurationError = computed(() =>
+  createForm.duration != null && createForm.duration > 0
+    ? undefined
+    : 'Duration must be a positive whole number of minutes.')
+const createServesError = computed(() =>
+  createForm.serves != null && createForm.serves > 0
+    ? undefined
+    : 'Serves must be a positive whole number.')
 const createCurrentAnalysisSignature = computed(() => {
   return `${normalizeRecipeRegion(createForm.region)}::${createAnalysisInput.value.trim()}`
 })
@@ -1829,8 +1842,10 @@ function formatServes(value?: number | null) {
   return value ? `${value}` : '—'
 }
 
-function formatNutriScore(value?: number | null) {
-  return value === null || value === undefined ? '—' : String(value)
+// A search result's nutri_score is points on the Neo4j path and a letter
+// label on the catalog one. Both print; only "absent" needs a placeholder.
+function formatNutriScore(value?: number | string | null) {
+  return value === null || value === undefined || value === '' ? '—' : String(value)
 }
 
 function resetCreateForm() {
@@ -1838,8 +1853,8 @@ function resetCreateForm() {
   createMode.value = 'manual'
   createForm.title = ''
   createForm.region = 'EU'
-  createForm.duration = '30'
-  createForm.serves = '4'
+  createForm.duration = 30
+  createForm.serves = 4
   createForm.ingredients = [
     {
       measurement: '',
@@ -1852,14 +1867,14 @@ function resetCreateForm() {
   createForm.allergens = []
   createForm.tagDraft = ''
   createForm.allergenDraft = ''
-  createForm.protein_g = ''
-  createForm.carbohydrate_g = ''
-  createForm.fat_g = ''
-  createForm.energy_kcal = ''
-  createForm.sugar_g = ''
-  createForm.saturated_fat_g = ''
-  createForm.sodium_mg = ''
-  createForm.fibre_g = ''
+  createForm.protein_g = null
+  createForm.carbohydrate_g = null
+  createForm.fat_g = null
+  createForm.energy_kcal = null
+  createForm.sugar_g = null
+  createForm.saturated_fat_g = null
+  createForm.sodium_mg = null
+  createForm.fibre_g = null
   createForm.nutrientsFromAnalysis = false
   createAnalysisInput.value = ''
   createAnalysisLoading.value = false
@@ -2080,9 +2095,9 @@ function buildCreateIngredientsFromAnalysis(result: RecipeProfileResult, rawReci
   return extractIngredientRowsFromRecipeText(rawRecipe)
 }
 
-function roundNutrient(value: number | undefined | null): string {
-  if (value == null || !Number.isFinite(value)) return ''
-  return String(Math.round(value * 100) / 100)
+function roundNutrient(value: number | undefined | null): number | null {
+  if (value == null || !Number.isFinite(value)) return null
+  return Math.round(value * 100) / 100
 }
 
 function applyCreateAnalysisToDraft(result: RecipeProfileResult) {
@@ -2105,7 +2120,7 @@ function applyCreateAnalysisToDraft(result: RecipeProfileResult) {
   } else if (!buildCreateInstructions().length) {
     createForm.instructions = ['']
   }
-  if (analyzedServes) createForm.serves = String(analyzedServes)
+  if (analyzedServes) createForm.serves = analyzedServes
 
   // Populate tags & allergens from analysis
   if (Array.isArray(result.tags) && result.tags.length) {
@@ -2743,8 +2758,8 @@ function buildCreateInstructions() {
     .filter(Boolean)
 }
 
-function parseRequiredPositiveInteger(value: string | number, label: string) {
-  const parsed = Number.parseInt(String(value ?? '').trim(), 10)
+function parseRequiredPositiveInteger(value: number | null | undefined, label: string) {
+  const parsed = Number.parseInt(String(value ?? ''), 10)
   if (!Number.isInteger(parsed) || parsed <= 0) {
     throw new Error(`${label} must be a positive whole number.`)
   }
@@ -2790,9 +2805,9 @@ function validateCreateStructure() {
   }
 }
 
-function parseOptionalFloat(value: string): number | undefined {
-  const n = parseFloat(value)
-  return Number.isFinite(n) && n >= 0 ? n : undefined
+function parseOptionalFloat(value: number | null | undefined): number | undefined {
+  // The number control writes `undefined` when its box is emptied.
+  return value != null && Number.isFinite(value) && value >= 0 ? value : undefined
 }
 
 function buildCreatePayload(): CreateRecipeRequest {

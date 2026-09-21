@@ -301,126 +301,78 @@
 
                     <div class="grid gap-4 sm:grid-cols-2">
                       <UFormField label="Category">
-                        <UInputMenu
+                        <ConsoleCatalogVocabularyInput
                           v-model="articleForm.category"
-                          :items="categoryOptions"
-                          value-key="value"
-                          label-key="label"
-                          create-item="always"
-                          leading
+                          :options="categoryOptions"
                           leading-icon="i-lucide-layers-3"
                           placeholder="Select or type and press Enter"
-                          class="w-full"
-                          @create="articleForm.category = String($event).trim()"
                         />
                       </UFormField>
 
                       <UFormField label="Study Type">
-                        <UInputMenu
+                        <ConsoleCatalogVocabularyInput
                           v-model="articleForm.studyType"
-                          :items="studyTypeOptions"
-                          value-key="value"
-                          label-key="label"
-                          create-item="always"
-                          leading
+                          :options="studyTypeOptions"
                           leading-icon="i-lucide-flask-conical"
                           placeholder="Select or type and press Enter"
-                          class="w-full"
-                          @create="articleForm.studyType = String($event).trim()"
                         />
                       </UFormField>
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-3">
                       <UFormField label="Reader Group">
-                        <UInputMenu
+                        <ConsoleCatalogVocabularyInput
                           v-model="articleForm.readerGroup"
-                          :items="readerGroupOptions"
-                          value-key="value"
-                          label-key="label"
-                          create-item="always"
-                          leading
+                          :options="readerGroupOptions"
                           leading-icon="i-lucide-users"
                           placeholder="Select or type and press Enter"
-                          class="w-full"
-                          @create="articleForm.readerGroup = String($event).trim()"
                         />
                       </UFormField>
 
                       <UFormField label="Age Group">
-                        <UInputMenu
+                        <ConsoleCatalogVocabularyInput
                           v-model="articleForm.ageGroup"
-                          :items="ageGroupOptions"
-                          value-key="value"
-                          label-key="label"
-                          create-item="always"
-                          leading
+                          :options="ageGroupOptions"
                           leading-icon="i-lucide-baby"
                           placeholder="Select or type and press Enter"
-                          class="w-full"
-                          @create="articleForm.ageGroup = String($event).trim()"
                         />
                       </UFormField>
 
                       <UFormField label="Population Group">
-                        <UInputMenu
+                        <ConsoleCatalogVocabularyInput
                           v-model="articleForm.populationGroup"
-                          :items="populationGroupOptions"
-                          value-key="value"
-                          label-key="label"
-                          create-item="always"
-                          leading
+                          :options="populationGroupOptions"
                           leading-icon="i-lucide-users"
                           placeholder="Select or type and press Enter"
-                          class="w-full"
-                          @create="articleForm.populationGroup = String($event).trim()"
                         />
                       </UFormField>
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-3">
                       <UFormField label="Biological Model">
-                        <UInputMenu
+                        <ConsoleCatalogVocabularyInput
                           v-model="articleForm.biologicalModel"
-                          :items="biologicalModelOptions"
-                          value-key="value"
-                          label-key="label"
-                          create-item="always"
-                          leading
+                          :options="biologicalModelOptions"
                           leading-icon="i-lucide-dna"
                           placeholder="Select or type and press Enter"
-                          class="w-full"
-                          @create="articleForm.biologicalModel = String($event).trim()"
                         />
                       </UFormField>
 
                       <UFormField label="Region">
-                        <UInputMenu
+                        <ConsoleCatalogVocabularyInput
                           v-model="articleForm.region"
-                          :items="regionOptions"
-                          value-key="value"
-                          label-key="label"
-                          create-item="always"
-                          leading
+                          :options="regionOptions"
                           leading-icon="i-lucide-globe"
                           placeholder="Select or type and press Enter"
-                          class="w-full"
-                          @create="articleForm.region = String($event).trim()"
                         />
                       </UFormField>
 
                       <UFormField label="Language">
-                        <UInputMenu
+                        <ConsoleCatalogVocabularyInput
                           v-model="articleForm.language"
-                          :items="languageOptions"
-                          value-key="value"
-                          label-key="label"
-                          create-item="always"
-                          leading
+                          :options="languageOptions"
                           leading-icon="i-lucide-languages"
                           placeholder="Select or type and press Enter"
-                          class="w-full"
-                          @create="articleForm.language = String($event).trim()"
                         />
                       </UFormField>
                     </div>
@@ -435,17 +387,11 @@
                       </UFormField>
 
                       <UFormField label="Income Setting">
-                        <UInputMenu
+                        <ConsoleCatalogVocabularyInput
                           v-model="articleForm.incomeSetting"
-                          :items="incomeSettingOptions"
-                          value-key="value"
-                          label-key="label"
-                          create-item="always"
-                          leading
+                          :options="incomeSettingOptions"
                           leading-icon="i-lucide-briefcase"
                           placeholder="Select or type and press Enter"
-                          class="w-full"
-                          @create="articleForm.incomeSetting = String($event).trim()"
                         />
                       </UFormField>
                     </div>
@@ -689,17 +635,11 @@
 
                   <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
                     <UFormField label="Article Type">
-                      <UInputMenu
+                      <ConsoleCatalogVocabularyInput
                         v-model="articleForm.type"
-                        :items="articleTypeOptions"
-                        value-key="value"
-                        label-key="label"
-                        create-item="always"
-                        leading
+                        :options="articleTypeOptions"
                         leading-icon="i-lucide-file-stack"
                         placeholder="Select or type and press Enter"
-                        class="w-full"
-                        @create="articleForm.type = String($event).trim()"
                       />
                     </UFormField>
 
@@ -715,16 +655,25 @@
                   </div>
 
                   <div class="grid gap-4">
-                    <UFormField label="Source URL">
+                    <UFormField
+                      label="Source URL"
+                      :error="urlFieldError"
+                    >
                       <UInput
                         v-model="articleForm.url"
+                        placeholder="https://…"
                         class="w-full"
                       />
                     </UFormField>
 
-                    <UFormField label="DOI">
+                    <UFormField
+                      label="DOI"
+                      :error="doiFieldError"
+                      help="The bare identifier or a doi.org link."
+                    >
                       <UInput
                         v-model="articleForm.doi"
+                        placeholder="10.1234/abcd"
                         class="w-full"
                       />
                     </UFormField>
@@ -732,17 +681,12 @@
 
                   <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
                     <UFormField label="License">
-                      <UInputMenu
+                      <ConsoleCatalogVocabularyInput
                         v-model="articleForm.license"
-                        :items="licenseOptions"
-                        value-key="value"
-                        label-key="label"
-                        create-item="always"
-                        leading
+                        :options="licenseOptions"
                         leading-icon="i-lucide-badge-check"
                         placeholder="Select or type and press Enter"
-                        class="w-full"
-                        @create="articleForm.license = String($event).trim()"
+                        :allow-custom="false"
                       />
                     </UFormField>
 
@@ -1324,6 +1268,7 @@ import catalogApi from '~/services/catalogApi'
 import type { Article, UpdateArticleRequest } from '~/services/articlesApi'
 import articlesApi from '~/services/articlesApi'
 import { fetchCatalogArtifactDownloadResponse, getArtifactPresignedUrl, hasS3Backing, uploadCatalogArtifact } from '~/services/objectStorageApi'
+import { doiError, httpUrlError } from '~/utils/consoleCatalogFields'
 import { formatDoiUrl } from '~/utils/articleHelpers'
 import {
   formatConsolePublicationYear as formatPublicationYear,
@@ -1463,6 +1408,14 @@ const resolvedArticleUrn = computed(() => resolveArticleRouteParam(route.params.
 const articleLibraryRoute = '/console/assets/articles'
 
 const pageTitle = computed(() => articleForm.title.trim() || selectedArticle.value?.title || 'Article Workspace')
+/*
+ * Shown, not enforced: these rules are stricter than the ones this corpus was
+ * ingested under, and a stored value that fails one must not block an edit to
+ * some other field of the same article.
+ */
+const urlFieldError = computed(() => httpUrlError(articleForm.url))
+const doiFieldError = computed(() => doiError(articleForm.doi))
+
 const sourceUrl = computed(() => articleForm.url.trim() || selectedArticle.value?.url || '')
 const doiUrl = computed(() => formatDoiUrl(articleForm.doi.trim() || selectedArticle.value?.doi))
 const publicArticleRoute = computed(() =>

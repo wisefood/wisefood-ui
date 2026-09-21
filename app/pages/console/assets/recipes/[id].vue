@@ -153,7 +153,7 @@
             color="neutral"
             variant="ghost"
             icon="i-lucide-rotate-ccw"
-            :disabled="savePending || imageUploading || !hasUnsavedChanges"
+            :disabled="savePending || imageUploading || !hasUnsavedChanges || imageUrlBlocksSave"
             @click="resetWorkingCopy"
           >
             Reset
@@ -171,7 +171,7 @@
             color="primary"
             icon="i-lucide-save"
             :loading="savePending"
-            :disabled="!hasUnsavedChanges || savePending || imageUploading"
+            :disabled="!hasUnsavedChanges || savePending || imageUploading || imageUrlBlocksSave"
             @click="saveRecipeEdits"
           >
             Save Changes
@@ -502,7 +502,10 @@
                     </div>
                   </div>
 
-                  <UFormField label="Image URL">
+                  <UFormField
+                    label="Image URL"
+                    :error="imageUrlError"
+                  >
                     <UInput
                       v-model="imageUrlInput"
                       placeholder="https://..."
@@ -748,6 +751,7 @@ import { formatDishTypeLabel, getDishTypeIcon, normalizeDishTypes } from '~/util
 import { assetSectionBreadcrumb, recordCrumb } from '~/utils/consoleBreadcrumbs'
 import insightsApi, { type FeedbackRow } from '~/services/insightsApi'
 import { reasonLabel, statusLabel } from '~/utils/labels'
+import { httpUrlError } from '~/utils/consoleCatalogFields'
 
 definePageMeta({
   layout: 'default'
@@ -826,6 +830,16 @@ const breadcrumbItems = computed(() => assetSectionBreadcrumb(
 const publicRecipeRoute = computed(() => `/recipe-wrangler/${encodeURIComponent(recipeId.value)}`)
 
 const previewImageUrl = computed(() => normalizeRecipeImageUrl(imageUrlInput.value))
+
+/*
+ * Shown always; only blocks the save when the editor changed it. A recipe
+ * harvested with a scheme-less image URL must not be unsaveable for every
+ * other field because of it.
+ */
+const imageUrlError = computed(() => httpUrlError(imageUrlInput.value))
+const imageUrlBlocksSave = computed(() =>
+  Boolean(imageUrlError.value)
+  && imageUrlInput.value.trim() !== String(recipe.value?.image_url || '').trim())
 
 function humanizeLabel(value: string) {
   return value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())

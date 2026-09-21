@@ -517,28 +517,21 @@
                   required
                   help="Journal, publisher or source."
                 >
-                  <UInputMenu
+                  <ConsoleCatalogVocabularyInput
                     v-model="createForm.venue"
-                    :items="venueOptions"
-                    value-key="value"
-                    label-key="label"
-                    create-item="always"
+                    :options="venueOptions"
                     placeholder="e.g. The Lancet"
-                    class="w-full"
-                    @create="createForm.venue = String($event).trim()"
                   />
                 </UFormField>
 
                 <UFormField
                   label="Publication year"
-                  :error="publicationYearError"
+                  :error="yearFieldError"
                 >
-                  <UInput
+                  <UInputNumber
                     v-model="createForm.publicationYear"
-                    type="number"
-                    inputmode="numeric"
-                    :min="1500"
-                    :max="currentYear + 1"
+                    :step="1"
+                    :format-options="{ useGrouping: false }"
                     placeholder="e.g. 2022"
                     class="w-full"
                   />
@@ -632,67 +625,42 @@
 
               <div class="grid gap-4 sm:grid-cols-2">
                 <UFormField label="Category">
-                  <UInputMenu
+                  <ConsoleCatalogVocabularyInput
                     v-model="createForm.category"
-                    :items="categorySelectOptions"
-                    value-key="value"
-                    label-key="label"
-                    create-item="always"
+                    :options="categorySelectOptions"
                     placeholder="Select or type a category"
-                    class="w-full"
-                    @create="createForm.category = String($event).trim()"
                   />
                 </UFormField>
 
                 <UFormField label="Study type">
-                  <UInputMenu
+                  <ConsoleCatalogVocabularyInput
                     v-model="createForm.studyType"
-                    :items="studyTypeSelectOptions"
-                    value-key="value"
-                    label-key="label"
-                    create-item="always"
+                    :options="studyTypeSelectOptions"
                     placeholder="Select or type a study type"
-                    class="w-full"
-                    @create="createForm.studyType = String($event).trim()"
                   />
                 </UFormField>
 
                 <UFormField label="Reader group">
-                  <UInputMenu
+                  <ConsoleCatalogVocabularyInput
                     v-model="createForm.readerGroup"
-                    :items="readerGroupSelectOptions"
-                    value-key="value"
-                    label-key="label"
-                    create-item="always"
+                    :options="readerGroupSelectOptions"
                     placeholder="Who is this for?"
-                    class="w-full"
-                    @create="createForm.readerGroup = String($event).trim()"
                   />
                 </UFormField>
 
                 <UFormField label="Age group">
-                  <UInputMenu
+                  <ConsoleCatalogVocabularyInput
                     v-model="createForm.ageGroup"
-                    :items="ageGroupSelectOptions"
-                    value-key="value"
-                    label-key="label"
-                    create-item="always"
+                    :options="ageGroupSelectOptions"
                     placeholder="Population age range"
-                    class="w-full"
-                    @create="createForm.ageGroup = String($event).trim()"
                   />
                 </UFormField>
 
                 <UFormField label="Region">
-                  <UInputMenu
+                  <ConsoleCatalogVocabularyInput
                     v-model="createForm.region"
-                    :items="regionSelectOptions"
-                    value-key="value"
-                    label-key="label"
-                    create-item="always"
+                    :options="regionSelectOptions"
                     placeholder="Geographic scope"
-                    class="w-full"
-                    @create="createForm.region = String($event).trim()"
                   />
                 </UFormField>
 
@@ -852,6 +820,7 @@ import {
 } from '~/utils/consoleEnrichment'
 import { formatConsoleDate as formatDate } from '~/utils/consoleGuideCatalog'
 import { assetSectionBreadcrumb } from '~/utils/consoleBreadcrumbs'
+import { httpUrlError, publicationYearError } from '~/utils/consoleCatalogFields'
 
 definePageMeta({
   layout: 'default'
@@ -936,7 +905,7 @@ const createForm = reactive({
   urn: '',
   venue: '',
   authors: [] as string[],
-  publicationYear: '',
+  publicationYear: null as number | null,
   abstract: '',
   content: '',
   url: '',
@@ -954,8 +923,6 @@ const createForm = reactive({
   topics: [] as string[]
 })
 
-const currentYear = new Date().getFullYear()
-
 // --- Inline validation ------------------------------------------------------
 // Shown as the editor types, so an invalid value is caught before the request
 // rather than surfacing as a 422 alert at the top of the modal.
@@ -969,27 +936,8 @@ const urnFieldError = computed(() => {
     : 'Use lowercase letters, numbers, dashes or underscores.'
 })
 
-const publicationYearError = computed(() => {
-  const value = createForm.publicationYear.trim()
-  if (!value) return undefined
-  const year = Number(value)
-  if (!/^\d{4}$/.test(value) || Number.isNaN(year)) return 'Enter a 4-digit year.'
-  if (year < 1500 || year > currentYear + 1) return `Enter a year between 1500 and ${currentYear + 1}.`
-  return undefined
-})
-
-const urlFieldError = computed(() => {
-  const value = createForm.url.trim()
-  if (!value) return undefined
-  try {
-    const parsed = new URL(value)
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
-      ? undefined
-      : 'Use an http or https URL.'
-  } catch {
-    return 'Enter a valid URL, including https://'
-  }
-})
+const yearFieldError = computed(() => publicationYearError(createForm.publicationYear))
+const urlFieldError = computed(() => httpUrlError(createForm.url))
 
 const createFormValid = computed(() =>
   Boolean(createForm.title.trim())
@@ -998,7 +946,7 @@ const createFormValid = computed(() =>
   && createForm.authors.length > 0
   && Boolean(createForm.abstract.trim())
   && !urnFieldError.value
-  && !publicationYearError.value
+  && !yearFieldError.value
   && !urlFieldError.value
 )
 
@@ -1347,21 +1295,9 @@ function normalizeNullable(value: string) {
   return normalized.length ? normalized : null
 }
 
-function buildPublicationYearDate(value: string) {
-  const normalized = value.trim()
-  if (!normalized) {
-    return undefined
-  }
-
-  if (/^\d{4}$/.test(normalized)) {
-    return `${normalized}-01-01`
-  }
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
-    return normalized
-  }
-
-  throw new Error('Publication year must be a 4-digit year such as 2024.')
+/** The catalog stores this as a date, so a bare year becomes its first day. */
+function buildPublicationYearDate(year: number | null | undefined) {
+  return year == null ? undefined : `${year}-01-01`
 }
 
 function escapeFilterValue(value: string) {
@@ -1613,7 +1549,7 @@ function resetCreateForm() {
   createForm.urn = ''
   createForm.venue = ''
   createForm.authors = []
-  createForm.publicationYear = ''
+  createForm.publicationYear = null
   createForm.abstract = ''
   createForm.content = ''
   createForm.url = ''

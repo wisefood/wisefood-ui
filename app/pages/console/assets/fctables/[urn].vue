@@ -59,7 +59,7 @@
             icon="i-lucide-save"
             class="cursor-pointer"
             :loading="saving"
-            :disabled="!dirty"
+            :disabled="!dirty || urlBlocksSave"
             @click="save"
           >
             {{ saveLabel }}
@@ -149,15 +149,17 @@
           </p>
           <div class="grid gap-4 sm:grid-cols-2">
             <UFormField label="Licence">
-              <UInput
+              <ConsoleCatalogVocabularyInput
                 v-model="form.license"
-                class="w-full"
+                :options="licenseOptions"
+                :allow-custom="false"
                 placeholder="CC-BY-4.0"
               />
             </UFormField>
             <UFormField
               label="Source URL"
               hint="Where the table and its terms live"
+              :error="urlError"
             >
               <UInput
                 v-model="form.url"
@@ -202,15 +204,17 @@
                 />
               </UFormField>
               <UFormField label="Region">
-                <UInput
+                <ConsoleCatalogVocabularyInput
                   v-model="form.region"
-                  class="w-full"
+                  :options="countryCodeOptions"
+                  placeholder="Select or type a code"
                 />
               </UFormField>
               <UFormField label="Language">
-                <UInput
+                <ConsoleCatalogVocabularyInput
                   v-model="form.language"
-                  class="w-full"
+                  :options="languageOptions"
+                  placeholder="Select or type a code"
                 />
               </UFormField>
               <UFormField label="Status">
@@ -308,6 +312,14 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import fctablesApi, { type FCTable } from '~/services/fctablesApi'
 import { assetSectionBreadcrumb, recordCrumb } from '~/utils/consoleBreadcrumbs'
+import { languageOptions, licenseOptions } from '~/utils/consoleArticleVocabulary'
+import { httpUrlError } from '~/utils/consoleCatalogFields'
+import { countries } from '~/utils/countries'
+
+const countryCodeOptions = countries.map(country => ({
+  label: `${country.label} (${country.code})`,
+  value: country.code
+}))
 
 definePageMeta({ layout: 'default' })
 
@@ -371,6 +383,15 @@ const changed = computed(() => {
   return keys
 })
 const dirty = computed(() => changed.value.length > 0)
+
+/*
+ * Shown always, but only a URL the editor actually changed may block the save —
+ * a harvested table can carry a scheme-less source, and that must not stop
+ * someone recording its licence.
+ */
+const urlError = computed(() => httpUrlError(form.url))
+const urlBlocksSave = computed(() =>
+  Boolean(urlError.value) && form.url !== (original.value['url'] ?? ''))
 const saveLabel = computed(() => {
   const n = changed.value.length
   return n ? `Save ${n} change${n === 1 ? '' : 's'}` : 'Saved'
@@ -429,7 +450,7 @@ async function load() {
 }
 
 async function save() {
-  if (!dirty.value) return
+  if (!dirty.value || urlBlocksSave.value) return
   saving.value = true
   try {
     const payload: Record<string, unknown> = {}
