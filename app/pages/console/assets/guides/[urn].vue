@@ -82,6 +82,11 @@
               at all rather than on whether it could be shown to readers. This
               separates the two: it never touches review_status or visibility,
               so publishing remains the reviewed path.
+
+              It does reach readers: guides are filtered on
+              `(review_status:verified OR status:active)`, with no visibility
+              clause, so activating one shows it. The reader surfaces mark it
+              unverified rather than pretending it was checked.
             -->
             <UButton
               v-if="showAdminActivation"
@@ -119,7 +124,8 @@
               v-if="isActiveWithoutReview"
               class="basis-full text-right text-xs text-amber-600 dark:text-amber-400"
             >
-              In service without review: downstream tasks read this guide, readers do not.
+              In service without review: downstream tasks and readers both see this
+              guide, marked unverified until review finishes.
             </p>
           </div>
         </section>

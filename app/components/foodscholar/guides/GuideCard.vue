@@ -6,9 +6,26 @@
     >
       <div class="flex h-full flex-col gap-4">
         <div class="space-y-2">
-          <h3 class="text-lg font-semibold leading-7 text-gray-900 transition-colors group-hover:text-brand-600 dark:text-white dark:group-hover:text-brand-300">
-            {{ guide.title }}
-          </h3>
+          <div class="flex items-start gap-2">
+            <h3 class="min-w-0 flex-1 text-lg font-semibold leading-7 text-gray-900 transition-colors group-hover:text-brand-600 dark:text-white dark:group-hover:text-brand-300">
+              {{ guide.title }}
+            </h3>
+            <!--
+              A guide reaches readers on `status: active`, which an admin can set
+              before review concludes. Saying so is the price of that shortcut:
+              the alternative is unreviewed guidance that reads exactly like
+              checked guidance.
+            -->
+            <UBadge
+              v-if="isUnverified"
+              color="warning"
+              variant="subtle"
+              class="mt-0.5 shrink-0"
+              title="Published for use before editorial review finished."
+            >
+              Unverified
+            </UBadge>
+          </div>
           <p class="line-clamp-3 text-sm leading-6 text-gray-600 dark:text-gray-300">
             {{ guide.description || 'Explore metadata, source artifacts, and structured guideline rules for this publication.' }}
           </p>
@@ -100,4 +117,5 @@ const audience = computed(() => getGuideAudience(props.guide))
 const topics = computed(() => getGuideTopics(props.guide))
 const hasPdf = computed(() => props.guide.artifacts.some(artifact => isPdfArtifact(artifact)))
 const region = computed(() => props.showRegion ? getRegionPresentation(props.guide.region) : null)
+const isUnverified = computed(() => props.guide.review_status !== 'verified')
 </script>
