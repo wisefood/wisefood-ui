@@ -399,6 +399,7 @@
                   <UFormField
                     label="Source URL"
                     required
+                    :error="wizardUrlError"
                   >
                     <UInput
                       v-model="wizardForm.url"
@@ -419,10 +420,14 @@
                       />
                     </UFormField>
 
-                    <UFormField label="Publication Year">
-                      <UInput
+                    <UFormField
+                      label="Publication Year"
+                      :error="wizardYearError"
+                    >
+                      <UInputNumber
                         v-model="wizardForm.publicationYear"
-                        type="number"
+                        :step="1"
+                        :format-options="{ useGrouping: false }"
                         placeholder="e.g. 2011"
                         class="w-full"
                       />
@@ -431,10 +436,10 @@
 
                   <div class="grid gap-4 sm:grid-cols-2">
                     <UFormField label="Language">
-                      <UInput
+                      <ConsoleCatalogVocabularyInput
                         v-model="wizardForm.language"
-                        placeholder="e.g. en"
-                        class="w-full"
+                        :options="languageOptions"
+                        placeholder="Select or type a code"
                       />
                       <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
                         Optional two-letter ISO language code.
@@ -442,10 +447,10 @@
                     </UFormField>
 
                     <UFormField label="Region">
-                      <UInput
+                      <ConsoleCatalogVocabularyInput
                         v-model="wizardForm.region"
-                        placeholder="e.g. IE"
-                        class="w-full"
+                        :options="countryCodeOptions"
+                        placeholder="Select or type a code"
                       />
                       <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
                         Optional two-letter ISO country code.
@@ -857,6 +862,9 @@ import {
   statusColor
 } from '~/utils/consoleGuideCatalog'
 import { assetSectionBreadcrumb } from '~/utils/consoleBreadcrumbs'
+import { languageOptions } from '~/utils/consoleArticleVocabulary'
+import { httpUrlError, publicationYearError } from '~/utils/consoleCatalogFields'
+import { countries } from '~/utils/countries'
 
 definePageMeta({
   layout: 'default'
@@ -941,11 +949,22 @@ const wizardExtractionMessage = ref<string | null>(null)
 const wizardExtractionPolling = ref(false)
 let wizardExtractionPollTimeout: ReturnType<typeof setTimeout> | null = null
 
+/*
+ * Per-field errors, shown beside the box as it is typed. The step-level check
+ * below still runs — it is what actually blocks Continue — but it could only
+ * report one problem at a time, after the editor had already pressed the
+ * button, and it named the field in prose rather than pointing at it.
+ */
+const countryCodeOptions = countries.map(country => ({
+  label: `${country.label} (${country.code})`,
+  value: country.code
+}))
+
 const wizardForm = reactive({
   title: '',
   url: '',
   issuingAuthority: '',
-  publicationYear: '' as string | number,
+  publicationYear: null as number | null,
   language: '',
   region: ''
 })
@@ -1124,25 +1143,6 @@ function normalizeRegionCode(value: string) {
   return normalized || null
 }
 
-function normalizeTextValue(value: string | number | null | undefined) {
-  if (typeof value === 'number') {
-    return String(value)
-  }
-
-  return typeof value === 'string' ? value.trim() : ''
-}
-
-function parsePublicationYear(value: string | number) {
-  const trimmed = normalizeTextValue(value)
-
-  if (!trimmed) {
-    return null
-  }
-
-  const parsed = Number.parseInt(trimmed, 10)
-  return Number.isInteger(parsed) ? parsed : null
-}
-
 function extractErrorDetail(value: unknown): string | null {
   if (!value) {
     return null
@@ -1198,6 +1198,9 @@ function resolveErrorMessage(error: unknown, fallback: string) {
   return fallback
 }
 
+const wizardUrlError = computed(() => httpUrlError(wizardForm.url))
+const wizardYearError = computed(() => publicationYearError(wizardForm.publicationYear))
+
 function validateGuideWizardStepOne() {
   if (!wizardForm.title.trim()) {
     return 'Guide title is required.'
@@ -1207,10 +1210,9 @@ function validateGuideWizardStepOne() {
     return 'Source URL is required.'
   }
 
-  try {
-    new URL(wizardForm.url.trim())
-  } catch {
-    return 'Enter a valid source URL.'
+  const urlError = httpUrlError(wizardForm.url)
+  if (urlError) {
+    return urlError
   }
 
   const language = normalizeLanguageCode(wizardForm.language)
@@ -1223,9 +1225,9 @@ function validateGuideWizardStepOne() {
     return 'Region must be a two-letter country code such as IE or GR.'
   }
 
-  const publicationYear = normalizeTextValue(wizardForm.publicationYear)
-  if (publicationYear && !/^\d{4}$/.test(publicationYear)) {
-    return 'Publication year must be a four-digit year.'
+  const yearError = publicationYearError(wizardForm.publicationYear)
+  if (yearError) {
+    return yearError
   }
 
   return null
@@ -1249,7 +1251,8 @@ function validateGuideWizardStepTwo() {
 function buildGuideCreationPayload(): GuideCreatePayload {
   const title = wizardForm.title.trim()
   const issuingAuthority = wizardForm.issuingAuthority.trim()
-  const publicationYear = parsePublicationYear(wizardForm.publicationYear)
+  // The number control writes `undefined` when its box is emptied.
+  const publicationYear = wizardForm.publicationYear ?? null
   const language = normalizeLanguageCode(wizardForm.language)
   const region = normalizeRegionCode(wizardForm.region)
 
@@ -1336,7 +1339,7 @@ function resetGuideWizardState() {
   wizardForm.title = ''
   wizardForm.url = ''
   wizardForm.issuingAuthority = ''
-  wizardForm.publicationYear = ''
+  wizardForm.publicationYear = null
   wizardForm.language = ''
   wizardForm.region = ''
 }

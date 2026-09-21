@@ -75,6 +75,27 @@
               Edit Guide
             </UButton>
 
+            <!--
+              Activation without review, for admins only.
+              Downstream consumers read `status: active`, not `review_status`,
+              so review had become a gate on whether a guide could be exercised
+              at all rather than on whether it could be shown to readers. This
+              separates the two: it never touches review_status or visibility,
+              so publishing remains the reviewed path.
+            -->
+            <UButton
+              v-if="showAdminActivation"
+              color="warning"
+              variant="soft"
+              :icon="adminActivationIcon"
+              :disabled="!canAdminToggleActivation"
+              :loading="activationPending"
+              :title="adminActivationHint"
+              @click="toggleAdminActivation"
+            >
+              {{ adminActivationLabel }}
+            </UButton>
+
             <UButton
               v-if="selectedGuide"
               color="primary"
@@ -92,6 +113,13 @@
               class="basis-full text-right text-xs text-gray-500 dark:text-gray-400"
             >
               {{ publishReadinessLabel }}
+            </p>
+
+            <p
+              v-if="isActiveWithoutReview"
+              class="basis-full text-right text-xs text-amber-600 dark:text-amber-400"
+            >
+              In service without review: downstream tasks read this guide, readers do not.
             </p>
           </div>
         </section>
@@ -474,10 +502,10 @@
                   label="Language"
                   class="w-full"
                 >
-                  <UInput
+                  <ConsoleCatalogVocabularyInput
                     v-model="guideForm.language"
-                    placeholder="e.g. en"
-                    class="w-full"
+                    :options="languageOptions"
+                    placeholder="Select or type a code"
                   />
                   <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
                     Two-letter ISO language code such as <code>en</code>, <code>el</code>, or <code>fr</code>.
@@ -486,9 +514,11 @@
                 <UFormField
                   label="URL"
                   class="w-full"
+                  :error="guideUrlError"
                 >
                   <UInput
                     v-model="guideForm.url"
+                    placeholder="https://…"
                     class="w-full"
                   />
                   <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
@@ -496,13 +526,28 @@
                   </p>
                 </UFormField>
                 <UFormField
+                  label="Licence"
+                  class="w-full"
+                >
+                  <ConsoleCatalogVocabularyInput
+                    v-model="guideForm.license"
+                    :options="licenseOptions"
+                    :allow-custom="false"
+                    placeholder="Select a licence"
+                  />
+                  <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                    What the guide's own terms permit. Every guideline extracted from it
+                    inherits this, and the catalog validates it against a fixed list.
+                  </p>
+                </UFormField>
+                <UFormField
                   label="Region"
                   class="w-full"
                 >
-                  <UInput
+                  <ConsoleCatalogVocabularyInput
                     v-model="guideForm.region"
-                    placeholder="e.g. IE"
-                    class="w-full"
+                    :options="countryCodeOptions"
+                    placeholder="Select or type a code"
                   />
                   <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
                     Two-letter ISO country code for the guide scope, for example <code>IE</code> or <code>GR</code>.
@@ -542,10 +587,13 @@
                 <UFormField
                   label="Publication Year"
                   class="w-full"
+                  :error="guideYearError"
                 >
-                  <UInput
+                  <UInputNumber
                     v-model="guideForm.publication_year"
-                    type="number"
+                    :step="1"
+                    :format-options="{ useGrouping: false }"
+                    placeholder="e.g. 2011"
                     class="w-full"
                   />
                   <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
@@ -1015,6 +1063,10 @@ import {
   statusColor
 } from '~/utils/consoleGuideCatalog'
 import { assetSectionBreadcrumb, recordCrumb } from '~/utils/consoleBreadcrumbs'
+import { useAuthStore } from '~/stores/auth'
+import { languageOptions, licenseOptions } from '~/utils/consoleArticleVocabulary'
+import { httpUrlError, publicationYearError } from '~/utils/consoleCatalogFields'
+import { countries } from '~/utils/countries'
 
 definePageMeta({
   layout: 'default'
@@ -1092,6 +1144,11 @@ const guidelineImportDialogOpen = computed({
   }
 })
 
+const countryCodeOptions = countries.map(country => ({
+  label: `${country.label} (${country.code})`,
+  value: country.code
+}))
+
 const guideForm = reactive({
   title: '',
   short_title: '',
@@ -1100,7 +1157,8 @@ const guideForm = reactive({
   url: '',
   region: '',
   language: '',
-  publication_year: '' as string | number,
+  license: '',
+  publication_year: null as number | null,
   publication_date: '',
   topic: '',
   audience: '',
@@ -1328,6 +1386,13 @@ const guidelineExtractionCompletedLabel = computed(() => {
   return guidelineExtractionStatusValue.value === 'not_found' ? 'Not started' : 'Pending'
 })
 
+const guideUrlError = computed(() => httpUrlError(guideForm.url))
+const guideYearError = computed(() => publicationYearError(guideForm.publication_year))
+
+const authStore = useAuthStore()
+const isAdmin = computed(() => authStore.isAdmin)
+const activationPending = ref(false)
+
 const isGuidePublished = computed(() =>
   selectedGuide.value?.status === 'active' && selectedGuide.value?.review_status === 'verified'
 )
@@ -1352,6 +1417,45 @@ const canPublishGuide = computed(() =>
 const canToggleGuidePublication = computed(() =>
   Boolean(selectedGuide.value) && (isGuidePublished.value || canPublishGuide.value)
 )
+
+/*
+ * Activation without review.
+ *
+ * `status: active` is what FoodChat retrieval and the enrichment workers read,
+ * and review verification is a separate, slower judgement about showing a guide
+ * to readers. Tying them together meant a guide could not be exercised at all
+ * until it had been through the reader-facing ceremony. An admin may now
+ * activate an unverified guide for those downstream consumers.
+ *
+ * Deliberately narrow: it never sets review_status, never touches visibility,
+ * and is not offered for a public guide — public still means reviewed, and the
+ * catalog API enforces exactly the same three conditions rather than trusting
+ * this button.
+ */
+const isGuideActive = computed(() => selectedGuide.value?.status === 'active')
+
+const isActiveWithoutReview = computed(() =>
+  isGuideActive.value && selectedGuide.value?.review_status !== 'verified')
+
+const showAdminActivation = computed(() =>
+  Boolean(selectedGuide.value)
+  && isAdmin.value
+  && selectedGuide.value?.visibility !== 'public'
+  && (isActiveWithoutReview.value || !isGuideActive.value))
+
+const canAdminToggleActivation = computed(() =>
+  showAdminActivation.value && !activationPending.value)
+
+const adminActivationLabel = computed(() =>
+  isActiveWithoutReview.value ? 'Deactivate' : 'Activate without review')
+
+const adminActivationIcon = computed(() =>
+  isActiveWithoutReview.value ? 'i-lucide-power-off' : 'i-lucide-power')
+
+const adminActivationHint = computed(() =>
+  isActiveWithoutReview.value
+    ? 'Return this guide to draft. Downstream tasks stop reading it.'
+    : 'Admin only. Makes the guide readable by downstream tasks without marking it reviewed, and without publishing it.')
 
 const guidePublicationButtonLabel = computed(() =>
   isGuidePublished.value ? 'Unpublish Guide' : 'Publish Guide'
@@ -1734,17 +1838,6 @@ async function confirmGuidelineImport() {
   })
 }
 
-function normalizeNumber(value: string | number) {
-  const normalized = typeof value === 'number' ? String(value) : value.trim()
-
-  if (!normalized) {
-    return null
-  }
-
-  const parsed = Number(normalized)
-  return Number.isFinite(parsed) ? parsed : null
-}
-
 function normalizeCsv(value: string) {
   return value
     .split(',')
@@ -1772,7 +1865,8 @@ function setGuideEditorForm(guide: CatalogGuide) {
   guideForm.url = guide.url
   guideForm.region = guide.region || ''
   guideForm.language = guide.language || ''
-  guideForm.publication_year = guide.publication_year?.toString() || ''
+  guideForm.license = guide.license || ''
+  guideForm.publication_year = guide.publication_year ?? null
   guideForm.publication_date = dateInputFromIso(guide.publication_date)
   guideForm.topic = guide.topic || ''
   guideForm.audience = guide.audience || ''
@@ -1972,7 +2066,10 @@ async function saveGuide() {
     url: normalizeNullable(guideForm.url),
     region: normalizeNullable(guideForm.region)?.toUpperCase() || null,
     language: normalizeNullable(guideForm.language)?.toLowerCase() || null,
-    publication_year: normalizeNumber(guideForm.publication_year),
+    license: normalizeNullable(guideForm.license),
+    // The number control writes `undefined` when emptied; null is what clears
+    // the field on a PATCH, since an undefined key is dropped from the body.
+    publication_year: guideForm.publication_year ?? null,
     publication_date: isoDateFromDateInput(guideForm.publication_date),
     topic: normalizeNullable(guideForm.topic),
     audience: normalizeNullable(guideForm.audience),
@@ -2051,6 +2148,49 @@ async function toggleGuidePublication() {
     })
   } finally {
     publishPending.value = false
+  }
+}
+
+/**
+ * Flip `status` alone.
+ *
+ * Sends no `review_status`, so an unverified guide stays unverified and a
+ * verified one keeps its verifier — this is about whether the guide is in
+ * service, not about whether anyone has checked it.
+ */
+async function toggleAdminActivation() {
+  if (!selectedGuide.value || !canAdminToggleActivation.value) {
+    return
+  }
+
+  const deactivating = isActiveWithoutReview.value
+  activationPending.value = true
+
+  try {
+    const updatedGuide = await catalogApi.updateGuide(
+      selectedGuide.value.urn,
+      { status: (deactivating ? 'draft' : 'active') as CatalogStatus }
+    )
+
+    mergeGuide(updatedGuide)
+    toast.add({
+      title: deactivating ? 'Guide deactivated' : 'Guide activated',
+      description: deactivating
+        ? 'Downstream tasks no longer read this guide.'
+        : 'Downstream tasks can read this guide. It is not published to readers.',
+      color: 'success'
+    })
+  } catch (error) {
+    console.error('[ConsoleGuideDetail] Failed to toggle guide activation:', error)
+    toast.add({
+      title: deactivating ? 'Deactivation failed' : 'Activation failed',
+      description: error instanceof Error
+        ? error.message
+        : 'The catalog refused that change.',
+      color: 'error'
+    })
+  } finally {
+    activationPending.value = false
   }
 }
 

@@ -649,10 +649,10 @@
                   class="w-full"
                   required
                 >
-                  <UInput
+                  <UInputNumber
                     v-model="guidelineForm.sequence_no"
-                    type="number"
-                    min="1"
+                    :step="1"
+                    :format-options="{ useGrouping: false }"
                     class="w-full"
                   />
                 </UFormField>
@@ -798,10 +798,10 @@
                   label="Age From (months)"
                   class="w-full"
                 >
-                  <UInput
+                  <UInputNumber
                     v-model="guidelineForm.age_min_months"
-                    type="number"
-                    :min="0"
+                    :step="1"
+                    :format-options="{ useGrouping: false }"
                     placeholder="e.g. 12"
                     class="w-full"
                   />
@@ -812,10 +812,10 @@
                   class="w-full"
                   :error="ageRangeError"
                 >
-                  <UInput
+                  <UInputNumber
                     v-model="guidelineForm.age_max_months"
-                    type="number"
-                    :min="0"
+                    :step="1"
+                    :format-options="{ useGrouping: false }"
                     placeholder="e.g. 48"
                     class="w-full"
                   />
@@ -928,9 +928,10 @@
                   label="Quantity Value"
                   class="w-full"
                 >
-                  <UInput
+                  <UInputNumber
                     v-model="guidelineForm.quantity_value"
-                    type="number"
+                    :step="1"
+                    :format-options="{ useGrouping: false }"
                     class="w-full"
                   />
                 </UFormField>
@@ -1186,7 +1187,7 @@ const guidelineEditorTabs = [
 const guidelineForm = reactive({
   title: '',
   rule_text: '',
-  sequence_no: '',
+  sequence_no: null as number | null,
   action_type: 'eat',
   frequency: '',
   target_populations: [] as string[],
@@ -1197,7 +1198,7 @@ const guidelineForm = reactive({
   applicability_status: '',
   notes: '',
   quantity_operator: '',
-  quantity_value: '',
+  quantity_value: null as number | null,
   quantity_unit: '',
   quantity_period: '',
   quantity_raw_text: '',
@@ -1205,8 +1206,8 @@ const guidelineForm = reactive({
   // inferred; the catalog then marks the field human-owned and later
   // enrichment passes leave it alone.
   life_stage: [] as string[],
-  age_min_months: '',
-  age_max_months: '',
+  age_min_months: null as number | null,
+  age_max_months: null as number | null,
   setting: [] as string[],
   audience: [] as string[],
   guideline_type: '',
@@ -1217,10 +1218,12 @@ const guidelineForm = reactive({
 })
 
 const ageRangeError = computed(() => {
-  const min = Number(guidelineForm.age_min_months)
-  const max = Number(guidelineForm.age_max_months)
-  if (!guidelineForm.age_min_months || !guidelineForm.age_max_months) return undefined
-  if (Number.isNaN(min) || Number.isNaN(max)) return undefined
+  // Compared against null, not falsiness: 0 months is a real lower bound —
+  // guidance that applies from birth — and a truthiness check silently skips
+  // validating every range that starts there.
+  const min = guidelineForm.age_min_months
+  const max = guidelineForm.age_max_months
+  if (min == null || max == null) return undefined
   return max < min ? 'Must be greater than or equal to the lower bound.' : undefined
 })
 
@@ -1573,16 +1576,14 @@ function normalizeNullable(value: string) {
   return normalized.length ? normalized : null
 }
 
-function normalizeNumber(value: string) {
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : null
+function normalizeNumber(value: number | null | undefined) {
+  // The number control writes `undefined` when its box is emptied.
+  return value != null && Number.isFinite(value) ? value : null
 }
 
-function parseOptionalCount(value: string): number | null {
-  const trimmed = String(value ?? '').trim()
-  if (!trimmed) return null
-  const parsed = Number(trimmed)
-  return Number.isFinite(parsed) && parsed >= 0 ? Math.round(parsed) : null
+function parseOptionalCount(value: number | null | undefined): number | null {
+  if (value == null || !Number.isFinite(value) || value < 0) return null
+  return Math.round(value)
 }
 
 function buildGuidelineQuantityPayload(): CatalogGuidelineQuantity | null {
@@ -1613,7 +1614,7 @@ function buildGuidelineQuantityPayload(): CatalogGuidelineQuantity | null {
 function resetGuidelineFormForCreate() {
   guidelineForm.title = ''
   guidelineForm.rule_text = ''
-  guidelineForm.sequence_no = String(nextGuidelineSequence.value)
+  guidelineForm.sequence_no = nextGuidelineSequence.value
   guidelineForm.action_type = 'eat'
   guidelineForm.frequency = ''
   guidelineForm.target_populations = []
@@ -1624,13 +1625,13 @@ function resetGuidelineFormForCreate() {
   guidelineForm.applicability_status = ''
   guidelineForm.notes = ''
   guidelineForm.quantity_operator = ''
-  guidelineForm.quantity_value = ''
+  guidelineForm.quantity_value = null
   guidelineForm.quantity_unit = ''
   guidelineForm.quantity_period = ''
   guidelineForm.quantity_raw_text = ''
   guidelineForm.life_stage = []
-  guidelineForm.age_min_months = ''
-  guidelineForm.age_max_months = ''
+  guidelineForm.age_min_months = null
+  guidelineForm.age_max_months = null
   guidelineForm.setting = []
   guidelineForm.audience = []
   guidelineForm.guideline_type = ''
@@ -1643,7 +1644,7 @@ function resetGuidelineFormForCreate() {
 function setGuidelineForm(guideline: CatalogGuideline) {
   guidelineForm.title = guideline.title || ''
   guidelineForm.rule_text = guideline.rule_text
-  guidelineForm.sequence_no = guideline.sequence_no?.toString() || String(nextGuidelineSequence.value)
+  guidelineForm.sequence_no = guideline.sequence_no ?? nextGuidelineSequence.value
   guidelineForm.action_type = guideline.action_type || 'eat'
   guidelineForm.frequency = guideline.frequency || ''
   guidelineForm.target_populations = [...guideline.target_populations]
@@ -1654,13 +1655,13 @@ function setGuidelineForm(guideline: CatalogGuideline) {
   guidelineForm.applicability_status = guideline.applicability_status || ''
   guidelineForm.notes = guideline.notes || ''
   guidelineForm.quantity_operator = guideline.quantity?.operator || ''
-  guidelineForm.quantity_value = guideline.quantity?.value?.toString() || ''
+  guidelineForm.quantity_value = guideline.quantity?.value ?? null
   guidelineForm.quantity_unit = guideline.quantity?.unit || ''
   guidelineForm.quantity_period = guideline.quantity?.period || ''
   guidelineForm.quantity_raw_text = guideline.quantity?.raw_text || ''
   guidelineForm.life_stage = [...(guideline.life_stage || [])]
-  guidelineForm.age_min_months = guideline.age_min_months?.toString() || ''
-  guidelineForm.age_max_months = guideline.age_max_months?.toString() || ''
+  guidelineForm.age_min_months = guideline.age_min_months ?? null
+  guidelineForm.age_max_months = guideline.age_max_months ?? null
   guidelineForm.setting = [...(guideline.setting || [])]
   guidelineForm.audience = [...(guideline.audiences || [])]
   guidelineForm.guideline_type = guideline.guideline_type || ''
