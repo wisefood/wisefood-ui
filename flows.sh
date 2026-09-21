@@ -50,6 +50,15 @@
 #
 # ── Dashboard configuration (do this in app.flows.sh) ─────────────────────────
 #
+# EVERY URL IN THE DASHBOARD NEEDS THE /app PREFIX.
+#   The container runs with CONTEXT_PATH=/app, so the app is served from
+#   /app and there is no route at the origin root: the dashboard page is
+#   /app/dashboard, the profile page /app/my-profile, and so on. A page
+#   condition or navigation gate written as "/my-profile" matches nothing,
+#   and the step it guards silently never renders — the tour reaches that
+#   point and stops, with no error anywhere. Every Page: line below is
+#   written with the prefix for this reason; carry it into any new workflow.
+#
 # Workflow: "Nutrition preferences setup"
 #   Type:   Tour (built-in tour components; setupJsComponents already registers them)
 #   Slot:   default tour overlay (no custom slot id needed for a tour)
@@ -74,26 +83,26 @@
 #       Placement: bottom
 #       Body:      "Open your profile menu and choose 'My Profile'."
 #       Advance:   on element click (user opens the dropdown). The dropdown's
-#                  'My Profile' item routes to /my-profile via the app's
-#                  onNavigate handler. Use a "wait for navigation to /my-profile"
-#                  / page-match condition before showing step 3, OR set step 3 to
-#                  only render on the /my-profile URL.
+#                  'My Profile' item routes to /app/my-profile via the app's
+#                  onNavigate handler. Use a "wait for navigation to
+#                  /app/my-profile" / page-match condition before showing step
+#                  3, OR set step 3 to only render on the /app/my-profile URL.
 #
 #     Step 3 — Allergies
-#       Page:      /my-profile
+#       Page:      /app/my-profile
 #       Anchor:    [data-flows="card-allergies"]
 #       Placement: top
 #       Body:      "Add anything you're allergic to or can't tolerate. Tap +."
 #       Advance:   Next (manual). The card's controls save on click already.
 #
 #     Step 4 — Food likes
-#       Page:      /my-profile
+#       Page:      /app/my-profile
 #       Anchor:    [data-flows="card-food-likes"]
 #       Body:      "Pick a few foods you love — we'll favour them."
 #       Advance:   Next
 #
 #     Step 5 — Food dislikes
-#       Page:      /my-profile
+#       Page:      /app/my-profile
 #       Anchor:    [data-flows="card-food-dislikes"]
 #       Body:      "Add foods to avoid — we'll keep them off your plate."
 #       Advance:   Next
