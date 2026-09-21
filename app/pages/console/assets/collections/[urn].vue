@@ -59,7 +59,7 @@
             icon="i-lucide-save"
             class="cursor-pointer"
             :loading="saving"
-            :disabled="!dirty"
+            :disabled="!dirty || Boolean(urlError)"
             @click="save"
           >
             {{ saveLabel }}
@@ -102,15 +102,21 @@
               label="Licence"
               hint="SPDX-style identifier where there is one"
             >
-              <UInput
+              <UInputMenu
                 v-model="form.license"
+                :items="licenceItems"
+                value-key="value"
+                label-key="label"
+                create-item="always"
                 class="w-full"
                 placeholder="CC-BY-4.0"
+                @create="form.license = String($event).trim()"
               />
             </UFormField>
             <UFormField
               label="Source URL"
               hint="Where the terms can be read"
+              :error="urlError"
             >
               <UInput
                 v-model="form.url"
@@ -167,10 +173,15 @@
                 />
               </UFormField>
               <UFormField label="Language">
-                <UInput
+                <UInputMenu
                   v-model="form.language"
+                  :items="languageItems"
+                  value-key="value"
+                  label-key="label"
+                  create-item="always"
                   class="w-full"
                   placeholder="en"
+                  @create="form.language = String($event).trim()"
                 />
               </UFormField>
               <UFormField label="Version">
@@ -303,6 +314,8 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import rcollectionsApi, { type RecipeCollection } from '~/services/rcollectionsApi'
 import { assetSectionBreadcrumb, recordCrumb } from '~/utils/consoleBreadcrumbs'
+import { languageOptions, licenseOptions } from '~/utils/consoleArticleVocabulary'
+import { httpUrlError, withCurrentOption } from '~/utils/consoleCatalogFields'
 
 definePageMeta({ layout: 'default' })
 
@@ -383,6 +396,17 @@ const changed = computed(() => {
   return keys
 })
 const dirty = computed(() => changed.value.length > 0)
+
+const urlError = computed(() => httpUrlError(form.url))
+
+/*
+ * Offered as suggestions rather than a closed list — these two fields are the
+ * ones a curator is most likely to have a legitimate value for that predates
+ * the list, and the record's own value has to stay selectable or the next save
+ * writes an emptiness nobody asked for.
+ */
+const licenceItems = computed(() => withCurrentOption(licenseOptions, form.license))
+const languageItems = computed(() => withCurrentOption(languageOptions, form.language))
 const saveLabel = computed(() => {
   const n = changed.value.length
   return n ? `Save ${n} change${n === 1 ? '' : 's'}` : 'Saved'
@@ -396,7 +420,7 @@ const facts = computed(() => {
     { label: 'Recipes', value: c.recipe_count?.toLocaleString() ?? '—' },
     { label: 'Nutrition data', value: yesNo(c.has_nutritional_data) },
     { label: 'Images', value: yesNo(c.has_images) },
-    { label: 'Completeness', value: c.data_completeness != null ? `${Math.round(c.data_completeness)}%` : '—' }
+    { label: 'Completeness', value: c.data_completeness != null ? `${Math.round(c.data_completeness * 100)}%` : '—' }
   ]
 })
 
@@ -434,7 +458,7 @@ async function load() {
 }
 
 async function save() {
-  if (!dirty.value) return
+  if (!dirty.value || urlError.value) return
   saving.value = true
   try {
     const payload: Record<string, unknown> = {}

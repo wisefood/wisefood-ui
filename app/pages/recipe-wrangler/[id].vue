@@ -113,7 +113,7 @@
                   name="i-lucide-users"
                   class="w-4 h-4"
                 />
-                <span class="text-xs sm:text-sm font-medium">{{ recipe.serves }} {{ t('recipeWrangler.recipe.servings', recipe.serves) }}</span>
+                <span class="text-xs sm:text-sm font-medium">{{ displayedServes }} {{ t('recipeWrangler.recipe.servings', displayedServes || 1) }}</span>
               </div>
               <NuxtLink
                 v-if="recipe.source"
@@ -173,7 +173,7 @@
                 name="i-lucide-users"
                 class="w-4 h-4 text-brandg-600 dark:text-brandg-400"
               />
-              <span class="text-xs sm:text-sm font-medium">{{ recipe.serves }} {{ t('recipeWrangler.recipe.servings', recipe.serves) }}</span>
+              <span class="text-xs sm:text-sm font-medium">{{ displayedServes }} {{ t('recipeWrangler.recipe.servings', displayedServes || 1) }}</span>
             </div>
             <NuxtLink
               v-if="recipe.source"
@@ -434,6 +434,30 @@
                 {{ t('recipeWrangler.detail.nutritionalInfo') }}
               </h2>
               <div class="flex items-center gap-2 flex-wrap">
+                <!-- Basis switcher: per serving / per 100 g -->
+                <div
+                  v-if="canShowPer100g"
+                  class="flex items-center rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/40 p-1 gap-1"
+                  role="tablist"
+                  :aria-label="t('recipeWrangler.detail.nutritionalInfo')"
+                >
+                  <button
+                    v-for="basis in NUTRITION_BASES"
+                    :key="basis.key"
+                    type="button"
+                    role="tab"
+                    :aria-selected="nutritionBasis === basis.key"
+                    :class="[
+                      'px-3 py-1 rounded-lg text-xs font-semibold transition-colors',
+                      nutritionBasis === basis.key
+                        ? 'bg-brandg-500 text-white'
+                        : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                    ]"
+                    @click="setNutritionBasis(basis.key)"
+                  >
+                    {{ t(basis.labelKey) }}
+                  </button>
+                </div>
                 <!-- Region switcher -->
                 <div class="flex items-center rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/40 p-1 gap-1">
                   <button
@@ -467,7 +491,7 @@
               </div>
             </div>
             <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-8">
-              {{ t('recipeWrangler.detail.perServing') }}
+              {{ basisLabel }}
               <span v-if="servingWeightLabel">· {{ servingWeightLabel }}</span>
               · <span class="italic">{{ compositionTableLabel }}</span>
             </p>
@@ -528,7 +552,7 @@
                         </p>
                       </div>
                       <p class="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white">
-                        {{ formatMetric(summaryCaloriesPerServing, 0) }}
+                        {{ formatMetric(displayCalories, 0) }}
                       </p>
                     </div>
 
@@ -543,7 +567,7 @@
                         </p>
                       </div>
                       <p class="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white">
-                        {{ formatMetricWithUnit(summaryProteinPerServing, 1, 'g') }}
+                        {{ formatMetricWithUnit(displayProtein, 1, 'g') }}
                       </p>
                     </div>
 
@@ -558,7 +582,7 @@
                         </p>
                       </div>
                       <p class="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white">
-                        {{ formatMetricWithUnit(summaryCarbsPerServing, 1, 'g') }}
+                        {{ formatMetricWithUnit(displayCarbs, 1, 'g') }}
                       </p>
                     </div>
 
@@ -573,7 +597,7 @@
                         </p>
                       </div>
                       <p class="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white">
-                        {{ formatMetricWithUnit(summaryFatPerServing, 1, 'g') }}
+                        {{ formatMetricWithUnit(displayFat, 1, 'g') }}
                       </p>
                     </div>
                   </div>
@@ -591,7 +615,7 @@
                         </p>
                       </div>
                       <p class="text-lg font-bold text-zinc-900 dark:text-white">
-                        {{ formatMetricWithUnit(summaryFiberPerServing, 1, 'g') }}
+                        {{ formatMetricWithUnit(displayFiber, 1, 'g') }}
                       </p>
                     </div>
                     <div class="rounded-lg bg-zinc-50 dark:bg-white/4 px-3 py-3">
@@ -605,7 +629,7 @@
                         </p>
                       </div>
                       <p class="text-lg font-bold text-zinc-900 dark:text-white">
-                        {{ formatMetricWithUnit(summarySugarPerServing, 1, 'g') }}
+                        {{ formatMetricWithUnit(displaySugar, 1, 'g') }}
                       </p>
                     </div>
                     <div class="rounded-lg bg-zinc-50 dark:bg-white/4 px-3 py-3">
@@ -619,7 +643,7 @@
                         </p>
                       </div>
                       <p class="text-lg font-bold text-zinc-900 dark:text-white">
-                        {{ formatMetricWithUnit(summarySodiumPerServing, 0, 'mg') }}
+                        {{ formatMetricWithUnit(displaySodium, 0, 'mg') }}
                       </p>
                     </div>
                   </div>
@@ -640,13 +664,13 @@
                   class="py-4"
                 >
                   <NutrientRadarChart
-                    :calories="toNumber(summaryCaloriesPerServing)"
-                    :protein="toNumber(summaryProteinPerServing)"
-                    :carbs="toNumber(summaryCarbsPerServing)"
-                    :fat="toNumber(summaryFatPerServing)"
-                    :fiber="toNumber(summaryFiberPerServing)"
-                    :sugar="toNumber(summarySugarPerServing)"
-                    :sodium="toNumber(summarySodiumPerServing)"
+                    :calories="toNumber(displayCalories)"
+                    :protein="toNumber(displayProtein)"
+                    :carbs="toNumber(displayCarbs)"
+                    :fat="toNumber(displayFat)"
+                    :fiber="toNumber(displayFiber)"
+                    :sugar="toNumber(displaySugar)"
+                    :sodium="toNumber(displaySodium)"
                   />
                 </div>
               </Transition>
@@ -671,7 +695,7 @@
                 </div>
                 <div class="flex items-center gap-3">
                   <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-zinc-200/80 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300">
-                    Per serving
+                    {{ showingPer100g ? t('recipeWrangler.detail.basisPer100g') : t('recipeWrangler.detail.basisPerServing') }}
                   </span>
                   <UIcon
                     :name="showAllNutrients ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
@@ -699,7 +723,7 @@
                           Nutrient
                         </th>
                         <th class="px-4 py-3 text-right font-semibold text-zinc-700 dark:text-zinc-300">
-                          Amount / serving
+                          {{ showingPer100g ? t('recipeWrangler.detail.basisPer100g') : t('recipeWrangler.detail.basisPerServing') }}
                         </th>
                       </tr>
                     </thead>
@@ -713,7 +737,7 @@
                           {{ nutrient.display_label }}
                         </td>
                         <td class="px-4 py-2 text-right font-medium text-zinc-900 dark:text-white">
-                          {{ formatNutrientAmount(nutrient.amount_per_serving, nutrient.unit_name, nutrient) }}
+                          {{ formatNutrientAmount(nutrientAmountOnBasis(nutrient.amount_per_serving), nutrient.unit_name, nutrient) }}
                         </td>
                       </tr>
                     </tbody>
@@ -1009,7 +1033,7 @@
                           name="i-lucide-weight"
                           class="w-2.5 h-2.5"
                         />
-                        {{ formatNumber(profilingFor(ingredient.name)?.weight_g || weightDetailFor(ingredient.name)?.weight_grams) }}g
+                        {{ formatNumber(scaledWeightGrams(profilingFor(ingredient.name)?.weight_g || weightDetailFor(ingredient.name)?.weight_grams)) }}g
                       </span>
                     </div>
                   </div>
@@ -1059,14 +1083,14 @@
                       <div class="flex items-center justify-between gap-2">
                         <span class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Weight used</span>
                         <span class="font-mono text-xs font-semibold text-brandg-700 dark:text-brandg-300">
-                          {{ formatNumber(profilingFor(ingredient.name)?.weight_g || weightDetailFor(ingredient.name)?.weight_grams) }} g
+                          {{ formatNumber(scaledWeightGrams(profilingFor(ingredient.name)?.weight_g || weightDetailFor(ingredient.name)?.weight_grams)) }} g
                         </span>
                       </div>
                       <!-- Parsed qty -->
                       <div class="flex items-center justify-between gap-2">
                         <span class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Parsed qty</span>
                         <span class="font-mono text-xs text-zinc-700 dark:text-zinc-300">
-                          {{ profilingFor(ingredient.name)?.parsed_quantity || weightDetailFor(ingredient.name)?.parsed_quantity || '—' }}
+                          {{ scaledQuantity(profilingFor(ingredient.name)?.parsed_quantity || weightDetailFor(ingredient.name)?.parsed_quantity) }}
                           {{ profilingFor(ingredient.name)?.parsed_unit || weightDetailFor(ingredient.name)?.parsed_unit || '' }}
                           <span
                             v-if="weightDetailFor(ingredient.name)?.quantity_inferred || weightDetailFor(ingredient.name)?.unit_inferred"
@@ -1969,6 +1993,10 @@ const originalServes = computed<number | null>(() => {
 })
 const targetServes = ref<number | null>(null)
 const scaledMeasurements = ref<string[] | null>(null)
+// The count `scaledMeasurements` was produced for. It trails `targetServes` by
+// the debounce plus the round trip, and stays behind it when the call fails, so
+// anything describing what is on screen has to read this and not the request.
+const appliedServes = ref<number | null>(null)
 const scaleBusy = ref(false)
 const scaleFailed = ref(false)
 let scaleTimer: ReturnType<typeof setTimeout> | null = null
@@ -1976,8 +2004,15 @@ let scaleTimer: ReturnType<typeof setTimeout> | null = null
 // are only accepted if no later request has been issued since.
 let scaleRequestToken = 0
 
+// What the stepper is asking for; drives the control and its bounds.
 const effectiveServes = computed<number | null>(
   () => targetServes.value ?? originalServes.value
+)
+// What the ingredient list is actually showing. Everything that describes the
+// rendered recipe — the serving chips, the gram weights, the copied text —
+// reads this, so they cannot get ahead of the quantities beside them.
+const displayedServes = computed<number | null>(
+  () => appliedServes.value ?? originalServes.value
 )
 const isScaled = computed<boolean>(() =>
   originalServes.value !== null
@@ -1990,9 +2025,35 @@ const measurementFor = (index: number, original: unknown): string => {
   return scaled !== undefined ? scaled : String(original ?? '')
 }
 
+// The profiled gram weights were computed for the recipe's own serving count.
+// Scaling the measurement text without scaling these leaves "6 medium potatoes"
+// sitting next to the 346 g that two of them weigh, so they move together.
+const servesRatio = computed<number>(() => {
+  const from = originalServes.value
+  const to = displayedServes.value
+  if (from === null || to === null || from <= 0) return 1
+  return to / from
+})
+
+const scaledWeightGrams = (value: unknown): number | null => {
+  const grams = toNullableNumber(value)
+  if (grams === null) return null
+  return grams * servesRatio.value
+}
+
+// The parsed quantity sits beside the weight it produced, so it moves with it;
+// trailing zeros are dropped because "3" reads better than "3.00 tablespoon".
+const scaledQuantity = (value: unknown): string => {
+  const quantity = toNullableNumber(value)
+  if (quantity === null) return '—'
+  const scaled = quantity * servesRatio.value
+  return Number.isInteger(scaled) ? String(scaled) : scaled.toFixed(2).replace(/\.?0+$/, '')
+}
+
 const resetServes = () => {
   targetServes.value = null
   scaledMeasurements.value = null
+  appliedServes.value = null
   scaleFailed.value = false
 }
 
@@ -2008,6 +2069,7 @@ const requestScale = async () => {
   if (from === null || to === null) return
   if (to === from) {
     scaledMeasurements.value = null
+    appliedServes.value = null
     scaleFailed.value = false
     return
   }
@@ -2025,10 +2087,12 @@ const requestScale = async () => {
     )
     if (token !== scaleRequestToken) return
     scaledMeasurements.value = result.measurements
+    appliedServes.value = to
   } catch {
     if (token !== scaleRequestToken) return
     // Show the original quantities rather than a half-scaled recipe.
     scaledMeasurements.value = null
+    appliedServes.value = null
     scaleFailed.value = true
   } finally {
     if (token === scaleRequestToken) scaleBusy.value = false
@@ -2092,7 +2156,7 @@ const recipeAsText = computed<string>(() => {
     })
   }
 
-  const serves = effectiveServes.value
+  const serves = displayedServes.value
   if (serves !== null && serves > 0) {
     lines.push('', `${serves} ${t('recipeWrangler.recipe.servings', serves)}`)
   }
@@ -2132,6 +2196,46 @@ const servingWeightLabel = computed<string | null>(() => {
   const grams = toNullableNumber(recipe.value?.serving_weight_g)
   if (grams === null || grams <= 0) return null
   return t('recipeWrangler.detail.servingWeight', { value: Math.round(grams / 5) * 5 })
+})
+
+// --- Nutrition basis: per serving or per 100 g ---
+// Only the per-serving figures come from the backend. Per 100 g is derived from
+// them and `serving_weight_g`, so the toggle is only offered when that weight is
+// known; without it there is nothing honest to divide by.
+const NUTRITION_BASES = [
+  { key: 'serving' as const, labelKey: 'recipeWrangler.detail.basisPerServing' },
+  { key: 'per100g' as const, labelKey: 'recipeWrangler.detail.basisPer100g' }
+]
+const nutritionBasis = ref<'serving' | 'per100g'>('serving')
+const servingWeightGrams = computed<number | null>(() => {
+  const grams = toNullableNumber(recipe.value?.serving_weight_g)
+  return grams !== null && grams > 0 ? grams : null
+})
+const canShowPer100g = computed<boolean>(() => servingWeightGrams.value !== null)
+const showingPer100g = computed<boolean>(
+  () => nutritionBasis.value === 'per100g' && canShowPer100g.value
+)
+const basisLabel = computed<string>(() =>
+  showingPer100g.value
+    ? t('recipeWrangler.detail.per100g')
+    : t('recipeWrangler.detail.perServing')
+)
+// Per-serving values divided by the serving's own weight: the recipe's grams
+// cancel, so this holds whatever the serving count is set to.
+const toBasis = (value: number | null): number | null => {
+  if (value === null) return null
+  if (!showingPer100g.value) return value
+  const grams = servingWeightGrams.value
+  if (grams === null) return null
+  return (value * 100) / grams
+}
+const setNutritionBasis = (basis: 'serving' | 'per100g') => {
+  if (basis === 'per100g' && !canShowPer100g.value) return
+  nutritionBasis.value = basis
+}
+// A different recipe may not carry a serving weight at all.
+watch(canShowPer100g, (available) => {
+  if (!available) nutritionBasis.value = 'serving'
 })
 
 // --- Sustainability (kg CO2e per serving, from the stored profiling trace) ---
@@ -2447,6 +2551,17 @@ const summarySodiumPerServing = computed<number | null>(() => {
   if (direct !== null) return direct
   return getNutrientAmountByKeys(['sodium_mg', 'sodium, na', 'sodium'])
 })
+// What the cards, the radar and the nutrient table actually render: the
+// per-serving figures above, re-expressed on the basis the reader picked.
+const displayCalories = computed(() => toBasis(summaryCaloriesPerServing.value))
+const displayProtein = computed(() => toBasis(summaryProteinPerServing.value))
+const displayCarbs = computed(() => toBasis(summaryCarbsPerServing.value))
+const displayFat = computed(() => toBasis(summaryFatPerServing.value))
+const displayFiber = computed(() => toBasis(summaryFiberPerServing.value))
+const displaySugar = computed(() => toBasis(summarySugarPerServing.value))
+const displaySodium = computed(() => toBasis(summarySodiumPerServing.value))
+const nutrientAmountOnBasis = (value: unknown): number | null => toBasis(toNullableNumber(value))
+
 const profilingDetailRows = computed<RecipeNutritionProfilingDetail[]>(() => {
   const stored = recipe.value?.nutrition_profiling_details
   if (Array.isArray(stored) && stored.length > 0) return stored

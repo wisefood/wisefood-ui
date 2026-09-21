@@ -88,6 +88,7 @@
                     leading-icon="i-lucide-search"
                     placeholder="Search title or description"
                     class="w-full sm:w-72"
+                    @update:model-value="queueSearch"
                     @keydown.enter="applySearch"
                   />
                   <UButton
@@ -189,6 +190,7 @@
           <UFormField
             label="Source URL"
             hint="Where the recipes come from"
+            :error="urlError"
           >
             <UInput
               v-model="draft.url"
@@ -200,10 +202,15 @@
             label="Licence"
             hint="Leave empty if nobody has established it — that is not the same as permissive"
           >
-            <UInput
+            <UInputMenu
               v-model="draft.license"
+              :items="licenceSuggestions"
+              value-key="value"
+              label-key="label"
+              create-item="always"
               class="w-full"
               placeholder="CC-BY-4.0"
+              @create="draft.license = String($event).trim()"
             />
           </UFormField>
           <UAlert
@@ -230,7 +237,7 @@
             icon="i-lucide-check"
             class="cursor-pointer"
             :loading="saving"
-            :disabled="!draft.title.trim()"
+            :disabled="!draft.title.trim() || Boolean(urlError)"
             @click="create"
           >
             Create
@@ -242,11 +249,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted, resolveComponent, ref } from 'vue'
+import { computed, h, onBeforeUnmount, onMounted, resolveComponent, ref } from 'vue'
 import rcollectionsApi, {
   type Facets, type RecipeCollection
 } from '~/services/rcollectionsApi'
 import { assetSectionBreadcrumb } from '~/utils/consoleBreadcrumbs'
+import { licenseOptions } from '~/utils/consoleArticleVocabulary'
+import { httpUrlError, suggestionsFromFacet, withCurrentOption } from '~/utils/consoleCatalogFields'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Recipe Collections · Console' })
@@ -282,6 +291,27 @@ const draft = ref({ title: '', description: '', url: '', license: '' })
 
 const countLabel = computed(() =>
   `${total.value.toLocaleString()} collection${total.value === 1 ? '' : 's'}`)
+
+const urlError = computed(() => httpUrlError(draft.value.url))
+
+/*
+ * The licences already recorded, then the curated list. Typed as a free field
+ * this is how one collection ends up "CC-BY-4.0" and the next "cc by 4.0",
+ * which makes the licence facet useless for the one question this page exists
+ * to answer.
+ *
+ * `withCurrentOption` is not decoration: the menu resolves its display text by
+ * looking the value up among its items, so a licence typed into a `create-item`
+ * menu vanishes from the box the moment it is accepted while the draft quietly
+ * still holds it.
+ */
+const licenceSuggestions = computed(() => withCurrentOption(
+  suggestionsFromFacet(
+    Object.entries(facets.value['license'] ?? {}).map(([value, count]) => ({ value, count })),
+    licenseOptions
+  ),
+  draft.value.license
+))
 
 /*
  * From the facet buckets rather than the current page: the catalog counted
@@ -378,7 +408,14 @@ const columns = [
   }
 ]
 
+// Any load supersedes a search still sitting in the debounce, so paging while
+// a query is being typed does not snap back to page 1 a moment later. The token
+// is what keeps a slow early response from overwriting a fast later one.
+let loadToken = 0
+
 async function load() {
+  if (searchTimer) clearTimeout(searchTimer)
+  const token = ++loadToken
   loading.value = true
   error.value = null
   try {
@@ -388,6 +425,7 @@ async function load() {
       limit: pageSize,
       offset: (page.value - 1) * pageSize
     })
+    if (token !== loadToken) return
     collections.value = result.collections
     total.value = result.total
     maxResultWindow.value = result.maxResultWindow
@@ -397,10 +435,22 @@ async function load() {
       facets.value = result.facets
     }
   } catch (caught) {
+    if (token !== loadToken) return
     error.value = caught instanceof Error ? caught.message : 'Could not load collections.'
   } finally {
-    loading.value = false
+    if (token === loadToken) loading.value = false
   }
+}
+
+/*
+ * Typing narrows the table on its own; Refresh refreshes. Those were the same
+ * control, and only one of them looked like it.
+ */
+let searchTimer: ReturnType<typeof setTimeout> | undefined
+
+function queueSearch() {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(applySearch, 300)
 }
 
 function applySearch() {
@@ -440,7 +490,8 @@ function openCreate() {
 }
 
 async function create() {
-  if (!draft.value.title.trim()) return
+  // The form submits on Enter, which does not consult the disabled button.
+  if (!draft.value.title.trim() || urlError.value) return
   saving.value = true
   createError.value = null
   try {
@@ -452,7 +503,13 @@ async function create() {
     const created = await rcollectionsApi.createCollection(payload)
     creating.value = false
     toast.add({ title: 'Collection created', icon: 'i-lucide-check', color: 'success' })
-    await navigateTo(`/console/assets/collections/${encodeURIComponent(created.urn)}`)
+    // Without a urn there is no page to open, and the bare path is the library
+    // we are already on — reload it so the new collection is at least visible.
+    if (created.urn) {
+      await navigateTo(`/console/assets/collections/${encodeURIComponent(created.urn)}`)
+    } else {
+      await load()
+    }
   } catch (caught) {
     createError.value = caught instanceof Error ? caught.message : 'Could not create that collection.'
   } finally {
@@ -461,4 +518,7 @@ async function create() {
 }
 
 onMounted(load)
+onBeforeUnmount(() => {
+  if (searchTimer) clearTimeout(searchTimer)
+})
 </script>

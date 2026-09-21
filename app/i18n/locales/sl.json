@@ -481,6 +481,9 @@
     "detail": {
       "nutritionalInfo": "Prehranske informacije",
       "perServing": "na porcijo",
+      "per100g": "na 100 g",
+      "basisPerServing": "Na porcijo",
+      "basisPer100g": "Na 100 g",
       "servingWeight": "ena porcija ≈ {value} g",
       "profilePending": {
         "message": "Prehranski profil tega recepta se še pripravlja. To običajno traja minuto.",

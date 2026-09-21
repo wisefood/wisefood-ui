@@ -373,6 +373,9 @@
     "detail": {
       "nutritionalInfo": "Διατροφικές Πληροφορίες",
       "perServing": "ανά μερίδα",
+      "per100g": "ανά 100 g",
+      "basisPerServing": "Ανά μερίδα",
+      "basisPer100g": "Ανά 100 g",
       "servingWeight": "μία μερίδα ≈ {value} g",
       "profilePending": {
         "message": "Το διατροφικό προφίλ αυτής της συνταγής δημιουργείται ακόμη. Συνήθως διαρκεί ένα λεπτό.",

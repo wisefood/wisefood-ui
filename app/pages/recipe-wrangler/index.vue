@@ -156,7 +156,7 @@
                 :key="region"
                 type="button"
                 :disabled="analysisLoading"
-                @click="analysisRegion = region"
+                @click="changeAnalysisRegion(region)"
                 :class="[
                   'px-3 py-1 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50',
                   analysisRegion === region
@@ -670,6 +670,7 @@ import type {
   RecipeAutocompleteSuggestion,
   RecipeParamSearchParams,
   RecipeProfileResult,
+  RecipeRegion,
   RecipeSearchParams,
   RecipeSearchResult
 } from '~/services/recipeApi'
@@ -725,6 +726,10 @@ const analysisRegion = ref<typeof ANALYSIS_REGIONS[number]>('EU')
 const analysisLoading = ref(false)
 const analysisError = ref<string | null>(null)
 const analysisResult = ref<RecipeProfileResult | null>(null)
+// The region the displayed result was actually profiled under. The picker can
+// move ahead of it while a re-run is in flight, so the attribution line reads
+// from here and never claims a table the numbers did not come from.
+const analysisResultRegion = ref<typeof ANALYSIS_REGIONS[number] | null>(null)
 const showCalculationDetails = ref(false)
 const analysisExpandedRow = ref<number | null>(null)
 let autocompleteDebounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -865,15 +870,38 @@ const analysisNutritionSource = computed(() => String(
   analysisResult.value?.source_nutrition ||
   ''
 ).toLowerCase())
+// Which composition table backs the displayed profile, keyed by region so a
+// switch shows its own attribution instead of inheriting a neighbour's.
+const COMPOSITION_TABLES: Record<RecipeRegion, { label: string, url: string }> = {
+  IE: {
+    label: 'Irish Food Composition Table',
+    url: 'https://irp-cdn.multiscreensite.com/46a7ad27/files/uploaded/Irish-Food-Portion-Sizes-Database.pdf'
+  },
+  HU: {
+    label: 'Hungarian Food Composition Table',
+    url: 'https://www.oeti.hu/'
+  },
+  SI: {
+    label: 'Slovenian Food Composition Table',
+    url: 'https://opkp.si/'
+  },
+  EU: {
+    label: 'EU Food Composition Table',
+    url: 'https://www.eurofir.org/food-information/food-composition-databases/'
+  }
+}
+const compositionTable = computed(
+  () => COMPOSITION_TABLES[analysisResultRegion.value ?? analysisRegion.value]
+)
 const nutritionSourceUrl = computed(() => {
   return analysisNutritionSource.value.includes('usda')
     ? 'https://fdc.nal.usda.gov/'
-    : 'https://irp-cdn.multiscreensite.com/46a7ad27/files/uploaded/Irish-Food-Portion-Sizes-Database.pdf'
+    : compositionTable.value.url
 })
 const nutritionSourceLabel = computed(() => {
   return analysisNutritionSource.value.includes('usda')
     ? 'USDA FoodData Central'
-    : 'Irish Composition Table'
+    : compositionTable.value.label
 })
 
 const nutriScoreBadgeClass = computed(() => {
@@ -1066,16 +1094,31 @@ const runRecipeAnalysis = async () => {
   showCalculationDetails.value = false
 
   try {
-    const result = await recipeApi.analyzeRecipe(analysisInput.value.trim(), analysisRegion.value)
+    const region = analysisRegion.value
+    const result = await recipeApi.analyzeRecipe(analysisInput.value.trim(), region)
     analysisResult.value = result
+    analysisResultRegion.value = region
   } catch (err: unknown) {
     const e = err as { data?: { detail?: string }; message?: string }
     const detail = e?.data?.detail || e?.message || 'Failed to analyze recipe'
     analysisError.value = String(detail)
     analysisResult.value = null
+    analysisResultRegion.value = null
   } finally {
     analysisLoading.value = false
   }
+}
+
+/**
+ * Switch composition table. A result already on screen was computed against the
+ * old table, so the numbers are re-derived rather than left to contradict the
+ * region now highlighted in the picker.
+ */
+const changeAnalysisRegion = async (region: typeof ANALYSIS_REGIONS[number]) => {
+  if (region === analysisRegion.value || analysisLoading.value) return
+  analysisRegion.value = region
+  if (!analysisResult.value) return
+  await runRecipeAnalysis()
 }
 
 const formatNumber = (value: unknown): string => {

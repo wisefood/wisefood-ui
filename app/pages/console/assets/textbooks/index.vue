@@ -52,6 +52,7 @@
                   leading-icon="i-lucide-search"
                   placeholder="Search title, authors, ISBN"
                   class="w-full sm:w-72"
+                  @update:model-value="queueSearch"
                   @keydown.enter="applySearch"
                 />
                 <UButton
@@ -259,10 +260,19 @@
               </h4>
 
               <div class="grid gap-4 sm:grid-cols-2">
-                <UFormField label="Publisher">
-                  <UInput
+                <UFormField
+                  label="Publisher"
+                  help="Existing publishers are offered first — picking one keeps the name spelled the same way."
+                >
+                  <UInputMenu
                     v-model="createForm.publisher"
+                    :items="publisherItems"
+                    value-key="value"
+                    label-key="label"
+                    create-item="always"
+                    placeholder="Start typing a publisher"
                     class="w-full"
+                    @create="createForm.publisher = String($event).trim()"
                   />
                 </UFormField>
                 <UFormField label="Edition">
@@ -276,11 +286,13 @@
                   label="Publication year"
                   :error="yearError"
                 >
-                  <UInput
+                  <UInputNumber
                     v-model="createForm.publication_year"
-                    type="number"
-                    :min="1500"
-                    :max="currentYear + 1"
+                    :min="PUBLICATION_YEAR_MIN"
+                    :max="yearMax"
+                    :step="1"
+                    :format-options="{ useGrouping: false }"
+                    placeholder="e.g. 2019"
                     class="w-full"
                   />
                 </UFormField>
@@ -296,6 +308,7 @@
                 <UFormField
                   label="ISBN-13"
                   :error="isbnError"
+                  help="Dashes and spaces are fine; the check digit is verified."
                 >
                   <UInput
                     v-model="createForm.isbn13"
@@ -303,9 +316,14 @@
                     class="w-full"
                   />
                 </UFormField>
-                <UFormField label="DOI">
+                <UFormField
+                  label="DOI"
+                  :error="doiFieldError"
+                  help="The bare identifier or a doi.org link — the prefix is stripped."
+                >
                   <UInput
                     v-model="createForm.doi"
+                    placeholder="10.1234/abcd"
                     class="w-full"
                   />
                 </UFormField>
@@ -323,6 +341,7 @@
                 <ConsoleArticleTokenInput
                   v-model="createForm.topics"
                   label="topic"
+                  :suggestions="topicSuggestions"
                   placeholder="Add a topic"
                   empty-text="No topics."
                 />
@@ -332,7 +351,7 @@
                 <UFormField label="Audience">
                   <UInputMenu
                     v-model="createForm.audience"
-                    :items="readerGroupOptions"
+                    :items="audienceItems"
                     value-key="value"
                     label-key="label"
                     create-item="always"
@@ -388,8 +407,9 @@
  * Passages are not created here: an external chunker produces them and they are
  * ingested per artifact from the workspace page.
  */
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import textbooksApi, {
+  type FacetBucket,
   type Textbook,
   type TextbookCreatePayload
 } from '~/services/textbooksApi'
@@ -399,6 +419,17 @@ import {
   licenseOptions,
   readerGroupOptions
 } from '~/utils/consoleArticleVocabulary'
+import {
+  PUBLICATION_YEAR_MIN,
+  doiError,
+  isbn13Error,
+  normalizeDoi,
+  normalizeIsbn,
+  publicationYearError,
+  publicationYearMax,
+  suggestionsFromFacet,
+  withCurrentOption
+} from '~/utils/consoleCatalogFields'
 import {
   formatConsoleDate as formatDate,
   formatConsoleEnumLabel as formatEnumLabel,
@@ -426,7 +457,15 @@ const createModalOpen = ref(false)
 const createPending = ref(false)
 const createError = ref<string | null>(null)
 const urnEdited = ref(false)
-const currentYear = new Date().getFullYear()
+const yearMax = publicationYearMax()
+
+/*
+ * Facet buckets from the same search that fills the table, so the create form
+ * suggests the publishers and topics the corpus actually uses rather than a
+ * list somebody guessed at once.
+ */
+const facets = ref<Record<string, FacetBucket[]>>({})
+const topicSuggestions = computed(() => suggestionsFromFacet(facets.value['topics']))
 
 const createForm = reactive({
   title: '',
@@ -434,7 +473,7 @@ const createForm = reactive({
   authors: [] as string[],
   publisher: '',
   edition: '',
-  publication_year: '',
+  publication_year: null as number | null,
   language: '',
   isbn13: '',
   doi: '',
@@ -442,6 +481,17 @@ const createForm = reactive({
   audience: '',
   license: ''
 })
+
+/*
+ * `withCurrentOption` is not decoration: these menus resolve their display text
+ * by looking the value up among their items, so a freshly typed publisher or
+ * audience disappears from the box the moment it is accepted while the form
+ * quietly still holds it.
+ */
+const publisherItems = computed(() => withCurrentOption(
+  suggestionsFromFacet(facets.value['publisher']), createForm.publisher))
+const audienceItems = computed(() => withCurrentOption(
+  readerGroupOptions, createForm.audience))
 
 const breadcrumbItems = assetSectionBreadcrumb('textbooks')
 
@@ -464,20 +514,9 @@ const urnError = computed(() => {
     : 'Use lowercase letters, numbers, dashes or underscores.'
 })
 
-const yearError = computed(() => {
-  const value = createForm.publication_year.trim()
-  if (!value) return undefined
-  const year = Number(value)
-  if (!/^\d{4}$/.test(value)) return 'Enter a 4-digit year.'
-  if (year < 1500 || year > currentYear + 1) return `Enter a year between 1500 and ${currentYear + 1}.`
-  return undefined
-})
-
-const isbnError = computed(() => {
-  const value = createForm.isbn13.replace(/[\s-]/g, '')
-  if (!value) return undefined
-  return /^\d{13}$/.test(value) ? undefined : 'An ISBN-13 has 13 digits.'
-})
+const yearError = computed(() => publicationYearError(createForm.publication_year))
+const isbnError = computed(() => isbn13Error(createForm.isbn13))
+const doiFieldError = computed(() => doiError(createForm.doi))
 
 const createFormValid = computed(() =>
   Boolean(createForm.title.trim())
@@ -485,6 +524,7 @@ const createFormValid = computed(() =>
   && !urnError.value
   && !yearError.value
   && !isbnError.value
+  && !doiFieldError.value
 )
 
 // Auto-slug from the title until the editor takes over, matching the article form.
@@ -515,7 +555,7 @@ function openCreateModal() {
     authors: [],
     publisher: '',
     edition: '',
-    publication_year: '',
+    publication_year: null,
     language: '',
     isbn13: '',
     doi: '',
@@ -541,7 +581,9 @@ async function createTextbook() {
       publisher: createForm.publisher,
       edition: createForm.edition,
       language: createForm.language,
-      doi: createForm.doi,
+      // Stored bare: a stored resolver URL breaks every consumer that builds
+      // its own link from the identifier.
+      doi: normalizeDoi(createForm.doi),
       audience: createForm.audience,
       license: createForm.license
     }
@@ -550,10 +592,11 @@ async function createTextbook() {
       if (value) (payload as unknown as Record<string, unknown>)[key] = value
     }
 
-    const isbn = createForm.isbn13.replace(/[\s-]/g, '')
+    const isbn = normalizeIsbn(createForm.isbn13)
     if (isbn) payload.isbn13 = isbn
-    if (createForm.publication_year.trim()) {
-      payload.publication_year = Number(createForm.publication_year)
+    // Loose on purpose: clearing the number field writes `undefined`, not null.
+    if (createForm.publication_year != null) {
+      payload.publication_year = createForm.publication_year
     }
     if (createForm.authors.length) payload.authors = createForm.authors
     if (createForm.topics.length) payload.topics = createForm.topics
@@ -565,7 +608,13 @@ async function createTextbook() {
       color: 'success'
     })
     createModalOpen.value = false
-    await router.push(`/console/assets/textbooks/${encodeURIComponent(created.urn)}`)
+    // Without a urn there is no workspace to open, and the bare path is the
+    // library we are already on — reload it so the new textbook is visible.
+    if (created.urn) {
+      await router.push(`/console/assets/textbooks/${encodeURIComponent(created.urn)}`)
+    } else {
+      await loadTextbooks()
+    }
   } catch (err) {
     createError.value = err instanceof Error ? err.message : 'Failed to create textbook.'
   } finally {
@@ -573,12 +622,30 @@ async function createTextbook() {
   }
 }
 
+/*
+ * Typing narrows the table on its own. The Sync button was doing double duty as
+ * "run my search", which is not what a refresh control looks like.
+ */
+let searchTimer: ReturnType<typeof setTimeout> | undefined
+
+function queueSearch() {
+  if (searchTimer) clearTimeout(searchTimer)
+  searchTimer = setTimeout(applySearch, 300)
+}
+
 function applySearch() {
   page.value = 1
   void loadTextbooks()
 }
 
+// Any load supersedes a search still sitting in the debounce, so paging while
+// a query is being typed does not snap back to page 1 a moment later. The token
+// is what keeps a slow early response from overwriting a fast later one.
+let loadToken = 0
+
 async function loadTextbooks() {
+  if (searchTimer) clearTimeout(searchTimer)
+  const token = ++loadToken
   loading.value = true
   error.value = null
   try {
@@ -586,18 +653,29 @@ async function loadTextbooks() {
       q: query.value.trim() || null,
       limit: pageSize,
       offset: (page.value - 1) * pageSize,
-      sort: 'updated_at desc'
+      sort: 'updated_at desc',
+      fields: ['publisher', 'topics']
     })
+    if (token !== loadToken) return
     textbooks.value = result.textbooks
     total.value = result.total
+    // Kept from the unqueried load: searching the table should not shrink the
+    // vocabulary the create form offers.
+    if (!query.value.trim() || !Object.keys(facets.value).length) {
+      facets.value = result.facets
+    }
   } catch (err) {
+    if (token !== loadToken) return
     error.value = err instanceof Error ? err.message : 'Could not load textbooks.'
     textbooks.value = []
     total.value = 0
   } finally {
-    loading.value = false
+    if (token === loadToken) loading.value = false
   }
 }
 
 onMounted(loadTextbooks)
+onBeforeUnmount(() => {
+  if (searchTimer) clearTimeout(searchTimer)
+})
 </script>

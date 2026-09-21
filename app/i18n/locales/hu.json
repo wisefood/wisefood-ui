@@ -481,6 +481,9 @@
     "detail": {
       "nutritionalInfo": "Tápérték információ",
       "perServing": "adagonként",
+      "per100g": "100 g-onként",
+      "basisPerServing": "Adagonként",
+      "basisPer100g": "100 g-onként",
       "servingWeight": "egy adag ≈ {value} g",
       "profilePending": {
         "message": "A recept tápanyagprofilja még készül. Ez általában egy percet vesz igénybe.",

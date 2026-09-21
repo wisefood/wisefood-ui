@@ -481,6 +481,9 @@
     "detail": {
       "nutritionalInfo": "Nutritional Information",
       "perServing": "per serving",
+      "per100g": "per 100 g",
+      "basisPerServing": "Per serving",
+      "basisPer100g": "Per 100 g",
       "servingWeight": "one serving ≈ {value} g",
       "profilePending": {
         "message": "The nutrition profile for this recipe is still being generated. This usually takes a minute.",

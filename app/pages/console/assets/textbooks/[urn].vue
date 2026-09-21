@@ -22,18 +22,18 @@
         />
         <div class="flex flex-wrap gap-2 self-start">
           <UBadge
-            :color="statusColor(textbook?.status || 'draft')"
+            :color="statusColor(form.status || 'draft')"
             variant="subtle"
           >
-            {{ formatEnumLabel(textbook?.status || 'draft') }}
+            {{ formatEnumLabel(form.status || 'draft') }}
           </UBadge>
           <UButton
             color="primary"
             :loading="savePending"
-            :disabled="!hasChanges"
+            :disabled="!hasChanges || hasFieldErrors"
             @click="save"
           >
-            {{ hasChanges ? 'Save changes' : 'Saved' }}
+            {{ saveLabel }}
           </UButton>
         </div>
       </div>
@@ -97,16 +97,20 @@
                   label="Publication year"
                   :error="yearError"
                 >
-                  <UInput
+                  <UInputNumber
                     v-model="form.publication_year"
-                    type="number"
+                    :min="PUBLICATION_YEAR_MIN"
+                    :max="yearMax"
+                    :step="1"
+                    :format-options="{ useGrouping: false }"
+                    placeholder="e.g. 2019"
                     class="w-full"
                   />
                 </UFormField>
                 <UFormField label="Language">
                   <USelectMenu
                     v-model="form.language"
-                    :items="languageOptions"
+                    :items="languageItems"
                     value-key="value"
                     label-key="label"
                     class="w-full"
@@ -115,15 +119,22 @@
                 <UFormField
                   label="ISBN-13"
                   :error="isbnError"
+                  help="Dashes and spaces are fine; the check digit is verified."
                 >
                   <UInput
                     v-model="form.isbn13"
+                    placeholder="978-0-000-00000-0"
                     class="w-full"
                   />
                 </UFormField>
-                <UFormField label="DOI">
+                <UFormField
+                  label="DOI"
+                  :error="doiFieldError"
+                  help="The bare identifier or a doi.org link — the prefix is stripped."
+                >
                   <UInput
                     v-model="form.doi"
+                    placeholder="10.1234/abcd"
                     class="w-full"
                   />
                 </UFormField>
@@ -226,14 +237,24 @@
               class="py-12 text-center"
             >
               <UIcon
-                name="i-lucide-file-text"
-                class="mx-auto h-8 w-8 text-gray-300 dark:text-zinc-600"
+                :name="passageError ? 'i-lucide-alert-circle' : 'i-lucide-file-text'"
+                class="mx-auto h-8 w-8"
+                :class="passageError ? 'text-red-400' : 'text-gray-300 dark:text-zinc-600'"
               />
-              <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+              <p
+                v-if="passageError"
+                class="mt-3 text-sm text-red-600 dark:text-red-400"
+              >
+                {{ passageError }}
+              </p>
+              <p
+                v-else
+                class="mt-3 text-sm text-gray-500 dark:text-gray-400"
+              >
                 {{ passageQuery ? 'No passages match that search.' : 'No passages ingested yet.' }}
               </p>
               <p
-                v-if="!passageQuery && !artifacts.length"
+                v-if="!passageError && !passageQuery && !artifacts.length"
                 class="text-xs text-gray-400 dark:text-gray-500"
               >
                 Attach a PDF artifact first — passages are ingested against one.
@@ -324,6 +345,9 @@
                 <p class="truncate text-sm font-medium text-gray-900 dark:text-white">
                   {{ artifact.title || artifact.file_type }}
                 </p>
+                <p class="mt-0.5 text-[0.6875rem] text-gray-500 dark:text-gray-400">
+                  {{ artifact.file_type || 'unknown type' }} · {{ formatBytes(artifact.file_size) }}
+                </p>
                 <p class="mt-0.5 truncate font-mono text-[0.6875rem] text-gray-400 dark:text-gray-500">
                   {{ artifact.id }}
                 </p>
@@ -333,8 +357,84 @@
               v-else
               class="text-sm text-gray-500 dark:text-gray-400"
             >
-              No artifacts attached. Passages are ingested against an artifact, so add the source PDF first.
+              No artifacts attached. Passages are ingested against an artifact, so attach the source PDF below first.
             </p>
+
+            <!--
+              The page told editors to add the source PDF and gave them nowhere
+              to add it: uploading was an article-only affordance, so a textbook
+              could never reach the state its own empty message asked for.
+            -->
+            <div class="mt-4 space-y-3 border-t border-gray-100 pt-4 dark:border-white/10">
+              <UAlert
+                v-if="uploadError"
+                color="error"
+                variant="soft"
+                icon="i-lucide-alert-circle"
+                :title="uploadError"
+              />
+
+              <label
+                :class="[
+                  'inline-flex w-full cursor-pointer',
+                  uploadPending ? 'pointer-events-none opacity-60' : ''
+                ]"
+              >
+                <span class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 transition hover:border-primary-400 hover:text-primary-700 dark:border-white/15 dark:text-gray-300 dark:hover:border-primary-400 dark:hover:text-primary-200">
+                  <UIcon
+                    name="i-lucide-file-up"
+                    class="h-4 w-4"
+                  />
+                  {{ uploadFile ? 'Choose a different PDF' : 'Choose a PDF' }}
+                </span>
+                <input
+                  :key="uploadInputKey"
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  class="hidden"
+                  @change="selectUploadFile"
+                >
+              </label>
+
+              <template v-if="uploadFile">
+                <p class="truncate text-xs text-gray-500 dark:text-gray-400">
+                  {{ uploadFile.name }} · {{ formatBytes(uploadFile.size) }}
+                </p>
+
+                <UFormField
+                  label="Artifact name"
+                  size="sm"
+                >
+                  <UInput
+                    v-model="uploadTitle"
+                    placeholder="e.g. Full text (PDF)"
+                    class="w-full"
+                  />
+                </UFormField>
+
+                <div class="flex gap-2">
+                  <UButton
+                    color="primary"
+                    size="sm"
+                    icon="i-lucide-upload"
+                    :loading="uploadPending"
+                    :disabled="!canUpload"
+                    @click="uploadArtifact"
+                  >
+                    Attach
+                  </UButton>
+                  <UButton
+                    color="neutral"
+                    variant="ghost"
+                    size="sm"
+                    :disabled="uploadPending"
+                    @click="resetUpload"
+                  >
+                    Cancel
+                  </UButton>
+                </div>
+              </template>
+            </div>
           </UCard>
         </aside>
       </UPageBody>
@@ -474,6 +574,16 @@ import textbooksApi, {
 import ConsoleArticleTokenInput from '~/components/console/ArticleTokenInput.vue'
 import { languageOptions } from '~/utils/consoleArticleVocabulary'
 import {
+  PUBLICATION_YEAR_MIN,
+  doiError,
+  isbn13Error,
+  normalizeDoi,
+  normalizeIsbn,
+  publicationYearError,
+  publicationYearMax,
+  withCurrentOption
+} from '~/utils/consoleCatalogFields'
+import {
   formatConsoleEnumLabel as formatEnumLabel,
   guideReviewEditOptions,
   guideStatusEditOptions,
@@ -481,6 +591,8 @@ import {
   statusColor
 } from '~/utils/consoleGuideCatalog'
 import { assetSectionBreadcrumb, recordCrumb } from '~/utils/consoleBreadcrumbs'
+import { formatBytes } from '~/utils/guidesCatalog'
+import { uploadCatalogArtifact } from '~/services/objectStorageApi'
 
 definePageMeta({ layout: 'default' })
 
@@ -501,6 +613,7 @@ const passageTotal = ref(0)
 const passagePage = ref(1)
 const passagePageSize = 25
 const passageQuery = ref('')
+const passageError = ref<string | null>(null)
 
 const ingestModalOpen = ref(false)
 const ingestPending = ref(false)
@@ -510,21 +623,38 @@ const ingestExtractorName = ref('')
 const ingestRunId = ref('')
 const ingestJson = ref('')
 
+/*
+ * Attaching the source PDF. The empty state here has always said to add one,
+ * but uploading was wired up only for articles — so the instruction named a
+ * state the page gave no way to reach, and passage ingestion (which needs an
+ * artifact to ingest against) stayed permanently disabled.
+ */
+const MAX_UPLOAD_BYTES = 200 * 1024 * 1024
+const uploadFile = ref<File | null>(null)
+const uploadTitle = ref('')
+const uploadPending = ref(false)
+const uploadError = ref<string | null>(null)
+// Bumped to clear the native input, which otherwise refuses to re-fire
+// `change` for the same file after a failed attempt.
+const uploadInputKey = ref(0)
+
 const form = reactive({
   title: '',
   description: '',
   authors: [] as string[],
   publisher: '',
   edition: '',
-  publication_year: '',
+  publication_year: null as number | null,
   language: '',
   isbn13: '',
   doi: '',
   topics: [] as string[],
   keywords: [] as string[],
-  status: 'draft',
-  review_status: 'unreviewed',
-  visibility: 'internal'
+  // Typed rather than inferred as `string`: these three drive the status badge
+  // and the update payload, both of which want the enum.
+  status: 'draft' as NonNullable<Textbook['status']>,
+  review_status: 'unreviewed' as NonNullable<Textbook['review_status']>,
+  visibility: 'internal' as NonNullable<Textbook['visibility']>
 })
 
 let snapshot = ''
@@ -545,18 +675,30 @@ const artifactOptions = computed(() =>
   }))
 )
 
+const canUpload = computed(() =>
+  Boolean(uploadFile.value) && Boolean(uploadTitle.value.trim()) && !uploadPending.value)
+
 const hasChanges = computed(() => JSON.stringify({ ...form }) !== snapshot)
 
-const yearError = computed(() => {
-  const value = form.publication_year.trim()
-  if (!value) return undefined
-  return /^\d{4}$/.test(value) ? undefined : 'Enter a 4-digit year.'
-})
+const yearMax = publicationYearMax()
 
-const isbnError = computed(() => {
-  const value = form.isbn13.replace(/[\s-]/g, '')
-  if (!value) return undefined
-  return /^\d{13}$/.test(value) ? undefined : 'An ISBN-13 has 13 digits.'
+/*
+ * A stored language outside the offered list would otherwise render as an empty
+ * select, and the next save would write that emptiness back — the form
+ * discarding a field nobody touched.
+ */
+const languageItems = computed(() => withCurrentOption(languageOptions, textbook.value?.language))
+
+const yearError = computed(() => publicationYearError(form.publication_year))
+const isbnError = computed(() => isbn13Error(form.isbn13))
+const doiFieldError = computed(() => doiError(form.doi))
+
+const hasFieldErrors = computed(() =>
+  Boolean(yearError.value || isbnError.value || doiFieldError.value))
+
+const saveLabel = computed(() => {
+  if (hasFieldErrors.value) return 'Fix the fields above'
+  return hasChanges.value ? 'Save changes' : 'Saved'
 })
 
 /**
@@ -632,7 +774,7 @@ function populate(record: Textbook) {
   form.authors = [...(record.authors ?? [])]
   form.publisher = record.publisher || ''
   form.edition = record.edition || ''
-  form.publication_year = record.publication_year?.toString() || ''
+  form.publication_year = record.publication_year ?? null
   form.language = record.language || ''
   form.isbn13 = record.isbn13 || ''
   form.doi = record.doi || ''
@@ -654,18 +796,19 @@ async function save() {
       publisher: form.publisher.trim() || null,
       edition: form.edition.trim() || null,
       language: form.language.trim() || null,
-      doi: form.doi.trim() || null,
+      doi: normalizeDoi(form.doi) || null,
       topics: form.topics,
       keywords: form.keywords,
-      status: form.status as Textbook['status'],
-      review_status: form.review_status as Textbook['review_status'],
-      visibility: form.visibility as Textbook['visibility']
+      status: form.status,
+      review_status: form.review_status,
+      visibility: form.visibility
     }
-    const isbn = form.isbn13.replace(/[\s-]/g, '')
+    const isbn = normalizeIsbn(form.isbn13)
     payload.isbn13 = isbn || null
-    payload.publication_year = form.publication_year.trim()
-      ? Number(form.publication_year)
-      : null
+    // Clearing the number field writes `undefined`, which JSON.stringify drops
+    // from the PATCH entirely — so the year the editor just cleared would have
+    // survived the save. Null is what actually clears it.
+    payload.publication_year = form.publication_year ?? null
 
     const updated = await textbooksApi.updateTextbook(textbookUrn.value, payload)
     textbook.value = updated
@@ -679,6 +822,88 @@ async function save() {
     })
   } finally {
     savePending.value = false
+  }
+}
+
+function isPdf(file: File) {
+  // Browsers report an empty or generic type often enough that the extension
+  // has to be honoured too, or a legitimate PDF gets refused.
+  return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+}
+
+/** Drops the pending file without touching a message explaining why. */
+function clearSelection() {
+  uploadFile.value = null
+  uploadTitle.value = ''
+  uploadInputKey.value += 1
+}
+
+function resetUpload() {
+  clearSelection()
+  uploadError.value = null
+}
+
+function selectUploadFile(event: Event) {
+  const input = event.target as HTMLInputElement | null
+  const file = input?.files?.[0] ?? null
+  uploadError.value = null
+
+  if (!file) {
+    clearSelection()
+    return
+  }
+
+  if (!isPdf(file)) {
+    clearSelection()
+    uploadError.value = 'Textbook sources are attached as PDFs.'
+    return
+  }
+
+  if (file.size > MAX_UPLOAD_BYTES) {
+    clearSelection()
+    uploadError.value = `That file is ${formatBytes(file.size)}; the limit is ${formatBytes(MAX_UPLOAD_BYTES)}.`
+    return
+  }
+
+  uploadFile.value = file
+  uploadTitle.value = file.name.replace(/\.[^.]+$/, '').trim() || file.name
+}
+
+async function uploadArtifact() {
+  if (!uploadFile.value || !textbookUrn.value) return
+  uploadPending.value = true
+  uploadError.value = null
+  try {
+    const artifact = await uploadCatalogArtifact({
+      parentUrn: textbookUrn.value,
+      file: uploadFile.value,
+      title: uploadTitle.value.trim(),
+      fileType: 'application/pdf',
+      language: form.language.trim() || undefined
+    })
+
+    // Appended rather than re-fetched: reloading the textbook would run
+    // `populate` and throw away whatever metadata edits are still unsaved.
+    if (textbook.value) {
+      textbook.value = {
+        ...textbook.value,
+        artifacts: [
+          ...textbook.value.artifacts,
+          { ...artifact, type: 'artifact' } as TextbookArtifact
+        ]
+      }
+    }
+
+    resetUpload()
+    toast.add({
+      title: 'PDF attached',
+      description: 'Passages can now be ingested against it.',
+      color: 'success'
+    })
+  } catch (err) {
+    uploadError.value = err instanceof Error ? err.message : 'Could not attach that PDF.'
+  } finally {
+    uploadPending.value = false
   }
 }
 
@@ -722,6 +947,7 @@ function searchPassages() {
 
 async function loadPassages() {
   if (!textbookUrn.value) return
+  passageError.value = null
   try {
     const result = await textbooksApi.searchPassages(textbookUrn.value, {
       q: passageQuery.value.trim() || null,
@@ -730,7 +956,10 @@ async function loadPassages() {
     })
     passages.value = result.passages
     passageTotal.value = result.total
-  } catch {
+  } catch (err) {
+    passageError.value = err instanceof Error
+      ? err.message
+      : 'Could not load passages for this textbook.'
     passages.value = []
     passageTotal.value = 0
   }
