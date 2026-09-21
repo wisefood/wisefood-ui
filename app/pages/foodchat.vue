@@ -1713,6 +1713,7 @@ import {
   planMeals,
   planMealsBySlot,
   planNutritionTotal,
+  plateRoleBadgeClass,
   slotIcon,
   slotKind,
   type NormalisedMeal
@@ -2691,17 +2692,8 @@ function weeklyMealKcal(plates: WeeklyMealEntry[]): number | null {
   return counted ? Math.round(total) : null
 }
 
-const PLATE_BADGE: Record<string, string> = {
-  main: 'bg-brandp-500 text-white',
-  side: 'bg-emerald-500 text-white',
-  salad: 'bg-emerald-500 text-white',
-  soup: 'bg-amber-500 text-white',
-  dessert: 'bg-pink-500 text-white',
-  drink: 'bg-sky-500 text-white'
-}
-
 function plateBadgeClass(plate: WeeklyMealEntry): string {
-  return PLATE_BADGE[String(plate.role || 'main').toLowerCase()] ?? 'bg-gray-400 text-white'
+  return plateRoleBadgeClass(plate.role)
 }
 
 function plateRoleLabel(plate: WeeklyMealEntry): string {

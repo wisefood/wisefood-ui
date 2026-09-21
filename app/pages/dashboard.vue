@@ -198,112 +198,94 @@
             </div>
           </div>
 
-          <!-- Upcoming Meals Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            <template v-for="meal in upcomingMeals" :key="meal.id">
-              <NuxtLink
-                v-if="meal.recipeId"
-                :to="`/recipe-wrangler/${meal.recipeId}`"
-                class="group h-full flex flex-col justify-center gap-2 p-3 rounded-xl border transition-all duration-200 cursor-pointer hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:bg-gray-50 dark:hover:bg-zinc-700/50 focus-visible:outline-none focus-visible:scale-[1.01] focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:ring-offset-1"
-                :class="meal.isNow ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-200 dark:border-brand-800' : 'border-transparent'"
-              >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <UIcon
-                      :name="meal.icon"
-                      class="w-5 h-5"
-                      :class="meal.isNow ? 'text-brand-500' : 'text-gray-400'"
-                    />
-                  </div>
-                  <UBadge v-if="meal.isNow" color="primary" variant="solid" size="xs">{{ t('dashboard.schedule.now') }}</UBadge>
-                </div>
-                <div>
-                  <h3 class="font-semibold text-sm text-gray-900 dark:text-white mb-1">{{ meal.name }}</h3>
-                  <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{{ meal.description }}</p>
-                </div>
-                <ul v-if="meal.plates.length" class="space-y-0.5">
-                  <li
-                    v-for="plate in meal.plates"
-                    :key="plate.id"
-                    class="flex items-baseline gap-1.5 text-xs"
-                  >
-                    <span class="shrink-0 text-[0.5625rem] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">{{ plate.role }}</span>
-                    <span class="min-w-0 truncate text-gray-600 dark:text-gray-300">{{ plate.title }}</span>
-                  </li>
-                </ul>
-                <div class="flex items-center gap-2 pt-1">
-                  <div v-if="meal.members.length" class="flex items-center -space-x-0.5">
-                    <UTooltip
-                      v-for="member in meal.members"
-                      :key="`${meal.id}-${member.id}`"
-                      :text="member.name"
-                    >
-                      <ProfileAvatar
-                        v-if="getMemberAvatar(member)"
-                        :avatar="getMemberAvatarForDisplay(member)"
-                        size="xxs"
-                        class="ring-1 ring-white dark:ring-zinc-800"
-                      />
-                      <div
-                        v-else
-                        class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white text-[0.625rem] font-semibold flex items-center justify-center ring-1 ring-white dark:ring-zinc-800"
-                      >
-                        {{ memberInitials(member.name) }}
-                      </div>
-                    </UTooltip>
-                  </div>
-                  <span v-else class="text-xs text-gray-500 dark:text-gray-400">
-                    {{ t('dashboard.schedule.noMembers') }}
-                  </span>
-                </div>
-              </NuxtLink>
+          <!-- Today's meals: one card per meal, in the plan's own order, as many
+               across as the day has. A meal is its main and whatever came with
+               it: a side is a badged row under the main, with a link of its own,
+               rather than a card of its own or a line of grey text.
 
-              <div
-                v-else
-                class="group h-full flex flex-col justify-center gap-2 p-3 rounded-xl border border-transparent transition-all duration-200 cursor-default"
-                :class="meal.isNow ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-200 dark:border-brand-800' : ''"
-              >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <UIcon
-                      :name="meal.icon"
-                      class="w-5 h-5"
-                      :class="meal.isNow ? 'text-brand-500' : 'text-gray-400'"
-                    />
-                  </div>
-                  <UBadge v-if="meal.isNow" color="primary" variant="solid" size="xs">{{ t('dashboard.schedule.now') }}</UBadge>
+               The card is one surface. `after:inset-0` on the main dish's link
+               stretches it over the whole card, so clicking anywhere opens the
+               main; the side links and the member avatars sit above it. -->
+          <div class="gap-3" :class="scheduleGridClass">
+            <div
+              v-for="meal in upcomingMeals"
+              :key="meal.id"
+              class="group relative h-full flex flex-col gap-2 p-3 rounded-xl border transition-all duration-200"
+              :class="[
+                meal.isNow ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-200 dark:border-brand-800' : 'border-transparent',
+                meal.recipeId
+                  ? 'hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:bg-gray-50 dark:hover:bg-zinc-700/50 focus-within:scale-[1.01] focus-within:ring-2 focus-within:ring-brand-500/40 focus-within:ring-offset-1'
+                  : 'cursor-default'
+              ]"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <UIcon
+                    :name="meal.icon"
+                    class="w-5 h-5"
+                    :class="meal.isNow ? 'text-brand-500' : 'text-gray-400'"
+                  />
+                  <!-- The hour comes from where the meal sits in the day, so a
+                       snack the member moved before lunch says so. -->
+                  <span v-if="meal.time" class="text-xs tabular-nums text-gray-400 dark:text-gray-500">{{ meal.time }}</span>
                 </div>
-                <div>
-                  <h3 class="font-semibold text-sm text-gray-900 dark:text-white mb-1">{{ meal.name }}</h3>
-                  <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{{ meal.description }}</p>
-                </div>
-                <div class="flex items-center gap-2 pt-1">
-                  <div v-if="meal.members.length" class="flex items-center -space-x-0.5">
-                    <UTooltip
-                      v-for="member in meal.members"
-                      :key="`${meal.id}-${member.id}`"
-                      :text="member.name"
-                    >
-                      <ProfileAvatar
-                        v-if="getMemberAvatar(member)"
-                        :avatar="getMemberAvatarForDisplay(member)"
-                        size="xxs"
-                        class="ring-1 ring-white dark:ring-zinc-800"
-                      />
-                      <div
-                        v-else
-                        class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white text-[0.625rem] font-semibold flex items-center justify-center ring-1 ring-white dark:ring-zinc-800"
-                      >
-                        {{ memberInitials(member.name) }}
-                      </div>
-                    </UTooltip>
-                  </div>
-                  <span v-else class="text-xs text-gray-500 dark:text-gray-400">
-                    {{ t('dashboard.schedule.noMembers') }}
-                  </span>
-                </div>
+                <UBadge v-if="meal.isNow" color="primary" variant="solid" size="xs">{{ t('dashboard.schedule.now') }}</UBadge>
               </div>
-            </template>
+              <div>
+                <h3 class="font-semibold text-sm text-gray-900 dark:text-white mb-1">{{ meal.name }}</h3>
+                <NuxtLink
+                  v-if="meal.recipeId"
+                  :to="`/recipe-wrangler/${meal.recipeId}`"
+                  class="block focus-visible:outline-none after:absolute after:inset-0 after:rounded-xl"
+                >
+                  <span class="block text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{{ meal.description }}</span>
+                </NuxtLink>
+                <p v-else class="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{{ meal.description }}</p>
+              </div>
+              <ul v-if="meal.plates.length" class="relative z-10 space-y-1 border-t border-gray-100 dark:border-zinc-700/60 pt-2">
+                <li
+                  v-for="plate in meal.plates"
+                  :key="plate.id"
+                  class="flex items-center gap-1.5 text-xs"
+                >
+                  <span
+                    class="shrink-0 inline-flex items-center px-1 py-px text-[0.5rem] font-semibold uppercase tracking-wide rounded"
+                    :class="plate.badgeClass"
+                  >{{ plate.role }}</span>
+                  <NuxtLink
+                    v-if="plate.recipeId"
+                    :to="`/recipe-wrangler/${plate.recipeId}`"
+                    class="min-w-0 truncate text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400 hover:underline"
+                  >{{ plate.title }}</NuxtLink>
+                  <span v-else class="min-w-0 truncate text-gray-600 dark:text-gray-300">{{ plate.title }}</span>
+                </li>
+              </ul>
+              <div class="relative z-10 flex items-center gap-2 pt-1 mt-auto">
+                <div v-if="meal.members.length" class="flex items-center -space-x-0.5">
+                  <UTooltip
+                    v-for="member in meal.members"
+                    :key="`${meal.id}-${member.id}`"
+                    :text="member.name"
+                  >
+                    <ProfileAvatar
+                      v-if="getMemberAvatar(member)"
+                      :avatar="getMemberAvatarForDisplay(member)"
+                      size="xxs"
+                      class="ring-1 ring-white dark:ring-zinc-800"
+                    />
+                    <div
+                      v-else
+                      class="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white text-[0.625rem] font-semibold flex items-center justify-center ring-1 ring-white dark:ring-zinc-800"
+                    >
+                      {{ memberInitials(member.name) }}
+                    </div>
+                  </UTooltip>
+                </div>
+                <span v-else class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('dashboard.schedule.noMembers') }}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -396,13 +378,13 @@ import { useHouseholdStore } from '@/stores/household'
 import foodscholarApi, { type QaTipsResult } from '~/services/foodscholarApi'
 import catalogApi from '~/services/catalogApi'
 import recipeApi, { type RecipeSearchResult } from '~/services/recipeApi'
-import foodchatApi, { type MealPlan, type MealRecipe, type MemberCurrentPlans, type PlanMeal } from '~/services/foodchatApi'
-import { humaniseSlot, planMealsBySlot } from '~/utils/planMeals'
+import foodchatApi, { type MealPlan, type MealRecipe, type MemberCurrentPlans, type PlanMeal, type WeeklyMealEntry } from '~/services/foodchatApi'
+import { humaniseSlot, mealGridColumns, planMealsBySlot, plateRoleBadgeClass, slotKind } from '~/utils/planMeals'
 import type { HouseholdMember } from '~/services/householdsApi'
 import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
 import { buildGuideDetailPath } from '~/utils/guidesCatalog'
 
-const { t, locale } = useI18n()
+const { t, te, locale } = useI18n()
 
 definePageMeta({
   middleware: ['auth', 'profile']
@@ -736,28 +718,50 @@ const shareKind = computed<'daily_meal_plan' | 'weekly_meal_plan'>(() => {
     : 'daily_meal_plan'
 })
 
-const membersByMealType = computed<Record<'breakfast' | 'lunch' | 'dinner', HouseholdMember[]>>(() => {
-  const byType: Record<'breakfast' | 'lunch' | 'dinner', HouseholdMember[]> = {
-    breakfast: [],
-    lunch: [],
-    dinner: []
-  }
+/**
+ * Who in the household has each meal today, keyed by slot.
+ *
+ * This used to read `plan.breakfast`, `plan.lunch` and `plan.dinner`, so a
+ * snack card said "No members" while the member whose snack it was looked at
+ * it. Keyed by the exact slot rather than its kind: a day's second snack is
+ * `snack_2`, and who shares the first one says nothing about the second.
+ */
+const membersBySlot = computed<Record<string, HouseholdMember[]>>(() => {
+  const bySlot: Record<string, HouseholdMember[]> = {}
 
   if (!todayMealPlan.value) {
-    return byType
+    return bySlot
   }
 
   for (const member of householdMembers.value) {
     const plan = memberMealPlansById.value[member.id]
     if (!plan) continue
-
-    if (plan.breakfast) byType.breakfast.push(member)
-    if (plan.lunch) byType.lunch.push(member)
-    if (plan.dinner) byType.dinner.push(member)
+    for (const meal of planMealsBySlot(plan)) {
+      (bySlot[meal.slot] ||= []).push(member)
+    }
   }
 
-  return byType
+  return bySlot
 })
+
+/**
+ * A slot's name on the card: the dashboard's own word for it where there is
+ * one, FoodChat's otherwise, and the slot humanised as a last resort. Looked
+ * up by KIND — `snack_2` is a snack in every language and needs no key.
+ */
+const slotLabel = (slot: string): string => {
+  const kind = slotKind(slot)
+  for (const key of [`dashboard.schedule.meals.${kind}`, `foodChatHome.meals.${kind}`]) {
+    if (te(key)) return t(key)
+  }
+  return humaniseSlot(slot)
+}
+
+/** "Side", "Salad", "Dessert" — the same word the FoodChat canvas badges with. */
+const plateRoleLabel = (role: string): string => {
+  const key = `foodChatHome.mealCard.roles.${String(role || 'main').toLowerCase()}`
+  return te(key) ? t(key) : humaniseSlot(role)
+}
 
 /**
  * Today's meals from a member's latest FoodChat plan canvas.
@@ -770,14 +774,22 @@ const membersByMealType = computed<Record<'breakfast' | 'lunch' | 'dinner', Hous
  */
 // Weekly planner entries store action-space keys (recipe_title, ...) rather
 // than the daily-plan MealRecipe shape — normalize for shared rendering.
-const weeklyRecipeToMealRecipe = (recipe: Record<string, unknown>): MealRecipe => ({
-  recipe_id: String(recipe.recipe_id ?? ''),
-  title: String(recipe.recipe_title ?? recipe.title ?? recipe.name ?? ''),
-  ingredients: String(recipe.recipe_ingredients ?? recipe.ingredients ?? ''),
-  directions: String(recipe.recipe_directions ?? recipe.directions ?? ''),
-  nutrition: (recipe.nutrition ?? null) as MealRecipe['nutrition'],
-  image_url: (recipe.image_url ?? null) as MealRecipe['image_url']
-})
+//
+// The role travels too. It lives on the ENTRY, not on the recipe, and dropping
+// it made every plate of a weekly dinner a "main" — the salad beside it was
+// then indistinguishable from the dish it went with.
+const weeklyEntryToMealRecipe = (entry: WeeklyMealEntry): MealRecipe => {
+  const recipe = entry.recipe as Record<string, unknown>
+  return {
+    recipe_id: String(recipe.recipe_id ?? ''),
+    title: String(recipe.recipe_title ?? recipe.title ?? recipe.name ?? ''),
+    ingredients: String(recipe.recipe_ingredients ?? recipe.ingredients ?? ''),
+    directions: String(recipe.recipe_directions ?? recipe.directions ?? ''),
+    role: entry.role ?? 'main',
+    nutrition: (recipe.nutrition ?? null) as MealRecipe['nutrition'],
+    image_url: (recipe.image_url ?? null) as MealRecipe['image_url']
+  }
+}
 
 const extractTodayPlan = (plans: MemberCurrentPlans): MealPlan | null => {
   if (plans.plan_type === 'weekly' && plans.weekly_meal_plan) {
@@ -802,7 +814,7 @@ const extractTodayPlan = (plans: MemberCurrentPlans): MealPlan | null => {
 
     const meals: PlanMeal[] = []
     for (const entry of todaysEntries) {
-      const recipe = weeklyRecipeToMealRecipe(entry.recipe as Record<string, unknown>)
+      const recipe = weeklyEntryToMealRecipe(entry)
       if (!recipe.recipe_id) continue
       const slot = String(entry.meal_type)
       const existing = meals.find(meal => meal.meal_type === slot)
@@ -871,49 +883,37 @@ watch(
 )
 
 // Meal schedule data
-const upcomingMeals = computed(() => {
+interface ScheduleRow {
+  id: string
+  name: string
+  time: string
+  icon: string
+  recipeId: string | null
+  description: string
+  plates: Array<{ id: string, role: string, badgeClass: string, title: string, recipeId: string | null }>
+  members: HouseholdMember[]
+  isNow: boolean
+}
+
+/** `08:00` -> 480. `null` for a slot with no clock hint. */
+const minutesOfClock = (time: string): number | null => {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(time)
+  return match ? Number(match[1]) * 60 + Number(match[2]) : null
+}
+
+const upcomingMeals = computed<ScheduleRow[]>(() => {
   const now = currentTime.value
-  const currentHour = now.getHours()
-  const currentMinutes = now.getMinutes()
-  const currentTimeInMinutes = currentHour * 60 + currentMinutes
+  const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes()
 
-  const meals = [
-    {
-      id: 'breakfast',
-      mealType: 'breakfast' as const,
-      name: t('dashboard.schedule.meals.breakfast'),
-      time: '08:00',
-      timeInMinutes: 8 * 60,
-      icon: 'i-lucide-coffee',
-      recipe: todayMealPlan.value?.breakfast,
-      fallbackDescription: t('dashboard.schedule.noBreakfast')
-    },
-    {
-      id: 'lunch',
-      mealType: 'lunch' as const,
-      name: t('dashboard.schedule.meals.lunch'),
-      time: '13:00',
-      timeInMinutes: 13 * 60,
-      icon: 'i-lucide-utensils',
-      recipe: todayMealPlan.value?.lunch,
-      fallbackDescription: t('dashboard.schedule.noLunch')
-    },
-    {
-      id: 'dinner',
-      mealType: 'dinner' as const,
-      name: t('dashboard.schedule.meals.dinner'),
-      time: '19:30',
-      timeInMinutes: 19 * 60 + 30,
-      icon: 'i-lucide-moon',
-      recipe: todayMealPlan.value?.dinner,
-      fallbackDescription: t('dashboard.schedule.noDinner')
-    }
-  ]
+  // "Now" is the hour after a meal's time. A slot with no time — a snack the
+  // plan put first, before anything with an hour of its own — is never "now",
+  // because nobody said when it is.
+  const isNowAt = (time: string) => {
+    const at = minutesOfClock(time)
+    return at !== null && currentTimeInMinutes >= at && currentTimeInMinutes < at + 60
+  }
 
-  const isNowAt = (timeInMinutes: number) =>
-    currentTimeInMinutes >= timeInMinutes && currentTimeInMinutes < timeInMinutes + 60
-
-  // The plan's OWN meals, one row each, with their extra plates inside.
+  // The plan's OWN meals, one card each, in the plan's OWN order.
   //
   // This used to be three fixed rows plus an "extras" list, and every plate
   // beyond a main became its own row labelled "Lunch · Side". A member with a
@@ -928,53 +928,65 @@ const upcomingMeals = computed(() => {
   // Five rows for two meals, and a breakfast reported as missing from a plan
   // that was never asked to have one. The plates belong to their meal, and the
   // shape of the plan is the shape of the plan.
+  //
+  // Nor are the cards re-sorted by clock time. The order is the member's — "put
+  // the snack before lunch" is a thing FoodChat now does — and the times are
+  // derived FROM that order by `planMealsBySlot`, so sorting by them again
+  // could only ever move a slot that has no time to the end of the day.
   const grouped = planMealsBySlot(todayMealPlan.value)
   if (grouped.length) {
-    const known = new Map(meals.map(m => [m.mealType as string, m]))
-    return grouped
-      .map((group) => {
-        const fixed = known.get(group.slot)
-        const main = group.plates.find(p => p.role === 'main') ?? group.plates[0]!
-        return {
-          id: `slot-${group.slot}`,
-          name: fixed?.name ?? humaniseSlot(group.slot),
-          time: group.time ?? fixed?.time ?? '',
-          icon: fixed?.icon ?? group.icon,
-          recipeId: main.recipe.recipe_id || null,
-          description: mealDescriptionFromRecipe(main.recipe, ''),
-          // The rest of the meal, named by what it is. Rendered under the main
-          // rather than beside it, which is what the canvas does too.
-          plates: group.plates
-            .filter(plate => plate !== main)
-            .map(plate => ({
-              id: `${group.slot}-${plate.recipe.recipe_id}`,
-              role: humaniseSlot(plate.role),
-              title: plate.recipe.title,
-              recipeId: plate.recipe.recipe_id || null
-            })),
-          members: membersByMealType.value[group.slot as 'breakfast' | 'lunch' | 'dinner'] ?? [],
-          isNow: fixed ? isNowAt(fixed.timeInMinutes) : false
-        }
-      })
-      .sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'))
+    return grouped.map((group) => {
+      const main = group.plates.find(p => p.role === 'main') ?? group.plates[0]!
+      const time = group.time ?? ''
+      return {
+        id: `slot-${group.slot}`,
+        name: slotLabel(group.slot),
+        time,
+        icon: group.icon,
+        recipeId: main.recipe.recipe_id || null,
+        description: mealDescriptionFromRecipe(main.recipe, ''),
+        // The rest of the meal, badged by what it is and linking to its own
+        // recipe. Rendered under the main rather than beside it, which is what
+        // the canvas does too.
+        plates: group.plates
+          .filter(plate => plate !== main)
+          .map(plate => ({
+            id: `${group.slot}-${plate.recipe.recipe_id}`,
+            role: plateRoleLabel(plate.role),
+            badgeClass: plateRoleBadgeClass(plate.role),
+            title: plate.recipe.title,
+            recipeId: plate.recipe.recipe_id || null
+          })),
+        members: membersBySlot.value[group.slot] ?? [],
+        isNow: isNowAt(time)
+      }
+    })
   }
 
   // No plan at all — the three canonical rows, so the widget shows a schedule
   // rather than a blank card. This is the ONLY case they are invented: a plan
   // that exists gets to say what shape it is, and "no breakfast planned yet"
   // on a deliberate lunch-and-dinner day reads as a gap the member left.
-  return meals.map(meal => ({
-    id: meal.id,
-    name: meal.name,
+  const canonical = [
+    { slot: 'breakfast', time: '08:00', icon: 'i-lucide-coffee', fallback: t('dashboard.schedule.noBreakfast') },
+    { slot: 'lunch', time: '13:00', icon: 'i-lucide-utensils', fallback: t('dashboard.schedule.noLunch') },
+    { slot: 'dinner', time: '19:30', icon: 'i-lucide-moon', fallback: t('dashboard.schedule.noDinner') }
+  ]
+  return canonical.map(meal => ({
+    id: meal.slot,
+    name: slotLabel(meal.slot),
     time: meal.time,
     icon: meal.icon,
     recipeId: null,
-    description: meal.fallbackDescription,
-    plates: [] as Array<{ id: string, role: string, title: string, recipeId: string | null }>,
-    members: membersByMealType.value[meal.mealType],
-    isNow: isNowAt(meal.timeInMinutes)
+    description: meal.fallback,
+    plates: [],
+    members: membersBySlot.value[meal.slot] ?? [],
+    isNow: isNowAt(meal.time)
   }))
 })
+
+/** As many columns as the day has meals — four across for a day with a snack. */
+const scheduleGridClass = computed(() => mealGridColumns(upcomingMeals.value.length))
 
 let timeInterval: NodeJS.Timeout | null = null
 let insightInterval: NodeJS.Timeout | null = null

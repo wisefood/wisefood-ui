@@ -53,6 +53,26 @@ const SLOT_ICONS: Record<string, string> = {
   drink: 'i-lucide-cup-soda'
 }
 
+/**
+ * The badge colour for a plate's role, shared by every surface that shows one.
+ *
+ * A side is green on the FoodChat canvas, on the weekly grid and on the
+ * dashboard, or it is not the same side. Each of those had its own copy of
+ * this table, and a copy is a table that drifts.
+ */
+const PLATE_ROLE_BADGE: Record<string, string> = {
+  main: 'bg-brandp-500 text-white',
+  side: 'bg-emerald-500 text-white',
+  salad: 'bg-emerald-500 text-white',
+  soup: 'bg-amber-500 text-white',
+  dessert: 'bg-pink-500 text-white',
+  drink: 'bg-sky-500 text-white'
+}
+
+export function plateRoleBadgeClass(role: string | null | undefined): string {
+  return PLATE_ROLE_BADGE[String(role || 'main').toLowerCase()] ?? 'bg-gray-400 text-white'
+}
+
 export interface NormalisedMeal {
   /** Stable key for `v-for` — slot alone is not unique in a multi-course meal. */
   key: string

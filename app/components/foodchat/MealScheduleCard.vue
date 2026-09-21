@@ -324,7 +324,7 @@ import type { MealRecipe } from '~/services/foodchatApi'
 import type { Recipe } from '~/services/recipeApi'
 import recipeApi from '~/services/recipeApi'
 import { useRecipeStore } from '~/stores/recipe'
-import { humaniseSlot } from '~/utils/planMeals'
+import { humaniseSlot, plateRoleBadgeClass } from '~/utils/planMeals'
 
 const props = defineProps<{
   type: string
@@ -502,18 +502,8 @@ function roleLabel(plate: MealRecipe): string {
   return translated === key ? humaniseSlot(String(plate.role || 'main')) : translated
 }
 
-const ROLE_BADGE: Record<string, string> = {
-  main: 'bg-brandp-500 text-white',
-  side: 'bg-emerald-500 text-white',
-  salad: 'bg-emerald-500 text-white',
-  soup: 'bg-amber-500 text-white',
-  dessert: 'bg-pink-500 text-white',
-  drink: 'bg-sky-500 text-white'
-}
-
 function roleBadgeClass(plate: MealRecipe): string {
-  return ROLE_BADGE[String(plate.role || 'main').toLowerCase()]
-    ?? 'bg-gray-400 text-white'
+  return plateRoleBadgeClass(plate.role)
 }
 
 /**

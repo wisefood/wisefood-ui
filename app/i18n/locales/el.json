@@ -542,6 +542,26 @@
       "savePlan": "Αποθήκευση πλάνου",
       "unsavePlan": "Αφαίρεση από τα αποθηκευμένα",
       "dayN": "Ημέρα {n}"
+    },
+    "meals": {
+      "breakfast": "Πρωινό",
+      "lunch": "Μεσημεριανό",
+      "dinner": "Βραδινό",
+      "brunch": "Brunch",
+      "snack": "Σνακ",
+      "dessert": "Επιδόρπιο",
+      "side": "Συνοδευτικό",
+      "drink": "Ρόφημα"
+    },
+    "mealCard": {
+      "roles": {
+        "main": "Κύριο",
+        "side": "Συνοδευτικό",
+        "salad": "Σαλάτα",
+        "soup": "Σούπα",
+        "dessert": "Επιδόρπιο",
+        "drink": "Ρόφημα"
+      }
     }
   },
   "guidelines": {
