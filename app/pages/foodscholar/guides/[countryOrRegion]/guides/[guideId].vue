@@ -261,38 +261,6 @@
                   {{ currentPage }} / {{ pdfTotalPages }}
                 </span>
 
-                <!--
-                  What this page of the document says, as the extractor
-                  summarised it. It sits in the toolbar behind a hover rather
-                  than in the page: inline it would either push the viewer down
-                  and change the aspect the document is rendered at, or add a
-                  paragraph to every row of a dense rule list.
-                -->
-                <UPopover
-                  v-if="currentPageSummary"
-                  mode="hover"
-                  :content="{ side: 'bottom', align: 'end' }"
-                >
-                  <UButton
-                    color="neutral"
-                    variant="ghost"
-                    size="xs"
-                    icon="i-lucide-text-search"
-                    :aria-label="`Summary of page ${currentPage}`"
-                    title="What is on this page"
-                  />
-                  <template #content>
-                    <div class="max-w-sm p-3">
-                      <p class="text-[0.6875rem] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                        Page {{ currentPage }}
-                      </p>
-                      <p class="mt-1 text-xs leading-5 text-gray-700 dark:text-gray-200">
-                        {{ currentPageSummary }}
-                      </p>
-                    </div>
-                  </template>
-                </UPopover>
-
                 <div class="mx-1 h-4 w-px bg-gray-200 dark:bg-white/10" />
 
                 <!-- Fit mode: the comfortable default, rather than making the
@@ -514,6 +482,41 @@
               <!-- Above the v-if chain, so the control exists whichever arm
                    renders and the reader can start a translation from here. -->
               <TranslationNotice class="mx-4 mt-4" />
+
+              <!--
+                What the source page says, in the reader's column rather than
+                over the document: the PDF keeps its width and the rule rows
+                keep their density, and a guide with no PDF attached still gets
+                it. Clamped to three lines because these run to a paragraph and
+                the rules are what the pane is for.
+              -->
+              <div
+                v-if="pageSummary"
+                class="mx-4 mt-4 rounded-lg border border-gray-200/70 bg-gray-50/70 p-3 dark:border-white/10 dark:bg-white/[0.03]"
+              >
+                <div class="flex items-center gap-1.5">
+                  <UIcon
+                    name="i-lucide-text-search"
+                    class="h-3.5 w-3.5 shrink-0 text-brand-500"
+                  />
+                  <p class="text-[0.6875rem] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                    {{ pageSummaryPage ? `Page ${pageSummaryPage} of the source` : 'From the source' }}
+                  </p>
+                </div>
+                <p
+                  class="mt-1.5 text-xs leading-5 text-gray-700 dark:text-gray-200"
+                  :class="pageSummaryExpanded ? '' : 'line-clamp-3'"
+                >
+                  {{ pageSummary }}
+                </p>
+                <button
+                  type="button"
+                  class="mt-1 text-[0.6875rem] font-medium text-brand-600 hover:underline dark:text-brand-300"
+                  @click="pageSummaryExpanded = !pageSummaryExpanded"
+                >
+                  {{ pageSummaryExpanded ? 'Show less' : 'Show more' }}
+                </button>
+              </div>
 
               <!-- Loading skeletons -->
               <div
@@ -816,18 +819,33 @@ const pdfArtifactOptions = computed(() => {
 const hasPageAssociations = computed(() => hasGuidePageAssociations(allGuideGuidelines.value))
 
 /*
- * `page_summary` is carried by each guideline, describing the page it was
- * extracted from — so every rule on a page repeats the same summary. Read the
- * first one that has it rather than showing it per rule.
+ * `page_summary` is carried by each guideline and describes the page it was
+ * extracted from, so every rule on a page repeats the same text.
+ *
+ * Prefer the selected rule's own page, which is what the reader just asked
+ * about, and fall back to the page on screen. The fallback matters when there
+ * is no PDF to drive `currentPage`: without it the panel would sit empty on
+ * every guide whose document was never attached.
  */
-const currentPageSummary = computed(() => {
-  for (const guideline of allGuideGuidelines.value) {
-    const summary = guideline.page_summary?.trim()
-    if (!summary) continue
-    if (getGuidelinePageReferences(guideline).includes(currentPage.value)) return summary
-  }
-  return ''
+const pageSummarySource = computed(() => {
+  const active = activeGuidelineId.value
+    ? allGuideGuidelines.value.find(item => item.id === activeGuidelineId.value)
+    : null
+  if (active?.page_summary?.trim()) return active
+
+  return allGuideGuidelines.value.find(item =>
+    item.page_summary?.trim()
+    && getGuidelinePageReferences(item).includes(currentPage.value)) ?? null
 })
+
+const pageSummary = computed(() => pageSummarySource.value?.page_summary?.trim() ?? '')
+
+const pageSummaryPage = computed(() => {
+  const source = pageSummarySource.value
+  return source ? getGuidelinePageReferences(source)[0] ?? null : null
+})
+
+const pageSummaryExpanded = ref(false)
 
 // Age spans for the filter histogram. Taken from the full guide set already
 // loaded for pagination, not the current page, so the distribution does not
