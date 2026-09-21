@@ -249,7 +249,9 @@ const allQuickAccessCards = [
   {
     title: 'LLM observability',
     description: 'Traces, prompt variants and model behaviour — what the models were asked, what they answered, and how they are performing.',
-    icon: 'i-lucide-sliders-horizontal',
+    // Same glyph the page's own breadcrumb carries, so the card and the place
+    // it leads to are recognisably one thing.
+    icon: 'i-lucide-brain-circuit',
     to: '/console/operations?tab=observability',
     available: true,
     iconWrapperClass: 'bg-brand-50 dark:bg-brand-500/10',
