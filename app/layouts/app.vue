@@ -8,7 +8,7 @@
 
     Machine translation is opt-in per region, as in the default layout.
   -->
-  <UApp translate="no">
+  <UApp translate="no" :locale="uiLocale">
     <div class="wf-app-shell flex flex-col">
       <WHeader />
 
@@ -20,3 +20,7 @@
     </div>
   </UApp>
 </template>
+
+<script setup lang="ts">
+const uiLocale = useUiLocale()
+</script>

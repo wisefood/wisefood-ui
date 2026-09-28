@@ -1,5 +1,12 @@
 <template>
+  <!--
+    Below `lg` Nuxt UI's header shows a hamburger and hides `#center`; the
+    menu it opens is the `#body` below. It used to open on nothing, which on
+    every phone and tablet was an empty full-screen modal.
+  -->
   <UHeader
+    v-model:open="menuOpen"
+    mode="slideover"
     class="z-[120]"
     :class="isLanding ? 'landing-header' : ''"
     :ui="isLanding ? { root: 'bg-white/15 !border-b-0 backdrop-blur-xl backdrop-saturate-150 shadow-[0_1px_0_0_rgba(255,255,255,0.15)_inset,0_8px_32px_-8px_rgba(0,0,0,0.35)]' } : undefined"
@@ -10,10 +17,23 @@
         height="10"
       />
     </template>
-    <template #right>
-      <UColorModeButton />
 
-      <LocaleSelector />
+    <!-- Desktop only (the theme hides the centre below lg): the app switcher. -->
+    <template #default>
+      <UNavigationMenu
+        v-if="showAppNav"
+        :items="appNavItems"
+        highlight
+        color="primary"
+        variant="link"
+        :ui="{ link: 'text-base' }"
+      />
+    </template>
+
+    <template #right>
+      <UColorModeButton class="hidden lg:inline-flex" />
+
+      <LocaleSelector class="hidden lg:block" />
 
       <UButton
         v-if="authStore.initialized && authStore.isLoggedIn && authStore.canAccessConsole"
@@ -22,7 +42,7 @@
         variant="outline"
         size="sm"
         :icon="isConsoleRoute ? 'i-lucide-layout-dashboard' : 'i-lucide-panel-top'"
-        class="shrink-0"
+        class="hidden lg:inline-flex shrink-0"
         :class="isConsoleRoute ? 'ring-1 ring-brand-500/30 bg-brand-50/80 dark:bg-brand-900/20' : ''"
       >
         {{ isConsoleRoute ? t('dashboard.title') : t('header.console') }}
@@ -43,7 +63,8 @@
       >
         <button
           data-flows="profile-dropdown-trigger"
-          class="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
+          class="flex items-center gap-2 px-2 py-1 min-h-11 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
+          :aria-label="currentMemberName"
         >
           <!-- Profile Avatar -->
           <div class="relative">
@@ -99,6 +120,23 @@
         {{ $t('nav.signIn') }}
       </UButton>
     </template>
+
+    <!-- The mobile menu: every destination the header offers on a desktop,
+         plus the app switcher, as a list a thumb can use. -->
+    <template #body>
+      <UNavigationMenu
+        orientation="vertical"
+        :items="mobileMenuItems"
+        highlight
+        color="primary"
+        :ui="{ link: 'min-h-11 text-base', label: 'mt-2 first:mt-0' }"
+      />
+
+      <div class="mt-6 flex items-center justify-between gap-3 border-t border-default pt-4">
+        <LocaleSelector show-label />
+        <UColorModeButton size="lg" />
+      </div>
+    </template>
   </UHeader>
 </template>
 
@@ -108,7 +146,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useHouseholdStore } from '@/stores/household'
 import { stringToAvatarConfig } from '~/utils/avatarPresets'
-import type { DropdownMenuItem } from '@nuxt/ui'
+import type { DropdownMenuItem, NavigationMenuItem } from '@nuxt/ui'
 
 type RuntimeConfigWindow = Window & {
   __RUNTIME_CONFIG__?: {
@@ -121,6 +159,8 @@ const { t } = useI18n()
 const authStore = useAuthStore()
 const householdStore = useHouseholdStore()
 const route = useRoute()
+
+const menuOpen = ref(false)
 
 // Initialize household store when auth is ready
 onMounted(async () => {
@@ -195,6 +235,29 @@ const userDisplayName = computed(() => {
 const isConsoleRoute = computed(() => route.path.startsWith('/console'))
 const isLanding = computed(() => route.path === '/')
 
+function openAccountSettings() {
+  // Check runtime config injected at container startup first, then fall back to Nuxt config
+  const runtimeConfig = (window as RuntimeConfigWindow).__RUNTIME_CONFIG__
+  const nuxtConfig = useRuntimeConfig()
+  const keycloakUrl = runtimeConfig?.keycloakUrl || nuxtConfig.public.keycloakUrl
+  const keycloakRealm = runtimeConfig?.keycloakRealm || nuxtConfig.public.keycloakRealm
+  if (keycloakUrl && keycloakRealm) {
+    window.open(`${keycloakUrl}/realms/${keycloakRealm}/account`, '_blank')
+  } else {
+    console.error('Keycloak configuration is not defined in runtime config')
+  }
+}
+
+function switchProfile() {
+  householdStore.clearSelectedMember()
+  navigateTo('/profiles')
+}
+
+function signOut() {
+  householdStore.reset()
+  authStore.logout('/')
+}
+
 // User dropdown menu items
 const userMenuItems = computed<DropdownMenuItem[]>(() => [
   {
@@ -212,10 +275,7 @@ const userMenuItems = computed<DropdownMenuItem[]>(() => [
   {
     label: t('header.menu.switchProfile'),
     icon: 'i-lucide-users',
-    onSelect: () => {
-      householdStore.clearSelectedMember()
-      navigateTo('/profiles')
-    }
+    onSelect: switchProfile
   },
   {
     type: 'separator'
@@ -223,18 +283,7 @@ const userMenuItems = computed<DropdownMenuItem[]>(() => [
   {
     label: t('header.menu.accountSettings'),
     icon: 'i-lucide-settings',
-    onSelect: () => {
-      // Check runtime config injected at container startup first, then fall back to Nuxt config
-      const runtimeConfig = (window as RuntimeConfigWindow).__RUNTIME_CONFIG__
-      const nuxtConfig = useRuntimeConfig()
-      const keycloakUrl = runtimeConfig?.keycloakUrl || nuxtConfig.public.keycloakUrl
-      const keycloakRealm = runtimeConfig?.keycloakRealm || nuxtConfig.public.keycloakRealm
-      if (keycloakUrl && keycloakRealm) {
-        window.open(`${keycloakUrl}/realms/${keycloakRealm}/account`, '_blank')
-      } else {
-        console.error('Keycloak configuration is not defined in runtime config')
-      }
-    }
+    onSelect: openAccountSettings
   },
   {
     type: 'separator'
@@ -242,12 +291,66 @@ const userMenuItems = computed<DropdownMenuItem[]>(() => [
   {
     label: t('header.menu.signOut'),
     icon: 'i-lucide-log-out',
-    onSelect: () => {
-      householdStore.reset()
-      authStore.logout('/')
-    }
+    onSelect: signOut
   }
 ])
+
+// The three applications. The dashboard cards were the only way between
+// them; now the header has them on every page, on every width.
+const appLinks = computed<NavigationMenuItem[]>(() => [
+  {
+    label: t('dashboard.apps.foodScholar.title'),
+    icon: 'i-lucide-graduation-cap',
+    to: '/foodscholar'
+  },
+  {
+    label: t('dashboard.apps.recipeWrangler.title'),
+    icon: 'i-lucide-chef-hat',
+    to: '/recipe-wrangler'
+  },
+  {
+    label: t('dashboard.apps.foodChat.title'),
+    icon: 'i-lucide-message-circle',
+    to: '/foodchat'
+  }
+])
+
+const showAppNav = computed(() => authStore.initialized && authStore.isLoggedIn && !isLanding.value)
+const appNavItems = computed<NavigationMenuItem[]>(() => appLinks.value)
+
+const mobileMenuItems = computed<NavigationMenuItem[][]>(() => {
+  const loggedIn = authStore.initialized && authStore.isLoggedIn
+  const groups: NavigationMenuItem[][] = []
+
+  if (loggedIn) {
+    groups.push([
+      { label: t('header.apps'), type: 'label' },
+      { label: t('dashboard.title'), icon: 'i-lucide-layout-dashboard', to: '/dashboard', exact: true },
+      ...appLinks.value
+    ])
+
+    const account: NavigationMenuItem[] = [
+      { label: t('header.account'), type: 'label' },
+      { label: t('header.menu.myProfile'), icon: 'i-lucide-user', to: '/my-profile', disabled: !householdStore.currentMember },
+      { label: t('header.menu.myLibrary'), icon: 'i-lucide-heart', to: '/library', disabled: !householdStore.currentMember },
+      { label: t('header.menu.switchProfile'), icon: 'i-lucide-users', onSelect: switchProfile }
+    ]
+    if (authStore.canAccessConsole) {
+      account.push({ label: t('header.console'), icon: 'i-lucide-panel-top', to: '/console' })
+    }
+    account.push(
+      { label: t('header.menu.accountSettings'), icon: 'i-lucide-settings', onSelect: () => { menuOpen.value = false; openAccountSettings() } },
+      { label: t('header.menu.signOut'), icon: 'i-lucide-log-out', onSelect: signOut }
+    )
+    groups.push(account)
+  } else if (authStore.initialized) {
+    groups.push([
+      { label: t('nav.signIn'), icon: 'i-lucide-lock', to: '/login' }
+    ])
+  }
+
+  return groups
+})
 </script>
 
 <style>

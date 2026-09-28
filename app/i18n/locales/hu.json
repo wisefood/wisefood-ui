@@ -150,8 +150,14 @@
       "switchProfile": "Profilváltás",
       "accountSettings": "Fiókbeállítások",
       "signOut": "Kijelentkezés",
-      "myLibrary": "Könyvtáram"
-    }
+      "myLibrary": "Könyvtáram",
+      "open": "Menü megnyitása",
+      "close": "Menü bezárása",
+      "title": "Menü",
+      "description": "Webhely navigáció"
+    },
+    "apps": "Alkalmazások",
+    "account": "Fiók"
   },
   "auth": {
     "welcome": "Üdv újra",

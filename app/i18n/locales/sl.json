@@ -150,8 +150,14 @@
       "switchProfile": "Zamenjaj profil",
       "accountSettings": "Nastavitve računa",
       "signOut": "Odjava",
-      "myLibrary": "Moja knjižnica"
-    }
+      "myLibrary": "Moja knjižnica",
+      "open": "Odpri meni",
+      "close": "Zapri meni",
+      "title": "Meni",
+      "description": "Navigacija po strani"
+    },
+    "apps": "Aplikacije",
+    "account": "Račun"
   },
   "auth": {
     "welcome": "Dobrodošli nazaj",

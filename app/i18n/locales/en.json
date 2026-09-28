@@ -150,8 +150,14 @@
       "switchProfile": "Switch Profile",
       "accountSettings": "Account Settings",
       "signOut": "Sign out",
-      "myLibrary": "My Library"
-    }
+      "myLibrary": "My Library",
+      "open": "Open menu",
+      "close": "Close menu",
+      "title": "Menu",
+      "description": "Site navigation"
+    },
+    "apps": "Apps",
+    "account": "Account"
   },
   "auth": {
     "welcome": "Welcome back",
