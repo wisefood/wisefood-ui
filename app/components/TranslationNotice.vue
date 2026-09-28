@@ -20,7 +20,7 @@
       <template v-if="!isActive && !confirming">
         <button
           :disabled="isLoading"
-          class="ml-auto rounded-md border border-amber-300 px-2 py-1 font-medium text-amber-900 transition-colors hover:bg-amber-100 disabled:opacity-50 dark:border-amber-800 dark:text-amber-200 dark:hover:bg-amber-900/30"
+          class="ml-auto rounded-md border border-amber-300 min-h-9 px-3 py-1 font-medium text-amber-900 transition-colors hover:bg-amber-100 disabled:opacity-50 dark:border-amber-800 dark:text-amber-200 dark:hover:bg-amber-900/30"
           @click="onTranslate"
         >
           {{ isLoading ? t('common.translation.translating') : t('common.translation.translate') }}
@@ -32,13 +32,13 @@
            immediately. -->
       <template v-else-if="confirming">
         <button
-          class="ml-auto rounded-md bg-amber-600 px-2 py-1 font-medium text-white transition-colors hover:bg-amber-700"
+          class="ml-auto rounded-md bg-amber-600 min-h-9 px-3 py-1 font-medium text-white transition-colors hover:bg-amber-700"
           @click="onConfirm"
         >
           {{ t('common.translation.confirm') }}
         </button>
         <button
-          class="rounded-md border border-amber-300 px-2 py-1 font-medium text-amber-900 transition-colors hover:bg-amber-100 dark:border-amber-800 dark:text-amber-200 dark:hover:bg-amber-900/30"
+          class="rounded-md border border-amber-300 min-h-9 px-3 py-1 font-medium text-amber-900 transition-colors hover:bg-amber-100 dark:border-amber-800 dark:text-amber-200 dark:hover:bg-amber-900/30"
           @click="confirming = false"
         >
           {{ t('common.translation.cancel') }}
@@ -46,7 +46,7 @@
       </template>
       <button
         v-else
-        class="ml-auto rounded-md border border-amber-300 px-2 py-1 font-medium text-amber-900 transition-colors hover:bg-amber-100 dark:border-amber-800 dark:text-amber-200 dark:hover:bg-amber-900/30"
+        class="ml-auto rounded-md border border-amber-300 min-h-9 px-3 py-1 font-medium text-amber-900 transition-colors hover:bg-amber-100 dark:border-amber-800 dark:text-amber-200 dark:hover:bg-amber-900/30"
         @click="showOriginal"
       >
         {{ t('common.translation.showOriginal') }}

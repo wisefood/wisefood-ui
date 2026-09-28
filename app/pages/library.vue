@@ -222,7 +222,7 @@
                 >
                   {{ t('library.planSavedOn', { date: formatDate(plan.saved_at) }) }}
                 </span>
-                <span class="text-[0.6875rem] text-brandp-500 opacity-0 group-hover:opacity-100 transition-opacity ml-auto">
+                <span class="text-[0.6875rem] text-brandp-500 opacity-0 pointer-coarse:opacity-100 group-hover:opacity-100 transition-opacity ml-auto">
                   {{ t('library.planOpen') }} →
                 </span>
               </div>

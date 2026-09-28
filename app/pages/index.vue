@@ -5,6 +5,8 @@
            TODO: video reference placeholder — drop an optional looping video
            behind the gradient once assets are delivered:
            <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover opacity-30" src="/videos/hero.mp4" />
+           Mount it only from `sm` up and not under `prefers-reduced-data`;
+           a phone on mobile data keeps the gradient alone.
       -->
       <div class="absolute inset-0 pointer-events-none">
         <!-- Red blob on the right (kept away from the logo in top-left) -->
@@ -33,9 +35,10 @@
             transform: `translate3d(0, ${parallaxY * 0.25}px, 0)`
           }"
         />
-        <!-- Warm terracotta blob bottom-left, away from the logo corner -->
+        <!-- Warm terracotta blob bottom-left, away from the logo corner. A
+             phone gets two blurred layers, not three. -->
         <div
-          class="gradient-blob blob-anim-c"
+          class="gradient-blob blob-anim-c hidden sm:block"
           :style="{
             bottom: '-30%',
             left: '-5%',
@@ -59,10 +62,10 @@
           </p>
 
           <h1 class="tracking-tight text-white leading-[0.95]">
-            <span class="block font-light text-5xl sm:text-6xl lg:text-7xl xl:text-8xl animate-fade-up animation-delay-200">
+            <span class="block font-light text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl break-words hyphens-auto animate-fade-up animation-delay-200">
               {{ t('hero.titleLead') }}
             </span>
-            <span class="block mt-1 sm:mt-2 font-serif italic text-6xl sm:text-7xl lg:text-8xl xl:text-[9rem] whitespace-nowrap bg-clip-text text-transparent bg-gradient-to-r from-brand-300 via-brand-200 to-brandg-200 animate-fade-up animation-delay-300">
+            <span class="block mt-1 sm:mt-2 font-serif italic text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[9rem] leading-none sm:leading-[0.95] whitespace-normal sm:whitespace-nowrap bg-clip-text text-transparent bg-gradient-to-r from-brand-300 via-brand-200 to-brandg-200 animate-fade-up animation-delay-300">
               <span
                 ref="typingElement"
                 class="typing-effect"
@@ -119,7 +122,9 @@
           </div>
         </div>
 
-        <div class="absolute left-1/2 -translate-x-1/2 bottom-8 sm:bottom-10 flex flex-col items-center gap-2 text-white/50 text-xs tracking-[0.3em] uppercase animate-fade-up animation-delay-800">
+        <!-- Decorative; on a phone the hero's copy reaches the bottom edge and
+             the hint would sit on the second call to action. -->
+        <div class="absolute left-1/2 -translate-x-1/2 bottom-8 sm:bottom-10 hidden sm:flex flex-col items-center gap-2 text-white/50 text-xs tracking-[0.3em] uppercase animate-fade-up animation-delay-800">
           <span>{{ t('hero.scrollHint') }}</span>
           <span class="block w-px h-10 bg-gradient-to-b from-white/50 to-transparent float-soft" />
         </div>
@@ -210,7 +215,7 @@
               :class="index % 2 === 1 ? 'lg:col-start-1 lg:row-start-1' : ''"
             >
               <div
-                class="relative aspect-[4/3] rounded-3xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-gradient-to-br p-6 sm:p-8"
+                class="relative aspect-auto min-h-[20rem] sm:aspect-[4/3] rounded-3xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-gradient-to-br px-5 pt-14 pb-6 sm:p-8"
                 :class="pillar.visualClass"
               >
                 <div class="absolute inset-0 grain-noise grain-noise-soft" />
@@ -236,7 +241,7 @@
                       <div class="px-4 pt-3 pb-2 text-sm leading-snug">
                         {{ t('mockups.foodchat.assistantMessage') }}
                       </div>
-                      <table class="w-full text-left text-xs border-t border-zinc-200">
+                      <table class="hidden sm:table w-full text-left text-xs border-t border-zinc-200">
                         <thead>
                           <tr class="bg-zinc-50 text-[0.625rem] uppercase tracking-wider text-zinc-500">
                             <th class="px-3 py-1.5 font-medium">
@@ -339,12 +344,12 @@
                       </i18n-t>
                     </p>
                     <div class="border-t border-dashed border-zinc-200 pt-3">
-                      <div class="text-[0.5625rem] tracking-[0.2em] uppercase text-zinc-600 font-medium mb-2">
+                      <div class="text-[0.625rem] tracking-[0.2em] uppercase text-zinc-600 font-medium mb-2">
                         {{ t('mockups.foodscholar.sources') }}
                       </div>
                       <ul class="space-y-1.5">
                         <li class="flex items-center gap-2 text-[0.6875rem] text-zinc-700">
-                          <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-500 text-white text-[0.5625rem] font-bold shrink-0">1</span>
+                          <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-500 text-white text-[0.625rem] font-bold shrink-0">1</span>
                           <UIcon
                             name="i-lucide-compass"
                             class="w-3 h-3 text-brand-600 shrink-0"
@@ -353,7 +358,7 @@
                           <span class="text-zinc-500 truncate">· {{ t('mockups.foodscholar.guideTitle') }}</span>
                         </li>
                         <li class="flex items-center gap-2 text-[0.6875rem] text-zinc-700">
-                          <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-500 text-white text-[0.5625rem] font-bold shrink-0">2</span>
+                          <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-500 text-white text-[0.625rem] font-bold shrink-0">2</span>
                           <UIcon
                             name="i-lucide-file-text"
                             class="w-3 h-3 text-brand-600 shrink-0"
@@ -362,7 +367,7 @@
                           <span class="text-zinc-500 truncate">· {{ t('mockups.foodscholar.articleTitle') }}</span>
                         </li>
                         <li class="flex items-center gap-2 text-[0.6875rem] text-zinc-700">
-                          <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-500 text-white text-[0.5625rem] font-bold shrink-0">3</span>
+                          <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand-500 text-white text-[0.625rem] font-bold shrink-0">3</span>
                           <UIcon
                             name="i-lucide-book-marked"
                             class="w-3 h-3 text-brand-600 shrink-0"
@@ -439,7 +444,7 @@
                   </div>
                 </div>
 
-                <div class="absolute top-5 left-6 right-6 flex items-center justify-between text-[0.625rem] tracking-[0.3em] uppercase text-zinc-500 dark:text-zinc-400 font-medium">
+                <div class="absolute top-5 left-5 right-5 sm:left-6 sm:right-6 flex items-center justify-between text-[0.625rem] tracking-[0.3em] uppercase text-zinc-500 dark:text-zinc-400 font-medium">
                   <span>{{ t(`pillars.items.${pillar.key}.tag`) }}</span>
                   <span>0{{ index + 1 }} / 03</span>
                 </div>
@@ -600,6 +605,8 @@
       <!-- TODO: video reference placeholder — drop in a short looping b-roll
            behind the CTA once assets are delivered:
            <video autoplay muted loop playsinline class="absolute inset-0 w-full h-full object-cover opacity-20" src="/videos/cta.mp4" />
+           Same rule as the hero: `sm` and up only, never under
+           `prefers-reduced-data`.
       -->
       <div class="absolute inset-0 pointer-events-none">
         <div

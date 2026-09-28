@@ -136,7 +136,7 @@
             <h2 class="text-xl font-light text-gray-900 dark:text-white mb-2">
               {{ activeInsightTitle }}
             </h2>
-            <div class="relative h-28 mb-4 overflow-hidden">
+            <div class="relative min-h-28 mb-4 overflow-hidden">
               <Transition name="insight-slide" mode="out-in">
                 <div
                   :key="`insight-${activeInsightIndex}`"
@@ -165,7 +165,7 @@
             </div>
             <NuxtLink
               to="/foodscholar"
-              class="text-sm font-medium text-brand-600 dark:text-brand-400 hover:underline"
+              class="inline-flex items-center text-sm font-medium text-brand-600 dark:text-brand-400 hover:underline pointer-coarse:min-h-11"
             >
               {{ t('dashboard.insights.learnMore') }} →
             </NuxtLink>
@@ -174,11 +174,11 @@
 
         <!-- Meal Schedule Calendar Card -->
         <div class="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 shadow-xl p-5 lg:col-span-2">
-          <div class="flex items-center justify-between mb-4">
+          <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-4">
             <div>
               <h2 class="text-xl font-light text-gray-900 dark:text-white">{{ t('dashboard.schedule.title') }}</h2>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 ml-auto">
               <!-- Only once there is a plan: sharing nothing is not an offer. -->
               <SharePlanButton
                 v-if="todayMealPlan?.id"
@@ -191,7 +191,7 @@
               />
               <NuxtLink
                 to="/foodchat"
-                class="text-sm font-medium text-brandp-500 dark:text-brandp-400 hover:underline"
+                class="inline-flex items-center text-sm font-medium text-brandp-500 dark:text-brandp-400 hover:underline pointer-coarse:min-h-11"
               >
                 {{ todayMealPlan ? t('dashboard.schedule.refineInFoodChat') : t('dashboard.schedule.createInFoodChat') }} →
               </NuxtLink>
@@ -214,7 +214,7 @@
               :class="[
                 meal.isNow ? 'bg-brand-50 dark:bg-brand-900/20 border-brand-200 dark:border-brand-800' : 'border-transparent',
                 meal.recipeId
-                  ? 'hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md hover:bg-gray-50 dark:hover:bg-zinc-700/50 focus-within:scale-[1.01] focus-within:ring-2 focus-within:ring-brand-500/40 focus-within:ring-offset-1'
+                  ? 'pointer-fine:hover:-translate-y-0.5 pointer-fine:hover:scale-[1.01] pointer-fine:hover:shadow-md pointer-fine:hover:bg-gray-50 dark:pointer-fine:hover:bg-zinc-700/50 focus-within:scale-[1.01] focus-within:ring-2 focus-within:ring-brand-500/40 focus-within:ring-offset-1'
                   : 'cursor-default'
               ]"
             >
@@ -249,7 +249,7 @@
                   class="flex items-center gap-1.5 text-xs"
                 >
                   <span
-                    class="shrink-0 inline-flex items-center px-1 py-px text-[0.5rem] font-semibold uppercase tracking-wide rounded"
+                    class="shrink-0 inline-flex items-center px-1 py-px text-[0.625rem] font-semibold uppercase tracking-wide rounded"
                     :class="plate.badgeClass"
                   >{{ plate.role }}</span>
                   <NuxtLink
@@ -291,14 +291,14 @@
       </div>
 
       <div class="mb-12 scroll-fade-in" style="--delay: 0.3s">
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-4">
           <h2 class="text-2xl font-light text-gray-900 dark:text-white">
             <span class="text-gray-900 dark:text-white">{{ t('dashboard.recipes.recommendedPrefix') }}</span>
             <span class="font-serif italic text-brand-500 dark:text-brand-400 text-3xl">&nbsp;{{ t('dashboard.recipes.recommendedAccent') }}</span>
           </h2>
           <NuxtLink
             to="/recipe-wrangler"
-            class="text-sm font-medium text-brandg-600 dark:text-brandg-400 hover:underline"
+            class="inline-flex items-center ml-auto text-sm font-medium text-brandg-600 dark:text-brandg-400 hover:underline pointer-coarse:min-h-11"
           >
             {{ t('dashboard.recipes.discoverInRecipeWrangler') }} →
           </NuxtLink>
@@ -329,7 +329,7 @@
             v-for="recipe in recommendedRecipes"
             :key="recipe.recipe_id"
             :to="`/recipe-wrangler/${recipe.recipe_id}`"
-            class="group rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/50 p-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+            class="group rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/50 p-3 pointer-fine:hover:shadow-md pointer-fine:hover:-translate-y-0.5 transition-all duration-200"
           >
             <div class="flex items-start gap-3">
               <div class="w-16 h-16 rounded-lg overflow-hidden border border-gray-100 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-700 shrink-0">

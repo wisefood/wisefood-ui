@@ -132,7 +132,8 @@ import type { AvatarConfig } from '~/utils/avatarPresets'
 
 interface Props {
   avatar: AvatarConfig
-  size?: 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  /** `full` fills whatever box the parent gives it, for grids of avatars. */
+  size?: 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'full'
   selected?: boolean
 }
 
@@ -149,6 +150,7 @@ const sizeClasses = computed(() => {
     case 'md': return 'w-20 h-20'
     case 'lg': return 'w-28 h-28'
     case 'xl': return 'w-36 h-36'
+    case 'full': return 'w-full h-full'
     default: return 'w-20 h-20'
   }
 })

@@ -39,19 +39,21 @@
         </p>
       </template>
 
-      <!-- Profiles Grid -->
-      <div class="flex flex-wrap justify-center gap-6 max-w-4xl">
+      <!-- Profiles Grid: two tiles a row on a phone, a wrapping row above -->
+      <div class="grid grid-cols-2 gap-4 w-full sm:flex sm:flex-wrap sm:justify-center sm:gap-6 max-w-4xl">
         <!-- Existing Profiles -->
         <div
           v-for="member in members"
           :key="member.id"
           class="relative"
         >
-          <!-- Delete button (only in manage mode) -->
+          <!-- Delete button (only in manage mode). The badge stays 32px; the
+               pseudo-element behind it takes the tap from a 44px area. -->
           <button
             v-if="isManaging"
             type="button"
-            class="absolute -top-2 -right-2 z-10 w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110"
+            class="absolute -top-2 -right-2 z-10 w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-lg transition-all duration-200 pointer-fine:hover:scale-110 after:absolute after:-inset-1.5 after:rounded-full after:content-['']"
+            :aria-label="t('profileSelection.actions.delete')"
             @click="confirmDeleteMember(member)"
           >
             <UIcon name="i-lucide-x" class="w-5 h-5" />
@@ -59,7 +61,7 @@
 
           <button
             type="button"
-            class="group flex flex-col items-center space-y-3 p-4 rounded-xl transition-all duration-300 hover:bg-white/5"
+            class="group w-full sm:w-auto flex flex-col items-center space-y-3 p-3 sm:p-4 rounded-xl transition-all duration-300 hover:bg-white/5"
             :class="{ 'animate-wiggle': isManaging }"
             @click="selectProfile(member)"
           >
@@ -67,28 +69,29 @@
               <ProfileAvatar
                 v-if="memberAvatars[member.id]"
                 :avatar="memberAvatars[member.id]"
-                size="xl"
+                :size="isPhone ? 'lg' : 'xl'"
                 class="transition-transform duration-300 group-hover:scale-105 group-hover:ring-4 group-hover:ring-white/30"
               />
               <div
                 v-else
-                class="w-36 h-36 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center transition-transform duration-300 group-hover:scale-105 group-hover:ring-4 group-hover:ring-white/30"
+                class="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center transition-transform duration-300 group-hover:scale-105 group-hover:ring-4 group-hover:ring-white/30"
               >
-                <span class="text-5xl font-light text-white">
+                <span class="text-4xl sm:text-5xl font-light text-white">
                   {{ member.name.charAt(0).toUpperCase() }}
                 </span>
               </div>
 
-              <!-- Hover overlay (only when not managing) -->
+              <!-- Play overlay (only when not managing): revealed on hover,
+                   always there for a finger, which has nothing to hover with -->
               <div
                 v-if="!isManaging"
-                class="absolute inset-0 rounded-full bg-white/0 group-hover:bg-white/10 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100"
+                class="absolute inset-0 rounded-full bg-white/0 group-hover:bg-white/10 transition-colors duration-300 flex items-center justify-center opacity-0 pointer-coarse:opacity-100 group-hover:opacity-100"
               >
                 <UIcon name="i-lucide-play" class="w-10 h-10 text-white drop-shadow-lg" />
               </div>
             </div>
 
-            <span class="text-gray-300 group-hover:text-white font-medium transition-colors text-xl">
+            <span class="max-w-full break-words text-center text-gray-300 group-hover:text-white font-medium transition-colors text-lg sm:text-xl">
               {{ member.name }}
             </span>
 
@@ -98,13 +101,13 @@
         <!-- Add Profile Button -->
         <button
           type="button"
-          class="group flex flex-col items-center space-y-3 p-4 rounded-xl transition-all duration-300 hover:bg-white/5"
+          class="group w-full sm:w-auto flex flex-col items-center space-y-3 p-3 sm:p-4 rounded-xl transition-all duration-300 hover:bg-white/5"
           @click="handleAddProfile"
         >
-          <div class="w-36 h-36 rounded-full border-2 border-dashed border-gray-600 group-hover:border-gray-400 flex items-center justify-center transition-all duration-300 group-hover:scale-105">
-            <UIcon name="i-lucide-plus" class="w-14 h-14 text-gray-500 group-hover:text-gray-300 transition-colors" />
+          <div class="w-28 h-28 sm:w-36 sm:h-36 rounded-full border-2 border-dashed border-gray-600 group-hover:border-gray-400 flex items-center justify-center transition-all duration-300 group-hover:scale-105">
+            <UIcon name="i-lucide-plus" class="w-12 h-12 sm:w-14 sm:h-14 text-gray-500 group-hover:text-gray-300 transition-colors" />
           </div>
-          <span class="text-gray-500 group-hover:text-gray-300 font-medium transition-colors text-lg">
+          <span class="max-w-full break-words text-center text-gray-500 group-hover:text-gray-300 font-medium transition-colors text-base sm:text-lg">
             {{ t('profileSelection.actions.addProfile') }}
           </span>
         </button>
@@ -114,132 +117,124 @@
       <button
         v-if="members.length > 0"
         type="button"
-        class="mt-12 px-6 py-2 border border-gray-600 text-gray-400 hover:text-white hover:border-white rounded-md transition-all duration-200"
+        class="mt-12 min-h-11 px-6 py-2 border border-gray-600 text-gray-400 hover:text-white hover:border-white rounded-md transition-all duration-200"
         @click="toggleManageMode"
       >
         {{ isManaging ? t('profileSelection.actions.done') : t('profileSelection.actions.manageProfiles') }}
       </button>
     </div>
 
-    <!-- Add Member Modal -->
-    <UModal v-model:open="showAddMember" :ui="{ width: 'max-w-md' }">
-      <template #content>
-        <UCard :ui="{ body: { padding: 'sm:p-6 p-4' }, rounded: 'rounded-2xl' }">
-          <template #header>
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('profileSelection.modal.addNewProfile') }}</h3>
-              <UButton
-                variant="ghost"
-                icon="i-lucide-x"
-                color="gray"
-                size="sm"
-                @click="showAddMember = false"
-              />
-            </div>
-          </template>
-
-          <div class="space-y-5">
-            <UFormField :label="t('profileSelection.fields.profileName')" required>
-              <UInput
-                v-model="newMemberName"
-                :placeholder="t('profileSelection.fields.profileNamePlaceholder')"
-                size="lg"
-                icon="i-lucide-user"
-                :disabled="isAddingMember"
-              />
-            </UFormField>
-
-            <UFormField :label="t('profileSelection.fields.ageGroupOptional')">
-              <USelectMenu
-                v-model="newMemberAgeGroup"
-                :items="ageGroupOptions"
-                :placeholder="t('profileSelection.fields.selectAgeGroup')"
-                size="lg"
-                value-key="value"
-                :disabled="isAddingMember"
-              />
-            </UFormField>
-
-            <ProfileAvatarSelector v-model="newMemberAvatarIndex" />
-
-            <UAlert
-              v-if="addMemberError"
-              color="red"
-              variant="soft"
-              icon="i-lucide-alert-circle"
-              :title="addMemberError"
+    <!-- Add Member Modal. The fields scroll under a pinned footer, so the
+         avatar grid and the Create button are both reachable on a phone. -->
+    <UModal
+      v-model:open="showAddMember"
+      :title="t('profileSelection.modal.addNewProfile')"
+      :ui="{ content: 'max-w-md sm:rounded-2xl', footer: 'justify-end gap-3' }"
+    >
+      <template #body>
+        <div class="space-y-5">
+          <UFormField :label="t('profileSelection.fields.profileName')" required>
+            <UInput
+              v-model="newMemberName"
+              :placeholder="t('profileSelection.fields.profileNamePlaceholder')"
+              size="lg"
+              icon="i-lucide-user"
+              :disabled="isAddingMember"
             />
-          </div>
+          </UFormField>
 
-          <template #footer>
-            <div class="flex justify-end gap-3">
-              <UButton
-                variant="ghost"
-                color="gray"
-                :disabled="isAddingMember"
-                @click="showAddMember = false"
-              >
-                {{ t('profileSelection.actions.cancel') }}
-              </UButton>
-              <UButton
-                color="primary"
-                :loading="isAddingMember"
-                :disabled="!newMemberName.trim()"
-                @click="addMember"
-              >
-                {{ t('profileSelection.actions.createProfile') }}
-              </UButton>
-            </div>
-          </template>
-        </UCard>
+          <UFormField :label="t('profileSelection.fields.ageGroupOptional')">
+            <USelectMenu
+              v-model="newMemberAgeGroup"
+              :items="ageGroupOptions"
+              :placeholder="t('profileSelection.fields.selectAgeGroup')"
+              size="lg"
+              value-key="value"
+              :disabled="isAddingMember"
+            />
+          </UFormField>
+
+          <ProfileAvatarSelector v-model="newMemberAvatarIndex" />
+
+          <UAlert
+            v-if="addMemberError"
+            color="error"
+            variant="soft"
+            icon="i-lucide-alert-circle"
+            :title="addMemberError"
+          />
+        </div>
+      </template>
+
+      <template #footer>
+        <UButton
+          variant="ghost"
+          color="neutral"
+          class="pointer-coarse:min-h-11"
+          :disabled="isAddingMember"
+          @click="showAddMember = false"
+        >
+          {{ t('profileSelection.actions.cancel') }}
+        </UButton>
+        <UButton
+          color="primary"
+          class="pointer-coarse:min-h-11"
+          :loading="isAddingMember"
+          :disabled="!newMemberName.trim()"
+          @click="addMember"
+        >
+          {{ t('profileSelection.actions.createProfile') }}
+        </UButton>
       </template>
     </UModal>
 
     <!-- Delete Confirmation Modal -->
-    <UModal v-model:open="showDeleteConfirm" :ui="{ width: 'max-w-sm' }">
+    <UModal
+      v-model:open="showDeleteConfirm"
+      :title="t('profileSelection.modal.deleteTitle')"
+      :ui="{ content: 'max-w-sm sm:rounded-2xl' }"
+    >
       <template #content>
-        <UCard :ui="{ body: { padding: 'sm:p-6 p-4' }, rounded: 'rounded-2xl' }">
-          <div class="text-center">
-            <div class="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
-              <UIcon name="i-lucide-alert-triangle" class="w-8 h-8 text-red-600 dark:text-red-400" />
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              {{ t('profileSelection.modal.deleteTitle') }}
-            </h3>
-            <p class="text-gray-600 dark:text-gray-400 mb-6">
-              {{ t('profileSelection.modal.deletePromptPrefix') }} <span class="font-medium text-gray-900 dark:text-white">{{ memberToDelete?.name }}</span>? {{ t('profileSelection.modal.deletePromptSuffix') }}
-            </p>
-
-            <UAlert
-              v-if="deleteError"
-              color="red"
-              variant="soft"
-              icon="i-lucide-alert-circle"
-              :title="deleteError"
-              class="mb-4 text-left"
-            />
-
-            <div class="flex gap-3">
-              <UButton
-                variant="soft"
-                color="gray"
-                class="flex-1"
-                :disabled="isDeleting"
-                @click="cancelDelete"
-              >
-                {{ t('profileSelection.actions.cancel') }}
-              </UButton>
-              <UButton
-                color="red"
-                class="flex-1"
-                :loading="isDeleting"
-                @click="deleteMember"
-              >
-                {{ t('profileSelection.actions.delete') }}
-              </UButton>
-            </div>
+        <div class="p-4 sm:p-6 text-center overflow-y-auto">
+          <div class="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
+            <UIcon name="i-lucide-alert-triangle" class="w-8 h-8 text-red-600 dark:text-red-400" />
           </div>
-        </UCard>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            {{ t('profileSelection.modal.deleteTitle') }}
+          </h3>
+          <p class="text-gray-600 dark:text-gray-400 mb-6">
+            {{ t('profileSelection.modal.deletePromptPrefix') }} <span class="font-medium text-gray-900 dark:text-white">{{ memberToDelete?.name }}</span>? {{ t('profileSelection.modal.deletePromptSuffix') }}
+          </p>
+
+          <UAlert
+            v-if="deleteError"
+            color="error"
+            variant="soft"
+            icon="i-lucide-alert-circle"
+            :title="deleteError"
+            class="mb-4 text-left"
+          />
+
+          <div class="flex gap-3">
+            <UButton
+              variant="soft"
+              color="neutral"
+              class="flex-1 pointer-coarse:min-h-11"
+              :disabled="isDeleting"
+              @click="cancelDelete"
+            >
+              {{ t('profileSelection.actions.cancel') }}
+            </UButton>
+            <UButton
+              color="error"
+              class="flex-1 pointer-coarse:min-h-11"
+              :loading="isDeleting"
+              @click="deleteMember"
+            >
+              {{ t('profileSelection.actions.delete') }}
+            </UButton>
+          </div>
+        </div>
       </template>
     </UModal>
 
@@ -265,6 +260,7 @@ definePageMeta({
 })
 
 const { t } = useI18n()
+const { isPhone } = useViewport()
 
 useHead({
   title: computed(() => t('profileSelection.pageTitle'))
@@ -346,16 +342,6 @@ onMounted(async () => {
 
   loading.value = false
 })
-
-function formatAgeGroup(group: string): string {
-  const labels: Record<string, string> = {
-    child: 'Child',
-    teen: 'Teen',
-    adult: 'Adult',
-    senior: 'Senior'
-  }
-  return labels[group] || group
-}
 
 function selectProfile(member: HouseholdMember) {
   if (isManaging.value) {

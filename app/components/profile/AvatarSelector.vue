@@ -9,11 +9,11 @@
         v-for="(avatar, index) in avatarPresets"
         :key="index"
         type="button"
-        class="group relative aspect-square rounded-full overflow-hidden transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+        class="group relative aspect-square rounded-full overflow-hidden transition-all duration-200 pointer-fine:hover:scale-110 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
         :class="selectedIndex === index ? 'ring-3 ring-brand-500 ring-offset-2 dark:ring-offset-gray-800 scale-105' : 'hover:shadow-lg'"
         @click="selectAvatar(index)"
       >
-        <ProfileAvatar :avatar="avatar" size="sm" class="w-full h-full" />
+        <ProfileAvatar :avatar="avatar" size="full" />
 
         <!-- Selection indicator -->
         <div
@@ -54,6 +54,7 @@ const selectedIndex = computed({
 
 function selectAvatar(index: number) {
   selectedIndex.value = index
-  emit('select', avatarPresets[index])
+  const avatar = avatarPresets[index]
+  if (avatar) emit('select', avatar)
 }
 </script>

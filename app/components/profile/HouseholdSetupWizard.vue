@@ -1,28 +1,28 @@
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm">
-    <div class="relative w-full max-w-lg mx-4">
-      <!-- Skip button -->
-      <button
-        v-if="!isSubmitting"
-        type="button"
-        class="absolute -top-12 right-0 text-white/70 hover:text-white text-sm flex items-center gap-1 transition-colors"
-        @click="handleSkip"
-      >
-        {{ t('profileSelection.setupWizard.actions.skipForNow') }}
-        <UIcon name="i-lucide-x" class="w-4 h-4" />
-      </button>
-
-      <!-- Card -->
-      <UCard
-        class="shadow-2xl"
-        :ui="{
-          body: { padding: 'sm:p-8 p-6' },
-          ring: 'ring-1 ring-white/10',
-          rounded: 'rounded-3xl'
-        }"
-      >
-        <!-- Progress indicator -->
-        <div class="flex items-center justify-center gap-2 mb-8">
+  <!-- A dialog rather than a page overlay. On a phone it fills the screen so
+       the steps scroll inside it while Continue stays pinned at the bottom; on
+       a wider screen it is the same card, centred, scrolling the same way.
+       There is no household yet to fall back to, so clicking outside does
+       nothing and Skip is the way out. -->
+  <UModal
+    :open="true"
+    :fullscreen="isPhone"
+    :dismissible="false"
+    :close="false"
+    :title="modalTitle"
+    :description="modalDescription"
+    :ui="{
+      overlay: 'bg-gray-900/80 backdrop-blur-sm',
+      content: 'sm:max-w-lg sm:rounded-3xl sm:shadow-2xl'
+    }"
+  >
+    <template #content>
+      <!-- Progress and the way out -->
+      <div class="flex items-center justify-between gap-3 px-4 sm:px-6 py-2.5 min-h-14">
+        <div
+          class="flex items-center gap-2"
+          aria-hidden="true"
+        >
           <div
             v-for="s in totalSteps"
             :key="s"
@@ -30,7 +30,20 @@
             :class="s <= step ? 'bg-brand-500 w-8' : 'bg-gray-200 dark:bg-gray-700 w-4'"
           />
         </div>
+        <UButton
+          v-if="!isSubmitting"
+          variant="ghost"
+          color="neutral"
+          size="sm"
+          trailing-icon="i-lucide-x"
+          class="pointer-coarse:min-h-11"
+          @click="handleSkip"
+        >
+          {{ t('profileSelection.setupWizard.actions.skipForNow') }}
+        </UButton>
+      </div>
 
+      <div class="flex-1 min-h-0 overflow-y-auto px-4 sm:px-8 py-6 sm:py-8">
         <!-- Step 1: Welcome & Household Name -->
         <div v-if="step === 1" class="space-y-6">
           <div class="text-center">
@@ -157,40 +170,43 @@
         <!-- Error display -->
         <UAlert
           v-if="error"
-          color="red"
+          color="error"
           variant="soft"
           icon="i-lucide-alert-circle"
           :title="error"
           class="mt-4"
         />
+      </div>
 
-        <!-- Navigation buttons -->
-        <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-          <UButton
-            v-if="step > 1"
-            variant="ghost"
-            color="gray"
-            icon="i-lucide-arrow-left"
-            :disabled="isSubmitting"
-            @click="step--"
-          >
-            {{ t('profileSelection.setupWizard.actions.back') }}
-          </UButton>
-          <div v-else />
+      <!-- Navigation buttons, pinned below the scrolling step and kept clear
+           of the phone's home indicator -->
+      <div class="flex items-center justify-between gap-3 px-4 sm:px-6 pt-4 pb-[max(1rem,var(--wf-safe-bottom))]">
+        <UButton
+          v-if="step > 1"
+          variant="ghost"
+          color="neutral"
+          icon="i-lucide-arrow-left"
+          class="pointer-coarse:min-h-11"
+          :disabled="isSubmitting"
+          @click="step--"
+        >
+          {{ t('profileSelection.setupWizard.actions.back') }}
+        </UButton>
+        <div v-else />
 
-          <UButton
-            color="primary"
-            trailing-icon="i-lucide-arrow-right"
-            :loading="isSubmitting"
-            :disabled="!canProceed"
-            @click="handleNext"
-          >
-            {{ step === totalSteps ? t('profileSelection.setupWizard.actions.completeSetup') : t('profileSelection.setupWizard.actions.continue') }}
-          </UButton>
-        </div>
-      </UCard>
-    </div>
-  </div>
+        <UButton
+          color="primary"
+          trailing-icon="i-lucide-arrow-right"
+          class="pointer-coarse:min-h-11"
+          :loading="isSubmitting"
+          :disabled="!canProceed"
+          @click="handleNext"
+        >
+          {{ step === totalSteps ? t('profileSelection.setupWizard.actions.completeSetup') : t('profileSelection.setupWizard.actions.continue') }}
+        </UButton>
+      </div>
+    </template>
+  </UModal>
 </template>
 
 <script setup lang="ts">
@@ -198,13 +214,12 @@ import { useI18n } from 'vue-i18n'
 import { useHouseholdStore } from '~/stores/household'
 import type { Gender } from '~/services/householdsApi'
 
-interface Emits {
-  (e: 'complete'): void
-  (e: 'skip'): void
-}
-
-const emit = defineEmits<Emits>()
+const emit = defineEmits<{
+  complete: []
+  skip: []
+}>()
 const { t } = useI18n()
+const { isPhone } = useViewport()
 
 const householdStore = useHouseholdStore()
 
@@ -225,6 +240,21 @@ const selectedAvatarIndex = ref(0)
 
 // Step 3: Dietary preferences
 const selectedDiet = ref<string>('omnivore')
+
+// What a screen reader hears the dialog called: the visible heading of the
+// current step, in plain text. The dialog renders it hidden because the step
+// draws its own heading with the accent styling.
+const modalTitle = computed(() => {
+  switch (step.value) {
+    case 1:
+      return `${t('profileSelection.setupWizard.step1.titlePrefix')} WiseFood`
+    case 2:
+      return `${t('profileSelection.setupWizard.step2.titlePrefix')} ${t('profileSelection.setupWizard.step2.titleAccent')}`
+    default:
+      return `${t('profileSelection.setupWizard.step3.titlePrefix')} ${t('profileSelection.setupWizard.step3.titleAccent')}`
+  }
+})
+const modalDescription = computed(() => t(`profileSelection.setupWizard.step${step.value}.subtitle`))
 
 const ageGroupOptions = computed(() => [
   { label: t('profileSelection.ageGroups.child'), value: 'child' },
