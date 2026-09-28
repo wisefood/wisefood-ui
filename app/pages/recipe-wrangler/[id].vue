@@ -3162,10 +3162,10 @@ const toNumber = (value: unknown): number => {
   return 0
 }
 
-// This helper is used by computed values that are registered with `watch`
-// earlier in setup. Vue evaluates a watched computed immediately to capture
-// its initial value, so this must be a hoisted declaration rather than a
-// later-initialized `const` (which throws in the temporal dead zone).
+// A declaration, not an arrow const, so it is hoisted. `watch(canShowPer100g)`
+// reads this through `servingWeightGrams` during setup, and a watched computed
+// is evaluated immediately to capture its initial value — so it runs long
+// before this line, where a `const` would still be in the temporal dead zone.
 function toNullableNumber(value: unknown): number | null {
   if (value === null || value === undefined || value === '') return null
   if (typeof value === 'number' && Number.isFinite(value)) return value

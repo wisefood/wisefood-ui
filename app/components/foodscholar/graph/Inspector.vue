@@ -89,17 +89,6 @@
           <button
             type="button"
             class="inline-flex items-center gap-1 rounded-lg border border-zinc-200 dark:border-zinc-700 px-2 py-1 text-[0.7rem] font-medium text-zinc-600 dark:text-zinc-300 transition-colors hover:border-brand-400 hover:text-brand-600 dark:hover:text-brand-400"
-            @click="emit('expand', nodeId)"
-          >
-            <UIcon
-              name="i-lucide-git-fork"
-              class="h-3 w-3"
-            />
-            {{ t('graph.inspector.expand') }}
-          </button>
-          <button
-            type="button"
-            class="inline-flex items-center gap-1 rounded-lg border border-zinc-200 dark:border-zinc-700 px-2 py-1 text-[0.7rem] font-medium text-zinc-600 dark:text-zinc-300 transition-colors hover:border-brand-400 hover:text-brand-600 dark:hover:text-brand-400"
             @click="emit('scope', nodeId)"
           >
             <UIcon
@@ -230,9 +219,9 @@
             </div>
           </section>
 
-          <!-- The card as a node of its own. Reached by clicking one on the
-               map, where it is a mark like any other. It has no hierarchy and
-               no evidence list of its own — what it describes has both — so
+          <!-- The card as a node of its own. Reached from a search
+               suggestion or a shared link, where it is a node like any
+               other. It has no hierarchy and no evidence list of its own — what it describes has both — so
                the useful thing to offer is the way back to its subject. -->
           <section
             v-if="isCardOnly"
@@ -508,7 +497,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   select: [nodeId: string]
-  expand: [nodeId: string]
   /** Narrow the whole view to this node's subtree. */
   scope: [nodeId: string]
   /** Hand a question to the Question Answering tab. */

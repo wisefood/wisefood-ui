@@ -20,6 +20,10 @@
       </div>
     </div>
 
+    <div class="shrink-0 border-b border-zinc-200 dark:border-zinc-800 px-3 py-1.5">
+      <FoodscholarGraphLegend :is-dark="isDark" />
+    </div>
+
     <div
       ref="scrollRef"
       class="min-h-0 flex-1 overflow-y-auto px-1.5 py-1.5"
@@ -144,9 +148,7 @@ import { GRAPH_THEME_DARK, GRAPH_THEME_LIGHT } from '~/utils/graphPalette'
 /**
  * The graph as a tree.
  *
- * The map answers "what is near what". This answers "where am I", which is a
- * different question and the one people ask more often. Both are first-class:
- * neither is a sidebar for the other.
+ * It answers "where am I", the question people ask most often of a hierarchy.
  *
  * Structure only. A shelf's children and the themes on it are loaded when the
  * row opens and cached afterwards, so re-opening a branch costs nothing and
@@ -155,8 +157,8 @@ import { GRAPH_THEME_DARK, GRAPH_THEME_LIGHT } from '~/utils/graphPalette'
  * The filters this view honours are the *structural* ones — facet, scope,
  * and whether folded shelves show. Evidence quality and the rest describe
  * cards, and hiding a shelf because its card is unrated would misrepresent the
- * hierarchy rather than filter it; those narrow the map and the result list,
- * where they mean what they say.
+ * hierarchy rather than filter it — which is why the filter panel offers only
+ * the structural ones.
  */
 
 const props = withDefaults(defineProps<{

@@ -23,11 +23,9 @@ import { shapeForFacet, type FacetShape } from '~/utils/graphPalette'
 /**
  * A facet's shape, at text size.
  *
- * The same shape the canvas draws, so the legend, the filter list and the
- * tree all say the same thing the map does. Drawn as a path rather than a
- * font glyph or an icon name because the canvas draws paths — two
- * implementations of the same six shapes would drift the first time one
- * changed.
+ * Drawn from the paths in `graphPalette`, so the filter list, the tree and
+ * the search suggestions all show the same six shapes. A font glyph or an
+ * icon name per place would drift the first time one changed.
  */
 
 const props = withDefaults(defineProps<{

@@ -82,136 +82,7 @@
         </div>
       </fieldset>
 
-      <fieldset>
-        <legend class="mb-1.5 text-[0.6rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-          {{ t('graph.filters.kind') }}
-        </legend>
-        <div class="space-y-0.5">
-          <label
-            v-for="kind in GRAPH_KINDS"
-            :key="kind"
-            class="flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
-          >
-            <input
-              type="checkbox"
-              class="h-3.5 w-3.5 rounded border-zinc-300 dark:border-zinc-600 text-brand-500 focus:ring-brand-500"
-              :checked="isChecked('kind', kind)"
-              @change="toggle('kind', kind)"
-            >
-            <span
-              class="h-2.5 w-2.5 shrink-0 rounded-sm"
-              :style="{ backgroundColor: palette.kind[kind] }"
-            />
-            <span class="min-w-0 flex-1 truncate text-xs text-zinc-700 dark:text-zinc-200">
-              {{ t(`graph.kind.${kind}`) }}
-            </span>
-            <span class="shrink-0 text-[0.65rem] tabular-nums text-zinc-400 dark:text-zinc-500">
-              {{ formatCount(countFor('by_kind', kind)) }}
-            </span>
-          </label>
-        </div>
-      </fieldset>
-
-      <!-- Evidence quality. Only offered when cards are in scope: filtering
-           on a card property while cards are excluded is a control that can
-           only ever return nothing. -->
-      <fieldset v-if="qualityOptions.length">
-        <legend class="mb-1.5 text-[0.6rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-          {{ t('graph.filters.evidenceQuality') }}
-        </legend>
-        <div class="flex flex-wrap gap-1">
-          <button
-            v-for="quality in qualityOptions"
-            :key="quality"
-            type="button"
-            class="rounded-full border px-2 py-0.5 text-[0.7rem] font-medium transition-colors"
-            :class="isChecked('evidenceQuality', quality)
-              ? 'border-brand-400 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300'
-              : 'border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-zinc-400'"
-            @click="toggle('evidenceQuality', quality)"
-          >
-            {{ t(`graph.quality.${quality}`, quality) }}
-            <span class="ml-1 tabular-nums opacity-60">{{ formatCount(countFor('by_evidence_quality', quality)) }}</span>
-          </button>
-        </div>
-      </fieldset>
-
-      <fieldset v-if="discoveryOptions.length">
-        <legend class="mb-1.5 text-[0.6rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-          {{ t('graph.filters.discoveredBy') }}
-        </legend>
-        <div class="flex flex-wrap gap-1">
-          <button
-            v-for="method in discoveryOptions"
-            :key="method"
-            type="button"
-            class="rounded-full border px-2 py-0.5 text-[0.7rem] font-medium transition-colors"
-            :class="isChecked('discoveredBy', method)
-              ? 'border-brand-400 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300'
-              : 'border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-zinc-400'"
-            @click="toggle('discoveredBy', method)"
-          >
-            {{ method }}
-            <span class="ml-1 tabular-nums opacity-60">{{ formatCount(countFor('by_discovered_by', method)) }}</span>
-          </button>
-        </div>
-      </fieldset>
-
-      <!-- Depth. The single most effective control over how much arrives, so
-           it is a slider rather than a number field: the cost of the next
-           level is something you want to feel. -->
-      <div>
-        <label class="mb-1 flex items-center justify-between">
-          <span class="text-[0.6rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-            {{ t('graph.filters.depth') }}
-          </span>
-          <span class="text-[0.7rem] tabular-nums text-zinc-600 dark:text-zinc-300">
-            {{ modelValue.depthMax ?? maxDepth }}
-          </span>
-        </label>
-        <input
-          type="range"
-          class="w-full accent-brand-500"
-          min="0"
-          :max="maxDepth"
-          :value="modelValue.depthMax ?? maxDepth"
-          @change="update({ depthMax: Number(($event.target as HTMLInputElement).value) })"
-        >
-        <p class="mt-0.5 text-[0.65rem] leading-tight text-zinc-400 dark:text-zinc-500">
-          {{ t('graph.filters.depthHint') }}
-        </p>
-      </div>
-
-      <div>
-        <label class="mb-1 flex items-center justify-between">
-          <span class="text-[0.6rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-            {{ t('graph.filters.minEvidence') }}
-          </span>
-          <span class="text-[0.7rem] tabular-nums text-zinc-600 dark:text-zinc-300">
-            {{ modelValue.minChunks || 0 }}
-          </span>
-        </label>
-        <input
-          type="range"
-          class="w-full accent-brand-500"
-          min="0"
-          max="100"
-          step="5"
-          :value="modelValue.minChunks || 0"
-          @change="update({ minChunks: Number(($event.target as HTMLInputElement).value) || null })"
-        >
-      </div>
-
       <div class="space-y-1.5 border-t border-zinc-200 dark:border-zinc-800 pt-3">
-        <label class="flex cursor-pointer items-center gap-2">
-          <input
-            type="checkbox"
-            class="h-3.5 w-3.5 rounded border-zinc-300 dark:border-zinc-600 text-brand-500 focus:ring-brand-500"
-            :checked="modelValue.hasCard === true"
-            @change="update({ hasCard: ($event.target as HTMLInputElement).checked ? true : null })"
-          >
-          <span class="text-xs text-zinc-700 dark:text-zinc-200">{{ t('graph.filters.onlyWithCard') }}</span>
-        </label>
         <label class="flex cursor-pointer items-center gap-2">
           <input
             type="checkbox"
@@ -232,13 +103,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  GRAPH_FACETS,
-  GRAPH_KINDS,
-  EVIDENCE_QUALITIES,
-  type GraphFilters
-} from '~/services/graphApi'
-import { GRAPH_THEME_DARK, GRAPH_THEME_LIGHT } from '~/utils/graphPalette'
+import { GRAPH_FACETS, type GraphFilters } from '~/services/graphApi'
 
 /**
  * The filter panel.
@@ -249,16 +114,19 @@ import { GRAPH_THEME_DARK, GRAPH_THEME_LIGHT } from '~/utils/graphPalette'
  * is real information: it means that combination is empty, and the option
  * dims rather than disappearing, because an option that vanishes when it hits
  * zero cannot be un-selected.
+ *
+ * Only the filters the tree honours are offered — scope, facet and folded
+ * shelves. The graph API takes more (kind, depth, evidence and the like), but
+ * they narrowed a map this page no longer draws, and a control that changes
+ * nothing on screen reads as a broken one.
  */
 
 const props = defineProps<{
   modelValue: GraphFilters
   /** Aggregation buckets from the last search, keyed as the API returns them. */
   counts: Record<string, Record<string, number>>
-  maxDepth: number
   /** Label of the node the view is scoped to, if any. */
   scopeLabel?: string | null
-  isDark?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -268,34 +136,13 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const palette = computed(() => (props.isDark ? GRAPH_THEME_DARK : GRAPH_THEME_LIGHT))
-
-/** Options are driven by what the data has, not by the enum, except for the
- *  qualities — those are a closed vocabulary and a missing one is meaningful
- *  ("nothing here is debated" reads differently from "debated is not an
- *  option"). Discovery methods are open-ended, so they come from the counts. */
-const qualityOptions = computed(() => {
-  const buckets = props.counts.by_evidence_quality || {}
-  const present = EVIDENCE_QUALITIES.filter(q => buckets[q] !== undefined)
-  return present.length ? present : []
-})
-
-const discoveryOptions = computed(() => Object.keys(props.counts.by_discovered_by || {}).sort())
-
 const showsFolded = computed(() => (props.modelValue.status || []).includes('folded'))
 
 const activeCount = computed(() => {
   const f = props.modelValue
   let n = 0
-  if (f.q?.trim()) n++
-  if (f.kind?.length) n++
   if (f.facet?.length) n++
   if (f.under) n++
-  if (f.depthMax !== null && f.depthMax !== undefined && f.depthMax < props.maxDepth) n++
-  if (f.minChunks) n++
-  if (f.discoveredBy?.length) n++
-  if (f.evidenceQuality?.length) n++
-  if (f.hasCard !== null && f.hasCard !== undefined) n++
   if (showsFolded.value) n++
   return n
 })
@@ -310,7 +157,7 @@ function formatCount(value: number): string {
   return String(value)
 }
 
-type ArrayKey = 'kind' | 'facet' | 'status' | 'discoveredBy' | 'evidenceQuality'
+type ArrayKey = 'facet'
 
 function isChecked(key: ArrayKey, value: string): boolean {
   return (props.modelValue[key] as string[] | undefined)?.includes(value) ?? false
