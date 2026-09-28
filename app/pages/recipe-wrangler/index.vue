@@ -653,6 +653,9 @@
           </button>
         </div>
       </section>
+
+      <!-- Where the recipes, and the numbers attached to them, come from -->
+      <RecipesSourceDataSection v-if="activeTab === 'search'" />
     </main>
   </div>
 </template>

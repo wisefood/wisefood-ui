@@ -493,7 +493,16 @@
             <p class="text-sm text-zinc-500 dark:text-zinc-400 mb-8">
               {{ basisLabel }}
               <span v-if="servingWeightLabel">· {{ servingWeightLabel }}</span>
-              · <span class="italic">{{ compositionTableLabel }}</span>
+              ·
+              <NuxtLink
+                v-if="compositionTable"
+                :to="`/recipe-wrangler/fctables/${encodeURIComponent(compositionTable.urn)}`"
+                class="italic underline decoration-dotted underline-offset-2 hover:text-brandg-600 dark:hover:text-brandg-400 transition-colors"
+              >
+                {{ compositionTableLabel }}
+                <UIcon name="i-lucide-arrow-up-right" class="w-3 h-3 inline-block align-text-top opacity-70" />
+              </NuxtLink>
+              <span v-else class="italic">{{ compositionTableLabel }}</span>
             </p>
 
             <!-- Profile still being computed in the background -->
@@ -1211,6 +1220,21 @@
         </div>
       </div>
 
+      <!-- More like this -->
+      <div v-if="showRelated" class="mt-10 sm:mt-12">
+        <RecipesRecipeStrip
+          :title="relatedTitle"
+          :subtitle="relatedSubtitle"
+          icon="i-lucide-sparkles"
+          :recipes="relatedRecipes"
+          :loading="relatedLoading"
+          :error="relatedError"
+          :skeleton-count="3"
+          :columns="3"
+          @retry="loadRelated"
+        />
+      </div>
+
       <UModal
         v-model:open="showNutriScoreDetails"
         :ui="{ content: 'max-w-3xl' }"
@@ -1821,6 +1845,8 @@ import type {
 } from '~/services/recipeApi'
 import type { AdaptedRecipeNutrition, MemberAdaptedRecipe } from '~/services/memberAdaptedRecipesApi'
 import { formatDishTypeLabel, getDishTypeIcon, normalizeDishTypes } from '~/utils/dishTypes'
+import { useRelatedRecipes } from '~/composables/useCatalogRecipes'
+import { useRegionCompositionTable } from '~/composables/useRegionCompositionTable'
 import { ANNOTATION_FACETS, humanizeFacet } from '~/utils/facetPresentation'
 
 definePageMeta({
@@ -1888,6 +1914,16 @@ const selectedRegion = ref<SupportedRegion>(
   resolveRegion(householdStore.currentHousehold?.region)
 )
 const compositionTableLabel = computed(() => COMPOSITION_TABLES[selectedRegion.value])
+
+/*
+ * The registered table behind that label, when there is one.
+ *
+ * The label is a constant string per region and stays exactly as it was; this
+ * only decides whether it is also a link. A region with no table registered
+ * keeps the plain prose.
+ */
+const { table: compositionTable, resolve: resolveCompositionTable } = useRegionCompositionTable()
+
 
 const checkedIngredients = ref<Record<number, boolean>>({})
 const checkedInstructions = ref<Record<number, boolean>>({})
@@ -1963,6 +1999,48 @@ const normalizeRecipeImageUrl = (url?: string | null): string | null => {
   return normalized
 }
 const recipe = computed(() => currentRecipe.value)
+/*
+ * Recipes like this one.
+ *
+ * At the bottom because it is somewhere to go after reading, not something to
+ * read past. `basis` reports what the list could actually be built on, so the
+ * heading can say "more from this source" when the annotation pass has not
+ * reached this recipe and there were no shared facets to relate on.
+ */
+const {
+  recipes: relatedRecipes,
+  loading: relatedLoading,
+  error: relatedError,
+  basis: relatedBasis,
+  load: loadRelatedRecipes
+} = useRelatedRecipes()
+
+const RELATED_LIMIT = 6
+
+const showRelated = computed(() =>
+  Boolean(recipe.value) && (relatedLoading.value || relatedError.value || relatedRecipes.value.length > 0))
+
+const relatedTitle = computed(() =>
+  relatedBasis.value === 'source' && recipe.value?.source
+    ? `More from ${recipe.value.source}`
+    : 'More like this')
+
+const relatedSubtitle = computed(() => {
+  if (relatedLoading.value || relatedError.value) return ''
+  return relatedBasis.value === 'source'
+    ? 'This recipe carries no cuisine or course yet, so these are its neighbours in the same collection.'
+    : 'Recipes sharing this one\u2019s cuisine or course.'
+})
+
+const loadRelated = async () => {
+  const current = recipe.value
+  if (!current) return
+  await loadRelatedRecipes(current.recipe_id, {
+    limit: RELATED_LIMIT,
+    region: selectedRegion.value,
+    source: current.source ?? null
+  })
+}
 const recipeImageUrl = computed(() => {
   const imageUrl = normalizeRecipeImageUrl(recipe.value?.image_url)
   if (!imageUrl || imageLoadFailed.value) return null
@@ -2667,6 +2745,11 @@ const loadRecipe = async () => {
       if (showImproveNudge.value) {
         void loadAdaptSuggestions()
       }
+      // Below the fold, and neither blocks the recipe: the strip has its own
+      // loading state and the table link only decorates a line that already
+      // reads correctly without it.
+      void loadRelated()
+      void resolveCompositionTable(selectedRegion.value)
     }
   } catch (err) {
     console.error('Failed to load recipe:', err)
@@ -3079,7 +3162,11 @@ const toNumber = (value: unknown): number => {
   return 0
 }
 
-const toNullableNumber = (value: unknown): number | null => {
+// This helper is used by computed values that are registered with `watch`
+// earlier in setup. Vue evaluates a watched computed immediately to capture
+// its initial value, so this must be a hoisted declaration rather than a
+// later-initialized `const` (which throws in the temporal dead zone).
+function toNullableNumber(value: unknown): number | null {
   if (value === null || value === undefined || value === '') return null
   if (typeof value === 'number' && Number.isFinite(value)) return value
   if (typeof value === 'string') {

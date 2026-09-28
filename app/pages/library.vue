@@ -244,12 +244,46 @@
               ({{ lit.savedCounts.value.article }})
             </span>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!--
+            Saved, but nothing came back.
+            `savedCounts` counts the saved URNs and the list counts what
+            actually hydrated; the composable tracks them apart for exactly
+            this case. Without it a failed lookup renders a heading, a
+            non-zero count and an empty grid, which reads as "my saves are
+            gone" rather than "this did not load".
+          -->
+          <div
+            v-if="!lit.loading.value && lit.articles.value.length === 0 && lit.savedCounts.value.article > 0"
+            class="rounded-xl border border-dashed border-amber-300 dark:border-amber-700 p-6 text-center"
+          >
+            <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+              {{ t('library.unresolvedDescription', { count: lit.savedCounts.value.article }) }}
+            </p>
+            <UButton
+              color="primary"
+              size="sm"
+              icon="i-lucide-refresh-cw"
+              @click="lit.load()"
+            >
+              {{ t('library.tryAgain') }}
+            </UButton>
+          </div>
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!--
+              `fade` off on purpose. These cards default to a scroll-reveal
+              that starts at opacity 0 and is only un-hidden by an
+              IntersectionObserver each Foodscholar page sets up for itself.
+              This page has none, and the rule reaches it anyway because
+              three other pages declare it in an unscoped <style> that stays
+              in the document after they are navigated away from — so the
+              cards rendered, took up grid space, and stayed invisible.
+            -->
             <FoodscholarArticleCard
               v-for="(article, i) in lit.articles.value"
               :key="article.urn"
               :article="article"
               :index="i"
+              :fade="false"
             />
           </div>
         </section>
@@ -268,7 +302,24 @@
               ({{ lit.savedCounts.value.guide }})
             </span>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Saved but unhydrated, as on the articles grid above. -->
+          <div
+            v-if="!lit.loading.value && lit.guides.value.length === 0 && lit.savedCounts.value.guide > 0"
+            class="rounded-xl border border-dashed border-amber-300 dark:border-amber-700 p-6 text-center"
+          >
+            <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+              {{ t('library.unresolvedDescription', { count: lit.savedCounts.value.guide }) }}
+            </p>
+            <UButton
+              color="primary"
+              size="sm"
+              icon="i-lucide-refresh-cw"
+              @click="lit.load()"
+            >
+              {{ t('library.tryAgain') }}
+            </UButton>
+          </div>
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <FoodscholarGuidesGuideCard
               v-for="guide in lit.guides.value"
               :key="guide.urn"
@@ -292,12 +343,31 @@
               ({{ lit.savedCounts.value.textbook }})
             </span>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Saved but unhydrated, as on the articles grid above. -->
+          <div
+            v-if="!lit.loading.value && lit.textbooks.value.length === 0 && lit.savedCounts.value.textbook > 0"
+            class="rounded-xl border border-dashed border-amber-300 dark:border-amber-700 p-6 text-center"
+          >
+            <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+              {{ t('library.unresolvedDescription', { count: lit.savedCounts.value.textbook }) }}
+            </p>
+            <UButton
+              color="primary"
+              size="sm"
+              icon="i-lucide-refresh-cw"
+              @click="lit.load()"
+            >
+              {{ t('library.tryAgain') }}
+            </UButton>
+          </div>
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- Scroll-reveal off, for the reason given on the articles grid. -->
             <FoodscholarTextbookCard
               v-for="(textbook, i) in lit.textbooks.value"
               :key="textbook.urn"
               :textbook="textbook"
               :index="i"
+              :fade="false"
             />
           </div>
         </section>
@@ -315,9 +385,6 @@ import { useRecipeStore } from '~/stores/recipe'
 import { useHouseholdStore } from '~/stores/household'
 import { useSavedLibrary } from '~/composables/useSavedLibrary'
 import { buildGuideDetailPath } from '~/utils/guidesCatalog'
-import ArticleCard from '~/components/foodscholar/ArticleCard.vue'
-import GuideCard from '~/components/foodscholar/guides/GuideCard.vue'
-import TextbookCard from '~/components/foodscholar/TextbookCard.vue'
 
 const { t } = useI18n()
 const recipeStore = useRecipeStore()

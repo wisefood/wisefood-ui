@@ -54,6 +54,19 @@ export const COLLECTION_TABLE_FIELDS = [
   'has_nutritional_data', 'updated_at'
 ]
 
+/**
+ * What a reader-facing collection card draws.
+ *
+ * Narrower than the console's table on purpose, and wider in one place: the
+ * card carries the cover image and a line of description, neither of which
+ * the management table shows.
+ */
+export const COLLECTION_CARD_FIELDS = [
+  'urn', 'id', 'title', 'description', 'image_url', 'recipe_count',
+  'source_type', 'cuisines', 'language', 'status', 'review_status',
+  'visibility', 'is_curated'
+]
+
 /** Fields the catalog aggregates into buckets, which become the filters. */
 export const COLLECTION_FACET_FIELDS = [
   'status', 'license', 'language', 'source_type', 'review_status', 'visibility'

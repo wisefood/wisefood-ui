@@ -53,6 +53,19 @@ export const FCTABLE_TABLE_FIELDS = [
   'completeness_percent', 'nutrient_coverage', 'updated_at'
 ]
 
+/**
+ * What a reader-facing table card draws.
+ *
+ * `description` and `url` are here and not in the console's table: a reader
+ * meeting a composition table for the first time needs to know what it is
+ * and where it came from, not which columns sort.
+ */
+export const FCTABLE_CARD_FIELDS = [
+  'urn', 'id', 'title', 'description', 'compiling_institution', 'database_name',
+  'number_of_entries', 'completeness_percent', 'nutrient_coverage', 'region',
+  'language', 'license', 'status', 'url', 'type'
+]
+
 /** Aggregated into buckets by the same request; these become the filters. */
 export const FCTABLE_FACET_FIELDS = [
   'status', 'license', 'language', 'region', 'compiling_institution'

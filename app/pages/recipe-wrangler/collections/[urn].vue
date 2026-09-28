@@ -286,7 +286,7 @@
               <h3 class="font-semibold text-brandg-900 dark:text-brandg-100">Browse Recipes</h3>
             </div>
             <p class="text-xs text-brandg-700 dark:text-brandg-300 mb-3 leading-relaxed">
-              Explore recipes from this collection in RecipeWrangler.
+              This collection's own recipes are listed below. Search across every collection in RecipeWrangler.
             </p>
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
               <UButton
@@ -305,6 +305,26 @@
           </div>
         </div>
       </div>
+
+      <!-- The collection's own recipes -->
+      <div class="mt-10 sm:mt-12">
+        <RecipesRecipeStrip
+          title="Recipes in this collection"
+          icon="i-lucide-chef-hat"
+          :subtitle="recipeCountLabel"
+          :recipes="recipes"
+          :loading="recipesLoading"
+          :loading-more="loadingMoreRecipes"
+          :error="recipesError"
+          :has-more="hasMoreRecipes"
+          :skeleton-count="4"
+          :columns="4"
+          empty-title="No recipes are linked to this collection yet"
+          empty-description="Recipes join a collection through their source. Until this collection's recipes carry its identifier they cannot be listed here, even where the count above says it holds some."
+          @retry="retryRecipes"
+          @load-more="loadMoreRecipes"
+        />
+      </div>
     </main>
   </div>
 </template>
@@ -314,9 +334,25 @@ import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import rcollectionsApi from '~/services/rcollectionsApi'
 import type { RecipeCollection, RCollectionStatus, RCollectionReviewStatus, RCollectionSourceType } from '~/services/rcollectionsApi'
+import { resolveRecipeRegion } from '~/services/recipeApi'
+import { useCatalogRecipeList } from '~/composables/useCatalogRecipes'
+import { luceneOr, luceneTerm } from '~/utils/catalogRecipeCards'
+import { useHouseholdStore } from '~/stores/household'
+
+/*
+ * Every request this page makes is authenticated, so an unauthenticated
+ * visitor used to get the page frame and a "failed to load" box. The rest of
+ * RecipeWrangler gates at the route; this now does too.
+ */
+definePageMeta({
+  middleware: ['auth']
+})
 
 const route = useRoute()
 const urn = computed(() => route.params.urn as string)
+
+const householdStore = useHouseholdStore()
+const region = resolveRecipeRegion(householdStore.currentHousehold?.region)
 
 const collection = ref<RecipeCollection | null>(null)
 const loading = ref(true)
@@ -346,7 +382,62 @@ async function loadCollection() {
   }
 }
 
-onMounted(loadCollection)
+/*
+ * The collection's recipes, from the recipe index.
+ *
+ * Two fields can carry the link and neither is redundant: `collection_urn` is
+ * written at index time from the backend's source registry, and `source_id`
+ * is what a curator sets when they attach a recipe to a collection by hand.
+ * A collection filtered on only one of them lists a fraction of itself.
+ */
+const {
+  recipes,
+  total: recipeTotal,
+  loading: recipesLoading,
+  loadingMore: loadingMoreRecipes,
+  error: recipesError,
+  hasMore: hasMoreRecipes,
+  load: loadRecipes,
+  loadMore: loadMoreRecipes,
+  retry: retryRecipes
+} = useCatalogRecipeList(12)
+
+function loadCollectionRecipes() {
+  const term = luceneTerm(urn.value)
+  const filter = luceneOr([`collection_urn:${term}`, `source_id:${term}`])
+  if (!filter) return Promise.resolve()
+  return loadRecipes({
+    fq: [filter],
+    // Alphabetical: a collection is browsed, not ranked, and relevance order
+    // without a query is index order wearing a better name.
+    sort: ['title.kw:asc'],
+    region
+  })
+}
+
+/**
+ * The indexed count, and the authored one when they disagree.
+ *
+ * `recipe_count` is a number somebody typed onto the collection record; the
+ * total here is how many recipes actually carry its identifier. They are
+ * routinely different, and showing only one of them makes the other look
+ * like a bug.
+ */
+const recipeCountLabel = computed(() => {
+  if (recipesLoading.value) return ''
+  const indexed = recipeTotal.value
+  if (!indexed) return ''
+  const recorded = collection.value?.recipe_count
+  const base = `${indexed.toLocaleString()} in the recipe index`
+  return recorded != null && recorded !== indexed
+    ? `${base} · ${recorded.toLocaleString()} recorded on the collection`
+    : base
+})
+
+onMounted(() => {
+  void loadCollection()
+  void loadCollectionRecipes()
+})
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })

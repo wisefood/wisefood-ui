@@ -113,7 +113,14 @@ export interface RecipeSearchResult {
   image_url: string | null
   duration?: number | null
   serves?: number | null
-  nutri_score?: number | null
+  /**
+   * Nutri-Score points (the Neo4j search path) or the letter label the
+   * catalog index stores ("Nutriscore_B"). `getNutriScoreGrade` accepts
+   * both; the union is here because a card built from an index document
+   * genuinely carries the string, and typing it as a number only meant the
+   * mismatch went unnoticed.
+   */
+  nutri_score?: number | string | null
   nutri_score_color?: string | null
   sust_score?: number | null
   expert_recipe?: boolean | null
