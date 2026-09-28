@@ -7,7 +7,7 @@
   it back.
 -->
 <template>
-  <div class="mx-auto w-full max-w-2xl px-4 py-10 sm:py-14">
+  <div class="mx-auto w-full max-w-2xl px-4 py-6 sm:py-14">
     <div class="mb-8 flex items-center justify-between gap-4">
       <img
         src="/logo.png"
@@ -69,7 +69,7 @@
         <p class="text-xs font-medium uppercase tracking-wide text-primary-600 dark:text-primary-400">
           {{ t('shared.eyebrow') }}
         </p>
-        <h1 class="mt-1 text-2xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
+        <h1 class="mt-1 text-2xl font-semibold tracking-tight break-words text-gray-900 dark:text-white sm:text-3xl">
           {{ plan.title || t('shared.fallbackTitle') }}
         </h1>
         <p
@@ -121,7 +121,7 @@
             >
             <div class="p-5">
               <div class="flex items-start justify-between gap-3">
-                <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+                <h3 class="min-w-0 text-base font-semibold break-words text-gray-900 dark:text-white">
                   {{ dish.title || t('shared.untitled') }}
                 </h3>
                 <UBadge

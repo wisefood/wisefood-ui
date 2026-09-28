@@ -26,27 +26,47 @@
                  knob over fixed stops in the UI)". It never was.
       a choice   segmented pills. "Lose weight" is not more or less than
                  "high protein", so nothing about it should slide.
+
+    Two postures for the whole strip. `ribbon` is the row across the canvas.
+    `stacked` is the same controls one per row, sized for a thumb, for the
+    sheet a phone opens instead — a ribbon that wraps to six rows of 20px
+    pills is not a ribbon any more.
   -->
-  <div class="fc-ribbon flex flex-wrap items-center gap-x-4 gap-y-2 px-4 sm:px-6 py-2.5 shrink-0">
-    <UIcon name="i-lucide-settings-2" class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0" />
+  <div
+    :class="stacked
+      ? 'fc-ribbon-stacked flex flex-col gap-5 py-1'
+      : 'fc-ribbon flex flex-wrap items-center gap-x-4 gap-y-2 px-4 sm:px-6 py-2.5 shrink-0'"
+  >
+    <UIcon
+      v-if="!stacked"
+      name="i-lucide-settings-2"
+      class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0"
+    />
 
     <template v-for="param in card.parameters" :key="param.key">
       <!-- A numeric duration: quick-pick presets. -->
       <div
         v-if="param.kind === 'scale'"
-        class="fc-ribbon-group flex items-center gap-1.5"
+        class="fc-ribbon-group flex"
+        :class="stacked ? 'flex-col gap-2' : 'items-center gap-1.5'"
       >
-        <span class="text-xs text-gray-500 dark:text-zinc-400 font-light whitespace-nowrap">
+        <span
+          class="text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap"
+          :class="stacked ? 'font-medium' : 'font-light'"
+        >
           {{ paramLabel(param) }}
         </span>
-        <div class="flex flex-wrap items-center gap-1">
+        <div class="flex flex-wrap items-center" :class="stacked ? 'gap-2' : 'gap-1'">
           <button
             v-for="preset in presets(param)"
             :key="preset"
-            class="px-2 py-0.5 text-xs rounded-md border tabular-nums transition-colors"
-            :class="Number(currentValue(param)) === preset
-              ? 'border-brandp-400 bg-brandp-50 dark:bg-brandp-950/50 text-brandp-700 dark:text-brandp-300 font-medium'
-              : 'border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400 hover:border-brandp-300 hover:text-brandp-600'"
+            class="rounded-md border tabular-nums transition-colors"
+            :class="[
+              stacked ? 'min-h-11 px-3.5 text-sm' : 'px-2 py-0.5 text-xs',
+              Number(currentValue(param)) === preset
+                ? 'border-brandp-400 bg-brandp-50 dark:bg-brandp-950/50 text-brandp-700 dark:text-brandp-300 font-medium'
+                : 'border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400 hover:border-brandp-300 hover:text-brandp-600'
+            ]"
             :disabled="busy"
             @click="commitScale(param, preset)"
           >
@@ -58,12 +78,16 @@
       <!-- An ordered scale: a knob that slides across its stops. -->
       <div
         v-else-if="param.kind === 'choice' && param.ordered && param.options"
-        class="fc-ribbon-group flex items-center gap-2"
+        class="fc-ribbon-group flex"
+        :class="stacked ? 'flex-col gap-2' : 'items-center gap-2'"
       >
-        <span class="text-xs text-gray-500 dark:text-zinc-400 font-light whitespace-nowrap">
+        <span
+          class="text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap"
+          :class="stacked ? 'font-medium' : 'font-light'"
+        >
           {{ paramLabel(param) }}
         </span>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center" :class="stacked ? 'gap-3 w-full' : 'gap-2'">
           <input
             :value="stopIndex(param)"
             type="range"
@@ -71,12 +95,16 @@
             :max="param.options.length - 1"
             step="1"
             class="fc-knob"
+            :class="{ 'fc-knob-wide': stacked }"
             :disabled="busy"
             :aria-label="paramLabel(param)"
             :aria-valuetext="optionLabel(param, param.options[stopIndex(param)]!)"
             @input="commitStop(param, Number(($event.target as HTMLInputElement).value))"
           >
-          <span class="text-xs font-medium text-gray-600 dark:text-zinc-300 whitespace-nowrap min-w-16">
+          <span
+            class="font-medium text-gray-600 dark:text-zinc-300 whitespace-nowrap"
+            :class="stacked ? 'text-sm min-w-24 text-right' : 'text-xs min-w-16'"
+          >
             {{ optionLabel(param, param.options[stopIndex(param)]!) }}
           </span>
         </div>
@@ -85,19 +113,29 @@
       <!-- Unordered alternatives: segmented pills. -->
       <div
         v-else-if="param.kind === 'choice' && param.options"
-        class="fc-ribbon-group flex items-center gap-1"
+        class="fc-ribbon-group flex"
+        :class="stacked ? 'flex-col gap-2' : 'items-center gap-1'"
       >
-        <span class="text-xs text-gray-500 dark:text-zinc-400 font-light whitespace-nowrap">
+        <span
+          class="text-xs text-gray-500 dark:text-zinc-400 whitespace-nowrap"
+          :class="stacked ? 'font-medium' : 'font-light'"
+        >
           {{ paramLabel(param) }}
         </span>
-        <div class="flex flex-wrap rounded-full border border-gray-200 dark:border-zinc-700 p-0.5 bg-white dark:bg-zinc-800">
+        <div
+          class="flex flex-wrap rounded-full border border-gray-200 dark:border-zinc-700 p-0.5 bg-white dark:bg-zinc-800"
+          :class="{ 'w-full gap-0.5': stacked }"
+        >
           <button
             v-for="option in param.options"
             :key="option.value"
-            class="px-2.5 py-1 text-xs rounded-full whitespace-nowrap transition-colors"
-            :class="currentValue(param) === option.value
-              ? 'bg-brandp-500 text-white font-medium'
-              : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200'"
+            class="rounded-full whitespace-nowrap transition-colors"
+            :class="[
+              stacked ? 'min-h-11 px-4 text-sm flex-1' : 'px-2.5 py-1 text-xs',
+              currentValue(param) === option.value
+                ? 'bg-brandp-500 text-white font-medium'
+                : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200'
+            ]"
             :disabled="busy"
             @click="commitChoice(param, option.value)"
           >
@@ -116,14 +154,21 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, reactive } from 'vue'
+import { computed, onBeforeUnmount, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { PlanParameter, PlanParameterCard, PlanParameterOption, PlanParameterValues } from '~/services/foodchatApi'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   card: PlanParameterCard
   busy?: boolean
-}>()
+  /** `ribbon` across the canvas; `stacked` one control per row, in a sheet. */
+  layout?: 'ribbon' | 'stacked'
+}>(), {
+  busy: false,
+  layout: 'ribbon'
+})
+
+const stacked = computed(() => props.layout === 'stacked')
 
 const emit = defineEmits<{
   apply: [values: PlanParameterValues, planType?: 'daily' | 'weekly']
@@ -312,5 +357,29 @@ function optionLabel(param: PlanParameter, option: PlanParameterOption): string 
 }
 .fc-knob:focus-visible::-moz-range-thumb {
   box-shadow: 0 0 0 3px rgb(99 102 241 / 0.35);
+}
+
+/* In the sheet the knob has the row to itself, so it takes the width and a
+   thumb a finger can find. The same thumb on any touch screen: a 13px thumb
+   is a target nobody hits first time. */
+.fc-knob-wide {
+  width: 100%;
+  flex: 1 1 auto;
+  height: 2rem;
+}
+.fc-knob-wide::-webkit-slider-thumb,
+.fc-knob-wide::-moz-range-thumb {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.fc-knob-wide::-webkit-slider-thumb { margin-top: -0.625rem; }
+@media (pointer: coarse) {
+  .fc-knob { height: 2rem; }
+  .fc-knob::-webkit-slider-thumb,
+  .fc-knob::-moz-range-thumb {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  .fc-knob::-webkit-slider-thumb { margin-top: -0.625rem; }
 }
 </style>

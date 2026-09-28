@@ -1,198 +1,211 @@
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <!-- Backdrop -->
+  <!--
+    RecipeWrangler's adapt assistant, without leaving FoodChat.
+
+    A bottom sheet on a phone and a centred dialog anywhere wider, so Escape,
+    the scroll lock and the swipe to dismiss come from the primitive rather
+    than a keydown listener on the document. The parent mounts this with
+    `v-if` and waits for `close`, which is sent once the shell has animated
+    out rather than the instant it was asked to.
+  -->
+  <DefineBody>
+    <!-- Loading -->
     <div
-      class="absolute inset-0 bg-black/40 backdrop-blur-sm"
-      @click="emit('close')"
-    />
-
-    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 shadow-2xl overflow-hidden">
-      <!-- Header -->
-      <div class="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100 dark:border-zinc-800">
-        <div class="w-8 h-8 rounded-lg bg-brandp-50 dark:bg-brandp-950/40 flex items-center justify-center shrink-0">
-          <UIcon
-            name="i-lucide-wand-sparkles"
-            class="w-4 h-4 text-brandp-500"
-          />
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
-            {{ t('foodChatHome.adaptModal.title') }}
-          </p>
-          <p class="text-[0.6875rem] text-gray-400 dark:text-zinc-500 truncate">
-            {{ recipe?.title || '…' }}
-          </p>
-        </div>
-        <button
-          class="flex items-center justify-center w-7 h-7 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
-          :aria-label="t('foodChatHome.adaptModal.close')"
-          @click="emit('close')"
-        >
-          <UIcon
-            name="i-lucide-x"
-            class="w-4 h-4"
-          />
-        </button>
-      </div>
-
-      <div class="px-4 py-3 max-h-[60vh] overflow-y-auto">
-        <!-- Loading -->
-        <div
-          v-if="loading"
-          class="py-8 text-center"
-        >
-          <UIcon
-            name="i-lucide-loader-2"
-            class="w-6 h-6 text-brandp-400 animate-spin mx-auto mb-2"
-          />
-          <p class="text-xs text-gray-400 dark:text-zinc-500">
-            {{ t('foodChatHome.adaptModal.loading') }}
-          </p>
-        </div>
-
-        <!-- Error -->
-        <div
-          v-else-if="error"
-          class="py-6 text-center space-y-2"
-        >
-          <UIcon
-            name="i-lucide-alert-circle"
-            class="w-6 h-6 text-amber-500 mx-auto"
-          />
-          <p class="text-xs text-gray-500 dark:text-zinc-400">
-            {{ error }}
-          </p>
-        </div>
-
-        <!-- Already optimal -->
-        <div
-          v-else-if="result?.status === 'already_optimal' || (result && !suggestions.length)"
-          class="py-6 text-center space-y-2"
-        >
-          <UIcon
-            name="i-lucide-badge-check"
-            class="w-7 h-7 text-emerald-500 mx-auto"
-          />
-          <p class="text-sm font-medium text-gray-700 dark:text-zinc-200">
-            {{ t('foodChatHome.adaptModal.alreadyOptimal') }}
-          </p>
-          <p
-            v-if="currentGrade"
-            class="text-[0.6875rem] text-gray-400 dark:text-zinc-500"
-          >
-            Nutri-Score {{ currentGrade }}
-          </p>
-        </div>
-
-        <!-- Suggestions -->
-        <div
-          v-else
-          class="space-y-2"
-        >
-          <div
-            v-for="suggestion in suggestions"
-            :key="suggestion.rank"
-            class="rounded-xl border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-800/40 p-3 space-y-1.5"
-          >
-            <div class="flex items-start gap-2">
-              <div class="flex-1 min-w-0">
-                <p class="text-xs font-medium text-gray-800 dark:text-gray-200 leading-snug">
-                  {{ suggestion.explanation?.headline || suggestionFallbackLine(suggestion) }}
-                </p>
-                <p
-                  v-if="suggestion.explanation?.reason"
-                  class="mt-0.5 text-[0.6875rem] font-light text-gray-500 dark:text-zinc-400 leading-snug"
-                >
-                  {{ suggestion.explanation.reason }}
-                </p>
-              </div>
-              <span
-                v-if="formatGrade(suggestion.simulated_nutri_score)"
-                class="shrink-0 px-1.5 py-0.5 text-[0.625rem] rounded font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"
-              >
-                → {{ formatGrade(suggestion.simulated_nutri_score) }}
-              </span>
-            </div>
-            <p
-              v-if="suggestion.introduces_allergen && suggestion.new_allergens?.length"
-              class="flex items-center gap-1 text-[0.625rem] text-amber-600 dark:text-amber-400"
-            >
-              <UIcon
-                name="i-lucide-alert-triangle"
-                class="w-3 h-3 shrink-0"
-              />
-              {{ t('foodChatHome.adaptModal.allergenWarning', { list: suggestion.new_allergens.join(', ') }) }}
-            </p>
-            <div class="flex justify-end">
-              <span
-                v-if="savedRank === suggestion.rank"
-                class="inline-flex items-center gap-1 text-[0.6875rem] text-emerald-600 dark:text-emerald-400"
-              >
-                <UIcon
-                  name="i-lucide-check"
-                  class="w-3 h-3"
-                />
-                {{ t('foodChatHome.adaptModal.saved') }}
-              </span>
-              <button
-                v-else
-                class="inline-flex items-center gap-1 px-2.5 py-1 text-[0.6875rem] rounded-full font-medium transition-colors
-                       bg-brandp-500 text-white hover:bg-brandp-600
-                       disabled:bg-gray-200 disabled:text-gray-400 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-500"
-                :disabled="savingRank !== null || savedRank !== null"
-                @click="save(suggestion)"
-              >
-                <UIcon
-                  v-if="savingRank === suggestion.rank"
-                  name="i-lucide-loader-2"
-                  class="w-3 h-3 animate-spin"
-                />
-                {{ t('foodChatHome.adaptModal.save') }}
-              </button>
-            </div>
-          </div>
-          <p
-            v-if="saveError"
-            class="text-[0.6875rem] text-red-500 dark:text-red-400"
-          >
-            {{ saveError }}
-          </p>
-          <p
-            v-if="savedRank !== null"
-            class="text-[0.6875rem] font-light text-gray-400 dark:text-zinc-500 leading-snug"
-          >
-            {{ t('foodChatHome.adaptModal.savedHint') }}
-          </p>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="flex items-center justify-between px-4 py-2.5 border-t border-gray-100 dark:border-zinc-800">
-        <NuxtLink
-          :to="`/recipe-wrangler/${recipeId}`"
-          target="_blank"
-          class="inline-flex items-center gap-1 text-[0.6875rem] text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:underline transition-colors"
-        >
-          {{ t('foodChatHome.adaptModal.openFull') }}
-          <UIcon
-            name="i-lucide-arrow-up-right"
-            class="w-3 h-3"
-          />
-        </NuxtLink>
-        <button
-          class="text-[0.6875rem] text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors"
-          @click="emit('close')"
-        >
-          {{ t('foodChatHome.adaptModal.close') }}
-        </button>
-      </div>
+      v-if="loading"
+      class="py-8 text-center"
+    >
+      <UIcon
+        name="i-lucide-loader-2"
+        class="w-6 h-6 text-brandp-400 animate-spin mx-auto mb-2"
+      />
+      <p class="text-xs text-gray-400 dark:text-zinc-500">
+        {{ t('foodChatHome.adaptModal.loading') }}
+      </p>
     </div>
-  </div>
+
+    <!-- Error -->
+    <div
+      v-else-if="error"
+      class="py-6 text-center space-y-2"
+    >
+      <UIcon
+        name="i-lucide-alert-circle"
+        class="w-6 h-6 text-amber-500 mx-auto"
+      />
+      <p class="text-xs text-gray-500 dark:text-zinc-400">
+        {{ error }}
+      </p>
+    </div>
+
+    <!-- Already optimal -->
+    <div
+      v-else-if="result?.status === 'already_optimal' || (result && !suggestions.length)"
+      class="py-6 text-center space-y-2"
+    >
+      <UIcon
+        name="i-lucide-badge-check"
+        class="w-7 h-7 text-emerald-500 mx-auto"
+      />
+      <p class="text-sm font-medium text-gray-700 dark:text-zinc-200">
+        {{ t('foodChatHome.adaptModal.alreadyOptimal') }}
+      </p>
+      <p
+        v-if="currentGrade"
+        class="text-[0.6875rem] text-gray-400 dark:text-zinc-500"
+      >
+        Nutri-Score {{ currentGrade }}
+      </p>
+    </div>
+
+    <!-- Suggestions -->
+    <div
+      v-else
+      class="space-y-2"
+    >
+      <div
+        v-for="suggestion in suggestions"
+        :key="suggestion.rank"
+        class="rounded-xl border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-800/40 p-3 space-y-1.5"
+      >
+        <div class="flex items-start gap-2">
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-medium text-gray-800 dark:text-gray-200 leading-snug">
+              {{ suggestion.explanation?.headline || suggestionFallbackLine(suggestion) }}
+            </p>
+            <p
+              v-if="suggestion.explanation?.reason"
+              class="mt-0.5 text-[0.6875rem] font-light text-gray-500 dark:text-zinc-400 leading-snug"
+            >
+              {{ suggestion.explanation.reason }}
+            </p>
+          </div>
+          <span
+            v-if="formatGrade(suggestion.simulated_nutri_score)"
+            class="shrink-0 px-1.5 py-0.5 text-[0.625rem] rounded font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"
+          >
+            → {{ formatGrade(suggestion.simulated_nutri_score) }}
+          </span>
+        </div>
+        <p
+          v-if="suggestion.introduces_allergen && suggestion.new_allergens?.length"
+          class="flex items-center gap-1 text-[0.625rem] text-amber-600 dark:text-amber-400"
+        >
+          <UIcon
+            name="i-lucide-alert-triangle"
+            class="w-3 h-3 shrink-0"
+          />
+          {{ t('foodChatHome.adaptModal.allergenWarning', { list: suggestion.new_allergens.join(', ') }) }}
+        </p>
+        <div class="flex justify-end">
+          <span
+            v-if="savedRank === suggestion.rank"
+            class="inline-flex items-center gap-1 text-[0.6875rem] text-emerald-600 dark:text-emerald-400"
+          >
+            <UIcon
+              name="i-lucide-check"
+              class="w-3 h-3"
+            />
+            {{ t('foodChatHome.adaptModal.saved') }}
+          </span>
+          <button
+            v-else
+            class="inline-flex items-center gap-1 px-2.5 py-1 pointer-coarse:min-h-11 pointer-coarse:px-4 text-[0.6875rem] pointer-coarse:text-xs rounded-full font-medium transition-colors
+                   bg-brandp-500 text-white hover:bg-brandp-600
+                   disabled:bg-gray-200 disabled:text-gray-400 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-500"
+            :disabled="savingRank !== null || savedRank !== null"
+            @click="save(suggestion)"
+          >
+            <UIcon
+              v-if="savingRank === suggestion.rank"
+              name="i-lucide-loader-2"
+              class="w-3 h-3 animate-spin"
+            />
+            {{ t('foodChatHome.adaptModal.save') }}
+          </button>
+        </div>
+      </div>
+      <p
+        v-if="saveError"
+        class="text-[0.6875rem] text-red-500 dark:text-red-400"
+      >
+        {{ saveError }}
+      </p>
+      <p
+        v-if="savedRank !== null"
+        class="text-[0.6875rem] font-light text-gray-400 dark:text-zinc-500 leading-snug"
+      >
+        {{ t('foodChatHome.adaptModal.savedHint') }}
+      </p>
+    </div>
+  </DefineBody>
+
+  <DefineFooter>
+    <!-- The full recipe opens beside the chat on a desktop and in place on a
+         phone, where a second tab is a place the plan cannot be seen from. -->
+    <NuxtLink
+      :to="`/recipe-wrangler/${recipeId}`"
+      :target="linkTarget"
+      class="inline-flex items-center gap-1 min-h-11 text-[0.6875rem] pointer-coarse:text-xs text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:underline transition-colors"
+    >
+      {{ t('foodChatHome.adaptModal.openFull') }}
+      <UIcon
+        name="i-lucide-arrow-up-right"
+        class="w-3 h-3"
+      />
+    </NuxtLink>
+    <button
+      class="min-h-11 px-3 text-[0.6875rem] pointer-coarse:text-xs text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200 transition-colors"
+      @click="open = false"
+    >
+      {{ t('foodChatHome.adaptModal.close') }}
+    </button>
+  </DefineFooter>
+
+  <UDrawer
+    v-if="isPhone"
+    v-model:open="open"
+    :title="t('foodChatHome.adaptModal.title')"
+    :description="recipe?.title || '…'"
+    :ui="{
+      content: 'max-h-[88dvh]',
+      container: 'min-h-0 overflow-hidden gap-3 pb-[max(0.5rem,var(--wf-safe-bottom))]',
+      body: 'min-h-0 overflow-y-auto -mx-4 px-4',
+      footer: 'shrink-0 flex-row items-center justify-between gap-3 pt-1 border-t border-gray-100 dark:border-zinc-800'
+    }"
+    @animation-end="onDrawerAnimationEnd"
+  >
+    <template #body>
+      <ReuseBody />
+    </template>
+    <template #footer>
+      <ReuseFooter />
+    </template>
+  </UDrawer>
+
+  <UModal
+    v-else
+    v-model:open="open"
+    :title="t('foodChatHome.adaptModal.title')"
+    :description="recipe?.title || '…'"
+    :ui="{
+      content: 'max-w-md',
+      footer: 'justify-between py-1.5'
+    }"
+    @after:leave="finishClose"
+  >
+    <template #body>
+      <ReuseBody />
+    </template>
+    <template #footer>
+      <ReuseFooter />
+    </template>
+  </UModal>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { createReusableTemplate } from '@vueuse/core'
 import recipeApi, { resolveRecipeRegion, type Recipe, type RecipeAdaptSuggestion, type RecipeAdaptSuggestionsResult, type RecipeIngredient } from '~/services/recipeApi'
 import memberAdaptedRecipesApi, { type AdaptedRecipeNutrition } from '~/services/memberAdaptedRecipesApi'
 import { useHouseholdStore } from '~/stores/household'
@@ -202,6 +215,44 @@ const emit = defineEmits<{ close: [], saved: [] }>()
 
 const { t } = useI18n()
 const householdStore = useHouseholdStore()
+const { isPhone, isCoarsePointer } = useViewport()
+
+const [DefineBody, ReuseBody] = createReusableTemplate()
+const [DefineFooter, ReuseFooter] = createReusableTemplate()
+
+const linkTarget = computed(() => isCoarsePointer.value ? undefined : '_blank')
+
+/**
+ * Open from the moment it is mounted; the parent decides WHEN it exists.
+ *
+ * Closing is a hand-off: the primitive animates out first, then `close` tells
+ * the parent to unmount this. The timer covers a browser that never fires
+ * the end event.
+ */
+const open = ref(true)
+let closed = false
+let closeTimer: ReturnType<typeof setTimeout> | null = null
+
+watch(open, (isOpen) => {
+  if (isOpen || closed) return
+  closeTimer = setTimeout(finishClose, 450)
+})
+
+function finishClose() {
+  if (closed) return
+  closed = true
+  if (closeTimer) clearTimeout(closeTimer)
+  closeTimer = null
+  emit('close')
+}
+
+function onDrawerAnimationEnd(isOpen: boolean) {
+  if (!isOpen) finishClose()
+}
+
+onBeforeUnmount(() => {
+  if (closeTimer) clearTimeout(closeTimer)
+})
 
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -221,13 +272,6 @@ function suggestionFallbackLine(s: RecipeAdaptSuggestion): string {
   if (s.action === 'reduce') return t('foodChatHome.adaptModal.reduceLine', { ingredient: s.original_ingredient })
   return t('foodChatHome.adaptModal.swapLine', { from: s.original_ingredient, to: s.substitute_name || '' })
 }
-
-function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape') emit('close')
-}
-
-onMounted(() => document.addEventListener('keydown', onKeydown))
-onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
 
 onMounted(async () => {
   try {

@@ -1638,7 +1638,8 @@
         "soup": "Leves",
         "dessert": "Desszert",
         "drink": "Ital"
-      }
+      },
+      "macroRing": "Tápanyag-megoszlás: {value} {label}. Koppints a következőhöz."
     },
     "constraints": {
       "label": "Feltételek",
@@ -1849,6 +1850,12 @@
     },
     "planSettings": {
       "title": "Terv beállításai"
+    },
+    "panes": {
+      "label": "Csevegés vagy terv",
+      "chat": "Csevegés",
+      "plan": "Terv",
+      "newPlan": "Új terv"
     },
     "splitter": {
       "hint": "Húzd az átméretezéshez · dupla kattintás a visszaállításhoz"

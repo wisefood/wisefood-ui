@@ -1639,7 +1639,8 @@
         "soup": "Juha",
         "dessert": "Sladica",
         "drink": "Napitek"
-      }
+      },
+      "macroRing": "Razčlenitev hranil: {value} {label}. Tapni za naslednje."
     },
     "constraints": {
       "label": "Omejitve",
@@ -1850,6 +1851,12 @@
     },
     "planSettings": {
       "title": "Nastavitve načrta"
+    },
+    "panes": {
+      "label": "Klepet ali načrt",
+      "chat": "Klepet",
+      "plan": "Načrt",
+      "newPlan": "Nov načrt"
     },
     "splitter": {
       "hint": "Povleci za spremembo velikosti · dvojni klik za ponastavitev"

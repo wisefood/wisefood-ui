@@ -66,15 +66,21 @@
             v-if="metric.score != null"
             class="text-[0.6875rem] text-gray-700 dark:text-zinc-200 tabular-nums shrink-0"
           >{{ formatScore(metric) }}</span>
-          <UTooltip
+          <FoodchatInfoPopover
             v-if="metric.detail"
             :text="metric.detail"
           >
-            <UIcon
-              name="i-lucide-info"
-              class="w-3 h-3 text-gray-300 dark:text-zinc-600 shrink-0"
-            />
-          </UTooltip>
+            <button
+              type="button"
+              class="w-3 h-3 pointer-coarse:w-9 pointer-coarse:h-9 pointer-coarse:-my-3 flex items-center justify-center rounded-full shrink-0 text-gray-300 dark:text-zinc-600 hover:text-gray-500 dark:hover:text-zinc-400"
+              :aria-label="metric.label"
+            >
+              <UIcon
+                name="i-lucide-info"
+                class="w-3 h-3"
+              />
+            </button>
+          </FoodchatInfoPopover>
         </div>
       </div>
 
@@ -83,16 +89,17 @@
         v-if="ledger.length"
         class="flex flex-wrap gap-1"
       >
-        <UTooltip
+        <FoodchatInfoPopover
           v-for="(row, idx) in ledger"
           :key="`c-${idx}`"
           :text="row.detail || row.constraint"
         >
-          <span
-            class="inline-flex items-center gap-1 px-2 py-0.5 text-[0.625rem] rounded-full border cursor-help"
+          <button
+            type="button"
+            class="inline-flex items-center gap-1 px-2 py-0.5 pointer-coarse:min-h-8 text-[0.625rem] rounded-full border cursor-help"
             :class="ledgerClass(row)"
-          >{{ row.constraint }}</span>
-        </UTooltip>
+          >{{ row.constraint }}</button>
+        </FoodchatInfoPopover>
       </div>
 
       <!-- How each dish was read. The part that decides whether the score

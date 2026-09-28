@@ -14,7 +14,7 @@
   -->
   <UDropdownMenu
     :items="menuItems"
-    :popper="{ placement: 'bottom-end' }"
+    :content="{ align: 'end' }"
   >
     <!-- Labelled at plan level, an icon on a day row.
          A bare wand icon is not discoverable: it reads as decoration, and the

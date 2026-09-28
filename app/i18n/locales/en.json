@@ -1660,7 +1660,8 @@
         "soup": "Soup",
         "dessert": "Dessert",
         "drink": "Drink"
-      }
+      },
+      "macroRing": "Nutrient breakdown: {value} {label}. Tap to see the next."
     },
     "constraints": {
       "label": "Constraints",
@@ -1871,6 +1872,12 @@
     },
     "planSettings": {
       "title": "Plan settings"
+    },
+    "panes": {
+      "label": "Chat or plan",
+      "chat": "Chat",
+      "plan": "Plan",
+      "newPlan": "New plan"
     },
     "splitter": {
       "hint": "Drag to resize · double-click to reset"
