@@ -26,7 +26,7 @@
         class="h-10 min-w-0 flex-1 bg-transparent text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none"
         @input="onInput"
         @focus="onFocus"
-        @blur="focused = false"
+        @blur="onBlur"
         @keydown="onKeyDown"
       >
       <UIcon
@@ -79,6 +79,12 @@
         <span class="shrink-0 text-[0.65rem] tabular-nums text-zinc-400">{{ item.chunk_count.toLocaleString() }}</span>
       </li>
     </ul>
+    <p
+      v-else-if="open && !loading && modelValue.trim()"
+      class="absolute left-0 right-0 top-full z-40 mt-1 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-500 dark:text-zinc-400 shadow-xl"
+    >
+      {{ t('graph.search.noResults') }}
+    </p>
   </div>
 </template>
 
@@ -91,12 +97,9 @@ import { GRAPH_THEME_DARK, GRAPH_THEME_LIGHT } from '~/utils/graphPalette'
 /**
  * The search box, with autocomplete over node labels.
  *
- * Two different actions share it, and keeping them apart matters: choosing a
- * suggestion **goes to** that node — it selects it, reveals it in the tree and
- * centres it on the map — while pressing Enter without choosing one **filters**
- * the whole view to the query. The first is navigation and the second is a
- * lens, and a box that guessed between them would do the wrong one half the
- * time.
+ * It navigates: choosing a suggestion goes to that node — selects it and
+ * reveals it in the tree — and Enter without choosing one goes to the top
+ * suggestion, so pressing it always does something visible.
  */
 
 const props = defineProps<{
@@ -106,8 +109,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
-  /** Enter with no suggestion chosen: narrow everything to this query. */
-  'submit': [query: string]
   /** A suggestion chosen: go to that node. */
   'pick': [nodeId: string]
 }>()
@@ -155,7 +156,9 @@ async function fetchSuggestions(query: string) {
     // a short query is often slower than the longer one after it.
     if (id !== requestId) return
     suggestions.value = items
-    open.value = items.length > 0
+    // Open even when empty, so "no matches" is said rather than implied — but
+    // not for an answer that arrives after the box was left.
+    open.value = focused.value
   } catch {
     if (id === requestId) {
       suggestions.value = []
@@ -178,12 +181,35 @@ function onFocus() {
   if (suggestions.value.length) open.value = true
 }
 
+// Closed on leaving the box, or the list would stay over the tree after a
+// click elsewhere. Choosing an option does not blur: it is `mousedown.prevent`.
+function onBlur() {
+  focused.value = false
+  open.value = false
+}
+
 function clear() {
   emit('update:modelValue', '')
   suggestions.value = []
   open.value = false
-  emit('submit', '')
   inputRef.value?.focus()
+}
+
+/**
+ * Enter with nothing highlighted: go to the top suggestion.
+ *
+ * Enter can land before the debounced lookup has answered, or while an older
+ * list is still showing, so this asks for the current text now rather than
+ * choosing from whatever happens to be on screen.
+ */
+async function goToTopSuggestion() {
+  const query = props.modelValue.trim()
+  if (!query) return
+  if (debounce) clearTimeout(debounce)
+  loading.value = true
+  await fetchSuggestions(query)
+  const top = suggestions.value[0]
+  if (top && props.modelValue.trim() === query) choose(top)
 }
 
 function onKeyDown(event: KeyboardEvent) {
@@ -201,9 +227,10 @@ function onKeyDown(event: KeyboardEvent) {
     case 'Enter':
       if (activeIndex.value >= 0 && suggestions.value[activeIndex.value]) {
         choose(suggestions.value[activeIndex.value]!)
+      } else if (suggestions.value.length && !loading.value) {
+        choose(suggestions.value[0]!)
       } else {
-        open.value = false
-        emit('submit', props.modelValue)
+        void goToTopSuggestion()
       }
       break
     case 'Escape':
