@@ -50,7 +50,7 @@
     <!-- Main Content -->
     <main
       v-else-if="article"
-      class="max-w-7xl mx-auto px-4 py-12"
+      class="max-w-7xl mx-auto px-4 py-6 sm:py-12"
     >
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Article Content (Left 2/3) -->
@@ -65,9 +65,10 @@
               >
                 {{ displayCategory }}
               </UBadge>
-              <UTooltip
+              <UPopover
                 v-if="displayTopic"
-                :text="topicsTooltip"
+                :mode="hasHover ? 'hover' : 'click'"
+                :ui="metricPopoverUi"
               >
                 <UBadge
                   variant="outline"
@@ -79,7 +80,10 @@
                   />
                   {{ displayTopic }}
                 </UBadge>
-              </UTooltip>
+                <template #content>
+                  <p>{{ topicsTooltip }}</p>
+                </template>
+              </UPopover>
               <UBadge
                 v-if="displayStudyType"
                 variant="outline"
@@ -93,7 +97,7 @@
               </UBadge>
             </div>
 
-            <h1 class="text-4xl sm:text-5xl font-light text-gray-900 dark:text-white tracking-tight mb-4">
+            <h1 class="text-3xl sm:text-5xl font-light text-gray-900 dark:text-white tracking-tight mb-4">
               {{ article.title }}
             </h1>
 
@@ -268,10 +272,34 @@
                 <p
                   v-else
                   class="font-light abstract-content"
+                  @click="onAbstractClick"
                   v-html="abstractWithTooltips"
                 />
               </div>
             </TranslatableContent>
+
+            <!-- The glossary definition, on tap. The hover tooltip is CSS and
+                 only for pointers that hover; this anchors to whichever term
+                 was tapped last. The trigger the popover insists on rendering
+                 is hidden: the term itself is the anchor. -->
+            <UPopover
+              v-if="glossaryAnchor"
+              mode="click"
+              :open="glossaryOpen"
+              :reference="glossaryAnchor"
+              class="hidden"
+              :ui="metricPopoverUi"
+              @update:open="glossaryOpen = $event"
+            >
+              <template #content>
+                <p class="font-semibold text-gray-900 dark:text-white">
+                  {{ glossaryTermLabel }}
+                </p>
+                <p class="mt-1">
+                  {{ glossaryDefinition }}
+                </p>
+              </template>
+            </UPopover>
           </div>
 
           <!-- Key Takeaways -->
@@ -424,7 +452,7 @@
             </h2>
 
             <!-- Q&A Tabs -->
-            <div class="flex gap-2 mb-4">
+            <div class="flex flex-wrap gap-2 mb-4">
               <button
                 v-for="tab in availableQATabs"
                 :key="tab.key"
@@ -470,7 +498,7 @@
 
         <!-- Sidebar (Right 1/3) -->
         <aside class="lg:col-span-1">
-          <div class="sticky top-24 space-y-6">
+          <div class="lg:sticky lg:top-24 space-y-6">
             <!-- Metrics -->
             <div
               v-if="hasCitationInfo || hasAccessInfo"
@@ -502,24 +530,45 @@
                     v-if="article.influential_citation_count !== null && article.influential_citation_count !== undefined"
                     class="flex items-center justify-between gap-3"
                   >
-                    <UTooltip :text="t('foodScholarArticle.metrics.influentialTooltip')">
-                      <span class="inline-flex items-center gap-2 cursor-help">
+                    <!-- Popovers, not tooltips: a tooltip never opens on tap. -->
+                    <UPopover
+                      :mode="hasHover ? 'hover' : 'click'"
+                      :ui="metricPopoverUi"
+                    >
+                      <span
+                        role="button"
+                        tabindex="0"
+                        class="inline-flex items-center gap-2 cursor-help"
+                      >
                         <span class="w-2 h-2 rounded-full bg-purple-500" />
                         {{ t('foodScholarArticle.metrics.influential') }}
                       </span>
-                    </UTooltip>
+                      <template #content>
+                        <p>{{ t('foodScholarArticle.metrics.influentialTooltip') }}</p>
+                      </template>
+                    </UPopover>
                     <span class="font-medium tabular-nums">{{ formatNumber(article.influential_citation_count) }}</span>
                   </div>
                   <div
                     v-if="article.reference_count !== null && article.reference_count !== undefined"
                     class="flex items-center justify-between gap-3"
                   >
-                    <UTooltip :text="t('foodScholarArticle.metrics.referencesTooltip')">
-                      <span class="inline-flex items-center gap-2 cursor-help">
+                    <UPopover
+                      :mode="hasHover ? 'hover' : 'click'"
+                      :ui="metricPopoverUi"
+                    >
+                      <span
+                        role="button"
+                        tabindex="0"
+                        class="inline-flex items-center gap-2 cursor-help"
+                      >
                         <span class="w-2 h-2 rounded-full bg-emerald-500" />
                         {{ t('foodScholarArticle.metrics.references') }}
                       </span>
-                    </UTooltip>
+                      <template #content>
+                        <p>{{ t('foodScholarArticle.metrics.referencesTooltip') }}</p>
+                      </template>
+                    </UPopover>
                     <span class="font-medium tabular-nums">{{ formatNumber(article.reference_count) }}</span>
                   </div>
                 </div>
@@ -755,6 +804,24 @@ definePageMeta({
 })
 
 const { t } = useI18n()
+const { hasHover } = useViewport()
+
+const metricPopoverUi = { content: 'max-w-xs px-3 py-2 text-xs leading-5 text-gray-700 dark:text-gray-200' }
+
+// ── Glossary on tap ──
+const glossaryAnchor = ref<HTMLElement | null>(null)
+const glossaryOpen = ref(false)
+const glossaryTermLabel = ref('')
+const glossaryDefinition = ref('')
+
+function onAbstractClick(event: MouseEvent) {
+  const term = (event.target as HTMLElement | null)?.closest<HTMLElement>('.glossary-term')
+  if (!term) return
+  glossaryTermLabel.value = term.textContent?.trim() || ''
+  glossaryDefinition.value = term.getAttribute('data-tooltip') || ''
+  glossaryAnchor.value = term
+  glossaryOpen.value = true
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -1219,9 +1286,13 @@ onUnmounted(() => {
   line-height: 1.4;
 }
 
-:deep(.glossary-term:hover::after) {
-  opacity: 1;
-  visibility: visible;
+/* Hover only where the pointer can hover; on touch the term is tapped and
+   the definition opens in a popover instead. */
+@media (hover: hover) {
+  :deep(.glossary-term:hover::after) {
+    opacity: 1;
+    visibility: visible;
+  }
 }
 
 /* Highlighted citation passage */

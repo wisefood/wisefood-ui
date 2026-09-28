@@ -42,20 +42,15 @@
 
       <!-- Content -->
       <div v-else class="flex flex-col lg:flex-row lg:items-start gap-6">
-        <!-- Left Sidebar - Filters -->
-        <Transition
-          enter-active-class="transition-all duration-300 ease-out"
-          leave-active-class="transition-all duration-300 ease-in"
-          enter-from-class="opacity-0 -translate-x-full"
-          enter-to-class="opacity-100 translate-x-0"
-          leave-from-class="opacity-100 translate-x-0"
-          leave-to-class="opacity-0 -translate-x-full"
+        <!-- Left Sidebar - Filters. A column beside the results at lg, a
+             bottom sheet below it. -->
+        <FoodscholarResponsiveFilters
+          v-model:open="showFilters"
+          :result-count="totalResults"
+          :title="t('foodScholarCatalog.filters.title')"
+          aside-class="lg:w-80"
         >
-          <aside
-            v-if="showFilters"
-            class="w-full lg:w-80 shrink-0 lg:self-start"
-          >
-            <div class="sticky top-24">
+            <div class="lg:sticky lg:top-24">
               <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 shadow-sm">
                 <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-zinc-800">
                   <div>
@@ -350,8 +345,7 @@
                 </div>
               </div>
             </div>
-        </aside>
-        </Transition>
+        </FoodscholarResponsiveFilters>
 
         <!-- Main Content Area -->
         <main class="flex-1 min-w-0">
@@ -572,8 +566,8 @@
                 v-model:page="page"
                 :total="paginationTotal"
                 :items-per-page="itemsPerPage"
-                :sibling-count="1"
-                show-edges
+                :sibling-count="isPhone ? 0 : 1"
+                :show-edges="!isPhone"
               />
               <p
                 v-if="resultsWindowExceeded"
@@ -619,6 +613,7 @@ import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 
 const { t } = useI18n()
+const { isPhone } = useViewport()
 
 definePageMeta({
   middleware: ['auth', 'profile']

@@ -1,8 +1,9 @@
 <template>
-  <div class="flex flex-col">
-    <!-- The app header is 4rem (UHeader default); reserving more than that
-         just shortens the PDF viewport for nothing. -->
-    <div class="flex h-[calc(100dvh-4rem)] flex-col overflow-hidden bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+  <!-- The `app` layout hands the page what is left of the viewport below the
+       header and the guest banner, so the document and the rules scroll
+       inside their own panes and the page itself never does. -->
+  <div class="flex min-h-0 flex-1 flex-col">
+    <div class="flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
       <FoodscholarMicroHeader
         :show-back="true"
         :back-to="backRegion ? buildGuidesRegionPath(backRegion) : buildGuidesCatalogPath()"
@@ -175,6 +176,22 @@
             >
               Source
             </UButton>
+            <!-- Below sm the Edit and Source buttons are hidden; the same
+                 actions live in this menu so a phone still has them. -->
+            <UDropdownMenu
+              v-if="overflowActions.length"
+              :items="overflowActions"
+              :content="{ align: 'end' }"
+            >
+              <UButton
+                color="neutral"
+                variant="ghost"
+                size="xs"
+                icon="i-lucide-ellipsis-vertical"
+                class="sm:hidden"
+                :aria-label="$t('guidelines.actions.more')"
+              />
+            </UDropdownMenu>
             <UButton
               color="neutral"
               variant="ghost"
@@ -212,15 +229,55 @@
       <!-- Main split layout -->
       <div
         v-else-if="selectedGuide"
-        class="flex min-h-0 flex-1 justify-center"
+        class="flex min-h-0 flex-1 flex-col items-center"
       >
-        <div class="flex min-h-0 w-full max-w-[100rem] flex-1">
+        <!-- Below lg the panes take turns: the document (or, without one,
+             the guide's details), or the rules. -->
+        <div
+          class="w-full shrink-0 border-b border-gray-100/60 bg-white/70 px-3 py-2 dark:border-white/5 dark:bg-zinc-900/40 lg:hidden"
+          role="tablist"
+        >
+          <div class="flex w-full rounded-lg bg-gray-100/80 p-0.5 dark:bg-zinc-800/60">
+            <button
+              type="button"
+              role="tab"
+              :aria-selected="!rulesPaneOpen"
+              :class="paneTabClass(!rulesPaneOpen)"
+              @click="rulesPaneOpen = false"
+            >
+              <UIcon
+                :name="primaryPdfArtifact ? 'i-lucide-file-text' : 'i-lucide-info'"
+                class="h-4 w-4"
+              />
+              {{ primaryPdfArtifact ? $t('guidelines.panes.document') : $t('guidelines.panes.about') }}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              :aria-selected="rulesPaneOpen"
+              :class="paneTabClass(rulesPaneOpen)"
+              @click="rulesPaneOpen = true"
+            >
+              <UIcon
+                name="i-lucide-list-checks"
+                class="h-4 w-4"
+              />
+              {{ $t('guidelines.panes.rules') }}
+              <span class="rounded-full bg-white/80 px-1.5 text-[0.6875rem] tabular-nums dark:bg-white/10">{{ guidelineTotal }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- `relative`, so the info overlay below anchors to the split rather
+             than to the page. -->
+        <div class="relative flex min-h-0 w-full max-w-[100rem] flex-1 flex-col lg:flex-row">
           <!-- LEFT: PDF viewer. Documents are portrait: width beyond ~64rem
                is dead margin that only makes fit-width pages taller than the
                viewport, so the column is capped and the split stays centered. -->
           <div
             v-if="primaryPdfArtifact"
-            class="flex min-w-0 max-w-[64rem] flex-1 flex-col"
+            class="min-h-0 min-w-0 max-w-[64rem] flex-1 flex-col"
+            :class="rulesPaneOpen ? 'hidden lg:flex' : 'flex'"
           >
             <!-- PDF toolbar -->
             <div class="flex shrink-0 flex-wrap items-center gap-2 border-b border-gray-100/60 bg-white/70 px-3 py-2 dark:border-white/5 dark:bg-zinc-900/40">
@@ -231,8 +288,8 @@
                 :items="pdfArtifactOptions"
                 value-key="value"
                 label-key="label"
-                size="xs"
-                class="w-44"
+                :size="toolbarSize"
+                class="w-40 sm:w-44"
               />
 
               <div class="ml-auto flex items-center gap-1">
@@ -240,7 +297,7 @@
                 <UButton
                   color="neutral"
                   variant="ghost"
-                  size="xs"
+                  :size="toolbarSize"
                   icon="i-lucide-chevron-left"
                   :disabled="currentPage <= 1"
                   @click="currentPage = Math.max(1, currentPage - 1)"
@@ -248,7 +305,7 @@
                 <UButton
                   color="neutral"
                   variant="ghost"
-                  size="xs"
+                  :size="toolbarSize"
                   icon="i-lucide-chevron-right"
                   :disabled="pdfTotalPages > 0 && currentPage >= pdfTotalPages"
                   @click="currentPage = pdfTotalPages ? Math.min(pdfTotalPages, currentPage + 1) : currentPage + 1"
@@ -268,7 +325,7 @@
                 <UButton
                   color="neutral"
                   :variant="fitMode === 'width' && zoom === 1 ? 'soft' : 'ghost'"
-                  size="xs"
+                  :size="toolbarSize"
                   icon="i-lucide-move-horizontal"
                   title="Fit width"
                   @click="setFit('width')"
@@ -276,7 +333,7 @@
                 <UButton
                   color="neutral"
                   :variant="fitMode === 'page' && zoom === 1 ? 'soft' : 'ghost'"
-                  size="xs"
+                  :size="toolbarSize"
                   icon="i-lucide-scan"
                   title="Fit whole page"
                   @click="setFit('page')"
@@ -288,7 +345,7 @@
                 <UButton
                   color="neutral"
                   variant="ghost"
-                  size="xs"
+                  :size="toolbarSize"
                   icon="i-lucide-zoom-out"
                   :disabled="zoom <= 0.5"
                   @click="zoom = Math.max(0.5, parseFloat((zoom - 0.1).toFixed(1)))"
@@ -299,7 +356,7 @@
                 <UButton
                   color="neutral"
                   variant="ghost"
-                  size="xs"
+                  :size="toolbarSize"
                   icon="i-lucide-zoom-in"
                   :disabled="zoom >= 3"
                   @click="zoom = Math.min(3, parseFloat((zoom + 0.1).toFixed(1)))"
@@ -311,7 +368,7 @@
                 <UButton
                   color="neutral"
                   variant="ghost"
-                  size="xs"
+                  :size="toolbarSize"
                   :icon="rulesPaneOpen ? 'i-lucide-panel-right-close' : 'i-lucide-panel-right-open'"
                   :title="rulesPaneOpen ? 'Hide rules' : 'Show rules'"
                   :aria-label="rulesPaneOpen ? 'Hide rules panel' : 'Show rules panel'"
@@ -354,7 +411,8 @@
           <!-- LEFT (no PDF): metadata + artifacts column -->
           <div
             v-else
-            class="flex w-80 shrink-0 flex-col gap-4 overflow-y-auto border-r border-gray-200/70 p-4 dark:border-white/10"
+            class="min-h-0 w-full flex-1 flex-col gap-4 overflow-y-auto border-gray-200/70 p-4 dark:border-white/10 lg:w-80 lg:flex-none lg:border-r"
+            :class="rulesPaneOpen ? 'hidden lg:flex' : 'flex'"
           >
             <GuideMetadataPanel
               :guide="selectedGuide"
@@ -366,7 +424,7 @@
           <!-- RIGHT: Guidelines panel -->
           <div
             v-show="rulesPaneOpen"
-            class="flex w-[22rem] shrink-0 flex-col border-l border-gray-200/70 bg-white/60 dark:border-white/10 dark:bg-zinc-900/50 xl:w-[26rem]"
+            class="flex min-h-0 w-full flex-1 flex-col border-gray-200/70 bg-white/60 dark:border-white/10 dark:bg-zinc-900/50 lg:w-[22rem] lg:flex-none lg:border-l xl:w-[26rem]"
           >
             <!-- Panel header -->
             <div class="shrink-0 px-4 pt-4 pb-3 space-y-3">
@@ -407,7 +465,7 @@
                 v-model="queryText"
                 type="text"
                 placeholder="Search rules…"
-                class="w-full rounded-md border-0 bg-gray-100/80 px-3 py-1.5 text-xs text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-400/40 dark:bg-zinc-800/60 dark:text-white dark:placeholder-gray-500 dark:focus:bg-zinc-800 transition-colors"
+                class="w-full rounded-md border-0 bg-gray-100/80 px-3 py-1.5 text-xs text-gray-900 placeholder-gray-400 pointer-coarse:text-base focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-400/40 dark:bg-zinc-800/60 dark:text-white dark:placeholder-gray-500 dark:focus:bg-zinc-800 transition-colors"
               >
 
               <!-- Filters -->
@@ -640,7 +698,7 @@
           <!-- Info panel overlay (mobile / optional) -->
           <div
             v-if="showInfoPanel && selectedGuide"
-            class="absolute inset-y-0 right-0 z-30 flex w-80 flex-col gap-4 overflow-y-auto border-l border-gray-200/70 bg-white/95 p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900/95 xl:hidden"
+            class="absolute inset-y-0 right-0 z-30 flex w-full max-w-sm flex-col gap-4 overflow-y-auto border-l border-gray-200/70 bg-white/95 p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900/95 xl:hidden"
           >
             <div class="flex items-center justify-between">
               <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
@@ -663,15 +721,12 @@
         </div>
       </div>
     </div>
-    <div
-      class="h-16 shrink-0"
-      aria-hidden="true"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import type { DropdownMenuItem } from '@nuxt/ui'
 import type { CatalogArtifact, CatalogFacetBucket, CatalogGuide, CatalogGuideline } from '~/services/catalogApi'
 import GuideArtifactList from '~/components/foodscholar/guides/GuideArtifactList.vue'
 import GuideMetadataPanel from '~/components/foodscholar/guides/GuideMetadataPanel.vue'
@@ -703,6 +758,7 @@ import {
 } from '~/utils/guidelineFacets'
 
 definePageMeta({
+  layout: 'app',
   middleware: ['auth', 'profile']
 })
 
@@ -712,6 +768,7 @@ const guidelinePageSize = 8
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const { isCompact, isCoarsePointer } = useViewport()
 
 const regionParam = computed(() => String(route.params.countryOrRegion || ''))
 const guideId = computed(() => decodeURIComponent(String(route.params.guideId || '')))
@@ -746,8 +803,26 @@ const currentPage = ref(1)
 // rather than an arbitrary absolute scale.
 const zoom = ref(1)
 const fitMode = ref<'width' | 'page'>('width')
-// The rules pane can be collapsed to give a dense document the full width.
-const rulesPaneOpen = ref(true)
+// On a wide screen the rules pane can be collapsed to give a dense document
+// the full width. Below lg the two panes take turns and the document comes
+// first, so the pane starts closed there and the toggle above the split
+// opens it.
+const rulesPaneOpen = ref(!isCompact.value)
+watch(isCompact, (compact) => {
+  rulesPaneOpen.value = !compact
+})
+
+function paneTabClass(active: boolean) {
+  return [
+    'flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+    active
+      ? 'bg-white text-gray-900 shadow-sm dark:bg-zinc-700 dark:text-white'
+      : 'text-gray-500 dark:text-gray-400'
+  ]
+}
+
+// Toolbar buttons are dense by design; a finger needs them a size up.
+const toolbarSize = computed(() => (isCoarsePointer.value ? 'sm' : 'xs'))
 
 /**
  * Whether the guide metadata block is expanded.
@@ -790,6 +865,29 @@ const regionTitle = computed(() => getRegionPresentation(resolvedRegion.value ||
 const backRegion = computed(() => resolvedRegion.value || regionParam.value)
 const backLabel = computed(() => backRegion.value ? `Back to ${getRegionPresentation(backRegion.value).label}` : 'Back to Guides')
 const guidePublisher = computed(() => selectedGuide.value ? getGuidePublisher(selectedGuide.value) : null)
+
+/** Edit and Source, for the phone menu that stands in for the hidden buttons. */
+const overflowActions = computed<DropdownMenuItem[]>(() => {
+  const guide = selectedGuide.value
+  if (!guide) return []
+  const items: DropdownMenuItem[] = []
+  if (guide.urn && authStore.hasAnyRole(['expert', 'admin'])) {
+    items.push({
+      label: 'Edit in Console',
+      icon: 'i-lucide-pencil',
+      to: `/console/assets/guides/${encodeURIComponent(guide.urn)}`
+    })
+  }
+  if (guide.url) {
+    items.push({
+      label: 'Source',
+      icon: 'i-lucide-external-link',
+      to: guide.url,
+      target: '_blank'
+    })
+  }
+  return items
+})
 const guidePublicationLabel = computed(() => selectedGuide.value ? getGuidePublicationLabel(selectedGuide.value) : null)
 
 useHead({
@@ -899,6 +997,12 @@ function selectGuideline(guideline: CatalogGuideline) {
   const pages = getGuidelinePageReferences(guideline)
   if (pages.length && primaryPdfArtifact.value && pages[0] !== undefined) {
     currentPage.value = pages[0]
+    // The rule's text is already on screen in the list; the page it comes
+    // from is what a tap is asking for, and below lg that pane is the other
+    // one.
+    if (isCompact.value) {
+      rulesPaneOpen.value = false
+    }
   }
 }
 
@@ -916,6 +1020,10 @@ let highlightTimeout: ReturnType<typeof setTimeout> | null = null
 async function revealGuideline(guidelineId: string) {
   activeGuidelineId.value = guidelineId
   highlightedGuidelineId.value = guidelineId
+  // The rule has to be on screen to be found, and below lg its pane may not be.
+  if (isCompact.value) {
+    rulesPaneOpen.value = true
+  }
 
   await nextTick()
   if (typeof document !== 'undefined') {

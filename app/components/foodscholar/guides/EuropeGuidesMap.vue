@@ -1,10 +1,10 @@
 <template>
-  <div class="relative h-full min-h-[32rem] sm:min-h-[42rem]">
+  <div class="relative h-full min-h-[18rem] sm:min-h-[42rem]">
     <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(255,255,255,0.5),rgba(255,255,255,0)_62%)] dark:bg-[radial-gradient(circle_at_50%_48%,rgba(255,255,255,0.04),rgba(255,255,255,0)_62%)]" />
 
     <div
       v-if="loadError"
-      class="relative flex min-h-[32rem] sm:min-h-[42rem] items-center justify-center"
+      class="relative flex min-h-[18rem] sm:min-h-[42rem] items-center justify-center"
     >
       <div class="rounded-full bg-white/55 px-4 py-2 text-sm text-[#3c332a] shadow-[0_14px_36px_rgba(70,46,30,0.12)] backdrop-blur-xl dark:bg-white/10 dark:text-stone-200 dark:shadow-[0_18px_36px_rgba(0,0,0,0.28)]">
         {{ loadError }}
@@ -14,17 +14,18 @@
     <div
       v-else
       ref="frameRef"
-      class="relative min-h-[32rem] sm:min-h-[42rem] select-none touch-none overflow-hidden cursor-grab active:cursor-grabbing"
+      class="relative min-h-[18rem] sm:min-h-[42rem] select-none overflow-hidden cursor-grab active:cursor-grabbing"
+      :class="exploring ? 'touch-none' : 'touch-pan-y'"
       @pointerdown="handlePointerDown"
       @pointermove="handlePointerMove"
       @pointerup="handlePointerUp"
-      @pointercancel="handlePointerUp"
+      @pointercancel="handlePointerCancel"
       @pointerleave="handlePointerLeave"
       @wheel.prevent="handleWheel"
     >
       <div
         ref="svgHost"
-        class="europe-guides-map-host h-full min-h-[32rem] sm:min-h-[42rem] transition-opacity duration-300"
+        class="europe-guides-map-host h-full min-h-[18rem] sm:min-h-[42rem] transition-opacity duration-300"
         :class="isReady ? 'opacity-100' : 'opacity-0'"
       />
 
@@ -36,6 +37,21 @@
           Loading map
         </div>
       </div>
+
+      <!-- Touch only. While the page may scroll over the map a finger can
+           select a region but not pan or pinch it; this hands the gestures
+           to the map until Done. -->
+      <button
+        v-if="isReady"
+        type="button"
+        class="absolute left-0 top-0 z-10 hidden h-10 items-center gap-1.5 rounded-full bg-white/70 px-3.5 text-xs font-semibold text-[#173f35] shadow-[0_14px_32px_rgba(70,46,30,0.14)] backdrop-blur-xl transition-colors any-pointer-coarse:flex dark:bg-white/12 dark:text-stone-100"
+        :class="exploring ? 'ring-2 ring-[#173f35]/30 dark:ring-white/30' : ''"
+        :aria-pressed="exploring"
+        @click="exploring = !exploring"
+      >
+        <UIcon :name="exploring ? 'i-lucide-check' : 'i-lucide-move'" class="h-4 w-4" />
+        {{ exploring ? $t('guidelines.map.done') : $t('guidelines.map.explore') }}
+      </button>
 
       <div v-if="!props.hideControls" class="absolute right-0 top-0 z-10 flex items-center gap-2">
         <button
@@ -92,16 +108,31 @@
           v-if="showHintChip && isReady"
           class="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2 flex items-center gap-1.5 rounded-full bg-white/70 px-3.5 py-1.5 text-xs font-medium text-[#173f35] shadow-[0_14px_32px_rgba(70,46,30,0.14)] backdrop-blur-xl dark:bg-white/12 dark:text-stone-100"
         >
-          <UIcon name="i-lucide-mouse-pointer-click" class="h-3.5 w-3.5" />
-          Click a region to open its guides
+          <UIcon :name="isCoarsePointer ? 'i-lucide-pointer' : 'i-lucide-mouse-pointer-click'" class="h-3.5 w-3.5" />
+          {{ isCoarsePointer ? $t('guidelines.map.hintTap') : $t('guidelines.map.hintClick') }}
         </div>
       </transition>
+
+      <!-- The facts the hover tooltip carries, for the pointers that cannot
+           hover: shown for the selected region, in the hint's place. -->
+      <div
+        v-if="selectedFacts && !hasHover && isReady"
+        class="pointer-events-none absolute bottom-4 left-1/2 z-10 max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-[1.4rem] bg-white/94 px-4 py-2 text-center shadow-[0_18px_40px_rgba(70,46,30,0.16)] backdrop-blur-xl dark:bg-black/82 dark:shadow-[0_20px_42px_rgba(0,0,0,0.38)]"
+      >
+        <p class="text-sm font-semibold text-[#241d16] dark:text-stone-100">
+          {{ selectedFacts.label }}
+        </p>
+        <p class="mt-0.5 text-xs leading-5 text-[#5f5146] dark:text-stone-300">
+          {{ selectedFacts.facts }}
+        </p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { useViewport } from '~/composables/useViewport'
 import europeSvgUrl from '~/assets/foodscholar/guides/europe-countries-outline-iso-coded-plain.svg?url'
 import { euCountryCodes, getCountryByCode } from '~/utils/countries'
 import { getRegionPresentation, type GuidesCatalogRegionSummary } from '~/utils/guidesCatalog'
@@ -159,8 +190,20 @@ const tooltip = reactive<TooltipState>({
   facts: ''
 })
 
+const { hasHover, isCoarsePointer } = useViewport()
+
+/**
+ * Whether a finger may pan and pinch the map.
+ *
+ * Off, the page scrolls over the map and a finger can only tap a region; on,
+ * the map takes every touch gesture until Done. A map that took the touches
+ * from the start was a page that could not be scrolled past it.
+ */
+const exploring = ref(false)
+
 const selectedCode = computed(() => props.selectedRegionCode?.toUpperCase() || null)
 const showHintChip = computed(() => Boolean(props.showHint) && !selectedCode.value)
+const selectedFacts = computed(() => selectedCode.value ? describeRegion(selectedCode.value) : null)
 const viewPadding = computed(() => {
   if (typeof props.viewPadding !== 'number') {
     return 0.12
@@ -197,6 +240,24 @@ const dragState = reactive({
   moved: false,
   scaleX: 1,
   scaleY: 1
+})
+
+// A touch that is not exploring: a press that becomes a selection on release
+// unless the finger travelled, in which case the page was being scrolled.
+const tapState = reactive({
+  pointerId: null as number | null,
+  start: null as { x: number, y: number } | null,
+  pressedRegionCode: null as string | null
+})
+
+// Every captured pointer, so a second finger can turn a drag into a pinch.
+const activePointers = new Map<number, { x: number, y: number }>()
+const pinchState = reactive({
+  active: false,
+  startDistance: 0,
+  startMidpoint: null as { x: number, y: number } | null,
+  startViewBox: null as ViewBoxRect | null,
+  anchor: null as { x: number, y: number } | null
 })
 
 let baseViewBox: ViewBoxRect | null = null
@@ -532,14 +593,10 @@ function hideTooltip() {
   tooltip.visible = false
 }
 
-function updateTooltipForCode(code: string, clientX: number, clientY: number) {
+/** What the map knows about a region: the tooltip's words, and the caption's. */
+function describeRegion(code: string) {
   const region = regionByCode.value[code]
   const country = getCountryByCode(code)
-  const frameRect = frameRef.value?.getBoundingClientRect()
-  const localX = clientX - (frameRect?.left || 0)
-  const localY = clientY - (frameRect?.top || 0)
-  const clampedX = frameRect ? Math.min(Math.max(localX, 96), frameRect.width - 96) : localX
-  const clampedY = frameRect ? Math.min(Math.max(localY, 68), frameRect.height - 28) : localY
   const facts = region
     ? [
         `${region.guideCount.toLocaleString()} guide${region.guideCount === 1 ? '' : 's'}`,
@@ -547,12 +604,27 @@ function updateTooltipForCode(code: string, clientX: number, clientY: number) {
       ].filter(Boolean).join(' · ')
     : 'No catalog records yet'
 
+  return {
+    eyebrow: region ? 'Coverage' : 'Unlisted',
+    label: region?.label || country?.name || code,
+    facts
+  }
+}
+
+function updateTooltipForCode(code: string, clientX: number, clientY: number) {
+  const frameRect = frameRef.value?.getBoundingClientRect()
+  const localX = clientX - (frameRect?.left || 0)
+  const localY = clientY - (frameRect?.top || 0)
+  const clampedX = frameRect ? Math.min(Math.max(localX, 96), frameRect.width - 96) : localX
+  const clampedY = frameRect ? Math.min(Math.max(localY, 68), frameRect.height - 28) : localY
+  const description = describeRegion(code)
+
   tooltip.visible = true
   tooltip.x = clampedX
   tooltip.y = clampedY
-  tooltip.eyebrow = region ? 'Coverage' : 'Unlisted'
-  tooltip.label = region?.label || country?.name || code
-  tooltip.facts = facts
+  tooltip.eyebrow = description.eyebrow
+  tooltip.label = description.label
+  tooltip.facts = description.facts
 }
 
 function getPathFromEventTarget(target: EventTarget | null) {
@@ -588,6 +660,19 @@ function selectRegion(code: string | null) {
   emit('update:selectedRegionCode', code)
 }
 
+function resetTapState() {
+  tapState.pointerId = null
+  tapState.start = null
+  tapState.pressedRegionCode = null
+}
+
+function releasePointer(pointerId: number) {
+  activePointers.delete(pointerId)
+  if (frameRef.value?.hasPointerCapture(pointerId)) {
+    frameRef.value.releasePointerCapture(pointerId)
+  }
+}
+
 function handlePointerDown(event: PointerEvent) {
   if (
     event.button !== 0
@@ -595,6 +680,23 @@ function handlePointerDown(event: PointerEvent) {
     || !currentViewBox
     || (event.target instanceof Element && event.target.closest('button'))
   ) {
+    return
+  }
+
+  // A finger on a map that is not being explored is a tap, never a drag: the
+  // page keeps its scroll, and the region is selected on release.
+  if (event.pointerType === 'touch' && !exploring.value) {
+    tapState.pointerId = event.pointerId
+    tapState.start = { x: event.clientX, y: event.clientY }
+    tapState.pressedRegionCode = findRegionCodeFromEventTarget(event.target)
+    return
+  }
+
+  activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+  frameRef.value.setPointerCapture(event.pointerId)
+
+  if (activePointers.size === 2) {
+    beginPinch()
     return
   }
 
@@ -616,10 +718,103 @@ function handlePointerDown(event: PointerEvent) {
   dragState.scaleX = scaleX
   dragState.scaleY = scaleY
   hideTooltip()
-  frameRef.value.setPointerCapture(event.pointerId)
+}
+
+/**
+ * A second finger: the drag in progress ends and the two fingers zoom the
+ * view about the point between them, which stays under them as they spread.
+ */
+function beginPinch() {
+  const [first, second] = [...activePointers.values()]
+  if (!first || !second || !currentViewBox) {
+    return
+  }
+
+  if (dragRafId) {
+    cancelAnimationFrame(dragRafId)
+    dragRafId = 0
+  }
+  pendingDragRect = null
+  dragState.pointerId = null
+  dragState.startPoint = null
+  dragState.startClientPoint = null
+  dragState.startViewBox = null
+  dragState.pressedRegionCode = null
+
+  const midpoint = { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 }
+  const anchor = getSvgPointFromClient(midpoint.x, midpoint.y)
+  if (!anchor) {
+    return
+  }
+
+  stopAnimation()
+  hideTooltip()
+  pinchState.active = true
+  pinchState.startDistance = Math.hypot(first.x - second.x, first.y - second.y) || 1
+  pinchState.startMidpoint = midpoint
+  pinchState.startViewBox = cloneRect(currentViewBox)
+  pinchState.anchor = { x: anchor.x, y: anchor.y }
+}
+
+function updatePinch() {
+  const [first, second] = [...activePointers.values()]
+  const start = pinchState.startViewBox
+  const anchor = pinchState.anchor
+  const startMidpoint = pinchState.startMidpoint
+  if (!first || !second || !start || !anchor || !startMidpoint || !frameRef.value) {
+    return
+  }
+
+  const distance = Math.hypot(first.x - second.x, first.y - second.y) || 1
+  const width = start.width * (pinchState.startDistance / distance)
+  const height = width * (start.height / start.width)
+  const frameRect = frameRef.value.getBoundingClientRect()
+  const unitsPerPixel = frameRect.width > 0 ? width / frameRect.width : 1
+  const midpoint = { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 }
+  const relativeX = (anchor.x - start.x) / start.width
+  const relativeY = (anchor.y - start.y) / start.height
+
+  pendingDragRect = clampViewBox({
+    x: anchor.x - width * relativeX - (midpoint.x - startMidpoint.x) * unitsPerPixel,
+    y: anchor.y - height * relativeY - (midpoint.y - startMidpoint.y) * unitsPerPixel,
+    width,
+    height
+  })
+
+  if (!dragRafId) {
+    dragRafId = requestAnimationFrame(() => {
+      dragRafId = 0
+      if (pendingDragRect) {
+        stopAnimation()
+        applyViewBox(pendingDragRect)
+        pendingDragRect = null
+      }
+    })
+  }
+}
+
+function endPinch() {
+  if (dragRafId) {
+    cancelAnimationFrame(dragRafId)
+    dragRafId = 0
+  }
+  if (pendingDragRect) {
+    applyViewBox(pendingDragRect)
+    pendingDragRect = null
+  }
+  pinchState.active = false
+  pinchState.startMidpoint = null
+  pinchState.startViewBox = null
+  pinchState.anchor = null
 }
 
 function handlePointerMove(event: PointerEvent) {
+  if (pinchState.active && activePointers.has(event.pointerId)) {
+    activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    updatePinch()
+    return
+  }
+
   if (dragState.pointerId === event.pointerId && dragState.startClientPoint && dragState.startViewBox) {
     const clientDx = event.clientX - dragState.startClientPoint.x
     const clientDy = event.clientY - dragState.startClientPoint.y
@@ -649,6 +844,12 @@ function handlePointerMove(event: PointerEvent) {
     return
   }
 
+  // No hover tooltip under a finger: the caption below the map carries the
+  // facts once a region is selected.
+  if (event.pointerType === 'touch') {
+    return
+  }
+
   const code = findRegionCodeFromEventTarget(event.target)
   if (!code) {
     hideTooltip()
@@ -659,6 +860,29 @@ function handlePointerMove(event: PointerEvent) {
 }
 
 function handlePointerUp(event: PointerEvent) {
+  if (tapState.pointerId === event.pointerId) {
+    const start = tapState.start
+    const code = tapState.pressedRegionCode
+    const travelled = start ? Math.hypot(event.clientX - start.x, event.clientY - start.y) > 10 : true
+    resetTapState()
+    hideTooltip()
+    if (!travelled && code && regionByCode.value[code]) {
+      selectRegion(code)
+    }
+    return
+  }
+
+  if (activePointers.has(event.pointerId)) {
+    releasePointer(event.pointerId)
+  }
+
+  // The pinch ends with the first finger to lift, and the other finger is
+  // done too rather than turning into a drag from a stale start.
+  if (pinchState.active) {
+    endPinch()
+    return
+  }
+
   if (!frameRef.value || dragState.pointerId !== event.pointerId) {
     return
   }
@@ -673,10 +897,6 @@ function handlePointerUp(event: PointerEvent) {
   if (pendingDragRect) {
     applyViewBox(pendingDragRect)
     pendingDragRect = null
-  }
-
-  if (frameRef.value.hasPointerCapture(event.pointerId)) {
-    frameRef.value.releasePointerCapture(event.pointerId)
   }
 
   dragState.pointerId = null
@@ -694,8 +914,21 @@ function handlePointerUp(event: PointerEvent) {
   }, 0)
 }
 
+/** The browser took the gesture, a scroll usually: whatever was pressed is not a tap. */
+function handlePointerCancel(event: PointerEvent) {
+  if (tapState.pointerId === event.pointerId) {
+    resetTapState()
+    hideTooltip()
+    return
+  }
+  if (dragState.pointerId === event.pointerId) {
+    dragState.moved = true
+  }
+  handlePointerUp(event)
+}
+
 function handlePointerLeave() {
-  if (dragState.pointerId !== null) {
+  if (dragState.pointerId !== null || pinchState.active) {
     return
   }
 

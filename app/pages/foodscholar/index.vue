@@ -51,7 +51,7 @@
       <!-- Idle state: composer centered vertically in remaining viewport -->
       <div
         v-if="!hasActiveSession"
-        class="qa-idle-shell flex-1 flex flex-col items-center justify-center px-4 pt-4 pb-48"
+        class="qa-idle-shell flex-1 flex flex-col items-center justify-center px-4 pt-4 pb-24 sm:pb-48"
       >
         <div class="w-full max-w-2xl">
           <div class="mb-8 text-center">
@@ -70,7 +70,8 @@
                 v-model="chatQuery"
                 :disabled="asking"
                 :placeholder="qaPlaceholder"
-                input-class="w-full h-12 pl-11 pr-28 rounded-xl bg-transparent text-[0.9375rem] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
+                multiline
+                input-class="w-full min-h-12 py-3 pl-11 pr-[6.5rem] sm:pr-28 rounded-xl bg-transparent text-[0.9375rem] leading-6 text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
                 @enter="askScholarQA"
                 @focus="composerFocused = true"
                 @blur="composerFocused = false"
@@ -116,7 +117,7 @@
                 </template>
               </FoodscholarNLInput>
             </div>
-            <div class="mt-2 px-1 flex items-center justify-between">
+            <div class="mt-2 px-1 hidden items-center justify-between pointer-fine:flex">
               <p class="text-[0.6875rem] text-gray-500 dark:text-gray-400">
                 {{ composerFocused ? t('foodScholarHome.qa.composer.focusedHint') : t('foodScholarHome.qa.composer.idleHint') }}
               </p>
@@ -226,7 +227,8 @@
                 v-model="chatQuery"
                 :disabled="asking"
                 :placeholder="qaPlaceholder"
-                input-class="w-full h-12 pl-11 pr-28 rounded-xl bg-transparent text-[0.9375rem] text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
+                multiline
+                input-class="w-full min-h-12 py-3 pl-11 pr-[6.5rem] rounded-xl bg-transparent text-[0.9375rem] leading-6 text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
                 @enter="askScholarQA"
                 @focus="composerFocused = true"
                 @blur="composerFocused = false"
@@ -264,7 +266,7 @@
                 </template>
               </FoodscholarNLInput>
             </div>
-            <div class="mt-2 px-1 flex items-center justify-between">
+            <div class="mt-2 px-1 hidden items-center justify-between pointer-fine:flex">
               <p class="text-[0.6875rem] text-gray-500 dark:text-gray-400">
                 {{ composerFocused ? t('foodScholarHome.qa.composer.focusedHint') : t('foodScholarHome.qa.composer.idleHint') }}
               </p>
@@ -299,7 +301,7 @@
                   </button>
                 </div>
               </div>
-              <div class="grid grid-cols-3 gap-3">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <USelectMenu v-model="selectedModelValue" :items="modelOptions" size="sm" :ui="advancedSelectUi" :content="advancedSelectContent" value-key="value" label-key="label" :search-input="false" :placeholder="t('foodScholarHome.qa.model.auto')" :disabled="modelsLoading || asking">
                   <template #leading><UIcon :name="selectedModelOption.icon" class="w-3.5 h-3.5 text-gray-500" /></template>
                 </USelectMenu>
@@ -572,12 +574,16 @@
           <div v-else class="chat-flow-bubble chat-flow-bubble-assistant">
             <div class="flex items-center justify-between mb-3">
               <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.answer') }}</h4>
-              <UTooltip :text="t('foodScholarHome.qa.confidenceExplainer')">
-                <span class="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 cursor-help">
+              <!-- A popover, not a tooltip: a tooltip never opens on tap. -->
+              <UPopover :mode="hasHover ? 'hover' : 'click'" :ui="{ content: 'max-w-xs px-3 py-2 text-xs leading-5 text-gray-700 dark:text-gray-200' }">
+                <span role="button" tabindex="0" class="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 cursor-help">
                   {{ t('foodScholarHome.qa.confidence') }}: {{ primaryAnswer.confidence || t('foodScholarHome.qa.notAvailable') }}
                   <UIcon name="i-lucide-help-circle" class="w-3 h-3" />
                 </span>
-              </UTooltip>
+                <template #content>
+                  <p>{{ t('foodScholarHome.qa.confidenceExplainer') }}</p>
+                </template>
+              </UPopover>
             </div>
             <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" style="--answer-reveal-delay: 40ms" @click="handleMarkdownClick" @mouseover="handleAnswerMouseOver" @mouseout="handleAnswerMouseOut" v-html="renderMarkdown(primaryAnswer.answer)" />
 
@@ -669,6 +675,65 @@
           </div>
         </div>
         <!-- end answer block -->
+
+        <!-- Sources, for the screens with no room for the rail beside the
+             answer: the same list the rail shows, folded under the answer
+             so it reads as a footnote rather than a second column. -->
+        <UCollapsible
+          v-if="qaResult && primaryAnswer && (primaryAnswer.citations?.length || uncitedRetrievedArticles.length)"
+          class="mt-4 xl:hidden"
+        >
+          <button
+            type="button"
+            class="group flex w-full items-center justify-between rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white"
+          >
+            <span class="inline-flex items-center gap-2">
+              <UIcon name="i-lucide-library" class="w-4 h-4 text-gray-400" />
+              {{ t('foodScholarHome.qa.sidebar.inlineTitle', { count: (primaryAnswer.citations?.length || 0) + uncitedRetrievedArticles.length }) }}
+            </span>
+            <UIcon name="i-lucide-chevron-down" class="w-4 h-4 text-gray-400 transition-transform group-data-[state=open]:rotate-180" />
+          </button>
+          <template #content>
+            <div class="mt-2 flex flex-col gap-2">
+              <template v-if="primaryAnswer.citations?.length">
+                <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1">{{ t('foodScholarHome.qa.sidebar.cited') }}</p>
+                <NuxtLink
+                  v-for="(citation, idx) in primaryAnswer.citations"
+                  :key="`inline-${citation.article_urn}`"
+                  :to="getCitationSourcePath(citation)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 hover:border-brand-300 dark:hover:border-brand-700 transition-colors"
+                  @click="recordCitationOpened(citation.article_urn, getCitationSourceType(citation), 'sidebar')"
+                >
+                  <UIcon :name="getQaSourceIcon(citation.article_urn, getCitationSourceType(citation))" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-xs text-gray-800 dark:text-gray-200 leading-snug">{{ citation.article_title }}</span>
+                    <span v-if="citationMetaLine(citation)" class="block text-[0.625rem] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{{ citationMetaLine(citation) }}</span>
+                  </span>
+                  <span class="text-[0.6rem] font-bold text-brand-400 dark:text-brand-500 shrink-0 mt-0.5">[{{ idx + 1 }}]</span>
+                </NuxtLink>
+              </template>
+              <template v-if="uncitedRetrievedArticles.length">
+                <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mt-2">{{ t('foodScholarHome.qa.sidebar.consulted') }}</p>
+                <NuxtLink
+                  v-for="article in uncitedRetrievedArticles"
+                  :key="`inline-${article.urn}`"
+                  :to="getRetrievedSourcePath(article)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-100 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/50 opacity-70 hover:opacity-100 transition-all"
+                >
+                  <UIcon :name="getQaSourceIcon(article.urn, article.source_type)" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-xs text-gray-700 dark:text-gray-300 leading-snug">{{ article.title }}</span>
+                    <span v-if="retrievedMetaLine(article)" class="block text-[0.625rem] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{{ retrievedMetaLine(article) }}</span>
+                  </span>
+                </NuxtLink>
+              </template>
+            </div>
+          </template>
+        </UCollapsible>
         </div>
         <!-- end center column -->
 
@@ -1198,6 +1263,7 @@
       :citation="articlePeekCitation"
       :anchor-rect="articlePeekAnchorRect"
       @open="openArticleFromPeek"
+      @close="articlePeekOpen = false"
       @pointer-enter="cancelArticlePeekClose"
       @pointer-leave="scheduleArticlePeekClose"
     />
@@ -1240,8 +1306,10 @@ import {
 import { euCountryCodes } from '~/utils/countries'
 
 const { t, locale } = useI18n()
+const { hasHover } = useViewport()
 
 definePageMeta({
+  dock: 'raised',
   middleware: [
     // The graph was once a tab here and its links were shared as
     // `?tab=graph&node=…&view=…`; they now open the Hierarchy page, keeping
@@ -2119,6 +2187,13 @@ const handleMarkdownClick = (event: MouseEvent) => {
       void openGuidelinePeek(targetUrn, anchor, hintedQuery)
     }
   } else {
+    // A finger cannot hover, so on touch a plain tap previews the passage in
+    // place — as the guideline peek already does — and the article stays one
+    // deliberate tap away, inside the peek.
+    if (!hasHover.value && citation?.quote && !(event.metaKey || event.ctrlKey || event.shiftKey)) {
+      openArticlePeekNow(anchor, citation)
+      return
+    }
     if (!('section' in query) && citation?.section) query.section = String(citation.section)
     if (!('hl' in query) && citation?.quote) query.hl = String(citation.quote)
     goToLocation({
@@ -2528,6 +2603,21 @@ const scheduleArticlePeekOpen = (anchor: HTMLElement, urn: string) => {
     articlePeekCitation.value = citation
     articlePeekOpen.value = true
   }, 250)
+}
+
+/** The peek at once, for a tap: no hover intent to wait out. */
+const openArticlePeekNow = (anchor: HTMLElement, citation: QaCitation) => {
+  cancelArticlePeekClose()
+  if (articlePeekOpenTimer) {
+    clearTimeout(articlePeekOpenTimer)
+    articlePeekOpenTimer = null
+  }
+  const rect = anchor.getBoundingClientRect()
+  articlePeekAnchorRect.value = {
+    top: rect.top, left: rect.left, bottom: rect.bottom, width: rect.width
+  }
+  articlePeekCitation.value = citation
+  articlePeekOpen.value = true
 }
 
 const openArticleFromPeek = () => {

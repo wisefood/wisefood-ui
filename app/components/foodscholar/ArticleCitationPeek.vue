@@ -2,7 +2,7 @@
   <div
     v-if="open && citation"
     ref="panelRef"
-    class="fixed z-50 w-[min(24rem,calc(100vw-2rem))] rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900"
+    class="fixed z-50 max-h-[70dvh] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900"
     :style="panelStyle"
     role="dialog"
     :aria-label="t('foodScholarHome.qa.passagePeek.title')"
@@ -70,8 +70,11 @@
  * substring of the source), so this needs no fetch: hovering answers "what
  * does that citation actually say?" in place, and the full article — with the
  * same passage highlighted via ?hl= — stays one click away.
+ *
+ * A finger cannot hover, so on touch the page opens this on a tap instead and
+ * the panel has to close on its own: a tap anywhere else, or Escape.
  */
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { QaCitation } from '~/services/foodscholarApi'
 
@@ -82,7 +85,7 @@ const props = withDefaults(defineProps<{
   anchorRect: { top: number, left: number, bottom: number, width: number } | null
 }>(), {})
 
-defineEmits<{ 'open': [], 'pointer-enter': [], 'pointer-leave': [] }>()
+const emit = defineEmits<{ 'open': [], 'close': [], 'pointer-enter': [], 'pointer-leave': [] }>()
 
 const { t } = useI18n()
 const panelRef = ref<HTMLElement | null>(null)
@@ -114,5 +117,37 @@ const panelStyle = computed(() => {
   return placeAbove
     ? { left: `${left}px`, bottom: `${window.innerHeight - rect.top + GAP}px` }
     : { left: `${left}px`, top: `${rect.bottom + GAP}px` }
+})
+
+const onDocumentClick = (event: MouseEvent) => {
+  if (!props.open) return
+  if (panelRef.value?.contains(event.target as Node)) return
+  emit('close')
+}
+
+const onKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && props.open) emit('close')
+}
+
+watch(
+  () => props.open,
+  (isOpen) => {
+    if (typeof document === 'undefined') return
+    if (isOpen) {
+      // Deferred so the tap that opened the peek does not immediately close it.
+      setTimeout(() => document.addEventListener('click', onDocumentClick), 0)
+    } else {
+      document.removeEventListener('click', onDocumentClick)
+    }
+  }
+)
+
+onMounted(() => {
+  document.addEventListener('keydown', onKeydown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onKeydown)
+  document.removeEventListener('click', onDocumentClick)
 })
 </script>

@@ -906,7 +906,8 @@
       },
       "sidebar": {
         "cited": "Hivatkozott források",
-        "consulted": "Átnézett források"
+        "consulted": "Átnézett források",
+        "inlineTitle": "Források ({count})"
       },
       "sourceMeta": {
         "guideline": "Irányelv",
@@ -1095,7 +1096,8 @@
       "citationCountInvalidNumber": "Adj meg egy érvényes számot.",
       "citationCountInvalidRange": "A minimum nem lehet nagyobb a maximumnál.",
       "showLess": "Kevesebb",
-      "showMore": "{count} további"
+      "showMore": "{count} további",
+      "showResults": "{count} találat megjelenítése"
     },
     "search": {
       "title": "Természetes nyelvű keresés",
@@ -1984,6 +1986,20 @@
     },
     "context": {
       "show": "Kontextus a forrásoldalról"
+    },
+    "panes": {
+      "document": "Dokumentum",
+      "about": "Adatlap",
+      "rules": "Szabályok"
+    },
+    "actions": {
+      "more": "További műveletek"
+    },
+    "map": {
+      "hintClick": "Kattints egy régióra az útmutatói megnyitásához",
+      "hintTap": "Koppints egy régióra az útmutatói megnyitásához",
+      "explore": "Térkép felfedezése",
+      "done": "Kész"
     }
   },
   "report": {
@@ -2124,7 +2140,8 @@
       "clearScope": "Szűkítés megszüntetése",
       "facet": "Nézőpont",
       "showFolded": "Összevont kategóriák mutatása",
-      "foldedHint": "Az összevont kategória magába olvasztott egy közbenső lépést. Azért marad meg, hogy egyetlen ontológiai azonosító se vesszen el."
+      "foldedHint": "Az összevont kategória magába olvasztott egy közbenső lépést. Azért marad meg, hogy egyetlen ontológiai azonosító se vesszen el.",
+      "done": "Kész"
     },
     "tree": {
       "title": "Hierarchia",

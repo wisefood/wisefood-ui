@@ -19,18 +19,28 @@
         <UIcon name="i-lucide-compass" class="w-3 h-3" />
         {{ topic }}
       </span>
-      <UTooltip
+      <!-- A popover rather than a tooltip: a tooltip never opens on tap, so
+           on a phone the chip was a dead end. It still opens on hover where
+           the pointer can. The click is prevented so the chip does not follow
+           the card's link. -->
+      <UPopover
         v-if="hiddenTopics.length"
-        :text="hiddenTopics.join(' · ')"
-        :delay-duration="100"
+        :mode="hasHover ? 'hover' : 'click'"
+        :open-delay="100"
+        :ui="{ content: 'max-w-xs px-3 py-2 text-xs leading-5 text-gray-700 dark:text-gray-200' }"
       >
         <span
+          role="button"
+          tabindex="0"
           class="inline-flex items-center gap-1 px-2 py-0.5 text-[0.6875rem] rounded-full bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-zinc-300 border border-gray-200 dark:border-zinc-600 cursor-help"
-          @click.prevent.stop
+          @click.prevent
         >
           {{ t('foodScholarCatalog.card.moreTopics', { count: hiddenTopics.length }) }}
         </span>
-      </UTooltip>
+        <template #content>
+          <p>{{ hiddenTopics.join(' · ') }}</p>
+        </template>
+      </UPopover>
     </div>
 
     <!-- Title -->
@@ -84,6 +94,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+const { hasHover } = useViewport()
 
 // Every non-identity field is optional AND nullable, because that is what the
 // catalog projection actually produces. It was declared as required-and-

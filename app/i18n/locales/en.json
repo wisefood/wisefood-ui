@@ -906,7 +906,8 @@
       },
       "sidebar": {
         "cited": "Sources cited",
-        "consulted": "Sources consulted"
+        "consulted": "Sources consulted",
+        "inlineTitle": "Sources ({count})"
       },
       "sourceMeta": {
         "guideline": "Guideline",
@@ -1095,7 +1096,8 @@
       "citationCountInvalidNumber": "Enter a valid number.",
       "citationCountInvalidRange": "Min cannot be greater than max.",
       "showLess": "Show Less",
-      "showMore": "Show {count} More"
+      "showMore": "Show {count} More",
+      "showResults": "Show {count} results"
     },
     "search": {
       "title": "Natural Language Search",
@@ -1984,6 +1986,20 @@
     },
     "context": {
       "show": "Context from the source page"
+    },
+    "panes": {
+      "document": "Document",
+      "about": "About",
+      "rules": "Rules"
+    },
+    "actions": {
+      "more": "More actions"
+    },
+    "map": {
+      "hintClick": "Click a region to open its guides",
+      "hintTap": "Tap a region to open its guides",
+      "explore": "Explore the map",
+      "done": "Done"
     }
   },
   "report": {
@@ -2124,7 +2140,8 @@
       "clearScope": "Remove the scope",
       "facet": "Facet",
       "showFolded": "Show folded categories",
-      "foldedHint": "A folded category absorbed an intermediate step. Kept so no ontology id is lost, not because it is worth navigating."
+      "foldedHint": "A folded category absorbed an intermediate step. Kept so no ontology id is lost, not because it is worth navigating.",
+      "done": "Done"
     },
     "tree": {
       "title": "Hierarchy",
