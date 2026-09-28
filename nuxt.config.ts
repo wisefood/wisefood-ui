@@ -53,6 +53,14 @@ export default defineNuxtConfig({
     fonts: false
   },
 
+  // Light unless the person picks dark with the header toggle. The device's
+  // own dark setting is not followed: the brand palette and the illustrations
+  // were drawn for the light scheme, and dark is an opt-in.
+  colorMode: {
+    preference: 'light',
+    fallback: 'light'
+  },
+
   icon: {
     collections: ['lucide', 'simple-icons'],
     serverBundle: {

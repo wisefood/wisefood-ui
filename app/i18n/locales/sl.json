@@ -189,7 +189,8 @@
     "guestExpires": "poteče čez",
     "guestErase": "Izbriši moje podatke zdaj",
     "guestErased": "Tvoji podatki gosta so izbrisani",
-    "guestEraseFailed": "Izbrisa nismo mogli potrditi — podatki bodo samodejno potekli"
+    "guestEraseFailed": "Izbrisa nismo mogli potrditi — podatki bodo samodejno potekli",
+    "guestBannerShort": "Gostujoča seja"
   },
   "seo": {
     "title": "WiseFood – Tvoja personalizirana prehranska pot",

@@ -3,39 +3,52 @@
     v-if="authStore.isGuest"
     class="bg-amber-50 dark:bg-amber-950 border-b border-amber-200 dark:border-amber-800 px-4 py-2"
   >
-    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-amber-900 dark:text-amber-200">
+    <!--
+      One line on a phone: a short label, the time left, and the two actions
+      as icons. The full sentence and the button labels come back from `sm`.
+      Three wrapped rows of banner were a third of a phone's screen on every
+      page a guest opened.
+    -->
+    <div class="max-w-7xl mx-auto flex items-center justify-center gap-2 sm:flex-wrap sm:gap-x-3 sm:gap-y-1 text-sm text-amber-900 dark:text-amber-200">
       <UIcon
         name="i-lucide-flask-conical"
         class="h-4 w-4 shrink-0"
       />
-      <span>
-        {{ t('auth.guestBanner') || "You're exploring as a guest — your data is temporary" }}
-        <template v-if="remainingLabel">
-          ({{ t('auth.guestExpires') || 'expires in' }} {{ remainingLabel }})
-        </template>
+      <span class="min-w-0 truncate sm:whitespace-normal sm:overflow-visible">
+        <span class="sm:hidden">
+          {{ t('auth.guestBannerShort') }}<template v-if="remainingLabel"> · {{ remainingLabel }}</template>
+        </span>
+        <span class="hidden sm:inline">
+          {{ t('auth.guestBanner') || "You're exploring as a guest — your data is temporary" }}
+          <template v-if="remainingLabel">
+            ({{ t('auth.guestExpires') || 'expires in' }} {{ remainingLabel }})
+          </template>
+        </span>
       </span>
       <UButton
         color="warning"
         variant="soft"
-        size="xs"
+        size="sm"
         icon="i-lucide-user-check"
-        class="cursor-pointer font-semibold"
+        class="cursor-pointer font-semibold shrink-0"
+        :aria-label="t('claim.cta')"
         @click="claiming = true"
       >
-        {{ t('claim.cta') }}
+        <span class="hidden sm:inline">{{ t('claim.cta') }}</span>
       </UButton>
 
       <UButton
         color="neutral"
         variant="ghost"
-        size="xs"
+        size="sm"
         icon="i-lucide-eraser"
-        class="cursor-pointer"
+        class="cursor-pointer shrink-0"
         :loading="purging"
+        :aria-label="t('auth.guestErase') || 'Erase my data now'"
         data-flows="guest-erase"
         @click="handleEraseNow"
       >
-        {{ t('auth.guestErase') || 'Erase my data now' }}
+        <span class="hidden sm:inline">{{ t('auth.guestErase') || 'Erase my data now' }}</span>
       </UButton>
     </div>
   </div>

@@ -189,7 +189,8 @@
     "guestExpires": "lejár",
     "guestErase": "Adataim törlése most",
     "guestErased": "A vendégadataid törölve lettek",
-    "guestEraseFailed": "A törlést nem tudtuk megerősíteni — automatikusan le fog járni"
+    "guestEraseFailed": "A törlést nem tudtuk megerősíteni — automatikusan le fog járni",
+    "guestBannerShort": "Vendég munkamenet"
   },
   "seo": {
     "title": "WiseFood – A személyre szabott táplálkozási utad",

@@ -189,7 +189,8 @@
     "guestExpires": "expires in",
     "guestErase": "Erase my data now",
     "guestErased": "Your guest data has been erased",
-    "guestEraseFailed": "We could not confirm the erase — it will still expire automatically"
+    "guestEraseFailed": "We could not confirm the erase — it will still expire automatically",
+    "guestBannerShort": "Guest session"
   },
   "seo": {
     "title": "WiseFood - Your Personalized Nutrition Journey",
