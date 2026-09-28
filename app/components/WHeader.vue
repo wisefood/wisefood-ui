@@ -18,18 +18,6 @@
       />
     </template>
 
-    <!-- Desktop only (the theme hides the centre below lg): the app switcher. -->
-    <template #default>
-      <UNavigationMenu
-        v-if="showAppNav"
-        :items="appNavItems"
-        highlight
-        color="primary"
-        variant="link"
-        :ui="{ link: 'text-base' }"
-      />
-    </template>
-
     <template #right>
       <UColorModeButton class="hidden lg:inline-flex" />
 
@@ -295,8 +283,8 @@ const userMenuItems = computed<DropdownMenuItem[]>(() => [
   }
 ])
 
-// The three applications. The dashboard cards were the only way between
-// them; now the header has them on every page, on every width.
+// The three applications, for the phone menu. On a desktop the dashboard
+// cards are the way between them and the header stays uncluttered.
 const appLinks = computed<NavigationMenuItem[]>(() => [
   {
     label: t('dashboard.apps.foodScholar.title'),
@@ -314,9 +302,6 @@ const appLinks = computed<NavigationMenuItem[]>(() => [
     to: '/foodchat'
   }
 ])
-
-const showAppNav = computed(() => authStore.initialized && authStore.isLoggedIn && !isLanding.value)
-const appNavItems = computed<NavigationMenuItem[]>(() => appLinks.value)
 
 const mobileMenuItems = computed<NavigationMenuItem[][]>(() => {
   const loggedIn = authStore.initialized && authStore.isLoggedIn

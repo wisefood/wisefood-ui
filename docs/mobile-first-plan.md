@@ -492,6 +492,9 @@ Departures from the plan, and things learned on the way:
 - **Playwright** remains a follow-up: the 375px smoke suite in Phase 7 needs a
   Keycloak test realm or a mocked auth store to reach the app pages.
 
+- **No app switcher in the desktop header** (user decision, after review).
+  The three apps are in the phone menu only; on a desktop the dashboard
+  cards remain the way between them.
 - **The earth gradient stays off.** Registering the `earth` tokens (§1.6)
   made a beige-to-sage background appear on twenty-one pages that had
   carried the classes unrendered since 2025; it was reverted the same day.
