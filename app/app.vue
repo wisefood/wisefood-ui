@@ -7,11 +7,8 @@
     that is refusing everyone but admins, and a consent banner over a closed
     sign asks a question nobody can act on yet.
   -->
-  <template v-if="!isMaintenancePage">
-    <ReportBugButton />
-    <FeedbackButton />
-    <ConsentBar />
-  </template>
+  <ConsentBar v-if="!isMaintenancePage" />
+  <FloatingDock :minimal="isMaintenancePage" />
 
   <!-- Flows.js floating blocks (interactive walkthroughs) -->
   <flows-floating-blocks />
@@ -26,7 +23,7 @@ const isMaintenancePage = computed(() => route.path === '/maintenance')
 
 useHead({
   meta: [
-    { name: 'viewport', content: 'width=device-width, initial-scale=1' }
+    { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content' }
   ],
   link: [
     { rel: 'icon', type: 'image/x-icon', href: '/app/favicon.ico' },

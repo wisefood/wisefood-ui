@@ -2177,5 +2177,10 @@
       "reindexDone": "Kész: {documents} dokumentum indexelve.",
       "reindexFailed": "Az újraépítés nem sikerült."
     }
+  },
+  "dock": {
+    "open": "Segítség és akadálymentesítés",
+    "close": "Bezárás",
+    "reportBug": "Hiba bejelentése"
   }
 }

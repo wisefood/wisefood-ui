@@ -6,7 +6,5 @@
       </div>
      <WFooter />
     </UMain>
-
-    <AccessibilityToolbar />
   </UApp>
 </template>

@@ -2177,5 +2177,10 @@
       "reindexDone": "Rebuilt: {documents} documents indexed.",
       "reindexFailed": "The rebuild failed."
     }
+  },
+  "dock": {
+    "open": "Help and accessibility",
+    "close": "Close",
+    "reportBug": "Report a bug"
   }
 }

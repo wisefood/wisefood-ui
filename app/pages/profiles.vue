@@ -249,8 +249,6 @@
       @complete="onSetupComplete"
       @skip="onSetupSkip"
     />
-
-    <AccessibilityToolbar />
   </div>
 </template>
 

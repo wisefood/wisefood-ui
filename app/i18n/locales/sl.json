@@ -2211,5 +2211,10 @@
       "reindexDone": "Zgrajeno: indeksiranih {documents} dokumentov.",
       "reindexFailed": "Ponovna gradnja ni uspela."
     }
+  },
+  "dock": {
+    "open": "Pomoč in dostopnost",
+    "close": "Zapri",
+    "reportBug": "Prijavi napako"
   }
 }

@@ -15,7 +15,5 @@
     <USeparator />
 
     <WFooter />
-
-    <AccessibilityToolbar />
   </UApp>
 </template>
