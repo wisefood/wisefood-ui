@@ -95,9 +95,17 @@ const onMouseLeave = () => {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.app-nav-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 28px -6px rgba(15, 23, 42, 0.12);
+/* The lift and the sweeping border are for a pointer that can hover. A tap
+   would leave them stuck on until the next tap somewhere else. */
+@media (hover: hover) {
+  .app-nav-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px -6px rgba(15, 23, 42, 0.12);
+  }
+
+  .app-nav-card:hover .app-nav-card__border {
+    opacity: 1;
+  }
 }
 
 .app-nav-card__border {
@@ -123,10 +131,6 @@ const onMouseLeave = () => {
   z-index: 0;
 }
 
-.app-nav-card:hover .app-nav-card__border {
-  opacity: 1;
-}
-
 .app-nav-card__info {
   position: absolute;
   top: 0.75rem;
@@ -149,6 +153,22 @@ const onMouseLeave = () => {
   opacity: 1;
   background: rgba(15, 23, 42, 0.06);
   color: rgb(55 65 81); /* gray-700 */
+}
+
+/* A finger cannot aim at a 28px dot, and has no hover to make it stand out:
+   the button keeps its size but answers to a 44px area around it, and sits
+   less faded at rest. */
+@media (pointer: coarse) {
+  .app-nav-card__info {
+    opacity: 0.8;
+  }
+
+  .app-nav-card__info::before {
+    content: '';
+    position: absolute;
+    inset: -0.5rem;
+    border-radius: inherit;
+  }
 }
 
 .app-nav-card__info:focus-visible {

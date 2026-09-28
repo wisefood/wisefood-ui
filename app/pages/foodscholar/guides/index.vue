@@ -100,7 +100,7 @@
             v-else-if="euRegionSummaries.length"
             class="grid gap-10 xl:grid-cols-[minmax(0,1fr)_14rem] xl:items-start"
           >
-            <div class="atlas-map-wrap min-w-0 h-[56rem]">
+            <div class="atlas-map-wrap min-w-0">
               <EuropeGuidesMap
                 v-model:selected-region-code="selectedMapRegionCode"
                 :regions="euRegionSummaries"
@@ -579,6 +579,15 @@ onMounted(async () => {
 .atlas-map-wrap {
   height: clamp(32rem, 72vh, 56rem);
   overflow: hidden;
+}
+
+/* A phone in portrait has neither 32rem of height to give the map above the
+   country list nor a pointer that needs the room; it gets what its width
+   warrants. */
+@media (max-width: 639px) {
+  .atlas-map-wrap {
+    height: clamp(18rem, 60vw, 56rem);
+  }
 }
 
 /* Override EuropeGuidesMap's internal min-height so it fills the constrained wrapper */

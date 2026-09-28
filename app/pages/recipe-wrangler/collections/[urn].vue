@@ -28,7 +28,7 @@
 
       <!-- Hero -->
       <div class="mb-8">
-        <div v-if="collection.image_url" class="relative aspect-[16/5] rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-xl mb-6">
+        <div v-if="collection.image_url" class="relative aspect-[16/9] sm:aspect-[16/5] rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-xl mb-6">
           <img
             :src="collection.image_url"
             :alt="collection.title"
@@ -37,8 +37,8 @@
             @error="imageError = true"
           />
           <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
-          <div class="absolute bottom-0 left-0 right-0 p-5 sm:p-8">
-            <h1 class="text-2xl sm:text-4xl font-serif font-bold text-white drop-shadow-lg mb-2">
+          <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-8">
+            <h1 class="text-2xl sm:text-4xl font-serif font-bold text-white drop-shadow-lg mb-2 line-clamp-3 sm:line-clamp-none">
               {{ collection.title }}
             </h1>
             <div class="flex flex-wrap gap-2">

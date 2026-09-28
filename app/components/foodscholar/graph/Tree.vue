@@ -40,7 +40,7 @@
         :aria-expanded="row.expandable ? expanded.has(row.key) : undefined"
         :aria-selected="row.nodeId === selectedId"
         :tabindex="row.key === focusedKey ? 0 : -1"
-        class="group flex cursor-pointer items-center gap-1 rounded-lg py-1 pr-2 transition-colors"
+        class="group flex cursor-pointer items-center gap-1 rounded-lg py-1 pr-2 transition-colors pointer-coarse:py-2"
         :class="row.nodeId === selectedId
           ? 'bg-brand-50 dark:bg-brand-900/30'
           : 'hover:bg-zinc-100 dark:hover:bg-zinc-800/70'"
@@ -53,7 +53,7 @@
         <button
           v-if="row.expandable"
           type="button"
-          class="flex h-4 w-4 shrink-0 items-center justify-center rounded text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+          class="flex h-4 w-4 shrink-0 items-center justify-center rounded text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 pointer-coarse:h-8 pointer-coarse:w-8"
           :aria-label="expanded.has(row.key) ? t('graph.tree.collapse') : t('graph.tree.expand')"
           tabindex="-1"
           @click.stop="toggle(row)"
@@ -66,13 +66,13 @@
           <UIcon
             v-else
             name="i-lucide-chevron-right"
-            class="h-3.5 w-3.5 transition-transform"
+            class="h-3.5 w-3.5 transition-transform pointer-coarse:h-5 pointer-coarse:w-5"
             :class="{ 'rotate-90': expanded.has(row.key) }"
           />
         </button>
         <span
           v-else
-          class="h-4 w-4 shrink-0"
+          class="h-4 w-4 shrink-0 pointer-coarse:w-8"
         />
 
         <!-- Facet groups read as headings; nodes carry their kind colour. -->

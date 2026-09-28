@@ -86,7 +86,7 @@
           >
             {{ item }}
             <button
-              class="w-4 h-4 flex items-center justify-center rounded-full text-emerald-500/70 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-800/40 disabled:opacity-40"
+              class="w-4 h-4 pointer-coarse:w-9 pointer-coarse:h-9 pointer-coarse:-my-2 flex items-center justify-center rounded-full text-emerald-500/70 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-800/40 disabled:opacity-40"
               :aria-label="t('foodChatHome.planningState.removeItem', { value: item })"
               :disabled="busy"
               @click="emit('remove-pantry', item)"
@@ -127,6 +127,7 @@
             color="neutral"
             variant="soft"
             icon="i-lucide-plus"
+            class="pointer-coarse:min-h-11 pointer-coarse:min-w-11 justify-center"
             :disabled="busy || !draft.trim()"
             :aria-label="t('foodChatHome.planningState.pantryAdd')"
           />
@@ -149,7 +150,7 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-1.5">
-          <UTooltip
+          <FoodchatInfoPopover
             v-for="chip in facets"
             :key="`facet-${chip.family}-${chip.value}`"
             :text="familyLabel(chip.family)"
@@ -159,10 +160,10 @@
             >
               {{ humanise(chip.value) }}
               <button
-                class="w-4 h-4 flex items-center justify-center rounded-full text-sky-500/70 hover:text-sky-700 hover:bg-sky-100 dark:hover:bg-sky-800/40 disabled:opacity-40"
+                class="w-4 h-4 pointer-coarse:w-9 pointer-coarse:h-9 pointer-coarse:-my-2 flex items-center justify-center rounded-full text-sky-500/70 hover:text-sky-700 hover:bg-sky-100 dark:hover:bg-sky-800/40 disabled:opacity-40"
                 :aria-label="t('foodChatHome.planningState.removeItem', { value: chip.value })"
                 :disabled="busy"
-                @click="emit('remove-facet', chip.value)"
+                @click.stop="emit('remove-facet', chip.value)"
               >
                 <UIcon
                   name="i-lucide-x"
@@ -170,7 +171,7 @@
                 />
               </button>
             </span>
-          </UTooltip>
+          </FoodchatInfoPopover>
 
           <span
             v-if="!facets.length"
@@ -283,6 +284,7 @@
         <UButton
           size="xs"
           color="primary"
+          class="pointer-coarse:min-h-11 pointer-coarse:px-4"
           :loading="busy"
           icon="i-lucide-refresh-cw"
           @click="emit('replan')"

@@ -39,7 +39,7 @@
         type="button"
         :aria-pressed="isSelected(option.value)"
         :class="[
-          'px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200',
+          'px-3 py-1.5 pointer-coarse:py-2.5 rounded-full text-sm font-medium transition-all duration-200',
           isSelected(option.value)
             ? 'bg-brandg-100 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-400 ring-2 ring-brandg-400 dark:ring-brandg-600'
             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'

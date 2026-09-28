@@ -1,6 +1,9 @@
 <template>
   <div class="flex h-full flex-col">
-    <div class="flex shrink-0 items-center justify-between border-b border-zinc-200 dark:border-zinc-800 px-4 py-2.5">
+    <div
+      v-if="!hideHeader"
+      class="flex shrink-0 items-center justify-between border-b border-zinc-200 dark:border-zinc-800 px-4 py-2.5"
+    >
       <h3 class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
         {{ t('graph.filters.title') }}
       </h3>
@@ -127,6 +130,12 @@ const props = defineProps<{
   counts: Record<string, Record<string, number>>
   /** Label of the node the view is scoped to, if any. */
   scopeLabel?: string | null
+  /**
+   * Leave out the title row. Set when the panel sits in a slideover that
+   * already has a title and a close button, so the title is not shown twice
+   * and Clear moves to the slideover's footer.
+   */
+  hideHeader?: boolean
 }>()
 
 const emit = defineEmits<{

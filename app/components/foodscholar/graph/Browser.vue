@@ -105,7 +105,7 @@
           <!-- Filters, as a column rather than an overlay: a filter panel that
                covers the thing it filters hides the effect of using it. -->
           <div
-            v-if="filtersOpen"
+            v-if="filtersOpen && !isCompact"
             class="w-60 shrink-0 border-r border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-sm"
           >
             <FoodscholarGraphFilters
@@ -133,11 +133,10 @@
 
           <!-- Details. Always there on a wide screen — prompting for a
                selection until there is one — so choosing the first node does
-               not reflow the tree. On a narrow one there is no room beside the
-               tree, so it opens over it only once something is selected. -->
+               not reflow the tree. -->
           <div
-            class="lg:relative lg:z-auto lg:flex lg:min-w-0 lg:max-w-none lg:flex-1 lg:shadow-none"
-            :class="selectedId ? 'absolute inset-y-0 right-0 z-30 flex w-full max-w-sm shadow-2xl' : 'hidden'"
+            v-if="!isCompact"
+            class="relative flex min-w-0 flex-1"
           >
             <FoodscholarGraphInspector
               :node-id="selectedId"
@@ -149,6 +148,63 @@
           </div>
         </div>
       </div>
+
+      <!-- Below lg there is no room beside the tree for either panel, so each
+           opens over it: the filters from the left, the details from the
+           right once something is selected. Slideovers rather than the bare
+           overlay this was, for the backdrop, the focus trap and Escape. -->
+      <USlideover
+        :open="isCompact && filtersOpen"
+        side="left"
+        :title="t('graph.filters.title')"
+        :ui="{ content: 'max-w-xs', body: 'p-0 sm:p-0 flex flex-col' }"
+        @update:open="filtersOpen = $event"
+      >
+        <template #body>
+          <FoodscholarGraphFilters
+            v-model="filters"
+            :counts="filterCounts"
+            :scope-label="scopeLabel"
+            hide-header
+            @reset="resetFilters"
+          />
+        </template>
+        <template #footer>
+          <button
+            v-if="activeFilterCount"
+            type="button"
+            class="rounded-lg px-3 py-2 text-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
+            @click="resetFilters"
+          >
+            {{ t('graph.filters.clear', { count: activeFilterCount }) }}
+          </button>
+          <button
+            type="button"
+            class="ml-auto rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-600"
+            @click="filtersOpen = false"
+          >
+            {{ t('graph.filters.done') }}
+          </button>
+        </template>
+      </USlideover>
+
+      <USlideover
+        :open="isCompact && !!selectedId"
+        side="right"
+        :title="t('graph.inspector.title')"
+        :ui="{ content: 'max-w-md' }"
+        @update:open="(open: boolean) => { if (!open) onSelect('') }"
+      >
+        <template #content>
+          <FoodscholarGraphInspector
+            :node-id="selectedId"
+            :is-dark="isDark"
+            @select="onSelect"
+            @scope="onScope"
+            @ask="(question: string) => emit('ask', question)"
+          />
+        </template>
+      </USlideover>
     </template>
   </div>
 </template>
@@ -177,6 +233,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { isCompact } = useViewport()
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()

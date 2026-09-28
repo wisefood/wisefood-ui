@@ -29,7 +29,10 @@ async function copySessionId() {
 </script>
 
 <template>
-<UFooter class="bg-neutral-300 dark:bg-zinc-800">
+<UFooter
+    class="bg-neutral-300 dark:bg-zinc-800"
+    :ui="{ left: 'flex-wrap gap-y-2', right: 'flex-wrap gap-y-2' }"
+>
     <template #left>
     <p class="text-sm text-muted">
         © {{ new Date().getFullYear() }} The WiseFood Consortium, All rights reserved.
@@ -46,7 +49,7 @@ async function copySessionId() {
         <button
         v-if="sessionId"
         type="button"
-        class="inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs text-muted font-mono hover:bg-neutral-400/30 dark:hover:bg-zinc-700/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors"
+        class="hidden sm:inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs text-muted font-mono hover:bg-neutral-400/30 dark:hover:bg-zinc-700/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-colors"
         :title="$t('footer.sessionHint')"
         :aria-label="`${$t('footer.session')} ${sessionId}. ${$t('footer.copy')}`"
         @click="copySessionId"

@@ -1,17 +1,18 @@
 <template>
   <!--
-    Exactly the screen below the site header, so the search bar stays in view
-    and the tree and the details scroll inside their own panels rather than
-    the page growing with every branch opened. The minimum keeps a short
-    screen from squeezing the tree to nothing; below it the page scrolls.
+    Exactly the screen below the site header (the `app` layout hands the page
+    what is left of the viewport), so the search bar stays in view and the
+    tree and the details scroll inside their own panels rather than the page
+    growing with every branch opened.
   -->
-  <div class="flex h-[calc(100dvh-var(--ui-header-height))] min-h-[32rem] flex-col bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+  <div class="flex min-h-0 flex-1 flex-col bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
     <AppPageHeader
       back-to="/foodscholar?tab=resources"
       :back-label="t('foodScholarHome.qa.tabs.library')"
       brand-title="FoodScholar"
       brand-class="text-brand-500 dark:text-brand-400"
       subtitle="Hierarchy"
+      compact
     />
     <div class="flex min-h-0 flex-1 flex-col">
       <FoodscholarGraphBrowser @ask="askFromGraph" />
@@ -25,7 +26,7 @@ import { track } from '~/composables/useTelemetry'
 
 const { t } = useI18n()
 
-definePageMeta({ middleware: ['auth', 'profile'] })
+definePageMeta({ layout: 'app', middleware: ['auth', 'profile'] })
 
 useHead({ title: 'Hierarchy – FoodScholar' })
 

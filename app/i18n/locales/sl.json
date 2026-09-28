@@ -150,8 +150,14 @@
       "switchProfile": "Zamenjaj profil",
       "accountSettings": "Nastavitve računa",
       "signOut": "Odjava",
-      "myLibrary": "Moja knjižnica"
-    }
+      "myLibrary": "Moja knjižnica",
+      "open": "Odpri meni",
+      "close": "Zapri meni",
+      "title": "Meni",
+      "description": "Navigacija po strani"
+    },
+    "apps": "Aplikacije",
+    "account": "Račun"
   },
   "auth": {
     "welcome": "Dobrodošli nazaj",
@@ -183,7 +189,8 @@
     "guestExpires": "poteče čez",
     "guestErase": "Izbriši moje podatke zdaj",
     "guestErased": "Tvoji podatki gosta so izbrisani",
-    "guestEraseFailed": "Izbrisa nismo mogli potrditi — podatki bodo samodejno potekli"
+    "guestEraseFailed": "Izbrisa nismo mogli potrditi — podatki bodo samodejno potekli",
+    "guestBannerShort": "Gostujoča seja"
   },
   "seo": {
     "title": "WiseFood – Tvoja personalizirana prehranska pot",
@@ -415,7 +422,12 @@
         "dairyFree": "Brez mlečnih izdelkov",
         "vegan": "Vegansko",
         "glutenFree": "Brez glutena"
-      }
+      },
+      "open": "Filtri",
+      "active": "Aktivni filtri",
+      "removeFilter": "Odstrani filter: {label}",
+      "showResults": "Prikaži recepte: {count}",
+      "showResultsLoading": "Iskanje receptov…"
     },
     "allergens": {
       "peanuts": "Arašidi",
@@ -465,7 +477,8 @@
       "removeFromComparison": "Odstrani iz primerjave",
       "addToFavorites": "Dodaj med priljubljene",
       "removeFromFavorites": "Odstrani iz priljubljenih",
-      "untitled": "Recept brez naslova"
+      "untitled": "Recept brez naslova",
+      "compareLimit": "Naenkrat lahko primerjaš največ {count} recepte"
     },
     "categories": {
       "title": "Brskaj po kategorijah",
@@ -602,7 +615,10 @@
         "reset": "Ponastavi",
         "nutritionNote": "Vrednosti na porcijo ostanejo enake — pripravljaš več porcij, ne večjih.",
         "failed": "Količin ni bilo mogoče prilagoditi. Prikazan je izvirni recept."
-      }
+      },
+      "share": "Deli",
+      "shareCopied": "Povezava kopirana",
+      "shareFailed": "Povezave ni bilo mogoče kopirati"
     },
     "comparePage": {
       "pageTitle": "Primerjava receptov - RecipeWrangler",
@@ -617,7 +633,8 @@
         "feature": "Lastnost",
         "duration": "Trajanje",
         "servings": "Porcije"
-      }
+      },
+      "pickTwo": "Izberi dva recepta za primerjavo drug ob drugem"
     },
     "cookingAnimation": {
       "deliciousRecipes": "okusne recepte",
@@ -637,7 +654,10 @@
         "sauteing": "Ples s toploto in časom",
         "simmering": "Potrpežljivo razvijamo globino okusa"
       }
-    }
+    },
+    "clearCompare": "Počisti primerjavo",
+    "pageOf": "Stran {page} od {total}",
+    "pageN": "Stran {page}"
   },
   "library": {
     "backToDashboard": "Nazaj na nadzorno ploščo",
@@ -901,7 +921,8 @@
       },
       "sidebar": {
         "cited": "Navedeni viri",
-        "consulted": "Pregledani viri"
+        "consulted": "Pregledani viri",
+        "inlineTitle": "Viri ({count})"
       },
       "sourceMeta": {
         "guideline": "Smernica",
@@ -1090,7 +1111,8 @@
       "citationCountInvalidNumber": "Vnesi veljavno številko.",
       "citationCountInvalidRange": "Min ne sme biti večji od max.",
       "showLess": "Prikaži manj",
-      "showMore": "Prikaži še {count}"
+      "showMore": "Prikaži še {count}",
+      "showResults": "Prikaži {count} rezultatov"
     },
     "search": {
       "title": "Iskanje v naravnem jeziku",
@@ -1633,7 +1655,8 @@
         "soup": "Juha",
         "dessert": "Sladica",
         "drink": "Napitek"
-      }
+      },
+      "macroRing": "Razčlenitev hranil: {value} {label}. Tapni za naslednje."
     },
     "constraints": {
       "label": "Omejitve",
@@ -1845,6 +1868,12 @@
     "planSettings": {
       "title": "Nastavitve načrta"
     },
+    "panes": {
+      "label": "Klepet ali načrt",
+      "chat": "Klepet",
+      "plan": "Načrt",
+      "newPlan": "Nov načrt"
+    },
     "splitter": {
       "hint": "Povleci za spremembo velikosti · dvojni klik za ponastavitev"
     },
@@ -1972,6 +2001,20 @@
     },
     "context": {
       "show": "Kontekst z izvorne strani"
+    },
+    "panes": {
+      "document": "Dokument",
+      "about": "O vodniku",
+      "rules": "Pravila"
+    },
+    "actions": {
+      "more": "Več dejanj"
+    },
+    "map": {
+      "hintClick": "Klikni regijo, da odpreš njene vodnike",
+      "hintTap": "Tapni regijo, da odpreš njene vodnike",
+      "explore": "Razišči zemljevid",
+      "done": "Končano"
     }
   },
   "report": {
@@ -2124,7 +2167,8 @@
       "minEvidence": "Najmanj dokazov",
       "onlyWithCard": "Samo kjer obstaja povzetek",
       "showFolded": "Pokaži združene kategorije",
-      "foldedHint": "Združena kategorija je vsrkala vmesni korak. Ohranjena je zato, da se noben ontološki identifikator ne izgubi."
+      "foldedHint": "Združena kategorija je vsrkala vmesni korak. Ohranjena je zato, da se noben ontološki identifikator ne izgubi.",
+      "done": "Končano"
     },
     "tree": {
       "title": "Hierarhija",
@@ -2211,5 +2255,10 @@
       "reindexDone": "Zgrajeno: indeksiranih {documents} dokumentov.",
       "reindexFailed": "Ponovna gradnja ni uspela."
     }
+  },
+  "dock": {
+    "open": "Pomoč in dostopnost",
+    "close": "Zapri",
+    "reportBug": "Prijavi napako"
   }
 }

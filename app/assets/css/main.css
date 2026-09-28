@@ -34,6 +34,11 @@ body {
 }
 
 @theme static {
+  /* The earth pair, as utilities. The variables above were never wired
+     into the theme, so `from-earth-1` and friends generated nothing. */
+  --color-earth-1: #F6EFE6;
+  --color-earth-2: #CAD5B2;
+
   --color-brandg-50: #f9fae9;
   --color-brandg-100: #edf0d5;
   --color-brandg-200: #dbe1aa;
@@ -69,6 +74,51 @@ body {
   --color-brand-800: #551422;
   --color-brand-900: #2b0a11;
   --color-brand-950: #450a0a;
+}
+
+/* ── Mobile foundations ─────────────────────────────────────────────
+   Shared by every page; the per-page work builds on these. */
+:root {
+  /* The notch and the home indicator. Zero everywhere else, and zero on
+     iOS too unless the viewport meta says `viewport-fit=cover` (app.vue). */
+  --wf-safe-top: env(safe-area-inset-top, 0px);
+  --wf-safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* The shell for full-screen pages (layouts/app.vue): exactly one viewport
+   tall, the dynamic kind where the browser supports it, so a chat's composer
+   sits above the toolbar rather than under it. */
+.wf-app-shell {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* iOS Safari zooms the page when a focused field is under 16px, and stays
+   zoomed after. Nuxt UI's inputs are 14px and the composers 15px, so on any
+   touch device every text field is at least 16px. This is unlayered on
+   purpose: it has to beat the `text-sm` utility on the element. Fields that
+   ask for a larger size keep it. */
+@media (pointer: coarse) {
+  :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]), textarea, select):not([class*="text-lg"], [class*="text-xl"], [class*="text-2xl"], [class*="text-3xl"]) {
+    font-size: max(16px, 1rem);
+  }
+}
+
+/* Markdown from the models (answers, summaries, chat) is rendered with GFM
+   tables and code blocks, which are as wide as their content. On a phone
+   they scroll inside the bubble rather than pushing it off the screen. */
+:is(.prose, .fc-md, .qa-answer-markdown) table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+:is(.prose, .fc-md, .qa-answer-markdown) pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+:is(.prose, .fc-md, .qa-answer-markdown) {
+  overflow-wrap: anywhere;
 }
 
 /* ── Grainy flowing gradient primitives (used by landing hero/sections) ── */

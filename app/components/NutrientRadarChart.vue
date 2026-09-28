@@ -5,7 +5,7 @@
       <button
         @click="zoomOut"
         :disabled="zoomLevel <= 0.5"
-        class="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        class="p-2 pointer-coarse:p-3.5 rounded-lg bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
         <UIcon name="i-lucide-zoom-out" class="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
       </button>
@@ -15,23 +15,23 @@
       <button
         @click="zoomIn"
         :disabled="zoomLevel >= 2"
-        class="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        class="p-2 pointer-coarse:p-3.5 rounded-lg bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
         <UIcon name="i-lucide-zoom-in" class="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
       </button>
       <button
         @click="resetZoom"
-        class="ml-2 px-3 py-1.5 text-xs font-medium rounded-lg bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 text-zinc-600 dark:text-zinc-300 transition-colors"
+        class="ml-2 px-3 py-1.5 pointer-coarse:min-h-11 text-xs font-medium rounded-lg bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600 text-zinc-600 dark:text-zinc-300 transition-colors"
       >
         {{ t('recipeWrangler.detail.nutrientChart.reset') }}
       </button>
     </div>
 
     <!-- Chart Container -->
-    <div class="relative w-full aspect-square max-w-xl mx-auto overflow-hidden">
+    <div class="relative w-full aspect-square max-w-xl mx-auto">
       <svg
         :viewBox="computedViewBox"
-        class="w-full h-full transition-all duration-300 ease-out"
+        :class="['w-full h-full transition-all duration-300 ease-out', zoomLevel > 1 ? 'overflow-hidden' : 'overflow-visible']"
         preserveAspectRatio="xMidYMid meet"
       >
         <!-- Background grid circles, each labelled with the share of the
@@ -43,19 +43,19 @@
             :key="level"
             cx="200"
             cy="200"
-            :r="level * 20"
+            :r="level * ringStep"
             fill="none"
             stroke="currentColor"
             stroke-width="1"
             :opacity="0.5 + (level * 0.1)"
           />
         </g>
-        <g class="text-[0.5625rem] fill-zinc-400 dark:fill-zinc-500">
+        <g :class="[geometry.ringClass, 'fill-zinc-400 dark:fill-zinc-500']">
           <text
             v-for="level in 5"
             :key="`ring-${level}`"
             x="203"
-            :y="200 - level * 20 + 3"
+            :y="200 - level * ringStep + 3"
             text-anchor="start"
           >{{ level * 20 }}%</text>
         </g>
@@ -89,13 +89,13 @@
           :key="`point-${visibleNutrients[index]?.key}`"
           :cx="point.x"
           :cy="point.y"
-          r="5"
+          :r="geometry.pointRadius"
           class="fill-brandg-500 dark:fill-brandg-400 stroke-white dark:stroke-zinc-800 transition-all duration-300"
           stroke-width="2"
         />
 
         <!-- Labels -->
-        <g class="text-xs font-medium">
+        <g :class="[geometry.labelClass, 'font-medium']">
           <text
             v-for="(nutrient, index) in visibleNutrients"
             :key="`label-${nutrient.key}`"
@@ -108,17 +108,20 @@
             <tspan>{{ nutrient.lowerIsBetter ? '▼ ' : '' }}{{ nutrient.label }}</tspan>
             <tspan
               :x="getLabelX(index, visibleNutrients.length)"
-              :dy="12"
-              class="fill-zinc-500 dark:fill-zinc-400 text-[0.625rem]"
+              :dy="geometry.subDy"
+              :class="['fill-zinc-500 dark:fill-zinc-400', geometry.subClass]"
             >
               {{ nutrient.displayValue }}
             </tspan>
             <tspan
               :x="getLabelX(index, visibleNutrients.length)"
-              :dy="11"
-              :class="nutrient.overRi
-                ? 'fill-amber-600 dark:fill-amber-400 text-[0.625rem] font-semibold'
-                : 'fill-zinc-400 dark:fill-zinc-500 text-[0.625rem]'"
+              :dy="geometry.subDy - 1"
+              :class="[
+                geometry.subClass,
+                nutrient.overRi
+                  ? 'fill-amber-600 dark:fill-amber-400 font-semibold'
+                  : 'fill-zinc-400 dark:fill-zinc-500'
+              ]"
             >
               {{ Math.round(nutrient.percentRi) }}%{{ nutrient.overRi ? '+' : '' }} RI
             </tspan>
@@ -134,7 +137,7 @@
         :key="nutrient.key"
         @click="toggleNutrient(nutrient.key)"
         :class="[
-          'text-left px-3 py-2 rounded-lg border transition-all',
+          'text-left px-3 py-2 pointer-coarse:min-h-11 rounded-lg border transition-all',
           visibleKeys.has(nutrient.key)
             ? 'bg-brandg-50 dark:bg-brandg-900/30 border-brandg-300 dark:border-brandg-700'
             : 'bg-zinc-50 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 opacity-70'
@@ -247,6 +250,7 @@ const props = defineProps<{
   sodium: MaybeNumber
 }>()
 const { t } = useI18n()
+const { isPhone } = useViewport()
 
 const hasNumber = (value: unknown): value is number => {
   return typeof value === 'number' && Number.isFinite(value)
@@ -343,7 +347,17 @@ const visibleNutrients = computed(() => {
 
 const centerX = 200
 const centerY = 200
-const maxRadius = 100
+
+// The SVG scales to its box, which on a phone is about 300px across for a
+// 400-unit viewBox: a 12-unit label lands at 9px and the value under it at
+// 7px. Rather than a second chart, the phone pulls the axes in and pushes
+// the type up, so the outermost label still fits and nothing reads under
+// 11px. Sizes are viewBox units; the classes are px so they scale with it.
+const geometry = computed(() => isPhone.value
+  ? { maxRadius: 80, labelOffset: 28, labelClass: 'text-[15px]', subClass: 'text-[13px]', subDy: 15, ringClass: 'text-[11px]', pointRadius: 6 }
+  : { maxRadius: 100, labelOffset: 35, labelClass: 'text-xs', subClass: 'text-[0.625rem]', subDy: 12, ringClass: 'text-[0.5625rem]', pointRadius: 5 })
+
+const ringStep = computed(() => geometry.value.maxRadius / 5)
 
 // Calculate angle for each nutrient (evenly distributed)
 const getAngle = (index: number, total: number): number => {
@@ -369,7 +383,7 @@ const getNormalizedValue = (nutrient: NutrientData): number => {
 // Calculate point coordinates for a given nutrient
 const getPointCoords = (index: number, total: number, nutrient: NutrientData): { x: number, y: number } => {
   const angle = getAngle(index, total)
-  const radius = getNormalizedValue(nutrient) * maxRadius
+  const radius = getNormalizedValue(nutrient) * geometry.value.maxRadius
   return {
     x: centerX + radius * Math.cos(angle),
     y: centerY + radius * Math.sin(angle)
@@ -379,25 +393,25 @@ const getPointCoords = (index: number, total: number, nutrient: NutrientData): {
 // Get axis end coordinates (for grid lines)
 const getAxisEndX = (index: number, total: number): number => {
   const angle = getAngle(index, total)
-  return centerX + maxRadius * Math.cos(angle)
+  return centerX + geometry.value.maxRadius * Math.cos(angle)
 }
 
 const getAxisEndY = (index: number, total: number): number => {
   const angle = getAngle(index, total)
-  return centerY + maxRadius * Math.sin(angle)
+  return centerY + geometry.value.maxRadius * Math.sin(angle)
 }
 
 // Get label position (outside the chart)
+const labelRadius = (): number => geometry.value.maxRadius + geometry.value.labelOffset
+
 const getLabelX = (index: number, total: number): number => {
   const angle = getAngle(index, total)
-  const labelRadius = maxRadius + 35
-  return centerX + labelRadius * Math.cos(angle)
+  return centerX + labelRadius() * Math.cos(angle)
 }
 
 const getLabelY = (index: number, total: number): number => {
   const angle = getAngle(index, total)
-  const labelRadius = maxRadius + 35
-  return centerY + labelRadius * Math.sin(angle)
+  return centerY + labelRadius() * Math.sin(angle)
 }
 
 // Get text anchor based on position

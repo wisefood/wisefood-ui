@@ -33,7 +33,7 @@
             <UIcon name="i-lucide-table-2" class="w-7 h-7 text-sky-600 dark:text-sky-300" />
           </div>
           <div class="min-w-0">
-            <h1 class="text-3xl sm:text-4xl font-serif font-bold text-zinc-900 dark:text-white">
+            <h1 class="text-2xl sm:text-4xl font-serif font-bold text-zinc-900 dark:text-white wrap-break-word">
               {{ table.title }}
             </h1>
             <p v-if="table.compiling_institution" class="mt-1 text-zinc-600 dark:text-zinc-400">
@@ -43,13 +43,13 @@
         </div>
 
         <div class="flex flex-wrap gap-2 mb-5">
-          <span v-if="table.status" :class="statusBadgeClass(table.status)" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold">
+          <span v-if="table.status" :class="statusBadgeClass(table.status)" class="inline-flex items-center max-w-full min-w-0 wrap-anywhere px-2.5 py-1 rounded-full text-xs font-semibold">
             {{ formatStatus(table.status) }}
           </span>
-          <span v-if="table.type" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+          <span v-if="table.type" class="inline-flex items-center max-w-full min-w-0 wrap-anywhere px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
             {{ formatTag(table.type) }}
           </span>
-          <span v-if="table.database_name" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+          <span v-if="table.database_name" class="inline-flex items-center gap-1 max-w-full min-w-0 wrap-anywhere px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
             <UIcon name="i-lucide-database" class="w-3 h-3" />
             {{ table.database_name }}
           </span>

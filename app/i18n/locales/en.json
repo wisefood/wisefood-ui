@@ -150,8 +150,14 @@
       "switchProfile": "Switch Profile",
       "accountSettings": "Account Settings",
       "signOut": "Sign out",
-      "myLibrary": "My Library"
-    }
+      "myLibrary": "My Library",
+      "open": "Open menu",
+      "close": "Close menu",
+      "title": "Menu",
+      "description": "Site navigation"
+    },
+    "apps": "Apps",
+    "account": "Account"
   },
   "auth": {
     "welcome": "Welcome back",
@@ -183,7 +189,8 @@
     "guestExpires": "expires in",
     "guestErase": "Erase my data now",
     "guestErased": "Your guest data has been erased",
-    "guestEraseFailed": "We could not confirm the erase — it will still expire automatically"
+    "guestEraseFailed": "We could not confirm the erase — it will still expire automatically",
+    "guestBannerShort": "Guest session"
   },
   "seo": {
     "title": "WiseFood - Your Personalized Nutrition Journey",
@@ -415,7 +422,12 @@
         "dairyFree": "Dairy-Free",
         "vegan": "Vegan",
         "glutenFree": "Gluten-Free"
-      }
+      },
+      "open": "Filters",
+      "active": "Active filters",
+      "removeFilter": "Remove filter: {label}",
+      "showResults": "Show {count} recipe | Show {count} recipes",
+      "showResultsLoading": "Finding recipes…"
     },
     "allergens": {
       "peanuts": "Peanuts",
@@ -465,7 +477,8 @@
       "removeFromComparison": "Remove from comparison",
       "addToFavorites": "Add to favorites",
       "removeFromFavorites": "Remove from favorites",
-      "untitled": "Untitled recipe"
+      "untitled": "Untitled recipe",
+      "compareLimit": "You can compare up to {count} recipes at a time"
     },
     "categories": {
       "title": "Browse by Category",
@@ -602,7 +615,10 @@
         "reset": "Reset",
         "nutritionNote": "Per-serving values stay the same — you are making more servings, not bigger ones.",
         "failed": "Could not adjust the quantities. Showing the original recipe."
-      }
+      },
+      "share": "Share",
+      "shareCopied": "Link copied",
+      "shareFailed": "Could not copy the link"
     },
     "comparePage": {
       "pageTitle": "Compare Recipes - RecipeWrangler",
@@ -617,7 +633,8 @@
         "feature": "Feature",
         "duration": "Duration",
         "servings": "Servings"
-      }
+      },
+      "pickTwo": "Choose two recipes to compare side by side"
     },
     "cookingAnimation": {
       "deliciousRecipes": "delicious recipes",
@@ -637,7 +654,10 @@
         "sauteing": "Dancing with heat and timing",
         "simmering": "Patiently developing depth"
       }
-    }
+    },
+    "clearCompare": "Clear comparison",
+    "pageOf": "Page {page} of {total}",
+    "pageN": "Page {page}"
   },
   "library": {
     "backToDashboard": "Back to Dashboard",
@@ -900,7 +920,8 @@
       },
       "sidebar": {
         "cited": "Sources cited",
-        "consulted": "Sources consulted"
+        "consulted": "Sources consulted",
+        "inlineTitle": "Sources ({count})"
       },
       "sourceMeta": {
         "guideline": "Guideline",
@@ -1089,7 +1110,8 @@
       "citationCountInvalidNumber": "Enter a valid number.",
       "citationCountInvalidRange": "Min cannot be greater than max.",
       "showLess": "Show Less",
-      "showMore": "Show {count} More"
+      "showMore": "Show {count} More",
+      "showResults": "Show {count} results"
     },
     "search": {
       "title": "Natural Language Search",
@@ -1654,7 +1676,8 @@
         "soup": "Soup",
         "dessert": "Dessert",
         "drink": "Drink"
-      }
+      },
+      "macroRing": "Nutrient breakdown: {value} {label}. Tap to see the next."
     },
     "constraints": {
       "label": "Constraints",
@@ -1866,6 +1889,12 @@
     "planSettings": {
       "title": "Plan settings"
     },
+    "panes": {
+      "label": "Chat or plan",
+      "chat": "Chat",
+      "plan": "Plan",
+      "newPlan": "New plan"
+    },
     "splitter": {
       "hint": "Drag to resize · double-click to reset"
     },
@@ -1971,6 +2000,20 @@
     },
     "context": {
       "show": "Context from the source page"
+    },
+    "panes": {
+      "document": "Document",
+      "about": "About",
+      "rules": "Rules"
+    },
+    "actions": {
+      "more": "More actions"
+    },
+    "map": {
+      "hintClick": "Click a region to open its guides",
+      "hintTap": "Tap a region to open its guides",
+      "explore": "Explore the map",
+      "done": "Done"
     }
   },
   "report": {
@@ -2111,7 +2154,8 @@
       "clearScope": "Remove the scope",
       "facet": "Facet",
       "showFolded": "Show folded categories",
-      "foldedHint": "A folded category absorbed an intermediate step. Kept so no ontology id is lost, not because it is worth navigating."
+      "foldedHint": "A folded category absorbed an intermediate step. Kept so no ontology id is lost, not because it is worth navigating.",
+      "done": "Done"
     },
     "tree": {
       "title": "Hierarchy",
@@ -2177,5 +2221,10 @@
       "reindexDone": "Rebuilt: {documents} documents indexed.",
       "reindexFailed": "The rebuild failed."
     }
+  },
+  "dock": {
+    "open": "Help and accessibility",
+    "close": "Close",
+    "reportBug": "Report a bug"
   }
 }

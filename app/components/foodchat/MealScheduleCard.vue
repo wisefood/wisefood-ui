@@ -25,7 +25,7 @@
         <button
           v-if="recipe.recipe_id"
           type="button"
-          class="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 hover:scale-110 transition-all duration-200"
+          class="flex items-center justify-center w-6 h-6 pointer-coarse:w-11 pointer-coarse:h-11 pointer-coarse:-my-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 pointer-fine:hover:scale-110 transition-all duration-200"
           :aria-label="isFavorite ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
           @click.prevent.stop="toggleFavorite"
         >
@@ -41,54 +41,25 @@
           v-if="time"
           class="text-xs text-gray-400 font-light"
         >{{ time }}</span>
-        <!-- Slot menu: replace via chat, adapt in RecipeWrangler -->
-        <div
-          class="relative"
-          @mouseleave="menuOpen = false"
+        <!-- Slot menu: replace via chat, adapt in RecipeWrangler.
+             A real menu rather than a box that closed when the mouse left it,
+             which on a finger meant a menu that never closed. -->
+        <UDropdownMenu
+          :items="menuItems"
+          :content="{ align: 'end' }"
+          :ui="{ content: 'min-w-40' }"
         >
           <button
             type="button"
-            class="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+            class="flex items-center justify-center w-6 h-6 pointer-coarse:w-11 pointer-coarse:h-11 pointer-coarse:-my-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
             :aria-label="t('foodChatHome.mealCard.menu')"
-            :aria-expanded="menuOpen"
-            @click.prevent.stop="menuOpen = !menuOpen"
           >
             <UIcon
               name="i-lucide-more-vertical"
               class="w-4 h-4 text-gray-400 dark:text-zinc-500"
             />
           </button>
-          <Transition name="chips-fade">
-            <div
-              v-if="menuOpen"
-              class="absolute right-0 top-7 z-20 w-40 rounded-xl border border-gray-100 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-lg overflow-hidden"
-            >
-              <button
-                type="button"
-                class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
-                @click.prevent.stop="onMenuAction('replace')"
-              >
-                <UIcon
-                  name="i-lucide-replace"
-                  class="w-3.5 h-3.5 text-brandp-400"
-                />
-                {{ t('foodChatHome.mealCard.replace') }}
-              </button>
-              <button
-                v-if="recipe.recipe_id"
-                type="button"
-                class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
-                @click.prevent.stop="onMenuAction('adapt')"
-              >
-                <UIcon
-                  name="i-lucide-wand-sparkles"
-                  class="w-3.5 h-3.5 text-brandp-400"
-                />
-                {{ t('foodChatHome.mealCard.adapt') }}
-              </button>
-            </div>
-          </Transition>
-        </div>
+        </UDropdownMenu>
       </div>
     </div>
 
@@ -97,8 +68,8 @@
       <!-- Circular image bubble -->
       <NuxtLink
         :to="recipe.recipe_id ? `/recipe-wrangler/${recipe.recipe_id}` : ''"
-        :target="recipe.recipe_id ? '_blank' : undefined"
-        class="w-10 h-10 rounded-full shrink-0 overflow-hidden bg-gray-100 dark:bg-zinc-700 transition-transform duration-200 hover:scale-150 block"
+        :target="recipe.recipe_id ? linkTarget : undefined"
+        class="w-10 h-10 rounded-full shrink-0 overflow-hidden bg-gray-100 dark:bg-zinc-700 transition-transform duration-200 pointer-fine:hover:scale-150 block"
       >
         <img
           v-if="recipeImage"
@@ -133,8 +104,8 @@
         <NuxtLink
           v-if="recipe.recipe_id"
           :to="`/recipe-wrangler/${recipe.recipe_id}`"
-          target="_blank"
-          class="block font-medium text-base sm:text-lg text-gray-900 dark:text-white leading-snug hover:text-brandp-500 dark:hover:text-brandp-300 transition-colors"
+          :target="linkTarget"
+          class="block font-medium text-base sm:text-lg text-gray-900 dark:text-white leading-snug break-words hover:text-brandp-500 dark:hover:text-brandp-300 transition-colors"
         >{{ recipe.title }}</NuxtLink>
         <h3
           v-else
@@ -158,8 +129,8 @@
       >
         <NuxtLink
           :to="plate.recipe_id ? `/recipe-wrangler/${plate.recipe_id}` : ''"
-          :target="plate.recipe_id ? '_blank' : undefined"
-          class="w-9 h-9 rounded-full shrink-0 overflow-hidden bg-gray-100 dark:bg-zinc-700 transition-transform duration-200 hover:scale-150 block"
+          :target="plate.recipe_id ? linkTarget : undefined"
+          class="w-9 h-9 rounded-full shrink-0 overflow-hidden bg-gray-100 dark:bg-zinc-700 transition-transform duration-200 pointer-fine:hover:scale-150 block"
         >
           <img
             v-if="plate.image_url"
@@ -185,8 +156,8 @@
           <NuxtLink
             v-if="plate.recipe_id"
             :to="`/recipe-wrangler/${plate.recipe_id}`"
-            target="_blank"
-            class="block text-sm font-medium text-gray-800 dark:text-zinc-100 leading-snug hover:text-brandp-500 dark:hover:text-brandp-300 transition-colors"
+            :target="linkTarget"
+            class="block text-sm font-medium text-gray-800 dark:text-zinc-100 leading-snug break-words hover:text-brandp-500 dark:hover:text-brandp-300 transition-colors"
           >{{ plate.title }}</NuxtLink>
           <span
             v-else
@@ -238,24 +209,32 @@
       v-if="recipe.match_reasons?.length"
       class="flex flex-wrap gap-1 pr-14"
     >
-      <UTooltip
+      <FoodchatInfoPopover
         v-for="(reason, rIdx) in recipe.match_reasons"
         :key="rIdx"
         :text="reasonTooltip(reason.kind)"
       >
-        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[0.5625rem] rounded-full border border-gray-200/80 dark:border-zinc-700/70 text-gray-400 dark:text-zinc-500 font-light">
+        <button
+          type="button"
+          class="inline-flex items-center gap-1 px-1.5 py-0.5 pointer-coarse:min-h-8 pointer-coarse:px-2 text-[0.6875rem] rounded-full border border-gray-200/80 dark:border-zinc-700/70 text-gray-400 dark:text-zinc-500 font-light"
+        >
           <UIcon
             :name="reasonIcon(reason.kind)"
             class="w-2.5 h-2.5 shrink-0"
           />
           <span class="max-w-24 truncate">{{ reason.label }}</span>
-        </span>
-      </UTooltip>
+        </button>
+      </FoodchatInfoPopover>
     </div>
 
-    <!-- Nutrient donut — bottom right corner -->
-    <div
-      class="absolute bottom-4 right-4 cursor-help"
+    <!-- Nutrient donut — bottom right corner.
+         A tap steps the centre through the macros, because the only other way
+         to read carbs or fat was to hover a segment, and a finger cannot. -->
+    <button
+      type="button"
+      class="absolute bottom-4 right-4 rounded-full cursor-pointer focus-visible:outline-2 focus-visible:outline-brandp-400"
+      :aria-label="t('foodChatHome.mealCard.macroRing', { value: centerValue, label: centerLabel })"
+      @click="cycleSegment"
       @mouseleave="hoveredSegment = null"
     >
       <svg
@@ -302,24 +281,25 @@
       <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
         <span
           v-if="nutritionLoading && !macros"
-          class="text-[0.5625rem] text-gray-400"
+          class="text-[0.6875rem] text-gray-400"
         >···</span>
         <template v-else-if="macros">
-          <span class="text-[0.625rem] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ centerValue }}</span>
-          <span class="text-[0.5rem] text-gray-400 dark:text-zinc-500 leading-none mt-0.5">{{ centerLabel }}</span>
+          <span class="text-[0.6875rem] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ centerValue }}</span>
+          <span class="text-[0.625rem] text-gray-400 dark:text-zinc-500 leading-none mt-0.5">{{ centerLabel }}</span>
         </template>
         <span
           v-else
-          class="text-[0.5625rem] text-gray-300"
+          class="text-[0.6875rem] text-gray-300"
         >—</span>
       </div>
-    </div>
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import type { DropdownMenuItem } from '@nuxt/ui'
 import type { MealRecipe } from '~/services/foodchatApi'
 import type { Recipe } from '~/services/recipeApi'
 import recipeApi from '~/services/recipeApi'
@@ -355,17 +335,30 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { isCoarsePointer } = useViewport()
+
+/**
+ * Recipe links open beside the plan under a mouse and in place on a finger:
+ * a phone has no "beside", and a second tab is where a plan goes to be lost.
+ */
+const linkTarget = computed(() => isCoarsePointer.value ? undefined : '_blank')
 
 // ── Slot menu (replace / adapt) ──
-const menuOpen = ref(false)
-
-function onMenuAction(action: 'replace' | 'adapt') {
-  menuOpen.value = false
-  // Narrowed rather than passed through: `replace` and `adapt` are two
-  // distinct events, and `emit` has no overload accepting their union.
-  if (action === 'replace') emit('replace')
-  else emit('adapt')
-}
+const menuItems = computed<DropdownMenuItem[]>(() => {
+  const items: DropdownMenuItem[] = [{
+    label: t('foodChatHome.mealCard.replace'),
+    icon: 'i-lucide-replace',
+    onSelect: () => emit('replace')
+  }]
+  if (props.recipe.recipe_id) {
+    items.push({
+      label: t('foodChatHome.mealCard.adapt'),
+      icon: 'i-lucide-wand-sparkles',
+      onSelect: () => emit('adapt')
+    })
+  }
+  return items
+})
 
 const recipeStore = useRecipeStore()
 
@@ -603,4 +596,11 @@ const centerLabel = computed(() => {
   const def = SEGMENT_DEFS.find(d => d.key === (hoveredSegment.value ?? 'protein'))
   return def?.label ?? 'prot'
 })
+
+/** The next macro round the ring, for a tap. */
+function cycleSegment() {
+  const keys = SEGMENT_DEFS.map(d => d.key)
+  const current = keys.indexOf(hoveredSegment.value ?? 'protein')
+  hoveredSegment.value = keys[(current + 1) % keys.length] ?? 'protein'
+}
 </script>

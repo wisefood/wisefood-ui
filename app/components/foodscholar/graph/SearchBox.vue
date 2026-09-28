@@ -23,7 +23,7 @@
         :aria-controls="`${uid}-suggestions`"
         :aria-activedescendant="activeIndex >= 0 ? `${uid}-option-${activeIndex}` : undefined"
         :placeholder="t('graph.search.placeholder')"
-        class="h-10 min-w-0 flex-1 bg-transparent text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none"
+        class="h-10 min-w-0 flex-1 bg-transparent text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none pointer-coarse:text-base"
         @input="onInput"
         @focus="onFocus"
         @blur="onBlur"
@@ -52,7 +52,7 @@
       v-if="open && suggestions.length"
       :id="`${uid}-suggestions`"
       role="listbox"
-      class="absolute left-0 right-0 top-full z-40 mt-1 max-h-72 overflow-y-auto rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-1 shadow-xl"
+      class="absolute left-0 right-0 top-full z-40 mt-1 max-h-[50dvh] overflow-y-auto rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-1 shadow-xl"
     >
       <li
         v-for="(item, index) in suggestions"

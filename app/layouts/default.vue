@@ -3,7 +3,7 @@
        hand-written hu/sl/el bundles, and running a translator over them
        yields worse text than what is already there; only
        <TranslatableContent> re-enables it, for stored English content. -->
-  <UApp translate="no">
+  <UApp translate="no" :locale="uiLocale">
     <WHeader />
 
     <GuestBanner />
@@ -15,7 +15,9 @@
     <USeparator />
 
     <WFooter />
-
-    <AccessibilityToolbar />
   </UApp>
 </template>
+
+<script setup lang="ts">
+const uiLocale = useUiLocale()
+</script>

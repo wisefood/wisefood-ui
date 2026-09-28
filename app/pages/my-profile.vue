@@ -6,7 +6,7 @@
       <div class="mb-6">
         <UButton
           variant="ghost"
-          color="gray"
+          color="neutral"
           icon="i-lucide-arrow-left"
           to="/dashboard"
         >
@@ -58,7 +58,8 @@
               </span>
             </div>
             <button
-              class="absolute bottom-0 right-0 p-2 rounded-full bg-white dark:bg-zinc-800 shadow-lg border border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors"
+              class="absolute bottom-0 right-0 p-2 rounded-full bg-white dark:bg-zinc-800 shadow-lg border border-gray-200 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors after:absolute after:-inset-1.5 after:rounded-full after:content-['']"
+              :aria-label="t('myProfile.actions.edit')"
               @click="showAvatarEditor = true"
             >
               <UIcon name="i-lucide-pencil" class="w-4 h-4 text-gray-600 dark:text-gray-400" />
@@ -79,7 +80,7 @@
               <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.sections.profileDetails') }}</h2>
               <UButton
                 variant="ghost"
-                color="gray"
+                color="neutral"
                 icon="i-lucide-pencil"
                 size="sm"
                 @click="showEditDetails = true"
@@ -119,7 +120,7 @@
               </div>
               <UButton
                 variant="ghost"
-                color="gray"
+                color="neutral"
                 icon="i-lucide-plus"
                 size="sm"
                 @click="showAddDiet = true"
@@ -160,9 +161,10 @@
               </div>
               <UButton
                 variant="ghost"
-                color="red"
+                color="error"
                 icon="i-lucide-trash-2"
-                size="xs"
+                :size="isCoarsePointer ? 'sm' : 'xs'"
+                class="pointer-coarse:min-h-11 pointer-coarse:min-w-11 justify-center"
                 @click="removeDiet(diet)"
               />
             </div>
@@ -179,7 +181,7 @@
               </div>
               <UButton
                 variant="ghost"
-                color="gray"
+                color="neutral"
                 icon="i-lucide-plus"
                 size="sm"
                 @click="openFoodPicker('likes')"
@@ -212,7 +214,7 @@
               <UIcon :name="getFoodIcon(foodId)" class="w-4 h-4 text-pink-500" />
               <span class="text-sm font-medium text-gray-900 dark:text-white">{{ getFoodName(foodId) }}</span>
               <button
-                class="ml-1 hover:bg-pink-200 dark:hover:bg-pink-800 rounded-full p-0.5 transition-colors"
+                class="chip-remove ml-1 hover:bg-pink-200 dark:hover:bg-pink-800 rounded-full p-0.5 transition-colors"
                 @click="removeFoodLike(foodId)"
               >
                 <UIcon name="i-lucide-x" class="w-3 h-3 text-pink-600 dark:text-pink-400" />
@@ -231,7 +233,7 @@
               </div>
               <UButton
                 variant="ghost"
-                color="gray"
+                color="neutral"
                 icon="i-lucide-plus"
                 size="sm"
                 @click="openFoodPicker('dislikes')"
@@ -264,7 +266,7 @@
               <UIcon :name="getFoodIcon(foodId)" class="w-4 h-4 text-orange-500" />
               <span class="text-sm font-medium text-gray-900 dark:text-white">{{ getFoodName(foodId) }}</span>
               <button
-                class="ml-1 hover:bg-orange-200 dark:hover:bg-orange-800 rounded-full p-0.5 transition-colors"
+                class="chip-remove ml-1 hover:bg-orange-200 dark:hover:bg-orange-800 rounded-full p-0.5 transition-colors"
                 @click="removeFoodDislike(foodId)"
               >
                 <UIcon name="i-lucide-x" class="w-3 h-3 text-orange-600 dark:text-orange-400" />
@@ -283,7 +285,7 @@
               </div>
               <UButton
                 variant="ghost"
-                color="gray"
+                color="neutral"
                 icon="i-lucide-plus"
                 size="sm"
                 @click="showAddAllergy = true"
@@ -316,7 +318,7 @@
               <UIcon name="i-lucide-alert-triangle" class="w-4 h-4 text-red-500" />
               <span class="text-sm font-medium text-gray-900 dark:text-white">{{ getAllergyLabel(allergy) }}</span>
               <button
-                class="ml-1 hover:bg-red-200 dark:hover:bg-red-800 rounded-full p-0.5 transition-colors"
+                class="chip-remove ml-1 hover:bg-red-200 dark:hover:bg-red-800 rounded-full p-0.5 transition-colors"
                 @click="removeAllergy(allergy)"
               >
                 <UIcon name="i-lucide-x" class="w-3 h-3 text-red-600 dark:text-red-400" />
@@ -369,7 +371,8 @@
                   <UButton
                     variant="ghost"
                     color="neutral"
-                    size="xs"
+                    :size="isCoarsePointer ? 'sm' : 'xs'"
+                    class="pointer-coarse:min-h-11 pointer-coarse:min-w-11 justify-center"
                     :icon="explainedMemoryKey === item.key ? 'i-lucide-chevron-up' : 'i-lucide-help-circle'"
                     :aria-label="t('myProfile.memory.why.title')"
                     :aria-expanded="explainedMemoryKey === item.key"
@@ -381,7 +384,8 @@
                     variant="ghost"
                     color="neutral"
                     icon="i-lucide-pencil"
-                    size="xs"
+                    :size="isCoarsePointer ? 'sm' : 'xs'"
+                    class="pointer-coarse:min-h-11 pointer-coarse:min-w-11 justify-center"
                     :disabled="!!forgettingMemoryKey || !!savingMemoryKey"
                     :aria-label="t('myProfile.memory.edit.action')"
                     data-flows="memory-edit"
@@ -391,7 +395,8 @@
                     variant="ghost"
                     color="error"
                     icon="i-lucide-trash-2"
-                    size="xs"
+                    :size="isCoarsePointer ? 'sm' : 'xs'"
+                    class="pointer-coarse:min-h-11 pointer-coarse:min-w-11 justify-center"
                     :loading="forgettingMemoryKey === item.key"
                     :disabled="!!forgettingMemoryKey || !!savingMemoryKey"
                     :aria-label="t('myProfile.memory.forget')"
@@ -412,8 +417,8 @@
                   </p>
 
                   <dl class="space-y-1.5 text-xs">
-                    <div class="flex gap-2">
-                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-28">{{ t('myProfile.memory.why.learned') }}</dt>
+                    <div class="flex flex-col sm:flex-row gap-0.5 sm:gap-2">
+                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-full sm:w-28">{{ t('myProfile.memory.why.learned') }}</dt>
                       <dd class="text-gray-700 dark:text-gray-200">
                         {{ t('myProfile.memory.why.learnedValue', {
                           app: memorySourceLabel(item.entry),
@@ -423,28 +428,28 @@
                     </div>
                     <div
                       v-if="memorySourceQuote(item.entry)"
-                      class="flex gap-2"
+                      class="flex flex-col sm:flex-row gap-0.5 sm:gap-2"
                     >
-                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-28">{{ t('myProfile.memory.why.fromWhatYouSaid') }}</dt>
+                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-full sm:w-28">{{ t('myProfile.memory.why.fromWhatYouSaid') }}</dt>
                       <dd class="text-gray-700 dark:text-gray-200 italic">“{{ memorySourceQuote(item.entry) }}”</dd>
                     </div>
-                    <div class="flex gap-2">
-                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-28">{{ t('myProfile.memory.why.consent') }}</dt>
+                    <div class="flex flex-col sm:flex-row gap-0.5 sm:gap-2">
+                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-full sm:w-28">{{ t('myProfile.memory.why.consent') }}</dt>
                       <dd class="text-gray-700 dark:text-gray-200">{{ t('myProfile.memory.why.consentValue') }}</dd>
                     </div>
-                    <div class="flex gap-2">
-                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-28">{{ t('myProfile.memory.why.effectLabel') }}</dt>
+                    <div class="flex flex-col sm:flex-row gap-0.5 sm:gap-2">
+                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-full sm:w-28">{{ t('myProfile.memory.why.effectLabel') }}</dt>
                       <dd class="text-gray-700 dark:text-gray-200">{{ memoryEffect(item.entry) }}</dd>
                     </div>
-                    <div class="flex gap-2">
-                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-28">{{ t('myProfile.memory.why.storedLabel') }}</dt>
+                    <div class="flex flex-col sm:flex-row gap-0.5 sm:gap-2">
+                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-full sm:w-28">{{ t('myProfile.memory.why.storedLabel') }}</dt>
                       <dd class="text-gray-700 dark:text-gray-200 font-mono text-[0.6875rem]">{{ memoryStoredIn(item.entry) }}</dd>
                     </div>
                     <div
                       v-if="item.entry.edited_at"
-                      class="flex gap-2"
+                      class="flex flex-col sm:flex-row gap-0.5 sm:gap-2"
                     >
-                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-28">{{ t('myProfile.memory.why.edited') }}</dt>
+                      <dt class="shrink-0 text-gray-500 dark:text-gray-400 w-full sm:w-28">{{ t('myProfile.memory.why.edited') }}</dt>
                       <dd class="text-gray-700 dark:text-gray-200">
                         {{ t('myProfile.memory.why.editedValue', { when: formatMemoryDate(item.entry.edited_at) || t('myProfile.memory.why.unknownDate') }) }}
                       </dd>
@@ -490,7 +495,7 @@
                     <UButton
                       variant="soft"
                       color="neutral"
-                      size="xs"
+                      :size="isCoarsePointer ? 'sm' : 'xs'"
                       :icon="memoryDraft.kind === 'like' ? 'i-lucide-heart' : 'i-lucide-thumbs-down'"
                       @click="flipMemoryKind()"
                     >
@@ -502,7 +507,7 @@
                   <div class="flex items-center gap-2 pt-1">
                     <UButton
                       color="primary"
-                      size="xs"
+                      :size="isCoarsePointer ? 'sm' : 'xs'"
                       :loading="savingMemoryKey === item.key"
                       :disabled="!memoryDraftChanged"
                       @click="saveMemoryEdit(item)"
@@ -512,7 +517,7 @@
                     <UButton
                       color="neutral"
                       variant="ghost"
-                      size="xs"
+                      :size="isCoarsePointer ? 'sm' : 'xs'"
                       :disabled="savingMemoryKey === item.key"
                       @click="cancelMemoryEdit()"
                     >
@@ -567,7 +572,7 @@
         <!-- Danger Zone -->
         <UCard
           :ui="{
-            ring: 'ring-1 ring-red-200 dark:ring-red-900/50'
+            root: 'ring-1 ring-red-200 dark:ring-red-900/50'
           }"
         >
           <template #header>
@@ -579,7 +584,7 @@
 
           <div class="divide-y divide-gray-100 dark:divide-white/10">
             <!-- Narrowest scope first: one profile out of a household -->
-            <div class="flex items-center justify-between gap-4 pb-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pb-4">
               <div>
                 <p class="font-medium text-gray-900 dark:text-white">{{ t('myProfile.dangerZone.deleteTitle') }}</p>
                 <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('myProfile.dangerZone.deleteDescription') }}</p>
@@ -588,14 +593,14 @@
                 color="error"
                 variant="soft"
                 icon="i-lucide-trash-2"
-                class="shrink-0"
+                class="shrink-0 self-start sm:self-auto"
                 @click="showDeleteConfirm = true"
               >
                 {{ t('myProfile.actions.deleteProfile') }}
               </UButton>
             </div>
 
-            <div class="flex items-center justify-between gap-4 py-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 py-4">
               <div>
                 <p class="font-medium text-gray-900 dark:text-white">{{ t('myProfile.dangerZone.deleteHouseholdTitle') }}</p>
                 <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -606,7 +611,7 @@
                 color="error"
                 variant="soft"
                 icon="i-lucide-users"
-                class="shrink-0"
+                class="shrink-0 self-start sm:self-auto"
                 data-flows="delete-household"
                 @click="showDeleteHouseholdConfirm = true"
               >
@@ -615,7 +620,7 @@
             </div>
 
             <!-- Widest scope last: the account itself -->
-            <div class="flex items-center justify-between gap-4 pt-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pt-4">
               <div>
                 <p class="font-medium text-gray-900 dark:text-white">{{ t('myProfile.dangerZone.deleteAccountTitle') }}</p>
                 <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('myProfile.dangerZone.deleteAccountDescription') }}</p>
@@ -623,7 +628,7 @@
               <UButton
                 color="error"
                 icon="i-lucide-user-x"
-                class="shrink-0"
+                class="shrink-0 self-start sm:self-auto"
                 data-flows="delete-account"
                 @click="showDeleteAccountConfirm = true"
               >
@@ -678,7 +683,7 @@
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.modals.changeAvatar') }}</h3>
                 <UButton
                   variant="ghost"
-                  color="gray"
+                  color="neutral"
                   icon="i-lucide-x"
                   size="sm"
                   @click="showAvatarEditor = false"
@@ -690,7 +695,7 @@
 
             <template #footer>
               <div class="flex justify-end gap-3">
-                <UButton variant="ghost" color="gray" @click="showAvatarEditor = false">
+                <UButton variant="ghost" color="neutral" @click="showAvatarEditor = false">
                   {{ t('myProfile.actions.cancel') }}
                 </UButton>
                 <UButton color="primary" :loading="isSaving" @click="saveAvatar">
@@ -711,7 +716,7 @@
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.modals.editProfileDetails') }}</h3>
                 <UButton
                   variant="ghost"
-                  color="gray"
+                  color="neutral"
                   icon="i-lucide-x"
                   size="sm"
                   @click="showEditDetails = false"
@@ -752,7 +757,7 @@
 
             <template #footer>
               <div class="flex justify-end gap-3">
-                <UButton variant="ghost" color="gray" @click="showEditDetails = false">
+                <UButton variant="ghost" color="neutral" @click="showEditDetails = false">
                   {{ t('myProfile.actions.cancel') }}
                 </UButton>
                 <UButton
@@ -778,7 +783,7 @@
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.modals.addDietaryPreference') }}</h3>
                 <UButton
                   variant="ghost"
-                  color="gray"
+                  color="neutral"
                   icon="i-lucide-x"
                   size="sm"
                   @click="showAddDiet = false"
@@ -823,7 +828,7 @@
 
             <template #footer>
               <div class="flex justify-end gap-3">
-                <UButton variant="ghost" color="gray" @click="showAddDiet = false">
+                <UButton variant="ghost" color="neutral" @click="showAddDiet = false">
                   {{ t('myProfile.actions.cancel') }}
                 </UButton>
                 <UButton
@@ -854,7 +859,7 @@
                 </h3>
                 <UButton
                   variant="ghost"
-                  color="gray"
+                  color="neutral"
                   icon="i-lucide-x"
                   size="sm"
                   @click="showFoodPicker = false"
@@ -878,7 +883,7 @@
                 v-for="cat in foodCategories"
                 :key="cat.id"
                 :variant="selectedFoodCategory === cat.id ? 'solid' : 'soft'"
-                :color="selectedFoodCategory === cat.id ? 'primary' : 'gray'"
+                :color="selectedFoodCategory === cat.id ? 'primary' : 'neutral'"
                 size="sm"
                 @click="selectedFoodCategory = cat.id"
               >
@@ -960,11 +965,11 @@
                   {{ t('myProfile.foodPicker.selectedCount', { count: selectedFoods.length }) }}
                 </span>
                 <div class="flex gap-3">
-                  <UButton variant="ghost" color="gray" @click="showFoodPicker = false">
+                  <UButton variant="ghost" color="neutral" @click="showFoodPicker = false">
                     {{ t('myProfile.actions.cancel') }}
                   </UButton>
                   <UButton
-                    :color="foodPickerMode === 'likes' ? 'pink' : 'orange'"
+                    :color="foodPickerMode === 'likes' ? 'primary' : 'warning'"
                     :loading="isSaving"
                     :disabled="selectedFoods.length === 0"
                     @click="saveFoodPreferences"
@@ -991,7 +996,7 @@
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.modals.addAllergyOrIntolerance') }}</h3>
                 <UButton
                   variant="ghost"
-                  color="gray"
+                  color="neutral"
                   icon="i-lucide-x"
                   size="sm"
                   @click="showAddAllergy = false"
@@ -1025,11 +1030,11 @@
 
             <template #footer>
               <div class="flex justify-end gap-3">
-                <UButton variant="ghost" color="gray" @click="showAddAllergy = false">
+                <UButton variant="ghost" color="neutral" @click="showAddAllergy = false">
                   {{ t('myProfile.actions.cancel') }}
                 </UButton>
                 <UButton
-                  color="red"
+                  color="error"
                   :loading="isSaving"
                   :disabled="!selectedNewAllergy"
                   @click="addAllergy"
@@ -1059,7 +1064,7 @@
 
             <UAlert
               v-if="deleteError"
-              color="red"
+              color="error"
               variant="soft"
               icon="i-lucide-alert-circle"
               :title="deleteError"
@@ -1068,11 +1073,11 @@
 
             <template #footer>
               <div class="flex justify-end gap-3">
-                <UButton variant="ghost" color="gray" @click="showDeleteConfirm = false">
+                <UButton variant="ghost" color="neutral" @click="showDeleteConfirm = false">
                   {{ t('myProfile.actions.cancel') }}
                 </UButton>
                 <UButton
-                  color="red"
+                  color="error"
                   :loading="isDeleting"
                   @click="deleteProfile"
                 >
@@ -1215,6 +1220,7 @@ definePageMeta({
 })
 
 const { t, te, locale } = useI18n()
+const { isCoarsePointer } = useViewport()
 
 useHead({
   title: computed(() => t('myProfile.pageTitle'))
@@ -2310,5 +2316,24 @@ async function deleteAccount() {
 
 .font-serif {
   font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+/* On a touch screen the chip's × stays a 12px glyph, but a finger gets a
+   44px-tall strip behind it: up and down into the row gap and right across
+   the chip's own padding, never left into the food name or onto the
+   neighbouring chip. */
+@media (pointer: coarse) {
+  .chip-remove {
+    position: relative;
+  }
+
+  .chip-remove::after {
+    content: '';
+    position: absolute;
+    top: -0.875rem;
+    bottom: -0.875rem;
+    left: -0.25rem;
+    right: -0.75rem;
+  }
 }
 </style>

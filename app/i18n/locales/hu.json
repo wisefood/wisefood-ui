@@ -150,8 +150,14 @@
       "switchProfile": "Profilváltás",
       "accountSettings": "Fiókbeállítások",
       "signOut": "Kijelentkezés",
-      "myLibrary": "Könyvtáram"
-    }
+      "myLibrary": "Könyvtáram",
+      "open": "Menü megnyitása",
+      "close": "Menü bezárása",
+      "title": "Menü",
+      "description": "Webhely navigáció"
+    },
+    "apps": "Alkalmazások",
+    "account": "Fiók"
   },
   "auth": {
     "welcome": "Üdv újra",
@@ -183,7 +189,8 @@
     "guestExpires": "lejár",
     "guestErase": "Adataim törlése most",
     "guestErased": "A vendégadataid törölve lettek",
-    "guestEraseFailed": "A törlést nem tudtuk megerősíteni — automatikusan le fog járni"
+    "guestEraseFailed": "A törlést nem tudtuk megerősíteni — automatikusan le fog járni",
+    "guestBannerShort": "Vendég munkamenet"
   },
   "seo": {
     "title": "WiseFood – A személyre szabott táplálkozási utad",
@@ -415,7 +422,12 @@
         "dairyFree": "Tejmentes",
         "vegan": "Vegán",
         "glutenFree": "Gluténmentes"
-      }
+      },
+      "open": "Szűrők",
+      "active": "Aktív szűrők",
+      "removeFilter": "Szűrő eltávolítása: {label}",
+      "showResults": "{count} recept mutatása",
+      "showResultsLoading": "Receptek keresése…"
     },
     "allergens": {
       "peanuts": "Földimogyoró",
@@ -465,7 +477,8 @@
       "removeFromComparison": "Eltávolítás összehasonlításból",
       "addToFavorites": "Hozzáadás a kedvencekhez",
       "removeFromFavorites": "Eltávolítás a kedvencekből",
-      "untitled": "Névtelen recept"
+      "untitled": "Névtelen recept",
+      "compareLimit": "Egyszerre legfeljebb {count} receptet hasonlíthatsz össze"
     },
     "categories": {
       "title": "Böngészés kategória szerint",
@@ -602,7 +615,10 @@
         "reset": "Visszaállítás",
         "nutritionNote": "Az egy adagra jutó értékek nem változnak — több adag készül, nem nagyobb.",
         "failed": "A mennyiségek módosítása nem sikerült. Az eredeti recept látható."
-      }
+      },
+      "share": "Megosztás",
+      "shareCopied": "Link kimásolva",
+      "shareFailed": "A linket nem sikerült kimásolni"
     },
     "comparePage": {
       "pageTitle": "Receptek összehasonlítása - RecipeWrangler",
@@ -617,7 +633,8 @@
         "feature": "Jellemző",
         "duration": "Időtartam",
         "servings": "Adagok"
-      }
+      },
+      "pickTwo": "Válassz két receptet az egymás melletti összehasonlításhoz"
     },
     "cookingAnimation": {
       "deliciousRecipes": "finom recepteket",
@@ -637,7 +654,10 @@
         "sauteing": "A hővel és az időzítéssel játszunk",
         "simmering": "Türelmesen mélyítjük az ízeket"
       }
-    }
+    },
+    "clearCompare": "Összehasonlítás törlése",
+    "pageOf": "{page}. oldal / {total}",
+    "pageN": "{page}. oldal"
   },
   "library": {
     "backToDashboard": "Vissza az irányítópultra",
@@ -900,7 +920,8 @@
       },
       "sidebar": {
         "cited": "Hivatkozott források",
-        "consulted": "Átnézett források"
+        "consulted": "Átnézett források",
+        "inlineTitle": "Források ({count})"
       },
       "sourceMeta": {
         "guideline": "Irányelv",
@@ -1089,7 +1110,8 @@
       "citationCountInvalidNumber": "Adj meg egy érvényes számot.",
       "citationCountInvalidRange": "A minimum nem lehet nagyobb a maximumnál.",
       "showLess": "Kevesebb",
-      "showMore": "{count} további"
+      "showMore": "{count} további",
+      "showResults": "{count} találat megjelenítése"
     },
     "search": {
       "title": "Természetes nyelvű keresés",
@@ -1632,7 +1654,8 @@
         "soup": "Leves",
         "dessert": "Desszert",
         "drink": "Ital"
-      }
+      },
+      "macroRing": "Tápanyag-megoszlás: {value} {label}. Koppints a következőhöz."
     },
     "constraints": {
       "label": "Feltételek",
@@ -1844,6 +1867,12 @@
     "planSettings": {
       "title": "Terv beállításai"
     },
+    "panes": {
+      "label": "Csevegés vagy terv",
+      "chat": "Csevegés",
+      "plan": "Terv",
+      "newPlan": "Új terv"
+    },
     "splitter": {
       "hint": "Húzd az átméretezéshez · dupla kattintás a visszaállításhoz"
     },
@@ -1971,6 +2000,20 @@
     },
     "context": {
       "show": "Kontextus a forrásoldalról"
+    },
+    "panes": {
+      "document": "Dokumentum",
+      "about": "Adatlap",
+      "rules": "Szabályok"
+    },
+    "actions": {
+      "more": "További műveletek"
+    },
+    "map": {
+      "hintClick": "Kattints egy régióra az útmutatói megnyitásához",
+      "hintTap": "Koppints egy régióra az útmutatói megnyitásához",
+      "explore": "Térkép felfedezése",
+      "done": "Kész"
     }
   },
   "report": {
@@ -2111,7 +2154,8 @@
       "clearScope": "Szűkítés megszüntetése",
       "facet": "Nézőpont",
       "showFolded": "Összevont kategóriák mutatása",
-      "foldedHint": "Az összevont kategória magába olvasztott egy közbenső lépést. Azért marad meg, hogy egyetlen ontológiai azonosító se vesszen el."
+      "foldedHint": "Az összevont kategória magába olvasztott egy közbenső lépést. Azért marad meg, hogy egyetlen ontológiai azonosító se vesszen el.",
+      "done": "Kész"
     },
     "tree": {
       "title": "Hierarchia",
@@ -2177,5 +2221,10 @@
       "reindexDone": "Kész: {documents} dokumentum indexelve.",
       "reindexFailed": "Az újraépítés nem sikerült."
     }
+  },
+  "dock": {
+    "open": "Segítség és akadálymentesítés",
+    "close": "Bezárás",
+    "reportBug": "Hiba bejelentése"
   }
 }

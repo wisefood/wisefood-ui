@@ -451,7 +451,7 @@
         </article>
 
         <aside class="lg:col-start-3 lg:row-start-2">
-          <div class="sticky top-24 space-y-6">
+          <div class="lg:sticky lg:top-24 space-y-6">
             <section
               v-if="detailItems.length"
               class="textbook-enter rounded-2xl border border-gray-200 bg-white/90 p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-800/50"

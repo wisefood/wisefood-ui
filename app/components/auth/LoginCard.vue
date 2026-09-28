@@ -20,7 +20,7 @@
     >
       <!-- Header -->
       <div class="mb-8 mt-6">
-        <h1 class="text-5xl font-medium text-brandg-500 font-serif italic text-center mb-2">
+        <h1 class="text-4xl sm:text-5xl font-medium text-brandg-500 font-serif italic text-center mb-2">
             {{ t('auth.welcome') || 'Welcome back' }}
         </h1>
         <p class="text-sm text-gray-600 dark:text-gray-400 text-center">
@@ -42,7 +42,7 @@
       </div>
 
       <!-- Login Form -->
-      <div v-else class="space-y-7 p-8">
+      <div v-else class="space-y-7 px-0 py-2 sm:p-8">
         <!-- Login Button -->
         <UButton 
           color="primary" 
@@ -142,13 +142,12 @@
           variant="link"
           color="primary"
           size="sm"
-          class="font-medium cursor-pointer"
-          :padded="false"
+          class="font-medium cursor-pointer p-0"
         >
           {{ t('auth.contactSupport') || 'Contact Support' }}
         </UButton>
       </p>
-      <div class="flex items-center justify-center space-x-4 text-sm">
+      <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm">
         <NuxtLink 
           to="/privacy" 
           class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"

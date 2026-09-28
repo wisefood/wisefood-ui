@@ -55,12 +55,17 @@
         >
           {{ t('foodChatHome.quality.varietyValue', { count: metric.value }) }}
         </span>
-        <UTooltip v-if="metric.reasoning" :text="metric.reasoning">
-          <UIcon
-            name="i-lucide-info"
-            class="w-3 h-3 text-gray-300 dark:text-zinc-600 cursor-help shrink-0"
-          />
-        </UTooltip>
+        <!-- The reasoning behind a score, on a button so a finger can ask
+             for it: the info glyph used to carry it in a tooltip alone. -->
+        <FoodchatInfoPopover v-if="metric.reasoning" :text="metric.reasoning">
+          <button
+            type="button"
+            class="w-3 h-3 pointer-coarse:w-9 pointer-coarse:h-9 pointer-coarse:-my-3 flex items-center justify-center rounded-full shrink-0 cursor-help text-gray-300 dark:text-zinc-600 hover:text-gray-500 dark:hover:text-zinc-400"
+            :aria-label="metric.label"
+          >
+            <UIcon name="i-lucide-info" class="w-3 h-3" />
+          </button>
+        </FoodchatInfoPopover>
         <span v-else class="w-3 shrink-0" />
       </div>
     </div>

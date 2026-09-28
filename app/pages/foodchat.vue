@@ -1,5 +1,8 @@
 <template>
-  <div class="min-h-full flex flex-col relative bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+  <!-- Exactly the screen below the site header: the `app` layout hands the
+       page what is left of the viewport, and the chat and the plan scroll
+       inside their own panes rather than the page growing under them. -->
+  <div class="flex min-h-0 flex-1 flex-col relative bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
     <!-- Header -->
     <AppPageHeader
       back-to="/dashboard"
@@ -7,6 +10,7 @@
       brand-title="FoodChat"
       brand-class="text-brandp-500 dark:text-brandp-400"
       :subtitle="t('foodChatHome.subtitle')"
+      compact
     />
 
     <AppFeatureGate feature="foodchat">
@@ -16,9 +20,9 @@
       <div
         v-if="!hasSentFirstMessage"
         key="idle"
-        class="flex-1 flex flex-col items-center justify-center px-4 pt-8 pb-4"
+        class="flex-1 min-h-0 overflow-y-auto flex flex-col items-center px-4 pt-8 pb-4"
       >
-        <div class="w-full max-w-2xl">
+        <div class="w-full max-w-2xl my-auto">
           <!-- Welcome heading -->
           <div class="text-center mb-8">
             <h2 class="text-2xl sm:text-3xl font-light text-gray-900 dark:text-white mb-3">
@@ -48,7 +52,8 @@
                   rows="1"
                   :disabled="sending"
                   :placeholder="t('foodChatHome.input.placeholderInitial')"
-                  class="flex-1 resize-none overflow-hidden bg-transparent px-3 py-2.5 text-[0.9375rem] text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 focus:outline-none max-h-32 font-light transition-colors leading-relaxed"
+                  :enterkeyhint="enterKeyHint"
+                  class="flex-1 resize-none overflow-y-auto bg-transparent px-3 py-2.5 text-[0.9375rem] text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 focus:outline-none max-h-28 font-light transition-colors leading-relaxed"
                   @input="autoResize($event, idleInputRef)"
                   @keydown="handleKeydown"
                   @focus="inputFocused = true"
@@ -56,7 +61,8 @@
                 />
                 <button
                   :disabled="!canSend"
-                  class="chat-send-button h-10 w-10 flex items-center justify-center rounded-xl bg-brandp-500 text-white disabled:opacity-40 shadow-md shadow-brandp-700/20 shrink-0 mb-0.5"
+                  class="chat-send-button h-10 w-10 pointer-coarse:h-11 pointer-coarse:w-11 flex items-center justify-center rounded-xl bg-brandp-500 text-white disabled:opacity-40 shadow-md shadow-brandp-700/20 shrink-0 mb-0.5"
+                  :aria-label="t('foodChatHome.input.generate')"
                   :class="{ 'chat-send-idle': canSend && !sending }"
                   @click="handleSend"
                 >
@@ -86,7 +92,8 @@
                 </div>
                 <div v-else />
               </Transition>
-              <p class="text-[0.6875rem] text-gray-400 dark:text-zinc-500 shrink-0">
+              <!-- A touch keyboard has no Shift, so the hint is only true under a real one. -->
+              <p class="hidden pointer-fine:block text-[0.6875rem] text-gray-400 dark:text-zinc-500 shrink-0">
                 {{ t('foodChatHome.input.enterHint') }}
               </p>
             </div>
@@ -105,10 +112,11 @@
                     :class="{ 'fc-diner-chip-active': isDinerSelected(member.id), 'fc-diner-chip-locked': member.id === currentMemberId }"
                     :disabled="dinersUpdating && member.id !== currentMemberId"
                     :aria-pressed="isDinerSelected(member.id)"
+                    :aria-label="dinerTooltip(member)"
                     @click="toggleDiner(member)"
                   >
                     <ProfileAvatar :avatar="getMemberAvatarForDisplay(member)" size="xs" />
-                    <span class="text-[0.625rem] max-w-16 truncate">{{ member.name }}</span>
+                    <span class="text-[0.6875rem] max-w-24 truncate">{{ member.name }}</span>
                     <UIcon v-if="member.id === currentMemberId" name="i-lucide-lock" class="w-2.5 h-2.5 opacity-50" />
                   </button>
                 </UTooltip>
@@ -146,17 +154,88 @@
       <div
         v-if="hasSentFirstMessage"
         key="split"
-        class="flex-1 flex justify-center px-4 sm:px-6 py-6 pt-12 min-h-0"
+        class="flex-1 flex flex-col items-center min-h-0 sm:px-6 sm:py-6 lg:pt-12"
       >
+        <!-- The rail's panel, defined once and placed three times: in the
+             rail at `lg`, in a sheet on a phone, in a side panel on a tablet.
+             Same props, same events, whichever shell it is in. -->
+        <DefinePlanningPanel>
+          <FoodchatPlanningStatePanel
+            :state="planningState"
+            :facets="facetChips"
+            :pending-changes="pendingStateChanges"
+            :busy="sending"
+            :vocabularies="vocabularies"
+            @add-facet="handleAddFacet"
+            @add-pantry="handleAddPantry"
+            @remove-pantry="handleRemovePantry"
+            @remove-facet="handleRemoveFacet"
+            @replan="handleReplan"
+          />
+        </DefinePlanningPanel>
+
+        <!-- ── One pane at a time below `lg` ──
+             A phone cannot show the conversation and the plan side by side,
+             so it shows one and names the other. The switch sits where a tab
+             bar would, and the button beside it opens the rail's panel as a
+             sheet, with the same count the rail's spine shows. -->
+        <div class="fc-pane-bar lg:hidden w-full max-w-7xl 2xl:max-w-[100rem] shrink-0 flex items-center gap-2 px-3 py-2 sm:px-0 sm:pt-0 sm:pb-3">
+          <div
+            class="fc-segmented flex-1 sm:flex-none"
+            role="tablist"
+            :aria-label="t('foodChatHome.panes.label')"
+          >
+            <button
+              type="button"
+              role="tab"
+              class="fc-segment"
+              :class="{ 'fc-segment-active': mobilePane === 'chat' }"
+              :aria-selected="mobilePane === 'chat'"
+              @click="showPane('chat')"
+            >
+              <UIcon name="i-lucide-messages-square" class="w-4 h-4" />
+              {{ t('foodChatHome.panes.chat') }}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              class="fc-segment"
+              :class="{ 'fc-segment-active': mobilePane === 'plan' }"
+              :aria-selected="mobilePane === 'plan'"
+              @click="showPane('plan')"
+            >
+              <UIcon name="i-lucide-calendar-days" class="w-4 h-4" />
+              {{ t('foodChatHome.panes.plan') }}
+              <span v-if="planBadge" class="fc-pane-dot">
+                <span class="sr-only">{{ t('foodChatHome.panes.newPlan') }}</span>
+              </span>
+            </button>
+          </div>
+          <button
+            v-if="planningState"
+            type="button"
+            class="fc-pane-btn ml-auto"
+            :aria-label="t('foodChatHome.planningState.title')"
+            @click="planningOpen = true"
+          >
+            <UIcon name="i-lucide-clipboard-list" class="w-5 h-5 text-brandp-500" />
+            <span
+              v-if="standingCount"
+              class="fc-pane-count"
+            >{{ standingCount }}</span>
+          </button>
+        </div>
+
         <div
           ref="splitWrap"
-          class="fc-split-wrap flex w-full max-w-7xl 2xl:max-w-[100rem] min-h-0"
+          class="fc-split-wrap flex w-full max-w-7xl 2xl:max-w-[100rem] flex-1 min-h-0"
         >
 
         <!-- ── LEFT: Chat column (FoodScholar-style floating) ── -->
         <div
+          v-show="isDesktop || mobilePane === 'chat'"
           class="fc-chat-col flex flex-col min-w-0 relative"
-          :style="{ width: `${chatWidth}px` }"
+          :style="isDesktop ? { width: `${chatWidth}px` } : undefined"
         >
 
           <!-- Session bar -->
@@ -175,28 +254,33 @@
             />
             <button
               v-if="activeSession"
-              class="shrink-0 h-6 w-6 flex items-center justify-center rounded-md text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
+              class="shrink-0 h-6 w-6 pointer-coarse:h-11 pointer-coarse:w-11 pointer-coarse:-my-2.5 flex items-center justify-center rounded-md text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
               :title="t('foodChatHome.chat.renameSession')"
+              :aria-label="t('foodChatHome.chat.renameSession')"
               @click="handleRenameSession"
             >
               <UIcon name="i-lucide-pencil" class="w-3 h-3" />
             </button>
             <button
-              class="shrink-0 h-6 w-6 flex items-center justify-center rounded-md text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
+              class="shrink-0 h-6 w-6 pointer-coarse:h-11 pointer-coarse:w-11 pointer-coarse:-my-2.5 flex items-center justify-center rounded-md text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
               :title="t('foodChatHome.chat.startFresh')"
+              :aria-label="t('foodChatHome.chat.startFresh')"
               @click="handleStartOver"
             >
               <UIcon name="i-lucide-plus" class="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <!-- Top fade — sits above the scroll area, not inside it -->
+          <!-- The thread, with the fade over its top edge. The fade lives in a
+               wrapper that knows where that edge is, so it no longer carries
+               the session bar's height as a number. -->
+          <div class="relative flex-1 min-h-0 flex flex-col">
           <div class="fc-messages-top-fade pointer-events-none" />
 
           <!-- Message area — scrollable -->
           <div
             ref="messagesScrollRef"
-            class="fc-messages-area flex-1 overflow-y-auto px-4 pt-16 pb-2"
+            class="fc-messages-area flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 pt-6 lg:pt-16 pb-2"
             @scroll="handleMessagesScroll"
           >
 
@@ -370,7 +454,7 @@
 
 
                     <!-- Feedback row -->
-                    <div v-if="msg.id" class="mt-2 flex items-center gap-1 transition-opacity" :class="feedbackSubmitted[msg.id] ? 'opacity-100' : 'opacity-0 group-hover/msg:opacity-100'">
+                    <div v-if="msg.id" class="mt-2 flex items-center gap-1 transition-opacity" :class="feedbackSubmitted[msg.id] ? 'opacity-100' : 'opacity-0 group-hover/msg:opacity-100 group-focus-within/msg:opacity-100 pointer-coarse:opacity-100'">
                       <template v-if="!feedbackSubmitted[msg.id]">
                         <button
                           :class="['fc-feedback-btn', messageFeedback[msg.id] === 'up' ? 'fc-feedback-active-up' : '']"
@@ -424,9 +508,12 @@
               </Transition>
             </div>
           </div>
+          </div>
 
-          <!-- ── Chat input (pinned to bottom) ── -->
-          <div class="fc-composer-wrap px-4 pb-4 pt-2">
+          <!-- ── Chat input (pinned to bottom) ──
+               The bottom padding is the home indicator's height on a phone
+               that has one, and the same 1rem as before everywhere else. -->
+          <div class="fc-composer-wrap shrink-0 px-3 sm:px-4 pt-2 pb-[max(1rem,var(--wf-safe-bottom))]">
             <!-- ── What's in the kitchen, settled here ──
                  Saying "I've got spinach and half a jar of olives" already
                  reaches the plan — the extractor hears it and the planner uses
@@ -448,7 +535,7 @@
                 >
                   {{ item }}
                   <button
-                    class="w-3.5 h-3.5 flex items-center justify-center rounded-full text-emerald-500/70 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-800/40 disabled:opacity-40"
+                    class="w-3.5 h-3.5 pointer-coarse:w-8 pointer-coarse:h-8 pointer-coarse:-my-2 flex items-center justify-center rounded-full text-emerald-500/70 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-800/40 disabled:opacity-40"
                     :aria-label="t('foodChatHome.planningState.removeItem', { value: item })"
                     :disabled="sending"
                     @click="handleRemovePantry(item)"
@@ -470,7 +557,7 @@
                   >
                   <button
                     type="submit"
-                    class="w-4 h-4 flex items-center justify-center rounded text-gray-400 hover:text-emerald-600 disabled:opacity-40"
+                    class="w-4 h-4 pointer-coarse:w-9 pointer-coarse:h-9 pointer-coarse:-my-2.5 flex items-center justify-center rounded text-gray-400 hover:text-emerald-600 disabled:opacity-40"
                     :disabled="sending || !pantryDraft.trim()"
                     :aria-label="t('foodChatHome.planningState.pantryAdd')"
                   >
@@ -479,7 +566,7 @@
                 </form>
                 <button
                   v-else
-                  class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[0.6875rem] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 pointer-coarse:min-h-9 pointer-coarse:px-2.5 pointer-coarse:text-xs text-[0.6875rem] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
                   @click="pantryStripOpen = true"
                 >
                   <UIcon name="i-lucide-plus" class="w-2.5 h-2.5" />
@@ -488,7 +575,7 @@
                 <!-- Typing is fine for one thing. Picking is what you want when
                      you are standing in front of the fridge. -->
                 <button
-                  class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[0.6875rem] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 pointer-coarse:min-h-9 pointer-coarse:px-2.5 pointer-coarse:text-xs text-[0.6875rem] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
                   @click="pantryPickerOpen = true"
                 >
                   <UIcon name="i-lucide-refrigerator" class="w-2.5 h-2.5" />
@@ -507,10 +594,11 @@
                   :class="{ 'fc-diner-chip-active': isDinerSelected(member.id), 'fc-diner-chip-locked': member.id === currentMemberId }"
                   :disabled="dinersUpdating && member.id !== currentMemberId"
                   :aria-pressed="isDinerSelected(member.id)"
+                  :aria-label="dinerTooltip(member)"
                   @click="toggleDiner(member)"
                 >
                   <ProfileAvatar :avatar="getMemberAvatarForDisplay(member)" size="xs" />
-                  <span class="text-[0.625rem] max-w-14 truncate">{{ member.name }}</span>
+                  <span class="text-[0.6875rem] max-w-20 truncate">{{ member.name }}</span>
                   <UIcon v-if="member.id === currentMemberId" name="i-lucide-lock" class="w-2.5 h-2.5 opacity-50" />
                 </button>
               </UTooltip>
@@ -526,7 +614,8 @@
                     rows="1"
                     :disabled="sending"
                     :placeholder="t('foodChatHome.input.placeholderChat')"
-                    class="flex-1 resize-none overflow-hidden bg-transparent px-2 py-2 text-[0.875rem] text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 focus:outline-none max-h-28 font-light leading-relaxed"
+                    :enterkeyhint="enterKeyHint"
+                    class="flex-1 resize-none overflow-y-auto bg-transparent px-2 py-2 text-[0.875rem] text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 focus:outline-none max-h-28 font-light leading-relaxed"
                     @input="autoResize($event, sessionInputRef)"
                     @keydown="handleKeydown"
                     @focus="sessionInputFocused = true"
@@ -535,7 +624,8 @@
                   <div class="flex items-center gap-1 shrink-0 mb-0.5">
                     <button
                       :disabled="!canSend"
-                      class="chat-send-button h-9 w-9 flex items-center justify-center rounded-xl bg-brandp-500 text-white disabled:opacity-40 shadow-md shadow-brandp-700/20"
+                      class="chat-send-button h-9 w-9 pointer-coarse:h-11 pointer-coarse:w-11 flex items-center justify-center rounded-xl bg-brandp-500 text-white disabled:opacity-40 shadow-md shadow-brandp-700/20"
+                      :aria-label="t('foodChatHome.input.generate')"
                       :class="{ 'chat-send-idle': canSend && !sending }"
                       @click="handleSend"
                     >
@@ -571,7 +661,10 @@
         </div>
 
         <!-- ── RIGHT: Canvas column ── -->
-        <div class="fc-canvas-col flex flex-col overflow-y-auto">
+        <div
+          v-show="isDesktop || mobilePane === 'plan'"
+          class="fc-canvas-col flex flex-col overflow-y-auto"
+        >
           <!-- Plan settings, behind a disclosure and closed by default.
                Four groups of pills across the top of the canvas is the first
                thing a member sees and the last thing they came for: it reads
@@ -583,27 +676,47 @@
             class="fc-settings-shell shrink-0"
           >
             <button
-              class="w-full flex items-center gap-2 px-4 sm:px-6 py-2 text-xs text-gray-500 dark:text-zinc-400 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors"
-              :aria-expanded="settingsOpen"
-              @click="settingsOpen = !settingsOpen"
+              class="w-full flex items-center gap-2 px-4 sm:px-6 py-2 min-h-11 lg:min-h-0 text-xs text-gray-500 dark:text-zinc-400 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors"
+              :aria-expanded="isCompact ? undefined : settingsOpen"
+              @click="toggleSettings"
             >
               <UIcon name="i-lucide-settings-2" class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0" />
               <span>{{ t('foodChatHome.planSettings.title') }}</span>
               <span
-                v-if="!settingsOpen && appliedSettingsSummary"
+                v-if="(isCompact || !settingsOpen) && appliedSettingsSummary"
                 class="text-[0.6875rem] text-gray-400 dark:text-zinc-500 font-light truncate"
               >· {{ appliedSettingsSummary }}</span>
               <UIcon
-                :name="settingsOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+                :name="isCompact ? 'i-lucide-chevron-right' : (settingsOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down')"
                 class="w-3.5 h-3.5 ml-auto shrink-0"
               />
             </button>
-            <FoodchatPlanSettingsRibbon
-              v-show="settingsOpen"
-              :card="latestParamCard"
-              :busy="sending || showEphemeralGenerating"
-              @apply="handleApplyPlanParameters"
-            />
+            <!-- Inline at `lg`. Below it the same controls open as a sheet,
+                 one per row and sized for a thumb: the ribbon wrapped to six
+                 rows of 20px pills on a phone, which is not a ribbon. -->
+            <div v-show="settingsOpen && !isCompact">
+              <FoodchatPlanSettingsRibbon
+                :card="latestParamCard"
+                :busy="sending || showEphemeralGenerating"
+                @apply="handleApplyPlanParameters"
+              />
+            </div>
+            <UDrawer
+              v-if="isCompact"
+              v-model:open="settingsSheetOpen"
+              :title="t('foodChatHome.planSettings.title')"
+              :description="appliedSettingsSummary || undefined"
+              :ui="sheetUi"
+            >
+              <template #body>
+                <FoodchatPlanSettingsRibbon
+                  layout="stacked"
+                  :card="latestParamCard"
+                  :busy="sending || showEphemeralGenerating"
+                  @apply="handleApplyPlanParameters"
+                />
+              </template>
+            </UDrawer>
           </div>
           <!-- "Cooking for" banner (when more than one diner) -->
           <Transition name="chips-fade">
@@ -713,7 +826,7 @@
                           <span class="w-20 shrink-0 text-xs text-gray-500 dark:text-zinc-400 capitalize">{{ t(`foodChatHome.meals.${mealType}`) }}</span>
                           <template v-if="draftPicks[draftSlotKey(group.day, mealType)]">
                             <span class="flex-1 min-w-0 truncate text-sm font-medium text-gray-800 dark:text-gray-200">{{ draftPicks[draftSlotKey(group.day, mealType)]!.title }}</span>
-                            <span class="shrink-0 px-1.5 py-0.5 text-[0.5625rem] rounded-full bg-brandp-50 dark:bg-brandp-950/40 text-brandp-500 dark:text-brandp-300">{{ t('foodChatHome.manual.yourPick') }}</span>
+                            <span class="shrink-0 px-1.5 py-0.5 text-[0.6875rem] rounded-full bg-brandp-50 dark:bg-brandp-950/40 text-brandp-500 dark:text-brandp-300">{{ t('foodChatHome.manual.yourPick') }}</span>
                             <button
                               class="shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
                               @click="draftPicks[draftSlotKey(group.day, mealType)] = null"
@@ -858,7 +971,7 @@
                        here". Grouped, labelled, and pushed right so the row
                        reads: what this is · when it was made · what you can do
                        with it. -->
-                  <div class="ml-auto flex items-center gap-2 shrink-0">
+                  <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
                     <UButton
                       v-if="displayedPlanId"
                       size="xs"
@@ -964,13 +1077,14 @@
                       <UIcon name="i-lucide-sliders-horizontal" class="w-3 h-3" />
                       {{ t('foodChatHome.constraints.label') }}
                     </span>
-                    <UTooltip
+                    <FoodchatInfoPopover
                       v-for="(constraint, cIdx) in displayedMealPlan.constraints_applied"
                       :key="cIdx"
                       :text="constraint.detail || constraintTooltip(constraint)"
                     >
-                      <span
-                        class="inline-flex items-center gap-1 px-2 py-0.5 text-[0.625rem] rounded-full border cursor-help"
+                      <button
+                        type="button"
+                        class="inline-flex items-center gap-1 px-2 py-0.5 pointer-coarse:min-h-8 pointer-coarse:text-[0.6875rem] text-[0.625rem] rounded-full border cursor-help"
                         :class="ledgerRowClass(constraint)"
                       >
                         <UIcon v-if="ledgerRowIcon(constraint)" :name="ledgerRowIcon(constraint) || ''" class="w-3 h-3 shrink-0" />
@@ -979,8 +1093,8 @@
                           v-if="constraintMembers(constraint)"
                           class="opacity-70"
                         >— {{ constraintMembers(constraint) }}</span>
-                      </span>
-                    </UTooltip>
+                      </button>
+                    </FoodchatInfoPopover>
                   </div>
 
                   <!-- One card per meal, from `planMeals`, which reads both the
@@ -1113,6 +1227,7 @@
                         <span class="text-xs text-gray-400">{{ t('foodChatHome.canvas.rateThisPlan') }}</span>
                         <UTooltip :text="t('foodChatHome.tooltips.planWorksWell')">
                           <button
+                            :aria-label="t('foodChatHome.tooltips.planWorksWell')"
                             :class="['fc-feedback-btn', planVotes[displayedMealPlan.id] === 'up' ? 'fc-feedback-active-up' : '']"
                             @click="votePlan(displayedMealPlan.id, 'up', getMessageIdForPlanIdx(selectedDailyPlanIdx))"
                           >
@@ -1121,6 +1236,7 @@
                         </UTooltip>
                         <UTooltip :text="t('foodChatHome.tooltips.needsImprovement')">
                           <button
+                            :aria-label="t('foodChatHome.tooltips.needsImprovement')"
                             :class="['fc-feedback-btn', planVotes[displayedMealPlan.id] === 'down' ? 'fc-feedback-active-down' : '']"
                             @click="votePlan(displayedMealPlan.id, 'down', getMessageIdForPlanIdx(selectedDailyPlanIdx))"
                           >
@@ -1168,13 +1284,14 @@
                       <UIcon name="i-lucide-sliders-horizontal" class="w-3 h-3" />
                       {{ t('foodChatHome.constraints.label') }}
                     </span>
-                    <UTooltip
+                    <FoodchatInfoPopover
                       v-for="(constraint, cIdx) in weeklyLedger"
                       :key="cIdx"
                       :text="constraint.detail || constraintTooltip(constraint)"
                     >
-                      <span
-                        class="inline-flex items-center gap-1 px-2 py-0.5 text-[0.625rem] rounded-full border cursor-help"
+                      <button
+                        type="button"
+                        class="inline-flex items-center gap-1 px-2 py-0.5 pointer-coarse:min-h-8 pointer-coarse:text-[0.6875rem] text-[0.625rem] rounded-full border cursor-help"
                         :class="ledgerRowClass(constraint)"
                       >
                         <UIcon v-if="ledgerRowIcon(constraint)" :name="ledgerRowIcon(constraint) || ''" class="w-3 h-3 shrink-0" />
@@ -1183,8 +1300,8 @@
                           v-if="constraintMembers(constraint)"
                           class="opacity-70"
                         >— {{ constraintMembers(constraint) }}</span>
-                      </span>
-                    </UTooltip>
+                      </button>
+                    </FoodchatInfoPopover>
                   </div>
 
                   <!-- Collapsible days — one row per day, meals reviewable inline -->
@@ -1275,7 +1392,7 @@
                               <button
                                 v-if="getWeeklyRecipeId(cellMain(cell))"
                                 type="button"
-                                class="ml-auto flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 hover:scale-110 transition-all duration-200 shrink-0"
+                                class="ml-auto flex items-center justify-center w-5 h-5 pointer-coarse:w-11 pointer-coarse:h-11 pointer-coarse:-my-3 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 pointer-fine:hover:scale-110 transition-all duration-200 shrink-0"
                                 :aria-label="isRecipeFavorite(getWeeklyRecipeId(cellMain(cell))) ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
                                 @click.prevent.stop="toggleRecipeFavorite(getWeeklyRecipeId(cellMain(cell)))"
                               >
@@ -1289,48 +1406,30 @@
                                   ]"
                                 />
                               </button>
-                              <!-- Slot menu: replace via chat, adapt in the popup -->
-                              <div class="relative shrink-0" :class="{ 'ml-auto': !getWeeklyRecipeId(cellMain(cell)) }" @mouseleave="weeklySlotMenu = null">
+                              <!-- Slot menu: replace via chat, adapt in the popup.
+                                   A real menu, so it opens on a tap and closes
+                                   on a tap outside rather than when a mouse
+                                   leaves a box a finger never entered. -->
+                              <UDropdownMenu
+                                :items="weeklyCellMenu(day.dayIndex, cell)"
+                                :content="{ align: 'end' }"
+                                :ui="{ content: 'min-w-40' }"
+                              >
                                 <button
                                   type="button"
-                                  class="flex items-center justify-center w-5 h-5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+                                  class="flex items-center justify-center w-5 h-5 pointer-coarse:w-11 pointer-coarse:h-11 pointer-coarse:-my-3 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors shrink-0"
+                                  :class="{ 'ml-auto': !getWeeklyRecipeId(cellMain(cell)) }"
                                   :aria-label="t('foodChatHome.mealCard.menu')"
-                                  :aria-expanded="weeklySlotMenu === cell.key"
-                                  @click.prevent.stop="weeklySlotMenu = weeklySlotMenu === cell.key ? null : cell.key"
                                 >
                                   <UIcon name="i-lucide-more-vertical" class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
                                 </button>
-                                <Transition name="chips-fade">
-                                  <div
-                                    v-if="weeklySlotMenu === cell.key"
-                                    class="absolute right-0 top-6 z-20 w-40 rounded-xl border border-gray-100 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-lg overflow-hidden"
-                                  >
-                                    <button
-                                      type="button"
-                                      class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
-                                      @click.prevent.stop="prefillWeeklySlotReplace(day.dayIndex, cell.mealType)"
-                                    >
-                                      <UIcon name="i-lucide-replace" class="w-3.5 h-3.5 text-brandp-400" />
-                                      {{ t('foodChatHome.mealCard.replace') }}
-                                    </button>
-                                    <button
-                                      v-if="getWeeklyRecipeId(cellMain(cell))"
-                                      type="button"
-                                      class="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
-                                      @click.prevent.stop="openAdaptRecipe(getWeeklyRecipeId(cellMain(cell)))"
-                                    >
-                                      <UIcon name="i-lucide-wand-sparkles" class="w-3.5 h-3.5 text-brandp-400" />
-                                      {{ t('foodChatHome.mealCard.adapt') }}
-                                    </button>
-                                  </div>
-                                </Transition>
-                              </div>
+                              </UDropdownMenu>
                             </div>
                             <div class="flex items-center gap-2">
                               <NuxtLink
                                 :to="getWeeklyRecipeId(cellMain(cell)) ? `/recipe-wrangler/${getWeeklyRecipeId(cellMain(cell))}` : ''"
-                                :target="getWeeklyRecipeId(cellMain(cell)) ? '_blank' : undefined"
-                                class="w-9 h-9 rounded-full overflow-hidden bg-gray-100 dark:bg-zinc-700 shrink-0 transition-transform duration-200 hover:scale-150 cursor-pointer block"
+                                :target="getWeeklyRecipeId(cellMain(cell)) ? recipeLinkTarget : undefined"
+                                class="w-9 h-9 rounded-full overflow-hidden bg-gray-100 dark:bg-zinc-700 shrink-0 transition-transform duration-200 pointer-fine:hover:scale-150 cursor-pointer block"
                               >
                                 <img
                                   v-if="getRecipeImage(getWeeklyRecipeId(cellMain(cell)))"
@@ -1350,7 +1449,7 @@
                                 <NuxtLink
                                   v-if="getWeeklyRecipeId(cellMain(cell))"
                                   :to="`/recipe-wrangler/${getWeeklyRecipeId(cellMain(cell))}`"
-                                  target="_blank"
+                                  :target="recipeLinkTarget"
                                   class="text-[0.6875rem] font-medium text-brandp-600 dark:text-brandp-400 leading-tight line-clamp-2 hover:underline"
                                 >
                                   {{ getWeeklyRecipeTitle(cellMain(cell)) }}
@@ -1363,15 +1462,21 @@
                                      main alone understates what gets eaten. -->
                                 <span
                                   v-if="weeklyMealKcal(cell.plates) != null"
-                                  class="text-[0.5625rem] text-gray-400 dark:text-zinc-500 leading-none"
+                                  class="text-[0.6875rem] text-gray-400 dark:text-zinc-500 leading-none"
                                 >
                                   {{ t('foodChatHome.mealCard.kcal', { kcal: weeklyMealKcal(cell.plates) }) }}
                                 </span>
                               </div>
-                              <!-- Nutrient donut -->
-                              <div
+                              <!-- Nutrient donut. The figure sits beside the
+                                   ring rather than inside a 28px one, where it
+                                   was seven-pixel type. A tap steps it through
+                                   the macros; a hover still previews them. -->
+                              <button
                                 v-if="getWeeklyRecipeId(cellMain(cell)) && getWeeklySegments(getWeeklyRecipeId(cellMain(cell))).length"
-                                class="shrink-0 relative cursor-help"
+                                type="button"
+                                class="shrink-0 flex items-center gap-1 rounded-full pointer-coarse:min-h-11 cursor-pointer"
+                                :aria-label="t('foodChatHome.mealCard.macroRing', { value: getWeeklyCenterValue(getWeeklyRecipeId(cellMain(cell))!, cell.key), label: getWeeklyCenterLabel(cell.key) })"
+                                @click="cycleWeeklySegment(cell.key)"
                                 @mouseleave="weeklyHovered[cell.key] = null"
                               >
                                 <svg width="28" height="28" viewBox="0 0 28 28" style="transform:rotate(-90deg)">
@@ -1390,10 +1495,11 @@
                                     @mouseenter="weeklyHovered[cell.key] = seg.key"
                                   />
                                 </svg>
-                                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                  <span class="text-[0.4375rem] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ getWeeklyCenterValue(getWeeklyRecipeId(cellMain(cell))!, cell.key) }}</span>
-                                </div>
-                              </div>
+                                <span class="flex flex-col items-start leading-none">
+                                  <span class="text-[0.6875rem] font-bold text-gray-700 dark:text-gray-200 tabular-nums">{{ getWeeklyCenterValue(getWeeklyRecipeId(cellMain(cell))!, cell.key) }}</span>
+                                  <span class="text-[0.625rem] text-gray-400 dark:text-zinc-500 mt-0.5">{{ getWeeklyCenterLabel(cell.key) }}</span>
+                                </span>
+                              </button>
                             </div>
                             <!-- Why this meal — transparency chips -->
                             <!-- The rest of the meal: the salad beside the
@@ -1411,8 +1517,8 @@
                               >
                                 <NuxtLink
                                   :to="getWeeklyRecipeId(plate) ? `/recipe-wrangler/${getWeeklyRecipeId(plate)}` : ''"
-                                  :target="getWeeklyRecipeId(plate) ? '_blank' : undefined"
-                                  class="w-6 h-6 rounded-full overflow-hidden bg-gray-100 dark:bg-zinc-700 shrink-0 transition-transform duration-200 hover:scale-150 block"
+                                  :target="getWeeklyRecipeId(plate) ? recipeLinkTarget : undefined"
+                                  class="w-6 h-6 rounded-full overflow-hidden bg-gray-100 dark:bg-zinc-700 shrink-0 transition-transform duration-200 pointer-fine:hover:scale-150 block"
                                 >
                                   <img
                                     v-if="getRecipeImage(getWeeklyRecipeId(plate))"
@@ -1425,13 +1531,13 @@
                                   </div>
                                 </NuxtLink>
                                 <span
-                                  class="shrink-0 inline-flex items-center px-1 py-px text-[0.5rem] font-semibold uppercase tracking-wide rounded"
+                                  class="shrink-0 inline-flex items-center px-1 py-px text-[0.6875rem] font-semibold uppercase tracking-wide rounded"
                                   :class="plateBadgeClass(plate)"
                                 >{{ plateRoleLabel(plate) }}</span>
                                 <NuxtLink
                                   v-if="getWeeklyRecipeId(plate)"
                                   :to="`/recipe-wrangler/${getWeeklyRecipeId(plate)}`"
-                                  target="_blank"
+                                  :target="recipeLinkTarget"
                                   class="min-w-0 text-[0.625rem] font-medium text-gray-700 dark:text-zinc-200 leading-tight line-clamp-1 hover:underline"
                                 >{{ getWeeklyRecipeTitle(plate) }}</NuxtLink>
                                 <span
@@ -1450,7 +1556,7 @@
                               <span
                                 v-for="(reason, rIdx) in weeklyEntryReasons(cellMain(cell))"
                                 :key="rIdx"
-                                class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[0.5625rem] rounded-full border border-brandp-100 dark:border-brandp-900/50 bg-brandp-50/60 dark:bg-brandp-950/30 text-brandp-600 dark:text-brandp-300"
+                                class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[0.6875rem] rounded-full border border-brandp-100 dark:border-brandp-900/50 bg-brandp-50/60 dark:bg-brandp-950/30 text-brandp-600 dark:text-brandp-300"
                               >
                                 <UIcon :name="reasonIcon(reason.kind)" class="w-2.5 h-2.5 shrink-0" />
                                 {{ reason.label }}
@@ -1482,7 +1588,7 @@
                         {{ t('foodChatHome.weekly.glanceTitle') }}
                         <span
                           v-if="weeklyChecklist.length"
-                          class="px-1.5 py-0.5 text-[0.5625rem] rounded-full font-medium tabular-nums"
+                          class="px-1.5 py-0.5 text-[0.6875rem] rounded-full font-medium tabular-nums"
                           :class="weeklyChecklistMet === weeklyChecklist.length
                             ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
                             : 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400'"
@@ -1544,6 +1650,7 @@
                         <span class="text-xs text-gray-400">{{ t('foodChatHome.canvas.rateThisPlan') }}</span>
                         <UTooltip :text="t('foodChatHome.tooltips.planWorksWell')">
                           <button
+                            :aria-label="t('foodChatHome.tooltips.planWorksWell')"
                             :class="['fc-feedback-btn', planVotes[displayedWeeklyPlan.id] === 'up' ? 'fc-feedback-active-up' : '']"
                             @click="votePlan(displayedWeeklyPlan.id, 'up', getMessageIdForPlanIdx(selectedWeeklyPlanIdx))"
                           >
@@ -1552,6 +1659,7 @@
                         </UTooltip>
                         <UTooltip :text="t('foodChatHome.tooltips.needsImprovement')">
                           <button
+                            :aria-label="t('foodChatHome.tooltips.needsImprovement')"
                             :class="['fc-feedback-btn', planVotes[displayedWeeklyPlan.id] === 'down' ? 'fc-feedback-active-down' : '']"
                             @click="votePlan(displayedWeeklyPlan.id, 'down', getMessageIdForPlanIdx(selectedWeeklyPlanIdx))"
                           >
@@ -1628,23 +1736,35 @@
             />
           </button>
           <div v-if="railOpen" class="flex-1 overflow-y-auto px-2 pb-3">
-    <FoodchatPlanningStatePanel
-    :state="planningState"
-    :facets="facetChips"
-    :pending-changes="pendingStateChanges"
-    :busy="sending"
-    :vocabularies="vocabularies"
-    @add-facet="handleAddFacet"
-    @add-pantry="handleAddPantry"
-    @remove-pantry="handleRemovePantry"
-    @remove-facet="handleRemoveFacet"
-    @replan="handleReplan"
-    />
-
+            <ReusePlanningPanel />
           </div>
         </div>
 
         </div><!-- end fc-split-wrap -->
+
+        <!-- The rail's panel below `lg`: a sheet on a phone, a side panel on
+             a tablet. The rail itself is hidden there. -->
+        <UDrawer
+          v-if="isPhone && planningState"
+          v-model:open="planningOpen"
+          :title="t('foodChatHome.planningState.title')"
+          :ui="sheetUi"
+        >
+          <template #body>
+            <ReusePlanningPanel />
+          </template>
+        </UDrawer>
+        <USlideover
+          v-else-if="isCompact && planningState"
+          v-model:open="planningOpen"
+          :title="t('foodChatHome.planningState.title')"
+          side="right"
+          :ui="{ content: 'max-w-sm' }"
+        >
+          <template #body>
+            <ReusePlanningPanel />
+          </template>
+        </USlideover>
       </div>
     </Transition>
 
@@ -1664,8 +1784,13 @@
       @close="adaptRecipeId = null"
     />
 
-    <!-- Disclaimer -->
-    <div class="pb-4 text-center">
+    <!-- Disclaimer. On a phone the split state is the whole screen, so the
+         line is shown with the welcome and folded away once a session is
+         under way. -->
+    <div
+      class="shrink-0 px-4 pb-4 text-center"
+      :class="{ 'hidden sm:block': hasSentFirstMessage }"
+    >
       <p class="text-[0.625rem] text-gray-400 dark:text-gray-500 font-light">{{ t('foodChatHome.disclaimer') }}</p>
     </div>
 
@@ -1673,7 +1798,7 @@
     <Transition name="toast-slide">
       <div
         v-if="error"
-        class="fixed bottom-6 left-1/2 -translate-x-1/2 max-w-md w-full px-4 z-50"
+        class="fixed bottom-[calc(6rem+var(--wf-safe-bottom))] lg:bottom-6 left-1/2 -translate-x-1/2 max-w-md w-full px-4 z-50"
       >
         <div class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200/80 dark:border-red-800/50 text-sm text-red-700 dark:text-red-300 shadow-lg shadow-red-500/5">
           <UIcon name="i-lucide-alert-circle" class="w-4 h-4 shrink-0" />
@@ -1696,8 +1821,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, nextTick, onMounted, watch } from 'vue'
+import { ref, reactive, computed, nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { createReusableTemplate } from '@vueuse/core'
+import type { DropdownMenuItem } from '@nuxt/ui'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { useFoodChat } from '~/composables/useFoodChat'
@@ -1721,7 +1848,7 @@ import {
 import type { HouseholdMember } from '~/services/householdsApi'
 import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
 
-definePageMeta({ layout: 'default', middleware: ['auth'] })
+definePageMeta({ layout: 'app', middleware: ['auth'], dock: 'raised' })
 
 const { t, locale } = useI18n()
 useHead({ title: computed(() => t('foodChatHome.pageTitle')) })
@@ -1778,6 +1905,64 @@ const {
 
 const householdStore = useHouseholdStore()
 const recipeStore = useRecipeStore()
+const { isPhone, isCompact, isDesktop, isCoarsePointer } = useViewport()
+
+// ── One pane at a time below `lg` ────────────────────────────────────────
+//
+// A phone cannot hold the conversation and the plan side by side, so it shows
+// one and names the other. The chat is where a session starts; the plan takes
+// over the first time one lands, and after that a new plan only marks the
+// switch, because a member mid-sentence should not have the page pulled out
+// from under them.
+const mobilePane = ref<'chat' | 'plan'>('chat')
+const planBadge = ref(false)
+const planningOpen = ref(false)
+
+function showPane(pane: 'chat' | 'plan') {
+  mobilePane.value = pane
+  if (pane === 'plan') {
+    planBadge.value = false
+    return
+  }
+  // The thread was `display: none` while the plan was up and kept whatever
+  // scroll it had; the bottom is where a conversation is picked up.
+  nextTick(() => scrollToBottom(false))
+}
+
+watch(
+  () => lastResponse.value?.meal_plan?.id ?? lastResponse.value?.weekly_meal_plan?.id ?? null,
+  (planId, previous) => {
+    if (!planId || planId === previous || !isCompact.value || mobilePane.value === 'plan') return
+    // The lists already hold this response's plan — the store merges it in
+    // the moment the response lands — so the first plan of the session is
+    // the lists holding nothing else.
+    const earlier = mealPlans.value.some(plan => plan.id !== planId)
+      || weeklyMealPlans.value.some(plan => plan.id !== planId)
+    if (earlier) planBadge.value = true
+    else showPane('plan')
+  }
+)
+
+/**
+ * Sheets below `lg`: as tall as their content and never taller than the
+ * screen, clear of the home indicator, with the body scrolling inside.
+ */
+const sheetUi = {
+  content: 'max-h-[88dvh]',
+  container: 'min-h-0 overflow-hidden pb-[max(1rem,var(--wf-safe-bottom))]',
+  body: 'min-h-0 overflow-y-auto -mx-4 px-4'
+}
+
+const [DefinePlanningPanel, ReusePlanningPanel] = createReusableTemplate()
+
+/**
+ * Recipe links open beside the plan under a mouse and in place on a finger:
+ * a phone has no "beside", and a second tab is where a plan goes to be lost.
+ */
+const recipeLinkTarget = computed(() => isCoarsePointer.value ? undefined : '_blank')
+
+/** What the keyboard's Enter key is labelled, which is what it does. */
+const enterKeyHint = computed(() => isCoarsePointer.value ? 'enter' : 'send')
 
 // ── Recipe favorites (weekly plan cells) ──
 function isRecipeFavorite(recipeId: string | null): boolean {
@@ -2503,6 +2688,13 @@ function getWeeklyCenterLabel(cellKey: string): string {
   return WEEKLY_SEGMENT_DEFS.find(d => d.key === key)?.label ?? 'prot'
 }
 
+/** The next macro round the ring, for a tap. */
+function cycleWeeklySegment(cellKey: string) {
+  const keys = WEEKLY_SEGMENT_DEFS.map(d => d.key)
+  const current = keys.indexOf(weeklyHovered[cellKey] ?? 'protein')
+  weeklyHovered[cellKey] = keys[(current + 1) % keys.length] ?? 'protein'
+}
+
 async function prefetchWeeklyRecipes(plan: typeof displayedWeeklyPlan.value) {
   if (!plan) return
   const ids = [...new Set(plan.entries.map(e => getWeeklyRecipeId(e)).filter(Boolean) as string[])]
@@ -2754,9 +2946,29 @@ function scrollToBottom(smooth = true) {
   })
 }
 
+/**
+ * Whether the thread is at, or within a thumb of, its bottom.
+ *
+ * Read on every scroll, so a new message only pulls the thread down when the
+ * member was already there. Someone rereading an earlier answer keeps their
+ * place; someone following along is followed.
+ */
+const stickToBottom = ref(true)
+
 function handleMessagesScroll(e: Event) {
-  // We let the load-more button handle pagination; nothing auto here
-  void e
+  const el = e.target as HTMLElement
+  stickToBottom.value = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+}
+
+/**
+ * iOS does not shrink the layout viewport for the keyboard; it shrinks the
+ * visual one and pans to the focused field. The shell is one viewport tall,
+ * so the composer stays reachable, but the last message slides under the
+ * keyboard unless the thread is nudged back to its bottom as the viewport
+ * changes size. Only when the member was there already.
+ */
+function onVisualViewportResize() {
+  if (isCompact.value && stickToBottom.value) scrollToBottom(false)
 }
 
 async function handleLoadMore() {
@@ -2808,7 +3020,6 @@ function prefillSlotReplace(slot: string, day?: number) {
 }
 
 function prefillWeeklySlotReplace(dayIndex: number, slot: string) {
-  weeklySlotMenu.value = null
   focusChatInputWith(t('foodChatHome.mealCard.replacePrefillWeekly', {
     meal: t(`foodChatHome.meals.${slot}`).toLowerCase(),
     day: weekdayName(dayIndex)
@@ -2817,12 +3028,31 @@ function prefillWeeklySlotReplace(dayIndex: number, slot: string) {
 
 // ── Adapt popup (RecipeWrangler's assistant, without leaving FoodChat) ──
 const adaptRecipeId = ref<string | null>(null)
-const weeklySlotMenu = ref<string | null>(null)
 
 function openAdaptRecipe(recipeId?: string | null) {
-  weeklySlotMenu.value = null
   if (!recipeId) return
   adaptRecipeId.value = recipeId
+}
+
+/** A weekly cell's menu, for `UDropdownMenu`: replace via chat, adapt in the popup. */
+function weeklyCellMenu(
+  dayIndex: number,
+  cell: { key: string, mealType: string, plates: WeeklyMealEntry[] }
+): DropdownMenuItem[] {
+  const recipeId = getWeeklyRecipeId(cellMain(cell))
+  const items: DropdownMenuItem[] = [{
+    label: t('foodChatHome.mealCard.replace'),
+    icon: 'i-lucide-replace',
+    onSelect: () => prefillWeeklySlotReplace(dayIndex, cell.mealType)
+  }]
+  if (recipeId) {
+    items.push({
+      label: t('foodChatHome.mealCard.adapt'),
+      icon: 'i-lucide-wand-sparkles',
+      onSelect: () => openAdaptRecipe(recipeId)
+    })
+  }
+  return items
 }
 
 // ── Sending ──
@@ -2883,8 +3113,14 @@ async function handleStartOver() {
   await newSession(cookingForForNewSession())
 }
 
+/**
+ * Enter sends under a keyboard that has a Shift key. On a touch keyboard it
+ * makes a new line and the button sends: there is no Shift+Enter there, so
+ * Enter-to-send would make a second paragraph impossible, and a key that
+ * sends the moment a thumb brushes it is how half-sentences get sent.
+ */
 function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Enter' && !e.shiftKey) {
+  if (e.key === 'Enter' && !e.shiftKey && !isCoarsePointer.value) {
     e.preventDefault()
     handleSend()
   }
@@ -3081,6 +3317,13 @@ const standingCount = computed(() => {
 // top of the canvas is the first thing a member sees and the last thing they
 // came for.
 const settingsOpen = ref(false)
+const settingsSheetOpen = ref(false)
+
+/** The disclosure at `lg`; below it, the same row opens the sheet. */
+function toggleSettings() {
+  if (isCompact.value) settingsSheetOpen.value = true
+  else settingsOpen.value = !settingsOpen.value
+}
 
 /**
  * What is currently set, in one line, for the collapsed header.
@@ -3431,7 +3674,14 @@ watch(weeklyMealPlans, () => {
 })
 
 // ── Watch messages to auto-scroll ──
-watch(messages, () => scrollToBottom(), { deep: true, flush: 'post' })
+// A new message pulls the thread down only when the member was already at
+// the bottom, or when it is their own: their words should never land off
+// screen, but an answer arriving while they reread an earlier one should not
+// take the page away from them.
+watch(messages, () => {
+  const last = messages.value[messages.value.length - 1]
+  if (stickToBottom.value || last?.role === 'user') scrollToBottom()
+}, { deep: true, flush: 'post' })
 watch(messagesScrollRef, (el) => { if (el) scrollToBottom(false) })
 
 // ── Mount ──
@@ -3443,6 +3693,8 @@ onMounted(async () => {
     const stored = Number(localStorage.getItem(SPLIT_KEY))
     if (Number.isFinite(stored) && stored > 0) chatWidth.value = clampSplit(stored)
   } catch { /* private mode — the default width is a fine answer */ }
+
+  window.visualViewport?.addEventListener('resize', onVisualViewportResize)
 
   recipeStore.initialize()
   await loadSessions()
@@ -3464,6 +3716,10 @@ onMounted(async () => {
   // The corpus vocabulary, so the panel can offer tastes that exist. Fetched
   // once and kept — it is the same for every member.
   loadVocabularies()
+})
+
+onBeforeUnmount(() => {
+  window.visualViewport?.removeEventListener('resize', onVisualViewportResize)
 })
 
 // The standing state belongs to the session, so it is re-read whenever the
@@ -3489,10 +3745,11 @@ watch(() => latestMealPlan.value?.id, (id) => {
 
 /* ── Layout ── */
 .fc-split-wrap {
-  /* Let the workspace use the screen it is on. The old 720px ceiling left a
-     third of a 1440p monitor empty while the plan scrolled inside a short
-     box; the viewport minus header is the honest bound. */
-  height: clamp(480px, 78vh, 1080px);
+  /* Whatever the `app` layout leaves below the header: the shell is one
+     viewport tall and this fills the rest. The old vh clamp sat inside a
+     page that also scrolled, so on a phone the composer was somewhere below
+     the fold and the keyboard put it further. */
+  flex: 1 1 auto;
   min-height: 0;
   border-radius: 1.25rem;
   overflow: hidden;
@@ -3502,6 +3759,16 @@ watch(() => latestMealPlan.value?.id, (id) => {
 .dark .fc-split-wrap {
   border-color: rgb(63 63 70 / 0.6);
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.2);
+}
+@media (width < 40rem) {
+  /* Edge to edge on a phone: a rounded card inside a 375px screen spends
+     its border on nothing. */
+  .fc-split-wrap {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    box-shadow: none;
+  }
 }
 .fc-chat-col {
   /* Width comes from the drag handle now (inline style). The clamp stays as
@@ -3581,6 +3848,16 @@ watch(() => latestMealPlan.value?.id, (id) => {
   border-color: rgb(16 185 129);
 }
 .dark .fc-pantry-input { border-color: rgb(63 63 70); }
+@media (pointer: coarse) {
+  /* 16px so iOS does not zoom into it, and room to type more than one word.
+     The global rule for fields loses to this class's own size, so it is
+     restated here. */
+  .fc-pantry-input {
+    width: 10rem;
+    padding: 0.3rem 0.75rem;
+    font-size: 1rem;
+  }
+}
 
 .fc-rail-shut { width: 2.75rem; }
 .fc-rail-open { width: 19rem; }
@@ -3588,6 +3865,114 @@ watch(() => latestMealPlan.value?.id, (id) => {
   /* Not enough room for three columns; the rail stays a spine and opens over
      the canvas rather than squeezing it to nothing. */
   .fc-rail-open { width: 15rem; }
+}
+
+/* ── One pane at a time below `lg` ──
+   The column is the screen, whatever width the handle remembered from a
+   desktop session, and the handle and the rail have nothing to sit between:
+   the rail's panel opens as a sheet from the pane bar instead. Stated here
+   rather than with utilities because these rules set `display` and `width`
+   themselves, and an unlayered rule beats a utility. */
+@media (width < 64rem) {
+  .fc-chat-col {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+  .fc-splitter,
+  .fc-rail {
+    display: none;
+  }
+}
+
+/* ── The Chat / Plan switch ── */
+.fc-pane-bar {
+  background: white;
+  border-bottom: 1px solid rgb(228 228 231 / 0.7);
+}
+.dark .fc-pane-bar {
+  background: rgb(24 24 27);
+  border-bottom-color: rgb(63 63 70 / 0.5);
+}
+@media (width >= 40rem) {
+  /* On a tablet the split sits in its rounded card, and the bar above it
+     needs no surface of its own. */
+  .fc-pane-bar {
+    background: transparent;
+    border-bottom: 0;
+  }
+}
+.fc-segmented {
+  display: flex;
+  gap: 0.2rem;
+  padding: 0.2rem;
+  border-radius: 9999px;
+  background: rgb(244 244 245);
+}
+.dark .fc-segmented { background: rgb(39 39 42); }
+.fc-segment {
+  position: relative;
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: rgb(113 113 122);
+  transition: background-color 150ms, color 150ms, box-shadow 150ms;
+}
+.dark .fc-segment { color: rgb(161 161 170); }
+.fc-segment-active {
+  background: white;
+  color: var(--color-brandp-600, #7c3aed);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+.dark .fc-segment-active {
+  background: rgb(63 63 70);
+  color: var(--color-brandp-300, #c4b5fd);
+}
+/* A new plan landed while the chat was up. */
+.fc-pane-dot {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.7rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--color-brandp-500, #7c3aed);
+  box-shadow: 0 0 0 2px white;
+}
+.dark .fc-pane-dot { box-shadow: 0 0 0 2px rgb(63 63 70); }
+.fc-pane-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  transition: background-color 150ms;
+}
+.fc-pane-btn:hover { background: rgb(244 244 245); }
+.dark .fc-pane-btn:hover { background: rgb(39 39 42); }
+.fc-pane-count {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.3rem;
+  border-radius: 9999px;
+  background: var(--color-brandp-500, #7c3aed);
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.1rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Messages area ── */
@@ -3635,16 +4020,21 @@ watch(() => latestMealPlan.value?.id, (id) => {
 .fc-canvas-col::-webkit-scrollbar-thumb:hover { background: rgb(161 161 170); }
 .dark .fc-canvas-col::-webkit-scrollbar-thumb:hover { background: rgb(82 82 91); }
 
-/* Fade sits absolutely over the top of the messages, below the session bar */
+/* Fade over the top edge of the thread. Its wrapper starts where the session
+   bar ends, so it needs no measurement of the bar; shorter below `lg`, where
+   the thread also keeps less clear space above its first message. */
 .fc-messages-top-fade {
   position: absolute;
-  top: 37px; /* height of session bar */
+  top: 0;
   left: 0;
   right: 0;
-  height: 3rem;
+  height: 1.5rem;
   background: linear-gradient(to bottom, white 50%, transparent);
   pointer-events: none;
   z-index: 2;
+}
+@media (width >= 64rem) {
+  .fc-messages-top-fade { height: 3rem; }
 }
 .dark .fc-messages-top-fade {
   background: linear-gradient(to bottom, rgb(24 24 27) 50%, transparent);
@@ -3671,8 +4061,15 @@ watch(() => latestMealPlan.value?.id, (id) => {
 /* ── Bubbles ── */
 .fc-bubble {
   max-width: 85%;
+  min-width: 0;
+  /* A URL or a long word breaks inside the bubble rather than pushing it
+     past the pane. */
+  overflow-wrap: anywhere;
   border-radius: 1.25rem;
   padding: 0.65rem 0.875rem;
+}
+@media (width < 40rem) {
+  .fc-bubble { max-width: 92%; }
 }
 .fc-bubble-user {
   background: var(--color-brandp-500, #7c3aed);
@@ -3771,6 +4168,15 @@ watch(() => latestMealPlan.value?.id, (id) => {
   border-radius: 0.5rem;
   color: rgb(161 161 170);
   transition: color 0.15s, background 0.15s;
+}
+@media (pointer: coarse) {
+  /* A 44px target that still takes 24px of the row: the extra reaches into
+     the margins around it, where nothing else is. */
+  .fc-feedback-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-block: -0.625rem;
+  }
 }
 .fc-feedback-btn:hover {
   color: rgb(82 82 91);
@@ -3926,6 +4332,13 @@ watch(() => latestMealPlan.value?.id, (id) => {
 }
 .fc-diner-chip-sm {
   padding: 0.1rem 0.45rem 0.1rem 0.15rem;
+}
+@media (pointer: coarse) {
+  .fc-diner-chip,
+  .fc-diner-chip-sm {
+    min-height: 2.25rem;
+    padding-right: 0.65rem;
+  }
 }
 
 /* The session-picker trigger is styled via `:ui.base` in the script (see
