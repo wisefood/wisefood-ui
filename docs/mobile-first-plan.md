@@ -492,6 +492,11 @@ Departures from the plan, and things learned on the way:
 - **Playwright** remains a follow-up: the 375px smoke suite in Phase 7 needs a
   Keycloak test realm or a mocked auth store to reach the app pages.
 
+- **The earth gradient stays off.** Registering the `earth` tokens (§1.6)
+  made a beige-to-sage background appear on twenty-one pages that had
+  carried the classes unrendered since 2025; it was reverted the same day.
+  The classes remain in place and inert.
+
 Files of note added in Phase 0/1: `app/composables/useViewport.ts`,
 `app/composables/useOverlayOpen.ts`, `app/composables/useSentryFeedback.ts`,
 `app/composables/useUiLocale.ts`, `app/components/FloatingDock.client.vue`,
