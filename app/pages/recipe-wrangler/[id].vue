@@ -48,23 +48,31 @@
     <!-- Recipe Content -->
     <main
       v-else-if="recipe"
-      class="max-w-7xl mx-auto px-1 sm:px-6 lg:px-8 py-4 sm:py-10"
+      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-10"
     >
       <!-- Hero Section with Image -->
       <div class="mb-8 sm:mb-10">
         <!-- Image -->
+        <!--
+          On a phone the photo is 4:3 and the title sits under it in the
+          page's own colours; from sm up the title moves onto the photo. A
+          16:7 photo at phone width is 160px tall, and a two-line title, three
+          meta pills and the report button do not fit on 160px of anything.
+        -->
         <div
           v-if="recipeImageUrl"
-          class="relative aspect-[16/7] sm:aspect-[16/6] rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-xl mb-6"
+          class="relative mb-6"
         >
-          <img
-            :src="recipeImageUrl"
-            :alt="recipe.title"
-            class="w-full h-full object-cover"
-            referrerpolicy="no-referrer"
-            @error="handleImageError"
-          >
-          <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          <div class="relative aspect-[4/3] sm:aspect-[16/6] rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-xl">
+            <img
+              :src="recipeImageUrl"
+              :alt="recipe.title"
+              class="w-full h-full object-cover"
+              referrerpolicy="no-referrer"
+              @error="handleImageError"
+            >
+            <div class="absolute inset-0 hidden sm:block bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          </div>
 
           <!--
             Top right of the image. It used to sit under the ingredients,
@@ -84,20 +92,20 @@
             />
           </div>
 
-          <!-- Title Overlay on Image -->
-          <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8">
+          <!-- Title: in flow under the photo on phones, overlaid from sm up -->
+          <div class="mt-4 sm:mt-0 sm:absolute sm:bottom-0 sm:left-0 sm:right-0 sm:p-6 md:p-8">
             <h1
               translate="yes"
-              class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-white mb-3 drop-shadow-lg"
+              class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-bold text-zinc-900 dark:text-white sm:text-white mb-3 sm:drop-shadow-lg"
             >
               {{ recipe.title }}
             </h1>
 
             <!-- Meta Info -->
-            <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-white/90">
+            <div class="flex flex-wrap items-center gap-3 sm:gap-4 text-zinc-600 dark:text-zinc-400 sm:text-white/90 sm:dark:text-white/90">
               <div
                 v-if="recipe.duration"
-                class="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full"
+                class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 sm:bg-white/20 sm:dark:bg-white/20 sm:backdrop-blur-sm px-3 py-1.5 rounded-full"
               >
                 <UIcon
                   name="i-lucide-clock"
@@ -107,7 +115,7 @@
               </div>
               <div
                 v-if="recipe.serves"
-                class="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full"
+                class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 sm:bg-white/20 sm:dark:bg-white/20 sm:backdrop-blur-sm px-3 py-1.5 rounded-full"
               >
                 <UIcon
                   name="i-lucide-users"
@@ -118,8 +126,8 @@
               <NuxtLink
                 v-if="recipe.source"
                 :to="recipe.source_id ? `/recipe-wrangler/collections/${encodeURIComponent(recipe.source_id)}` : undefined"
-                :class="recipe.source_id ? 'hover:bg-white/30 transition-colors cursor-pointer' : ''"
-                class="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full"
+                :class="recipe.source_id ? 'hover:bg-zinc-200 dark:hover:bg-zinc-700 sm:hover:bg-white/30 sm:dark:hover:bg-white/30 transition-colors cursor-pointer' : ''"
+                class="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 sm:bg-white/20 sm:dark:bg-white/20 sm:backdrop-blur-sm px-3 py-1.5 rounded-full"
               >
                 <UIcon
                   name="i-lucide-database"
@@ -264,7 +272,7 @@
             >
               <button
                 type="button"
-                class="flex items-center justify-center w-4 h-4 rounded-full text-zinc-400 dark:text-zinc-500 hover:text-brandg-600 dark:hover:text-brandg-400 transition-colors cursor-pointer"
+                class="flex items-center justify-center w-4 h-4 pointer-coarse:w-10 pointer-coarse:h-10 pointer-coarse:-m-3 rounded-full text-zinc-400 dark:text-zinc-500 hover:text-brandg-600 dark:hover:text-brandg-400 transition-colors cursor-pointer"
                 @click="showNutriScoreDetails = true"
               >
                 <UIcon
@@ -281,37 +289,40 @@
             class="h-5 w-px bg-zinc-300 dark:bg-zinc-600 hidden sm:block"
           />
 
-          <!-- Sustainability progress bar (hidden when no footprint data) -->
-          <UTooltip
+          <!-- Sustainability progress bar (hidden when no footprint data).
+               The figure behind the bar is printed, not tucked in a tooltip:
+               a tooltip never opens under a finger. -->
+          <div
             v-if="sustainabilityLevel"
-            :text="t('recipeWrangler.detail.sustainability.perServing', { value: formatNumber(sustainabilityPerServing) })"
+            class="flex flex-wrap items-center gap-x-2 gap-y-1"
           >
-            <div class="flex items-center gap-2">
-              <UIcon
-                name="i-lucide-leaf"
-                class="w-3.5 h-3.5 text-brandg-500 dark:text-brandg-400 flex-shrink-0"
+            <UIcon
+              name="i-lucide-leaf"
+              class="w-3.5 h-3.5 text-brandg-500 dark:text-brandg-400 flex-shrink-0"
+            />
+            <span class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              {{ t('recipeWrangler.detail.sustainability.label') }}
+            </span>
+            <div class="w-24 h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+              <div
+                :class="['h-full bg-gradient-to-r rounded-full', sustainabilityLevel.barClass]"
+                :style="{ width: `${sustainabilityLevel.pct}%` }"
               />
-              <span class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                {{ t('recipeWrangler.detail.sustainability.label') }}
-              </span>
-              <div class="w-24 h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
-                <div
-                  :class="['h-full bg-gradient-to-r rounded-full', sustainabilityLevel.barClass]"
-                  :style="{ width: `${sustainabilityLevel.pct}%` }"
-                />
-              </div>
-              <span :class="['text-xs font-medium', sustainabilityLevel.textClass]">
-                {{ t(`recipeWrangler.detail.sustainability.levels.${sustainabilityLevel.key}`) }}
-              </span>
             </div>
-          </UTooltip>
+            <span :class="['text-xs font-medium', sustainabilityLevel.textClass]">
+              {{ t(`recipeWrangler.detail.sustainability.levels.${sustainabilityLevel.key}`) }}
+            </span>
+            <span class="text-[0.6875rem] text-zinc-500 dark:text-zinc-400">
+              {{ t('recipeWrangler.detail.sustainability.perServing', { value: formatNumber(sustainabilityPerServing) }) }}
+            </span>
+          </div>
 
           <!-- Action buttons -->
           <div class="ml-auto flex items-center gap-2">
             <NuxtLink
               v-if="recipe && recipe.recipe_id && authStore.hasAnyRole(['expert', 'admin'])"
               :to="`/console/assets/recipes/${encodeURIComponent(recipe.recipe_id)}`"
-              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all"
+              class="flex items-center gap-1.5 px-3 py-1.5 min-h-9 pointer-coarse:min-h-11 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all"
             >
               <UIcon
                 name="i-lucide-pencil"
@@ -322,10 +333,27 @@
               </span>
             </NuxtLink>
 
+            <!-- Share: the phone's own share sheet, or the link on the clipboard -->
+            <button
+              v-if="recipe"
+              type="button"
+              class="flex items-center gap-1.5 px-3 py-1.5 min-h-9 pointer-coarse:min-h-11 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all"
+              @click="shareRecipe"
+            >
+              <UIcon
+                name="i-lucide-share-2"
+                class="w-4 h-4 text-zinc-500 dark:text-zinc-400"
+              />
+              <span class="text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                {{ t('recipeWrangler.detail.share') }}
+              </span>
+            </button>
+
             <!-- Save button -->
             <button
               v-if="recipe"
-              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all"
+              type="button"
+              class="flex items-center gap-1.5 px-3 py-1.5 min-h-9 pointer-coarse:min-h-11 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all"
               @click="toggleFavorite"
             >
               <UIcon
@@ -424,7 +452,7 @@
         <!-- Main Content (Left Column) -->
         <div class="lg:col-span-3 space-y-6 sm:space-y-8">
           <!-- Nutrition Information -->
-          <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 sm:p-10 border border-zinc-200 dark:border-zinc-700 shadow-lg">
+          <section class="bg-white dark:bg-zinc-800 rounded-3xl p-5 sm:p-8 lg:p-10 border border-zinc-200 dark:border-zinc-700 shadow-lg">
             <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
               <h2 class="text-xl font-claude text-zinc-900 dark:text-white flex items-center gap-3">
                 <UIcon
@@ -787,7 +815,7 @@
           <TranslationNotice />
 
           <!-- Instructions -->
-          <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 sm:p-10 border border-zinc-200 dark:border-zinc-700 shadow-lg">
+          <section class="bg-white dark:bg-zinc-800 rounded-3xl p-5 sm:p-8 lg:p-10 border border-zinc-200 dark:border-zinc-700 shadow-lg">
             <h2 class="text-xl font-claude text-zinc-900 dark:text-white mb-8 flex items-center gap-3">
               <UIcon
                 name="i-lucide-chef-hat"
@@ -835,11 +863,15 @@
           </section>
         </div>
 
-        <!-- Sidebar (Right Column) -->
-        <div class="lg:col-span-2 space-y-8">
+        <!--
+          Sidebar (Right Column). First in the flow below lg: on a phone the
+          columns stack, and the ingredients are what a cook reaches for
+          before the nutrition and every instruction.
+        -->
+        <div class="lg:col-span-2 space-y-6 sm:space-y-8 order-first lg:order-none">
           <!-- Ingredients -->
-          <section class="bg-white dark:bg-zinc-800 rounded-3xl p-8 border border-zinc-200 dark:border-zinc-700 shadow-lg sticky top-24 z-0">
-            <div class="mb-8 flex items-center justify-between gap-3">
+          <section class="bg-white dark:bg-zinc-800 rounded-3xl p-5 sm:p-8 border border-zinc-200 dark:border-zinc-700 shadow-lg lg:sticky lg:top-24 z-0">
+            <div class="mb-6 sm:mb-8 flex flex-wrap items-center justify-between gap-3">
               <h2 class="text-xl font-claude text-zinc-900 dark:text-white flex items-center gap-3">
                 <UIcon
                   name="i-lucide-shopping-basket"
@@ -847,10 +879,10 @@
                 />
                 {{ t('recipeWrangler.detail.ingredients') }}
               </h2>
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-zinc-50 dark:bg-zinc-900/40 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-900/60 transition-colors"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-9 pointer-coarse:min-h-11 rounded-full text-xs font-medium bg-zinc-50 dark:bg-zinc-900/40 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-900/60 transition-colors"
                   @click="copyRecipeForAnalyzer"
                 >
                   <UIcon
@@ -859,11 +891,14 @@
                   />
                   {{ recipeCopied ? t('recipeWrangler.detail.copiedRecipe') : t('recipeWrangler.detail.copyRecipe') }}
                 </button>
-                <UTooltip :text="adaptAvailable ? t('recipeWrangler.detail.adaptation.action') : t('recipeWrangler.detail.adaptation.unavailable')">
+                <UTooltip
+                  :text="t('recipeWrangler.detail.adaptation.action')"
+                  :disabled="!adaptAvailable"
+                >
                   <button
                     type="button"
                     :disabled="!adaptAvailable"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-brandg-50 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300 border border-brandg-200 dark:border-brandg-700 hover:bg-brandg-100 dark:hover:bg-brandg-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-9 pointer-coarse:min-h-11 rounded-full text-xs font-medium bg-brandg-50 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300 border border-brandg-200 dark:border-brandg-700 hover:bg-brandg-100 dark:hover:bg-brandg-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     @click="openAdaptModal"
                   >
                     <UIcon
@@ -874,6 +909,14 @@
                   </button>
                 </UTooltip>
               </div>
+              <!-- Why Improve is off. A disabled button raises no hover, so a
+                   tooltip on it was never going to say. -->
+              <p
+                v-if="!adaptAvailable"
+                class="basis-full text-xs text-zinc-500 dark:text-zinc-400"
+              >
+                {{ t('recipeWrangler.detail.adaptation.unavailable') }}
+              </p>
             </div>
 
             <!-- Servings (Round 2 row 10) -->
@@ -1050,7 +1093,7 @@
                   <UTooltip :text="t('recipeWrangler.detail.substitution.action')">
                     <button
                       type="button"
-                      class="flex-shrink-0 mt-0.5 p-1 rounded-md text-zinc-300 dark:text-zinc-600 hover:text-brandg-600 dark:hover:text-brandg-400 hover:bg-brandg-50 dark:hover:bg-brandg-900/20 transition-colors"
+                      class="flex-shrink-0 mt-0.5 p-1 pointer-coarse:w-11 pointer-coarse:h-11 pointer-coarse:-my-2 pointer-coarse:-mr-2 pointer-coarse:flex pointer-coarse:items-center pointer-coarse:justify-center rounded-md text-zinc-300 dark:text-zinc-600 pointer-coarse:text-zinc-400 pointer-coarse:dark:text-zinc-500 hover:text-brandg-600 dark:hover:text-brandg-400 hover:bg-brandg-50 dark:hover:bg-brandg-900/20 transition-colors"
                       :aria-label="t('recipeWrangler.detail.substitution.action')"
                       @click.stop="openSubstituteModal(ingredient.name)"
                     >
@@ -1064,7 +1107,7 @@
                   <button
                     v-if="showProfilingDetails && profilingFor(ingredient.name)"
                     type="button"
-                    class="flex-shrink-0 mt-0.5 p-1 rounded-md text-zinc-400 dark:text-zinc-500 hover:text-brandg-600 dark:hover:text-brandg-400 hover:bg-brandg-50 dark:hover:bg-brandg-900/20 transition-colors"
+                    class="flex-shrink-0 mt-0.5 p-1 pointer-coarse:w-11 pointer-coarse:h-11 pointer-coarse:-my-2 pointer-coarse:-mr-2 pointer-coarse:flex pointer-coarse:items-center pointer-coarse:justify-center rounded-md text-zinc-400 dark:text-zinc-500 hover:text-brandg-600 dark:hover:text-brandg-400 hover:bg-brandg-50 dark:hover:bg-brandg-900/20 transition-colors"
                     @click.stop="expandedIngredient = expandedIngredient === index ? null : index"
                   >
                     <UIcon
@@ -1240,7 +1283,7 @@
         :ui="{ content: 'max-w-3xl' }"
       >
         <template #content>
-          <div class="p-6 sm:p-7 bg-white dark:bg-zinc-900">
+          <div class="p-6 sm:p-7 bg-white dark:bg-zinc-900 max-h-[calc(100dvh-2rem)] overflow-y-auto">
             <div class="flex items-start justify-between gap-3 mb-4">
               <div>
                 <h3 class="text-xl font-semibold text-zinc-900 dark:text-white">
@@ -1346,7 +1389,7 @@
         :ui="{ content: 'max-w-xl' }"
       >
         <template #content>
-          <div class="p-6 sm:p-7 bg-white dark:bg-zinc-900">
+          <div class="p-6 sm:p-7 bg-white dark:bg-zinc-900 max-h-[calc(100dvh-2rem)] overflow-y-auto">
             <div class="flex items-start justify-between gap-3 mb-5">
               <div>
                 <h3 class="text-xl font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
@@ -1533,7 +1576,7 @@
         :ui="{ content: 'max-w-2xl' }"
       >
         <template #content>
-          <div class="p-6 sm:p-7 bg-white dark:bg-zinc-900 max-h-[85vh] overflow-y-auto">
+          <div class="p-6 sm:p-7 bg-white dark:bg-zinc-900 max-h-[calc(100dvh-2rem)] overflow-y-auto">
             <div class="mb-5">
               <h3 class="text-xl font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
                 <UIcon
@@ -1863,6 +1906,7 @@ const { currentRecipe, loading, error, fetchRecipe } = useRecipes()
 const recipeStore = useRecipeStore()
 const householdStore = useHouseholdStore()
 const authStore = useAuthStore()
+const toast = useToast()
 
 const backLink = computed(() => {
   const prev = router.options.history.state.back as string | undefined
@@ -2759,6 +2803,31 @@ const loadRecipe = async () => {
 const toggleFavorite = () => {
   if (recipe.value) {
     recipeStore.toggleFavorite(recipe.value.recipe_id)
+  }
+}
+
+/**
+ * The native share sheet where there is one, which is every phone, and the
+ * clipboard everywhere else. A sheet the user dismisses rejects with
+ * AbortError; that is a change of mind, not a failure, so it says nothing.
+ */
+const shareRecipe = async () => {
+  if (!recipe.value) return
+  const url = window.location.href
+  const title = recipe.value.title
+  if (typeof navigator.share === 'function') {
+    try {
+      await navigator.share({ title, url })
+      return
+    } catch (caught) {
+      if ((caught as { name?: string } | null)?.name === 'AbortError') return
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(url)
+    toast.add({ title: t('recipeWrangler.detail.shareCopied'), icon: 'i-lucide-check', color: 'success' })
+  } catch {
+    toast.add({ title: t('recipeWrangler.detail.shareFailed'), icon: 'i-lucide-alert-circle', color: 'error' })
   }
 }
 

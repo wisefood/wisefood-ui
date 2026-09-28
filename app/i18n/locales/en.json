@@ -421,7 +421,12 @@
         "dairyFree": "Dairy-Free",
         "vegan": "Vegan",
         "glutenFree": "Gluten-Free"
-      }
+      },
+      "open": "Filters",
+      "active": "Active filters",
+      "removeFilter": "Remove filter: {label}",
+      "showResults": "Show {count} recipe | Show {count} recipes",
+      "showResultsLoading": "Finding recipes…"
     },
     "allergens": {
       "peanuts": "Peanuts",
@@ -471,7 +476,8 @@
       "removeFromComparison": "Remove from comparison",
       "addToFavorites": "Add to favorites",
       "removeFromFavorites": "Remove from favorites",
-      "untitled": "Untitled recipe"
+      "untitled": "Untitled recipe",
+      "compareLimit": "You can compare up to {count} recipes at a time"
     },
     "categories": {
       "title": "Browse by Category",
@@ -608,7 +614,10 @@
         "reset": "Reset",
         "nutritionNote": "Per-serving values stay the same — you are making more servings, not bigger ones.",
         "failed": "Could not adjust the quantities. Showing the original recipe."
-      }
+      },
+      "share": "Share",
+      "shareCopied": "Link copied",
+      "shareFailed": "Could not copy the link"
     },
     "comparePage": {
       "pageTitle": "Compare Recipes - RecipeWrangler",
@@ -623,7 +632,8 @@
         "feature": "Feature",
         "duration": "Duration",
         "servings": "Servings"
-      }
+      },
+      "pickTwo": "Choose two recipes to compare side by side"
     },
     "cookingAnimation": {
       "deliciousRecipes": "delicious recipes",
@@ -643,7 +653,10 @@
         "sauteing": "Dancing with heat and timing",
         "simmering": "Patiently developing depth"
       }
-    }
+    },
+    "clearCompare": "Clear comparison",
+    "pageOf": "Page {page} of {total}",
+    "pageN": "Page {page}"
   },
   "library": {
     "backToDashboard": "Back to Dashboard",

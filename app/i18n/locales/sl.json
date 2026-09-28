@@ -421,7 +421,12 @@
         "dairyFree": "Brez mlečnih izdelkov",
         "vegan": "Vegansko",
         "glutenFree": "Brez glutena"
-      }
+      },
+      "open": "Filtri",
+      "active": "Aktivni filtri",
+      "removeFilter": "Odstrani filter: {label}",
+      "showResults": "Prikaži recepte: {count}",
+      "showResultsLoading": "Iskanje receptov…"
     },
     "allergens": {
       "peanuts": "Arašidi",
@@ -471,7 +476,8 @@
       "removeFromComparison": "Odstrani iz primerjave",
       "addToFavorites": "Dodaj med priljubljene",
       "removeFromFavorites": "Odstrani iz priljubljenih",
-      "untitled": "Recept brez naslova"
+      "untitled": "Recept brez naslova",
+      "compareLimit": "Naenkrat lahko primerjaš največ {count} recepte"
     },
     "categories": {
       "title": "Brskaj po kategorijah",
@@ -608,7 +614,10 @@
         "reset": "Ponastavi",
         "nutritionNote": "Vrednosti na porcijo ostanejo enake — pripravljaš več porcij, ne večjih.",
         "failed": "Količin ni bilo mogoče prilagoditi. Prikazan je izvirni recept."
-      }
+      },
+      "share": "Deli",
+      "shareCopied": "Povezava kopirana",
+      "shareFailed": "Povezave ni bilo mogoče kopirati"
     },
     "comparePage": {
       "pageTitle": "Primerjava receptov - RecipeWrangler",
@@ -623,7 +632,8 @@
         "feature": "Lastnost",
         "duration": "Trajanje",
         "servings": "Porcije"
-      }
+      },
+      "pickTwo": "Izberi dva recepta za primerjavo drug ob drugem"
     },
     "cookingAnimation": {
       "deliciousRecipes": "okusne recepte",
@@ -643,7 +653,10 @@
         "sauteing": "Ples s toploto in časom",
         "simmering": "Potrpežljivo razvijamo globino okusa"
       }
-    }
+    },
+    "clearCompare": "Počisti primerjavo",
+    "pageOf": "Stran {page} od {total}",
+    "pageN": "Stran {page}"
   },
   "library": {
     "backToDashboard": "Nazaj na nadzorno ploščo",

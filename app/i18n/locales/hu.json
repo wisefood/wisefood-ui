@@ -421,7 +421,12 @@
         "dairyFree": "Tejmentes",
         "vegan": "Vegán",
         "glutenFree": "Gluténmentes"
-      }
+      },
+      "open": "Szűrők",
+      "active": "Aktív szűrők",
+      "removeFilter": "Szűrő eltávolítása: {label}",
+      "showResults": "{count} recept mutatása",
+      "showResultsLoading": "Receptek keresése…"
     },
     "allergens": {
       "peanuts": "Földimogyoró",
@@ -471,7 +476,8 @@
       "removeFromComparison": "Eltávolítás összehasonlításból",
       "addToFavorites": "Hozzáadás a kedvencekhez",
       "removeFromFavorites": "Eltávolítás a kedvencekből",
-      "untitled": "Névtelen recept"
+      "untitled": "Névtelen recept",
+      "compareLimit": "Egyszerre legfeljebb {count} receptet hasonlíthatsz össze"
     },
     "categories": {
       "title": "Böngészés kategória szerint",
@@ -608,7 +614,10 @@
         "reset": "Visszaállítás",
         "nutritionNote": "Az egy adagra jutó értékek nem változnak — több adag készül, nem nagyobb.",
         "failed": "A mennyiségek módosítása nem sikerült. Az eredeti recept látható."
-      }
+      },
+      "share": "Megosztás",
+      "shareCopied": "Link kimásolva",
+      "shareFailed": "A linket nem sikerült kimásolni"
     },
     "comparePage": {
       "pageTitle": "Receptek összehasonlítása - RecipeWrangler",
@@ -623,7 +632,8 @@
         "feature": "Jellemző",
         "duration": "Időtartam",
         "servings": "Adagok"
-      }
+      },
+      "pickTwo": "Válassz két receptet az egymás melletti összehasonlításhoz"
     },
     "cookingAnimation": {
       "deliciousRecipes": "finom recepteket",
@@ -643,7 +653,10 @@
         "sauteing": "A hővel és az időzítéssel játszunk",
         "simmering": "Türelmesen mélyítjük az ízeket"
       }
-    }
+    },
+    "clearCompare": "Összehasonlítás törlése",
+    "pageOf": "{page}. oldal / {total}",
+    "pageN": "{page}. oldal"
   },
   "library": {
     "backToDashboard": "Vissza az irányítópultra",

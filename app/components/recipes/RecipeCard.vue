@@ -1,7 +1,7 @@
 <template>
   <NuxtLink
     :to="effectiveRecipeId ? `/recipe-wrangler/${encodeURIComponent(effectiveRecipeId)}` : '/recipe-wrangler'"
-    class="recipe-card group relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer block"
+    class="recipe-card group relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-md pointer-fine:hover:shadow-xl transition-all duration-300 pointer-fine:hover:-translate-y-1 cursor-pointer block"
   >
     <!-- Image Container -->
     <div class="relative aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700">
@@ -9,7 +9,7 @@
         v-if="recipeImageUrl"
         :src="recipeImageUrl"
         :alt="recipe.title"
-        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        class="w-full h-full object-cover transition-transform duration-300 pointer-fine:group-hover:scale-105"
         loading="lazy"
         referrerpolicy="no-referrer"
         @error="handleImageError"
@@ -26,10 +26,9 @@
 
       <!-- Compare Checkbox -->
       <button
-        class="absolute top-3 left-3 w-9 h-9 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg hover:scale-110 transition-all duration-200 z-10 flex items-center justify-center"
+        class="absolute top-3 left-3 w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg pointer-fine:hover:scale-110 transition-all duration-200 z-10 flex items-center justify-center"
         @click="toggleCompare"
         :aria-label="isInCompare ? t('recipeWrangler.recipe.removeFromComparison') : t('recipeWrangler.recipe.addToComparison')"
-        :disabled="!isInCompare && recipeStore.compareCount >= 4"
       >
         <UIcon
           :name="isInCompare ? 'i-lucide-check-square' : 'i-lucide-square'"
@@ -44,7 +43,7 @@
 
       <!-- Favorite Button -->
       <button
-        class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg hover:scale-110 transition-all duration-200 z-10 flex items-center justify-center"
+        class="absolute top-3 right-3 w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg pointer-fine:hover:scale-110 transition-all duration-200 z-10 flex items-center justify-center"
         @click="toggleFavorite"
         :aria-label="isFavorite ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
       >
@@ -158,7 +157,7 @@
 
     <!-- Hover Overlay -->
     <div
-      class="absolute inset-0 bg-gradient-to-t from-brandg-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+      class="absolute inset-0 bg-gradient-to-t from-brandg-600/10 to-transparent opacity-0 pointer-fine:group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
     />
   </NuxtLink>
 </template>
@@ -181,6 +180,16 @@ interface Props {
 
 const props = defineProps<Props>()
 const { t } = useI18n()
+const toast = useToast()
+
+/**
+ * The compare page lays out four columns and no more.
+ *
+ * The button used to go `disabled` at the cap, which on a phone is
+ * indistinguishable from a button that does not work: no hover title, no
+ * cursor, nothing. It stays live and says why instead.
+ */
+const COMPARE_LIMIT = 4
 
 // ============================================================================
 // Store
@@ -264,6 +273,14 @@ const toggleCompare = (event: Event) => {
   event.preventDefault()
   event.stopPropagation()
   if (!effectiveRecipeId.value) return
+  if (!isInCompare.value && recipeStore.compareCount >= COMPARE_LIMIT) {
+    toast.add({
+      title: t('recipeWrangler.recipe.compareLimit', { count: COMPARE_LIMIT }),
+      icon: 'i-lucide-git-compare',
+      color: 'neutral'
+    })
+    return
+  }
   recipeStore.toggleCompare(effectiveRecipeId.value)
 }
 

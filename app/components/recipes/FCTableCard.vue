@@ -1,7 +1,7 @@
 <template>
   <NuxtLink
     :to="`/recipe-wrangler/fctables/${encodeURIComponent(table.urn)}`"
-    class="group flex flex-col overflow-hidden rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+    class="group flex flex-col overflow-hidden rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm pointer-fine:hover:shadow-xl pointer-fine:hover:-translate-y-1 transition-all duration-300"
   >
     <div class="flex items-start gap-3 p-4 pb-0">
       <div class="w-10 h-10 shrink-0 rounded-xl bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center">

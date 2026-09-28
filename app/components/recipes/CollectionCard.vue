@@ -1,7 +1,7 @@
 <template>
   <NuxtLink
     :to="`/recipe-wrangler/collections/${encodeURIComponent(collection.urn)}`"
-    class="group flex flex-col overflow-hidden rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+    class="group flex flex-col overflow-hidden rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm pointer-fine:hover:shadow-xl pointer-fine:hover:-translate-y-1 transition-all duration-300"
   >
     <!-- Cover -->
     <div class="relative h-32 shrink-0 overflow-hidden bg-gradient-to-br from-brandg-50 to-brandg-100 dark:from-brandg-900/30 dark:to-brandg-800/30">
@@ -9,7 +9,7 @@
         v-if="coverUrl"
         :src="coverUrl"
         :alt="collection.title"
-        class="w-full h-full object-contain p-4 bg-white dark:bg-zinc-900 transition-transform duration-300 group-hover:scale-105"
+        class="w-full h-full object-contain p-4 bg-white dark:bg-zinc-900 transition-transform duration-300 pointer-fine:group-hover:scale-105"
         loading="lazy"
         referrerpolicy="no-referrer"
         @error="imageFailed = true"

@@ -42,7 +42,10 @@
     </div>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-12">
+    <main
+      class="flex-1 flex flex-col max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-12"
+      :class="{ 'pb-24 sm:pb-12': showCompareBar }"
+    >
       <!-- Search Bar -->
       <section v-if="activeTab === 'search'" class="mb-8 sm:mb-12">
         <div class="max-w-2xl mx-auto">
@@ -52,7 +55,7 @@
               v-model="searchQuery"
               type="text"
               :placeholder="t('recipeWrangler.search.placeholder')"
-              class="w-full pl-11 sm:pl-12 pr-12 sm:pr-16 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-brandg-500 text-sm sm:text-base"
+              class="w-full pl-11 sm:pl-12 pr-12 sm:pr-16 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-brandg-500 text-base"
               @input="handleSearchInput"
               @focus="handleSearchInput"
               @keydown.enter.prevent="handleSearchEnter"
@@ -131,7 +134,7 @@
               v-model="analysisInput"
               rows="8"
               :placeholder="t('recipeWrangler.analyzer.placeholder')"
-              class="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brandg-500"
+              class="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-4 py-3 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-brandg-500"
             />
             <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
               {{ t('recipeWrangler.analyzer.formatHint') }}
@@ -251,7 +254,7 @@
               <!-- Unified table -->
               <div v-if="analysisIngredientRows.length" class="p-5">
                 <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden shadow-sm">
-                  <div class="overflow-x-auto">
+                  <div ref="analysisScrollRef" class="overflow-x-auto">
                     <table class="min-w-full text-xs">
                       <thead>
                         <tr class="bg-zinc-50 dark:bg-zinc-900/60 border-b border-zinc-200 dark:border-zinc-700">
@@ -320,8 +323,17 @@
                           >
                             <tr v-if="analysisExpandedRow === idx" class="border-t-0">
                               <td colspan="10" class="px-0 py-0">
-                                <div class="px-6 py-4 bg-zinc-50/80 dark:bg-zinc-800/30 border-b border-zinc-200 dark:border-zinc-700">
-                                  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-3">
+                                <!--
+                                  The cell spans a table wider than a phone, so
+                                  the detail is pinned to the scroll box's left
+                                  edge and capped at its width: it stays in view
+                                  however far the columns have been scrolled.
+                                -->
+                                <div
+                                  class="sticky left-0 px-4 sm:px-6 py-4 bg-zinc-50/80 dark:bg-zinc-800/30 border-b border-zinc-200 dark:border-zinc-700"
+                                  :style="analysisDetailStyle"
+                                >
+                                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-3">
                                     <div>
                                       <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Raw Measurement</p>
                                       <p class="font-mono text-zinc-700 dark:text-zinc-300">{{ analysisWeightDetails[idx]?.measurement_raw || '—' }}</p>
@@ -361,7 +373,7 @@
                                       <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Matched Sustainability</p>
                                       <p class="text-zinc-700 dark:text-zinc-300 truncate" :title="String(item.matched_sustainability_ingredient || '')">{{ item.matched_sustainability_ingredient || '—' }}</p>
                                     </div>
-                                    <div v-if="analysisWeightDetails[idx]?.error" class="col-span-2">
+                                    <div v-if="analysisWeightDetails[idx]?.error" class="sm:col-span-2">
                                       <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-red-400 dark:text-red-500 mb-0.5">Error</p>
                                       <p class="text-red-600 dark:text-red-400">{{ analysisWeightDetails[idx]?.error }}</p>
                                     </div>
@@ -383,16 +395,31 @@
 
       <!-- Filters Sidebar Toggle -->
       <section v-if="activeTab === 'search'" class="mb-6 sm:mb-8">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-3">
+          <!--
+            One button, two behaviours. On a desktop it folds the panel out
+            below; on anything narrower it opens the same panel as a bottom
+            sheet, because an eleven-card stack between the search box and
+            the results is several screens of scrolling before the first
+            recipe. The count is there so a closed sheet still says filters
+            are on.
+          -->
           <button
-            @click="showFilters = !showFilters"
-            class="flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-sm"
+            type="button"
+            @click="openFilters"
+            :aria-expanded="isCompact ? filtersDrawerOpen : showFilters"
+            class="flex items-center gap-2 px-4 py-2 min-h-11 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-sm"
           >
             <UIcon name="i-lucide-sliders" class="w-4 h-4" />
-            <span>{{ showFilters ? t('recipeWrangler.filters.hide') : t('recipeWrangler.filters.show') }}</span>
+            <span class="hidden lg:inline">{{ showFilters ? t('recipeWrangler.filters.hide') : t('recipeWrangler.filters.show') }}</span>
+            <span class="lg:hidden">{{ t('recipeWrangler.filters.open') }}</span>
+            <span
+              v-if="activeFilters.filterCount.value > 0"
+              class="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-brandg-600 text-white text-[0.6875rem] font-semibold tabular-nums"
+            >{{ activeFilters.filterCount.value }}</span>
             <UIcon
               :name="showFilters ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
-              class="w-4 h-4"
+              class="hidden lg:inline-block w-4 h-4"
             />
           </button>
           <button
@@ -400,7 +427,7 @@
             @click="togglePersonalizedSearch"
             :title="t('recipeWrangler.search.personalizedHint')"
             :class="[
-              'flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors text-sm',
+              'flex items-center gap-2 px-4 py-2 min-h-11 rounded-lg border transition-colors text-sm',
               personalizedSearch
                 ? 'bg-brandg-500 border-brandg-500 text-white'
                 : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700'
@@ -411,8 +438,11 @@
           </button>
         </div>
 
-        <!-- Filters Component -->
-        <div v-if="showFilters" class="mt-4">
+        <!-- What is currently narrowing the search, whether or not the panel is open -->
+        <RecipesRecipeActiveFilters class="mt-3" @change="handleFilterChange" />
+
+        <!-- Filters Component: inline from lg up -->
+        <div v-if="showFilters" class="hidden lg:block mt-4">
           <RecipesRecipeFilters
             :facets="paramSearchFacets"
             @filter-change="handleFilterChange"
@@ -420,11 +450,51 @@
             @sort-change="handleFilterChange"
           />
         </div>
+
+        <!--
+          Below lg the same panel in a bottom sheet. Every chip still runs the
+          search, but through a short debounce, so tapping four allergens in a
+          row is one request rather than four; the footer shows the live count
+          and closing the sheet by any route flushes whatever is pending.
+        -->
+        <UDrawer
+          v-model:open="filtersDrawerOpen"
+          :title="t('recipeWrangler.filters.title')"
+          :ui="{
+            content: 'bg-zinc-50 dark:bg-zinc-950',
+            container: 'pb-0',
+            footer: 'sticky bottom-0 -mx-4 px-4 pt-3 pb-[max(1rem,var(--wf-safe-bottom))] bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800'
+          }"
+        >
+          <template #body>
+            <RecipesRecipeFilters
+              :facets="paramSearchFacets"
+              @filter-change="queueFilterSearch"
+              @quick-filter="handleQuickFilter"
+              @sort-change="queueFilterSearch"
+            />
+          </template>
+          <template #footer>
+            <button
+              type="button"
+              class="w-full min-h-12 inline-flex items-center justify-center gap-2 rounded-xl bg-brandg-600 hover:bg-brandg-700 text-white text-sm font-medium transition-colors"
+              @click="filtersDrawerOpen = false"
+            >
+              <UIcon
+                v-if="loading || filterSearchPending"
+                name="i-lucide-loader-2"
+                class="w-4 h-4 animate-spin"
+              />
+              <span v-if="loading || filterSearchPending">{{ t('recipeWrangler.filters.showResultsLoading') }}</span>
+              <span v-else>{{ t('recipeWrangler.filters.showResults', totalResultsDisplay) }}</span>
+            </button>
+          </template>
+        </UDrawer>
       </section>
 
       <!-- Recipe Grid -->
       <section v-if="activeTab === 'search'" class="mb-12 sm:mb-16">
-        <div class="flex items-center justify-between mb-6 sm:mb-8">
+        <div class="flex flex-wrap items-center justify-between gap-y-3 mb-6 sm:mb-8">
           <div class="flex items-center gap-3">
             <h2 class="text-2xl sm:text-3xl font-claude text-zinc-900 dark:text-white">
               <span v-if="!hasSearchAttempted">Search recipes to get started</span>
@@ -434,7 +504,7 @@
               <span v-else>Recipe Results</span>
             </h2>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <span
               v-if="!loading && !error && hasRecipes"
               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm font-medium text-zinc-700 dark:text-zinc-200 shadow-sm"
@@ -446,24 +516,28 @@
             <button
               v-if="recipeStore.compareCount > 0"
               @click="clearCompareSelection"
-              class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-sm"
+              :aria-label="t('recipeWrangler.clearCompare')"
+              :title="t('recipeWrangler.clearCompare')"
+              class="flex items-center gap-2 px-3 py-2 min-h-10 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-sm"
             >
               <UIcon name="i-lucide-x" class="w-4 h-4" />
-              <span>Clear Compare</span>
+              <span class="hidden sm:inline">{{ t('recipeWrangler.clearCompare') }}</span>
             </button>
             <button
               v-if="recipeStore.compareCount >= 2"
               @click="navigateToCompare"
-              class="flex items-center gap-2 px-4 py-2 rounded-lg bg-brandg-600 dark:bg-brandg-500 text-white hover:bg-brandg-700 dark:hover:bg-brandg-600 transition-colors text-sm font-medium shadow-md"
+              :aria-label="`${t('recipeWrangler.compare')} (${recipeStore.compareCount})`"
+              class="flex items-center gap-2 px-4 py-2 min-h-10 rounded-lg bg-brandg-600 dark:bg-brandg-500 text-white hover:bg-brandg-700 dark:hover:bg-brandg-600 transition-colors text-sm font-medium shadow-md"
             >
               <UIcon name="i-lucide-git-compare" class="w-4 h-4" />
-              <span>{{ t('recipeWrangler.compare') }} ({{ recipeStore.compareCount }})</span>
+              <span class="hidden sm:inline">{{ t('recipeWrangler.compare') }}</span>
+              <span class="tabular-nums">({{ recipeStore.compareCount }})</span>
             </button>
             <button
               v-if="recipeStore.favorites.length > 0 || showFavoritesView"
               @click="toggleFavoritesView"
               :class="[
-                'flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors text-sm',
+                'flex items-center gap-2 px-3 py-2 min-h-10 rounded-lg border transition-colors text-sm',
                 showFavoritesView
                   ? 'bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300'
                   : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700'
@@ -578,17 +652,22 @@
             <button
               @click="goToPage(currentPage - 1)"
               :disabled="currentPage === 1"
-              class="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              class="px-3 py-2 min-h-11 min-w-11 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               :aria-label="t('recipeWrangler.previousPage')"
             >
               <UIcon name="i-lucide-chevron-left" class="w-5 h-5" />
             </button>
 
+            <!-- Where we are, for a screen too narrow for the numbers -->
+            <span class="sm:hidden px-2 text-sm font-medium text-zinc-600 dark:text-zinc-300 tabular-nums" aria-current="page">
+              {{ totalPages > 0 ? t('recipeWrangler.pageOf', { page: currentPage, total: totalPages }) : t('recipeWrangler.pageN', { page: currentPage }) }}
+            </span>
+
             <!-- Page Numbers -->
-            <div class="flex items-center gap-1">
+            <div class="hidden sm:flex items-center gap-1">
               <!-- First page + ellipsis -->
               <template v-if="visiblePages.length && visiblePages[0] > 1">
-                <button @click="goToPage(1)" class="px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">1</button>
+                <button @click="goToPage(1)" class="px-4 py-2 min-h-11 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">1</button>
                 <span v-if="visiblePages[0] > 2" class="px-2 text-zinc-500">…</span>
               </template>
 
@@ -598,7 +677,7 @@
                 :key="page"
                 @click="goToPage(page)"
                 :class="[
-                  'px-4 py-2 rounded-lg border transition-colors',
+                  'px-4 py-2 min-h-11 rounded-lg border transition-colors',
                   page === currentPage
                     ? 'border-brandg-500 bg-brandg-500 text-white'
                     : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700'
@@ -610,7 +689,7 @@
               <!-- Ellipsis + last page -->
               <template v-if="visiblePages.length && visiblePages[visiblePages.length - 1] < totalPages">
                 <span v-if="visiblePages[visiblePages.length - 1] < totalPages - 1" class="px-2 text-zinc-500">…</span>
-                <button @click="goToPage(totalPages)" class="px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">{{ totalPages }}</button>
+                <button @click="goToPage(totalPages)" class="px-4 py-2 min-h-11 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">{{ totalPages }}</button>
               </template>
 
               <!-- Fallback when count endpoint hasn't resolved yet -->
@@ -626,7 +705,7 @@
             <button
               @click="goToPage(currentPage + 1)"
               :disabled="isLastPage"
-              class="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              class="px-3 py-2 min-h-11 min-w-11 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               :aria-label="t('recipeWrangler.nextPage')"
             >
               <UIcon name="i-lucide-chevron-right" class="w-5 h-5" />
@@ -634,6 +713,44 @@
           </nav>
         </div>
       </section>
+
+      <!--
+        Phones: the compare call to action pinned to the bottom edge once two
+        recipes are ticked, since the header's button has long scrolled away
+        by the time the second card is chosen. It stops short of the right
+        corner where the floating dock lives, so the two never overlap and
+        the dock keeps its usual place on every other width.
+      -->
+      <Transition
+        enter-active-class="transition-all duration-200 ease-out"
+        enter-from-class="opacity-0 translate-y-4"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition-all duration-150 ease-in"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 translate-y-4"
+      >
+        <div
+          v-if="showCompareBar"
+          class="sm:hidden fixed left-4 right-20 bottom-[max(0.75rem,var(--wf-safe-bottom))] z-30 flex items-stretch gap-2 p-2 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur border border-zinc-200 dark:border-zinc-700 shadow-2xl"
+        >
+          <button
+            type="button"
+            class="flex-1 min-h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-brandg-600 hover:bg-brandg-700 text-white text-sm font-medium transition-colors"
+            @click="navigateToCompare"
+          >
+            <UIcon name="i-lucide-git-compare" class="w-4 h-4" />
+            <span>{{ t('recipeWrangler.compare') }} <span class="tabular-nums">({{ recipeStore.compareCount }})</span></span>
+          </button>
+          <button
+            type="button"
+            :aria-label="t('recipeWrangler.clearCompare')"
+            class="min-h-11 min-w-11 inline-flex items-center justify-center rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            @click="clearCompareSelection"
+          >
+            <UIcon name="i-lucide-x" class="w-4 h-4" />
+          </button>
+        </div>
+      </Transition>
 
       <!-- Categories Section -->
       <section v-if="activeTab === 'search'" class="mb-12 sm:mb-16 bg-gradient-to-br from-brandg-50 to-brandg-100 dark:from-brandg-900/20 dark:to-brandg-800/20 border border-brandg-200 dark:border-brandg-800 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12">
@@ -644,7 +761,7 @@
             :key="category.name"
             @click="browseCategory(category)"
             :disabled="loading"
-            class="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm border border-zinc-200 dark:border-zinc-700 cursor-pointer hover:bg-white dark:hover:bg-zinc-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 text-center disabled:opacity-50 disabled:cursor-not-allowed"
+            class="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm border border-zinc-200 dark:border-zinc-700 cursor-pointer hover:bg-white dark:hover:bg-zinc-800 pointer-fine:hover:shadow-lg pointer-fine:hover:-translate-y-1 transition-all duration-300 text-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-brandg-100 dark:bg-brandg-900/50 flex items-center justify-center mb-2 sm:mb-3 mx-auto">
               <UIcon :name="category.icon" class="w-5 h-5 sm:w-6 sm:h-6 text-brandg-600 dark:text-brandg-400" />
@@ -662,7 +779,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useElementSize } from '@vueuse/core'
 import { track } from '~/composables/useTelemetry'
+import { useActiveRecipeFilters } from '~/components/recipes/RecipeFilters.vue'
 import { useRecipes } from '~/composables/useRecipes'
 import { useRecipeStore } from '~/stores/recipe'
 import { useI18n } from 'vue-i18n'
@@ -698,6 +817,8 @@ useSeoMeta({
 const { recipes, loading, error, searchRecipes, searchRecipesByParams, fetchRecipesByCategory, clearError, hasMore, paramSearchTotal, paramSearchFacets } = useRecipes()
 const recipeStore = useRecipeStore()
 const householdStore = useHouseholdStore()
+const { isCompact } = useViewport()
+const activeFilters = useActiveRecipeFilters()
 
 // ============================================================================
 // State
@@ -710,6 +831,7 @@ const showAutocomplete = ref(false)
 const activeAutocompleteIndex = ref(-1)
 const activeRecipeResultIndex = ref(-1)
 const showFilters = ref(false)
+const filtersDrawerOpen = ref(false)
 const currentPage = ref(1)
 const itemsPerPage = 12
 const searchMode = ref<'nl' | 'params'>('nl')
@@ -736,6 +858,16 @@ const analysisResultRegion = ref<typeof ANALYSIS_REGIONS[number] | null>(null)
 const showCalculationDetails = ref(false)
 const analysisExpandedRow = ref<number | null>(null)
 let autocompleteDebounceTimer: ReturnType<typeof setTimeout> | null = null
+
+// The analyzer table's scroll box, measured so an expanded row's detail can
+// be capped at exactly the width that is on screen.
+const analysisScrollRef = ref<HTMLElement | null>(null)
+const { width: analysisScrollWidth } = useElementSize(analysisScrollRef)
+const analysisDetailStyle = computed(() =>
+  analysisScrollWidth.value > 0 ? { maxWidth: `${analysisScrollWidth.value}px` } : undefined
+)
+
+const showCompareBar = computed(() => activeTab.value === 'search' && recipeStore.compareCount >= 2)
 
 // ============================================================================
 // Categories
@@ -1565,6 +1697,47 @@ const clearCompareSelection = () => {
   recipeStore.clearCompareList()
 }
 
+// ============================================================================
+// Filters: inline panel on a desktop, bottom sheet below lg
+// ============================================================================
+const openFilters = () => {
+  if (isCompact.value) {
+    filtersDrawerOpen.value = true
+  } else {
+    showFilters.value = !showFilters.value
+  }
+}
+
+// While the sheet is open every chip still re-runs the search, but through
+// a short debounce so a run of taps costs one request. Whatever is pending
+// when the sheet closes, by the footer button, the overlay or a swipe, runs
+// straight away so the results behind it are never stale.
+const FILTER_SEARCH_DELAY_MS = 400
+const filterSearchPending = ref(false)
+let filterSearchTimer: ReturnType<typeof setTimeout> | null = null
+
+const flushFilterSearch = async () => {
+  if (filterSearchTimer) {
+    clearTimeout(filterSearchTimer)
+    filterSearchTimer = null
+  }
+  if (!filterSearchPending.value) return
+  filterSearchPending.value = false
+  await handleFilterChange()
+}
+
+const queueFilterSearch = () => {
+  filterSearchPending.value = true
+  if (filterSearchTimer) clearTimeout(filterSearchTimer)
+  filterSearchTimer = setTimeout(() => {
+    void flushFilterSearch()
+  }, FILTER_SEARCH_DELAY_MS)
+}
+
+watch(filtersDrawerOpen, (open) => {
+  if (!open) void flushFilterSearch()
+})
+
 watch(() => displayedRecipes.value.length, (nextLength) => {
   if (nextLength === 0) {
     activeRecipeResultIndex.value = -1
@@ -1621,6 +1794,10 @@ onBeforeUnmount(() => {
   if (autocompleteDebounceTimer) {
     clearTimeout(autocompleteDebounceTimer)
     autocompleteDebounceTimer = null
+  }
+  if (filterSearchTimer) {
+    clearTimeout(filterSearchTimer)
+    filterSearchTimer = null
   }
   if (import.meta.client) {
     document.removeEventListener('click', handleClickOutsideSearch)
