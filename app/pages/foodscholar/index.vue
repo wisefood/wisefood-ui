@@ -42,21 +42,6 @@
               {{ t('foodScholarHome.qa.tabs.library') }}
             </span>
           </button>
-          <button
-            type="button"
-            :class="[
-              'px-5 py-3 text-sm font-medium border-b-2 transition-colors',
-              pageTab === 'graph'
-                ? 'border-brand-500 text-brand-600 dark:text-brand-400'
-                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
-            ]"
-            @click="pageTab = 'graph'"
-          >
-            <span class="flex items-center gap-1.5">
-              <UIcon name="i-lucide-waypoints" class="w-3.5 h-3.5" />
-              {{ t('foodScholarHome.qa.tabs.graph') }}
-            </span>
-          </button>
         </div>
       </div>
     </div>
@@ -883,6 +868,20 @@
           <!-- Resource type pills -->
           <div class="flex lg:flex-col gap-3 flex-wrap">
             <NuxtLink
+              to="/foodscholar/hierarchy"
+              class="group inline-flex min-w-[14rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-violet-300 hover:bg-violet-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-violet-700 dark:hover:bg-violet-900/20"
+            >
+              <div class="w-8 h-8 rounded-lg bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center shrink-0">
+                <UIcon name="i-lucide-list-tree" class="w-4 h-4 text-violet-600 dark:text-violet-400" />
+              </div>
+              <div>
+                <p class="text-base font-semibold text-gray-900 dark:text-white">Hierarchy</p>
+                <p class="font-claude text-sm text-gray-400 dark:text-zinc-500">Browse by theme</p>
+              </div>
+              <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600 ml-2 group-hover:text-violet-500 group-hover:translate-x-0.5 transition-all" />
+            </NuxtLink>
+
+            <NuxtLink
               to="/foodscholar/catalog"
               class="group inline-flex min-w-[14rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-brand-300 hover:bg-brand-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-brand-700 dark:hover:bg-brand-900/20"
             >
@@ -1184,23 +1183,6 @@
       </div>
     </template>
 
-    <!--
-      Graph tab.
-
-      Its own component rather than three thousand more lines here, and it owns
-      its whole workspace: the browser needs the remaining viewport height to
-      lay a tree, a map and an inspector side by side, which is why this wrapper
-      is `flex-1 min-h-0` rather than the padded container the other two tabs
-      sit in. `v-if`, not `v-show` — leaving it mounted would keep an SSE
-      stream and a canvas alive behind the QA tab.
-    -->
-    <div
-      v-else-if="pageTab === 'graph'"
-      class="flex min-h-0 flex-1 flex-col"
-    >
-      <FoodscholarGraphBrowser @ask="askFromGraph" />
-    </div>
-
     <FoodscholarGuidelineCitationPeek
       :open="guidelinePeekOpen"
       :guideline="guidelinePeek"
@@ -1260,7 +1242,19 @@ import { euCountryCodes } from '~/utils/countries'
 const { t, locale } = useI18n()
 
 definePageMeta({
-  middleware: ['auth', 'profile']
+  middleware: [
+    // The graph was once a tab here and its links were shared as
+    // `?tab=graph&node=…&view=…`; they now open the Hierarchy page, keeping
+    // the node and view they named.
+    (to) => {
+      if (to.query.tab !== 'graph') return
+      const query = { ...to.query }
+      delete query.tab
+      return navigateTo({ path: '/foodscholar/hierarchy', query }, { replace: true })
+    },
+    'auth',
+    'profile'
+  ]
 })
 
 useHead({
@@ -1333,7 +1327,7 @@ interface RetrievalOption {
 const AUTO_MODEL_VALUE = '__auto__'
 const CATEGORY_ALL = 'All'
 const CATEGORY_UNCATEGORIZED = 'Uncategorized'
-const pageTab = ref<'qa' | 'resources' | 'graph'>('qa')
+const pageTab = ref<'qa' | 'resources'>('qa')
 const hasActiveSession = computed(() => asking.value || !!qaResult.value || !!qaError.value || !!pendingClarification.value)
 const advancedSelectContent = {
   side: 'bottom' as const,
@@ -1490,7 +1484,6 @@ function syncLibraryQuery() {
 function hydrateLibraryFromQuery() {
   const tab = route.query.tab
   if (tab === 'resources') pageTab.value = 'resources'
-  else if (tab === 'graph') pageTab.value = 'graph'
   const browse = route.query.browse
   if (browse === 'journal' || browse === 'topic') libraryBrowseAxis.value = browse
   const value = libraryBrowseAxis.value === 'journal' ? route.query.venue : route.query.topic
@@ -3342,29 +3335,7 @@ watch(pageTab, (tab) => {
     loadLibraryTopicFacets()
     syncLibraryQuery()
   }
-  // The graph tab is worth a shareable URL: someone who found a topic in it
-  // will send the link, and landing back on QA would lose the thing they sent.
-  if (tab === 'graph') {
-    router.replace({ query: { ...(route.query as Record<string, string>), tab: 'graph' } })
-  }
 })
-
-/**
- * A question raised from the graph, asked here.
- *
- * The graph browser ends at "this is what the evidence covers"; the answer is
- * on the other tab. Handing the question across rather than opening a second
- * surface is what makes the two feel like one product — and asking immediately
- * rather than only prefilling is the point, since the user already pressed a
- * button that said Ask.
- */
-function askFromGraph(question: string) {
-  if (!question?.trim() || asking.value) return
-  pageTab.value = 'qa'
-  chatQuery.value = question.trim()
-  track('graph.ask_bridge', { length: question.trim().length }, 'foodscholar')
-  askScholarQA()
-}
 
 onMounted(async () => {
   hydrateLibraryFromQuery()

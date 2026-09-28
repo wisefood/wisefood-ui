@@ -888,8 +888,7 @@
       },
       "tabs": {
         "askQuestions": "Ask Questions",
-        "library": "Library",
-        "graph": "Graph"
+        "library": "Library"
       },
       "clarify": {
         "yourAnswer": "Your answer…",
@@ -2100,15 +2099,10 @@
       "debated": "Debated",
       "unclear": "Unclear"
     },
-    "view": {
-      "label": "View",
-      "tree": "Tree",
-      "split": "Split",
-      "map": "Map"
-    },
     "search": {
       "placeholder": "Search the graph — a food, a nutrient, a topic",
-      "clear": "Clear the search"
+      "clear": "Clear the search",
+      "noResults": "No matches in the hierarchy"
     },
     "filters": {
       "title": "Filters",
@@ -2116,13 +2110,6 @@
       "scope": "Scoped to",
       "clearScope": "Remove the scope",
       "facet": "Facet",
-      "kind": "Kind",
-      "evidenceQuality": "Evidence quality",
-      "discoveredBy": "Discovered by",
-      "depth": "Depth",
-      "depthHint": "How far down the hierarchy the map draws. Each level costs more to load.",
-      "minEvidence": "Minimum evidence",
-      "onlyWithCard": "Only where a summary exists",
       "showFolded": "Show folded categories",
       "foldedHint": "A folded category absorbed an intermediate step. Kept so no ontology id is lost, not because it is worth navigating."
     },
@@ -2135,25 +2122,12 @@
       "empty": "Nothing here matches the current filters.",
       "hasCard": "Has a written summary"
     },
-    "canvas": {
-      "help": "Drag to pan, scroll to zoom. Arrow keys pan, plus and minus zoom, 0 fits the graph, Enter opens the selected node, Escape clears the selection.",
-      "ariaLabel": "Knowledge graph map, {count} nodes drawn",
-      "evidenceCount": "{count} source passages",
-      "doubleClickToExpand": "Double-click to open its neighbourhood",
-      "zoomIn": "Zoom in",
-      "zoomOut": "Zoom out",
-      "fit": "Fit the graph",
-      "minimap": "Overview",
-      "scale": "{percent}%",
-      "labelsHidden": "too dense for labels"
-    },
     "inspector": {
       "title": "Details",
       "emptyTitle": "Nothing selected",
-      "emptyHint": "Pick a node on the map or a row in the hierarchy to see what the evidence says about it.",
+      "emptyHint": "Pick a row in the hierarchy to see what the evidence says about it.",
       "breadcrumb": "Ancestors",
       "close": "Close",
-      "expand": "Open neighbourhood",
       "scopeHere": "Narrow to this",
       "askAbout": "Ask about this",
       "askTemplate": "What does the evidence say about {topic}?",
@@ -2182,17 +2156,9 @@
     },
     "legend": {
       "title": "Legend",
-      "colourIsKind": "Colour — what kind of node",
-      "shapeIsFacet": "Shape — which facet",
-      "sizeIsEvidence": "Size is how much of the corpus sits behind a node."
+      "passages": "source passages"
     },
     "status": {
-      "drawing": "Drawing {nodes} of {total}…",
-      "drawn": "{nodes} nodes, {edges} links, {ms} ms",
-      "truncated": "Showing part of the graph",
-      "droppedEdges": "{count} links not drawn",
-      "droppedEdgesHint": "Links whose other end was filtered out or fell past the limit.",
-      "matches": "{count} matches",
       "build": "build",
       "buildHint": "Which graph build is being served."
     },

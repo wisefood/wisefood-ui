@@ -3079,7 +3079,9 @@ const toNumber = (value: unknown): number => {
   return 0
 }
 
-const toNullableNumber = (value: unknown): number | null => {
+// A declaration, not an arrow const, so it is hoisted: `watch(canShowPer100g)`
+// reads it through `servingWeightGrams` during setup, long before this line.
+function toNullableNumber(value: unknown): number | null {
   if (value === null || value === undefined || value === '') return null
   if (typeof value === 'number' && Number.isFinite(value)) return value
   if (typeof value === 'string') {
