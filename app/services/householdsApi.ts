@@ -11,6 +11,31 @@ export interface Household {
   updated_at?: string
 }
 
+/**
+ * Where a household is in its one-time setup, read from `metadata.onboarding`.
+ *
+ * A household the wizard created has no value: it was set up by definition.
+ * The gateway writes `pending` when a guest keeps their account
+ * (`guests.claim_guest`), because the household it was given still says
+ * "Guest Household" with a member called "Guest". The wizard in claim mode
+ * writes `complete` or `skipped`, and either value means "do not ask again".
+ */
+export type HouseholdOnboarding = 'pending' | 'complete' | 'skipped'
+
+export function householdOnboarding(household: Household | null | undefined): HouseholdOnboarding | null {
+  const value = household?.metadata?.onboarding
+  return value === 'pending' || value === 'complete' || value === 'skipped' ? value : null
+}
+
+/**
+ * The placeholder names a guest is provisioned with (gateway `src/guests.py`,
+ * GUEST_HOUSEHOLD_NAME / GUEST_MEMBER_NAME). The claim-mode wizard treats
+ * these exact strings as "never set" so the fields start empty rather than
+ * asking someone to delete "Guest" before typing their name.
+ */
+export const GUEST_HOUSEHOLD_NAME = 'Guest Household'
+export const GUEST_MEMBER_NAME = 'Guest'
+
 export interface HouseholdMember {
   id: string
   name: string
@@ -56,6 +81,9 @@ export interface CreateHouseholdRequest {
   region?: string
   metadata?: Record<string, unknown>
 }
+
+/** PATCH body. `metadata` replaces the whole object, so send it merged. */
+export type UpdateHouseholdRequest = Partial<CreateHouseholdRequest>
 
 export interface CreateMemberRequest {
   name: string
@@ -107,8 +135,8 @@ class HouseholdsApiService {
     return { success: true, result }
   }
 
-  async updateHousehold(householdId: string, data: Partial<CreateHouseholdRequest>): Promise<ApiResponse<Household>> {
-    const result = await wisefoodRestApi.patch<Household, Partial<CreateHouseholdRequest>>(`/households/${householdId}`, data)
+  async updateHousehold(householdId: string, data: UpdateHouseholdRequest): Promise<ApiResponse<Household>> {
+    const result = await wisefoodRestApi.patch<Household, UpdateHouseholdRequest>(`/households/${householdId}`, data)
     return { success: true, result }
   }
 

@@ -3,7 +3,14 @@
        the steps scroll inside it while Continue stays pinned at the bottom; on
        a wider screen it is the same card, centred, scrolling the same way.
        There is no household yet to fall back to, so clicking outside does
-       nothing and Skip is the way out. -->
+       nothing and Skip is the way out.
+
+       Two modes. `create` is a new account with nothing yet: the wizard makes
+       the household and its first member. `claim` is a guest who kept their
+       account: the household and member already exist, still called "Guest
+       Household" and "Guest", so the same three steps edit them in place —
+       prefilled with whatever the guest had already changed — and the
+       gateway's onboarding flag is closed at the end so this runs once. -->
   <UModal
     :open="true"
     :fullscreen="isPhone"
@@ -39,7 +46,7 @@
           class="pointer-coarse:min-h-11"
           @click="handleSkip"
         >
-          {{ t('profileSelection.setupWizard.actions.skipForNow') }}
+          {{ isClaim ? t('profileSelection.setupWizard.claim.actions.skip') : t('profileSelection.setupWizard.actions.skipForNow') }}
         </UButton>
       </div>
 
@@ -51,10 +58,15 @@
               <UIcon name="i-lucide-home" class="w-8 h-8 text-brand-600 dark:text-brand-400" />
             </div>
             <h2 class="text-2xl font-light text-gray-900 dark:text-white mb-2">
-              {{ t('profileSelection.setupWizard.step1.titlePrefix') }} <span class="font-serif italic text-brand-500 text-3xl">WiseFood</span>
+              <template v-if="isClaim">
+                {{ t('profileSelection.setupWizard.claim.step1.titlePrefix') }} <span class="font-serif italic text-brand-500 text-3xl">{{ t('profileSelection.setupWizard.claim.step1.titleAccent') }}</span>
+              </template>
+              <template v-else>
+                {{ t('profileSelection.setupWizard.step1.titlePrefix') }} <span class="font-serif italic text-brand-500 text-3xl">WiseFood</span>
+              </template>
             </h2>
             <p class="text-gray-600 dark:text-gray-400">
-              {{ t('profileSelection.setupWizard.step1.subtitle') }}
+              {{ isClaim ? t('profileSelection.setupWizard.claim.step1.subtitle') : t('profileSelection.setupWizard.step1.subtitle') }}
             </p>
           </div>
 
@@ -92,10 +104,10 @@
               <UIcon name="i-lucide-user-plus" class="w-8 h-8 text-brandg-600 dark:text-brandg-400" />
             </div>
             <h2 class="text-2xl font-light text-gray-900 dark:text-white mb-2">
-              {{ t('profileSelection.setupWizard.step2.titlePrefix') }} <span class="font-serif italic text-brandg-500 text-3xl">{{ t('profileSelection.setupWizard.step2.titleAccent') }}</span>
+              {{ isClaim ? t('profileSelection.setupWizard.claim.step2.titlePrefix') : t('profileSelection.setupWizard.step2.titlePrefix') }} <span class="font-serif italic text-brandg-500 text-3xl">{{ isClaim ? t('profileSelection.setupWizard.claim.step2.titleAccent') : t('profileSelection.setupWizard.step2.titleAccent') }}</span>
             </h2>
             <p class="text-gray-600 dark:text-gray-400">
-              {{ t('profileSelection.setupWizard.step2.subtitle') }}
+              {{ isClaim ? t('profileSelection.setupWizard.claim.step2.subtitle') : t('profileSelection.setupWizard.step2.subtitle') }}
             </p>
           </div>
 
@@ -202,7 +214,7 @@
           :disabled="!canProceed"
           @click="handleNext"
         >
-          {{ step === totalSteps ? t('profileSelection.setupWizard.actions.completeSetup') : t('profileSelection.setupWizard.actions.continue') }}
+          {{ step === totalSteps ? finalActionLabel : t('profileSelection.setupWizard.actions.continue') }}
         </UButton>
       </div>
     </template>
@@ -212,7 +224,26 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useHouseholdStore } from '~/stores/household'
-import type { Gender } from '~/services/householdsApi'
+import { useAuthStore } from '~/stores/auth'
+import { track } from '~/composables/useTelemetry'
+import householdsApi, {
+  GUEST_HOUSEHOLD_NAME,
+  GUEST_MEMBER_NAME,
+  type Gender,
+  type HouseholdMember,
+  type MemberProfile
+} from '~/services/householdsApi'
+import { avatarPresets } from '~/utils/avatarPresets'
+
+type DietaryGroup = 'omnivore' | 'vegetarian' | 'vegan' | 'pescatarian' | 'flexitarian'
+type AgeGroup = 'child' | 'teen' | 'adult' | 'senior'
+
+const props = withDefaults(defineProps<{
+  /** `create` makes a household; `claim` edits the one a guest was given. */
+  mode?: 'create' | 'claim'
+}>(), {
+  mode: 'create'
+})
 
 const emit = defineEmits<{
   complete: []
@@ -222,6 +253,9 @@ const { t } = useI18n()
 const { isPhone } = useViewport()
 
 const householdStore = useHouseholdStore()
+const authStore = useAuthStore()
+
+const isClaim = computed(() => props.mode === 'claim')
 
 const step = ref(1)
 const totalSteps = 3
@@ -241,20 +275,90 @@ const selectedAvatarIndex = ref(0)
 // Step 3: Dietary preferences
 const selectedDiet = ref<string>('omnivore')
 
+/*
+ * Claim mode edits what is already there. The member is the one the guest
+ * was provisioned with — still called "Guest" unless they renamed it — or,
+ * if they made more, the first; the profile is fetched so gender and diet
+ * start from what they set rather than from the defaults.
+ */
+const claimMember = computed<HouseholdMember | null>(() => {
+  if (!isClaim.value) return null
+  const members = householdStore.householdMembers
+  return members.find(m => m.name === GUEST_MEMBER_NAME) ?? members[0] ?? null
+})
+const existingProfile = ref<MemberProfile | null>(null)
+const initialDiet = ref<string | null>(null)
+
+function avatarIndexOf(imageUrl: string | undefined): number {
+  const value = imageUrl?.startsWith('avatar:') ? Number.parseInt(imageUrl.slice(7), 10) : Number.NaN
+  return Number.isInteger(value) && value >= 0 && value < avatarPresets.length ? value : 0
+}
+
+/** A first name to offer where the member is still called "Guest". */
+function accountFirstName(): string {
+  const user = authStore.currentUser
+  const given = user?.given_name?.trim()
+  if (given) return given
+  return user?.name?.trim().split(/\s+/)[0] ?? ''
+}
+
+async function prefillFromClaim() {
+  const household = householdStore.currentHousehold
+  if (household) {
+    householdName.value = household.name === GUEST_HOUSEHOLD_NAME ? '' : household.name
+    householdRegion.value = household.region || undefined
+  }
+
+  const member = claimMember.value
+  if (!member) return
+  memberName.value = member.name === GUEST_MEMBER_NAME ? accountFirstName() : member.name
+  memberAgeGroup.value = member.age_group
+  selectedAvatarIndex.value = avatarIndexOf(member.image_url)
+
+  try {
+    const response = await householdsApi.getMemberProfile(member.id)
+    existingProfile.value = response.result ?? null
+  } catch {
+    // No profile row yet — the guest never opened their profile page.
+    existingProfile.value = null
+  }
+  const gender = existingProfile.value?.nutritional_preferences?.gender
+  if (gender) memberGender.value = gender
+  const diet = existingProfile.value?.dietary_groups?.[0]
+  if (diet) {
+    selectedDiet.value = diet
+    initialDiet.value = diet
+  }
+}
+
+onMounted(() => {
+  if (isClaim.value) void prefillFromClaim()
+})
+
 // What a screen reader hears the dialog called: the visible heading of the
 // current step, in plain text. The dialog renders it hidden because the step
 // draws its own heading with the accent styling.
 const modalTitle = computed(() => {
   switch (step.value) {
     case 1:
-      return `${t('profileSelection.setupWizard.step1.titlePrefix')} WiseFood`
+      return isClaim.value
+        ? `${t('profileSelection.setupWizard.claim.step1.titlePrefix')} ${t('profileSelection.setupWizard.claim.step1.titleAccent')}`
+        : `${t('profileSelection.setupWizard.step1.titlePrefix')} WiseFood`
     case 2:
-      return `${t('profileSelection.setupWizard.step2.titlePrefix')} ${t('profileSelection.setupWizard.step2.titleAccent')}`
+      return isClaim.value
+        ? `${t('profileSelection.setupWizard.claim.step2.titlePrefix')} ${t('profileSelection.setupWizard.claim.step2.titleAccent')}`
+        : `${t('profileSelection.setupWizard.step2.titlePrefix')} ${t('profileSelection.setupWizard.step2.titleAccent')}`
     default:
       return `${t('profileSelection.setupWizard.step3.titlePrefix')} ${t('profileSelection.setupWizard.step3.titleAccent')}`
   }
 })
-const modalDescription = computed(() => t(`profileSelection.setupWizard.step${step.value}.subtitle`))
+const modalDescription = computed(() => {
+  if (isClaim.value && step.value < 3) return t(`profileSelection.setupWizard.claim.step${step.value}.subtitle`)
+  return t(`profileSelection.setupWizard.step${step.value}.subtitle`)
+})
+const finalActionLabel = computed(() => isClaim.value
+  ? t('profileSelection.setupWizard.claim.actions.complete')
+  : t('profileSelection.setupWizard.actions.completeSetup'))
 
 const ageGroupOptions = computed(() => [
   { label: t('profileSelection.ageGroups.child'), value: 'child' },
@@ -330,42 +434,123 @@ async function handleNext() {
   isSubmitting.value = true
 
   try {
-    // 1. Create household
-    const household = await householdStore.createHousehold({
-      name: householdName.value.trim(),
-      region: householdRegion.value || undefined
-    })
-
-    if (!household) {
-      throw new Error(t('profileSelection.setupWizard.errors.createHouseholdFailed'))
+    if (isClaim.value) {
+      await submitClaim()
+    } else {
+      await submitCreate()
     }
-
-    // 2. Create member with profile
-    // Store avatar as index reference (e.g., "avatar:0", "avatar:5")
-    await householdStore.createMember({
-      name: memberName.value.trim(),
-      age_group: memberAgeGroup.value as 'child' | 'teen' | 'adult' | 'senior' | undefined,
-      image_url: `avatar:${selectedAvatarIndex.value}`,
-      profile: {
-        dietary_groups: [selectedDiet.value as 'omnivore' | 'vegetarian' | 'vegan' | 'pescatarian' | 'flexitarian'],
-        // Gender rides in the nutritional_preferences blob (no dedicated column);
-        // only include it when the member actually picked one.
-        nutritional_preferences: memberGender.value ? { gender: memberGender.value } : {},
-        properties: {}
-      }
-    })
-
+    track('onboarding.completed', { mode: props.mode })
     emit('complete')
   } catch (err) {
     console.error('[HouseholdSetupWizard] Setup failed:', err)
-    error.value = t('profileSelection.setupWizard.errors.genericSubmitFailed')
+    error.value = isClaim.value
+      ? t('profileSelection.setupWizard.claim.errors.updateFailed')
+      : t('profileSelection.setupWizard.errors.genericSubmitFailed')
   } finally {
     isSubmitting.value = false
   }
 }
 
-function handleSkip() {
+async function submitCreate() {
+  // 1. Create household
+  const household = await householdStore.createHousehold({
+    name: householdName.value.trim(),
+    region: householdRegion.value || undefined
+  })
+
+  if (!household) {
+    throw new Error(t('profileSelection.setupWizard.errors.createHouseholdFailed'))
+  }
+
+  // 2. Create member with profile
+  // Store avatar as index reference (e.g., "avatar:0", "avatar:5")
+  await householdStore.createMember({
+    name: memberName.value.trim(),
+    age_group: memberAgeGroup.value as AgeGroup | undefined,
+    image_url: `avatar:${selectedAvatarIndex.value}`,
+    profile: {
+      dietary_groups: [selectedDiet.value as DietaryGroup],
+      // Gender rides in the nutritional_preferences blob (no dedicated column);
+      // only include it when the member actually picked one.
+      nutritional_preferences: memberGender.value ? { gender: memberGender.value } : {},
+      properties: {}
+    }
+  })
+}
+
+/*
+ * Three writes, in the order that fails safest. The member and the profile go
+ * first; the household — whose PATCH also closes the onboarding flag — goes
+ * last, so a failure part-way leaves the flag open and the wizard runs again
+ * next time, prefilled with whatever did land. The other order could mark
+ * the setup done with "Guest" still on the profile.
+ */
+async function submitClaim() {
+  const member = claimMember.value
+  const details = {
+    name: memberName.value.trim(),
+    age_group: memberAgeGroup.value as AgeGroup | undefined,
+    image_url: `avatar:${selectedAvatarIndex.value}`
+  }
+  const genderPatch = memberGender.value ? { gender: memberGender.value } : {}
+  let saved: HouseholdMember | undefined
+
+  if (member) {
+    saved = await householdStore.updateMember(member.id, details)
+
+    // Everything the guest already had on the profile (allergies, likes, the
+    // memories FoodChat kept) rides along untouched; only what this wizard
+    // asked about is written. A diet they had set and did not change is kept
+    // as they had it, even if it was more than one group.
+    const existing = existingProfile.value
+    const keepDiet = initialDiet.value !== null
+      && selectedDiet.value === initialDiet.value
+      && (existing?.dietary_groups?.length ?? 0) > 0
+    await householdStore.updateMemberProfile(member.id, {
+      nutritional_preferences: { ...(existing?.nutritional_preferences ?? {}), ...genderPatch },
+      dietary_groups: keepDiet ? existing?.dietary_groups : [selectedDiet.value as DietaryGroup],
+      allergies: existing?.allergies ?? [],
+      properties: existing?.properties ?? {}
+    })
+  } else {
+    // A guest who erased every profile before claiming: nothing to edit, so
+    // make one, exactly as create mode would.
+    saved = await householdStore.createMember({
+      ...details,
+      profile: {
+        dietary_groups: [selectedDiet.value as DietaryGroup],
+        nutritional_preferences: genderPatch,
+        properties: {}
+      }
+    })
+  }
+
+  await householdStore.resolveClaimSetup('complete', {
+    name: householdName.value.trim(),
+    region: householdRegion.value || undefined
+  })
+
+  // This member is theirs; no need to pick it from the tiles afterwards.
+  const selected = saved ?? (member ? { ...member, ...details } : null)
+  if (selected) householdStore.selectMember(selected)
+}
+
+async function handleSkip() {
+  if (isClaim.value) {
+    // Recorded server-side so the wizard does not come back on the next
+    // sign-in; the names can still be changed from the profile page. If the
+    // write fails they simply see this once more — not worth an error.
+    try {
+      await householdStore.resolveClaimSetup('skipped')
+    } catch (err) {
+      console.warn('[HouseholdSetupWizard] Skip was not recorded:', err)
+    }
+    track('onboarding.skipped', { mode: props.mode })
+    emit('skip')
+    return
+  }
   householdStore.skipSetup()
+  track('onboarding.skipped', { mode: props.mode })
   emit('skip')
 }
 </script>

@@ -47,6 +47,12 @@ export type ClientEventType =
   | 'graph.scope'
   | 'graph.search'
   | 'graph.ask_bridge'
+  // The two wizards: household setup (`props.mode` is 'create' or 'claim')
+  // and the food-preferences wizard a guest is nudged into.
+  | 'onboarding.completed'
+  | 'onboarding.skipped'
+  | 'preferences.completed'
+  | 'preferences.dismissed'
 
 export type AnalyticsApp =
   | 'foodchat'

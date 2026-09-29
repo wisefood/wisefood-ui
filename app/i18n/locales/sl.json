@@ -1057,6 +1057,25 @@
           "description": "Večinoma rastlinsko"
         }
       },
+      "claim": {
+        "step1": {
+          "titlePrefix": "Naj bo",
+          "titleAccent": "tvoj",
+          "subtitle": "Tvoj račun je zdaj trajen. Poimenuj svoj prostor namesto privzetega imena za goste."
+        },
+        "step2": {
+          "titlePrefix": "To si",
+          "titleAccent": "ti",
+          "subtitle": "Zamenjaj profil gosta s svojim imenom in podatki."
+        },
+        "actions": {
+          "skip": "Obdrži privzeto",
+          "complete": "Shrani in nadaljuj"
+        },
+        "errors": {
+          "updateFailed": "Nastavitev nismo mogli shraniti. Poskusi znova."
+        }
+      },
       "errors": {
         "createHouseholdFailed": "Ustvarjanje gospodinjstva ni uspelo",
         "genericSubmitFailed": "Nekaj je šlo narobe. Poskusi znova."
@@ -1250,6 +1269,7 @@
       "backToDashboard": "Nazaj na nadzorno ploščo",
       "goToProfiles": "Pojdi na profile",
       "edit": "Uredi",
+      "quickSetup": "Hitra nastavitev",
       "add": "Dodaj",
       "cancel": "Prekliči",
       "saveAvatar": "Shrani avatar",
@@ -2059,7 +2079,49 @@
     "doneTitle": "Račun je zdaj tvoj",
     "doneBody": "Vse, kar si ustvaril, je še vedno tu in ne poteče več.",
     "doneVerify": "Potrditveno povezavo smo poslali na {email}. Vse, kar si ustvaril, je še vedno tu.",
+    "signInToFinish": "Prijavi se z e-pošto in geslom, da dokončaš nastavitev svojega profila.",
+    "signInToFinishVerify": "Potrditveno povezavo smo poslali na {email}. Prijavi se z e-pošto in geslom, da dokončaš nastavitev svojega profila.",
     "failed": "Računa nismo mogli obdržati. Poskusi znova."
+  },
+  "preferencesWizard": {
+    "steps": {
+      "diet": {
+        "title": "Kako se prehranjuješ?",
+        "subtitle": "Izberi najbližje. To določa, katera živila ti pokažemo naprej."
+      },
+      "allergies": {
+        "title": "Se čemu izogibaš?",
+        "subtitle": "Alergije in intolerance so vedno izključene iz predlogov.",
+        "hint": "Izberi vse, kar velja, ali nič."
+      },
+      "likes": {
+        "title": "Kaj imaš rad?",
+        "subtitle": "K tem se nagibamo pri receptih in jedilnikih."
+      },
+      "dislikes": {
+        "title": "Kaj bi raje izpustil?",
+        "subtitle": "Tega ne vključujemo v predloge."
+      }
+    },
+    "search": "Išči živila...",
+    "noFoods": "Nobeno živilo ne ustreza iskanju.",
+    "onOtherList": "Že na tvojem drugem seznamu",
+    "selected": "{count} izbranih",
+    "actions": {
+      "back": "Nazaj",
+      "continue": "Nadaljuj",
+      "save": "Shrani nastavitve",
+      "close": "Zapri"
+    },
+    "savedTitle": "Nastavitve shranjene",
+    "savedBody": "Recepti in jedilniki zdaj sledijo tvojemu okusu.",
+    "failed": "Nastavitev nismo mogli shraniti. Poskusi znova.",
+    "nudge": {
+      "title": "Naj bo WiseFood tvoj",
+      "body": "Povej nam, kaj imaš rad in čemu se izogibaš, in predlogi se bodo prilagodili tvojemu okusu. Vzame minuto.",
+      "start": "Gremo",
+      "notNow": "Ne zdaj"
+    }
   },
   "share": {
     "button": "Deli",

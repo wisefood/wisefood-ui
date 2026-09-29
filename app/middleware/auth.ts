@@ -45,6 +45,24 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
       })
     }
 
+    /*
+     * A guest who kept their account signs in to a household that still
+     * carries the guest placeholders — the gateway flagged it at claim time.
+     * Whatever page they were heading for, the setup wizard comes first, and
+     * only once: resolving it writes the flag back. Guests themselves never
+     * carry the flag, and the profiles page is where the wizard lives.
+     */
+    if (!authStore.isGuest && to.path !== '/profiles') {
+      const householdStore = useHouseholdStore()
+      if (!householdStore.initialized) {
+        await householdStore.initialize()
+      }
+      if (householdStore.needsClaimSetup) {
+        log('[AuthMiddleware] Household setup pending after a claim, redirecting to /profiles')
+        return navigateTo('/profiles')
+      }
+    }
+
     log('[AuthMiddleware] User authenticated, allowing access to:', to.path)
   } catch (error) {
     console.error('[AuthMiddleware] Error during authentication check:', error)

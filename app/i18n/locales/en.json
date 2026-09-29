@@ -1056,6 +1056,25 @@
           "description": "Mostly plant-based"
         }
       },
+      "claim": {
+        "step1": {
+          "titlePrefix": "Make it",
+          "titleAccent": "yours",
+          "subtitle": "Your account is permanent now. Give your space a name to replace the guest defaults."
+        },
+        "step2": {
+          "titlePrefix": "This is",
+          "titleAccent": "you",
+          "subtitle": "Replace the guest profile with your own name and details."
+        },
+        "actions": {
+          "skip": "Keep the defaults",
+          "complete": "Save and continue"
+        },
+        "errors": {
+          "updateFailed": "We could not save your setup. Please try again."
+        }
+      },
       "errors": {
         "createHouseholdFailed": "Failed to create household",
         "genericSubmitFailed": "Something went wrong. Please try again."
@@ -1249,6 +1268,7 @@
       "backToDashboard": "Back to Dashboard",
       "goToProfiles": "Go to Profiles",
       "edit": "Edit",
+      "quickSetup": "Quick setup",
       "add": "Add",
       "cancel": "Cancel",
       "saveAvatar": "Save Avatar",
@@ -2058,7 +2078,49 @@
     "doneTitle": "Your account is yours now",
     "doneBody": "Everything you made is still here, and it no longer expires.",
     "doneVerify": "We sent a confirmation link to {email}. Everything you made is still here.",
+    "signInToFinish": "Sign in with your email and password to finish setting up your profile.",
+    "signInToFinishVerify": "We sent a confirmation link to {email}. Sign in with your email and password to finish setting up your profile.",
     "failed": "We could not keep your account. Please try again."
+  },
+  "preferencesWizard": {
+    "steps": {
+      "diet": {
+        "title": "How do you eat?",
+        "subtitle": "Pick the closest match. It decides which foods we show you next."
+      },
+      "allergies": {
+        "title": "Anything to steer clear of?",
+        "subtitle": "Allergies and intolerances are always kept out of what we suggest.",
+        "hint": "Pick as many as apply, or none."
+      },
+      "likes": {
+        "title": "What do you love?",
+        "subtitle": "We lean towards these in recipes and meal plans."
+      },
+      "dislikes": {
+        "title": "What would you rather skip?",
+        "subtitle": "We keep these out of what we suggest."
+      }
+    },
+    "search": "Search foods...",
+    "noFoods": "No foods match your search.",
+    "onOtherList": "Already on your other list",
+    "selected": "{count} selected",
+    "actions": {
+      "back": "Back",
+      "continue": "Continue",
+      "save": "Save preferences",
+      "close": "Close"
+    },
+    "savedTitle": "Preferences saved",
+    "savedBody": "Recipes and meal plans now follow your taste.",
+    "failed": "We could not save your preferences. Please try again.",
+    "nudge": {
+      "title": "Make WiseFood yours",
+      "body": "Tell us what you like and what to avoid, and suggestions start matching your taste. It takes a minute.",
+      "start": "Let's do it",
+      "notNow": "Not now"
+    }
   },
   "share": {
     "button": "Share",

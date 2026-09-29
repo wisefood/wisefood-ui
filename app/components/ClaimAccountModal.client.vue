@@ -113,9 +113,9 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import sharingApi, { failureText } from '~/services/sharingApi'
 import { useAuthStore } from '~/stores/auth'
+import { stashClaimNotice } from '~/utils/claimNotice'
 
 const { t } = useI18n()
-const toast = useToast()
 const authStore = useAuthStore()
 
 const isOpen = defineModel<boolean>('open', { default: false })
@@ -153,20 +153,21 @@ async function submit() {
      * the stored guest session drives the banner and the expiry countdown.
      * Dropping that state is what makes the change visible here; the data it
      * used to point at is untouched and still ours.
+     *
+     * There is no Keycloak session underneath to fall back on — a guest never
+     * went through the login page — so once the guest token is gone this tab
+     * is signed out. Rather than leave them on a page that can no longer
+     * load, hand them to the login page with a note, and from there to the
+     * profiles page: the household they kept is still called "Guest
+     * Household", and the gateway flagged it so the setup wizard runs there
+     * once, in claim mode, to replace the placeholders with their own names.
      */
+    stashClaimNotice({ email: result.email, verification_sent: result.verification_sent })
     authStore.clearGuestSession()
     await authStore.initialize(true)
 
     isOpen.value = false
-    toast.add({
-      title: t('claim.doneTitle'),
-      description: result.verification_sent
-        ? t('claim.doneVerify', { email: result.email })
-        : t('claim.doneBody'),
-      color: 'success',
-      icon: 'i-lucide-check',
-      duration: 8000
-    })
+    await navigateTo({ path: '/login', query: { redirect: '/profiles' } })
   } catch (caught) {
     error.value = failureText(caught, t('claim.failed'))
   } finally {

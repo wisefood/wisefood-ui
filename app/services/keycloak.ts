@@ -281,7 +281,7 @@ class KeycloakAuthService {
     return this.keycloak?.tokenParsed
   }
 
-  getUserInfo(): { id: string; username?: string; email?: string; name?: string; roles: string[] } | null {
+  getUserInfo(): { id: string; username?: string; email?: string; name?: string; given_name?: string; family_name?: string; roles: string[] } | null {
     const parsed = this.keycloak?.tokenParsed
     if (!parsed) return null
     return {
@@ -289,6 +289,8 @@ class KeycloakAuthService {
       username: parsed.preferred_username,
       email: parsed.email,
       name: parsed.name,
+      given_name: parsed.given_name,
+      family_name: parsed.family_name,
       roles: parsed.realm_access?.roles ?? [],
     }
   }

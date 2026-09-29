@@ -18,6 +18,31 @@ export interface FoodCategory {
   icon: string
 }
 
+/**
+ * The common allergies and intolerances a profile can declare. Labelled
+ * through `myProfile.allergyOptions.<value>` wherever they are shown, so this
+ * holds only the stable value and its icon.
+ */
+export interface AllergyOption {
+  value: string
+  icon: string
+}
+
+export const allergyOptions: AllergyOption[] = [
+  { value: 'gluten', icon: 'i-lucide-wheat' },
+  { value: 'dairy', icon: 'i-lucide-milk' },
+  { value: 'eggs', icon: 'i-lucide-egg' },
+  { value: 'nuts', icon: 'i-lucide-nut' },
+  { value: 'peanuts', icon: 'i-lucide-nut' },
+  { value: 'soy', icon: 'i-lucide-bean' },
+  { value: 'shellfish', icon: 'i-lucide-shell' },
+  { value: 'fish', icon: 'i-lucide-fish' },
+  { value: 'sesame', icon: 'i-lucide-circle-dot' },
+  { value: 'sulfites', icon: 'i-lucide-flask-conical' },
+  { value: 'lactose', icon: 'i-lucide-milk' },
+  { value: 'fructose', icon: 'i-lucide-apple' }
+]
+
 export const foodCategories: FoodCategory[] = [
   { id: 'proteins', name: 'Proteins', icon: 'i-lucide-beef' },
   { id: 'dairy', name: 'Dairy & Eggs', icon: 'i-lucide-milk' },

@@ -1,8 +1,11 @@
 import { defineStore } from 'pinia'
 import householdsApi, {
+  householdOnboarding,
   type Household,
   type HouseholdMember,
+  type HouseholdOnboarding,
   type CreateHouseholdRequest,
+  type UpdateHouseholdRequest,
   type CreateMemberRequest,
   type UpdateMemberRequest,
   type MemberProfile
@@ -41,7 +44,15 @@ export const useHouseholdStore = defineStore('household', {
     isLoading: (state) => state.loading,
     hasError: (state) => !!state.error,
     needsHouseholdSetup: (state) => state.hasHousehold === false && !state.setupSkipped,
-    needsProfileSelection: (state) => state.hasHousehold === true && !state.selectedMember && state.members.length > 0
+    needsProfileSelection: (state) => state.hasHousehold === true && !state.selectedMember && state.members.length > 0,
+    /**
+     * A guest who kept their account still owns the household they were
+     * given, placeholders and all. The gateway flags it at claim time and
+     * this is what sends them through the wizard in claim mode — once,
+     * because resolving it writes the flag back (see `resolveClaimSetup`).
+     * Server-side on purpose: it has to hold on a different device too.
+     */
+    needsClaimSetup: (state) => householdOnboarding(state.household) === 'pending'
   },
 
   actions: {
@@ -122,6 +133,54 @@ export const useHouseholdStore = defineStore('household', {
       } finally {
         this.loading = false
       }
+    },
+
+    async updateHousehold(data: UpdateHouseholdRequest) {
+      if (!this.household?.id) {
+        throw new Error('No household exists')
+      }
+
+      this.loading = true
+      this.error = null
+
+      try {
+        const response = await householdsApi.updateHousehold(this.household.id, data)
+        if (response.success && response.result) {
+          // The detail response carries members too; keep the store's own
+          // member list authoritative rather than swapping it for a copy.
+          this.household = { ...this.household, ...response.result }
+          return response.result
+        }
+      } catch (err) {
+        console.error('[HouseholdStore] Failed to update household:', err)
+        this.error = 'Failed to update household'
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
+
+    /**
+     * Close the claim-mode wizard for good, with or without changes.
+     *
+     * `metadata` is replaced wholesale by the PATCH, so whatever else the
+     * household carries is sent back alongside the new flag. The write
+     * happens last in the wizard: if it fails, the wizard simply runs again
+     * next time with the names already saved, which beats a flagged-complete
+     * household still called "Guest Household".
+     */
+    async resolveClaimSetup(
+      status: Exclude<HouseholdOnboarding, 'pending'>,
+      changes: Pick<UpdateHouseholdRequest, 'name' | 'region'> = {}
+    ) {
+      return this.updateHousehold({
+        ...changes,
+        metadata: {
+          ...(this.household?.metadata ?? {}),
+          onboarding: status,
+          onboarding_resolved_at: new Date().toISOString()
+        }
+      })
     },
 
     async createMember(data: Omit<CreateMemberRequest, 'household_id'>) {

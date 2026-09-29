@@ -1056,6 +1056,25 @@
           "description": "Főleg növényi alapú"
         }
       },
+      "claim": {
+        "step1": {
+          "titlePrefix": "Legyen",
+          "titleAccent": "a tiéd",
+          "subtitle": "A fiókod mostantól állandó. Adj nevet a terednek a vendég-alapértelmezés helyett."
+        },
+        "step2": {
+          "titlePrefix": "Ez vagy",
+          "titleAccent": "te",
+          "subtitle": "Cseréld le a vendégprofilt a saját nevedre és adataidra."
+        },
+        "actions": {
+          "skip": "Maradjanak az alapértelmezések",
+          "complete": "Mentés és folytatás"
+        },
+        "errors": {
+          "updateFailed": "Nem sikerült menteni a beállításokat. Próbáld újra."
+        }
+      },
       "errors": {
         "createHouseholdFailed": "A háztartás létrehozása sikertelen",
         "genericSubmitFailed": "Valami hiba történt. Próbáld újra."
@@ -1249,6 +1268,7 @@
       "backToDashboard": "Vissza a vezérlőpultra",
       "goToProfiles": "Ugrás a profilokhoz",
       "edit": "Szerkesztés",
+      "quickSetup": "Gyors beállítás",
       "add": "Hozzáadás",
       "cancel": "Mégse",
       "saveAvatar": "Avatar mentése",
@@ -2058,7 +2078,49 @@
     "doneTitle": "A fiók mostantól a tiéd",
     "doneBody": "Minden megmaradt, és már nem jár le.",
     "doneVerify": "Megerősítő linket küldtünk ide: {email}. Minden megmaradt.",
+    "signInToFinish": "Jelentkezz be az e-mail-címeddel és a jelszavaddal, hogy befejezd a profilod beállítását.",
+    "signInToFinishVerify": "Megerősítő linket küldtünk ide: {email}. Jelentkezz be az e-mail-címeddel és a jelszavaddal, hogy befejezd a profilod beállítását.",
     "failed": "Nem sikerült megtartani a fiókot. Próbáld újra."
+  },
+  "preferencesWizard": {
+    "steps": {
+      "diet": {
+        "title": "Hogyan étkezel?",
+        "subtitle": "Válaszd a legközelebbit. Ez dönti el, milyen ételeket mutatunk ezután."
+      },
+      "allergies": {
+        "title": "Van, amit kerülnöd kell?",
+        "subtitle": "Az allergiákat és intoleranciákat mindig kihagyjuk a javaslatokból.",
+        "hint": "Jelöld be az összes érintettet, vagy egyet sem."
+      },
+      "likes": {
+        "title": "Mit szeretsz?",
+        "subtitle": "Ezek felé hajlunk a receptekben és az étrendekben."
+      },
+      "dislikes": {
+        "title": "Mit hagynál inkább ki?",
+        "subtitle": "Ezeket kihagyjuk a javaslatainkból."
+      }
+    },
+    "search": "Ételek keresése...",
+    "noFoods": "Nincs a keresésnek megfelelő étel.",
+    "onOtherList": "Már a másik listádon van",
+    "selected": "{count} kiválasztva",
+    "actions": {
+      "back": "Vissza",
+      "continue": "Folytatás",
+      "save": "Preferenciák mentése",
+      "close": "Bezárás"
+    },
+    "savedTitle": "Preferenciák mentve",
+    "savedBody": "A receptek és étrendek mostantól az ízlésedet követik.",
+    "failed": "Nem sikerült menteni a preferenciáidat. Próbáld újra.",
+    "nudge": {
+      "title": "Tedd a WiseFoodot a sajátoddá",
+      "body": "Mondd el, mit szeretsz és mit kerülsz, és a javaslatok az ízlésedhez igazodnak. Egy percet vesz igénybe.",
+      "start": "Vágjunk bele",
+      "notNow": "Most nem"
+    }
   },
   "share": {
     "button": "Megosztás",

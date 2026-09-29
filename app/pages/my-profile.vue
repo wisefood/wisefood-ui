@@ -71,6 +71,20 @@
           <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">
             {{ ageGroupLabel }}
           </p>
+          <!-- The four preference cards below, as one short run-through.
+               For someone starting from nothing; the cards stay the way to
+               change a single thing. -->
+          <UButton
+            variant="soft"
+            color="primary"
+            size="sm"
+            icon="i-lucide-sparkles"
+            class="mt-4 pointer-coarse:min-h-11"
+            data-flows="preferences-quick-setup"
+            @click="showPreferencesWizard = true"
+          >
+            {{ t('myProfile.actions.quickSetup') }}
+          </UButton>
         </div>
 
         <!-- Profile Details Card -->
@@ -845,6 +859,15 @@
         </template>
       </UModal>
 
+      <!-- Food Preferences Wizard (diet, allergies, likes, dislikes in one go) -->
+      <ProfileFoodPreferencesWizard
+        v-if="currentMember"
+        v-model:open="showPreferencesWizard"
+        :member-id="currentMember.id"
+        source="profile"
+        @complete="loadMemberProfile"
+      />
+
       <!-- Food Picker Modal -->
       <UModal v-model:open="showFoodPicker">
         <template #content>
@@ -1205,6 +1228,7 @@ import { useI18n } from 'vue-i18n'
 import { useHouseholdStore } from '@/stores/household'
 import { stringToAvatarConfig, avatarPresets } from '~/utils/avatarPresets'
 import {
+  allergyOptions as ALLERGY_OPTIONS,
   foodCategories,
   getFoodsByCategory,
   getFoodById,
@@ -1279,6 +1303,7 @@ const showAvatarEditor = ref(false)
 const showEditDetails = ref(false)
 const showAddDiet = ref(false)
 const showFoodPicker = ref(false)
+const showPreferencesWizard = ref(false)
 const showAddAllergy = ref(false)
 const showDeleteConfirm = ref(false)
 
@@ -1782,20 +1807,12 @@ const dietaryOptions = computed(() => [
   }
 ])
 
-const allergyOptions = computed(() => [
-  { value: 'gluten', label: t('myProfile.allergyOptions.gluten'), icon: 'i-lucide-wheat' },
-  { value: 'dairy', label: t('myProfile.allergyOptions.dairy'), icon: 'i-lucide-milk' },
-  { value: 'eggs', label: t('myProfile.allergyOptions.eggs'), icon: 'i-lucide-egg' },
-  { value: 'nuts', label: t('myProfile.allergyOptions.nuts'), icon: 'i-lucide-nut' },
-  { value: 'peanuts', label: t('myProfile.allergyOptions.peanuts'), icon: 'i-lucide-nut' },
-  { value: 'soy', label: t('myProfile.allergyOptions.soy'), icon: 'i-lucide-bean' },
-  { value: 'shellfish', label: t('myProfile.allergyOptions.shellfish'), icon: 'i-lucide-shell' },
-  { value: 'fish', label: t('myProfile.allergyOptions.fish'), icon: 'i-lucide-fish' },
-  { value: 'sesame', label: t('myProfile.allergyOptions.sesame'), icon: 'i-lucide-circle-dot' },
-  { value: 'sulfites', label: t('myProfile.allergyOptions.sulfites'), icon: 'i-lucide-flask-conical' },
-  { value: 'lactose', label: t('myProfile.allergyOptions.lactose'), icon: 'i-lucide-milk' },
-  { value: 'fructose', label: t('myProfile.allergyOptions.fructose'), icon: 'i-lucide-apple' }
-])
+// The list itself is shared with the preferences wizard; only the labels
+// are resolved here.
+const allergyOptions = computed(() => ALLERGY_OPTIONS.map(option => ({
+  ...option,
+  label: t(`myProfile.allergyOptions.${option.value}`)
+})))
 
 const availableDiets = computed(() => {
   return dietaryOptions.value.filter(d => !currentDietaryGroups.value.includes(d.value as DietaryGroup))

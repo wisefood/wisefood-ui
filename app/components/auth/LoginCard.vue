@@ -43,6 +43,21 @@
 
       <!-- Login Form -->
       <div v-else class="space-y-7 px-0 py-2 sm:p-8">
+        <!-- A guest who just kept their account. The claim signed this tab
+             out on the way here; what is left is to sign in as themselves,
+             and the profiles page then runs the setup wizard once. -->
+        <UAlert
+          v-if="claimNotice"
+          color="success"
+          variant="soft"
+          icon="i-lucide-check-circle-2"
+          :title="t('claim.doneTitle')"
+          :description="claimNotice.verification_sent
+            ? t('claim.signInToFinishVerify', { email: claimNotice.email })
+            : t('claim.signInToFinish')"
+          data-flows="claim-signin-notice"
+        />
+
         <!-- Login Button -->
         <UButton 
           color="primary" 
@@ -170,6 +185,7 @@
 import { useAuthStore } from '@/stores/auth'
 import KeycloakAuthService from '@/services/keycloak'
 import { useI18n } from 'vue-i18n'
+import { takeClaimNotice, type ClaimNotice } from '~/utils/claimNotice'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -181,6 +197,7 @@ const isLoggingIn = ref(false)
 const isRegistering = ref(false)
 const isGuestLoading = ref(false)
 const guestError = ref<string | null>(null)
+const claimNotice = ref<ClaimNotice | null>(null)
 
 const redirectTarget = computed(() => {
   const redirect = route.query.redirect
@@ -198,6 +215,8 @@ const redirectTarget = computed(() => {
 
 // Check authentication status on mount
 onMounted(async () => {
+  claimNotice.value = takeClaimNotice()
+
   if (!authStore.initialized) {
     await authStore.initialize()
   }

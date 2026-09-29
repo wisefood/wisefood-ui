@@ -238,9 +238,11 @@
       </template>
     </UModal>
 
-    <!-- Household Setup Wizard -->
+    <!-- Household Setup Wizard: creates a household for a new account, or
+         edits the one a guest kept (claim mode) -->
     <ProfileHouseholdSetupWizard
       v-if="showSetupWizard"
+      :mode="wizardMode"
       @complete="onSetupComplete"
       @skip="onSetupSkip"
     />
@@ -274,6 +276,7 @@ const loading = ref(true)
 const isManaging = ref(false)
 const showAddMember = ref(false)
 const showSetupWizard = ref(false)
+const wizardMode = ref<'create' | 'claim'>('create')
 const isAddingMember = ref(false)
 const addMemberError = ref<string | null>(null)
 
@@ -326,8 +329,20 @@ onMounted(async () => {
   // Initialize household store (this also restores selected member from localStorage)
   await householdStore.initialize()
 
+  // A guest who kept their account: the household still carries the guest
+  // placeholders, and the flag the gateway set at claim time says so. The
+  // wizard runs in claim mode — before any member selection, since the
+  // member it edits is the one they would be selecting.
+  if (householdStore.needsClaimSetup) {
+    wizardMode.value = 'claim'
+    showSetupWizard.value = true
+    loading.value = false
+    return
+  }
+
   // Check if user needs to set up household
   if (householdStore.needsHouseholdSetup) {
+    wizardMode.value = 'create'
     showSetupWizard.value = true
     loading.value = false
     return
@@ -395,12 +410,21 @@ async function addMember() {
 
 function onSetupComplete() {
   showSetupWizard.value = false
+  if (wizardMode.value === 'claim') {
+    // The wizard selected the member it just renamed; straight on.
+    router.push('/dashboard')
+    return
+  }
   // Refresh household data
   householdStore.fetchHousehold()
 }
 
 function onSetupSkip() {
   showSetupWizard.value = false
+  if (wizardMode.value === 'claim') {
+    // The household and its member exist; the tiles are the way on.
+    return
+  }
   // User skipped setup, go to dashboard without profile
   router.push('/dashboard')
 }

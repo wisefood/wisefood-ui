@@ -13,6 +13,7 @@
       <WHeader />
 
       <GuestBanner />
+      <GuestPreferencesNudge />
 
       <UMain class="flex min-h-0 flex-1 flex-col">
         <slot />

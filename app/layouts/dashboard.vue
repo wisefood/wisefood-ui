@@ -7,6 +7,7 @@
     <WHeader />
 
     <GuestBanner />
+    <GuestPreferencesNudge />
 
     <UMain>
       <slot />

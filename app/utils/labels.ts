@@ -29,6 +29,11 @@ const EVENT_TYPES: Record<string, string> = {
   'library.save': 'Saved to library',
   'library.remove': 'Removed from library',
   'catalog.view': 'Opened a catalogue entry',
+  // Setting up
+  'onboarding.completed': 'Finished household setup',
+  'onboarding.skipped': 'Skipped household setup',
+  'preferences.completed': 'Set food preferences',
+  'preferences.dismissed': 'Waved off the preferences nudge',
   // Questions and answers
   'qa.ask': 'Asked a question',
   'qa.answered': 'Received an answer',
