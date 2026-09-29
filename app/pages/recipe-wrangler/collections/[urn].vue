@@ -333,7 +333,10 @@
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import rcollectionsApi from '~/services/rcollectionsApi'
-import type { RecipeCollection, RCollectionStatus, RCollectionReviewStatus, RCollectionSourceType } from '~/services/rcollectionsApi'
+import {
+  RCOLLECTION_SOURCE_TYPE_LABELS,
+  type RecipeCollection, type RCollectionStatus, type RCollectionReviewStatus, type RCollectionSourceType
+} from '~/services/rcollectionsApi'
 import { resolveRecipeRegion } from '~/services/recipeApi'
 import { useCatalogRecipeList } from '~/composables/useCatalogRecipes'
 import { luceneOr, luceneTerm } from '~/utils/catalogRecipeCards'
@@ -464,14 +467,7 @@ function formatReviewStatus(status: RCollectionReviewStatus): string {
 }
 
 function formatSourceType(type: RCollectionSourceType): string {
-  const map: Record<RCollectionSourceType, string> = {
-    web_portal: 'Web Portal',
-    database: 'Database',
-    book: 'Book',
-    journal: 'Journal',
-    other: 'Other'
-  }
-  return map[type] ?? type
+  return RCOLLECTION_SOURCE_TYPE_LABELS[type] ?? type
 }
 
 function statusBadgeClass(status: RCollectionStatus): string {

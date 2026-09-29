@@ -3,7 +3,21 @@ import wisefoodRestApi from './wisefoodApi'
 export type RCollectionStatus = 'active' | 'draft' | 'archived' | 'deleted' | 'deprecated'
 export type RCollectionReviewStatus = 'unreviewed' | 'pending_review' | 'in_review' | 'verified' | 'changes_requested' | 'rejected'
 export type RCollectionVisibility = 'internal' | 'public'
-export type RCollectionSourceType = 'web_portal' | 'database' | 'book' | 'journal' | 'other'
+/** The API's enum, verbatim: anything else is a 422 on create and on patch. */
+export type RCollectionSourceType = 'dataset' | 'web_portal' | 'manual_curation' | 'partner' | 'user_generated'
+
+export const RCOLLECTION_SOURCE_TYPE_LABELS: Record<RCollectionSourceType, string> = {
+  dataset: 'Dataset',
+  web_portal: 'Web portal',
+  manual_curation: 'Manual curation',
+  partner: 'Partner',
+  user_generated: 'User generated'
+}
+
+/** The same enum as select items, so no form keeps a copy of the list. */
+export const RCOLLECTION_SOURCE_TYPE_OPTIONS = (
+  Object.entries(RCOLLECTION_SOURCE_TYPE_LABELS) as Array<[RCollectionSourceType, string]>
+).map(([value, label]) => ({ label, value }))
 
 export interface RecipeCollection {
   urn: string

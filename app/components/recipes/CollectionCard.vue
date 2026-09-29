@@ -73,7 +73,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { RecipeCollection, RCollectionSourceType } from '~/services/rcollectionsApi'
+import { RCOLLECTION_SOURCE_TYPE_LABELS, type RecipeCollection } from '~/services/rcollectionsApi'
 import { CUISINE_EMOJI, humanizeFacet } from '~/utils/facetPresentation'
 
 const props = defineProps<{ collection: RecipeCollection }>()
@@ -83,17 +83,9 @@ watch(() => props.collection.urn, () => { imageFailed.value = false })
 
 const coverUrl = computed(() => imageFailed.value ? null : props.collection.image_url)
 
-const SOURCE_TYPE_LABELS: Record<RCollectionSourceType, string> = {
-  web_portal: 'Web portal',
-  database: 'Database',
-  book: 'Book',
-  journal: 'Journal',
-  other: 'Other'
-}
-
 const sourceTypeLabel = computed(() => {
   const type = props.collection.source_type
-  return type ? SOURCE_TYPE_LABELS[type] ?? type : ''
+  return type ? RCOLLECTION_SOURCE_TYPE_LABELS[type] ?? type : ''
 })
 
 /*

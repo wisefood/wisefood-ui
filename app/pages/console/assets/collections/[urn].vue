@@ -303,11 +303,11 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import rcollectionsApi, { type RecipeCollection } from '~/services/rcollectionsApi'
+import rcollectionsApi, { RCOLLECTION_SOURCE_TYPE_OPTIONS, type RecipeCollection } from '~/services/rcollectionsApi'
 import { apiErrorMessage } from '~/utils/apiErrorMessage'
 import { assetSectionBreadcrumb, recordCrumb } from '~/utils/consoleBreadcrumbs'
 import { languageOptions, licenseOptions } from '~/utils/consoleArticleVocabulary'
-import { httpUrlError } from '~/utils/consoleCatalogFields'
+import { httpUrlError, type CatalogSelectOption } from '~/utils/consoleCatalogFields'
 
 definePageMeta({ layout: 'default' })
 
@@ -354,13 +354,8 @@ const VISIBILITIES = [
   { label: 'Internal', value: 'internal' },
   { label: 'Public', value: 'public' }
 ]
-const SOURCE_TYPES = [
-  { label: 'Web portal', value: 'web_portal' },
-  { label: 'Database', value: 'database' },
-  { label: 'Book', value: 'book' },
-  { label: 'Journal', value: 'journal' },
-  { label: 'Other', value: 'other' }
-]
+// Widened: the form holds every field as a string, and this select binds one.
+const SOURCE_TYPES: CatalogSelectOption[] = RCOLLECTION_SOURCE_TYPE_OPTIONS
 const REVIEW_STATUSES = [
   { label: 'Unreviewed', value: 'unreviewed' },
   { label: 'Pending review', value: 'pending_review' },
