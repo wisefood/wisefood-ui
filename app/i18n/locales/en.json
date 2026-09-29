@@ -2085,6 +2085,13 @@
   },
   "preferencesWizard": {
     "steps": {
+      "name": {
+        "title": "What should we call you?",
+        "subtitle": "So the greeting and your plans say your name instead of \"Guest\".",
+        "label": "Your name",
+        "placeholder": "e.g. Anna, or a nickname",
+        "hint": "Just for this guest session. Leave it empty to stay \"Guest\"."
+      },
       "diet": {
         "title": "How do you eat?",
         "subtitle": "Pick the closest match. It decides which foods we show you next."
@@ -2115,13 +2122,7 @@
     },
     "savedTitle": "Preferences saved",
     "savedBody": "Recipes and meal plans now follow your taste.",
-    "failed": "We could not save your preferences. Please try again.",
-    "nudge": {
-      "title": "Make WiseFood yours",
-      "body": "Tell us what you like and what to avoid, and suggestions start matching your taste. It takes a minute.",
-      "start": "Let's do it",
-      "notNow": "Not now"
-    }
+    "failed": "We could not save your preferences. Please try again."
   },
   "share": {
     "button": "Share",

@@ -366,6 +366,9 @@
         </div>
       </div>
 
+      <!-- A guest's first time here: the food preferences wizard opens by
+           itself, once, with Skip for now in the corner -->
+      <GuestPreferencesPrompt />
     </main>
   </div>
 </template>

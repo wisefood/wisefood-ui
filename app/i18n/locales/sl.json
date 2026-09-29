@@ -2086,6 +2086,13 @@
   },
   "preferencesWizard": {
     "steps": {
+      "name": {
+        "title": "Kako naj te kličemo?",
+        "subtitle": "Da bosta pozdrav in tvoji jedilniki nosila tvoje ime namesto »Guest«.",
+        "label": "Tvoje ime",
+        "placeholder": "npr. Ana ali vzdevek",
+        "hint": "Samo za to gostujočo sejo. Pusti prazno, če želiš ostati »Guest«."
+      },
       "diet": {
         "title": "Kako se prehranjuješ?",
         "subtitle": "Izberi najbližje. To določa, katera živila ti pokažemo naprej."
@@ -2116,13 +2123,7 @@
     },
     "savedTitle": "Nastavitve shranjene",
     "savedBody": "Recepti in jedilniki zdaj sledijo tvojemu okusu.",
-    "failed": "Nastavitev nismo mogli shraniti. Poskusi znova.",
-    "nudge": {
-      "title": "Naj bo WiseFood tvoj",
-      "body": "Povej nam, kaj imaš rad in čemu se izogibaš, in predlogi se bodo prilagodili tvojemu okusu. Vzame minuto.",
-      "start": "Gremo",
-      "notNow": "Ne zdaj"
-    }
+    "failed": "Nastavitev nismo mogli shraniti. Poskusi znova."
   },
   "share": {
     "button": "Deli",

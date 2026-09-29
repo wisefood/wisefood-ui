@@ -2085,6 +2085,13 @@
   },
   "preferencesWizard": {
     "steps": {
+      "name": {
+        "title": "Hogy szólítsunk?",
+        "subtitle": "Hogy a köszöntés és az étrendjeid a nevedet mutassák „Guest” helyett.",
+        "label": "A neved",
+        "placeholder": "pl. Anna, vagy egy becenév",
+        "hint": "Csak erre a vendég-munkamenetre szól. Hagyd üresen, ha maradnál „Guest”."
+      },
       "diet": {
         "title": "Hogyan étkezel?",
         "subtitle": "Válaszd a legközelebbit. Ez dönti el, milyen ételeket mutatunk ezután."
@@ -2115,13 +2122,7 @@
     },
     "savedTitle": "Preferenciák mentve",
     "savedBody": "A receptek és étrendek mostantól az ízlésedet követik.",
-    "failed": "Nem sikerült menteni a preferenciáidat. Próbáld újra.",
-    "nudge": {
-      "title": "Tedd a WiseFoodot a sajátoddá",
-      "body": "Mondd el, mit szeretsz és mit kerülsz, és a javaslatok az ízlésedhez igazodnak. Egy percet vesz igénybe.",
-      "start": "Vágjunk bele",
-      "notNow": "Most nem"
-    }
+    "failed": "Nem sikerült menteni a preferenciáidat. Próbáld újra."
   },
   "share": {
     "button": "Megosztás",

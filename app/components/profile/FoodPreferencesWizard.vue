@@ -5,8 +5,8 @@
   The profile page already has an editor for each of these, and they are the
   right tool for changing one thing. They are the wrong tool for starting from
   nothing: four cards, four modals, four saves is a chore nobody finishes at a
-  booth. A guest is nudged into this after their first page
-  (GuestPreferencesNudge); anyone can open it from their profile.
+  booth. A guest gets this opened for them on the dashboard
+  (GuestPreferencesPrompt); anyone can open it from their profile.
 
   Optional throughout. Every step may be left empty, closing saves nothing,
   and whatever the profile already holds — allergies, likes, the memories
@@ -39,7 +39,23 @@
             :class="s <= step ? 'bg-brand-500 w-8' : 'bg-gray-200 dark:bg-gray-700 w-4'"
           />
         </div>
+        <!-- The way out. Opened by itself on a guest's dashboard it says so
+             in words — an X on a dialog nobody asked for reads as an error;
+             opened on purpose from the profile page, the X is enough. -->
         <UButton
+          v-if="skippable"
+          variant="ghost"
+          color="neutral"
+          size="sm"
+          trailing-icon="i-lucide-x"
+          class="pointer-coarse:min-h-11"
+          :disabled="isSaving"
+          @click="close"
+        >
+          {{ t('profileSelection.setupWizard.actions.skipForNow') }}
+        </UButton>
+        <UButton
+          v-else
           variant="ghost"
           color="neutral"
           size="sm"
@@ -84,9 +100,33 @@
           />
         </div>
 
-        <!-- Step 1: how you eat -->
+        <!-- Guests only: a name for the session, so the greeting and the
+             plans stop saying "Guest". Blank keeps it. -->
         <div
-          v-else-if="step === 1"
+          v-else-if="stepKey === 'name'"
+          class="max-w-sm mx-auto space-y-3"
+        >
+          <UFormField :label="t('preferencesWizard.steps.name.label')">
+            <UInput
+              v-model="memberName"
+              :placeholder="t('preferencesWizard.steps.name.placeholder')"
+              size="lg"
+              icon="i-lucide-user"
+              class="w-full"
+              autocomplete="given-name"
+              :maxlength="60"
+              :disabled="isSaving"
+              @keyup.enter="handleNext"
+            />
+          </UFormField>
+          <p class="text-center text-xs text-gray-500 dark:text-gray-400">
+            {{ t('preferencesWizard.steps.name.hint') }}
+          </p>
+        </div>
+
+        <!-- How you eat -->
+        <div
+          v-else-if="stepKey === 'diet'"
           class="grid grid-cols-2 sm:grid-cols-3 gap-3"
         >
           <button
@@ -115,9 +155,9 @@
           </button>
         </div>
 
-        <!-- Step 2: what to keep out -->
+        <!-- What to keep out -->
         <div
-          v-else-if="step === 2"
+          v-else-if="stepKey === 'allergies'"
           class="space-y-4"
         >
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -151,7 +191,7 @@
           </p>
         </div>
 
-        <!-- Steps 3 and 4: the foods, one list at a time -->
+        <!-- Likes, then dislikes: the foods, one list at a time -->
         <div
           v-else
           class="space-y-4"
@@ -282,7 +322,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useHouseholdStore } from '~/stores/household'
 import { track } from '~/composables/useTelemetry'
-import householdsApi, { type MemberProfile } from '~/services/householdsApi'
+import householdsApi, { GUEST_MEMBER_NAME, type MemberProfile } from '~/services/householdsApi'
 import {
   allergyOptions,
   foodCategories,
@@ -293,11 +333,21 @@ import {
   type FoodCategory
 } from '~/utils/foodPreferences'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   memberId: string
   /** Where it was opened from; recorded with the completion event. */
-  source: 'nudge' | 'profile'
-}>()
+  source: 'auto' | 'profile'
+  /** Opened uninvited: the header offers "Skip for now" instead of an X. */
+  skippable?: boolean
+  /**
+   * Start by asking what to call them. For a guest, whose member is named
+   * "Guest" until they say otherwise; a blank answer keeps that.
+   */
+  askName?: boolean
+}>(), {
+  skippable: false,
+  askName: false
+})
 
 const emit = defineEmits<{
   complete: [profile: MemberProfile]
@@ -311,13 +361,20 @@ const { t, te } = useI18n()
 const { isPhone } = useViewport()
 const householdStore = useHouseholdStore()
 
+type StepKey = 'name' | 'diet' | 'allergies' | 'likes' | 'dislikes'
+const STEP_KEYS = computed<StepKey[]>(() => (props.askName
+  ? ['name', 'diet', 'allergies', 'likes', 'dislikes']
+  : ['diet', 'allergies', 'likes', 'dislikes']))
+
 const step = ref(1)
-const totalSteps = 4
+const totalSteps = computed(() => STEP_KEYS.value.length)
 const isLoading = ref(false)
 const isSaving = ref(false)
 const error = ref<string | null>(null)
 
 const existing = ref<MemberProfile | null>(null)
+const memberName = ref('')
+const initialMemberName = ref('')
 const initialDiet = ref<DietaryGroup | null>(null)
 const selectedDiet = ref<DietaryGroup>('omnivore')
 const selectedAllergies = ref<string[]>([])
@@ -344,6 +401,18 @@ async function start() {
     existing.value = response.result ?? null
   } catch {
     existing.value = null
+  }
+  if (props.askName) {
+    try {
+      const member = (await householdsApi.getMember(props.memberId)).result
+      initialMemberName.value = member?.name ?? ''
+      // The placeholder is not a name they chose; start blank rather than
+      // asking them to delete "Guest" first.
+      memberName.value = initialMemberName.value === GUEST_MEMBER_NAME ? '' : initialMemberName.value
+    } catch {
+      initialMemberName.value = ''
+      memberName.value = ''
+    }
   }
   const diet = existing.value?.dietary_groups?.[0] ?? null
   selectedDiet.value = diet ?? 'omnivore'
@@ -389,42 +458,46 @@ const allergyChoices = computed(() =>
   }))
 )
 
-const STEP_KEYS = ['diet', 'allergies', 'likes', 'dislikes'] as const
-const STEP_ACCENTS = [
-  {
+const STEP_ACCENTS: Record<StepKey, { icon: string, bg: string, text: string }> = {
+  name: {
+    icon: 'i-lucide-user',
+    bg: 'from-brand-100 to-brand-200 dark:from-brand-900/40 dark:to-brand-800/40',
+    text: 'text-brand-600 dark:text-brand-400'
+  },
+  diet: {
     icon: 'i-lucide-salad',
     bg: 'from-green-100 to-green-200 dark:from-green-900/40 dark:to-green-800/40',
     text: 'text-green-600 dark:text-green-400'
   },
-  {
+  allergies: {
     icon: 'i-lucide-shield-alert',
     bg: 'from-red-100 to-red-200 dark:from-red-900/40 dark:to-red-800/40',
     text: 'text-red-600 dark:text-red-400'
   },
-  {
+  likes: {
     icon: 'i-lucide-heart',
     bg: 'from-pink-100 to-pink-200 dark:from-pink-900/40 dark:to-pink-800/40',
     text: 'text-pink-600 dark:text-pink-400'
   },
-  {
+  dislikes: {
     icon: 'i-lucide-ban',
     bg: 'from-orange-100 to-orange-200 dark:from-orange-900/40 dark:to-orange-800/40',
     text: 'text-orange-600 dark:text-orange-400'
   }
-]
+}
 
-const stepKey = computed(() => STEP_KEYS[step.value - 1] ?? 'diet')
+const stepKey = computed<StepKey>(() => STEP_KEYS.value[step.value - 1] ?? 'diet')
 const stepTitle = computed(() => t(`preferencesWizard.steps.${stepKey.value}.title`))
 const stepSubtitle = computed(() => t(`preferencesWizard.steps.${stepKey.value}.subtitle`))
-const stepAccent = computed(() => STEP_ACCENTS[step.value - 1] ?? STEP_ACCENTS[0]!)
+const stepAccent = computed(() => STEP_ACCENTS[stepKey.value])
 
 // Likes are pink and dislikes orange, as on the profile page.
-const listAccent = computed(() => step.value === 3
+const listAccent = computed(() => stepKey.value === 'likes'
   ? { picked: 'border-pink-500 bg-pink-50 dark:bg-pink-900/20', text: 'text-pink-500' }
   : { picked: 'border-orange-500 bg-orange-50 dark:bg-orange-900/20', text: 'text-orange-500' })
 
-const activeList = computed(() => (step.value === 3 ? likes : dislikes))
-const otherList = computed(() => (step.value === 3 ? dislikes : likes))
+const activeList = computed(() => (stepKey.value === 'likes' ? likes : dislikes))
+const otherList = computed(() => (stepKey.value === 'likes' ? dislikes : likes))
 
 /*
  * A search looks across every category — someone typing "salmon" should not
@@ -441,12 +514,12 @@ const filteredFoods = computed(() => {
 })
 
 const selectionSummary = computed(() => {
-  switch (step.value) {
-    case 2:
+  switch (stepKey.value) {
+    case 'allergies':
       return t('preferencesWizard.selected', { count: selectedAllergies.value.length })
-    case 3:
+    case 'likes':
       return t('preferencesWizard.selected', { count: likes.value.length })
-    case 4:
+    case 'dislikes':
       return t('preferencesWizard.selected', { count: dislikes.value.length })
     default:
       return ''
@@ -487,7 +560,7 @@ function toggleAllergy(value: string) {
 
 function handleNext() {
   error.value = null
-  if (step.value < totalSteps) {
+  if (step.value < totalSteps.value) {
     step.value++
     foodSearch.value = ''
     return
@@ -515,12 +588,23 @@ async function save() {
       properties: existing.value?.properties ?? {}
     }
     await householdStore.updateMemberProfile(props.memberId, payload)
+
+    // The name goes through the store so the selected member — and with it
+    // the dashboard greeting — updates in place. After the preferences: a
+    // failure here costs a retry, not the answers just given.
+    const newName = memberName.value.trim()
+    const renamed = props.askName && newName.length > 0 && newName !== initialMemberName.value
+    if (renamed) {
+      await householdStore.updateMember(props.memberId, { name: newName })
+    }
+
     track('preferences.completed', {
       source: props.source,
       diet: selectedDiet.value,
       allergies: selectedAllergies.value.length,
       likes: likes.value.length,
-      dislikes: dislikes.value.length
+      dislikes: dislikes.value.length,
+      named: renamed
     })
     savedThisRun = true
     isOpen.value = false
