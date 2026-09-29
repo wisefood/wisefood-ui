@@ -3,9 +3,10 @@
 
   A guest arrives with an empty profile, so everything the platform suggests
   is generic until they say otherwise — and most never find the profile page.
-  This is a small card at the foot of the screen, offered after their first
-  page rather than on it: the first page is where they are still finding
-  their feet, and a prompt there is one more thing in the way.
+  This is a small card at the foot of the screen, offered once they have had
+  a first look: a few seconds into their first app page, or straight away on
+  the second. Not the instant they land — that moment already has the
+  dashboard and the consent bar in it.
 
   It shows once per guest session and never again after "Not now", after the
   wizard is saved, or when the profile already has preferences on it (some
@@ -94,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { useConsentStore } from '@/stores/consent'
@@ -107,9 +108,14 @@ const STORAGE_KEY = 'wisefood_guest_preferences_nudge'
 /** Pages a guest actually uses the product on. Only these count as an encounter. */
 const APP_PATHS = ['/dashboard', '/foodchat', '/recipe-wrangler', '/foodscholar', '/library', '/my-profile']
 
+/** How long a first look lasts before the card is offered on that same page. */
+const FIRST_LOOK_MS = 6_000
+
 interface NudgeState {
   /** Distinct app pages this guest has opened, in order. */
   seen: string[]
+  /** When the first app page was opened (epoch ms); the first-look clock. */
+  firstSeenAt: number | null
   outcome: 'open' | 'dismissed' | 'done'
 }
 
@@ -120,13 +126,14 @@ function loadState(): NudgeState {
       const parsed = JSON.parse(raw) as Partial<NudgeState>
       return {
         seen: Array.isArray(parsed.seen) ? parsed.seen.filter(p => typeof p === 'string') : [],
+        firstSeenAt: typeof parsed.firstSeenAt === 'number' ? parsed.firstSeenAt : null,
         outcome: parsed.outcome === 'dismissed' || parsed.outcome === 'done' ? parsed.outcome : 'open'
       }
     }
   } catch {
     // Private mode or blocked storage: the nudge still works for this page.
   }
-  return { seen: [], outcome: 'open' }
+  return { seen: [], firstSeenAt: null, outcome: 'open' }
 }
 
 function persist(state: NudgeState) {
@@ -148,25 +155,52 @@ const state = ref<NudgeState>(loadState())
 /** null until the profile has been looked at. */
 const hasPreferences = ref<boolean | null>(null)
 const wizardOpen = ref(false)
+/** True once the first-look clock has run out. */
+const firstLookOver = ref(false)
+let firstLookTimer: ReturnType<typeof setTimeout> | undefined
 
 const memberId = computed(() => authStore.guestMemberId ?? householdStore.currentMember?.id ?? null)
 const isAppPage = computed(() => APP_PATHS.some(p => route.path === p || route.path.startsWith(`${p}/`)))
 
-// "After the first encounter" is the second distinct app page. The first is
-// wherever they landed, and they are still working out what it is.
+/*
+ * The first look. Its clock starts on the first app page and is kept in the
+ * session, so moving between layouts (which remounts this component) does
+ * not restart it; a second distinct page ends it early.
+ */
+function armFirstLook() {
+  if (firstLookTimer) clearTimeout(firstLookTimer)
+  const startedAt = state.value.firstSeenAt
+  if (startedAt === null) return
+  const remaining = Math.max(0, FIRST_LOOK_MS - (Date.now() - startedAt))
+  firstLookTimer = setTimeout(() => {
+    firstLookOver.value = true
+  }, remaining)
+}
+
 watch(() => route.path, (path) => {
   if (!authStore.isGuest || !isAppPage.value) return
   if (!state.value.seen.includes(path)) {
-    state.value = { ...state.value, seen: [...state.value.seen, path].slice(-20) }
+    state.value = {
+      ...state.value,
+      seen: [...state.value.seen, path].slice(-20),
+      firstSeenAt: state.value.firstSeenAt ?? Date.now()
+    }
     persist(state.value)
   }
+  armFirstLook()
 }, { immediate: true })
+
+onUnmounted(() => {
+  if (firstLookTimer) clearTimeout(firstLookTimer)
+})
+
+const hadFirstLook = computed(() => state.value.seen.length >= 2 || firstLookOver.value)
 
 const eligible = computed(() =>
   authStore.isGuest
   && !!memberId.value
   && state.value.outcome === 'open'
-  && state.value.seen.length >= 2
+  && hadFirstLook.value
   && isAppPage.value
   && consentStore.loaded
   && !consentStore.needsConsent
