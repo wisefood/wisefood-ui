@@ -19,6 +19,26 @@ export const RCOLLECTION_SOURCE_TYPE_OPTIONS = (
   Object.entries(RCOLLECTION_SOURCE_TYPE_LABELS) as Array<[RCollectionSourceType, string]>
 ).map(([value, label]) => ({ label, value }))
 
+export const RCOLLECTION_URN_PREFIX = 'urn:rcollection:'
+
+/** What `POST /rcollections` accepts as the slug after the prefix. */
+export const RCOLLECTION_SLUG_PATTERN = /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/
+export const RCOLLECTION_SLUG_MAX_LENGTH = 100
+
+/**
+ * `POST /rcollections` insists on these three; the rest is optional and is
+ * omitted rather than sent empty, because the schema is closed and typed.
+ * The slug is chosen, not derived: it is the identifier recipes link to.
+ */
+export interface RCollectionCreatePayload {
+  urn: string
+  title: string
+  source_type: RCollectionSourceType
+  description?: string
+  url?: string
+  license?: string
+}
+
 export interface RecipeCollection {
   urn: string
   id: string
@@ -270,7 +290,7 @@ class RCollectionsApiService {
     }
   }
 
-  async createCollection(payload: Partial<RecipeCollection>): Promise<RecipeCollection> {
+  async createCollection(payload: RCollectionCreatePayload): Promise<RecipeCollection> {
     const res = await wisefoodRestApi.post<unknown>(this.basePath, payload)
     return normalizeCollection(asRecord(res)?.['result'] ?? res)
   }

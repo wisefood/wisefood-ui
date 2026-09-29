@@ -180,6 +180,40 @@
               placeholder="Healthy Food Guide"
             />
           </UFormField>
+          <UFormField
+            label="URN slug"
+            required
+            :error="urnError"
+            help="Lowercase letters, numbers and dashes. Generated from the title until you edit it, and fixed once created: recipes link to it."
+          >
+            <UInput
+              v-model="draft.urn"
+              class="w-full"
+              placeholder="healthy-food-guide"
+              :ui="{
+                base: 'ps-32',
+                leading: 'pointer-events-none ps-2.5'
+              }"
+              @update:model-value="urnEdited = true"
+            >
+              <template #leading>
+                <span class="text-xs text-gray-400 dark:text-gray-500">{{ RCOLLECTION_URN_PREFIX }}</span>
+              </template>
+            </UInput>
+          </UFormField>
+          <UFormField
+            label="Source type"
+            required
+            hint="What kind of thing the recipes were taken from"
+          >
+            <USelectMenu
+              v-model="draft.source_type"
+              value-key="value"
+              :items="RCOLLECTION_SOURCE_TYPE_OPTIONS"
+              placeholder="Choose one"
+              class="w-full"
+            />
+          </UFormField>
           <UFormField label="Description">
             <UTextarea
               v-model="draft.description"
@@ -233,7 +267,7 @@
             icon="i-lucide-check"
             class="cursor-pointer"
             :loading="saving"
-            :disabled="!draft.title.trim() || Boolean(urlError)"
+            :disabled="!canCreate"
             @click="create"
           >
             Create
@@ -245,13 +279,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, onBeforeUnmount, onMounted, resolveComponent, ref } from 'vue'
+import { computed, h, onBeforeUnmount, onMounted, resolveComponent, ref, watch } from 'vue'
 import rcollectionsApi, {
-  type Facets, type RecipeCollection
+  RCOLLECTION_SLUG_MAX_LENGTH, RCOLLECTION_SLUG_PATTERN, RCOLLECTION_SOURCE_TYPE_OPTIONS,
+  RCOLLECTION_URN_PREFIX,
+  type Facets, type RCollectionCreatePayload, type RCollectionSourceType, type RecipeCollection
 } from '~/services/rcollectionsApi'
 import { apiErrorMessage } from '~/utils/apiErrorMessage'
 import { assetSectionBreadcrumb } from '~/utils/consoleBreadcrumbs'
 import { licenseOptions } from '~/utils/consoleArticleVocabulary'
+import { slugifyArticleUrn } from '~/utils/consoleArticles'
 import { httpUrlError } from '~/utils/consoleCatalogFields'
 
 definePageMeta({ layout: 'default' })
@@ -284,12 +321,51 @@ const error = ref<string | null>(null)
 const creating = ref(false)
 const saving = ref(false)
 const createError = ref<string | null>(null)
-const draft = ref({ title: '', description: '', url: '', license: '' })
+const urnEdited = ref(false)
+
+const emptyDraft = () => ({
+  title: '',
+  urn: '',
+  source_type: undefined as RCollectionSourceType | undefined,
+  description: '',
+  url: '',
+  license: ''
+})
+const draft = ref(emptyDraft())
 
 const countLabel = computed(() =>
   `${total.value.toLocaleString()} collection${total.value === 1 ? '' : 's'}`)
 
 const urlError = computed(() => httpUrlError(draft.value.url))
+
+const urnError = computed(() => {
+  const value = draft.value.urn.trim()
+  if (!value) return undefined
+  if (value.length > RCOLLECTION_SLUG_MAX_LENGTH) {
+    return `At most ${RCOLLECTION_SLUG_MAX_LENGTH} characters.`
+  }
+  return RCOLLECTION_SLUG_PATTERN.test(value)
+    ? undefined
+    : 'Use lowercase letters, numbers, dashes or underscores.'
+})
+
+/*
+ * The API requires the slug and the source type alongside the title, and it
+ * did not before this form asked for them: the request went out without
+ * either and came back a 422.
+ */
+const canCreate = computed(() =>
+  Boolean(draft.value.title.trim())
+  && Boolean(draft.value.urn.trim())
+  && !urnError.value
+  && Boolean(draft.value.source_type)
+  && !urlError.value)
+
+// Auto-slug from the title until the editor takes over, as the article and
+// textbook forms do.
+watch(() => draft.value.title, (title) => {
+  if (!urnEdited.value) draft.value.urn = title.trim() ? slugifyArticleUrn(title) : ''
+})
 
 /*
  * From the facet buckets rather than the current page: the catalog counted
@@ -462,18 +538,24 @@ function openRow(_event: Event, row: { original: RecipeCollection }) {
 }
 
 function openCreate() {
-  draft.value = { title: '', description: '', url: '', license: '' }
+  draft.value = emptyDraft()
+  urnEdited.value = false
   createError.value = null
   creating.value = true
 }
 
 async function create() {
   // The form submits on Enter, which does not consult the disabled button.
-  if (!draft.value.title.trim() || urlError.value) return
+  const sourceType = draft.value.source_type
+  if (!canCreate.value || !sourceType) return
   saving.value = true
   createError.value = null
   try {
-    const payload: Record<string, unknown> = { title: draft.value.title.trim() }
+    const payload: RCollectionCreatePayload = {
+      urn: draft.value.urn.trim(),
+      title: draft.value.title.trim(),
+      source_type: sourceType
+    }
     for (const key of ['description', 'url', 'license'] as const) {
       const value = draft.value[key].trim()
       if (value) payload[key] = value
