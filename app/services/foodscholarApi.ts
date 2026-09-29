@@ -182,9 +182,13 @@ export interface QaAskResult {
  *  same shape as FoodChat's MemorySuggestion so the UI treats both alike. */
 export interface QaMemorySuggestion {
   id: string
-  kind: 'like' | 'dislike' | 'cuisine' | 'allergy_hint'
+  kind: 'like' | 'dislike' | 'cuisine' | 'allergy_hint' | 'goal' | 'dietary_pattern'
   value: string
   statement: string
+  /** The question it was inferred from; echoed back on accept as provenance. */
+  source_text?: string | null
+  /** The profile already holds this value: shown pre-selected, nothing to answer. */
+  already_known?: boolean
 }
 
 export interface QaQuestionsResult {

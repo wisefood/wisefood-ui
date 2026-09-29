@@ -1772,7 +1772,8 @@
       "memory": {
         "remember": "Remember",
         "noThanks": "No thanks",
-        "saved": "Saved to your profile"
+        "saved": "Saved to your profile",
+        "alreadySaved": "Already in your profile"
       },
       "changedSlots": {
         "verified": "verified",

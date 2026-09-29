@@ -1751,7 +1751,8 @@
       "memory": {
         "remember": "Zapomni si",
         "noThanks": "Ne, hvala",
-        "saved": "Shranjeno v tvoj profil"
+        "saved": "Shranjeno v tvoj profil",
+        "alreadySaved": "Že v tvojem profilu"
       },
       "changedSlots": {
         "verified": "preverjeno",

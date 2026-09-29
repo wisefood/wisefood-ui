@@ -632,7 +632,13 @@
               class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-700 dark:text-gray-200"
               :class="sug.kind === 'allergy_hint' ? 'bg-amber-50 dark:bg-amber-900/20' : 'bg-gray-50 dark:bg-zinc-800/60'"
             >
-              <template v-if="memoryChipState[sug.id] !== 'accepted'">
+              <template v-if="sug.already_known">
+                <!-- Already on the profile: recognised, pre-selected, nothing to answer. -->
+                <UIcon name="i-lucide-check" class="w-3.5 h-3.5 shrink-0 text-green-500" />
+                <span class="flex-1 min-w-0 text-xs font-light leading-snug">{{ sug.statement }}</span>
+                <span class="px-2.5 py-1 text-[0.6875rem] font-medium rounded-full bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300">{{ t('foodChatHome.chat.memory.alreadySaved') }}</span>
+              </template>
+              <template v-else-if="memoryChipState[sug.id] !== 'accepted'">
                 <UIcon
                   name="i-lucide-brain"
                   class="w-3.5 h-3.5 shrink-0"
@@ -2277,7 +2283,7 @@ const visibleMemorySuggestions = computed<QaMemorySuggestion[]>(() =>
 
 const handleMemoryDecision = async (suggestion: QaMemorySuggestion, decision: 'accept' | 'decline') => {
   const memberId = householdStore.currentMember?.id
-  if (!memberId || memoryChipState[suggestion.id]) return
+  if (!memberId || suggestion.already_known || memoryChipState[suggestion.id]) return
   memoryChipState[suggestion.id] = 'pending'
   try {
     await foodscholarApi.submitMemoryDecision(memberId, suggestion, decision)

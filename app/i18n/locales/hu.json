@@ -1750,7 +1750,8 @@
       "memory": {
         "remember": "Jegyezd meg",
         "noThanks": "Köszönöm, nem",
-        "saved": "Elmentve a profilodba"
+        "saved": "Elmentve a profilodba",
+        "alreadySaved": "Már a profilodban van"
       },
       "changedSlots": {
         "verified": "ellenőrizve",
