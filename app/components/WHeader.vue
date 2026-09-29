@@ -21,7 +21,10 @@
     <template #right>
       <UColorModeButton class="hidden lg:inline-flex" />
 
-      <LocaleSelector class="hidden lg:block" />
+      <!-- The selector's root is its trigger button, so the visibility class
+           must keep the button's inline-flex: `lg:block` would stack the flag
+           over the label. -->
+      <LocaleSelector class="hidden lg:inline-flex" />
 
       <UButton
         v-if="authStore.initialized && authStore.isLoggedIn && authStore.canAccessConsole"
