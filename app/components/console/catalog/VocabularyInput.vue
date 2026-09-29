@@ -6,7 +6,9 @@
 
   - **Closed** (`allow-custom="false"`) — the API validates against an enum, so
     anything else is a 422 that arrives after the save looks successful. Licence
-    is the one that bites. A select is the honest control.
+    is the one that bites. A select is the honest control. An empty model is
+    handed to it as `undefined`, so no value shows the placeholder rather than
+    the "None" entry.
   - **Open** — a plain input with a native suggestion list. Deliberately not a
     combobox: `UInputMenu` only writes its model when an item is picked, so text
     typed and left unpicked is discarded on blur, and its search term is also
@@ -19,7 +21,7 @@
 <template>
   <USelectMenu
     v-if="!allowCustom"
-    :model-value="modelValue"
+    :model-value="modelValue || undefined"
     :items="selectItems"
     value-key="value"
     label-key="label"
@@ -27,7 +29,7 @@
     :placeholder="placeholder"
     :disabled="disabled"
     class="w-full"
-    @update:model-value="emit('update:modelValue', String($event ?? ''))"
+    @update:model-value="commitSelection"
   />
 
   <div v-else>
@@ -92,6 +94,15 @@ const emit = defineEmits<{ 'update:modelValue': [string] }>()
 const listId = useId()
 
 /*
+ * The way back to no value cannot be the empty string the model uses for it.
+ * The select is a Reka combobox, which reserves '' for "clear the selection"
+ * and throws at mount for any item that carries it — every closed field on
+ * every page failed to render. The sentinel is translated at this edge and
+ * never reaches the model.
+ */
+const NONE = '__none__'
+
+/*
  * A closed list still has to carry the stored value: a record can hold a member
  * of the enum that the curated list no longer offers, and a select whose value
  * is absent from its items renders blank and writes that blankness back on the
@@ -100,6 +111,10 @@ const listId = useId()
  */
 const selectItems = computed(() => {
   const items = withCurrentOption(props.options, props.modelValue)
-  return props.clearable ? [{ label: '— None —', value: '' }, ...items] : items
+  return props.clearable ? [{ label: '— None —', value: NONE }, ...items] : items
 })
+
+function commitSelection(value: unknown) {
+  emit('update:modelValue', value === NONE || value == null ? '' : String(value))
+}
 </script>
