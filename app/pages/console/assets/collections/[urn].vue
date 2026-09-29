@@ -304,6 +304,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import rcollectionsApi, { type RecipeCollection } from '~/services/rcollectionsApi'
+import { apiErrorMessage } from '~/utils/apiErrorMessage'
 import { assetSectionBreadcrumb, recordCrumb } from '~/utils/consoleBreadcrumbs'
 import { languageOptions, licenseOptions } from '~/utils/consoleArticleVocabulary'
 import { httpUrlError } from '~/utils/consoleCatalogFields'
@@ -444,7 +445,7 @@ async function load() {
     collection.value = record
     fill(record)
   } catch (caught) {
-    error.value = caught instanceof Error ? caught.message : 'Could not load that collection.'
+    error.value = apiErrorMessage(caught, 'Could not load that collection.')
   } finally {
     loading.value = false
   }
@@ -468,7 +469,7 @@ async function save() {
     toast.add({ title: 'Saved', icon: 'i-lucide-check', color: 'success' })
   } catch (caught) {
     toast.add({
-      title: caught instanceof Error ? caught.message : 'Could not save those changes.',
+      title: apiErrorMessage(caught, 'Could not save those changes.'),
       color: 'error',
       icon: 'i-lucide-alert-circle'
     })
@@ -485,7 +486,7 @@ async function remove() {
     await navigateTo('/console/assets/collections')
   } catch (caught) {
     toast.add({
-      title: caught instanceof Error ? caught.message : 'Could not delete that collection.',
+      title: apiErrorMessage(caught, 'Could not delete that collection.'),
       color: 'error',
       icon: 'i-lucide-alert-circle'
     })

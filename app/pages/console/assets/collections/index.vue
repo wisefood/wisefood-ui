@@ -249,6 +249,7 @@ import { computed, h, onBeforeUnmount, onMounted, resolveComponent, ref } from '
 import rcollectionsApi, {
   type Facets, type RecipeCollection
 } from '~/services/rcollectionsApi'
+import { apiErrorMessage } from '~/utils/apiErrorMessage'
 import { assetSectionBreadcrumb } from '~/utils/consoleBreadcrumbs'
 import { licenseOptions } from '~/utils/consoleArticleVocabulary'
 import { httpUrlError } from '~/utils/consoleCatalogFields'
@@ -413,7 +414,7 @@ async function load() {
     }
   } catch (caught) {
     if (token !== loadToken) return
-    error.value = caught instanceof Error ? caught.message : 'Could not load collections.'
+    error.value = apiErrorMessage(caught, 'Could not load collections.')
   } finally {
     if (token === loadToken) loading.value = false
   }
@@ -488,7 +489,7 @@ async function create() {
       await load()
     }
   } catch (caught) {
-    createError.value = caught instanceof Error ? caught.message : 'Could not create that collection.'
+    createError.value = apiErrorMessage(caught, 'Could not create that collection.')
   } finally {
     saving.value = false
   }
