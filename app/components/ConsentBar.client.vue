@@ -67,10 +67,12 @@
 import { useAuthStore } from '@/stores/auth'
 import { useConsentStore } from '@/stores/consent'
 import { useI18n } from 'vue-i18n'
+import { useGuestPromptPending } from '~/composables/useGuestPromptPending'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
 const consentStore = useConsentStore()
+const guestPromptPending = useGuestPromptPending()
 
 // Fetch the consent status once auth is ready (the keycloak plugin awaits
 // authStore.initialize() before the app mounts, so this usually fires
@@ -83,8 +85,13 @@ watch(
   { immediate: true }
 )
 
+// A guest's first minute belongs to the preferences wizard; the bar comes
+// once that is answered, rather than stacked under a modal's footer.
 const showBar = computed(
-  () => authStore.isAuthenticated && consentStore.loaded && consentStore.needsConsent
+  () => authStore.isAuthenticated
+    && consentStore.loaded
+    && consentStore.needsConsent
+    && !guestPromptPending.value
 )
 
 const handleAccept = async () => {

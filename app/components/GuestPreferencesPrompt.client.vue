@@ -6,9 +6,10 @@
   otherwise — and most never find the profile page.
   So the dashboard, the one page every guest lands on, opens the wizard for
   them: once per guest session, only while the profile is still empty, and
-  after the consent bar has been answered (two things asking at once is a
-  wall). "Skip for now" closes it for the session; Quick setup on My Profile
-  brings it back. Session storage, like the guest session itself, so the next
+  before the consent bar, which holds back until this is answered (two things
+  asking at once is a wall, and this is the one worth answering first).
+  "Skip for now" closes it for the session; Quick setup on My Profile brings
+  it back. Session storage, like the guest session itself, so the next
   visitor at the same booth gets a fresh start.
 -->
 <template>
@@ -25,12 +26,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
-import { useConsentStore } from '@/stores/consent'
 import { useHouseholdStore } from '@/stores/household'
 import { track } from '~/composables/useTelemetry'
+import { useGuestPromptPending } from '~/composables/useGuestPromptPending'
 import householdsApi from '~/services/householdsApi'
 
 const STORAGE_KEY = 'wisefood_guest_preferences_prompt'
@@ -58,8 +59,8 @@ function saveOutcome(outcome: Outcome) {
 const { t } = useI18n()
 const toast = useToast()
 const authStore = useAuthStore()
-const consentStore = useConsentStore()
 const householdStore = useHouseholdStore()
+const promptPending = useGuestPromptPending()
 
 const outcome = ref<Outcome>(loadOutcome())
 /** null until the profile has been looked at. */
@@ -73,9 +74,14 @@ const eligible = computed(() =>
   authStore.isGuest
   && !!memberId.value
   && outcome.value === 'open'
-  && consentStore.loaded
-  && !consentStore.needsConsent
 )
+
+// The consent bar waits on this: from "will open" until answered or found
+// unnecessary. Cleared on the way out, so leaving the dashboard mid-wizard
+// does not leave the bar held back on the next page.
+watchEffect(() => {
+  promptPending.value = eligible.value && hasPreferences.value !== true
+})
 
 watch(eligible, async (yes) => {
   if (!yes || !memberId.value) return
@@ -110,6 +116,7 @@ watch(eligible, async (yes) => {
 
 onUnmounted(() => {
   if (openTimer) clearTimeout(openTimer)
+  promptPending.value = false
 })
 
 function setOutcome(next: Outcome) {
