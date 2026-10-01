@@ -12,6 +12,7 @@
  * just renders one chip fewer.
  */
 import type { RecipeCatalogDocument, RecipeSearchResult } from '~/services/recipeApi'
+import { getCostCategory } from '~/utils/costCategory'
 
 /** The UI's region codes against the index's per-region score suffixes. */
 const REGION_SUFFIX: Record<string, string> = {
@@ -36,6 +37,7 @@ export const CATALOG_CARD_FIELDS: string[] = [
   'image_url',
   'duration',
   'serves',
+  'cost_category',
   'source',
   'source_name',
   'source_id',
@@ -86,6 +88,7 @@ export function catalogDocumentToCard(
     image_url: asString(document['image_url']),
     duration: asNumber(document['duration']),
     serves: asNumber(document['serves']),
+    cost_category: getCostCategory(document['cost_category']),
     // `source_name` is the registry's display name ("Food Hero"); `source` is
     // the raw stored value ("foodhero"). The card prints it, so prefer the
     // one written for people.

@@ -43,6 +43,9 @@ export interface RecipeNutritionProfilingDetail {
 
 export type RecipeStatus = 'active' | 'disabled'
 
+/** The catalog's price band. Null for most recipes until the restore lands. */
+export type CostCategory = 'low' | 'medium' | 'high'
+
 export interface Recipe {
   recipe_id: string
   title: string
@@ -73,6 +76,7 @@ export interface Recipe {
   instructions: string[]
   duration: number | null
   serves: number | null
+  cost_category?: CostCategory | null
   /** Approximate raw grams in one serving; null when any ingredient weight is unknown. */
   serving_weight_g?: number | null
   total_kcal_per_serving: number | null
@@ -113,6 +117,7 @@ export interface RecipeSearchResult {
   image_url: string | null
   duration?: number | null
   serves?: number | null
+  cost_category?: CostCategory | null
   /**
    * Nutri-Score points (the Neo4j search path) or the letter label the
    * catalog index stores ("Nutriscore_B"). `getNutriScoreGrade` accepts
@@ -250,6 +255,7 @@ export interface RecipeCardDetails {
   protein_g_per_serving?: number | null
   carbs_g_per_serving?: number | null
   fat_g_per_serving?: number | null
+  cost_category?: CostCategory | null
   nutri_score_label?: string | null
 }
 

@@ -478,7 +478,15 @@
       "addToFavorites": "Dodaj med priljubljene",
       "removeFromFavorites": "Odstrani iz priljubljenih",
       "untitled": "Recept brez naslova",
-      "compareLimit": "Naenkrat lahko primerjaš največ {count} recepte"
+      "compareLimit": "Naenkrat lahko primerjaš največ {count} recepte",
+      "cost": {
+        "label": "Cena",
+        "levels": {
+          "low": "Nizka",
+          "medium": "Srednja",
+          "high": "Visoka"
+        }
+      }
     },
     "categories": {
       "title": "Brskaj po kategorijah",
