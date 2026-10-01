@@ -156,17 +156,46 @@
               placeholder="National Food Composition Database 2023"
             />
           </UFormField>
-          <UFormField label="Compiling institution">
+          <UFormField
+            label="URN slug"
+            required
+            :error="urnError"
+            :help="`Lowercase letters, numbers, dashes or underscores. Generated from the title until you edit it, and fixed once created. Stored as ${FCTABLE_URN_PREFIX}…`"
+          >
             <UInput
-              v-model="draft.compiling_institution"
+              v-model="draft.urn"
               class="w-full"
+              placeholder="national-food-composition-database-2023"
+              @update:model-value="urnEdited = true"
             />
           </UFormField>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <UFormField
+              label="Compiling institution"
+              required
+            >
+              <UInput
+                v-model="draft.compiling_institution"
+                class="w-full"
+                placeholder="Ciqual (FR)"
+              />
+            </UFormField>
+            <UFormField
+              label="Database name"
+              required
+            >
+              <UInput
+                v-model="draft.database_name"
+                class="w-full"
+                placeholder="Ciqual 2020"
+              />
+            </UFormField>
+          </div>
           <div class="grid gap-4 sm:grid-cols-2">
             <UFormField label="Region">
               <ConsoleCatalogVocabularyInput
                 v-model="draft.region"
-                :options="countryCodeOptions"
+                :options="COMPOSITION_TABLE_REGION_OPTIONS"
                 placeholder="Select or type a code"
               />
             </UFormField>
@@ -213,7 +242,7 @@
             icon="i-lucide-check"
             class="cursor-pointer"
             :loading="saving"
-            :disabled="!draft.title.trim()"
+            :disabled="!canCreate"
             @click="create"
           >
             Create
@@ -225,17 +254,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted, resolveComponent, ref } from 'vue'
-import fctablesApi, { type Facets, type FCTable } from '~/services/fctablesApi'
+import { computed, h, onMounted, resolveComponent, ref, watch } from 'vue'
+import fctablesApi, {
+  FCTABLE_SLUG_MAX_LENGTH, FCTABLE_SLUG_PATTERN, FCTABLE_URN_PREFIX,
+  type Facets, type FCTable
+} from '~/services/fctablesApi'
 import { assetSectionBreadcrumb } from '~/utils/consoleBreadcrumbs'
 import { licenseOptions } from '~/utils/consoleArticleVocabulary'
+import { slugifyArticleUrn } from '~/utils/consoleArticles'
 import { httpUrlError } from '~/utils/consoleCatalogFields'
-import { countries } from '~/utils/countries'
-
-const countryCodeOptions = countries.map(country => ({
-  label: `${country.label} (${country.code})`,
-  value: country.code
-}))
+import { COMPOSITION_TABLE_REGION_OPTIONS } from '~/utils/compositionTables'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Composition Tables · Console' })
@@ -266,11 +294,44 @@ const error = ref<string | null>(null)
 const creating = ref(false)
 const saving = ref(false)
 const createError = ref<string | null>(null)
-const draft = ref({
-  title: '', compiling_institution: '', region: '', license: '', url: ''
+const urnEdited = ref(false)
+const emptyDraft = () => ({
+  title: '', urn: '', compiling_institution: '', database_name: '',
+  region: '', license: '', url: ''
 })
+const draft = ref(emptyDraft())
 
 const urlError = computed(() => httpUrlError(draft.value.url))
+
+const urnError = computed(() => {
+  const value = draft.value.urn.trim()
+  if (!value) return undefined
+  if (value.length > FCTABLE_SLUG_MAX_LENGTH) {
+    return `At most ${FCTABLE_SLUG_MAX_LENGTH} characters.`
+  }
+  return FCTABLE_SLUG_PATTERN.test(value)
+    ? undefined
+    : 'Use lowercase letters, numbers, dashes or underscores.'
+})
+
+/*
+ * The API requires the slug, the institution and the database name alongside
+ * the title. The form used to ask for the title alone, so every request went
+ * out short two fields and came back a 422.
+ */
+const canCreate = computed(() =>
+  Boolean(draft.value.title.trim())
+  && Boolean(draft.value.urn.trim())
+  && !urnError.value
+  && Boolean(draft.value.compiling_institution.trim())
+  && Boolean(draft.value.database_name.trim())
+  && !urlError.value)
+
+// Auto-slug from the title until the editor takes over, as the collection
+// and article forms do.
+watch(() => draft.value.title, (title) => {
+  if (!urnEdited.value) draft.value.urn = title.trim() ? slugifyArticleUrn(title) : ''
+})
 
 const countLabel = computed(() =>
   `${total.value.toLocaleString()} table${total.value === 1 ? '' : 's'}`)
@@ -402,18 +463,24 @@ function openRow(_event: Event, row: { original: FCTable }) {
 }
 
 function openCreate() {
-  draft.value = { title: '', compiling_institution: '', region: '', license: '', url: '' }
+  draft.value = emptyDraft()
+  urnEdited.value = false
   createError.value = null
   creating.value = true
 }
 
 async function create() {
-  if (!draft.value.title.trim()) return
+  if (!canCreate.value) return
   saving.value = true
   createError.value = null
   try {
-    const payload: Record<string, unknown> = { title: draft.value.title.trim() }
-    for (const key of ['compiling_institution', 'region', 'license', 'url'] as const) {
+    const payload: Record<string, unknown> = {
+      title: draft.value.title.trim(),
+      urn: draft.value.urn.trim(),
+      compiling_institution: draft.value.compiling_institution.trim(),
+      database_name: draft.value.database_name.trim()
+    }
+    for (const key of ['region', 'license', 'url'] as const) {
       const value = draft.value[key].trim()
       if (value) payload[key] = value
     }

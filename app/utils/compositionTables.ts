@@ -13,6 +13,8 @@
  */
 import type { FCTable } from '~/services/fctablesApi'
 import type { RecipeRegion } from '~/services/recipeApi'
+import type { CatalogSelectOption } from '~/utils/consoleCatalogFields'
+import { countries } from '~/utils/countries'
 
 /** Accepted spellings per region, lower-cased at comparison time. */
 export const REGION_ALIASES: Record<RecipeRegion, string[]> = {
@@ -36,3 +38,19 @@ export function findTableForRegion(tables: FCTable[], region: RecipeRegion): FCT
     return value.length > 0 && aliases.includes(value)
   }) ?? null
 }
+
+/**
+ * What the console offers for a table's `region`.
+ *
+ * The country list alone was not enough: a composite table such as Ciqual
+ * stands in for the whole Union, and the recipe pages already resolve the
+ * `EU` region to a table. Without this entry a curator had to type the code
+ * by hand and hope it matched an alias above.
+ */
+export const COMPOSITION_TABLE_REGION_OPTIONS: readonly CatalogSelectOption[] = [
+  { label: '🇪🇺 European Union (EU)', value: 'EU' },
+  ...countries.map(country => ({
+    label: `${country.label} (${country.code})`,
+    value: country.code
+  }))
+]

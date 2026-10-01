@@ -206,7 +206,7 @@
               <UFormField label="Region">
                 <ConsoleCatalogVocabularyInput
                   v-model="form.region"
-                  :options="countryCodeOptions"
+                  :options="COMPOSITION_TABLE_REGION_OPTIONS"
                   placeholder="Select or type a code"
                 />
               </UFormField>
@@ -314,12 +314,7 @@ import fctablesApi, { type FCTable } from '~/services/fctablesApi'
 import { assetSectionBreadcrumb, recordCrumb } from '~/utils/consoleBreadcrumbs'
 import { languageOptions, licenseOptions } from '~/utils/consoleArticleVocabulary'
 import { httpUrlError } from '~/utils/consoleCatalogFields'
-import { countries } from '~/utils/countries'
-
-const countryCodeOptions = countries.map(country => ({
-  label: `${country.label} (${country.code})`,
-  value: country.code
-}))
+import { COMPOSITION_TABLE_REGION_OPTIONS } from '~/utils/compositionTables'
 
 definePageMeta({ layout: 'default' })
 

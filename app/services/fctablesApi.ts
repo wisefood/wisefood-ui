@@ -10,6 +10,15 @@ import wisefoodRestApi from './wisefoodApi'
  * curator for tables that predate it.
  */
 
+/**
+ * The slug the API asks for on create. The system prefixes it with
+ * `urn:food_composition_table:`; the pattern and the length cap are the
+ * API's own, copied so the form can refuse a bad slug before the round trip.
+ */
+export const FCTABLE_URN_PREFIX = 'urn:food_composition_table:'
+export const FCTABLE_SLUG_PATTERN = /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/
+export const FCTABLE_SLUG_MAX_LENGTH = 100
+
 export type FCTableStatus = 'active' | 'draft' | 'archived' | 'deleted' | 'deprecated'
 
 export interface FCTable {
