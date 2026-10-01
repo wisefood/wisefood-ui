@@ -1166,39 +1166,6 @@
                           {{ formatNumber(scaledWeightGrams(profilingFor(ingredient.name)?.weight_g || weightDetailFor(ingredient.name)?.weight_grams)) }} g
                         </span>
                       </div>
-                      <!-- Parsed qty -->
-                      <div class="flex items-center justify-between gap-2">
-                        <span class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Parsed qty</span>
-                        <span class="font-mono text-xs text-zinc-700 dark:text-zinc-300">
-                          {{ scaledQuantity(profilingFor(ingredient.name)?.parsed_quantity || weightDetailFor(ingredient.name)?.parsed_quantity) }}
-                          {{ profilingFor(ingredient.name)?.parsed_unit || weightDetailFor(ingredient.name)?.parsed_unit || '' }}
-                          <span
-                            v-if="weightDetailFor(ingredient.name)?.quantity_inferred || weightDetailFor(ingredient.name)?.unit_inferred"
-                            class="ml-1 text-amber-500"
-                          >
-                            <UIcon
-                              name="i-lucide-zap"
-                              class="w-2.5 h-2.5 inline"
-                            />
-                          </span>
-                        </span>
-                      </div>
-                      <!-- Match source -->
-                      <div class="flex items-center justify-between gap-2">
-                        <span class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Match source</span>
-                        <span
-                          :class="[
-                            'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[0.625rem] font-medium border',
-                            getMatchSourceStyle(String(profilingFor(ingredient.name)?.weight_source || profilingFor(ingredient.name)?.nutrition_match_source || weightDetailFor(ingredient.name)?.match_type || ''))
-                          ]"
-                        >
-                          <UIcon
-                            :name="getMatchSourceIcon(String(profilingFor(ingredient.name)?.weight_source || profilingFor(ingredient.name)?.nutrition_match_source || weightDetailFor(ingredient.name)?.match_type || ''))"
-                            class="w-2.5 h-2.5"
-                          />
-                          {{ getWeightSourceLabel(String(profilingFor(ingredient.name)?.weight_source || profilingFor(ingredient.name)?.nutrition_match_source || weightDetailFor(ingredient.name)?.match_type || '')) }}
-                        </span>
-                      </div>
                       <!-- Matched ingredient -->
                       <div class="flex items-start justify-between gap-2">
                         <span class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mt-0.5 shrink-0">Matched to</span>
@@ -1230,12 +1197,12 @@
                           {{ (Number(profilingFor(ingredient.name)?.similarity) * 100).toFixed(0) }}%
                         </span>
                       </div>
-                      <!-- USDA ID -->
+                      <!-- Food ID -->
                       <div
                         v-if="profilingFor(ingredient.name)?.canonical_food_id || weightDetailFor(ingredient.name)?.usda_id"
                         class="flex items-center justify-between gap-2"
                       >
-                        <span class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">USDA ID</span>
+                        <span class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Food ID</span>
                         <span class="font-mono text-[0.625rem] text-zinc-500 dark:text-zinc-400">
                           #{{ profilingFor(ingredient.name)?.canonical_food_id || weightDetailFor(ingredient.name)?.usda_id }}
                         </span>
@@ -2190,15 +2157,6 @@ const scaledWeightGrams = (value: unknown): number | null => {
   const grams = toNullableNumber(value)
   if (grams === null) return null
   return grams * servesRatio.value
-}
-
-// The parsed quantity sits beside the weight it produced, so it moves with it;
-// trailing zeros are dropped because "3" reads better than "3.00 tablespoon".
-const scaledQuantity = (value: unknown): string => {
-  const quantity = toNullableNumber(value)
-  if (quantity === null) return '—'
-  const scaled = quantity * servesRatio.value
-  return Number.isInteger(scaled) ? String(scaled) : scaled.toFixed(2).replace(/\.?0+$/, '')
 }
 
 const resetServes = () => {
@@ -3311,38 +3269,6 @@ const formatNutrientAmount = (
   const formatted = Number.isInteger(amount) ? amount.toString() : amount.toFixed(2)
   const effectiveUnit = unit || (nutrient ? inferNutrientUnit(nutrient) : null)
   return effectiveUnit ? `${formatted} ${effectiveUnit}` : formatted
-}
-
-const getWeightSourceLabel = (matchType?: string | null): string => {
-  const normalized = String(matchType || '').toLowerCase()
-  if (!normalized) return 'N/A'
-  if (normalized.includes('direct') || normalized.includes('portion')) return 'USDA portion table'
-  if (normalized.includes('embedding')) return 'USDA embedding match'
-  if (normalized.includes('llm')) return 'AI Generated (LLM Fallback)'
-  if (normalized.includes('density')) return 'Density fallback'
-  return matchType || 'N/A'
-}
-
-const getMatchSourceIcon = (matchType?: string | null): string => {
-  const normalized = String(matchType || '').toLowerCase()
-  if (normalized.includes('direct') || normalized.includes('portion')) return 'i-lucide-database'
-  if (normalized.includes('embedding')) return 'i-lucide-sparkles'
-  if (normalized.includes('llm')) return 'i-lucide-bot'
-  if (normalized.includes('density')) return 'i-lucide-flask-conical'
-  return 'i-lucide-circle-help'
-}
-
-const getMatchSourceStyle = (matchType?: string | null): string => {
-  const normalized = String(matchType || '').toLowerCase()
-  if (normalized.includes('direct') || normalized.includes('portion'))
-    return 'bg-brandg-50 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300 border-brandg-200 dark:border-brandg-700'
-  if (normalized.includes('embedding'))
-    return 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700'
-  if (normalized.includes('llm'))
-    return 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700'
-  if (normalized.includes('density'))
-    return 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-700'
-  return 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700'
 }
 
 const formatNutritionSourceLabel = (source?: unknown): string => {
