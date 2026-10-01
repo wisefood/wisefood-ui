@@ -478,7 +478,15 @@
       "addToFavorites": "Hozzáadás a kedvencekhez",
       "removeFromFavorites": "Eltávolítás a kedvencekből",
       "untitled": "Névtelen recept",
-      "compareLimit": "Egyszerre legfeljebb {count} receptet hasonlíthatsz össze"
+      "compareLimit": "Egyszerre legfeljebb {count} receptet hasonlíthatsz össze",
+      "cost": {
+        "label": "Költség",
+        "levels": {
+          "low": "Alacsony",
+          "medium": "Közepes",
+          "high": "Magas"
+        }
+      }
     },
     "categories": {
       "title": "Böngészés kategória szerint",

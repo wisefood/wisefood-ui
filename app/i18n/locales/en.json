@@ -478,7 +478,15 @@
       "addToFavorites": "Add to favorites",
       "removeFromFavorites": "Remove from favorites",
       "untitled": "Untitled recipe",
-      "compareLimit": "You can compare up to {count} recipes at a time"
+      "compareLimit": "You can compare up to {count} recipes at a time",
+      "cost": {
+        "label": "Cost",
+        "levels": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      }
     },
     "categories": {
       "title": "Browse by Category",

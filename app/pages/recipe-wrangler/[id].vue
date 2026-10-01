@@ -317,6 +317,34 @@
             </span>
           </div>
 
+          <!-- Divider -->
+          <div
+            v-if="costLevel"
+            class="h-5 w-px bg-zinc-300 dark:bg-zinc-600 hidden sm:block"
+          />
+
+          <!-- Cost band (hidden when the catalog has none, which is most
+               recipes until the restore lands — never an "unknown"). -->
+          <div
+            v-if="costLevel"
+            class="flex items-center gap-2"
+          >
+            <UIcon
+              name="i-lucide-coins"
+              class="w-3.5 h-3.5 text-brandg-500 dark:text-brandg-400 flex-shrink-0"
+            />
+            <span class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              {{ t('recipeWrangler.recipe.cost.label') }}
+            </span>
+            <span
+              :class="['text-xs font-black tracking-tight', costLevel.textClass]"
+              aria-hidden="true"
+            >{{ costLevel.symbol }}</span>
+            <span :class="['text-xs font-medium', costLevel.textClass]">
+              {{ t(`recipeWrangler.recipe.cost.levels.${costLevel.key}`) }}
+            </span>
+          </div>
+
           <!-- Action buttons -->
           <div class="ml-auto flex items-center gap-2">
             <NuxtLink
@@ -1887,6 +1915,7 @@ import type {
   RecipeSubstituteResult
 } from '~/services/recipeApi'
 import type { AdaptedRecipeNutrition, MemberAdaptedRecipe } from '~/services/memberAdaptedRecipesApi'
+import { getCostLevel } from '~/utils/costCategory'
 import { formatDishTypeLabel, getDishTypeIcon, normalizeDishTypes } from '~/utils/dishTypes'
 import { useRelatedRecipes } from '~/composables/useCatalogRecipes'
 import { useRegionCompositionTable } from '~/composables/useRegionCompositionTable'
@@ -2393,6 +2422,9 @@ const sustainabilityLevel = computed<SustainabilityLevel | null>(() => {
   }
   return { key: 'high', pct: 20, barClass: 'from-red-400 to-red-500', textClass: 'text-red-600 dark:text-red-400' }
 })
+
+// --- Cost band (the catalog's low / medium / high; null for most recipes) ---
+const costLevel = computed(() => getCostLevel(recipe.value?.cost_category))
 const formatPer100 = (value: number, unit: string): string => {
   const safe = Number.isFinite(value) ? value : 0
   const digits = unit === 'kJ' || unit === 'mg' ? 0 : 1

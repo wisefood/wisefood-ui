@@ -109,6 +109,22 @@
           <UIcon name="i-lucide-users" class="w-4 h-4" />
           <span>{{ recipe.serves }} {{ t('recipeWrangler.recipe.servings', recipe.serves) }}</span>
         </div>
+        <!-- Cost band: hidden when the catalog has none, which is most recipes. -->
+        <div
+          v-if="costLevel"
+          class="flex items-center gap-1"
+          :title="costLabel"
+        >
+          <UIcon
+            name="i-lucide-coins"
+            class="w-4 h-4"
+          />
+          <span
+            :class="['font-semibold tracking-tight', costLevel.textClass]"
+            aria-hidden="true"
+          >{{ costLevel.symbol }}</span>
+          <span class="sr-only">{{ costLabel }}</span>
+        </div>
       </div>
 
       <div v-if="dishTypeChips.length" class="mt-2 flex flex-wrap gap-1.5">
@@ -167,6 +183,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRecipeStore } from '~/stores/recipe'
 import type { RecipeSearchResult } from '~/services/recipeApi'
+import { getCostLevel } from '~/utils/costCategory'
 import { formatDishTypeLabel, getDishTypeIcon, normalizeDishTypes } from '~/utils/dishTypes'
 import { CUISINE_EMOJI, MOOD_EMOJI, humanizeFacet } from '~/utils/facetPresentation'
 import { getRecipeWranglerMode, getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
@@ -260,6 +277,20 @@ const annotationChips = computed(() => {
   }
   return chips.slice(0, 3)
 })
+
+/**
+ * The catalog's price band, as one to three coins.
+ *
+ * Null for most recipes until the catalog restore lands, and the card then
+ * shows nothing: an "unknown" on nearly every card would say more about the
+ * backfill than about the recipe. The glyph is decorative; the words are for
+ * the screen reader and the hover.
+ */
+const costLevel = computed(() => getCostLevel(props.recipe.cost_category))
+const costLabel = computed(() => costLevel.value
+  ? `${t('recipeWrangler.recipe.cost.label')}: ${t(`recipeWrangler.recipe.cost.levels.${costLevel.value.key}`)}`
+  : ''
+)
 
 watch(() => effectiveRecipeId.value, () => {
   imageLoadFailed.value = false
