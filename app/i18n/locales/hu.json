@@ -333,6 +333,33 @@
       "compare": "Összehasonlítás"
     }
   },
+  "allergens": {
+    "labels": {
+      "gluten": "Glutént tartalmazó gabonafélék",
+      "wheat": "Búza",
+      "crustacean_shellfish": "Rákfélék",
+      "egg": "Tojás",
+      "fish": "Hal",
+      "peanut": "Földimogyoró",
+      "soy": "Szójabab",
+      "milk": "Tej",
+      "tree_nut": "Diófélék",
+      "celery": "Zeller",
+      "mustard": "Mustár",
+      "sesame": "Szezámmag",
+      "sulphites": "Kén-dioxid és szulfitok",
+      "lupin": "Csillagfürt",
+      "molluscs": "Puhatestűek"
+    },
+    "hints": {
+      "gluten": "Búza (beleértve a tönkölyt és a khorasan búzát), rozs, árpa, zab",
+      "crustacean_shellfish": "Rákok, garnélák, homárok",
+      "milk": "Beleértve a laktózt",
+      "tree_nut": "Mandula, mogyoró, dió, kesudió, pekándió, brazil dió, pisztácia, makadámia",
+      "sulphites": "Tartósítószerként, 10 mg/kg vagy 10 mg/l felett",
+      "molluscs": "Kagylók, osztrigák, tintahal, csigák"
+    }
+  },
   "recipeWrangler": {
     "title": "RecipeWrangler",
     "subtitle": "Fedezz fel személyre szabott recepteket a táplálkozási céljaid és környezeti hatás alapján",
@@ -411,23 +438,6 @@
       "clearAll": "Összes törlése",
       "quickFilters": "Gyors szűrők",
       "sortBy": "Rendezés",
-      "allergens": {
-        "celery": "Zeller",
-        "crustaceanShellfish": "Rákfélék",
-        "egg": "Tojás",
-        "fish": "Hal",
-        "gluten": "Glutén",
-        "lupin": "Csillagfürt",
-        "milk": "Tej",
-        "molluscs": "Puhatestűek",
-        "mustard": "Mustár",
-        "peanut": "Mogyoró",
-        "sesame": "Szezám",
-        "soy": "Szója",
-        "sulphites": "Szulfitok",
-        "treeNut": "Diófélék",
-        "wheat": "Búza"
-      },
       "quickOptions": {
         "quickEasy": "Gyors és egyszerű (< 30 perc)",
         "healthy": "Egészséges és tápláló",
@@ -466,18 +476,6 @@
       "removeFilter": "Szűrő eltávolítása: {label}",
       "showResults": "{count} recept mutatása",
       "showResultsLoading": "Receptek keresése…"
-    },
-    "allergens": {
-      "peanuts": "Földimogyoró",
-      "treeNuts": "Csonthéjasok",
-      "dairy": "Tejtermék",
-      "eggs": "Tojás",
-      "soy": "Szója",
-      "wheat": "Búza",
-      "fish": "Hal",
-      "shellfish": "Rákfélék",
-      "gluten": "Glutén",
-      "lactose": "Laktóz"
     },
     "quickFilters": {
       "quick": "Gyors és egyszerű (< 30 perc)",
@@ -1473,20 +1471,6 @@
       "nuts": "Diófélék és magvak",
       "condiments": "Fűszerek és szószok",
       "beverages": "Italok"
-    },
-    "allergyOptions": {
-      "gluten": "Glutén",
-      "dairy": "Tejtermékek",
-      "eggs": "Tojás",
-      "nuts": "Fadiófélék",
-      "peanuts": "Földimogyoró",
-      "soy": "Szója",
-      "shellfish": "Rákfélék",
-      "fish": "Hal",
-      "sesame": "Szezám",
-      "sulfites": "Szulfitok",
-      "lactose": "Laktóz",
-      "fructose": "Fruktóz"
     },
     "errors": {
       "deleteProfileFailed": "A profil törlése sikertelen. Próbáld újra.",

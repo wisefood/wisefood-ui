@@ -1043,7 +1043,13 @@
                   class="w-5 h-5"
                   :class="selectedNewAllergy === allergy.value ? 'text-red-500' : 'text-gray-400'"
                 />
-                <span class="text-sm font-medium text-gray-900 dark:text-white">{{ allergy.label }}</span>
+                <span class="flex flex-col min-w-0">
+                  <span class="text-sm font-medium text-gray-900 dark:text-white">{{ allergy.label }}</span>
+                  <span
+                    v-if="allergy.hint"
+                    class="text-xs text-gray-500 dark:text-gray-400 leading-snug"
+                  >{{ allergy.hint }}</span>
+                </span>
               </button>
             </div>
 
@@ -1234,6 +1240,7 @@ import {
   getFoodById,
   type DietaryGroup
 } from '~/utils/foodPreferences'
+import { allergenHintKey, allergenLabel, allergenLabelKey, normalizeAllergens } from '~/utils/allergens'
 import householdsApi, { type MemberProfile, type NutritionalPreferences } from '~/services/householdsApi'
 import consentApi from '~/services/consentApi'
 import { useAnalyticsSession } from '~/composables/useAnalyticsSession'
@@ -1807,19 +1814,25 @@ const dietaryOptions = computed(() => [
   }
 ])
 
-// The list itself is shared with the preferences wizard; only the labels
-// are resolved here.
+// The list itself is shared with the preferences wizard and the recipe
+// filters; only the labels are resolved here.
 const allergyOptions = computed(() => ALLERGY_OPTIONS.map(option => ({
   ...option,
-  label: t(`myProfile.allergyOptions.${option.value}`)
+  label: t(allergenLabelKey(option.value)),
+  // The regulation's own examples (wheat, rye, barley; crabs, prawns ...),
+  // where a group name alone would leave someone guessing.
+  hint: te(allergenHintKey(option.value)) ? t(allergenHintKey(option.value)) : ''
 })))
 
 const availableDiets = computed(() => {
   return dietaryOptions.value.filter(d => !currentDietaryGroups.value.includes(d.value as DietaryGroup))
 })
 
+// Through the vocabulary, so a profile still holding `dairy` is not offered
+// "Milk" a second time.
 const availableAllergies = computed(() => {
-  return allergyOptions.value.filter(a => !allergies.value.includes(a.value))
+  const held = new Set(normalizeAllergens(allergies.value))
+  return allergyOptions.value.filter(a => !held.has(a.value))
 })
 
 // Filtered foods based on category, search, and dietary compatibility
@@ -1894,8 +1907,10 @@ function getFoodName(foodId: string): string {
   return te(key) ? t(key) : fallbackName
 }
 
+// Whatever the profile holds — canonical, an older spelling, or a free-text
+// allergy FoodChat remembered — reads as its label.
 function getAllergyLabel(allergy: string): string {
-  return allergyOptions.value.find(a => a.value === allergy)?.label || allergy
+  return allergenLabel(allergy, t, te)
 }
 
 function getFoodCategoryLabel(categoryId: string, fallbackLabel: string): string {
@@ -2177,7 +2192,8 @@ async function addAllergy() {
 
   isSaving.value = true
   try {
-    const newAllergies = [...allergies.value, selectedNewAllergy.value]
+    // Folded on write, so the first edit also migrates any older spellings.
+    const newAllergies = normalizeAllergens([...allergies.value, selectedNewAllergy.value])
     const payload = buildProfilePayload({ allergies: newAllergies })
     await householdStore.updateMemberProfile(currentMember.value.id, payload)
 
@@ -2197,7 +2213,7 @@ async function removeAllergy(allergy: string) {
 
   isSaving.value = true
   try {
-    const newAllergies = allergies.value.filter(a => a !== allergy)
+    const newAllergies = normalizeAllergens(allergies.value.filter(a => a !== allergy))
     const payload = buildProfilePayload({ allergies: newAllergies })
     await householdStore.updateMemberProfile(currentMember.value.id, payload)
 

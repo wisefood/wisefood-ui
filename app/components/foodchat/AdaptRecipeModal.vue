@@ -94,7 +94,7 @@
             name="i-lucide-alert-triangle"
             class="w-3 h-3 shrink-0"
           />
-          {{ t('foodChatHome.adaptModal.allergenWarning', { list: suggestion.new_allergens.join(', ') }) }}
+          {{ t('foodChatHome.adaptModal.allergenWarning', { list: suggestion.new_allergens.map(a => allergenLabel(a, t, te)).join(', ') }) }}
         </p>
         <div class="flex justify-end">
           <span
@@ -203,6 +203,7 @@
 </template>
 
 <script setup lang="ts">
+import { allergenLabel } from '~/utils/allergens'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { createReusableTemplate } from '@vueuse/core'
@@ -213,7 +214,7 @@ import { useHouseholdStore } from '~/stores/household'
 const props = defineProps<{ recipeId: string }>()
 const emit = defineEmits<{ close: [], saved: [] }>()
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const householdStore = useHouseholdStore()
 const { isPhone, isCoarsePointer } = useViewport()
 

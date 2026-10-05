@@ -333,6 +333,33 @@
       "compare": "Primerjaj"
     }
   },
+  "allergens": {
+    "labels": {
+      "gluten": "Žita, ki vsebujejo gluten",
+      "wheat": "Pšenica",
+      "crustacean_shellfish": "Raki",
+      "egg": "Jajca",
+      "fish": "Ribe",
+      "peanut": "Arašidi",
+      "soy": "Soja",
+      "milk": "Mleko",
+      "tree_nut": "Oreščki",
+      "celery": "Zelena",
+      "mustard": "Gorčica",
+      "sesame": "Sezamova semena",
+      "sulphites": "Žveplov dioksid in sulfiti",
+      "lupin": "Volčji bob",
+      "molluscs": "Mehkužci"
+    },
+    "hints": {
+      "gluten": "Pšenica (vključno s piro in pšenico khorasan), rž, ječmen, oves",
+      "crustacean_shellfish": "Rakovice, kozice, jastogi",
+      "milk": "Vključno z laktozo",
+      "tree_nut": "Mandlji, lešniki, orehi, indijski oreščki, pekani, brazilski oreščki, pistacije, makadamija",
+      "sulphites": "Kot konzervans, nad 10 mg/kg ali 10 mg/l",
+      "molluscs": "Školjke, ostrige, lignji, polži"
+    }
+  },
   "recipeWrangler": {
     "title": "RecipeWrangler",
     "subtitle": "Odkrij personalizirane recepte glede na tvoje prehranske cilje in vpliv na okolje",
@@ -411,23 +438,6 @@
       "clearAll": "Počisti vse",
       "quickFilters": "Hitri filtri",
       "sortBy": "Razvrsti po",
-      "allergens": {
-        "celery": "Zelena",
-        "crustaceanShellfish": "Raki",
-        "egg": "Jajca",
-        "fish": "Ribe",
-        "gluten": "Gluten",
-        "lupin": "Volčji bob",
-        "milk": "Mleko",
-        "molluscs": "Mehkužci",
-        "mustard": "Gorčica",
-        "peanut": "Arašidi",
-        "sesame": "Sezam",
-        "soy": "Soja",
-        "sulphites": "Sulfiti",
-        "treeNut": "Oreščki",
-        "wheat": "Pšenica"
-      },
       "quickOptions": {
         "quickEasy": "Hitro in enostavno (< 30 min)",
         "healthy": "Zdravo in hranljivo",
@@ -466,18 +476,6 @@
       "removeFilter": "Odstrani filter: {label}",
       "showResults": "Prikaži recepte: {count}",
       "showResultsLoading": "Iskanje receptov…"
-    },
-    "allergens": {
-      "peanuts": "Arašidi",
-      "treeNuts": "Oreščki",
-      "dairy": "Mlečni izdelki",
-      "eggs": "Jajca",
-      "soy": "Soja",
-      "wheat": "Pšenica",
-      "fish": "Ribe",
-      "shellfish": "Školjke",
-      "gluten": "Gluten",
-      "lactose": "Laktoza"
     },
     "quickFilters": {
       "quick": "Hitro in enostavno (< 30 min)",
@@ -1474,20 +1472,6 @@
       "nuts": "Oreščki in semena",
       "condiments": "Začimbe in omake",
       "beverages": "Pijače"
-    },
-    "allergyOptions": {
-      "gluten": "Gluten",
-      "dairy": "Mlečni izdelki",
-      "eggs": "Jajca",
-      "nuts": "Drevesni oreščki",
-      "peanuts": "Arašidi",
-      "soy": "Soja",
-      "shellfish": "Školjke",
-      "fish": "Ribe",
-      "sesame": "Sezam",
-      "sulfites": "Sulfiti",
-      "lactose": "Laktoza",
-      "fructose": "Fruktoza"
     },
     "errors": {
       "deleteProfileFailed": "Brisanje profila ni uspelo. Poskusi znova.",

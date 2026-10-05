@@ -1788,7 +1788,7 @@
                     class="w-3.5 h-3.5 flex-shrink-0 mt-0.5"
                   />
                   {{ t('recipeWrangler.detail.adaptation.allergenWarning') }}
-                  {{ (suggestion.new_allergens || []).join(', ') }}
+                  {{ (suggestion.new_allergens || []).map(a => allergenLabel(a, t, te)).join(', ') }}
                 </p>
 
                 <!-- Explanation warning -->
@@ -1858,6 +1858,7 @@
 </template>
 
 <script setup lang="ts">
+import { allergenLabel } from '~/utils/allergens'
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -1892,7 +1893,7 @@ import { ANNOTATION_FACETS, humanizeFacet } from '~/utils/facetPresentation'
 definePageMeta({
   middleware: ['auth', 'profile']
 })
-const { t } = useI18n()
+const { t, te } = useI18n()
 
 // ============================================================================
 // Route & Stores

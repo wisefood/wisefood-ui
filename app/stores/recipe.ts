@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { normalizeAllergens } from '~/utils/allergens'
 import { watch } from 'vue'
 import { track } from '~/composables/useTelemetry'
 import type { Recipe, RecipeDishType, RecipeFacetMap, RecipeParamSortBy, RecipeSearchResult, RecipeSource } from '~/services/recipeApi'
@@ -378,7 +379,7 @@ export const useRecipeStore = defineStore('recipe', {
      * Set excluded allergens
      */
     setExcludedAllergens(allergens: string[]) {
-      this.excludedAllergens = [...allergens]
+      this.excludedAllergens = normalizeAllergens(allergens)
       this.persistAllergens()
     },
 
@@ -793,7 +794,9 @@ export const useRecipeStore = defineStore('recipe', {
         const stored = localStorage.getItem('recipe-allergens')
         if (stored) {
           try {
-            this.excludedAllergens = JSON.parse(stored)
+            // Folded through the vocabulary so a value persisted before the
+            // identifiers settled still excludes what it names.
+            this.excludedAllergens = normalizeAllergens(JSON.parse(stored))
           } catch (e) {
             console.error('Failed to load allergens:', e)
           }

@@ -318,6 +318,7 @@
 </template>
 
 <script setup lang="ts">
+import { allergenLabelKey, normalizeAllergens } from '~/utils/allergens'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useHouseholdStore } from '~/stores/household'
@@ -417,7 +418,9 @@ async function start() {
   const diet = existing.value?.dietary_groups?.[0] ?? null
   selectedDiet.value = diet ?? 'omnivore'
   initialDiet.value = diet
-  selectedAllergies.value = [...(existing.value?.allergies ?? [])]
+  // Folded, so an older `dairy` pre-selects the Milk chip and is written
+  // back as `milk`.
+  selectedAllergies.value = normalizeAllergens(existing.value?.allergies ?? [])
   likes.value = [...(existing.value?.nutritional_preferences?.food_likes ?? [])]
   dislikes.value = [...(existing.value?.nutritional_preferences?.food_dislikes ?? [])]
   isLoading.value = false
@@ -454,7 +457,7 @@ const dietaryOptions = computed(() =>
 const allergyChoices = computed(() =>
   allergyOptions.map(option => ({
     ...option,
-    label: t(`myProfile.allergyOptions.${option.value}`)
+    label: t(allergenLabelKey(option.value))
   }))
 )
 

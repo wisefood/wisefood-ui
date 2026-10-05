@@ -739,6 +739,7 @@
 </template>
 
 <script setup lang="ts">
+import { allergenLabelEn, normalizeAllergens } from '~/utils/allergens'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { Recipe, RecipeCollectionSuggestion, UpdateRecipeRequest } from '~/services/recipeApi'
 import recipeApi from '~/services/recipeApi'
@@ -863,7 +864,7 @@ const displayTags = computed(() => {
 const displayAllergens = computed(() => {
   const allergens = recipe.value?.allergens || []
   return allergens
-    .map(allergen => humanizeLabel(String(allergen || '').trim()))
+    .map(allergen => allergenLabelEn(String(allergen || '').trim()))
     .filter(Boolean)
 })
 
@@ -932,12 +933,16 @@ function sanitizeInstructions(value: string[]) {
     .filter(Boolean)
 }
 
+// A curator typing "Dairy" or "tree nuts" stores the identifier the graph
+// matches on (`milk`, `tree_nut`); a name outside the vocabulary is kept as
+// typed, lower-cased, so a rare allergy is not silently dropped.
 function addAllergenFromDraft() {
-  const token = allergenDraftInput.value.trim()
-  if (!token) return
-  const normalized = token.toLowerCase()
-  if (!allergenTokens.value.map(a => a.toLowerCase()).includes(normalized)) {
-    allergenTokens.value = [...allergenTokens.value, token]
+  const tokens = normalizeAllergens([allergenDraftInput.value])
+  if (!tokens.length) return
+  const held = new Set(normalizeAllergens(allergenTokens.value))
+  const additions = tokens.filter(token => !held.has(token))
+  if (additions.length) {
+    allergenTokens.value = [...allergenTokens.value, ...additions]
   }
   allergenDraftInput.value = ''
 }

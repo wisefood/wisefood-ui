@@ -1430,6 +1430,7 @@
 </template>
 
 <script setup lang="ts">
+import { ALLERGEN_FILTER_OPTIONS, ALLERGEN_LABELS_EN } from '~/utils/allergens'
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import type {
   CreateRecipeRequest,
@@ -1524,18 +1525,13 @@ function toggleAnnotationFacet(
 
 const showFacetPanel = ref(true)
 
-const allergenOptions: { value: string, label: string }[] = [
-  { value: 'peanuts', label: 'Peanuts' },
-  { value: 'tree nuts', label: 'Tree Nuts' },
-  { value: 'dairy', label: 'Dairy' },
-  { value: 'eggs', label: 'Eggs' },
-  { value: 'soy', label: 'Soy' },
-  { value: 'wheat', label: 'Wheat' },
-  { value: 'fish', label: 'Fish' },
-  { value: 'shellfish', label: 'Shellfish' },
-  { value: 'gluten', label: 'Gluten' },
-  { value: 'lactose', label: 'Lactose' }
-]
+// The canonical identifiers the backend matches on, so an exclusion chosen
+// here excludes something. The old list sent `tree nuts`, `dairy` and
+// `shellfish`, which `toLower(al.name) IN $exclude_allergens` never matched.
+const allergenOptions: { value: string, label: string }[] = ALLERGEN_FILTER_OPTIONS.map(option => ({
+  value: option.value,
+  label: ALLERGEN_LABELS_EN[option.value]
+}))
 
 const paramSearchFacets = ref<RecipeFacetMap>({})
 

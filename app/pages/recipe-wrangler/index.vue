@@ -1021,6 +1021,7 @@
 </template>
 
 <script setup lang="ts">
+import { normalizeAllergens } from '~/utils/allergens'
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useElementSize } from '@vueuse/core'
 import { track } from '~/composables/useTelemetry'
@@ -1758,9 +1759,10 @@ const buildSearchPersonalization = async (): Promise<SearchPersonalization> => {
     const profile = memberProfileCache.value?.profile as Record<string, unknown>
     if (!profile) return {}
 
-    const allergens = (Array.isArray(profile.allergies) ? profile.allergies : [])
-      .map(item => String(item || '').trim())
-      .filter(Boolean)
+    // Folded through the vocabulary: a profile written before the gateway
+    // canonicalised `dairy`/`nuts`/`shellfish` would otherwise be sent as is
+    // and exclude nothing, which is worse than no personalisation at all.
+    const allergens = normalizeAllergens(Array.isArray(profile.allergies) ? profile.allergies : [])
 
     const dietTags = [...new Set(
       (Array.isArray(profile.dietary_groups) ? profile.dietary_groups : [])

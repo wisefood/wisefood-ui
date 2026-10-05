@@ -128,13 +128,6 @@
         >
           {{ source.label }}
         </button>
-        <!-- Placeholder: PLAN'EAT (Curated Hungarian Recipes) source, not yet wired. -->
-        <button
-          type="button"
-          class="px-3 py-1.5 pointer-coarse:py-2.5 rounded-full text-sm font-medium transition-all duration-200 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-        >
-          Curated Hungarian Recipes
-        </button>
       </div>
     </div>
 
@@ -259,6 +252,7 @@ import {
   humanizeFacet
 } from '~/utils/facetPresentation'
 import RecipeFacetSection from '~/components/recipes/RecipeFacetSection.vue'
+import { ALLERGEN_FILTER_OPTIONS, allergenLabel, allergenLabelKey } from '~/utils/allergens'
 
 export const SOURCE_OPTIONS: { value: RecipeSource, label: string }[] = [
   { value: 'healthyfoods', label: 'Healthy Foods' },
@@ -317,7 +311,7 @@ export function useActiveRecipeFilters() {
   const chips = computed<ActiveRecipeFilter[]>(() => {
     const list: ActiveRecipeFilter[] = []
     for (const value of recipeStore.excludedAllergens) {
-      list.push({ key: `allergen:${value}`, icon: 'i-lucide-shield-alert', label: localized('recipeWrangler.filters.allergens', value), isSort: false, remove: () => recipeStore.toggleAllergen(value) })
+      list.push({ key: `allergen:${value}`, icon: 'i-lucide-shield-alert', label: allergenLabel(value, t, te), isSort: false, remove: () => recipeStore.toggleAllergen(value) })
     }
     for (const value of recipeStore.selectedDishTypes) {
       list.push({ key: `dish:${value}`, icon: 'i-lucide-utensils', label: formatDishTypeLabel(value), isSort: false, remove: () => recipeStore.toggleDishType(value) })
@@ -393,26 +387,13 @@ const selectedTimeRange = ref<string | null>(null)
 // Constants
 // ============================================================================
 // Allergen `value`s are matched on the backend as `toLower(al.name) IN exclude_allergens`
-// (param_search), so they must equal the lowercase canonical `Allergen.name` used by the
-// graph tagging (e.g. `tree_nut`, `crustacean_shellfish`). Entries not yet covered by the
-// backend allergen tagging won't match any recipes until that vocabulary is extended.
-const commonAllergens = computed(() => [
-  { value: 'celery', label: t('recipeWrangler.filters.allergens.celery') },
-  { value: 'crustacean_shellfish', label: t('recipeWrangler.filters.allergens.crustaceanShellfish') },
-  { value: 'egg', label: t('recipeWrangler.filters.allergens.egg') },
-  { value: 'fish', label: t('recipeWrangler.filters.allergens.fish') },
-  { value: 'gluten', label: t('recipeWrangler.filters.allergens.gluten') },
-  { value: 'lupin', label: t('recipeWrangler.filters.allergens.lupin') },
-  { value: 'milk', label: t('recipeWrangler.filters.allergens.milk') },
-  { value: 'molluscs', label: t('recipeWrangler.filters.allergens.molluscs') },
-  { value: 'mustard', label: t('recipeWrangler.filters.allergens.mustard') },
-  { value: 'peanut', label: t('recipeWrangler.filters.allergens.peanut') },
-  { value: 'sesame', label: t('recipeWrangler.filters.allergens.sesame') },
-  { value: 'soy', label: t('recipeWrangler.filters.allergens.soy') },
-  { value: 'sulphites', label: t('recipeWrangler.filters.allergens.sulphites') },
-  { value: 'tree_nut', label: t('recipeWrangler.filters.allergens.treeNut') },
-  { value: 'wheat', label: t('recipeWrangler.filters.allergens.wheat') }
-])
+// (param_search), so they are the canonical identifiers from `~/utils/allergens` — the
+// EU declaration groups plus `wheat` — in Annex order, the same list the profile picker
+// offers and the same labels it shows.
+const commonAllergens = computed(() => ALLERGEN_FILTER_OPTIONS.map(option => ({
+  value: option.value,
+  label: t(allergenLabelKey(option.value))
+})))
 
 // Dish types are driven by whatever buckets the backend returns in the
 // param_search `dish_type` facet, merged with any currently-selected values

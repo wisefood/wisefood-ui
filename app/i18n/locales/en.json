@@ -333,6 +333,33 @@
     "primary": "Get started",
     "secondary": "Watch the demo"
   },
+  "allergens": {
+    "labels": {
+      "gluten": "Cereals containing gluten",
+      "wheat": "Wheat",
+      "crustacean_shellfish": "Crustaceans",
+      "egg": "Eggs",
+      "fish": "Fish",
+      "peanut": "Peanuts",
+      "soy": "Soybeans",
+      "milk": "Milk",
+      "tree_nut": "Nuts",
+      "celery": "Celery",
+      "mustard": "Mustard",
+      "sesame": "Sesame seeds",
+      "sulphites": "Sulphur dioxide and sulphites",
+      "lupin": "Lupin",
+      "molluscs": "Molluscs"
+    },
+    "hints": {
+      "gluten": "Wheat (including spelt and khorasan wheat), rye, barley, oats",
+      "crustacean_shellfish": "Crabs, prawns, lobsters",
+      "milk": "Including lactose",
+      "tree_nut": "Almonds, hazelnuts, walnuts, cashews, pecans, Brazil nuts, pistachios, macadamias",
+      "sulphites": "Used as a preservative, above 10 mg/kg or 10 mg/L",
+      "molluscs": "Mussels, oysters, squid, snails"
+    }
+  },
   "recipeWrangler": {
     "title": "RecipeWrangler",
     "subtitle": "Discover personalized recipes tailored to your nutritional goals and environmental impact",
@@ -411,23 +438,6 @@
       "clearAll": "Clear all",
       "quickFilters": "Quick Filters",
       "sortBy": "Sort By",
-      "allergens": {
-        "celery": "Celery",
-        "crustaceanShellfish": "Crustacean Shellfish",
-        "egg": "Egg",
-        "fish": "Fish",
-        "gluten": "Gluten",
-        "lupin": "Lupin",
-        "milk": "Milk",
-        "molluscs": "Molluscs",
-        "mustard": "Mustard",
-        "peanut": "Peanut",
-        "sesame": "Sesame",
-        "soy": "Soy",
-        "sulphites": "Sulphites",
-        "treeNut": "Tree Nut",
-        "wheat": "Wheat"
-      },
       "quickOptions": {
         "quickEasy": "Quick and Easy (< 30 min)",
         "healthy": "Healthy and Nutritious",
@@ -466,18 +476,6 @@
       "removeFilter": "Remove filter: {label}",
       "showResults": "Show {count} recipe | Show {count} recipes",
       "showResultsLoading": "Finding recipes…"
-    },
-    "allergens": {
-      "peanuts": "Peanuts",
-      "treeNuts": "Tree Nuts",
-      "dairy": "Dairy",
-      "eggs": "Eggs",
-      "soy": "Soy",
-      "wheat": "Wheat",
-      "fish": "Fish",
-      "shellfish": "Shellfish",
-      "gluten": "Gluten",
-      "lactose": "Lactose"
     },
     "quickFilters": {
       "quick": "Quick & Easy (< 30 min)",
@@ -1473,20 +1471,6 @@
       "nuts": "Nuts & Seeds",
       "condiments": "Condiments & Sauces",
       "beverages": "Beverages"
-    },
-    "allergyOptions": {
-      "gluten": "Gluten",
-      "dairy": "Dairy",
-      "eggs": "Eggs",
-      "nuts": "Tree Nuts",
-      "peanuts": "Peanuts",
-      "soy": "Soy",
-      "shellfish": "Shellfish",
-      "fish": "Fish",
-      "sesame": "Sesame",
-      "sulfites": "Sulfites",
-      "lactose": "Lactose",
-      "fructose": "Fructose"
     },
     "errors": {
       "deleteProfileFailed": "Failed to delete profile. Please try again.",
