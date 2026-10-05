@@ -363,7 +363,19 @@
       "calories": "Kalorije",
       "protein": "Beljakovine",
       "carbs": "Ogljikovi hidrati",
-      "fat": "Maščobe"
+      "fat": "Maščobe",
+      "facets": {
+        "title": "Predlagana razvrstitev",
+        "hint": "Vrsta jedi, kuhinja, razpoloženje in okus, ki jih model predlaga iz naslova in sestavin. Preveri pred shranjevanjem.",
+        "confidence": "{value}% zaupanja",
+        "confidenceHint": "Modelova lastna ocena, da je celotna razvrstitev pravilna.",
+        "warning": "Razvrstitev za to analizo ni na voljo; hranilni profil ni prizadet.",
+        "course_types": "Vrsta jedi",
+        "cuisines": "Kuhinja",
+        "moods": "Razpoloženje",
+        "flavor_profiles": "Okus",
+        "food_groups": "Skupina živil"
+      }
     },
     "filters": {
       "title": "Filtri in preference",

@@ -363,7 +363,19 @@
       "calories": "Calories",
       "protein": "Protein",
       "carbs": "Carbs",
-      "fat": "Fat"
+      "fat": "Fat",
+      "facets": {
+        "title": "Suggested classification",
+        "hint": "Course, cuisine, mood and flavour suggested by the model from the title and ingredients. Review before saving.",
+        "confidence": "{value}% confident",
+        "confidenceHint": "The model's own estimate that the whole classification is right.",
+        "warning": "Classification is unavailable for this analysis; the nutrition profile is unaffected.",
+        "course_types": "Course",
+        "cuisines": "Cuisine",
+        "moods": "Mood",
+        "flavor_profiles": "Flavour",
+        "food_groups": "Food group"
+      }
     },
     "filters": {
       "title": "Filters & Preferences",

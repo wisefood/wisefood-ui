@@ -460,6 +460,20 @@ export interface RecipeProfileResult {
   message?: string
   tags?: string[]
   allergens?: string[]
+  /**
+   * Model-suggested facets, under the same names the catalog index uses so a
+   * profile can be shown with the detail page's chip code unchanged. Present
+   * only when the request kept `annotate` on and the model call succeeded;
+   * an empty array means the model abstained for that facet.
+   */
+  course_types?: string[]
+  cuisines?: string[]
+  flavor_profiles?: string[]
+  moods?: string[]
+  /** The model's own 0–1 estimate that the whole classification is right. */
+  annotation_confidence?: number | null
+  /** Set instead of the facets when the annotation call failed. */
+  annotations_warning?: string
 }
 
 export type RecipeAdaptMode = 'nutrition' | 'sustainability' | 'reduce_quantity'
@@ -1191,9 +1205,18 @@ class RecipeApiService {
   }
 
   /**
-   * Analyze raw recipe text through parsing + profiling chain
+   * Analyze raw recipe text through parsing + profiling chain.
+   *
+   * The backend also classifies the recipe (course, cuisine, flavour, mood)
+   * unless `annotate` is false. That is one extra model call, so a caller
+   * that only wants the numbers can opt out. The flag is only sent when set,
+   * so the default request stays identical for a gateway that predates it.
    */
-  async analyzeRecipe(rawRecipe: string, region: string = 'EU'): Promise<RecipeProfileResult> {
+  async analyzeRecipe(
+    rawRecipe: string,
+    region: string = 'EU',
+    options: { annotate?: boolean } = {}
+  ): Promise<RecipeProfileResult> {
     if (!rawRecipe || !rawRecipe.trim()) {
       throw new Error('Recipe text is required for analysis')
     }
@@ -1203,7 +1226,11 @@ class RecipeApiService {
       return await this.fetchWithTimeout<RecipeProfileResult>(
         `${this.getRecipeBasePath(transport)}/profile`,
         'POST',
-        { raw_recipe: rawRecipe, region: safeRegion },
+        {
+          raw_recipe: rawRecipe,
+          region: safeRegion,
+          ...(options.annotate === undefined ? {} : { annotate: options.annotate })
+        },
         PROFILE_TIMEOUT,
         transport
       )

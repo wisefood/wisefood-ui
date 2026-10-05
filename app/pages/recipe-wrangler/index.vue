@@ -219,6 +219,101 @@
               </div>
             </div>
 
+            <!-- Model-suggested classification: course, cuisine, flavour, mood.
+                 Same chip treatment as the detail page, so a facet looks the
+                 same before and after a recipe is saved. The block renders only
+                 when there is something to say — a model that abstained on
+                 every facet is a quiet result, not an empty panel — and a
+                 failed annotation is reported here rather than as an analysis
+                 error, because the nutrition profile above it is still valid. -->
+            <div
+              v-if="analysisHasAnnotations || analysisAnnotationWarning"
+              class="mt-3 rounded-xl border border-zinc-200 dark:border-zinc-700 p-3 bg-zinc-50 dark:bg-zinc-800/50"
+            >
+              <div class="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                    {{ t('recipeWrangler.analyzer.facets.title') }}
+                  </p>
+                  <p class="text-sm text-zinc-600 dark:text-zinc-300">
+                    {{ t('recipeWrangler.analyzer.facets.hint') }}
+                  </p>
+                </div>
+                <span
+                  v-if="analysisAnnotationConfidence !== null"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-brandg-100 dark:bg-brandg-900/40 text-brandg-700 dark:text-brandg-300 border border-brandg-200 dark:border-brandg-700"
+                  :title="t('recipeWrangler.analyzer.facets.confidenceHint')"
+                >
+                  <UIcon
+                    name="i-lucide-sparkles"
+                    class="w-3 h-3"
+                  />
+                  {{ t('recipeWrangler.analyzer.facets.confidence', { value: analysisAnnotationConfidence }) }}
+                </span>
+              </div>
+
+              <p
+                v-if="analysisAnnotationWarning"
+                class="mt-2 text-sm text-amber-700 dark:text-amber-400"
+                :title="analysisAnnotationWarning"
+              >
+                {{ t('recipeWrangler.analyzer.facets.warning') }}
+              </p>
+
+              <div
+                v-if="analysisHasAnnotations"
+                class="mt-3 flex flex-col gap-2"
+              >
+                <div
+                  v-if="analysisCourseChips.length"
+                  class="flex flex-wrap items-center gap-2"
+                >
+                  <span class="inline-flex items-center gap-1.5 w-28 flex-shrink-0 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                    <UIcon
+                      name="i-lucide-utensils"
+                      class="w-3.5 h-3.5 text-brandg-500"
+                    />
+                    {{ t('recipeWrangler.analyzer.facets.course_types') }}
+                  </span>
+                  <span
+                    v-for="chip in analysisCourseChips"
+                    :key="`course-${chip.value}`"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-white dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-600"
+                  >
+                    <UIcon
+                      :name="chip.icon"
+                      class="w-3.5 h-3.5 text-brandg-500"
+                    />
+                    {{ chip.label }}
+                  </span>
+                </div>
+                <div
+                  v-for="group in analysisAnnotationGroups"
+                  :key="group.key"
+                  class="flex flex-wrap items-center gap-2"
+                >
+                  <span class="inline-flex items-center gap-1.5 w-28 flex-shrink-0 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                    <UIcon
+                      :name="group.icon"
+                      class="w-3.5 h-3.5 text-brandg-500"
+                    />
+                    {{ group.title }}
+                  </span>
+                  <span
+                    v-for="chip in group.chips"
+                    :key="`${group.key}-${chip.value}`"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-white dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-600"
+                  >
+                    <span
+                      v-if="chip.emoji"
+                      aria-hidden="true"
+                    >{{ chip.emoji }}</span>
+                    {{ chip.label }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             <div
               v-if="showCalculationDetails"
               class="mt-5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 overflow-hidden"
@@ -787,6 +882,8 @@ import { useRecipeStore } from '~/stores/recipe'
 import { useI18n } from 'vue-i18n'
 import { useHouseholdStore } from '~/stores/household'
 import recipeApi, { RECIPE_REGIONS, resolveRecipeRegion } from '~/services/recipeApi'
+import { formatDishTypeLabel, getDishTypeIcon, normalizeDishTypes } from '~/utils/dishTypes'
+import { ANNOTATION_FACETS, humanizeFacet } from '~/utils/facetPresentation'
 import type {
   PipelineTraceWeightDetail,
   RecipeAutocompleteSuggestion,
@@ -974,6 +1071,61 @@ const matchedWeightCount = computed(
 const unmatchedWeightCount = computed(
   () => analysisResult.value?.pipeline_trace?.weight_calculation?.unmatched_count || 0
 )
+
+/**
+ * Model-suggested facets on the analysis, in the detail page's shape.
+ *
+ * `POST /recipes/profile` returns them under the index field names
+ * (`course_types`, `cuisines`, `flavor_profiles`, `moods`) and omits the keys
+ * entirely when the request skipped annotation, so a missing facet means
+ * "not asked" and an empty array means "the model abstained". Both render as
+ * nothing; only `annotations_warning` marks a call that failed.
+ */
+const readAnalysisFacet = (key: string): string[] => {
+  const raw = (analysisResult.value as Record<string, unknown> | null)?.[key]
+  return Array.isArray(raw)
+    ? raw.filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    : []
+}
+
+const analysisCourseChips = computed(() =>
+  normalizeDishTypes(readAnalysisFacet('course_types')).map(value => ({
+    value,
+    label: formatDishTypeLabel(value),
+    icon: getDishTypeIcon(value)
+  }))
+)
+
+// Driven off `ANNOTATION_FACETS`, like the detail page, so the analyzer cannot
+// label or decorate a value differently from the card it will become.
+const analysisAnnotationGroups = computed(() =>
+  ANNOTATION_FACETS.map(facet => ({
+    key: facet.key,
+    title: t(`recipeWrangler.analyzer.facets.${facet.key}`),
+    icon: facet.icon,
+    chips: readAnalysisFacet(facet.key).map(value => ({
+      value,
+      label: humanizeFacet(value),
+      emoji: facet.emojis[value] ?? ''
+    }))
+  })).filter(group => group.chips.length > 0)
+)
+
+const analysisHasAnnotations = computed(
+  () => analysisCourseChips.value.length > 0 || analysisAnnotationGroups.value.length > 0
+)
+
+/** Confidence as a whole percentage, or null when the model gave none. */
+const analysisAnnotationConfidence = computed<number | null>(() => {
+  const raw = analysisResult.value?.annotation_confidence
+  if (typeof raw !== 'number' || Number.isNaN(raw)) return null
+  return Math.round(Math.min(Math.max(raw, 0), 1) * 100)
+})
+
+const analysisAnnotationWarning = computed<string | null>(() => {
+  const raw = analysisResult.value?.annotations_warning
+  return typeof raw === 'string' && raw.trim() ? raw : null
+})
 
 const lookupTotal = (metricParts: string[]): number => {
   const entries = Object.entries(analysisTotals.value)

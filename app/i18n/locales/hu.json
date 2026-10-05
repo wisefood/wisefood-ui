@@ -363,7 +363,19 @@
       "calories": "Kalória",
       "protein": "Fehérje",
       "carbs": "Szénhidrát",
-      "fat": "Zsír"
+      "fat": "Zsír",
+      "facets": {
+        "title": "Javasolt besorolás",
+        "hint": "Fogás, konyha, hangulat és íz, amelyet a modell a címből és a hozzávalókból javasol. Mentés előtt ellenőrizd.",
+        "confidence": "{value}% biztos",
+        "confidenceHint": "A modell saját becslése arra, hogy a teljes besorolás helyes.",
+        "warning": "Ehhez az elemzéshez nem érhető el besorolás; a tápanyagprofilt ez nem érinti.",
+        "course_types": "Fogás",
+        "cuisines": "Konyha",
+        "moods": "Hangulat",
+        "flavor_profiles": "Íz",
+        "food_groups": "Élelmiszercsoport"
+      }
     },
     "filters": {
       "title": "Szűrők és preferenciák",
