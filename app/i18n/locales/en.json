@@ -375,6 +375,32 @@
         "moods": "Mood",
         "flavor_profiles": "Flavour",
         "food_groups": "Food group"
+      },
+      "sustainability": {
+        "lowCoverage": "Only {value}% of the recipe weight matched a footprint entry, so this is a lower bound."
+      },
+      "cost": {
+        "unavailable": "Not graded",
+        "regionHint": "Based on {region} prices; no amounts are shown."
+      },
+      "matches": {
+        "weightSource": "Weight source",
+        "nutrition": "Nutrition match",
+        "sustainability": "Footprint match",
+        "cost": "Price match",
+        "noMatch": "No match",
+        "similarity": "{value}% similar",
+        "footprintFactor": "{value} kg CO₂e/kg",
+        "costShare": "{value}% of the recipe cost",
+        "confidence": {
+          "curated": "curated",
+          "exact": "exact",
+          "alias": "alias",
+          "override": "corrected",
+          "strong": "strong",
+          "weak": "weak",
+          "none": "none"
+        }
       }
     },
     "filters": {

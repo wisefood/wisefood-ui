@@ -375,6 +375,32 @@
         "moods": "Hangulat",
         "flavor_profiles": "Íz",
         "food_groups": "Élelmiszercsoport"
+      },
+      "sustainability": {
+        "lowCoverage": "A recept tömegének csak {value}%-ához tartozik lábnyom-bejegyzés, így ez alsó becslés."
+      },
+      "cost": {
+        "unavailable": "Nincs besorolva",
+        "regionHint": "{region} árak alapján; összegek nem jelennek meg."
+      },
+      "matches": {
+        "weightSource": "Tömeg forrása",
+        "nutrition": "Tápanyag-egyezés",
+        "sustainability": "Lábnyom-egyezés",
+        "cost": "Ár-egyezés",
+        "noMatch": "Nincs egyezés",
+        "similarity": "{value}% hasonlóság",
+        "footprintFactor": "{value} kg CO₂e/kg",
+        "costShare": "a receptköltség {value}%-a",
+        "confidence": {
+          "curated": "kurált",
+          "exact": "pontos",
+          "alias": "alias",
+          "override": "javított",
+          "strong": "erős",
+          "weak": "gyenge",
+          "none": "nincs"
+        }
       }
     },
     "filters": {

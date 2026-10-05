@@ -423,6 +423,71 @@ export interface PipelineTraceWeightDetail {
   error?: string | null
 }
 
+/**
+ * One ingredient as the live profiling chain reports it: the nutrition
+ * calculator's row with the footprint matcher's fields merged in. Keys both
+ * produce (`weight_g`, `distance`) keep the nutrition value and carry the
+ * footprint one under a `sustainability_` prefix. The index signature is
+ * there because the chain adds fields faster than this type lists them; only
+ * what the UI reads is named.
+ */
+export interface ProfiledIngredientDetail extends RecipeNutritionProfilingDetail {
+  name?: string
+  measurement?: string
+  energy_kcal_per_100g?: number | null
+  protein_per_100g?: number | null
+  carbs_per_100g?: number | null
+  fat_per_100g?: number | null
+  /** curated | strong | weak | none — how sure the nutrition matcher was. */
+  match_confidence?: string | null
+  /** Footprint-database entry the CO₂e factor came from; null when unmatched. */
+  matched_sustainability_ingredient?: string | null
+  /** kg CO₂e per kg of that entry. */
+  cf_val?: number | null
+  /** kg CO₂e this ingredient adds to the whole recipe. */
+  contribution?: number | null
+  /** exact | alias | override | strong | weak | none — the footprint matcher's grade. */
+  sustainability_match_confidence?: string | null
+  [key: string]: unknown
+}
+
+/** One priced ingredient's share of a recipe's estimated cost. */
+export interface RecipeCostContributor {
+  /** The ingredient under the name the profile used for it. */
+  ingredient: string
+  /** The catalogue product it was priced as. */
+  matched_product?: string | null
+  price_scope?: string | null
+  price_class?: string | null
+  cost_contribution_pct: number
+}
+
+/**
+ * The public cost facet for one region. The backend keeps the EUR figures to
+ * itself; what reaches the UI is the band, why, and who drives it.
+ */
+export interface RecipeCostFacet {
+  region: string
+  /** "classified" when a band was assigned, "unavailable" when nothing could be priced. */
+  status?: string
+  category?: CostCategory | null
+  category_code?: number | null
+  explanation?: string
+  priced_weight_coverage?: number
+  priced_ingredient_coverage?: number
+  priced_ingredient_count?: number
+  ingredient_count?: number
+  /** Every priced ingredient, largest share first. */
+  contributors?: RecipeCostContributor[]
+}
+
+export interface RecipeCostProfile {
+  /** One facet per priced region; absent when the price catalogue is not installed. */
+  cost_facet?: RecipeCostFacet[]
+  status?: string
+  reason?: string
+}
+
 export interface PipelineTrace {
   parser?: Record<string, unknown>
   weight_calculation?: {
@@ -435,7 +500,7 @@ export interface PipelineTrace {
     source?: string
     source_key?: string
     totals?: Record<string, number>
-    ingredients?: Array<Record<string, unknown>>
+    ingredients?: ProfiledIngredientDetail[]
   }
 }
 
@@ -444,7 +509,7 @@ export interface RecipeProfileResult {
   ingredient_names: string[]
   measurements: string[]
   weights: number[]
-  ingredients: Array<Record<string, unknown>>
+  ingredients: ProfiledIngredientDetail[]
   instructions?: string[]
   directions?: string[]
   profiling_totals: Record<string, number>
@@ -474,6 +539,14 @@ export interface RecipeProfileResult {
   annotation_confidence?: number | null
   /** Set instead of the facets when the annotation call failed. */
   annotations_warning?: string
+  /** kg CO₂e for the whole recipe and per serving; absent when nothing matched. */
+  total_sustainability?: number | null
+  total_sustainability_per_serving?: number | null
+  sustainability_per_kg?: number | null
+  /** Fraction of the recipe weight that matched a footprint entry. */
+  sustainability_coverage?: number | null
+  sustainability_low_coverage?: boolean | null
+  cost_profile?: RecipeCostProfile | null
 }
 
 export type RecipeAdaptMode = 'nutrition' | 'sustainability' | 'reduce_quantity'

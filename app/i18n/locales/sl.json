@@ -375,6 +375,32 @@
         "moods": "Razpoloženje",
         "flavor_profiles": "Okus",
         "food_groups": "Skupina živil"
+      },
+      "sustainability": {
+        "lowCoverage": "Le {value} % teže recepta se je ujemalo z vnosom odtisa, zato je to spodnja meja."
+      },
+      "cost": {
+        "unavailable": "Ni razvrščeno",
+        "regionHint": "Na podlagi cen {region}; zneski niso prikazani."
+      },
+      "matches": {
+        "weightSource": "Vir teže",
+        "nutrition": "Hranilno ujemanje",
+        "sustainability": "Ujemanje odtisa",
+        "cost": "Cenovno ujemanje",
+        "noMatch": "Ni ujemanja",
+        "similarity": "{value} % podobnosti",
+        "footprintFactor": "{value} kg CO₂e/kg",
+        "costShare": "{value} % stroška recepta",
+        "confidence": {
+          "curated": "kurirano",
+          "exact": "natančno",
+          "alias": "sopomenka",
+          "override": "popravljeno",
+          "strong": "močno",
+          "weak": "šibko",
+          "none": "brez"
+        }
       }
     },
     "filters": {

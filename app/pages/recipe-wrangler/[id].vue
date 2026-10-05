@@ -1883,6 +1883,7 @@ import type {
 } from '~/services/recipeApi'
 import type { AdaptedRecipeNutrition, MemberAdaptedRecipe } from '~/services/memberAdaptedRecipesApi'
 import { getCostLevel } from '~/utils/costCategory'
+import { getSustainabilityLevel } from '~/utils/sustainabilityLevel'
 import { formatDishTypeLabel, getDishTypeIcon, normalizeDishTypes } from '~/utils/dishTypes'
 import { useRelatedRecipes } from '~/composables/useCatalogRecipes'
 import { useRegionCompositionTable } from '~/composables/useRegionCompositionTable'
@@ -2357,29 +2358,9 @@ const sustainabilityPerServing = computed<number | null>(() => {
   return null
 })
 
-type SustainabilityLevel = {
-  key: 'excellent' | 'good' | 'moderate' | 'high'
-  pct: number
-  barClass: string
-  textClass: string
-}
-
-// Meal-footprint bands (kg CO2e per serving): <0.5 excellent, <1 good,
-// <2 moderate, >=2 high. Bar fill reads as "more = better".
-const sustainabilityLevel = computed<SustainabilityLevel | null>(() => {
-  const kg = sustainabilityPerServing.value
-  if (kg === null) return null
-  if (kg < 0.5) {
-    return { key: 'excellent', pct: 90, barClass: 'from-brandg-400 to-brandg-600', textClass: 'text-brandg-600 dark:text-brandg-400' }
-  }
-  if (kg < 1.0) {
-    return { key: 'good', pct: 70, barClass: 'from-brandg-400 to-brandg-600', textClass: 'text-brandg-600 dark:text-brandg-400' }
-  }
-  if (kg < 2.0) {
-    return { key: 'moderate', pct: 45, barClass: 'from-amber-400 to-amber-500', textClass: 'text-amber-600 dark:text-amber-400' }
-  }
-  return { key: 'high', pct: 20, barClass: 'from-red-400 to-red-500', textClass: 'text-red-600 dark:text-red-400' }
-})
+// The band thresholds live in utils, next to the cost band's, so the analyzer
+// grades an unsaved recipe exactly as this page grades a saved one.
+const sustainabilityLevel = computed(() => getSustainabilityLevel(sustainabilityPerServing.value))
 
 // --- Cost band (the catalog's low / medium / high; null for most recipes) ---
 const costLevel = computed(() => getCostLevel(recipe.value?.cost_category))

@@ -219,6 +219,87 @@
               </div>
             </div>
 
+            <!-- Carbon footprint and cost. They come from the same profile call
+                 as the nutrition but had nowhere to show. A block renders only
+                 when the backend graded it, and an ungraded cost says why
+                 instead of wearing an "unknown" band. -->
+            <div
+              v-if="analysisHasFootprintOrCost"
+              class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3"
+            >
+              <div
+                v-if="analysisSustainabilityLevel"
+                class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-3 bg-zinc-50 dark:bg-zinc-800/50"
+              >
+                <div class="flex items-center gap-2">
+                  <UIcon
+                    name="i-lucide-leaf"
+                    class="w-4 h-4 text-brandg-500 dark:text-brandg-400 flex-shrink-0"
+                  />
+                  <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                    {{ t('recipeWrangler.detail.sustainability.label') }}
+                  </p>
+                  <span :class="['ml-auto text-sm font-semibold', analysisSustainabilityLevel.textClass]">
+                    {{ t(`recipeWrangler.detail.sustainability.levels.${analysisSustainabilityLevel.key}`) }}
+                  </span>
+                </div>
+                <div class="mt-2 h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+                  <div
+                    :class="['h-full bg-gradient-to-r rounded-full', analysisSustainabilityLevel.barClass]"
+                    :style="{ width: `${analysisSustainabilityLevel.pct}%` }"
+                  />
+                </div>
+                <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+                  {{ t('recipeWrangler.detail.sustainability.perServing', { value: formatNumber(analysisSustainabilityPerServing) }) }}
+                </p>
+                <p
+                  v-if="analysisSustainabilityLowCoverage && analysisSustainabilityCoveragePct !== null"
+                  class="mt-1 text-xs text-amber-700 dark:text-amber-400"
+                >
+                  {{ t('recipeWrangler.analyzer.sustainability.lowCoverage', { value: analysisSustainabilityCoveragePct }) }}
+                </p>
+              </div>
+
+              <div
+                v-if="analysisCostFacet"
+                class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-3 bg-zinc-50 dark:bg-zinc-800/50"
+              >
+                <div class="flex items-center gap-2">
+                  <UIcon
+                    name="i-lucide-coins"
+                    class="w-4 h-4 text-brandg-500 dark:text-brandg-400 flex-shrink-0"
+                  />
+                  <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                    {{ t('recipeWrangler.recipe.cost.label') }}
+                  </p>
+                  <template v-if="analysisCostLevel">
+                    <span
+                      :class="['ml-auto text-sm font-black tracking-tight', analysisCostLevel.textClass]"
+                      aria-hidden="true"
+                    >{{ analysisCostLevel.symbol }}</span>
+                    <span :class="['text-sm font-semibold', analysisCostLevel.textClass]">
+                      {{ t(`recipeWrangler.recipe.cost.levels.${analysisCostLevel.key}`) }}
+                    </span>
+                  </template>
+                  <span
+                    v-else
+                    class="ml-auto text-sm font-medium text-zinc-500 dark:text-zinc-400"
+                  >
+                    {{ t('recipeWrangler.analyzer.cost.unavailable') }}
+                  </span>
+                </div>
+                <p
+                  v-if="analysisCostExplanation"
+                  class="mt-2 text-sm text-zinc-600 dark:text-zinc-300"
+                >
+                  {{ analysisCostExplanation }}
+                </p>
+                <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                  {{ t('recipeWrangler.analyzer.cost.regionHint', { region: analysisCostFacet.region }) }}
+                </p>
+              </div>
+            </div>
+
             <!-- Model-suggested classification: course, cuisine, flavour, mood.
                  Same chip treatment as the detail page, so a facet looks the
                  same before and after a recipe is saved. The block renders only
@@ -428,49 +509,116 @@
                                   class="sticky left-0 px-4 sm:px-6 py-4 bg-zinc-50/80 dark:bg-zinc-800/30 border-b border-zinc-200 dark:border-zinc-700"
                                   :style="analysisDetailStyle"
                                 >
+                                  <!--
+                                    One block per matcher: where the weight came from,
+                                    which composition-table food the nutrition came from,
+                                    which footprint entry the CO₂e came from, and the
+                                    priced product when the cost estimate used this
+                                    ingredient. A miss is said as one, not drawn as a
+                                    dash: an unmatched ingredient is the reason a column
+                                    reads 0.
+                                  -->
                                   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-3">
                                     <div>
-                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Raw Measurement</p>
-                                      <p class="font-mono text-zinc-700 dark:text-zinc-300">{{ analysisWeightDetails[idx]?.measurement_raw || '—' }}</p>
-                                    </div>
-                                    <div>
-                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Match Source</p>
-                                      <span v-if="analysisWeightDetails[idx]?.match_type" :class="[
-                                        'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[0.6875rem] font-medium border',
-                                        getMatchSourceStyle(analysisWeightDetails[idx]?.match_type)
-                                      ]">
-                                        <UIcon :name="getMatchSourceIcon(analysisWeightDetails[idx]?.match_type)" class="w-3 h-3" />
+                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">
+                                        {{ t('recipeWrangler.analyzer.matches.weightSource') }}
+                                      </p>
+                                      <span
+                                        v-if="analysisWeightDetails[idx]?.match_type"
+                                        :class="[
+                                          'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[0.6875rem] font-medium border',
+                                          getMatchSourceStyle(analysisWeightDetails[idx]?.match_type)
+                                        ]"
+                                      >
+                                        <UIcon
+                                          :name="getMatchSourceIcon(analysisWeightDetails[idx]?.match_type)"
+                                          class="w-3 h-3"
+                                        />
                                         {{ getWeightSourceLabel(analysisWeightDetails[idx]?.match_type) }}
                                       </span>
-                                      <span v-else class="text-zinc-400">—</span>
+                                      <span
+                                        v-else
+                                        class="text-zinc-500 dark:text-zinc-400"
+                                      >{{ t('recipeWrangler.analyzer.matches.noMatch') }}</span>
                                     </div>
                                     <div>
-                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">USDA ID</p>
-                                      <p class="font-mono text-zinc-600 dark:text-zinc-400">{{ analysisWeightDetails[idx]?.usda_id || '—' }}</p>
+                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">
+                                        {{ t('recipeWrangler.analyzer.matches.nutrition') }}
+                                      </p>
+                                      <template v-if="item.matched_nutritional_ingredient">
+                                        <p
+                                          class="text-zinc-700 dark:text-zinc-300 truncate"
+                                          :title="String(item.matched_nutritional_ingredient)"
+                                        >
+                                          {{ item.matched_nutritional_ingredient }}
+                                        </p>
+                                        <p class="mt-1 flex flex-wrap items-center gap-1.5">
+                                          <span
+                                            v-if="similarityPct(item.similarity) !== null"
+                                            :class="['font-mono font-semibold', similarityClass(item.similarity)]"
+                                          >{{ t('recipeWrangler.analyzer.matches.similarity', { value: similarityPct(item.similarity) }) }}</span>
+                                          <span
+                                            v-if="confidenceLabel(item.match_confidence)"
+                                            :class="['inline-flex items-center px-1.5 py-0.5 rounded-full text-[0.625rem] font-medium border', confidenceClass(item.match_confidence)]"
+                                          >{{ confidenceLabel(item.match_confidence) }}</span>
+                                        </p>
+                                      </template>
+                                      <span
+                                        v-else
+                                        class="text-zinc-500 dark:text-zinc-400"
+                                      >{{ t('recipeWrangler.analyzer.matches.noMatch') }}</span>
                                     </div>
                                     <div>
-                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Inferred</p>
-                                      <div class="flex items-center gap-2">
-                                        <span v-if="analysisWeightDetails[idx]?.quantity_inferred" class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                                          <UIcon name="i-lucide-zap" class="w-3 h-3" /> Qty
-                                        </span>
-                                        <span v-if="analysisWeightDetails[idx]?.unit_inferred" class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                                          <UIcon name="i-lucide-zap" class="w-3 h-3" /> Unit
-                                        </span>
-                                        <span v-if="!analysisWeightDetails[idx]?.quantity_inferred && !analysisWeightDetails[idx]?.unit_inferred" class="text-zinc-400">—</span>
-                                      </div>
+                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">
+                                        {{ t('recipeWrangler.analyzer.matches.sustainability') }}
+                                      </p>
+                                      <template v-if="item.matched_sustainability_ingredient">
+                                        <p
+                                          class="text-zinc-700 dark:text-zinc-300 truncate"
+                                          :title="String(item.matched_sustainability_ingredient)"
+                                        >
+                                          {{ item.matched_sustainability_ingredient }}
+                                        </p>
+                                        <p class="mt-1 flex flex-wrap items-center gap-1.5">
+                                          <span
+                                            v-if="toFiniteNumber(item.cf_val) !== null"
+                                            class="font-mono text-zinc-600 dark:text-zinc-400"
+                                          >{{ t('recipeWrangler.analyzer.matches.footprintFactor', { value: formatNumber(item.cf_val) }) }}</span>
+                                          <span
+                                            v-if="confidenceLabel(item.sustainability_match_confidence)"
+                                            :class="['inline-flex items-center px-1.5 py-0.5 rounded-full text-[0.625rem] font-medium border', confidenceClass(item.sustainability_match_confidence)]"
+                                          >{{ confidenceLabel(item.sustainability_match_confidence) }}</span>
+                                        </p>
+                                      </template>
+                                      <span
+                                        v-else
+                                        class="text-zinc-500 dark:text-zinc-400"
+                                      >{{ t('recipeWrangler.analyzer.matches.noMatch') }}</span>
                                     </div>
-                                    <div>
-                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Matched Nutrition</p>
-                                      <p class="text-zinc-700 dark:text-zinc-300 truncate" :title="String(item.matched_nutritional_ingredient || '')">{{ item.matched_nutritional_ingredient || '—' }}</p>
+                                    <div v-if="costContributorFor(item)">
+                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">
+                                        {{ t('recipeWrangler.analyzer.matches.cost') }}
+                                      </p>
+                                      <p
+                                        class="text-zinc-700 dark:text-zinc-300 truncate"
+                                        :title="String(costContributorFor(item)?.matched_product || costContributorFor(item)?.ingredient || '')"
+                                      >
+                                        {{ costContributorFor(item)?.matched_product || costContributorFor(item)?.ingredient }}
+                                      </p>
+                                      <p class="mt-1 font-mono text-zinc-600 dark:text-zinc-400">
+                                        {{ t('recipeWrangler.analyzer.matches.costShare', { value: costContributorFor(item)?.cost_contribution_pct }) }}
+                                      </p>
                                     </div>
-                                    <div>
-                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-0.5">Matched Sustainability</p>
-                                      <p class="text-zinc-700 dark:text-zinc-300 truncate" :title="String(item.matched_sustainability_ingredient || '')">{{ item.matched_sustainability_ingredient || '—' }}</p>
-                                    </div>
-                                    <div v-if="analysisWeightDetails[idx]?.error" class="sm:col-span-2">
-                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-red-400 dark:text-red-500 mb-0.5">Error</p>
-                                      <p class="text-red-600 dark:text-red-400">{{ analysisWeightDetails[idx]?.error }}</p>
+                                    <div
+                                      v-if="analysisWeightDetails[idx]?.error"
+                                      class="sm:col-span-2"
+                                    >
+                                      <p class="text-[0.625rem] font-semibold uppercase tracking-wider text-red-400 dark:text-red-500 mb-0.5">
+                                        Error
+                                      </p>
+                                      <p class="text-red-600 dark:text-red-400">
+                                        {{ analysisWeightDetails[idx]?.error }}
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
@@ -884,9 +1032,14 @@ import { useHouseholdStore } from '~/stores/household'
 import recipeApi, { RECIPE_REGIONS, resolveRecipeRegion } from '~/services/recipeApi'
 import { formatDishTypeLabel, getDishTypeIcon, normalizeDishTypes } from '~/utils/dishTypes'
 import { ANNOTATION_FACETS, humanizeFacet } from '~/utils/facetPresentation'
+import { getCostLevel } from '~/utils/costCategory'
+import { getSustainabilityLevel } from '~/utils/sustainabilityLevel'
 import type {
   PipelineTraceWeightDetail,
+  ProfiledIngredientDetail,
   RecipeAutocompleteSuggestion,
+  RecipeCostContributor,
+  RecipeCostFacet,
   RecipeParamSearchParams,
   RecipeProfileResult,
   RecipeRegion,
@@ -1053,7 +1206,7 @@ const isLastPage = computed(() => {
 
 const analysisTotals = computed(() => analysisResult.value?.profiling_totals || {})
 
-const analysisIngredientRows = computed(() => {
+const analysisIngredientRows = computed<ProfiledIngredientDetail[]>(() => {
   const fromTrace = analysisResult.value?.pipeline_trace?.profiling?.ingredients
   if (Array.isArray(fromTrace) && fromTrace.length > 0) {
     return fromTrace
@@ -1064,6 +1217,104 @@ const analysisIngredientRows = computed(() => {
 const analysisWeightDetails = computed<PipelineTraceWeightDetail[]>(() => {
   return analysisResult.value?.pipeline_trace?.weight_calculation?.details || []
 })
+
+const toFiniteNumber = (value: unknown): number | null => {
+  if (value === null || value === undefined || value === '') return null
+  const n = typeof value === 'number' ? value : Number(value)
+  return Number.isFinite(n) ? n : null
+}
+
+// --- Footprint and cost of the analysed recipe ------------------------------
+// Both ride on the same profile call as the nutrition; they simply had no
+// place on this page. The bands come from the detail page's helpers, so an
+// unsaved recipe grades exactly as it will once saved.
+const analysisSustainabilityPerServing = computed<number | null>(() => {
+  const direct = toFiniteNumber(analysisResult.value?.total_sustainability_per_serving)
+  if (direct !== null) return direct
+  const total = toFiniteNumber(analysisResult.value?.total_sustainability)
+  const serves = toFiniteNumber(analysisResult.value?.serves)
+  return total !== null && serves !== null && serves > 0 ? total / serves : null
+})
+const analysisSustainabilityLevel = computed(
+  () => getSustainabilityLevel(analysisSustainabilityPerServing.value)
+)
+const analysisSustainabilityCoveragePct = computed<number | null>(() => {
+  const raw = toFiniteNumber(analysisResult.value?.sustainability_coverage)
+  return raw === null ? null : Math.round(Math.min(Math.max(raw, 0), 1) * 100)
+})
+const analysisSustainabilityLowCoverage = computed(
+  () => analysisResult.value?.sustainability_low_coverage === true
+)
+
+// The facet for the region the result was profiled under, else EU: the
+// backend prices every region, and EU is the fallback everywhere else too.
+const analysisCostFacet = computed<RecipeCostFacet | null>(() => {
+  const facets = analysisResult.value?.cost_profile?.cost_facet
+  if (!Array.isArray(facets) || facets.length === 0) return null
+  const wanted = analysisResultRegion.value ?? analysisRegion.value
+  return facets.find(facet => facet?.region === wanted)
+    ?? facets.find(facet => facet?.region === 'EU')
+    ?? facets[0]
+    ?? null
+})
+const analysisCostLevel = computed(() => getCostLevel(analysisCostFacet.value?.category))
+const analysisCostExplanation = computed<string | null>(() => {
+  const raw = analysisCostFacet.value?.explanation
+  return typeof raw === 'string' && raw.trim() ? raw : null
+})
+const analysisHasFootprintOrCost = computed(
+  () => analysisSustainabilityLevel.value !== null || analysisCostFacet.value !== null
+)
+
+const normalizeIngredientKey = (value: unknown): string => String(value ?? '').trim().toLowerCase()
+
+// Priced ingredients keyed by the name the profile used for them, so a row
+// finds its share of the estimate with one lookup rather than a scan.
+const analysisCostContributors = computed<Map<string, RecipeCostContributor>>(() => {
+  const byName = new Map<string, RecipeCostContributor>()
+  for (const contributor of analysisCostFacet.value?.contributors ?? []) {
+    const key = normalizeIngredientKey(contributor?.ingredient)
+    if (key && !byName.has(key)) byName.set(key, contributor)
+  }
+  return byName
+})
+const costContributorFor = (row: ProfiledIngredientDetail): RecipeCostContributor | null =>
+  analysisCostContributors.value.get(normalizeIngredientKey(row.name ?? row.ingredient)) ?? null
+
+// --- How each ingredient was matched ----------------------------------------
+// Similarity reads on the detail page's ramp: 85% and up is a confident hit.
+const similarityPct = (value: unknown): number | null => {
+  const n = toFiniteNumber(value)
+  return n === null ? null : Math.round(Math.min(Math.max(n, 0), 1) * 100)
+}
+const similarityClass = (value: unknown): string => {
+  const n = toFiniteNumber(value)
+  if (n === null) return 'text-zinc-500 dark:text-zinc-400'
+  if (n >= 0.85) return 'text-brandg-600 dark:text-brandg-400'
+  if (n >= 0.6) return 'text-amber-600 dark:text-amber-400'
+  return 'text-red-600 dark:text-red-400'
+}
+// Each matcher grades its hit with a word. The two vocabularies overlap but
+// are not the same; a word this page does not know is shown as it came
+// rather than dropped, so a new grade upstream is never silently hidden.
+const MATCH_CONFIDENCE_KEYS = new Set(['curated', 'exact', 'alias', 'override', 'strong', 'weak', 'none'])
+const SURE_MATCH_CONFIDENCE = new Set(['curated', 'exact', 'alias', 'override', 'strong'])
+const matchConfidenceKey = (value: unknown): string => String(value ?? '').trim().toLowerCase()
+const confidenceLabel = (value: unknown): string | null => {
+  const key = matchConfidenceKey(value)
+  if (!key) return null
+  return MATCH_CONFIDENCE_KEYS.has(key)
+    ? t(`recipeWrangler.analyzer.matches.confidence.${key}`)
+    : key
+}
+const confidenceClass = (value: unknown): string => {
+  const key = matchConfidenceKey(value)
+  if (SURE_MATCH_CONFIDENCE.has(key))
+    return 'bg-brandg-50 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300 border-brandg-200 dark:border-brandg-700'
+  if (key === 'weak')
+    return 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-700'
+  return 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700'
+}
 
 const matchedWeightCount = computed(
   () => analysisResult.value?.pipeline_trace?.weight_calculation?.matched_count || 0

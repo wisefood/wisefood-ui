@@ -280,6 +280,32 @@
         "moods": "Διάθεση",
         "flavor_profiles": "Γεύση",
         "food_groups": "Ομάδες τροφίμων"
+      },
+      "sustainability": {
+        "lowCoverage": "Μόνο το {value}% του βάρους της συνταγής αντιστοιχήθηκε σε καταχώριση αποτυπώματος, οπότε η τιμή είναι κατώτατο όριο."
+      },
+      "cost": {
+        "unavailable": "Χωρίς κατάταξη",
+        "regionHint": "Με βάση τιμές {region}· δεν εμφανίζονται ποσά."
+      },
+      "matches": {
+        "weightSource": "Πηγή βάρους",
+        "nutrition": "Διατροφική αντιστοίχιση",
+        "sustainability": "Αντιστοίχιση αποτυπώματος",
+        "cost": "Αντιστοίχιση τιμής",
+        "noMatch": "Χωρίς αντιστοίχιση",
+        "similarity": "{value}% ομοιότητα",
+        "footprintFactor": "{value} kg CO₂e/kg",
+        "costShare": "{value}% του κόστους της συνταγής",
+        "confidence": {
+          "curated": "επιμελημένη",
+          "exact": "ακριβής",
+          "alias": "συνώνυμο",
+          "override": "διορθωμένη",
+          "strong": "ισχυρή",
+          "weak": "ασθενής",
+          "none": "καμία"
+        }
       }
     },
     "filters": {
