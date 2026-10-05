@@ -22,6 +22,16 @@
       :class="[isSaved ? 'text-brandg-600 dark:text-brandg-400' : '', 'cursor-pointer']"
       @click="toggle"
     >
+      <template #leading>
+        <!-- The slot replaces the button's own icon, including its spinner,
+             so the pending request shows as a pulse on the same glyph. -->
+        <BurstIcon
+          name="i-lucide-bookmark"
+          active-name="i-lucide-bookmark-check"
+          :active="isSaved"
+          :class="['size-4', loading ? 'animate-pulse' : '']"
+        />
+      </template>
       <slot :is-saved="isSaved">
         {{ isSaved ? t('library.saved') : t('library.save') }}
       </slot>

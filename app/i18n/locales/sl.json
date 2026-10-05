@@ -377,7 +377,8 @@
       "searching": "Iskanje...",
       "recentSearches": "Nedavna iskanja:",
       "personalized": "Prilagojeno",
-      "personalizedHint": "Uporabi alergije, prehrano in preference izbranega člana za filtriranje in razvrščanje rezultatov"
+      "personalizedHint": "Uporabi alergije, prehrano in preference izbranega člana za filtriranje in razvrščanje rezultatov",
+      "personalizedNeedsMember": "Izberite člana gospodinjstva za prilagojene rezultate"
     },
     "analyzer": {
       "title": "AI analizator receptov",

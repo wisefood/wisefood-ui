@@ -149,6 +149,8 @@ export interface RecipeSearchParams {
   diet_tags?: string[]
   /** Soft preference boosts — reorder results, never filter them out. */
   preferred_ingredients?: string[]
+  /** Ingredients that must not appear (the member's disliked foods); a hard filter. */
+  exclude_ingredients?: string[]
   /** Region whose nutri-score the result cards carry: US, IE, HU. */
   region?: string
   /**
@@ -213,6 +215,12 @@ export interface RecipeParamSearchParams {
   exclude_ingredients?: string[]
   exclude_allergens?: string[]
   diet_tags?: string[]
+  /**
+   * Soft preference boosts (the member's liked foods): recipes naming one rank
+   * higher, none are filtered out. Only reorders the default browse order; an
+   * explicit `sort_by` wins.
+   */
+  preferred_ingredients?: string[]
   sources?: RecipeSource[]
   dish_types?: RecipeDishType[]
   /**

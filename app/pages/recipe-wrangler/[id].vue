@@ -384,9 +384,9 @@
               class="flex items-center gap-1.5 px-3 py-1.5 min-h-9 pointer-coarse:min-h-11 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all"
               @click="toggleFavorite"
             >
-              <UIcon
-                name="i-lucide-heart"
-                :class="['w-4 h-4 transition-colors', isFavorite ? 'text-red-500 fill-red-500' : 'text-zinc-500 dark:text-zinc-400']"
+              <FavoriteHeart
+                :active="isFavorite"
+                :class="['w-4 h-4 transition-colors', isFavorite ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400']"
               />
               <span class="text-xs font-medium text-zinc-600 dark:text-zinc-300">
                 {{ isFavorite ? t('recipeWrangler.recipe.saved') : t('recipeWrangler.recipe.save') }}

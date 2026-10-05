@@ -42,10 +42,10 @@ const toggleSave = () => {
           class="absolute top-3 right-3 p-2 rounded-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-900 transition-all duration-200 hover:scale-110"
           @click="toggleSave"
         >
-          <UIcon
-            :name="isSaved ? 'i-lucide-heart-filled' : 'i-lucide-heart'"
+          <FavoriteHeart
+            :active="isSaved"
             :class="[
-              'w-5 h-5',
+              'w-5 h-5 transition-colors duration-200',
               isSaved ? 'text-brand' : 'text-gray-600 dark:text-gray-400'
             ]"
           />

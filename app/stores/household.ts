@@ -25,6 +25,10 @@ interface HouseholdState {
 const SELECTED_MEMBER_KEY = 'wisefood_selected_member_id'
 const SETUP_SKIPPED_KEY = 'wisefood_household_setup_skipped'
 
+// The in-flight initialization, shared by overlapping callers. Module-level
+// rather than state: it is a promise, not something to persist or devtool.
+let initializing: Promise<void> | null = null
+
 export const useHouseholdStore = defineStore('household', {
   state: (): HouseholdState => ({
     household: null,
@@ -58,14 +62,25 @@ export const useHouseholdStore = defineStore('household', {
   actions: {
     async initialize() {
       if (this.initialized) return
+      // Callers that overlap (a page awaiting the member before its first
+      // fetch while a layout kicked the same load off) share one request
+      // instead of each fetching the household and its members.
+      if (initializing) return initializing
 
-      // Check if setup was previously skipped
-      if (import.meta.client) {
-        this.setupSkipped = localStorage.getItem(SETUP_SKIPPED_KEY) === 'true'
-      }
+      initializing = (async () => {
+        // Check if setup was previously skipped
+        if (import.meta.client) {
+          this.setupSkipped = localStorage.getItem(SETUP_SKIPPED_KEY) === 'true'
+        }
 
-      await this.fetchHousehold()
-      this.initialized = true
+        try {
+          await this.fetchHousehold()
+          this.initialized = true
+        } finally {
+          initializing = null
+        }
+      })()
+      return initializing
     },
 
     async fetchHousehold() {

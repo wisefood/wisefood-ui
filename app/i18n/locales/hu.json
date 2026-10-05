@@ -377,7 +377,8 @@
       "searching": "Keresés...",
       "recentSearches": "Legutóbbi keresések:",
       "personalized": "Személyre szabott",
-      "personalizedHint": "A kiválasztott tag allergiái, étrendje és preferenciái alapján szűri és rangsorolja a találatokat"
+      "personalizedHint": "A kiválasztott tag allergiái, étrendje és preferenciái alapján szűri és rangsorolja a találatokat",
+      "personalizedNeedsMember": "Válasszon háztartási tagot a személyre szabott találatokhoz"
     },
     "analyzer": {
       "title": "MI receptelemző",

@@ -29,11 +29,11 @@
           :aria-label="isFavorite ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
           @click.prevent.stop="toggleFavorite"
         >
-          <UIcon
-            name="i-lucide-heart"
+          <FavoriteHeart
+            :active="isFavorite"
             :class="[
               'w-4 h-4 transition-colors duration-200',
-              isFavorite ? 'text-red-500 fill-red-500' : 'text-gray-400 dark:text-zinc-500'
+              isFavorite ? 'text-red-500' : 'text-gray-400 dark:text-zinc-500'
             ]"
           />
         </button>

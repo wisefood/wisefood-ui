@@ -47,12 +47,12 @@
         @click="toggleFavorite"
         :aria-label="isFavorite ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
       >
-        <UIcon
-          :name="isFavorite ? 'i-lucide-heart' : 'i-lucide-heart'"
+        <FavoriteHeart
+          :active="isFavorite"
           :class="[
             'w-5 h-5 transition-colors duration-200',
             isFavorite
-              ? 'text-red-500 fill-red-500'
+              ? 'text-red-500'
               : 'text-gray-600 dark:text-gray-300'
           ]"
         />

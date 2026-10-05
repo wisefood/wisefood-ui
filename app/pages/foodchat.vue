@@ -981,6 +981,14 @@
                       :disabled="sending"
                       @click="handleTogglePlanSaved"
                     >
+                      <template #leading>
+                        <BurstIcon
+                          name="i-lucide-bookmark"
+                          active-name="i-lucide-bookmark-check"
+                          :active="displayedPlanSaved"
+                          class="size-4"
+                        />
+                      </template>
                       {{ displayedPlanSaved
                         ? t('foodChatHome.planHeader.savedPlan')
                         : t('foodChatHome.planHeader.savePlan') }}
@@ -1396,12 +1404,12 @@
                                 :aria-label="isRecipeFavorite(getWeeklyRecipeId(cellMain(cell))) ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
                                 @click.prevent.stop="toggleRecipeFavorite(getWeeklyRecipeId(cellMain(cell)))"
                               >
-                                <UIcon
-                                  name="i-lucide-heart"
+                                <FavoriteHeart
+                                  :active="isRecipeFavorite(getWeeklyRecipeId(cellMain(cell)))"
                                   :class="[
                                     'w-3 h-3 transition-colors duration-200',
                                     isRecipeFavorite(getWeeklyRecipeId(cellMain(cell)))
-                                      ? 'text-red-500 fill-red-500'
+                                      ? 'text-red-500'
                                       : 'text-gray-300 dark:text-zinc-600'
                                   ]"
                                 />

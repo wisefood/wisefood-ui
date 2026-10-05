@@ -377,7 +377,8 @@
       "searching": "Searching...",
       "recentSearches": "Recent searches:",
       "personalized": "Personalized",
-      "personalizedHint": "Use the selected member's allergies, diet and preferences to filter and rank results"
+      "personalizedHint": "Use the selected member's allergies, diet and preferences to filter and rank results",
+      "personalizedNeedsMember": "Select a household member to personalize results"
     },
     "analyzer": {
       "title": "AI Recipe Analyzer",

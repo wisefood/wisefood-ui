@@ -668,12 +668,15 @@
           <button
             type="button"
             @click="togglePersonalizedSearch"
-            :title="t('recipeWrangler.search.personalizedHint')"
+            :title="householdStore.currentMember ? t('recipeWrangler.search.personalizedHint') : t('recipeWrangler.search.personalizedNeedsMember')"
+            :aria-pressed="personalizedSearch && !!householdStore.currentMember"
+            :disabled="!householdStore.currentMember"
             :class="[
               'flex items-center gap-2 px-4 py-2 min-h-11 rounded-lg border transition-colors text-sm',
-              personalizedSearch
+              personalizedSearch && householdStore.currentMember
                 ? 'bg-brandg-500 border-brandg-500 text-white'
-                : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700'
+                : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700',
+              householdStore.currentMember ? '' : 'opacity-60 cursor-not-allowed'
             ]"
           >
             <UIcon name="i-lucide-user-check" class="w-4 h-4" />
@@ -1713,11 +1716,16 @@ if (import.meta.client) {
   personalizedSearch.value = localStorage.getItem('recipe-personalized-search') !== 'off'
 }
 
-const togglePersonalizedSearch = () => {
+const togglePersonalizedSearch = async () => {
   personalizedSearch.value = !personalizedSearch.value
   if (import.meta.client) {
     localStorage.setItem('recipe-personalized-search', personalizedSearch.value ? 'on' : 'off')
   }
+  // The chip used to flip a flag and nothing else: the results on screen
+  // stayed as they were until the next typed question, which read as a
+  // button that does nothing. Re-run whatever is showing — the question, or
+  // the filtered browse — with the new setting.
+  await handleFilterChange()
 }
 
 // Profile dietary groups → recipes_v2 diet tags (the index only carries the
@@ -1743,7 +1751,10 @@ const memberProfileCache = ref<{ memberId: string, profile: Record<string, unkno
 interface SearchPersonalization {
   allergens?: string[]
   dietTags?: string[]
+  /** `nutritional_preferences.food_likes`: soft ranking boosts. */
   preferredIngredients?: string[]
+  /** `nutritional_preferences.food_dislikes`: hard excludes, as the planner treats them. */
+  excludeIngredients?: string[]
   region?: string
 }
 
@@ -1770,29 +1781,52 @@ const buildSearchPersonalization = async (): Promise<SearchPersonalization> => {
         .filter((tag): tag is string => Boolean(tag))
     )]
 
-    // nutritional_preferences.dietary_preferences is a free-form
-    // {category: items} dict; flatten string items into soft boosts.
-    const preferredIngredients: string[] = []
-    const prefs = (profile.nutritional_preferences as Record<string, unknown> | undefined)?.dietary_preferences
-    if (prefs && typeof prefs === 'object') {
-      for (const items of Object.values(prefs as Record<string, unknown>)) {
-        for (const item of Array.isArray(items) ? items : []) {
-          const name = String(item || '').trim()
-          if (name) preferredIngredients.push(name)
-        }
-      }
-    }
+    // Likes and dislikes live in `nutritional_preferences.food_likes` and
+    // `.food_dislikes`, which is what the profile page and the preferences
+    // wizard write. This used to read `.dietary_preferences`, a key nothing
+    // ever wrote, so a profile full of likes personalised nothing.
+    const nutritionalPreferences = (profile.nutritional_preferences ?? {}) as Record<string, unknown>
+    const foodNames = (value: unknown): string[] => [...new Set(
+      (Array.isArray(value) ? value : [])
+        .map(item => String(item || '').trim().toLowerCase())
+        .filter(Boolean)
+    )]
+    const preferredIngredients = foodNames(nutritionalPreferences.food_likes)
+    const excludeIngredients = foodNames(nutritionalPreferences.food_dislikes)
 
     const region = String(householdStore.currentHousehold?.region || '').trim().toUpperCase()
     return {
       allergens,
       dietTags,
       preferredIngredients: preferredIngredients.slice(0, 10),
+      excludeIngredients,
       region: resolveRecipeRegion(region)
     }
   } catch (err) {
     console.warn('Personalized search: profile unavailable, searching unpersonalized', err)
     return {}
+  }
+}
+
+/**
+ * The member's profile applied to a parameter search, the same way the question
+ * path applies it: allergies and disliked foods are hard excludes and dietary
+ * groups are hard filters, each unioned with what the sidebar already asks
+ * for; liked foods are soft boosts. Region has no field on this path. Off, or
+ * without a member, the params pass through untouched.
+ */
+const withParamPersonalization = async (params: RecipeParamSearchParams): Promise<RecipeParamSearchParams> => {
+  const personalization = await buildSearchPersonalization()
+  const excludeAllergens = [...new Set([...(params.exclude_allergens || []), ...(personalization.allergens || [])])]
+  const dietTags = [...new Set([...(params.diet_tags || []), ...(personalization.dietTags || [])])]
+  const excludeIngredients = [...new Set([...(params.exclude_ingredients || []), ...(personalization.excludeIngredients || [])])]
+  const preferredIngredients = personalization.preferredIngredients || []
+  return {
+    ...params,
+    exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined,
+    diet_tags: dietTags.length > 0 ? dietTags : undefined,
+    exclude_ingredients: excludeIngredients.length > 0 ? excludeIngredients : undefined,
+    preferred_ingredients: preferredIngredients.length > 0 ? preferredIngredients : undefined
   }
 }
 
@@ -1847,6 +1881,7 @@ const performSearch = async (options: { openFirstResult?: boolean } = {}) => {
       require_diet_tags: requiredDietTags.length > 0 ? requiredDietTags : undefined,
       exclude_allergens: excludeAllergens.length > 0 ? excludeAllergens : undefined,
       preferred_ingredients: personalization.preferredIngredients?.length ? personalization.preferredIngredients : undefined,
+      exclude_ingredients: personalization.excludeIngredients?.length ? personalization.excludeIngredients : undefined,
       region: personalization.region
     }
     lastNlSearch.value = nlParams
@@ -2008,11 +2043,11 @@ const handleFilterChange = async () => {
   if (searchQuery.value) {
     await performSearch()
   } else {
-    const updatedParams = {
+    const updatedParams = await withParamPersonalization({
       ...(lastParamSearch.value ?? {}),
       ...buildFilterParams(),
       offset: 0
-    }
+    })
     searchMode.value = 'params'
     lastParamSearch.value = updatedParams
     await searchRecipesByParams(updatedParams, false)
@@ -2074,6 +2109,7 @@ const handleQuickFilter = async (filterType: string) => {
       // Same as the main search above: a profile diet is a requirement here.
       require_diet_tags: personalization.dietTags?.length ? personalization.dietTags : undefined,
       preferred_ingredients: personalization.preferredIngredients?.length ? personalization.preferredIngredients : undefined,
+      exclude_ingredients: personalization.excludeIngredients?.length ? personalization.excludeIngredients : undefined,
       region: personalization.region
     }
     lastNlSearch.value = quickParams
@@ -2162,19 +2198,19 @@ onMounted(async () => {
     document.addEventListener('click', handleClickOutsideSearch)
   }
 
-  // Initialize stores
+  // Initialize stores. The household is awaited rather than left to load in
+  // the background: the landing fetch below reads the selected member's
+  // allergies and diet, and before this only the second page respected them.
   recipeStore.initialize()
-  void (async () => {
-    try {
-      await householdStore.initialize()
-      const userRegion = String(householdStore.currentHousehold?.region || '').trim().toUpperCase()
-      if ((ANALYSIS_REGIONS as readonly string[]).includes(userRegion)) {
-        analysisRegion.value = userRegion as typeof ANALYSIS_REGIONS[number]
-      }
-    } catch (err) {
-      console.error('Failed to load household region:', err)
+  try {
+    await householdStore.initialize()
+    const userRegion = String(householdStore.currentHousehold?.region || '').trim().toUpperCase()
+    if ((ANALYSIS_REGIONS as readonly string[]).includes(userRegion)) {
+      analysisRegion.value = userRegion as typeof ANALYSIS_REGIONS[number]
     }
-  })()
+  } catch (err) {
+    console.error('Failed to load household region:', err)
+  }
 
   // Load an initial set of recipes on page open using param_search (supports server-side pagination).
   hasUserTriggeredSearch.value = false
@@ -2182,11 +2218,11 @@ onMounted(async () => {
   try {
     clearError()
     resetPagination()
-    const initialParams = {
+    const initialParams = await withParamPersonalization({
       ...buildFilterParams(),
       limit: itemsPerPage,
       offset: 0
-    }
+    })
     searchMode.value = 'params'
     lastParamSearch.value = initialParams
     await searchRecipesByParams(initialParams, false)
