@@ -319,6 +319,11 @@
             @enqueued="loadEnrichmentProgress"
           />
 
+          <ConsoleGuidesGuideExportCard
+            v-if="resolvedGuideUrn"
+            :guide-urn="resolvedGuideUrn"
+          />
+
           <UCard
             :ui="{ body: 'p-5 sm:p-6' }"
             class="border border-gray-200/70 bg-white/95 shadow-sm dark:border-white/10 dark:bg-zinc-900/80"

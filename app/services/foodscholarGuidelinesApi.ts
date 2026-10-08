@@ -116,6 +116,36 @@ export interface FoodScholarGuidelineExtractionStatus {
   result?: FoodScholarGuidelineExtractionResult | null
 }
 
+/**
+ * The latest Excel export of a guide. One per guide: asking again while one is
+ * queued or running returns that one. A finished workbook stays downloadable
+ * until `expires_at`, after which the export has to be run again.
+ */
+export interface FoodScholarGuideExportStatus {
+  guide_urn: string
+  status: 'not_found' | 'queued' | 'running' | 'succeeded' | 'failed' | 'stalled'
+  stalled?: boolean
+  job_id?: string | null
+  /** queued, fetching, writing or done */
+  stage?: string | null
+  enqueued_at?: string | null
+  started_at?: string | null
+  completed_at?: string | null
+  total_guidelines?: number | null
+  filename?: string | null
+  size_bytes?: number | null
+  expires_at?: string | null
+  download_ready: boolean
+  error?: string | null
+}
+
+export interface FoodScholarGuideExportFile {
+  blob: Blob
+  filename: string
+}
+
+const XLSX_MEDIA_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
 export interface FoodScholarGuidelineImportRequest {
   guide_id: string
   dry_run: boolean
@@ -277,6 +307,44 @@ class FoodScholarGuidelinesApiService {
       `${this.basePath}/import/${encodeURIComponent(artifactUuid)}`,
       payload
     )
+  }
+
+  // ----------------------------------------------------------------------- #
+  // Excel export of a guide's guidelines (console)
+  // ----------------------------------------------------------------------- #
+
+  /** Queue an export; returns the job already in flight for the guide, if any. */
+  async enqueueGuideExport(
+    guideUrn: string,
+    options: { force?: boolean } = {}
+  ): Promise<FoodScholarGuideExportStatus> {
+    return wisefoodRestApi.post<FoodScholarGuideExportStatus, { force?: boolean }>(
+      `${this.basePath}/export/${encodeURIComponent(guideUrn)}`,
+      options
+    )
+  }
+
+  async getGuideExportStatus(guideUrn: string): Promise<FoodScholarGuideExportStatus> {
+    return wisefoodRestApi.get<FoodScholarGuideExportStatus>(`${this.basePath}/export/${encodeURIComponent(guideUrn)}`)
+  }
+
+  /**
+   * The finished workbook. Fetched with the bearer token rather than linked:
+   * the gateway reads the token from the Authorization header only, so a plain
+   * `<a href download>` would arrive unauthenticated.
+   */
+  async downloadGuideExport(guideUrn: string): Promise<FoodScholarGuideExportFile> {
+    const response = await wisefoodRestApi.getStream(
+      `${this.basePath}/export/${encodeURIComponent(guideUrn)}/download`,
+      { headers: { Accept: XLSX_MEDIA_TYPE } }
+    )
+    const disposition = response.headers.get('content-disposition') || ''
+    const named = disposition.match(/filename="?([^";]+)"?/i)?.[1]
+    const slug = guideUrn.split(':').pop() || 'guide'
+    return {
+      blob: await response.blob(),
+      filename: named || `FSKG_Platform_${slug}.xlsx`
+    }
   }
 
   // ----------------------------------------------------------------------- #
