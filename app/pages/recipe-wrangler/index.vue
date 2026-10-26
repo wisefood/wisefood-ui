@@ -30,6 +30,7 @@
                 ? 'border-brandg-500 text-brandg-600 dark:text-brandg-400'
                 : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
             ]"
+            data-flows="recipes-analyzer-tab"
             @click="activeTab = 'analyze'"
           >
             <span class="flex items-center gap-1.5">
@@ -49,7 +50,11 @@
       <!-- Search Bar -->
       <section v-if="activeTab === 'search'" class="mb-8 sm:mb-12">
         <div class="max-w-2xl mx-auto">
-          <div ref="searchBoxRef" class="relative">
+          <div
+            ref="searchBoxRef"
+            class="relative"
+            data-flows="recipes-search-input"
+          >
             <UIcon name="i-lucide-search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-zinc-400" />
             <input
               v-model="searchQuery"
@@ -133,6 +138,7 @@
             <textarea
               v-model="analysisInput"
               rows="8"
+              data-flows="recipes-analyzer-input"
               :placeholder="t('recipeWrangler.analyzer.placeholder')"
               class="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white px-4 py-3 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-brandg-500"
             />
@@ -649,6 +655,7 @@
           -->
           <button
             type="button"
+            data-flows="recipes-filters-button"
             @click="openFilters"
             :aria-expanded="isCompact ? filtersDrawerOpen : showFilters"
             class="flex items-center gap-2 px-4 py-2 min-h-11 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors text-sm"
@@ -667,6 +674,7 @@
           </button>
           <button
             type="button"
+            data-flows="recipes-personalized-toggle"
             @click="togglePersonalizedSearch"
             :title="householdStore.currentMember ? t('recipeWrangler.search.personalizedHint') : t('recipeWrangler.search.personalizedNeedsMember')"
             :aria-pressed="personalizedSearch && !!householdStore.currentMember"
@@ -771,6 +779,7 @@
             </button>
             <button
               v-if="recipeStore.compareCount >= 2"
+              data-flows="recipes-compare-button"
               @click="navigateToCompare"
               :aria-label="`${t('recipeWrangler.compare')} (${recipeStore.compareCount})`"
               class="flex items-center gap-2 px-4 py-2 min-h-10 rounded-lg bg-brandg-600 dark:bg-brandg-500 text-white hover:bg-brandg-700 dark:hover:bg-brandg-600 transition-colors text-sm font-medium shadow-md"
@@ -869,10 +878,12 @@
                 ? 'ring-2 ring-brandg-500 ring-offset-2 ring-offset-transparent'
                 : ''
             ]"
+            :data-flows="index === 0 ? 'recipes-first-card' : undefined"
             @click="recordResultClick(recipe, index)"
           >
             <RecipesRecipeCard
               :recipe="recipe"
+              :flows-anchor="index === 0"
             />
           </div>
         </div>
@@ -977,6 +988,7 @@
       >
         <div
           v-if="showCompareBar"
+          data-flows="recipes-compare-bar"
           class="sm:hidden fixed left-4 right-20 bottom-[max(0.75rem,var(--wf-safe-bottom))] z-30 flex items-stretch gap-2 p-2 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur border border-zinc-200 dark:border-zinc-700 shadow-2xl"
         >
           <button

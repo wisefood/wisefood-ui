@@ -21,6 +21,7 @@
                 ? 'border-brand-500 text-brand-600 dark:text-brand-400'
                 : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200'
             ]"
+            data-flows="foodscholar-guides-tab-map"
             @click="activeTab = 'map'"
           >
             <span class="flex items-center gap-1.5">
@@ -36,6 +37,7 @@
                 ? 'border-brand-500 text-brand-600 dark:text-brand-400'
                 : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200'
             ]"
+            data-flows="foodscholar-guides-tab-catalog"
             @click="activeTab = 'catalog'"
           >
             <span class="flex items-center gap-1.5">
@@ -100,7 +102,10 @@
             v-else-if="euRegionSummaries.length"
             class="grid gap-10 xl:grid-cols-[minmax(0,1fr)_14rem] xl:items-start"
           >
-            <div class="atlas-map-wrap min-w-0">
+            <div
+              class="atlas-map-wrap min-w-0"
+              data-flows="foodscholar-guides-map"
+            >
               <EuropeGuidesMap
                 v-model:selected-region-code="selectedMapRegionCode"
                 :regions="euRegionSummaries"
@@ -172,7 +177,10 @@
                 </div>
 
                 <div class="mt-8 border-t border-black/10 pt-6 dark:border-white/10">
-                  <div class="space-y-1">
+                  <div
+                    class="space-y-1"
+                    data-flows="foodscholar-guides-region-list"
+                  >
                     <button
                       v-for="region in euRegionBrowseList"
                       :key="region.region"

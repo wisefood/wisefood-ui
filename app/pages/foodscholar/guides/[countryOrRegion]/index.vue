@@ -94,6 +94,7 @@
             :items="tabItems"
             variant="link"
             class="w-full"
+            data-flows="foodscholar-guides-explorer-tabs"
             :ui="{ content: 'pt-6' }"
           >
             <template #overview>

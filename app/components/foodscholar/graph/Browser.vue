@@ -58,7 +58,10 @@
            under the tree. -->
       <div class="relative z-40 shrink-0 border-b border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm">
         <div class="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-2 sm:px-6">
-          <div class="min-w-0 flex-1 basis-64">
+          <div
+            class="min-w-0 flex-1 basis-64"
+            data-flows="foodscholar-graph-search"
+          >
             <FoodscholarGraphSearchBox
               v-model="searchQuery"
               :is-dark="isDark"

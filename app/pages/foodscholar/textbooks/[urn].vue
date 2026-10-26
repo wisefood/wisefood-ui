@@ -68,7 +68,10 @@
           class="textbook-enter z-20 flex justify-end lg:sticky lg:top-20 lg:col-start-3 lg:row-start-1 lg:self-start"
           style="--delay: 40ms"
         >
-          <div class="inline-flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white/90 p-2 shadow-lg shadow-gray-900/5 backdrop-blur-xl dark:border-zinc-700 dark:bg-zinc-900/85 dark:shadow-black/20">
+          <div
+            data-flows="foodscholar-textbook-save"
+            class="inline-flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white/90 p-2 shadow-lg shadow-gray-900/5 backdrop-blur-xl dark:border-zinc-700 dark:bg-zinc-900/85 dark:shadow-black/20"
+          >
             <LibrarySaveToLibraryButton
               :item-ref="textbook.urn"
               item-type="textbook"

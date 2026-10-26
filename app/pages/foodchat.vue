@@ -44,7 +44,11 @@
 
           <!-- Central chat input -->
           <div class="relative mb-3">
-            <div class="chat-composer" :class="{ 'is-focused': inputFocused }">
+            <div
+              class="chat-composer"
+              :class="{ 'is-focused': inputFocused }"
+              data-flows="foodchat-composer"
+            >
               <div class="flex items-end gap-2 p-2">
                 <textarea
                   ref="idleInputRef"
@@ -61,6 +65,7 @@
                 />
                 <button
                   :disabled="!canSend"
+                  data-flows="foodchat-send"
                   class="chat-send-button h-10 w-10 pointer-coarse:h-11 pointer-coarse:w-11 flex items-center justify-center rounded-xl bg-brandp-500 text-white disabled:opacity-40 shadow-md shadow-brandp-700/20 shrink-0 mb-0.5"
                   :aria-label="t('foodChatHome.input.generate')"
                   :class="{ 'chat-send-idle': canSend && !sending }"
@@ -75,7 +80,11 @@
             <!-- Below chatbar row: hint right, sessions left -->
             <div class="mt-2 px-1 flex items-center justify-between gap-3">
               <Transition name="chips-fade">
-                <div v-if="sessions.length > 0" class="flex items-center gap-1.5 min-w-0">
+                <div
+                  v-if="sessions.length > 0"
+                  class="flex items-center gap-1.5 min-w-0"
+                  data-flows="foodchat-sessions"
+                >
                   <UIcon name="i-lucide-history" class="w-3 h-3 text-gray-400 dark:text-zinc-500 shrink-0" />
                   <USelectMenu
                     :model-value="undefined"
@@ -125,7 +134,10 @@
           </div>
 
           <!-- Suggested questions -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
+          <div
+            class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5"
+            data-flows="foodchat-suggestions"
+          >
             <button
               v-for="(q, idx) in suggestedQuestions"
               :key="q.text"
@@ -182,6 +194,7 @@
         <div class="fc-pane-bar lg:hidden w-full max-w-7xl 2xl:max-w-[100rem] shrink-0 flex items-center gap-2 px-3 py-2 sm:px-0 sm:pt-0 sm:pb-3">
           <div
             class="fc-segmented flex-1 sm:flex-none"
+            data-flows="foodchat-pane-switch"
             role="tablist"
             :aria-label="t('foodChatHome.panes.label')"
           >
@@ -215,6 +228,7 @@
             v-if="planningState"
             type="button"
             class="fc-pane-btn ml-auto"
+            data-flows="foodchat-planning-rail-phone"
             :aria-label="t('foodChatHome.planningState.title')"
             @click="planningOpen = true"
           >
@@ -243,6 +257,7 @@
             <UIcon name="i-lucide-messages-square" class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0" />
             <USelectMenu
               :model-value="activeSession?.session_id"
+              data-flows="foodchat-sessions"
               :items="sessionItems"
               value-key="value"
               label-key="label"
@@ -265,6 +280,7 @@
               class="shrink-0 h-6 w-6 pointer-coarse:h-11 pointer-coarse:w-11 pointer-coarse:-my-2.5 flex items-center justify-center rounded-md text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:bg-brandp-50 dark:hover:bg-brandp-950/30 transition-colors"
               :title="t('foodChatHome.chat.startFresh')"
               :aria-label="t('foodChatHome.chat.startFresh')"
+              data-flows="foodchat-new-chat"
               @click="handleStartOver"
             >
               <UIcon name="i-lucide-plus" class="w-3.5 h-3.5" />
@@ -604,7 +620,11 @@
               </UTooltip>
             </div>
             <div class="relative">
-              <div class="chat-composer" :class="{ 'is-focused': sessionInputFocused }">
+              <div
+                class="chat-composer"
+                :class="{ 'is-focused': sessionInputFocused }"
+                data-flows="foodchat-composer"
+              >
                 <div class="chat-composer-accent chat-composer-accent-left" />
                 <div class="chat-composer-accent chat-composer-accent-right" />
                 <div class="flex items-end gap-2 p-2">
@@ -624,6 +644,7 @@
                   <div class="flex items-center gap-1 shrink-0 mb-0.5">
                     <button
                       :disabled="!canSend"
+                      data-flows="foodchat-send"
                       class="chat-send-button h-9 w-9 pointer-coarse:h-11 pointer-coarse:w-11 flex items-center justify-center rounded-xl bg-brandp-500 text-white disabled:opacity-40 shadow-md shadow-brandp-700/20"
                       :aria-label="t('foodChatHome.input.generate')"
                       :class="{ 'chat-send-idle': canSend && !sending }"
@@ -664,6 +685,7 @@
         <div
           v-show="isDesktop || mobilePane === 'plan'"
           class="fc-canvas-col flex flex-col overflow-y-auto"
+          data-flows="foodchat-plan"
         >
           <!-- Plan settings, behind a disclosure and closed by default.
                Four groups of pills across the top of the canvas is the first
@@ -678,6 +700,7 @@
             <button
               class="w-full flex items-center gap-2 px-4 sm:px-6 py-2 min-h-11 lg:min-h-0 text-xs text-gray-500 dark:text-zinc-400 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors"
               :aria-expanded="isCompact ? undefined : settingsOpen"
+              data-flows="foodchat-plan-settings"
               @click="toggleSettings"
             >
               <UIcon name="i-lucide-settings-2" class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0" />
@@ -979,6 +1002,7 @@
                       :variant="displayedPlanSaved ? 'soft' : 'subtle'"
                       :icon="displayedPlanSaved ? 'i-lucide-bookmark-check' : 'i-lucide-bookmark'"
                       :disabled="sending"
+                      data-flows="foodchat-save-plan"
                       @click="handleTogglePlanSaved"
                     >
                       <template #leading>
@@ -1011,17 +1035,23 @@
                         : t('foodChatHome.planHeader.dailyPlan')"
                       size="xs"
                       variant="subtle"
+                      data-flows="foodchat-share-plan"
                     />
-                    <FoodchatPlanToolsMenu
+                    <span
                       v-if="tools.length"
-                      :tools="tools"
-                      :plan-type="canvasMode"
-                      :day="toolsMenuDay"
-                      :running="runningTool"
-                      :busy="sending"
-                      show-label
-                      @invoke="handleToolInvoke"
-                    />
+                      class="inline-flex"
+                      data-flows="foodchat-plan-tools"
+                    >
+                      <FoodchatPlanToolsMenu
+                        :tools="tools"
+                        :plan-type="canvasMode"
+                        :day="toolsMenuDay"
+                        :running="runningTool"
+                        :busy="sending"
+                        show-label
+                        @invoke="handleToolInvoke"
+                      />
+                    </span>
                   </div>
                 </div>
 
@@ -1725,6 +1755,7 @@
             :class="railOpen ? 'justify-between' : 'flex-col gap-1.5'"
             :aria-expanded="railOpen"
             :title="t('foodChatHome.planningState.title')"
+            data-flows="foodchat-planning-rail"
             @click="railOpen = !railOpen"
           >
             <span class="inline-flex items-center gap-2">

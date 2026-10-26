@@ -147,12 +147,17 @@
               :aria-expanded="headerExpanded"
               @click="headerExpanded = !headerExpanded"
             />
-            <LibrarySaveToLibraryButton
+            <span
               v-if="selectedGuide?.urn"
-              :item-ref="selectedGuide.urn"
-              variant="ghost"
-              size="xs"
-            />
+              class="inline-flex"
+              data-flows="foodscholar-guide-save"
+            >
+              <LibrarySaveToLibraryButton
+                :item-ref="selectedGuide.urn"
+                variant="ghost"
+                size="xs"
+              />
+            </span>
             <UButton
               v-if="selectedGuide?.urn && authStore.hasAnyRole(['expert', 'admin'])"
               :to="`/console/assets/guides/${encodeURIComponent(selectedGuide.urn)}`"

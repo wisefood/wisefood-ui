@@ -18,7 +18,7 @@
         </div>
 
         <!-- Saved recipes section -->
-        <section>
+        <section data-flows="library-saved-recipes">
           <div class="flex items-center gap-2 mb-4">
             <UIcon
               name="i-lucide-heart"
@@ -144,7 +144,10 @@
           the bookmark fill in, and then find their library had no meal plans
           in it. This is the missing half of that feature.
         -->
-        <section class="mt-10">
+        <section
+          class="mt-10"
+          data-flows="library-saved-plans"
+        >
           <div class="flex items-center gap-2 mb-4">
             <UIcon name="i-lucide-calendar-heart" class="w-5 h-5 text-brandp-500" />
             <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">

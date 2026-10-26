@@ -20,6 +20,7 @@
                 ? 'border-brand-500 text-brand-600 dark:text-brand-400'
                 : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
             ]"
+            data-flows="foodscholar-tab-ask"
             @click="pageTab = 'qa'"
           >
             <span class="flex items-center gap-1.5">
@@ -35,6 +36,7 @@
                 ? 'border-brand-500 text-brand-600 dark:text-brand-400'
                 : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
             ]"
+            data-flows="foodscholar-tab-library"
             @click="pageTab = 'resources'"
           >
             <span class="flex items-center gap-1.5">
@@ -65,7 +67,11 @@
           </div>
 
           <div class="relative">
-            <div class="chat-composer" :class="{ 'is-focused': composerFocused }">
+            <div
+              class="chat-composer"
+              :class="{ 'is-focused': composerFocused }"
+              data-flows="foodscholar-qa-input"
+            >
               <FoodscholarNLInput
                 v-model="chatQuery"
                 :disabled="asking"
@@ -98,6 +104,7 @@
                         :class="{ 'is-active': isAdvancedMode }"
                         :aria-label="t('foodScholarHome.qa.advanced.title')"
                         :title="t('foodScholarHome.qa.advanced.title')"
+                        data-flows="foodscholar-qa-advanced"
                       >
                         <UIcon name="i-lucide-sliders-horizontal" class="w-4 h-4 shrink-0" />
                         <span class="hidden sm:inline text-xs font-medium whitespace-nowrap">
@@ -109,6 +116,7 @@
                       :disabled="asking"
                       class="chat-send-button h-10 w-10 flex items-center justify-center rounded-xl bg-brand-500 text-white disabled:opacity-50 shadow-md shadow-brand-700/20"
                       :class="{ 'chat-send-idle': !asking }"
+                      data-flows="foodscholar-qa-submit"
                       @click="askScholarQA()"
                     >
                       <UIcon name="i-lucide-arrow-up" class="w-4 h-4 text-white" />
@@ -185,6 +193,7 @@
           <div
             v-if="quickQuestions.length"
             class="mt-4 flex flex-wrap gap-2"
+            data-flows="foodscholar-qa-suggestions"
           >
             <button
               v-for="quickQ in quickQuestions"
@@ -222,7 +231,11 @@
         <!-- Pinned composer -->
         <div class="session-composer-wrap mb-6">
           <div class="relative">
-            <div class="chat-composer" :class="{ 'is-focused': composerFocused }">
+            <div
+              class="chat-composer"
+              :class="{ 'is-focused': composerFocused }"
+              data-flows="foodscholar-qa-input"
+            >
               <FoodscholarNLInput
                 v-model="chatQuery"
                 :disabled="asking"
@@ -249,6 +262,7 @@
                         :class="{ 'is-active': isAdvancedMode }"
                         :aria-label="t('foodScholarHome.qa.advanced.title')"
                         :title="t('foodScholarHome.qa.advanced.title')"
+                        data-flows="foodscholar-qa-advanced"
                       >
                         <UIcon name="i-lucide-sliders-horizontal" class="w-4 h-4" />
                       </button>
@@ -257,6 +271,7 @@
                       :disabled="asking"
                       class="chat-send-button h-10 w-10 flex items-center justify-center rounded-xl bg-brand-500 text-white disabled:opacity-50 shadow-md shadow-brand-700/20"
                       :class="{ 'chat-send-idle': !asking }"
+                      data-flows="foodscholar-qa-submit"
                       @click="askScholarQA()"
                     >
                       <UIcon v-if="asking" name="i-lucide-loader-2" class="w-4 h-4 animate-spin text-white" />
@@ -523,7 +538,12 @@
         </div>
 
         <!-- Answer -->
-        <div v-if="qaResult && primaryAnswer" ref="latestExchangeRef" class="space-y-4 session-answer-enter">
+        <div
+          v-if="qaResult && primaryAnswer"
+          ref="latestExchangeRef"
+          class="space-y-4 session-answer-enter"
+          data-flows="foodscholar-qa-answer"
+        >
           <div class="flex justify-end">
             <div class="chat-flow-bubble chat-flow-bubble-user">
               <p class="text-[0.625rem] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
@@ -669,7 +689,11 @@
           </div>
 
           <!-- Follow-up suggestions -->
-          <div v-if="qaResult.follow_up_suggestions?.length" class="chat-flow-bubble chat-flow-bubble-muted">
+          <div
+            v-if="qaResult.follow_up_suggestions?.length"
+            class="chat-flow-bubble chat-flow-bubble-muted"
+            data-flows="foodscholar-qa-followups"
+          >
             <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">{{ t('foodScholarHome.qa.followUpSuggestions') }}</h4>
             <div class="flex flex-wrap gap-2">
               <button
@@ -688,6 +712,7 @@
         <UCollapsible
           v-if="qaResult && primaryAnswer && (primaryAnswer.citations?.length || uncitedRetrievedArticles.length)"
           class="mt-4 xl:hidden"
+          data-flows="foodscholar-qa-sources-inline"
         >
           <button
             type="button"
@@ -745,7 +770,10 @@
 
         <!-- Right panel: cited sources (titles only) -->
         <aside class="qa-source-sidebar hidden xl:block pt-1">
-          <div class="qa-source-sidebar-inner">
+          <div
+            class="qa-source-sidebar-inner"
+            data-flows="foodscholar-qa-sources"
+          >
           <template v-if="qaResult && primaryAnswer && primaryAnswer.citations?.length">
             <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mb-1">{{ t('foodScholarHome.qa.sidebar.cited') }}</p>
             <NuxtLink
@@ -812,7 +840,10 @@
 
             <!-- Library search bar -->
             <div ref="librarySearchBoxRef" class="relative max-w-xl">
-              <div class="relative flex items-center">
+              <div
+                class="relative flex items-center"
+                data-flows="foodscholar-library-search"
+              >
                 <UIcon name="i-lucide-search" class="absolute left-3.5 w-4 h-4 text-gray-400 dark:text-zinc-500 pointer-events-none z-10" />
                 <input
                   ref="librarySearchInputRef"
@@ -937,7 +968,10 @@
           </div>
 
           <!-- Resource type pills -->
-          <div class="flex lg:flex-col gap-3 flex-wrap">
+          <div
+            class="flex lg:flex-col gap-3 flex-wrap"
+            data-flows="foodscholar-library-nav"
+          >
             <NuxtLink
               to="/foodscholar/hierarchy"
               class="group inline-flex min-w-[14rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-violet-300 hover:bg-violet-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-violet-700 dark:hover:bg-violet-900/20"

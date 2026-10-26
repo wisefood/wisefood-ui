@@ -352,6 +352,7 @@
           <!-- Filter Toggle Button -->
           <div class="mb-3 flex items-center justify-between gap-3">
             <button
+              data-flows="foodscholar-catalog-filters-toggle"
               @click="showFilters = !showFilters"
               class="px-4 py-2 inline-flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
             >
@@ -369,7 +370,10 @@
 
           <!-- Natural Language Search -->
           <div class="mb-4">
-            <div class="catalog-search-composer">
+            <div
+              class="catalog-search-composer"
+              data-flows="foodscholar-catalog-search"
+            >
             <FoodscholarNLInput
               v-model="nlQuery"
               @enter="performNLSearch"
@@ -393,7 +397,10 @@
             </FoodscholarNLInput>
             </div>
 
-            <div class="mt-2 flex flex-wrap gap-1.5">
+            <div
+              class="mt-2 flex flex-wrap gap-1.5"
+              data-flows="foodscholar-catalog-examples"
+            >
               <button
                 v-for="example in exampleQueries"
                 :key="example"
@@ -414,7 +421,11 @@
             leave-from-class="opacity-100 translate-y-0"
             leave-to-class="opacity-0 -translate-y-1"
           >
-          <div v-if="summaryLoading || searchSummary || summaryError" class="mb-5">
+          <div
+            v-if="summaryLoading || searchSummary || summaryError"
+            class="mb-5"
+            data-flows="foodscholar-catalog-summary"
+          >
             <!-- Loading State -->
             <div v-if="summaryLoading" class="py-3 flex items-center gap-3">
               <div class="w-5 h-5 border-2 border-brand-600 border-t-transparent rounded-full animate-spin"></div>

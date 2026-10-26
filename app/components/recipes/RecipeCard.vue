@@ -27,6 +27,7 @@
       <!-- Compare Checkbox -->
       <button
         class="absolute top-3 left-3 w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg pointer-fine:hover:scale-110 transition-all duration-200 z-10 flex items-center justify-center"
+        :data-flows="flowsAnchor ? 'recipes-card-compare' : undefined"
         @click="toggleCompare"
         :aria-label="isInCompare ? t('recipeWrangler.recipe.removeFromComparison') : t('recipeWrangler.recipe.addToComparison')"
       >
@@ -44,6 +45,7 @@
       <!-- Favorite Button -->
       <button
         class="absolute top-3 right-3 w-9 h-9 pointer-coarse:w-11 pointer-coarse:h-11 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg pointer-fine:hover:scale-110 transition-all duration-200 z-10 flex items-center justify-center"
+        :data-flows="flowsAnchor ? 'recipes-card-favorite' : undefined"
         @click="toggleFavorite"
         :aria-label="isFavorite ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
       >
@@ -193,6 +195,10 @@ import { getRecipeWranglerMode, getWisefoodRestApiUrl } from '~/utils/runtimeCon
 // ============================================================================
 interface Props {
   recipe: RecipeSearchResult
+  /** Marks this card's compare and favourite buttons as guided-tour anchors.
+      Only one card on a page should set it (a boolean prop is false when
+      absent). */
+  flowsAnchor?: boolean
 }
 
 const props = defineProps<Props>()

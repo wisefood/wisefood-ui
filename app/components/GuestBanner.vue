@@ -32,6 +32,7 @@
         icon="i-lucide-user-check"
         class="cursor-pointer font-semibold shrink-0"
         :aria-label="t('claim.cta')"
+        data-flows="guest-keep-account"
         @click="claiming = true"
       >
         <span class="hidden sm:inline">{{ t('claim.cta') }}</span>

@@ -89,6 +89,7 @@
             <ReportProblemButton
               :recipe-id="recipeId"
               on-image
+              data-flows="recipes-report-problem"
             />
           </div>
 
@@ -159,6 +160,7 @@
               v-if="recipeId"
               :recipe-id="recipeId"
               class="shrink-0"
+              data-flows="recipes-report-problem"
             />
           </div>
           <!-- Meta Info for no-image case -->
@@ -253,7 +255,10 @@
           />
 
           <!-- Nutri-Score mini strip -->
-          <div class="flex items-center gap-2">
+          <div
+            class="flex items-center gap-2"
+            data-flows="recipes-detail-nutriscore"
+          >
             <span class="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Nutri-Score</span>
             <div class="flex gap-0.5">
               <span
@@ -381,6 +386,7 @@
             <button
               v-if="recipe"
               type="button"
+              data-flows="recipes-detail-save"
               class="flex items-center gap-1.5 px-3 py-1.5 min-h-9 pointer-coarse:min-h-11 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all"
               @click="toggleFavorite"
             >
@@ -480,7 +486,10 @@
         <!-- Main Content (Left Column) -->
         <div class="lg:col-span-3 space-y-6 sm:space-y-8">
           <!-- Nutrition Information -->
-          <section class="bg-white dark:bg-zinc-800 rounded-3xl p-5 sm:p-8 lg:p-10 border border-zinc-200 dark:border-zinc-700 shadow-lg">
+          <section
+            data-flows="recipes-detail-nutrition"
+            class="bg-white dark:bg-zinc-800 rounded-3xl p-5 sm:p-8 lg:p-10 border border-zinc-200 dark:border-zinc-700 shadow-lg"
+          >
             <div class="flex items-center justify-between mb-3 gap-3 flex-wrap">
               <h2 class="text-xl font-claude text-zinc-900 dark:text-white flex items-center gap-3">
                 <UIcon
@@ -926,6 +935,7 @@
                   <button
                     type="button"
                     :disabled="!adaptAvailable"
+                    data-flows="recipes-detail-improve"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-9 pointer-coarse:min-h-11 rounded-full text-xs font-medium bg-brandg-50 dark:bg-brandg-900/30 text-brandg-700 dark:text-brandg-300 border border-brandg-200 dark:border-brandg-700 hover:bg-brandg-100 dark:hover:bg-brandg-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     @click="openAdaptModal"
                   >

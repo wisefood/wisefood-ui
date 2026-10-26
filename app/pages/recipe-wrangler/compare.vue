@@ -43,7 +43,10 @@
           the widest a phone can honestly show, so the picker decides which
           two and the metrics stack underneath.
         -->
-        <div class="sm:hidden space-y-4">
+        <div
+          class="sm:hidden space-y-4"
+          data-flows="recipes-compare-table-phone"
+        >
           <div v-if="compareRecipes.length > 2">
             <p class="mb-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
               {{ t('recipeWrangler.comparePage.pickTwo') }}
@@ -140,7 +143,10 @@
           wrapper, not the table, because `overflow: hidden` on the table made
           the sticky feature column scroll away with everything else.
         -->
-        <div class="hidden sm:block overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-lg bg-white dark:bg-zinc-800">
+        <div
+          data-flows="recipes-compare-table"
+          class="hidden sm:block overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-lg bg-white dark:bg-zinc-800"
+        >
           <table class="w-full">
             <!-- Table Header with Recipe Images and Titles -->
             <thead>

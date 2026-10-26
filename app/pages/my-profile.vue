@@ -125,7 +125,7 @@
         </UCard>
 
         <!-- Dietary Preferences Card -->
-        <UCard>
+        <UCard data-flows="card-dietary-preferences">
           <template #header>
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">

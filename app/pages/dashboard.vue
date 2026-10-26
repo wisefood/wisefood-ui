@@ -57,6 +57,7 @@
           has-about
           :about-label="t('dashboard.about.trigger', { app: t('dashboard.apps.foodScholar.title') })"
           class="bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-900/20 dark:to-brand-800/20"
+          data-flows="dashboard-app-foodscholar"
           @about="openAbout('foodScholar')"
         />
         <DashboardAppNavCard
@@ -69,6 +70,7 @@
           has-about
           :about-label="t('dashboard.about.trigger', { app: t('dashboard.apps.recipeWrangler.title') })"
           class="bg-gradient-to-br from-brandg-50 to-brandg-200 dark:from-brandg-900/20 dark:to-brandg-800/20"
+          data-flows="dashboard-app-recipewrangler"
           @about="openAbout('recipeWrangler')"
         />
         <DashboardAppNavCard
@@ -81,6 +83,7 @@
           has-about
           :about-label="t('dashboard.about.trigger', { app: t('dashboard.apps.foodChat.title') })"
           class="bg-gradient-to-br from-brandp-50 to-brandp-100 dark:from-brandp-600/20 dark:to-brandp-600/20"
+          data-flows="dashboard-app-foodchat"
           @about="openAbout('foodChat')"
         />
       </div>
@@ -124,7 +127,10 @@
       <!-- Today's Spotlight & Meal Schedule -->
       <div class="mb-12 scroll-fade-in grid grid-cols-1 lg:grid-cols-3 gap-6" style="--delay: 0.2s">
         <!-- FoodScholar Insight Card -->
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800 border border-gray-200 dark:border-zinc-700 shadow-[0_12px_28px_rgba(15,23,42,0.10)] lg:col-span-1">
+        <div
+          data-flows="dashboard-spotlight"
+          class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800 border border-gray-200 dark:border-zinc-700 shadow-[0_12px_28px_rgba(15,23,42,0.10)] lg:col-span-1"
+        >
           <!-- Content Section -->
           <div class="p-5">
             <div class="flex items-center justify-between mb-2">
@@ -173,7 +179,10 @@
         </div>
 
         <!-- Meal Schedule Calendar Card -->
-        <div class="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 shadow-xl p-5 lg:col-span-2">
+        <div
+          data-flows="dashboard-schedule"
+          class="relative overflow-hidden rounded-3xl bg-white dark:bg-zinc-800/50 border border-gray-200 dark:border-zinc-700 shadow-xl p-5 lg:col-span-2"
+        >
           <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-4">
             <div>
               <h2 class="text-xl font-light text-gray-900 dark:text-white">{{ t('dashboard.schedule.title') }}</h2>

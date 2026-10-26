@@ -729,6 +729,7 @@
             <div
               class="scroll-fade-in p-6 rounded-2xl bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700"
               style="--delay: 0.4s"
+              data-flows="foodscholar-article-save"
             >
               <h3 class="font-semibold text-gray-900 dark:text-white mb-4">
                 {{ t('foodScholarArticle.sections.share') }}
