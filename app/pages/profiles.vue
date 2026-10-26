@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col">
     <!-- Header -->
-    <header class="p-6">
+    <header class="p-6 flex items-center justify-between">
       <NuxtLink to="/" class="inline-block">
         <img
           src="/logo.png"
@@ -9,6 +9,9 @@
           class="h-10 w-auto"
         />
       </NuxtLink>
+      <!-- This page has no app header, so it carries the desktop help button
+           itself; phones reach help from the dock as everywhere else. -->
+      <HelpButton class="hidden lg:inline-flex text-gray-200 hover:bg-white/10 hover:text-white" />
     </header>
 
     <!-- Loading State -->
@@ -43,9 +46,10 @@
       <div class="grid grid-cols-2 gap-4 w-full sm:flex sm:flex-wrap sm:justify-center sm:gap-6 max-w-4xl">
         <!-- Existing Profiles -->
         <div
-          v-for="member in members"
+          v-for="(member, index) in members"
           :key="member.id"
           class="relative"
+          :data-flows="index === 0 ? 'profiles-first-member' : undefined"
         >
           <!-- Delete button (only in manage mode). The badge stays 32px; the
                pseudo-element behind it takes the tap from a 44px area. -->
@@ -101,6 +105,7 @@
         <!-- Add Profile Button -->
         <button
           type="button"
+          data-flows="profiles-add-member"
           class="group w-full sm:w-auto flex flex-col items-center space-y-3 p-3 sm:p-4 rounded-xl transition-all duration-300 hover:bg-white/5"
           @click="handleAddProfile"
         >
@@ -117,6 +122,7 @@
       <button
         v-if="members.length > 0"
         type="button"
+        data-flows="profiles-manage"
         class="mt-12 min-h-11 px-6 py-2 border border-gray-600 text-gray-400 hover:text-white hover:border-white rounded-md transition-all duration-200"
         @click="toggleManageMode"
       >

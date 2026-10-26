@@ -9,7 +9,7 @@
   >
     <div
       v-if="showBar"
-      class="fixed inset-x-0 bottom-0 z-[120] px-3 pb-3 sm:px-4 pointer-events-none"
+      class="fixed left-0 right-(--wf-help-offset) bottom-0 z-[120] px-3 pb-3 sm:px-4 pointer-events-none"
     >
       <!--
         Announced as a dialog, because it asks for a decision. A plain div that

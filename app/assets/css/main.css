@@ -91,6 +91,30 @@ body {
   height: 100dvh;
 }
 
+/* The help companion (components/help/HelpCompanion.client.vue). While the
+   desktop panel is open, anything fixed to the right or bottom edge (the
+   dock, toasts, the consent bar) moves over by `--wf-help-offset`: the app
+   root is its own stacking context, so nothing inside it can paint above the
+   panel, and an Accept button under the panel is an Accept nobody can press.
+   From 80rem up the page itself also makes room; below that the panel
+   overlays the content. */
+:root {
+  --wf-help-width: 24rem;
+  --wf-help-offset: 0px;
+}
+
+@media (min-width: 64rem) {
+  html.wf-help-docked {
+    --wf-help-offset: var(--wf-help-width);
+  }
+}
+
+@media (min-width: 80rem) {
+  html.wf-help-docked #__nuxt {
+    padding-right: var(--wf-help-width);
+  }
+}
+
 /* iOS Safari zooms the page when a focused field is under 16px, and stays
    zoomed after. Nuxt UI's inputs are 14px and the composers 15px, so on any
    touch device every text field is at least 16px. This is unlayered on

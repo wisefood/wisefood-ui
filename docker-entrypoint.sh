@@ -26,6 +26,7 @@ window.__RUNTIME_CONFIG__ = {
   flowsOrgId: '${VITE_FLOWS_ORG_ID}',
   flowsEnvironment: '${VITE_FLOWS_ENVIRONMENT}',
   flowsApiUrl: '${VITE_FLOWS_API_URL}',
+  helpMediaBaseUrl: '${HELP_MEDIA_BASE_URL}',
   release: '${NUXT_PUBLIC_RELEASE:-$VITE_APP_RELEASE}'
 };
 EOF

@@ -2341,6 +2341,16 @@
   "dock": {
     "open": "Help and accessibility",
     "close": "Close",
-    "reportBug": "Report a bug"
+    "reportBug": "Report a bug",
+    "help": "Help with this page",
+    "trouble": {
+      "server": "Something went wrong on our side",
+      "auth": "WiseFood refused something it should have allowed",
+      "network": "We lost contact with WiseFood",
+      "script": "Part of this page stopped working",
+      "body": "Tell us in a few words what you were doing and we will fix it. The technical details are attached for you.",
+      "report": "Report it",
+      "dismiss": "Not now"
+    }
   }
 }

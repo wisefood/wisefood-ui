@@ -92,6 +92,7 @@ export default defineNuxtConfig({
       flowsOrgId: process.env.VITE_FLOWS_ORG_ID, // Flows.js organization id (interactive walkthroughs)
       flowsEnvironment: process.env.VITE_FLOWS_ENVIRONMENT || 'production',
       flowsApiUrl: process.env.VITE_FLOWS_API_URL || '', // Override Flows apiUrl; empty => same-origin (proxied to api.flows-cloud.com)
+      helpMediaBaseUrl: process.env.HELP_MEDIA_BASE_URL || '', // Help panel videos; empty => <baseURL>/help/media from public/
       // Build identifier for real user monitoring. Set it to the image tag or
       // the commit sha at build time; an error group's release is how anyone
       // tells a fixed crash from a live one.

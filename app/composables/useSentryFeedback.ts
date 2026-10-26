@@ -1,8 +1,16 @@
 import { sentryFeedbackOptions } from '~/utils/sentryFeedback'
 import { getSentryDsn, isSentryEnabled } from '~/utils/runtimeConfig'
 
+type FeedbackTags = Record<string, string | number | boolean>
+
+interface FeedbackForm {
+  appendToDom: () => void
+  removeFromDom: () => void
+  open: () => void
+}
+
 interface SentryFeedback {
-  createForm: () => Promise<{ appendToDom: () => void, open: () => void }>
+  createForm: (overrides?: { tags?: FeedbackTags }) => Promise<FeedbackForm>
   setTheme: (colorScheme: 'light' | 'dark' | 'system') => void
 }
 
@@ -19,7 +27,9 @@ declare global {
 }
 
 let sentryModule: SentryModule | null = null
-let dialog: { appendToDom: () => void, open: () => void } | null = null
+let dialog: FeedbackForm | null = null
+/** The tags the current form was built with; a form's tags are fixed at creation. */
+let dialogTagsKey = ''
 
 /**
  * The Sentry bug-report form, opened on demand.
@@ -27,6 +37,10 @@ let dialog: { appendToDom: () => void, open: () => void } | null = null
  * The form is created lazily on the first request and reused after that;
  * its colour scheme follows the app's. `enabled` is false when Sentry is off
  * for this build, and every call is then a no-op.
+ *
+ * `open(tags)` stamps the report with what the page knew when it offered it
+ * (the dock passes the failure that prompted the offer). Sentry fixes a form's
+ * tags when it builds it, so different tags mean a fresh form.
  */
 export function useSentryFeedback() {
   const colorMode = useColorMode()
@@ -75,7 +89,7 @@ export function useSentryFeedback() {
     }
   }
 
-  async function open() {
+  async function open(tags?: FeedbackTags) {
     if (!enabled.value) return
 
     const Sentry = getSentryModule()
@@ -86,13 +100,22 @@ export function useSentryFeedback() {
 
     syncFeedbackTheme(Sentry)
 
-    if (dialog) {
+    const tagsKey = tags ? JSON.stringify(tags) : ''
+    if (dialog && tagsKey === dialogTagsKey) {
       dialog.open()
       return
     }
 
     try {
-      dialog = await feedback.createForm()
+      dialog?.removeFromDom()
+    } catch {
+      // A form Sentry already tore down is as good as removed.
+    }
+    dialog = null
+
+    try {
+      dialog = await feedback.createForm(tags ? { tags } : undefined)
+      dialogTagsKey = tagsKey
       dialog.appendToDom()
       dialog.open()
     } catch {

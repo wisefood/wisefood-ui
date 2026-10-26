@@ -2375,6 +2375,16 @@
   "dock": {
     "open": "Pomoč in dostopnost",
     "close": "Zapri",
-    "reportBug": "Prijavi napako"
+    "reportBug": "Prijavi napako",
+    "help": "Pomoč za to stran",
+    "trouble": {
+      "server": "Pri nas je šlo nekaj narobe",
+      "auth": "WiseFood je zavrnil nekaj, kar bi moral dovoliti",
+      "network": "Povezava z WiseFoodom je prekinjena",
+      "script": "Del te strani je prenehal delovati",
+      "body": "Z nekaj besedami opiši, kaj se je zgodilo, in napako bomo odpravili. Tehnične podrobnosti priložimo samodejno.",
+      "report": "Prijavi",
+      "dismiss": "Ne zdaj"
+    }
   }
 }

@@ -2341,6 +2341,16 @@
   "dock": {
     "open": "Segítség és akadálymentesítés",
     "close": "Bezárás",
-    "reportBug": "Hiba bejelentése"
+    "reportBug": "Hiba bejelentése",
+    "help": "Súgó ehhez az oldalhoz",
+    "trouble": {
+      "server": "Valami elromlott nálunk",
+      "auth": "A WiseFood elutasított valamit, amit engedélyeznie kellett volna",
+      "network": "Megszakadt a kapcsolat a WiseFooddal",
+      "script": "Az oldal egy része leállt",
+      "body": "Írd le pár szóban, mit csináltál, és kijavítjuk. A technikai részleteket automatikusan csatoljuk.",
+      "report": "Bejelentem",
+      "dismiss": "Most nem"
+    }
   }
 }

@@ -9,6 +9,7 @@
   -->
   <ConsentBar v-if="!isMaintenancePage" />
   <FloatingDock :minimal="isMaintenancePage" />
+  <HelpCompanion v-if="!isMaintenancePage" />
 
   <!-- Flows.js floating blocks (interactive walkthroughs) -->
   <flows-floating-blocks />

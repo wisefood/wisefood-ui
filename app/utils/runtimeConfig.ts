@@ -26,6 +26,7 @@ interface RuntimeConfigWindow extends Window {
     flowsOrgId?: string
     flowsEnvironment?: string
     flowsApiUrl?: string
+    helpMediaBaseUrl?: string
     release?: string
   }
 }
@@ -127,4 +128,16 @@ export const getFlowsApiUrl = (): string => {
   // SSR/fallback: the plugin is client-only, so this is effectively unused, but
   // return the upstream directly rather than an invalid relative value.
   return FLOWS_UPSTREAM_ORIGIN
+}
+
+// Where the help panel's short videos live: `<base>/manifest.json` lists them
+// and every file it names is resolved against the same base. Defaults to the
+// app's own `public/help/media`; point it at a bucket or CDN with
+// HELP_MEDIA_BASE_URL to publish clips without rebuilding the image.
+export const getHelpMediaBaseUrl = (): string => {
+  const runtimeConfig = getWindowRuntimeConfig()
+  const config = useRuntimeConfig()
+  const override = String(runtimeConfig?.helpMediaBaseUrl || config.public.helpMediaBaseUrl || '').trim()
+  if (override) return normalizeBaseUrl(override)
+  return `${normalizeBaseUrl(config.app.baseURL || '/')}/help/media`
 }

@@ -9,6 +9,7 @@ import * as surveyComponents from '@flows/js-components/survey-components'
 import '@flows/js-components/index.css'
 
 import { getFlowsApiUrl, getFlowsEnvironment, getFlowsOrgId } from '~/utils/runtimeConfig'
+import { markWalkthroughsReady } from '~/composables/useWalkthroughs'
 
 // Guard so init()/setupJsComponents() never run twice (HMR, re-invocation).
 // Double-registration breaks the custom-element rendering.
@@ -112,4 +113,8 @@ export default defineNuxtPlugin(async () => {
     tourComponents: { ...tourComponents },
     surveyComponents: { ...surveyComponents }
   })
+
+  // The help panel's "Show me" buttons start tours from their manual start
+  // blocks; they stay hidden until this point.
+  markWalkthroughsReady()
 })

@@ -19,6 +19,9 @@
     </template>
 
     <template #right>
+      <!-- Phones reach help from the dock's speed-dial instead. -->
+      <HelpButton class="hidden lg:inline-flex" />
+
       <UColorModeButton class="hidden lg:inline-flex" />
 
       <!-- The selector's root is its trigger button, so the visibility class
