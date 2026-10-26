@@ -6,7 +6,7 @@
     />
     <UPageHeader
       title="Platform Operations"
-      description="Elasticsearch index state, embedding coverage, and corpus-wide maintenance. Administrators only."
+      description="Platform switches, inactivity reminders, Elasticsearch index state, embedding coverage, and corpus-wide maintenance. Administrators only."
       :ui="{ root: 'relative py-8 border-b-0' }"
     >
       <template #links>
@@ -39,6 +39,7 @@
         class="space-y-6"
       >
         <ConsoleInsightsAnalyticsControls />
+        <ConsoleSystemInactivityReminders />
         <UAlert
           v-if="error"
           color="error"

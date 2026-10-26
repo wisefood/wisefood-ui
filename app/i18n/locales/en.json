@@ -1612,7 +1612,10 @@
       "analyticsAggregateNote": "If you decline, we still count that something happened — we just do not record that it was you.",
       "sessionLine": "Current session reference: {id}",
       "readMore": "Read the privacy notice",
-      "analyticsUnavailable": "Your current setting could not be loaded. Try again in a moment."
+      "analyticsUnavailable": "Your current setting could not be loaded. Try again in a moment.",
+      "remindersTitle": "Reminder emails",
+      "remindersDescription": "If you stop using WiseFood for a while, we may send you a short reminder. Turn this off and we will not.",
+      "remindersFailed": "We could not save that. Please try again."
     }
   },
   "featureGate": {
@@ -2194,6 +2197,24 @@
       "lunch": "Lunch",
       "dinner": "Dinner"
     }
+  },
+  "unsubscribe": {
+    "pageTitle": "Email reminders",
+    "title": "Stop reminder emails?",
+    "body": "You will no longer get emails reminding you about WiseFood when you have not used it for a while. Emails you ask for, such as password resets, still arrive.",
+    "confirm": "Turn off reminders",
+    "doneTitle": "Reminders are off",
+    "doneBody": "You will not get any more reminder emails. You can turn them back on here or in your profile at any time.",
+    "undo": "Turn them back on",
+    "resubscribedTitle": "Reminders are back on",
+    "resubscribedBody": "We will send you a short reminder if you stop using WiseFood for a while.",
+    "invalidTitle": "This link no longer works",
+    "invalidBody": "It may have been replaced by a newer one. You can manage reminder emails from your profile.",
+    "previewTitle": "This is a preview",
+    "previewBody": "This link came from a test or experimental email, so nothing has changed.",
+    "failed": "We could not record that just now. Please try again.",
+    "openApp": "Open WiseFood",
+    "manage": "Email settings in your profile"
   },
   "common": {
     "translation": {

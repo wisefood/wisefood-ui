@@ -1612,7 +1612,10 @@
       "analyticsAggregateNote": "Ha nem engedélyezed, továbbra is számoljuk, hogy történt valami — csak azt nem rögzítjük, hogy te voltál.",
       "sessionLine": "Aktuális munkamenet azonosítója: {id}",
       "readMore": "Adatvédelmi tájékoztató",
-      "analyticsUnavailable": "A jelenlegi beállítás nem tölthető be. Próbáld újra egy pillanat múlva."
+      "analyticsUnavailable": "A jelenlegi beállítás nem tölthető be. Próbáld újra egy pillanat múlva.",
+      "remindersTitle": "Emlékeztető e-mailek",
+      "remindersDescription": "Ha egy ideig nem használod a WiseFoodot, küldhetünk egy rövid emlékeztetőt. Ha kikapcsolod, nem küldünk.",
+      "remindersFailed": "Nem sikerült menteni. Próbáld újra."
     }
   },
   "foodChatHome": {
@@ -2194,6 +2197,24 @@
       "lunch": "Ebéd",
       "dinner": "Vacsora"
     }
+  },
+  "unsubscribe": {
+    "pageTitle": "E-mail-emlékeztetők",
+    "title": "Leállítod az emlékeztető e-maileket?",
+    "body": "Nem kapsz többé emlékeztetőt, ha egy ideig nem használod a WiseFoodot. Az általad kért e-mailek, például a jelszó-visszaállítás, továbbra is megérkeznek.",
+    "confirm": "Emlékeztetők kikapcsolása",
+    "doneTitle": "Az emlékeztetők ki vannak kapcsolva",
+    "doneBody": "Nem kapsz több emlékeztető e-mailt. Itt vagy a profilodban bármikor visszakapcsolhatod őket.",
+    "undo": "Visszakapcsolás",
+    "resubscribedTitle": "Az emlékeztetők újra be vannak kapcsolva",
+    "resubscribedBody": "Küldünk egy rövid emlékeztetőt, ha egy ideig nem használod a WiseFoodot.",
+    "invalidTitle": "Ez a link már nem működik",
+    "invalidBody": "Lehet, hogy egy újabb váltotta fel. Az emlékeztető e-maileket a profilodban kezelheted.",
+    "previewTitle": "Ez egy előnézet",
+    "previewBody": "Ez a link egy teszt- vagy kísérleti e-mailből származik, ezért semmi sem változott.",
+    "failed": "Most nem sikerült rögzíteni. Próbáld újra.",
+    "openApp": "WiseFood megnyitása",
+    "manage": "E-mail-beállítások a profilodban"
   },
   "common": {
     "translation": {

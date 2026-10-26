@@ -574,6 +574,36 @@
             >
               {{ t('myProfile.privacy.analyticsUnavailable') }}
             </p>
+            <!-- Reminder emails. Hidden for a guest, who has no real address to
+                 be reminded at, and before the deployment can store the answer:
+                 a switch that cannot be saved is worse than none. -->
+            <div
+              v-if="remindersApplies"
+              class="flex items-start justify-between gap-4 border-t border-gray-100 pt-4 dark:border-white/10"
+              data-flows="privacy-reminders"
+            >
+              <div class="min-w-0">
+                <p class="font-medium text-gray-900 dark:text-white">
+                  {{ t('myProfile.privacy.remindersTitle') }}
+                </p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  {{ t('myProfile.privacy.remindersDescription') }}
+                </p>
+              </div>
+              <USwitch
+                v-model="remindersEnabled"
+                :loading="remindersSaving"
+                :disabled="remindersSaving"
+                :aria-label="t('myProfile.privacy.remindersTitle')"
+                @update:model-value="saveReminders"
+              />
+            </div>
+            <p
+              v-if="remindersFailed"
+              class="text-xs text-red-600 dark:text-red-400"
+            >
+              {{ t('myProfile.privacy.remindersFailed') }}
+            </p>
             <p v-if="analyticsSessionId" class="text-xs text-gray-400 dark:text-gray-500">
               {{ t('myProfile.privacy.sessionLine', { id: analyticsSessionId }) }}
             </p>
@@ -1243,6 +1273,7 @@ import {
 import { allergenHintKey, allergenLabel, allergenLabelKey, normalizeAllergens } from '~/utils/allergens'
 import householdsApi, { type MemberProfile, type NutritionalPreferences } from '~/services/householdsApi'
 import consentApi from '~/services/consentApi'
+import notificationsApi from '~/services/notificationsApi'
 import { useAnalyticsSession } from '~/composables/useAnalyticsSession'
 import { useAuthStore } from '~/stores/auth'
 
@@ -1302,6 +1333,39 @@ async function saveAnalyticsConsent(enabled: boolean) {
     analyticsConsent.value = !enabled
   } finally {
     analyticsConsentSaving.value = false
+  }
+}
+
+// Reminder emails: the inactivity reminders an admin can switch on from the
+// console. Every reminder carries its own way out too; this is the place to
+// find it without one in hand.
+const remindersEnabled = ref(true)
+const remindersApplies = ref(false)
+const remindersSaving = ref(false)
+const remindersFailed = ref(false)
+
+async function loadReminders() {
+  try {
+    const preferences = await notificationsApi.myPreferences()
+    remindersEnabled.value = preferences.inactivity_reminders
+    remindersApplies.value = preferences.applies
+  } catch {
+    remindersApplies.value = false
+  }
+}
+
+async function saveReminders(enabled: boolean) {
+  remindersSaving.value = true
+  remindersFailed.value = false
+  try {
+    const preferences = await notificationsApi.setMyReminders(enabled)
+    remindersEnabled.value = preferences.inactivity_reminders
+  } catch {
+    // Back to what is actually stored, as with the analytics switch.
+    remindersEnabled.value = !enabled
+    remindersFailed.value = true
+  } finally {
+    remindersSaving.value = false
   }
 }
 
@@ -1989,6 +2053,7 @@ onMounted(async () => {
   // Not awaited with the rest: the privacy switch settling a moment later is
   // better than the whole page waiting on it.
   void loadAnalyticsConsent()
+  void loadReminders()
 })
 
 async function loadMemberProfile() {

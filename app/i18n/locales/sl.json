@@ -20,7 +20,7 @@
     "apps": {
       "foodScholar": {
         "title": "FoodScholar",
-        "description": "Vprašaj, učи se & odkrivaj"
+        "description": "Vprašaj, uči se & odkrivaj"
       },
       "recipeWrangler": {
         "title": "RecipeWrangler",
@@ -1613,7 +1613,10 @@
       "analyticsAggregateNote": "Če zavrneš, še vedno štejemo, da se je nekaj zgodilo — le tega ne zabeležimo, da si bil to ti.",
       "sessionLine": "Oznaka trenutne seje: {id}",
       "readMore": "Preberi obvestilo o zasebnosti",
-      "analyticsUnavailable": "Trenutne nastavitve ni bilo mogoče naložiti. Poskusi znova čez trenutek."
+      "analyticsUnavailable": "Trenutne nastavitve ni bilo mogoče naložiti. Poskusi znova čez trenutek.",
+      "remindersTitle": "Opomniki po e-pošti",
+      "remindersDescription": "Če WiseFooda nekaj časa ne uporabljaš, ti lahko pošljemo kratek opomnik. Če to izklopiš, ga ne bomo.",
+      "remindersFailed": "Tega nismo mogli shraniti. Poskusi znova."
     }
   },
   "foodChatHome": {
@@ -2195,6 +2198,24 @@
       "lunch": "Kosilo",
       "dinner": "Večerja"
     }
+  },
+  "unsubscribe": {
+    "pageTitle": "Opomniki po e-pošti",
+    "title": "Želiš izklopiti opomnike po e-pošti?",
+    "body": "Opomnikov, ko WiseFooda nekaj časa ne uporabljaš, ti ne bomo več pošiljali. E-sporočila, ki jih zahtevaš, na primer za ponastavitev gesla, bodo še vedno prihajala.",
+    "confirm": "Izklopi opomnike",
+    "doneTitle": "Opomniki so izklopljeni",
+    "doneBody": "Opomnikov po e-pošti ti ne bomo več pošiljali. Kadarkoli jih lahko znova vklopiš tukaj ali v svojem profilu.",
+    "undo": "Znova jih vklopi",
+    "resubscribedTitle": "Opomniki so znova vklopljeni",
+    "resubscribedBody": "Če WiseFood nekaj časa ne bo v uporabi, ti bomo poslali kratek opomnik.",
+    "invalidTitle": "Ta povezava ne deluje več",
+    "invalidBody": "Morda jo je nadomestila novejša. Opomnike po e-pošti lahko urejaš v svojem profilu.",
+    "previewTitle": "To je predogled",
+    "previewBody": "Ta povezava izvira iz testnega ali poskusnega e-sporočila, zato se ni nič spremenilo.",
+    "failed": "Tega trenutno nismo mogli zabeležiti. Poskusi znova.",
+    "openApp": "Odpri WiseFood",
+    "manage": "Nastavitve e-pošte v profilu"
   },
   "common": {
     "translation": {
