@@ -46,11 +46,27 @@ const getUiLocale = (): string | undefined => {
   return SUPPORTED_LOCALES.includes(locale) ? locale : undefined
 }
 
+/**
+ * A token refresh that failed without Keycloak saying the session is over:
+ * no network yet after a laptop wakes, a phone between networks, a gateway
+ * hiccup. The session is still alive and the next attempt will likely work,
+ * so callers fail the request at hand rather than signing the person out —
+ * which would also end the session at Keycloak and throw away "Remember me".
+ */
+export class TokenRefreshUnavailableError extends Error {
+  constructor(cause: unknown) {
+    super('Could not reach the sign-in server to refresh the session', { cause })
+    this.name = 'TokenRefreshUnavailableError'
+  }
+}
+
 class KeycloakAuthService {
   private keycloak: Keycloak | null = null
   private initPromise: Promise<boolean> | null = null
   private silentCheckDisabled = false
-  
+  private refreshTimer: ReturnType<typeof setInterval> | null = null
+  private refreshListenersInstalled = false
+
   private getKeycloak(): Keycloak {
     if (!this.keycloak) {
       const config = this.getConfig()
@@ -205,18 +221,58 @@ class KeycloakAuthService {
     return this.initPromise
   }
 
+  /**
+   * Whether a failed refresh means the session is over.
+   *
+   * keycloak-js clears its tokens itself when the token endpoint answers 400
+   * (invalid_grant: the session expired or was ended), and `updateToken`
+   * throws when there is no refresh token at all. Anything else — a fetch
+   * that never got an answer, a 5xx from the gateway — says nothing about
+   * the session.
+   */
+  private sessionRejected(error: unknown): boolean {
+    const status = (error as { response?: { status?: number } } | null)?.response?.status
+    return !this.keycloak?.refreshToken || status === 400 || status === 401
+  }
+
+  /**
+   * Keep the access token fresh while the page is open.
+   *
+   * Only a session Keycloak has rejected signs the person out. A refresh
+   * that fails for any other reason is tried again on the next tick, as soon
+   * as the browser is back online, and when the tab becomes visible again
+   * (a laptop waking up fires the timer before the Wi-Fi is back).
+   */
   private setupTokenRefresh(): void {
-    const kc = this.getKeycloak()
-    const interval = setInterval(async () => {
+    const tick = async () => {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) return
+      const kc = this.keycloak
+      if (!kc?.authenticated) return
       try {
         const refreshed = await kc.updateToken(70)
         if (!refreshed) warn('[Keycloak] Token not refreshed')
       } catch (error) {
-        console.error('[Keycloak] Token refresh failed:', error)
-        clearInterval(interval)
-        this.logout()
+        if (this.sessionRejected(error)) {
+          console.error('[Keycloak] Session ended at the server; signing out:', error)
+          if (this.refreshTimer) clearInterval(this.refreshTimer)
+          this.refreshTimer = null
+          this.logout()
+          return
+        }
+        warn('[Keycloak] Token refresh failed, will retry:', error)
       }
-    }, 60_000)
+    }
+
+    if (this.refreshTimer) clearInterval(this.refreshTimer)
+    this.refreshTimer = setInterval(tick, 60_000)
+
+    if (!this.refreshListenersInstalled && typeof window !== 'undefined') {
+      this.refreshListenersInstalled = true
+      window.addEventListener('online', () => { void tick() })
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') void tick()
+      })
+    }
   }
 
   login(redirectUri?: string): void {
@@ -260,9 +316,25 @@ class KeycloakAuthService {
     })
   }
 
-  refreshToken(): Promise<boolean> {
-    return this.getKeycloak().updateToken(70)
-      .catch((err) => { console.error(err); return false })
+  /**
+   * Refresh the access token if it is about to expire.
+   *
+   * Resolves `true` when it refreshed, `false` when it did not need to or
+   * when Keycloak rejected the session (callers sign out on `false`), and
+   * throws `TokenRefreshUnavailableError` when the sign-in server could not
+   * be reached: the session may well be fine, so the caller should fail the
+   * request, not sign anyone out.
+   */
+  async refreshToken(): Promise<boolean> {
+    try {
+      return await this.getKeycloak().updateToken(70)
+    } catch (error) {
+      if (this.sessionRejected(error)) {
+        console.error(error)
+        return false
+      }
+      throw new TokenRefreshUnavailableError(error)
+    }
   }
 
   isAuthenticated(): boolean {

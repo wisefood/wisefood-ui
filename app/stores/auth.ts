@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { resetAnalyticsSession } from '~/composables/useAnalyticsSession'
-import KeycloakAuthService from '~/services/keycloak'
+import KeycloakAuthService, { TokenRefreshUnavailableError } from '~/services/keycloak'
 import { canAccessConsole, includesAnyRole, includesRole, isAdmin } from '~/utils/authRoles'
 import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 
@@ -158,7 +158,14 @@ export const useAuthStore = defineStore('auth', {
             this.isAuthenticated = true
             this.user = KeycloakAuthService.getUserInfo() ?? { roles: [] }
             log('[AuthStore] User authenticated:', this.user?.username)
-            await this.refreshToken()
+            try {
+              await this.refreshToken()
+            } catch (err) {
+              // init() has just issued a token; failing to top it up on a
+              // flaky connection is no reason to treat the person as signed out.
+              if (!(err instanceof TokenRefreshUnavailableError)) throw err
+              log('[AuthStore] Token top-up skipped, sign-in server unreachable')
+            }
           } else {
             this.isAuthenticated = false
             this.user = null
@@ -340,6 +347,10 @@ export const useAuthStore = defineStore('auth', {
         }
         return refreshed
       } catch (err) {
+        // The sign-in server could not be reached: the session is probably
+        // fine. Let the request fail instead of answering `false`, which
+        // every caller takes as "signed out" and acts on by logging out.
+        if (err instanceof TokenRefreshUnavailableError) throw err
         console.error('[AuthStore] Token refresh failed:', err)
         return false
       }

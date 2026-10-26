@@ -1,4 +1,5 @@
 import { useAuthStore } from '~/stores/auth'
+import { TokenRefreshUnavailableError } from '~/services/keycloak'
 import { analyticsHeaders } from '~/composables/useAnalyticsSession'
 import { getRecipeWranglerMode, getWisefoodApiUrl, getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
 
@@ -1732,12 +1733,18 @@ class RecipeApiService {
 
       let response = await doRequest(token)
 
+      // Set when the retry could not even refresh the token because the
+      // sign-in server was unreachable: the session may be fine, so the 401
+      // below fails the request rather than signing the person out.
+      let refreshUnavailable: TokenRefreshUnavailableError | null = null
+
       if (response.status === 401) {
         try {
           await authStore.refreshToken()
           token = await this.ensureAuthToken(authStore)
           response = await doRequest(token)
-        } catch {
+        } catch (error) {
+          if (error instanceof TokenRefreshUnavailableError) refreshUnavailable = error
           // Let the shared error handling run below.
         }
       }
@@ -1760,6 +1767,7 @@ class RecipeApiService {
         }
 
         if (response.status === 401) {
+          if (refreshUnavailable) throw refreshUnavailable
           if (import.meta.client) {
             await authStore.logout()
           }
@@ -1829,12 +1837,16 @@ class RecipeApiService {
       let response = await doRequest(token)
 
       // Retry once after token refresh to avoid false-empty compare/search failures.
+      // See the same flag in the request above.
+      let refreshUnavailable: TokenRefreshUnavailableError | null = null
+
       if (response.status === 401) {
         try {
           await authStore.refreshToken()
           token = await this.ensureAuthToken(authStore)
           response = await doRequest(token)
-        } catch {
+        } catch (error) {
+          if (error instanceof TokenRefreshUnavailableError) refreshUnavailable = error
           // Let normal error handling below run.
         }
       }
@@ -1858,6 +1870,7 @@ class RecipeApiService {
 
         // Handle 401 authentication errors (after retry attempt above)
         if (response.status === 401) {
+          if (refreshUnavailable) throw refreshUnavailable
           if (import.meta.client) {
             await authStore.logout()
           }
