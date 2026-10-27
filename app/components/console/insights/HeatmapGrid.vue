@@ -46,6 +46,30 @@
       </span>
     </div>
 
+    <UAlert
+      v-if="pageStateDiffers"
+      color="info"
+      variant="subtle"
+      icon="i-lucide-layers"
+      class="mb-3"
+      title="Most of these clicks were on parts of the page that only appear while it is used"
+      description="A conversation, an open plan — the page as it loads does not have them, so the
+        heat is drawn on a blank page instead of over the wrong one. Read where the clicks went
+        by area and in the list of controls."
+    >
+      <template #actions>
+        <UButton
+          v-if="!showPage"
+          size="xs"
+          color="neutral"
+          variant="outline"
+          @click="showPage = true"
+        >
+          Show the page as it loads anyway
+        </UButton>
+      </template>
+    </UAlert>
+
     <!--
       The page box is a whole scrolled page, not a viewport, so at any readable
       width it is far taller than the card wants to be. The true shape is kept,
@@ -260,6 +284,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { HeatmapCell } from '~/services/insightsApi'
 import { backdropFrameName } from '~/utils/clickmapBackdrop'
+import { controlName } from '~/utils/labels'
 
 /**
  * The click map itself.
@@ -288,6 +313,7 @@ interface ClickedElement {
   element_key: string | null
   element_label?: string | null
   element_role?: string | null
+  area?: string | null
   clicks: number
   sessions?: number
   rage: number
@@ -387,6 +413,30 @@ watch(frameKey, () => {
   pageHeight.value = null
   anchors.value = {}
   layout.value = 'idle'
+  autoHidden.value = false
+})
+
+/*
+ * A page that changes as it is used cannot be drawn as it was clicked.
+ *
+ * FoodChat's clicks happen in a conversation and an open plan; rendered on its
+ * own, the page is its empty start screen, and the heat floated over nothing
+ * while seven of eight pins said "not found". When most of the pinned controls
+ * are missing from the rendered page, the page is the wrong picture: it is
+ * hidden, and the reader is told why and pointed at the areas and the list.
+ */
+const autoHidden = ref(false)
+const pinnedMissing = computed(() => {
+  const positioned = props.elements.filter(e => e.x_pct !== null && e.y_pct !== null).slice(0, 8)
+  if (layout.value !== 'ready' || positioned.length < 3) return 0
+  return positioned.filter(e => !anchors.value[e.element_key || '']).length / positioned.length
+})
+const pageStateDiffers = computed(() => pinnedMissing.value >= 0.5)
+watch(pageStateDiffers, (differs) => {
+  if (differs && !autoHidden.value) {
+    autoHidden.value = true
+    showPage.value = false
+  }
 })
 
 /*
@@ -629,10 +679,7 @@ const pinTone = (e: ClickedElement) => {
  * printing `div.flex.items-center>button.px-3.py-1` as though it were a name.
  */
 function nameOf(e: ClickedElement): string {
-  const label = (e.element_label || '').trim()
-  if (label) return label
-  const role = (e.element_role || '').trim()
-  return role ? `Unnamed ${role}` : 'Unnamed control'
+  return controlName(e)
 }
 
 function countsOf(e: ClickedElement): string {

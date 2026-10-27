@@ -3103,7 +3103,7 @@ const loadSavedAdaptation = async () => {
       memberId, recipe.value.recipe_id
     )
   } catch {
-    savedAdaptation.value = null // 404 — nothing saved for this recipe
+    savedAdaptation.value = null
   }
 }
 

@@ -192,6 +192,36 @@ const QA_MODES: Record<string, string> = {
 }
 
 /**
+ * The named parts of a page a click can land in (`data-rum-region`). A click
+ * on text inside one is "text in the plan panel" — which a curator can act on
+ * — rather than a CSS path or a line of somebody's plan.
+ */
+const AREAS: Record<string, string> = {
+  'foodchat.start': 'the start screen',
+  'foodchat.composer': 'the message box',
+  'foodchat.diners': 'who it is for',
+  'foodchat.sessions': 'the conversation list',
+  'foodchat.conversation': 'the conversation',
+  'foodchat.plan': 'the plan panel',
+  'foodchat.settings': 'plan settings',
+  'profiles.picker': 'the profile picker'
+}
+
+/** What a clicked element is, as a word, from the role the browser reported. */
+const ROLE_WORDS: Record<string, string> = {
+  a: 'Link',
+  link: 'Link',
+  button: 'Button',
+  input: 'Field',
+  textarea: 'Text box',
+  select: 'Dropdown',
+  img: 'Image',
+  svg: 'Icon',
+  path: 'Icon',
+  separator: 'Splitter'
+}
+
+/**
  * A readable fallback for a code nobody has named.
  *
  * `expert.feedback_context_read` → "Feedback context read". Keeps the last
@@ -226,6 +256,39 @@ export const surfaceLabel = lookup(SURFACES)
 export const errorKindLabel = lookup(ERROR_KINDS)
 export const severityLabel = lookup(SEVERITIES)
 export const clickKindLabel = lookup(CLICK_KINDS)
+
+/** "the plan panel", or a readable version of an area nobody has named yet. */
+export function areaLabel(area: unknown): string {
+  const code = area === null || area === undefined ? '' : String(area)
+  if (!code) return 'unmarked parts of the page'
+  return AREAS[code] ?? humanize(code).toLowerCase()
+}
+
+/**
+ * What to call a clicked thing, in words a curator can act on.
+ *
+ * Its own name when it is a control that has one. Otherwise what it is and
+ * where — "Text in the plan panel" — because the CSS path names a div nobody
+ * can find, and the text itself is never recorded. A developer-named key
+ * (`foodchat.splitter`) reads as its name.
+ */
+export function controlName(row: {
+  // Unknown, not string: table rows reach here as `Record<string, unknown>`.
+  element_label?: unknown
+  element_role?: unknown
+  element_key?: unknown
+  area?: unknown
+}): string {
+  const text = (value: unknown) => (typeof value === 'string' ? value.trim() : '')
+  const label = text(row.element_label)
+  if (label) return label
+  const key = text(row.element_key)
+  const role = text(row.element_role).toLowerCase()
+  const what = ROLE_WORDS[role] ?? (role ? 'Text' : 'Something')
+  if (text(row.area)) return `${what} in ${areaLabel(row.area)}`
+  if (key && !key.includes('>') && !key.includes(' ')) return humanize(key.replace(/\./g, ' '))
+  return role ? `${what} with no name` : 'Unnamed control'
+}
 export const chatStepLabel = lookup(CHAT_STEPS)
 export const qaModeLabel = lookup(QA_MODES)
 

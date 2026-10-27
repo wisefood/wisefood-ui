@@ -55,12 +55,19 @@ class MemberAdaptedRecipesApiService {
   }
 
   /**
-   * Get a member's adaptation of one recipe. Throws (404) when none is saved.
+   * Get a member's adaptation of one recipe, or null when none is saved.
+   * An older gateway answered 404 for "none"; that is read as null too.
    */
-  async getAdaptedRecipe(memberId: string, recipeId: string): Promise<MemberAdaptedRecipe> {
-    return wisefoodRestApi.get<MemberAdaptedRecipe>(
-      `/members/${memberId}/adapted-recipes/${encodeURIComponent(recipeId)}`
-    )
+  async getAdaptedRecipe(memberId: string, recipeId: string): Promise<MemberAdaptedRecipe | null> {
+    try {
+      const result = await wisefoodRestApi.get<MemberAdaptedRecipe | null>(
+        `/members/${memberId}/adapted-recipes/${encodeURIComponent(recipeId)}`
+      )
+      return result ?? null
+    } catch (error) {
+      if ((error as { status?: number } | null)?.status === 404) return null
+      throw error
+    }
   }
 
   /**

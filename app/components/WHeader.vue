@@ -55,8 +55,12 @@
           content: 'w-56'
         }"
       >
+        <!-- Click maps: the name is the person's, so the map records a
+             fixed label and none of the button's own words. -->
         <button
           data-flows="profile-dropdown-trigger"
+          data-rum-label="Account menu"
+          data-rum-private
           class="flex items-center gap-2 px-2 py-1 min-h-11 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
           :aria-label="currentMemberName"
         >

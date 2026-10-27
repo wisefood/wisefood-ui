@@ -1719,7 +1719,9 @@
       "label": "Feltételek",
       "hardTooltip": "Kötelező feltétel · Forrás: {source}",
       "softTooltip": "Rugalmas feltétel · Forrás: {source}",
-      "unsupportedTooltip": "Ezt nem tudtuk érvényesíteni — azért látod, hogy tudd: nem lett alkalmazva."
+      "unsupportedTooltip": "Ezt nem tudtuk érvényesíteni — azért látod, hogy tudd: nem lett alkalmazva.",
+      "guidelinesMet": "Táplálkozási irányelvek · {total}-ből {met} teljesül",
+      "guidelinesCount": "Táplálkozási irányelvek · {count}"
     },
     "personalization": {
       "prefix": "Személyre szabva:",

@@ -1720,7 +1720,9 @@
       "label": "Omejitve",
       "hardTooltip": "Stroga omejitev · Vir: {source}",
       "softTooltip": "Mehka omejitev · Vir: {source}",
-      "unsupportedTooltip": "Tega nismo mogli uveljaviti — prikazano je, da veš, da ni bilo upoštevano."
+      "unsupportedTooltip": "Tega nismo mogli uveljaviti — prikazano je, da veš, da ni bilo upoštevano.",
+      "guidelinesMet": "Prehranske smernice · izpolnjenih {met} od {total}",
+      "guidelinesCount": "Prehranske smernice · {count}"
     },
     "personalization": {
       "prefix": "Prilagojeno na podlagi:",

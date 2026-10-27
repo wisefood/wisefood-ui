@@ -115,9 +115,14 @@ export function analyticsHeaders(clientVersion = '1'): Record<string, string> {
   // site's storage, and would otherwise file its page loads under the
   // console's session.
   const backdrop = isClickmapBackdrop()
+  // Server rendering asks too — the platform-status check runs on the server
+  // for a server-rendered page — and nobody is behind that request, so it is
+  // labelled apart from the browser rather than counted as a visit.
+  const server = typeof window === 'undefined'
+  const client = backdrop ? BACKDROP_CLIENT : server ? 'wisefood-ui-server' : 'wisefood-ui'
   const headers: Record<string, string> = {
     'X-Request-Id': newRequestId(),
-    'X-Client': `${backdrop ? BACKDROP_CLIENT : 'wisefood-ui'}/${clientVersion}`
+    'X-Client': `${client}/${clientVersion}`
   }
   const sessionId = backdrop ? null : analyticsSessionId()
   if (sessionId) headers['X-Client-Session'] = sessionId

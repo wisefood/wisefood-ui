@@ -286,6 +286,8 @@ export interface ConstraintApplied {
   status: string
   source: string
   detail?: string | null
+  /** `guideline` for guidance from the member's dietary guidelines. */
+  kind?: string
   /**
    * The diners this row is there for — empty on a solo plan. A household row
    * names the member it protects rather than the whole table, so one member's

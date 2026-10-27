@@ -145,6 +145,25 @@
           </div>
 
           <aside class="space-y-6 lg:sticky lg:top-6 lg:self-start">
+            <!-- "Unattributed" was a fifth of all activity and nothing could
+                 say what it was. The route is usually the answer: a page of
+                 ours calling without its headers, an old SDK, or a crawler. -->
+            <ConsoleInsightsTablePanel
+              v-if="unattributedRoutes.length || loading"
+              title="Where unattributed comes from"
+              subtitle="Requests that said nothing about who sent them, by route"
+              :rows="unattributedRoutes"
+              :columns="unattributedColumns"
+              :loading="loading"
+              :failed="failed"
+              empty="Everything was attributed."
+              empty-icon="i-lucide-tag"
+            >
+              <template #cell-route="{ row }">
+                <span class="break-all font-mono text-xs">{{ row.route }}</span>
+              </template>
+            </ConsoleInsightsTablePanel>
+
             <ConsoleInsightsTablePanel
               title="By role"
               subtitle="Experts against everyone else"
@@ -264,6 +283,11 @@ const LOCALE_NAMES: Record<string, string> = {
 }
 
 const byClient = computed(() => report.value?.by_client ?? [])
+const unattributedRoutes = computed(() => report.value?.unattributed_routes ?? [])
+const unattributedColumns = [
+  { key: 'route', label: 'Route' },
+  { key: 'events', label: 'Events', align: 'right' as const }
+]
 const byLocale = computed(() => report.value?.by_locale ?? [])
 const byRole = computed(() => report.value?.by_role ?? [])
 const skew = computed(

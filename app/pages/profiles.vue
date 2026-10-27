@@ -1,5 +1,10 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col">
+  <!-- Click maps: private, every card is a household member's name. -->
+  <div
+    class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col"
+    data-rum-region="profiles.picker"
+    data-rum-private
+  >
     <!-- Header -->
     <header class="p-6 flex items-center justify-between">
       <NuxtLink to="/" class="inline-block">

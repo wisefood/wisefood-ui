@@ -62,6 +62,12 @@
         </UBadge>
 
         <div class="min-w-0 flex-1">
+          <!-- What it was, in words: its own name when it is a control, else
+               what it is and which part of the page. The selector stays, small,
+               for whoever has to find it in the source. -->
+          <p class="text-sm text-gray-900 dark:text-white">
+            {{ controlName(row) }}
+          </p>
           <NuxtLink
             :to="`/console/insights/heatmaps?path=${encodeURIComponent(row.path)}`"
             class="break-all font-mono text-xs text-brand-600 hover:underline dark:text-brand-300"
@@ -72,7 +78,7 @@
                they get their own scrolling line rather than widening the page. -->
           <p
             v-if="row.element_key"
-            class="mt-0.5 overflow-x-auto whitespace-nowrap font-mono text-xs text-gray-400 dark:text-gray-500"
+            class="mt-0.5 overflow-x-auto whitespace-nowrap font-mono text-[0.6875rem] text-gray-400 dark:text-gray-500"
           >
             {{ row.element_key }}
           </p>
@@ -93,6 +99,7 @@
 </template>
 
 <script setup lang="ts">
+import { controlName } from '~/utils/labels'
 import { computed } from 'vue'
 
 /**
@@ -109,6 +116,9 @@ type FrustrationRow = {
   path: string
   element_key: string | null
   clicks: number
+  element_label?: string | null
+  element_role?: string | null
+  area?: string | null
 }
 
 const props = defineProps<{ items: FrustrationRow[] }>()

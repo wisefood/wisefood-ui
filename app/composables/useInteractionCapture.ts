@@ -8,6 +8,7 @@ import {
   elementLabel,
   elementRole,
   interactiveAncestor,
+  looksClickable,
   pageBox,
   pagePercent,
   sampledIn,
@@ -44,6 +45,8 @@ const RAGE_WINDOW_MS = 1000
 const RAGE_MIN_CLICKS = 3
 /** How long the page has to react before a click counts as dead. */
 const DEAD_WINDOW_MS = 500
+/** Further than this between pressing and releasing, and it was a drag. */
+const DRAG_THRESHOLD_PX = 6
 
 const stream = createRumStream<RumInteraction>({
   limit: QUEUE_MAX,
@@ -100,6 +103,8 @@ interface Cluster {
 
 let cluster: Cluster | null = null
 let installed = false
+/** Where the last press began, to tell a click from the end of a drag. */
+let pressedAt: { x: number, y: number } | null = null
 let sampledDecision: { seed: string, rate: number, value: boolean } | null = null
 
 let currentPath = ''
@@ -259,12 +264,28 @@ function onClick(event: MouseEvent): void {
     finalizeCluster()
 
     const target = (event.target instanceof Element) ? event.target : null
+    const control = interactiveAncestor(target)
+    // Three things that look like a dead click and are not: the end of a drag
+    // (a splitter, a slider, a selection), text that was just selected, and a
+    // click on something that never looked clickable — reading, resting a
+    // hand. Counted as dead, they made half of all clicks on a chat page
+    // "dead" and buried the few that were.
+    const dragged = pressedAt !== null
+      && Math.hypot(xPage - pressedAt.x, yPage - pressedAt.y) > DRAG_THRESHOLD_PX
+    let selecting = false
+    try {
+      selecting = (window.getSelection?.()?.toString() || '').trim().length > 0
+    } catch {
+      selecting = false
+    }
     const next: Cluster = {
       occurredAt: new Date(now).toISOString(),
       path: pathNow(),
       key: elementKey(target),
       label: elementLabel(target),
-      role: elementRole(target),
+      // The control's role, not the icon or span inside it: what was clicked
+      // is the button, and the gateway keeps a label only for a control.
+      role: elementRole(control ?? target),
       // The address actually in the bar, alongside the route pattern the rest
       // of analytics groups by. The pattern is what makes a click map poolable
       // across visits; a concrete example is what lets the console load the
@@ -279,7 +300,7 @@ function onClick(event: MouseEvent): void {
       viewportH: box.viewportHeight,
       repeats: 1,
       lastAt: now,
-      deadCandidate: interactiveAncestor(target) === null,
+      deadCandidate: control === null && !dragged && !selecting && looksClickable(target),
       reacted: false,
       navAtClick: navCount,
       observer: null,
@@ -383,6 +404,9 @@ export function installInteractionCapture(): void {
   try {
     // Capture phase: a click that a handler stops from propagating is still a
     // click somebody made, and those are exactly the interesting ones.
+    window.addEventListener('pointerdown', (event: PointerEvent) => {
+      pressedAt = { x: event.pageX, y: event.pageY }
+    }, { capture: true, passive: true })
     window.addEventListener('click', onClick, { capture: true, passive: true })
     window.addEventListener('scroll', onScroll, { passive: true })
 

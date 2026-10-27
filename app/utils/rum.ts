@@ -222,9 +222,24 @@ const MAX_ELEMENT_LABEL = 60
 export function elementLabel(target: Element | null): string {
   if (!target) return ''
   try {
+    // Words a developer chose for the control. The only label read inside a
+    // private area, because nobody wrote a person's name into it.
+    const named = target.closest('[data-rum-label]')?.getAttribute('data-rum-label')
+    if (named?.trim()) return clean(named)
+
+    // A private area — a conversation, a plan, a list of the household's
+    // names — gives up no words at all, not even an aria-label: "Remove
+    // Miranda" is as personal as "Miranda".
+    if (target.closest('[data-rum-private]')) return ''
+
+    // Only a control has a name. Reading the text of whatever was clicked put
+    // chat messages, plan lines and people's names into a column everybody
+    // with console access reads; a click on text says "text", and its area
+    // says where.
     const control = target.closest(
       'button, a, [role="button"], [role="link"], [role="tab"], [role="menuitem"], input, select, summary'
-    ) ?? target
+    )
+    if (!control) return ''
 
     const attribute = (name: string) => (control.getAttribute(name) || '').trim()
     const labelled = attribute('aria-label') || attribute('title') || attribute('alt')
@@ -256,6 +271,26 @@ function clean(value: string): string {
   return flat.length > MAX_ELEMENT_LABEL ? `${flat.slice(0, MAX_ELEMENT_LABEL - 1)}…` : flat
 }
 
+/** What separates an area from the rest of a key: `foodchat.plan › div.px-3>span`. */
+export const AREA_SEPARATOR = ' › '
+
+/**
+ * The named part of the page a control sits in, from `data-rum-region`.
+ *
+ * A structural path says which div; an area says which part of the product —
+ * the plan, the conversation, the message box — which is what a person reading
+ * a click map can act on.
+ */
+export function elementArea(target: Element | null): string {
+  if (!target) return ''
+  try {
+    const raw = target.closest('[data-rum-region]')?.getAttribute('data-rum-region') || ''
+    return /^[a-z0-9_.-]{1,40}$/.test(raw) ? raw : ''
+  } catch {
+    return ''
+  }
+}
+
 export function elementKey(target: Element | null): string {
   if (!target) return ''
   try {
@@ -271,11 +306,35 @@ export function elementKey(target: Element | null): string {
       node = node.parentElement
       depth += 1
     }
-    const key = parts.join('>')
-    return key.length > MAX_ELEMENT_KEY ? key.slice(key.length - MAX_ELEMENT_KEY) : key
+    const path = parts.join('>')
+    const area = elementArea(target)
+    const prefix = area ? `${area}${AREA_SEPARATOR}` : ''
+    const room = MAX_ELEMENT_KEY - prefix.length
+    return prefix + (path.length > room ? path.slice(path.length - room) : path)
   } catch {
     return ''
   }
+}
+
+/**
+ * Whether a non-control looks like something to click: a pointer cursor on it
+ * or just above it. A click on plain text is reading, selecting or resting a
+ * hand; only something that invites a click and then does nothing is a dead
+ * click worth showing anybody.
+ */
+export function looksClickable(target: Element | null): boolean {
+  let node: Element | null = target
+  let depth = 0
+  try {
+    while (node && depth < 4 && node.tagName !== 'BODY') {
+      if (getComputedStyle(node).cursor === 'pointer') return true
+      node = node.parentElement
+      depth += 1
+    }
+  } catch {
+    return false
+  }
+  return false
 }
 
 // --------------------------------------------------------------- page metrics

@@ -1,5 +1,6 @@
 import wisefoodRestApi from './wisefoodRestApi'
 import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
+import { analyticsHeaders } from '~/composables/useAnalyticsSession'
 
 /**
  * Inactivity reminders: the admin card on Platform Operations, the switch on
@@ -166,7 +167,7 @@ class NotificationsApiService {
       const url = `${getWisefoodRestApiUrl()}/notifications/${path}?token=${encodeURIComponent(token)}&source=page`
       const response = await fetch(url, {
         method: 'POST',
-        headers: { Accept: 'application/json' },
+        headers: { Accept: 'application/json', ...analyticsHeaders() },
         referrerPolicy: 'no-referrer'
       })
       if (!response.ok) return null

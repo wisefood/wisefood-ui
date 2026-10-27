@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { resetAnalyticsSession } from '~/composables/useAnalyticsSession'
+import { analyticsHeaders, resetAnalyticsSession } from '~/composables/useAnalyticsSession'
 import KeycloakAuthService, { TokenRefreshUnavailableError } from '~/services/keycloak'
 import { canAccessConsole, includesAnyRole, includesRole, isAdmin } from '~/utils/authRoles'
 import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
@@ -226,6 +226,7 @@ export const useAuthStore = defineStore('auth', {
       const baseUrl = getWisefoodRestApiUrl()
       const response = await fetch(`${baseUrl}/system/guest`, {
         method: 'POST',
+        headers: analyticsHeaders(),
       })
       if (!response.ok) {
         const body = await response.json().catch(() => null)
@@ -290,7 +291,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         const response = await fetch(`${getWisefoodRestApiUrl()}/system/guest`, {
           method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}`, ...analyticsHeaders() }
         })
         erased = response.ok
         if (!response.ok) {

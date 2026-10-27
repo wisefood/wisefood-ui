@@ -21,6 +21,7 @@
         v-if="!hasSentFirstMessage"
         key="idle"
         class="flex-1 min-h-0 overflow-y-auto flex flex-col items-center px-4 pt-8 pb-4"
+        data-rum-region="foodchat.start"
       >
         <div class="w-full max-w-2xl my-auto">
           <!-- Welcome heading -->
@@ -48,6 +49,7 @@
               class="chat-composer"
               :class="{ 'is-focused': inputFocused }"
               data-flows="foodchat-composer"
+              data-rum-region="foodchat.composer"
             >
               <div class="flex items-end gap-2 p-2">
                 <textarea
@@ -108,7 +110,8 @@
             </div>
 
             <!-- Diner picker (multi-member households only) -->
-            <div v-if="showDinerPicker" class="mt-3 px-1 flex items-center gap-2 flex-wrap">
+            <!-- Click maps: private, the chips are the household's names. -->
+            <div v-if="showDinerPicker" class="mt-3 px-1 flex items-center gap-2 flex-wrap" data-rum-region="foodchat.diners" data-rum-private>
               <span class="inline-flex items-center gap-1 text-[0.6875rem] text-gray-400 dark:text-zinc-500 shrink-0">
                 <UIcon name="i-lucide-users" class="w-3 h-3" />
                 {{ t('foodChatHome.diners.label') }}
@@ -253,7 +256,8 @@
         >
 
           <!-- Session bar -->
-          <div class="fc-session-bar flex items-center gap-2 px-3 py-2 shrink-0">
+          <!-- Click maps: private, session titles are the member's own words. -->
+          <div class="fc-session-bar flex items-center gap-2 px-3 py-2 shrink-0" data-rum-region="foodchat.sessions" data-rum-private>
             <UIcon name="i-lucide-messages-square" class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0" />
             <USelectMenu
               :model-value="activeSession?.session_id"
@@ -294,9 +298,12 @@
           <div class="fc-messages-top-fade pointer-events-none" />
 
           <!-- Message area — scrollable -->
+          <!-- Click maps: private — this is the conversation itself. -->
           <div
             ref="messagesScrollRef"
             class="fc-messages-area flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 pt-6 lg:pt-16 pb-2"
+            data-rum-region="foodchat.conversation"
+            data-rum-private
             @scroll="handleMessagesScroll"
           >
 
@@ -601,7 +608,7 @@
             </div>
 
             <!-- Diner picker (multi-member households only) -->
-            <div v-if="showDinerPicker" class="mb-2 px-1 flex items-center gap-1.5 flex-wrap">
+            <div v-if="showDinerPicker" class="mb-2 px-1 flex items-center gap-1.5 flex-wrap" data-rum-region="foodchat.diners" data-rum-private>
               <UIcon name="i-lucide-users" class="w-3 h-3 text-gray-400 dark:text-zinc-500 shrink-0" />
               <UTooltip v-for="member in householdMembers" :key="member.id" :text="dinerTooltip(member)">
                 <button
@@ -624,6 +631,7 @@
                 class="chat-composer"
                 :class="{ 'is-focused': sessionInputFocused }"
                 data-flows="foodchat-composer"
+                data-rum-region="foodchat.composer"
               >
                 <div class="chat-composer-accent chat-composer-accent-left" />
                 <div class="chat-composer-accent chat-composer-accent-right" />
@@ -668,6 +676,8 @@
              session. Double-click restores the default. -->
         <div
           class="fc-splitter shrink-0 group"
+          data-track="foodchat.splitter"
+          data-rum-label="Panel splitter"
           role="separator"
           aria-orientation="vertical"
           :aria-valuenow="Math.round(chatWidth)"
@@ -686,6 +696,8 @@
           v-show="isDesktop || mobilePane === 'plan'"
           class="fc-canvas-col flex flex-col overflow-y-auto"
           data-flows="foodchat-plan"
+          data-rum-region="foodchat.plan"
+          data-rum-private
         >
           <!-- Plan settings, behind a disclosure and closed by default.
                Four groups of pills across the top of the canvas is the first
@@ -696,6 +708,7 @@
           <div
             v-if="latestParamCard && hasAnyPlan"
             class="fc-settings-shell shrink-0"
+            data-rum-region="foodchat.settings"
           >
             <button
               class="w-full flex items-center gap-2 px-4 sm:px-6 py-2 min-h-11 lg:min-h-0 text-xs text-gray-500 dark:text-zinc-400 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors"
@@ -1116,7 +1129,7 @@
                       {{ t('foodChatHome.constraints.label') }}
                     </span>
                     <FoodchatInfoPopover
-                      v-for="(constraint, cIdx) in displayedMealPlan.constraints_applied"
+                      v-for="(constraint, cIdx) in ownRows(displayedMealPlan.constraints_applied)"
                       :key="cIdx"
                       :text="constraint.detail || constraintTooltip(constraint)"
                     >
@@ -1133,6 +1146,44 @@
                         >— {{ constraintMembers(constraint) }}</span>
                       </button>
                     </FoodchatInfoPopover>
+                    <!-- Guidance from the member's dietary guidelines folds into
+                         one chip. A guide writes a rule per audience and two
+                         guides say the same thing, so as chips of their own
+                         they buried what the member actually asked for. -->
+                    <button
+                      v-if="guidelineRows(displayedMealPlan.constraints_applied).length"
+                      type="button"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 pointer-coarse:min-h-8 pointer-coarse:text-[0.6875rem] text-[0.625rem] rounded-full border border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                      :aria-expanded="guidelinesOpen"
+                      @click="guidelinesOpen = !guidelinesOpen"
+                    >
+                      <UIcon name="i-lucide-book-open" class="w-3 h-3 shrink-0" />
+                      {{ guidelineSummary(guidelineRows(displayedMealPlan.constraints_applied)) }}
+                      <UIcon :name="guidelinesOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3 h-3 shrink-0" />
+                    </button>
+                    <div
+                      v-if="guidelinesOpen && guidelineRows(displayedMealPlan.constraints_applied).length"
+                      class="basis-full flex items-center gap-1.5 flex-wrap pt-0.5"
+                    >
+                      <FoodchatInfoPopover
+                        v-for="(constraint, cIdx) in guidelineRows(displayedMealPlan.constraints_applied)"
+                        :key="cIdx"
+                        :text="constraint.detail || constraintTooltip(constraint)"
+                      >
+                        <button
+                          type="button"
+                          class="inline-flex items-center gap-1 px-2 py-0.5 pointer-coarse:min-h-8 pointer-coarse:text-[0.6875rem] text-[0.625rem] rounded-full border cursor-help"
+                          :class="ledgerRowClass(constraint)"
+                        >
+                          <UIcon v-if="ledgerRowIcon(constraint)" :name="ledgerRowIcon(constraint) || ''" class="w-3 h-3 shrink-0" />
+                          {{ constraint.constraint }}
+                          <span
+                            v-if="constraintMembers(constraint)"
+                            class="opacity-70"
+                          >— {{ constraintMembers(constraint) }}</span>
+                        </button>
+                      </FoodchatInfoPopover>
+                    </div>
                   </div>
 
                   <!-- One card per meal, from `planMeals`, which reads both the
@@ -1323,7 +1374,7 @@
                       {{ t('foodChatHome.constraints.label') }}
                     </span>
                     <FoodchatInfoPopover
-                      v-for="(constraint, cIdx) in weeklyLedger"
+                      v-for="(constraint, cIdx) in ownRows(weeklyLedger)"
                       :key="cIdx"
                       :text="constraint.detail || constraintTooltip(constraint)"
                     >
@@ -1340,6 +1391,44 @@
                         >— {{ constraintMembers(constraint) }}</span>
                       </button>
                     </FoodchatInfoPopover>
+                    <!-- Guidance from the member's dietary guidelines folds into
+                         one chip. A guide writes a rule per audience and two
+                         guides say the same thing, so as chips of their own
+                         they buried what the member actually asked for. -->
+                    <button
+                      v-if="guidelineRows(weeklyLedger).length"
+                      type="button"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 pointer-coarse:min-h-8 pointer-coarse:text-[0.6875rem] text-[0.625rem] rounded-full border border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                      :aria-expanded="guidelinesOpen"
+                      @click="guidelinesOpen = !guidelinesOpen"
+                    >
+                      <UIcon name="i-lucide-book-open" class="w-3 h-3 shrink-0" />
+                      {{ guidelineSummary(guidelineRows(weeklyLedger)) }}
+                      <UIcon :name="guidelinesOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3 h-3 shrink-0" />
+                    </button>
+                    <div
+                      v-if="guidelinesOpen && guidelineRows(weeklyLedger).length"
+                      class="basis-full flex items-center gap-1.5 flex-wrap pt-0.5"
+                    >
+                      <FoodchatInfoPopover
+                        v-for="(constraint, cIdx) in guidelineRows(weeklyLedger)"
+                        :key="cIdx"
+                        :text="constraint.detail || constraintTooltip(constraint)"
+                      >
+                        <button
+                          type="button"
+                          class="inline-flex items-center gap-1 px-2 py-0.5 pointer-coarse:min-h-8 pointer-coarse:text-[0.6875rem] text-[0.625rem] rounded-full border cursor-help"
+                          :class="ledgerRowClass(constraint)"
+                        >
+                          <UIcon v-if="ledgerRowIcon(constraint)" :name="ledgerRowIcon(constraint) || ''" class="w-3 h-3 shrink-0" />
+                          {{ constraint.constraint }}
+                          <span
+                            v-if="constraintMembers(constraint)"
+                            class="opacity-70"
+                          >— {{ constraintMembers(constraint) }}</span>
+                        </button>
+                      </FoodchatInfoPopover>
+                    </div>
                   </div>
 
                   <!-- Collapsible days — one row per day, meals reviewable inline -->
@@ -2594,6 +2683,31 @@ function ledgerRowClass(row: ConstraintApplied): string {
   return row.type === 'hard'
     ? 'border-brandp-200 dark:border-brandp-800/70 bg-brandp-50 dark:bg-brandp-950/40 text-brandp-600 dark:text-brandp-300 ring-1 ring-brandp-200/60 dark:ring-brandp-800/40'
     : 'border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400'
+}
+
+/**
+ * Guidance from the member's dietary guidelines, as against what they asked for.
+ *
+ * Rows say so since guideline rows were tagged; a plan saved before that is
+ * read by the same signs — soft, and sourced from a guide.
+ */
+function isGuidelineRow(row: ConstraintApplied): boolean {
+  if (row.kind) return row.kind === 'guideline'
+  return row.type === 'soft' && /guid/i.test(row.source || '')
+}
+
+const ownRows = (rows?: ConstraintApplied[] | null) => (rows ?? []).filter(row => !isGuidelineRow(row))
+const guidelineRows = (rows?: ConstraintApplied[] | null) => (rows ?? []).filter(isGuidelineRow)
+
+/** Folded by default: the member's own constraints are what the row is for. */
+const guidelinesOpen = ref(false)
+
+function guidelineSummary(rows: ConstraintApplied[]): string {
+  const met = rows.filter(row => row.status === 'satisfied').length
+  const checked = rows.filter(row => row.status === 'satisfied' || row.status === 'relaxed').length
+  return checked
+    ? t('foodChatHome.constraints.guidelinesMet', { met, total: checked })
+    : t('foodChatHome.constraints.guidelinesCount', { count: rows.length })
 }
 
 function ledgerRowIcon(row: ConstraintApplied): string | null {

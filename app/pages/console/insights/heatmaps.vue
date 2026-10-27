@@ -183,6 +183,50 @@
           </div>
 
           <div class="min-w-0 space-y-6 lg:self-start">
+            <!-- Where the clicks went, by part of the page. The reading that
+                 survives on a page that changes as it is used, where no one
+                 rendering can hold every click. -->
+            <UCard
+              v-if="areaRows.length"
+              class="border border-gray-200/70 dark:border-white/10"
+              :ui="{ body: 'p-0' }"
+            >
+              <div class="border-b border-gray-200/70 px-5 py-3 dark:border-white/10">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+                  Where the clicks went
+                </h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                  By part of the page, with the clicks on things that did nothing
+                </p>
+              </div>
+              <ul class="divide-y divide-gray-100 dark:divide-zinc-800">
+                <li
+                  v-for="row in areaRows"
+                  :key="row.area || 'unmarked'"
+                  class="px-5 py-2.5"
+                >
+                  <div class="flex items-baseline justify-between gap-3 text-sm">
+                    <span class="text-gray-700 first-letter:uppercase dark:text-gray-200">{{ areaLabel(row.area) }}</span>
+                    <span class="shrink-0 tabular-nums text-gray-900 dark:text-white">
+                      {{ row.clicks.toLocaleString() }}
+                    </span>
+                  </div>
+                  <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-zinc-800">
+                    <div
+                      class="h-full rounded-full bg-brand-500"
+                      :style="{ width: `${areaTotal ? (row.clicks / areaTotal) * 100 : 0}%` }"
+                    />
+                  </div>
+                  <p
+                    v-if="row.dead || row.rage"
+                    class="mt-1 text-xs text-amber-600 dark:text-amber-400"
+                  >
+                    {{ areaTrouble(row) }}
+                  </p>
+                </li>
+              </ul>
+            </UCard>
+
             <ConsoleInsightsTablePanel
               title="Controls clicked"
               subtitle="A control nobody touches is interface to remove"
@@ -199,7 +243,7 @@
               <template #cell-element_key="{ row }">
                 <div class="min-w-0">
                   <p class="truncate text-sm text-gray-900 dark:text-white">
-                    {{ row.element_label || (row.element_role ? `Unnamed ${row.element_role}` : 'Unnamed control') }}
+                    {{ controlName(row) }}
                   </p>
                   <p
                     v-if="row.element_key"
@@ -360,7 +404,17 @@
               </button>
             </template>
             <template #cell-element_key="{ row }">
-              <span class="break-all font-mono text-xs">{{ row.element_key || '—' }}</span>
+              <div class="min-w-0">
+                <p class="text-sm text-gray-900 dark:text-white">
+                  {{ controlName(row) }}
+                </p>
+                <p
+                  v-if="row.element_key"
+                  class="break-all font-mono text-[0.6875rem] text-gray-400 dark:text-gray-500"
+                >
+                  {{ row.element_key }}
+                </p>
+              </div>
             </template>
             <template #cell-kind="{ row }">
               <UBadge
@@ -382,7 +436,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import insightsApi, { type ClickMap, type InteractionOverview } from '~/services/insightsApi'
 import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
-import { clickKindLabel } from '~/utils/labels'
+import { areaLabel, clickKindLabel, controlName } from '~/utils/labels'
 
 definePageMeta({ layout: 'default' })
 useHead({ title: 'Click maps · Console' })
@@ -494,6 +548,17 @@ const elementColumns = [
 const pageRows = computed(() => overview.value?.pages ?? [])
 const frustrationRows = computed(() => overview.value?.frustration ?? [])
 const elementRows = computed(() => map.value?.elements ?? [])
+// Areas only when at least one part of the page is named; a page with none
+// marked would show one bar saying "unmarked", which says nothing.
+const areaRows = computed(() => {
+  const rows = map.value?.areas ?? []
+  return rows.some(row => row.area) ? rows : []
+})
+const areaTotal = computed(() => areaRows.value.reduce((sum, row) => sum + row.clicks, 0))
+const areaTrouble = (row: { rage: number, dead: number }) => [
+  row.rage ? `${row.rage} rage` : '',
+  row.dead ? `${row.dead} on things that did nothing` : ''
+].filter(Boolean).join(' · ')
 
 const scrollSteps = computed(() => {
   const depth = map.value?.scroll_depth

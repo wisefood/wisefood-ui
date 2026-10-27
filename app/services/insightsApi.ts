@@ -759,6 +759,8 @@ export interface ClickMap extends Window {
    * visit may have been to something since deleted.
    */
   example_paths: string[]
+  /** Clicks per named part of the page; `area` null is the unmarked rest. */
+  areas?: Array<{ area: string | null, clicks: number, sessions: number, rage: number, dead: number }>
   grid: number
   /** Rows of the grid, which follow the page's shape when asked to. Absent
    *  from an older API, where the grid is square. */
@@ -781,6 +783,8 @@ export interface ClickMap extends Window {
     /** What the control calls itself. Null for clicks recorded before capture. */
     element_label: string | null
     element_role: string | null
+    /** The named part of the page it sits in. */
+    area?: string | null
     clicks: number
     sessions: number
     rage: number
@@ -811,6 +815,11 @@ export interface InteractionOverview extends Window {
   frustration: Array<{
     path: string
     element_key: string | null
+    /** Only a control's own name; absent from older APIs. */
+    element_label?: string | null
+    element_role?: string | null
+    /** The named part of the page, from `data-rum-region`. */
+    area?: string | null
     kind: string
     count: number
     sessions: number
@@ -838,7 +847,15 @@ export interface SessionDevice {
   errors: ClientErrorRow[]
   vitals: Array<{ metric: string, path: string, value: number, rating: string | null }>
   /** Rage and dead clicks: the clearest frustration signal recorded. */
-  frustration: Array<{ kind: string, path: string, element_key: string | null, clicks: number }>
+  frustration: Array<{
+    kind: string
+    path: string
+    element_key: string | null
+    clicks: number
+    element_label?: string | null
+    element_role?: string | null
+    area?: string | null
+  }>
 }
 
 export interface EngagementPatterns extends Window {
@@ -929,6 +946,8 @@ export interface SearchFilterReport extends Window {
 
 export interface AudienceReport extends Window {
   by_client: Array<{ value: string, events: number, sessions: number }>
+  /** Where events with no client label come from. Absent from older APIs. */
+  unattributed_routes?: Array<{ route: string, event_type: string, events: number }>
   by_locale: Array<{ value: string, events: number, sessions: number }>
   by_role: Array<{ role: string, users: number, events: number }>
   guest_events: number

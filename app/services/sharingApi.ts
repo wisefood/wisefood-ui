@@ -1,5 +1,6 @@
 import wisefoodRestApi from './wisefoodRestApi'
 import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
+import { analyticsHeaders } from '~/composables/useAnalyticsSession'
 
 /**
  * Keeping a guest account, and sharing what it made.
@@ -144,7 +145,7 @@ class SharingApiService {
     try {
       const response = await fetch(
         `${getWisefoodRestApiUrl()}/shares/public/${encodeURIComponent(token)}`,
-        { headers: { Accept: 'application/json' }, referrerPolicy: 'no-referrer' }
+        { headers: { Accept: 'application/json', ...analyticsHeaders() }, referrerPolicy: 'no-referrer' }
       )
       if (!response.ok) return null
       const body = await response.json() as { result?: SharedPlan }

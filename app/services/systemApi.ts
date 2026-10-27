@@ -7,6 +7,7 @@
  */
 import wisefoodApi from './wisefoodApi'
 import { getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
+import { analyticsHeaders } from '~/composables/useAnalyticsSession'
 
 export interface ClusterState {
   reachable: boolean
@@ -145,8 +146,10 @@ class SystemApiService {
    * better than silently deciding the platform is open.
    */
   async getInfo(): Promise<PlatformInfo> {
+    // With the client headers, like every other call: without them this one
+    // request per page load was the largest share of "unattributed" traffic.
     const response = await fetch(`${getWisefoodRestApiUrl()}/system/info`, {
-      headers: { Accept: 'application/json' }
+      headers: { Accept: 'application/json', ...analyticsHeaders() }
     })
     if (!response.ok) {
       throw new Error(`system/info responded ${response.status}`)
