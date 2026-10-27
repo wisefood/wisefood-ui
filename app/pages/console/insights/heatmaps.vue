@@ -127,10 +127,18 @@
             :variant="deviceType === option.value ? 'solid' : 'ghost'"
             size="xs"
             :aria-pressed="deviceType === option.value"
-            @click="deviceType = option.value"
+            @click="pickDevice(option.value)"
           >
             {{ option.label }}
+            <span
+              v-if="deviceClicks(option.value) !== null"
+              class="tabular-nums opacity-70"
+            >{{ deviceClicks(option.value)?.toLocaleString() }}</span>
           </UButton>
+          <span
+            v-if="deviceNote"
+            class="text-xs text-gray-500 dark:text-gray-400"
+          >{{ deviceNote }}</span>
         </div>
 
         <!--
@@ -167,6 +175,10 @@
               :path="map.path"
               :elements="map.elements"
               :example-paths="map.example_paths"
+              :device-type="deviceType"
+              :viewport="map.viewport ?? null"
+              :rows="map.rows ?? map.grid"
+              @measured="fitRows"
             />
           </div>
 
@@ -399,6 +411,59 @@ const deviceOptions = [
   { label: 'Desktop', value: 'desktop' }
 ]
 
+/*
+ * A page opens on the screen size most of its clicks came from.
+ *
+ * A phone and a laptop lay the same page out differently, so a map pooled
+ * across both draws heat on neither layout — which is what "All" used to show
+ * by default, and why the heat sat beside the buttons. "All" is still there
+ * when somebody wants the totals; it is just no longer what they get first.
+ * Picked once per page, and never over a size somebody chose.
+ */
+const deviceExplicit = ref(Boolean(route.query.device))
+const deviceAuto = ref(false)
+
+function pickDevice(value: string) {
+  deviceExplicit.value = true
+  deviceAuto.value = false
+  deviceType.value = value
+}
+
+const deviceClicks = (value: string): number | null => {
+  const counts = map.value?.by_device
+  if (!counts) return null
+  if (!value) return counts.phone + counts.tablet + counts.desktop
+  return counts[value as keyof typeof counts] ?? 0
+}
+
+const deviceNote = computed(() => {
+  const counts = map.value?.by_device
+  if (!counts) return ''
+  if (deviceAuto.value && deviceType.value) {
+    return `Opened on ${deviceType.value}, where most clicks came from.`
+  }
+  const sizes = [counts.phone, counts.tablet, counts.desktop].filter(n => n > 0).length
+  if (!deviceType.value && sizes > 1) {
+    return 'Clicks from different screen sizes land on different layouts — pick one for an exact map.'
+  }
+  return ''
+})
+
+function autoPickDevice() {
+  const counts = map.value?.by_device
+  if (deviceExplicit.value || deviceType.value || !counts) return
+  const ranked = (['phone', 'tablet', 'desktop'] as const)
+    .map(size => ({ size, clicks: counts[size] }))
+    .filter(row => row.clicks > 0)
+    .sort((a, b) => b.clicks - a.clicks)
+  const top = ranked[0]
+  // Only when it changes the picture: a page clicked on one size alone is
+  // already exact under "All".
+  if (!top || ranked.length < 2) return
+  deviceAuto.value = true
+  deviceType.value = top.size
+}
+
 // The page-path cell is a button in two tables; one definition keeps its focus
 // ring and wrapping in step between them.
 const PATH_BUTTON = 'break-all rounded text-left font-mono text-xs text-brand-600 hover:underline '
@@ -441,6 +506,26 @@ const scrollSteps = computed(() => {
   ]
 })
 
+/*
+ * Rows for the grid, once the page behind it has been measured.
+ *
+ * The grid's columns are fixed; its rows follow the page, so a cell is about
+ * as tall as it is wide. Square cells over a phone page four times taller
+ * than wide were a hundred pixels tall, and the heat sat half a cell away
+ * from the control it belonged to. Refetched once per page and size, only
+ * when the fit is meaningfully different.
+ */
+const rows = ref<number | undefined>(undefined)
+
+function fitRows(shape: { width: number, height: number }) {
+  const columns = map.value?.grid ?? 40
+  const wanted = Math.max(8, Math.min(400, Math.round(columns * (shape.height / shape.width))))
+  const current = map.value?.rows ?? columns
+  if (Math.abs(wanted - current) / current < 0.1) return
+  rows.value = wanted
+  void reload()
+}
+
 async function load() {
   overview.value = await insightsApi.getInteractions(range.value.days, 50, range.value)
   if (selectedPath.value) {
@@ -449,8 +534,10 @@ async function load() {
       days: range.value.days,
       since: range.value.since,
       until: range.value.until,
-      deviceType: deviceType.value || undefined
+      deviceType: deviceType.value || undefined,
+      rows: rows.value
     })
+    autoPickDevice()
   } else {
     map.value = null
   }
@@ -473,6 +560,18 @@ const pending = computed(() => loading.value && !overview.value && !map.value)
 // Only the page and screen size are mirrored here. `days` is owned by
 // useInsightsRange, so the rest of the query is copied through untouched
 // rather than rebuilt — rebuilding it would drop the period on every click.
+// Another page, or another size, is another shape.
+watch([selectedPath, deviceType], () => {
+  rows.value = undefined
+})
+
+// Another page gets its own first pick, unless a size was chosen by hand.
+watch(selectedPath, () => {
+  if (deviceExplicit.value) return
+  deviceAuto.value = false
+  deviceType.value = ''
+})
+
 watch([selectedPath, deviceType], () => {
   const query = { ...route.query }
   delete query.path

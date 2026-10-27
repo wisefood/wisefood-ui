@@ -1,6 +1,7 @@
 import { defineNuxtPlugin, useRouter } from '#imports'
 import { installFlushOnHide, track } from '~/composables/useTelemetry'
 import { touchAnalyticsSession } from '~/composables/useAnalyticsSession'
+import { isClickmapBackdrop } from '~/utils/clickmapBackdrop'
 
 /**
  * Page views, and the session they belong to.
@@ -30,6 +31,8 @@ function routePattern(to: { matched: Array<{ path: string }>, path: string }): s
 
 export default defineNuxtPlugin(() => {
   if (typeof window === 'undefined') return
+  // The click map's backdrop is a page nobody is visiting.
+  if (isClickmapBackdrop()) return
 
   touchAnalyticsSession()
   installFlushOnHide()

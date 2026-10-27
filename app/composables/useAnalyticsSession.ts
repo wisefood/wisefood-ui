@@ -7,6 +7,7 @@ import {
   sessionAgeMinutes,
   type StoredSession
 } from '~/utils/analyticsSession'
+import { BACKDROP_CLIENT, isClickmapBackdrop } from '~/utils/clickmapBackdrop'
 
 /**
  * The session id shown in the footer, and the headers that tie a request to it.
@@ -109,11 +110,16 @@ export function newRequestId(): string {
  * more.
  */
 export function analyticsHeaders(clientVersion = '1'): Record<string, string> {
+  // The click map's backdrop says what it is, so the gateway leaves its
+  // requests out of the record, and borrows no session: it shares the
+  // site's storage, and would otherwise file its page loads under the
+  // console's session.
+  const backdrop = isClickmapBackdrop()
   const headers: Record<string, string> = {
     'X-Request-Id': newRequestId(),
-    'X-Client': `wisefood-ui/${clientVersion}`
+    'X-Client': `${backdrop ? BACKDROP_CLIENT : 'wisefood-ui'}/${clientVersion}`
   }
-  const sessionId = analyticsSessionId()
+  const sessionId = backdrop ? null : analyticsSessionId()
   if (sessionId) headers['X-Client-Session'] = sessionId
   const locale = currentLocale()
   if (locale) headers['X-Locale'] = locale

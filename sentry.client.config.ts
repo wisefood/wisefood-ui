@@ -1,9 +1,12 @@
 import { sentryFeedbackOptions } from './app/utils/sentryFeedback'
 import { getSentryDsn, isSentryEnabled } from './app/utils/runtimeConfig'
+import { isClickmapBackdrop } from './app/utils/clickmapBackdrop'
 
 const sentryDsn = getSentryDsn()
 
-if (isSentryEnabled() && sentryDsn) {
+// Not behind a click map: it would replay an expert's look at a map as a
+// visitor's session on that page.
+if (isSentryEnabled() && sentryDsn && !isClickmapBackdrop()) {
   const Sentry = await import('@sentry/nuxt')
 
   Sentry.init({

@@ -1,6 +1,7 @@
 import { defineNuxtPlugin } from '#imports'
 import { installTroubleWatch, noteVueTrouble } from '~/composables/useTroubleSignal'
 import { getWisefoodApiUrl, getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
+import { isClickmapBackdrop } from '~/utils/clickmapBackdrop'
 
 /**
  * Watch for the failures worth offering a bug report over.
@@ -12,6 +13,8 @@ import { getWisefoodApiUrl, getWisefoodRestApiUrl } from '~/utils/runtimeConfig'
  */
 export default defineNuxtPlugin((nuxtApp) => {
   if (typeof window === 'undefined') return
+  // Nobody is there to be offered a bug report.
+  if (isClickmapBackdrop()) return
 
   let recipeWranglerApiUrl: string | undefined
   try {

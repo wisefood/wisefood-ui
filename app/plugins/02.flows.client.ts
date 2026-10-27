@@ -10,6 +10,7 @@ import '@flows/js-components/index.css'
 
 import { getFlowsApiUrl, getFlowsEnvironment, getFlowsOrgId } from '~/utils/runtimeConfig'
 import { markWalkthroughsReady } from '~/composables/useWalkthroughs'
+import { isClickmapBackdrop } from '~/utils/clickmapBackdrop'
 
 // Guard so init()/setupJsComponents() never run twice (HMR, re-invocation).
 // Double-registration breaks the custom-element rendering.
@@ -72,6 +73,8 @@ export default defineNuxtPlugin(async () => {
 
   // No org id configured -> Flows is disabled. Never breaks the app.
   if (!organizationId) return
+  // A tour starting inside the click map's backdrop would sit on the map.
+  if (isClickmapBackdrop()) return
   if (flowsInitialized) return
 
   // 01.keycloak.client.ts already awaited initialize(); this is idempotent

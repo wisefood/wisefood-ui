@@ -11,6 +11,7 @@ import { addBreadcrumb, installErrorCapture, reportVueError } from '~/composable
 import { installInteractionCapture, notePageView } from '~/composables/useInteractionCapture'
 import { installWebVitals } from '~/composables/useWebVitals'
 import { installRumSession, reportRumSession } from '~/composables/useRumSession'
+import { isClickmapBackdrop } from '~/utils/clickmapBackdrop'
 
 /**
  * Real user monitoring: what the machine was, what broke, where people clicked,
@@ -35,6 +36,9 @@ import { installRumSession, reportRumSession } from '~/composables/useRumSession
  */
 export default defineNuxtPlugin((nuxtApp) => {
   if (typeof window === 'undefined') return
+  // Above all not here: the backdrop's own clicks and vitals would be drawn
+  // into the very map it sits behind.
+  if (isClickmapBackdrop()) return
 
   const router = useRouter()
 

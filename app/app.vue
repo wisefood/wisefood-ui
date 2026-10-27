@@ -7,7 +7,7 @@
     that is refusing everyone but admins, and a consent banner over a closed
     sign asks a question nobody can act on yet.
   -->
-  <ConsentBar v-if="!isMaintenancePage" />
+  <ConsentBar v-if="!isMaintenancePage && !backdrop" />
   <FloatingDock :minimal="isMaintenancePage" />
   <HelpCompanion v-if="!isMaintenancePage" />
 
@@ -17,10 +17,19 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { isClickmapBackdrop } from '~/utils/clickmapBackdrop'
 
 const { t, locale } = useI18n()
 const route = useRoute()
 const isMaintenancePage = computed(() => route.path === '/maintenance')
+
+// Behind a click map the page is a picture of what visitors saw, and the
+// consent banner is a question to the person in front of it — who is not
+// there. Decided after mount: the server cannot know it is in a frame.
+const backdrop = ref(false)
+onMounted(() => {
+  backdrop.value = isClickmapBackdrop()
+})
 
 useHead({
   meta: [

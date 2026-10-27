@@ -1,6 +1,7 @@
 import analyticsApi, { type AnalyticsApp, type ClientEvent, type ClientEventType } from '~/services/analyticsApi'
 import { touchAnalyticsSession } from '~/composables/useAnalyticsSession'
 import { useAuthStore } from '~/stores/auth'
+import { isClickmapBackdrop } from '~/utils/clickmapBackdrop'
 
 /**
  * Emitting what the browser knows and the server cannot see.
@@ -66,6 +67,9 @@ export function track(
   app: AnalyticsApp = 'platform',
 ): void {
   if (typeof window === 'undefined') return
+  // A page laid out behind a click map is not being used; its recipe view or
+  // search would be filed as the expert's own.
+  if (isClickmapBackdrop()) return
   try {
     // Nothing to send for a visitor with no token: the gateway requires one,
     // so queueing their events only wastes memory and a failed request later.
