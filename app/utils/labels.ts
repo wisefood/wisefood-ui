@@ -132,7 +132,7 @@ const SURFACES: Record<string, string> = {
   recipes: 'Recipe search',
   param: 'Filtered search',
   catalog: 'Catalogue search',
-  tools: 'Tool search',
+  tools: 'FoodChat lookup',
   autocomplete: 'Suggestions',
   qa: 'Question sources',
   scholar_library: 'Library'
@@ -159,6 +159,36 @@ const CLICK_KINDS: Record<string, string> = {
   rage: 'Rage click',
   dead: 'Dead click',
   scroll: 'Scrolled'
+}
+
+/**
+ * What a FoodChat turn was routed to, and the steps a conversation path adds:
+ * a refused or failed turn is a step in itself, and so is keeping a plan.
+ */
+const CHAT_STEPS: Record<string, string> = {
+  daily_plan: 'Asked for a day plan',
+  weekly_plan: 'Asked for a week plan',
+  refine_plan: 'Refined the plan',
+  edit_plan_slot: 'Swapped one meal',
+  switch_plan_type: 'Switched day/week',
+  nutrition_question: 'Nutrition question',
+  plan_question: 'Asked about the plan',
+  preference_update: 'Stated a preference',
+  score_plan: 'Had their own plan scored',
+  favorites_offer: 'Offered favourites',
+  chat: 'Chatted',
+  saved: 'Saved a plan',
+  error: 'Turn failed',
+  busy: 'Sent while busy',
+  unknown: 'Unclassified',
+  start: 'Start',
+  end: 'Left'
+}
+
+const QA_MODES: Record<string, string> = {
+  simple: 'Standard',
+  advanced: 'Advanced (own model or sources)',
+  unknown: 'Unknown'
 }
 
 /**
@@ -196,6 +226,8 @@ export const surfaceLabel = lookup(SURFACES)
 export const errorKindLabel = lookup(ERROR_KINDS)
 export const severityLabel = lookup(SEVERITIES)
 export const clickKindLabel = lookup(CLICK_KINDS)
+export const chatStepLabel = lookup(CHAT_STEPS)
+export const qaModeLabel = lookup(QA_MODES)
 
 /** "a recipe", "an answer" — reads inside a sentence: "feedback about a recipe". */
 export const targetTypeLabel = lookup(TARGET_TYPES)

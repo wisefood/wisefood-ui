@@ -235,6 +235,137 @@ export interface ReviewRow {
   tags: string[]
 }
 
+/** A run of the same step, as one step with a count. */
+export interface JourneyStep {
+  step: string
+  repeats: number
+  /** Set on period reports, where a run of three and a run of seven group. */
+  or_more?: boolean
+}
+
+export interface ChatLookup {
+  query: string | null
+  results: number | null
+  zero_result: boolean
+  relaxed: boolean
+}
+
+export interface ChatPlanMade {
+  plan_id: string | null
+  plan_type: string | null
+  version: number | null
+  refinement: boolean
+  item_count: number | null
+}
+
+/** A turn of a FoodChat conversation, with what it produced. */
+export interface ChatTurnStep {
+  kind: 'turn'
+  occurred_at: string | null
+  intent: string | null
+  /** ok | busy | error */
+  outcome: string
+  opening_turn: boolean
+  latency_ms: number | null
+  llm_calls: number
+  cost_usd: number | null
+  plan: ChatPlanMade | null
+  lookups: ChatLookup[]
+}
+
+/** A plan that could not be hung on the turn that made it. */
+export interface ChatPlanStep extends ChatPlanMade {
+  kind: 'plan_generated'
+  occurred_at: string | null
+}
+
+export interface ChatSavedStep {
+  kind: 'plan_saved'
+  occurred_at: string | null
+  plan_id: string | null
+}
+
+/** One thing that happened in a FoodChat conversation. */
+export type ChatStep = ChatTurnStep | ChatPlanStep | ChatSavedStep
+
+export interface ChatConversation {
+  conversation_id: string
+  started_at: string | null
+  ended_at: string | null
+  turns: number
+  failed_turns: number
+  busy_turns: number
+  plans_generated: number
+  plans_refined: number
+  plans_saved: number
+  lookups: number
+  llm_calls: number
+  cost_usd: number
+  path: JourneyStep[]
+  steps: ChatStep[]
+  steps_truncated: boolean
+}
+
+export interface ScholarQuestion {
+  occurred_at: string | null
+  /** Null unless the person agreed and typed-text capture was on. */
+  question: string | null
+  mode: string | null
+  language: string | null
+  cache_hit: boolean | null
+  confidence: string | number | null
+  articles_consulted: number | null
+  sources_found: number | null
+  latency_ms: number | null
+  qa_request_id: string | null
+  rating: string | null
+  answered: boolean
+}
+
+/** What one session did in each product, as steps rather than rows. */
+export interface SessionJourney {
+  foodchat: {
+    conversations: ChatConversation[]
+    totals: {
+      conversations: number
+      turns: number
+      failed_turns: number
+      busy_turns: number
+      plans_generated: number
+      plans_refined: number
+      plans_saved: number
+      lookups: number
+      rated_up: number
+      rated_down: number
+    }
+  }
+  foodscholar: {
+    questions: ScholarQuestion[]
+    totals: {
+      questions: number
+      answered: number
+      from_cache: number
+      rated: number
+      rated_negative: number
+      citations_opened: number
+    }
+  }
+  recipes: {
+    totals: {
+      searches: number
+      found_nothing: number
+      loosened: number
+      suggestions: number
+      results_opened: number
+      recipes_viewed: number
+      compared: number
+      favourited: number
+      unfavourited: number
+      searched_then_opened: boolean
+    }
+  }
+}
+
 export interface SessionSummary {
   session_id: string
   started_at: string | null
@@ -243,8 +374,13 @@ export interface SessionSummary {
   events_by_type: Record<string, number>
   questions_asked: number
   chat_turns: number
+  /** FoodChat conversations touched in this session. Absent from older APIs. */
+  conversations?: number
   meal_plans_generated: number
+  meal_plans_refined?: number
   meal_plans_saved: number
+  /** Absent from an API older than the journey report. */
+  journey?: SessionJourney
   recipes_viewed: number
   searches: number
   searches_with_no_results: number
@@ -423,6 +559,16 @@ export interface ClientSessionRow {
   pages: number
   failed_requests?: number
   duration_seconds?: number | null
+  /** What the session did, counted per product. Absent from older APIs. */
+  did?: {
+    chat_turns: number
+    meal_plans_generated: number
+    meal_plans_saved: number
+    questions_asked: number
+    recipes_viewed: number
+    searches: number
+    apps: string[]
+  }
 }
 
 export interface SessionBoard extends Window {
@@ -442,6 +588,67 @@ export interface SessionBoard extends Window {
   }
 }
 
+/** How conversations, questions and searches unfold across a period. */
+export interface JourneyReport extends Window {
+  foodchat: {
+    conversations: number
+    turns: number
+    median_turns: number | null
+    p90_turns: number | null
+    failed_turns: number
+    busy_turns: number
+    with_plan: number
+    plans_generated: number
+    plans_refined: number
+    plans_saved: number
+    conversations_saved: number
+    /** Of conversations that produced a plan, the share that kept one. */
+    save_rate: number
+    sessions_linked: number
+    truncated: boolean
+    paths: Array<{
+      path: JourneyStep[]
+      more: boolean
+      conversations: number
+      saved: number
+      share: number
+    }>
+    entries: Array<{ step: string, conversations: number, share: number }>
+    exits: Array<{ step: string, conversations: number, share: number, avg_turns: number }>
+    transitions: Array<{ from: string, to: string, count: number }>
+    plans_per_conversation: Array<{ bucket: string, count: number }>
+    plans_per_session: Array<{ bucket: string, count: number }>
+  }
+  foodscholar: {
+    questions: number
+    answered: number
+    from_cache: number
+    sessions: number
+    median_per_session: number | null
+    follow_up_sessions: number
+    follow_up_rate: number
+    citation_sessions: number
+    citation_rate: number
+    rated: number
+    rated_negative: number
+    by_mode: Array<{ mode: string, count: number }>
+  }
+  recipes: {
+    searches: number
+    found_nothing: number
+    zero_result_rate: number
+    loosened: number
+    sessions: number
+    searched_again: number
+    searched_again_rate: number
+    opened_after_search: number
+    opened_after_search_rate: number
+    favourited_sessions: number
+    assistant_lookups: number
+    assistant_lookups_empty: number
+  }
+}
+
 export interface SessionBoardFilters {
   days?: number
   since?: string
@@ -456,6 +663,10 @@ export interface SessionBoardFilters {
   hasErrors?: boolean
   search?: string
   includeBots?: boolean
+  /** Only sessions that used this product: foodchat | foodscholar | recipewrangler | catalog. */
+  app?: string
+  /** Only sessions that did this: plans | saved_plans | chat | questions | searches | recipes. */
+  activity?: string
 }
 
 export interface ErrorGroupRow {
@@ -549,6 +760,15 @@ export interface ClickMap extends Window {
    */
   example_paths: string[]
   grid: number
+  /** Rows of the grid, which follow the page's shape when asked to. Absent
+   *  from an older API, where the grid is square. */
+  rows?: number
+  /** Positioned clicks per screen size, whichever size is selected. Absent
+   *  from an older API. */
+  by_device?: { phone: number, tablet: number, desktop: number }
+  /** The median window these clicks were made in; the page behind the map is
+   *  laid out at this size. Absent from an older API. */
+  viewport?: { width: number | null, height: number | null }
   clicks: number
   sessions: number
   rage_clicks: number
@@ -1106,6 +1326,8 @@ class InsightsApiService {
       if (filters.hasErrors !== undefined) query.set('has_errors', String(filters.hasErrors))
       if (filters.search) query.set('search', filters.search)
       if (filters.includeBots) query.set('include_bots', 'true')
+      if (filters.app) query.set('app', filters.app)
+      if (filters.activity) query.set('activity', filters.activity)
       if (filters.since) query.set('since', filters.since)
       if (filters.until) query.set('until', filters.until)
       return asResult<SessionBoard | null>(
@@ -1203,6 +1425,7 @@ class InsightsApiService {
     deviceType?: string
     since?: string
     until?: string
+    rows?: number
   }): Promise<ClickMap | null> {
     try {
       const query = new URLSearchParams({
@@ -1211,6 +1434,7 @@ class InsightsApiService {
         grid: String(params.grid ?? 40)
       })
       if (params.deviceType) query.set('device_type', params.deviceType)
+      if (params.rows) query.set('rows', String(params.rows))
       if (params.since) query.set('since', params.since)
       if (params.until) query.set('until', params.until)
       return asResult<ClickMap | null>(
@@ -1238,6 +1462,17 @@ class InsightsApiService {
     try {
       return asResult<EngagementPatterns | null>(
         await wisefoodRestApi.get<unknown>(`${this.basePath}/patterns?days=${days}${rangeQuery(bounds)}`), null
+      )
+    } catch {
+      lastInsightsFailure.value++
+      return null
+    }
+  }
+
+  async getJourneys(days = 30, bounds?: RangeBounds): Promise<JourneyReport | null> {
+    try {
+      return asResult<JourneyReport | null>(
+        await wisefoodRestApi.get<unknown>(`${this.basePath}/journeys?days=${days}${rangeQuery(bounds)}`), null
       )
     } catch {
       lastInsightsFailure.value++

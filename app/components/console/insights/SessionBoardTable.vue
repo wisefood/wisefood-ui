@@ -41,6 +41,9 @@
             >
               Person
             </th>
+            <th class="whitespace-nowrap px-5 py-2">
+              Did
+            </th>
             <th class="px-5 py-2">
               Ran on
             </th>
@@ -107,6 +110,34 @@
                 v-else
                 class="text-gray-400 dark:text-gray-500"
               >not attributed</span>
+            </td>
+            <!-- What the visit was for, before anybody opens it. Only what
+                 happened is shown; a row of zeros reads as a row of facts.
+                 Early in the row, because the table scrolls sideways on a
+                 laptop and this is the column the board is opened for. -->
+            <td class="px-5 py-2">
+              <div
+                v-if="did(row).length"
+                class="flex gap-x-2.5 whitespace-nowrap text-xs tabular-nums text-gray-600 dark:text-gray-300"
+              >
+                <span
+                  v-for="item in did(row)"
+                  :key="item.icon"
+                  class="inline-flex items-center gap-1 whitespace-nowrap"
+                  :title="item.title"
+                >
+                  <UIcon
+                    :name="item.icon"
+                    class="h-3.5 w-3.5 shrink-0"
+                    :class="item.tone"
+                  />
+                  {{ item.text }}
+                </span>
+              </div>
+              <span
+                v-else
+                class="text-gray-300 dark:text-zinc-600"
+              >—</span>
             </td>
             <td class="px-5 py-2">
               <ConsoleInsightsDeviceGlyphs
@@ -192,6 +223,58 @@ import { countryFlag, formatDuration, viewportClass } from '~/utils/deviceIcons'
  * session id stays a real link inside it so the keyboard and the middle mouse
  * button still work.
  */
+/**
+ * The handful of things a visit did, as icon-and-count pairs. Plans read as
+ * "made/saved" because that pair is the one that says whether planning
+ * worked; the rest are single counts.
+ */
+function did(row: ClientSessionRow) {
+  const d = row.did
+  if (!d) return []
+  const out: Array<{ icon: string, text: string, title: string, tone: string }> = []
+  if (d.chat_turns) {
+    out.push({
+      icon: 'i-lucide-messages-square',
+      text: String(d.chat_turns),
+      title: `${d.chat_turns} FoodChat turn${d.chat_turns === 1 ? '' : 's'}`,
+      tone: 'text-gray-400 dark:text-gray-500'
+    })
+  }
+  if (d.meal_plans_generated || d.meal_plans_saved) {
+    out.push({
+      icon: 'i-lucide-utensils',
+      text: `${d.meal_plans_generated}/${d.meal_plans_saved}`,
+      title: `${d.meal_plans_generated} meal plan${d.meal_plans_generated === 1 ? '' : 's'} made, ${d.meal_plans_saved} saved`,
+      tone: d.meal_plans_saved ? 'text-emerald-500' : 'text-gray-400 dark:text-gray-500'
+    })
+  }
+  if (d.questions_asked) {
+    out.push({
+      icon: 'i-lucide-message-circle-question',
+      text: String(d.questions_asked),
+      title: `${d.questions_asked} FoodScholar question${d.questions_asked === 1 ? '' : 's'}`,
+      tone: 'text-gray-400 dark:text-gray-500'
+    })
+  }
+  if (d.searches) {
+    out.push({
+      icon: 'i-lucide-search',
+      text: String(d.searches),
+      title: `${d.searches} search${d.searches === 1 ? '' : 'es'}`,
+      tone: 'text-gray-400 dark:text-gray-500'
+    })
+  }
+  if (d.recipes_viewed) {
+    out.push({
+      icon: 'i-lucide-chef-hat',
+      text: String(d.recipes_viewed),
+      title: `${d.recipes_viewed} recipe${d.recipes_viewed === 1 ? '' : 's'} viewed`,
+      tone: 'text-gray-400 dark:text-gray-500'
+    })
+  }
+  return out
+}
+
 withDefaults(defineProps<{
   rows: ClientSessionRow[]
   title: string

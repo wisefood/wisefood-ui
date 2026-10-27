@@ -35,6 +35,12 @@ export const INSIGHTS_NAV: InsightsGroup[] = [
         hint: 'What people look for, and what the catalogue is missing'
       },
       {
+        label: 'Journeys',
+        to: '/console/insights/journeys',
+        icon: 'i-lucide-route',
+        hint: 'How conversations unfold, plans made and kept, where people stop'
+      },
+      {
         label: 'Content & answers',
         to: '/console/insights/content',
         icon: 'i-lucide-file-text',

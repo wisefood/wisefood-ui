@@ -134,7 +134,7 @@
             </span>
           </div>
 
-          <div class="grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <ConsoleStatsStatTile
               v-for="stat in stats"
               :key="stat.label"
@@ -249,6 +249,20 @@
                them. -->
           <div class="grid gap-6 lg:grid-cols-3">
             <div class="min-w-0 space-y-6 lg:col-span-2">
+              <!-- What they tried to do, per product, before the raw record of
+                   how: the timeline is evidence for these, not the story. -->
+              <ConsoleInsightsSessionConversations
+                v-if="journey"
+                :conversations="journey.foodchat.conversations"
+                :used-food-chat="usedApp('foodchat')"
+              />
+
+              <ConsoleInsightsSessionQuestions
+                v-if="journey && (journey.foodscholar.totals.questions || usedApp('foodscholar'))"
+                :questions="journey.foodscholar.questions"
+                :total="journey.foodscholar.totals.questions"
+              />
+
               <ConsoleInsightsSessionTimeline
                 :entries="session.timeline"
                 :truncated="session.timeline_truncated"
@@ -289,6 +303,38 @@
                  three are short next to it — so the rail follows the scroll and
                  stays beside whatever part of the session is on screen. -->
             <aside class="min-w-0 space-y-6 lg:sticky lg:top-6 lg:self-start">
+              <UCard
+                v-if="recipeFacts.length"
+                :ui="{ body: 'p-0' }"
+                class="border border-gray-200/70 dark:border-white/10"
+              >
+                <div class="border-b border-gray-200/70 px-5 py-3 dark:border-white/10">
+                  <h3 class="text-base font-semibold text-gray-900 dark:text-white">
+                    Recipes
+                  </h3>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ recipeVerdict }}
+                  </p>
+                </div>
+                <dl class="divide-y divide-gray-100 text-sm dark:divide-zinc-800">
+                  <div
+                    v-for="fact in recipeFacts"
+                    :key="fact.label"
+                    class="flex items-baseline justify-between gap-3 px-5 py-2"
+                  >
+                    <dt class="text-gray-500 dark:text-gray-400">
+                      {{ fact.label }}
+                    </dt>
+                    <dd
+                      class="font-semibold tabular-nums"
+                      :class="fact.warn ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-white'"
+                    >
+                      {{ fact.value.toLocaleString() }}
+                    </dd>
+                  </div>
+                </dl>
+              </UCard>
+
               <ConsoleInsightsSessionFrustration :items="device?.frustration ?? []" />
 
               <ConsoleInsightsSessionFeedbackList :items="session.feedback" />
@@ -388,12 +434,44 @@ const stats = computed(() => {
   if (!s) return []
   return [
     { label: 'Actions', value: s.events, icon: 'i-lucide-activity' },
+    { label: 'Conversations', value: s.conversations ?? 0, icon: 'i-lucide-messages-square' },
+    { label: 'Meal plans made', value: s.meal_plans_generated, icon: 'i-lucide-utensils' },
+    { label: 'Plans saved', value: s.meal_plans_saved, icon: 'i-lucide-bookmark-check' },
     { label: 'Questions', value: s.questions_asked, icon: 'i-lucide-message-circle-question' },
     { label: 'Searches', value: s.searches, icon: 'i-lucide-search' },
     { label: 'Found nothing', value: s.searches_with_no_results, icon: 'i-lucide-search-x' },
-    { label: 'Meal plans', value: s.meal_plans_generated, icon: 'i-lucide-utensils' },
     { label: 'Feedback', value: s.feedback_given, icon: 'i-lucide-message-square' }
   ]
+})
+
+const journey = computed(() => session.value?.journey ?? null)
+
+// Which products the gateway saw this session reach, so an empty panel can
+// say "they never went there" apart from "it went there and nothing linked".
+const usedApp = (app: string) => (session.value?.apps ?? []).some(row => row.app === app)
+
+const recipeFacts = computed(() => {
+  const totals = journey.value?.recipes.totals
+  if (!totals) return []
+  const facts = [
+    { label: 'Searches', value: totals.searches, warn: false },
+    { label: 'Found nothing', value: totals.found_nothing, warn: totals.found_nothing > 0 },
+    { label: 'Only after loosening', value: totals.loosened, warn: false },
+    { label: 'Results opened', value: totals.results_opened, warn: false },
+    { label: 'Recipes viewed', value: totals.recipes_viewed, warn: false },
+    { label: 'Compared', value: totals.compared, warn: false },
+    { label: 'Favourited', value: totals.favourited, warn: false }
+  ]
+  return facts.some(fact => fact.value) ? facts.filter(fact => fact.value || fact.label === 'Searches') : []
+})
+
+// The one sentence the counts add up to.
+const recipeVerdict = computed(() => {
+  const totals = journey.value?.recipes.totals
+  if (!totals) return ''
+  if (!totals.searches) return 'Browsed recipes without searching.'
+  if (totals.searched_then_opened) return 'Searched, then opened something — the search led somewhere.'
+  return 'Searched, and opened nothing afterwards.'
 })
 
 // Only people who can be linked to: a row carrying neither id is a count, not

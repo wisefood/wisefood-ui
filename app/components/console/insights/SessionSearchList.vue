@@ -23,7 +23,7 @@
     <ConsoleInsightsEmptyState
       v-if="!searches.length"
       title="Nobody searched in this session."
-      hint="Searches are recorded for every visit, so an empty list means none were run — not that the recording was off."
+      hint="Searches are recorded for every visit, so an empty list means none were run. Questions to FoodScholar and FoodChat's own recipe lookups are listed under the question or the turn they belong to."
       icon="i-lucide-search"
     />
 

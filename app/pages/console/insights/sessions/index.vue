@@ -46,7 +46,28 @@
               />
             </div>
 
-            <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:flex xl:flex-none">
+            <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:flex xl:flex-none">
+              <!-- What the visit was for comes first: "the FoodChat sessions"
+                   and "the ones that made a plan" are what people come to this
+                   board looking for, far more often than a browser. -->
+              <USelectMenu
+                v-model="filters.app"
+                :items="productOptions"
+                value-key="value"
+                label-key="label"
+                leading-icon="i-lucide-layout-grid"
+                class="w-full xl:w-40"
+                aria-label="Product used"
+              />
+              <USelectMenu
+                v-model="filters.activity"
+                :items="activityOptions"
+                value-key="value"
+                label-key="label"
+                leading-icon="i-lucide-list-checks"
+                class="w-full xl:w-48"
+                aria-label="What the session did"
+              />
               <USelectMenu
                 v-model="filters.deviceType"
                 :items="deviceOptions"
@@ -372,7 +393,9 @@ const filters = reactive({
   country: '',
   hasErrors: false,
   includeBots: false,
-  search: ''
+  search: '',
+  app: '',
+  activity: ''
 })
 const searchInput = ref('')
 const offset = ref(0)
@@ -392,6 +415,8 @@ function hydrateFromRoute() {
   filters.hasErrors = first(route.query.errors) === '1'
   filters.includeBots = first(route.query.bots) === '1'
   filters.search = first(route.query.q)
+  filters.app = first(route.query.app)
+  filters.activity = first(route.query.did)
   searchInput.value = filters.search
   const start = Number(first(route.query.offset))
   offset.value = Number.isInteger(start) && start > 0 ? start : 0
@@ -409,6 +434,8 @@ function buildRouteQuery(): Record<string, string> {
   if (filters.hasErrors) query.errors = '1'
   if (filters.includeBots) query.bots = '1'
   if (filters.search) query.q = filters.search
+  if (filters.app) query.app = filters.app
+  if (filters.activity) query.did = filters.activity
   if (offset.value > 0) query.offset = String(offset.value)
   return query
 }
@@ -436,7 +463,8 @@ function rangeQuery(): Record<string, string> {
 
 const hasActiveFilters = computed(() =>
   Boolean(filters.userId || filters.deviceType || filters.browser || filters.os
-    || filters.country || filters.hasErrors || filters.includeBots || filters.search)
+    || filters.country || filters.hasErrors || filters.includeBots || filters.search
+    || filters.app || filters.activity)
 )
 
 /*
@@ -458,6 +486,23 @@ const customEndIgnored = computed(() => {
 })
 
 const option = (value: string, label: string) => ({ value, label })
+
+const productOptions = [
+  option('', 'Any product'),
+  option('foodchat', 'FoodChat'),
+  option('foodscholar', 'FoodScholar'),
+  option('recipewrangler', 'Recipes'),
+  option('catalog', 'Catalogue')
+]
+const activityOptions = [
+  option('', 'Did anything'),
+  option('plans', 'Made a meal plan'),
+  option('saved_plans', 'Saved a meal plan'),
+  option('chat', 'Chatted with FoodChat'),
+  option('questions', 'Asked FoodScholar'),
+  option('searches', 'Searched'),
+  option('recipes', 'Opened a recipe')
+]
 
 const deviceOptions = computed(() => [
   option('', 'Any device'),
@@ -591,6 +636,8 @@ function resetFilters() {
   filters.hasErrors = false
   filters.includeBots = false
   filters.search = ''
+  filters.app = ''
+  filters.activity = ''
   searchInput.value = ''
 }
 
@@ -608,7 +655,9 @@ async function load() {
     // errors at all", which is a third filter nobody asked for here.
     hasErrors: filters.hasErrors ? true : undefined,
     search: filters.search || undefined,
-    includeBots: filters.includeBots
+    includeBots: filters.includeBots,
+    app: filters.app || undefined,
+    activity: filters.activity || undefined
   })
 }
 
