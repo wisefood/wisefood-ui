@@ -59,11 +59,18 @@ class WiseFoodApiService {
    */
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      let errorData: unknown
+      // Read once, parse after: `json()` consumes the body even when it
+      // fails, so a `text()` fallback threw on any non-JSON error page.
+      let errorData: unknown = null
       try {
-        errorData = await response.json()
+        const body = await response.text()
+        try {
+          errorData = JSON.parse(body)
+        } catch {
+          errorData = body
+        }
       } catch {
-        errorData = await response.text()
+        errorData = null
       }
 
       const error: ApiError = {

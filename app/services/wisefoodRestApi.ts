@@ -64,11 +64,21 @@ class WiseFoodRestApiService {
    */
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      let errorData: unknown
+      // Read once, parse after. `json()` consumes the body even when it fails,
+      // so falling back to `text()` on a gateway's HTML 502 page threw "body
+      // stream already read" — a TypeError with no status, which callers
+      // could no longer tell apart from a bug, and the consent banner could
+      // not even say the request had failed.
+      let errorData: unknown = null
       try {
-        errorData = await response.json()
+        const body = await response.text()
+        try {
+          errorData = JSON.parse(body)
+        } catch {
+          errorData = body
+        }
       } catch {
-        errorData = await response.text()
+        errorData = null
       }
 
       const error: ApiError = {
