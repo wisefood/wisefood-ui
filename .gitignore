@@ -27,3 +27,9 @@ logs
 
 # Confidential peer-review material — never commit
 WiseFood_camera_ready_*.md
+
+# Commercial fonts (TypeType TT Commons) tried locally: never committed, since
+# this repo is public. The site uses Quicksand; nothing references these.
+public/fonts/
+tt-commons-font-family/
+tt-commons-pro-font-family/

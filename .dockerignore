@@ -44,3 +44,9 @@ docs
 README*.md
 prompt.txt
 renovate.json
+
+# Commercial fonts tried locally (see .gitignore). The image copies the whole
+# folder, so without this they would be served from the public site.
+public/fonts
+tt-commons-font-family
+tt-commons-pro-font-family
