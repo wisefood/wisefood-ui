@@ -1614,6 +1614,10 @@
       "sessionLine": "Oznaka trenutne seje: {id}",
       "readMore": "Preberi obvestilo o zasebnosti",
       "analyticsUnavailable": "Trenutne nastavitve ni bilo mogoče naložiti. Poskusi znova čez trenutek.",
+      "researchTitle": "Pomagaj preizkušati odgovore WiseFood",
+      "researchDescription": "Dovoli, da tvoje pogovore s FoodChat in FoodScholar — brez imen in drugih podatkov, po katerih bi te lahko prepoznali — uporabimo za preizkušanje in primerjanje odgovorov WiseFood. Nikoli za učenje modelov umetne inteligence.",
+      "researchNote": "Če to izklopiš, tvojih pogovorov ne bo v nobenem testnem naboru, pripravljenem od zdaj naprej.",
+      "researchGuest": "V seji gosta ni na voljo — podatki gosta se izbrišejo, ko seja poteče.",
       "remindersTitle": "Opomniki po e-pošti",
       "remindersDescription": "Če WiseFooda nekaj časa ne uporabljaš, ti lahko pošljemo kratek opomnik. Če to izklopiš, ga ne bomo.",
       "remindersFailed": "Tega nismo mogli shraniti. Poskusi znova."
@@ -1999,10 +2003,12 @@
     }
   },
   "consent": {
-    "message": "Piškotke uporabljamo in vaše osebne podatke obdelujemo za zagotavljanje storitve WiseFood ter za štetje vaše dejavnosti pod vašim računom, da jo lahko izboljšamo.",
+    "message": "Piškotke uporabljamo in vaše osebne podatke obdelujemo za zagotavljanje storitve WiseFood, za štetje vaše dejavnosti pod vašim računom, da jo lahko izboljšamo, ter — brez imen in drugih podatkov, po katerih bi vas lahko prepoznali — za preizkušanje odgovorov WiseFood na podlagi vaših pogovorov. Nikoli za učenje modelov umetne inteligence.",
+    "messageGuest": "Piškotke uporabljamo in vaše osebne podatke obdelujemo za zagotavljanje storitve WiseFood ter za štetje vaše dejavnosti pod vašim računom, da jo lahko izboljšamo.",
     "privacyPolicy": "Politika zasebnosti",
     "accept": "Sprejmi",
-    "analyticsNote": "Pripisovanje dejavnosti lahko kadar koli izklopite v svojem profilu."
+    "analyticsNote": "Pripisovanje dejavnosti lahko kadar koli izklopite v svojem profilu.",
+    "purposesNote": "Pripisovanje dejavnosti in uporabo za raziskave lahko vsako posebej izklopite v svojem profilu; WiseFood deluje enako tudi brez njiju."
   },
   "featureGate": {
     "loading": "Nalaganje ...",

@@ -32,7 +32,7 @@
               name="i-lucide-cookie"
               class="h-4 w-4 shrink-0 inline-block align-[-2px] mr-1.5 text-gray-500 dark:text-gray-400"
             />
-            {{ t('consent.message') || 'We use cookies and process your personal data to provide the WiseFood service, and to count your activity under your account so we can improve it.' }}
+            {{ message }}
             <NuxtLink
               to="/privacy"
               class="underline underline-offset-2 font-medium hover:text-gray-900 dark:hover:text-white"
@@ -40,12 +40,12 @@
               {{ t('consent.privacyPolicy') || 'Privacy Policy' }}
             </NuxtLink>
             <!--
-              Named here rather than buried, because accepting grants two
-              separate things and the second one can be withdrawn on its own.
-              A consent nobody knew they gave is not a consent.
+              Named here rather than buried, because one Accept covers several
+              purposes and all but the first can be withdrawn on their own. A
+              consent nobody knew they gave is not a consent.
             -->
             <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {{ t('consent.analyticsNote') || 'You can turn activity attribution off at any time in your profile.' }}
+              {{ note }}
             </span>
           </p>
           <UButton
@@ -84,6 +84,24 @@ watch(
   },
   { immediate: true }
 )
+
+/*
+ * One consent for everything, worded for who is asked.
+ *
+ * A guest is not asked about research: their data is promised to expire, so
+ * nothing of theirs may end up in a test set that outlives it — and the
+ * gateway records their acceptance without it. An older gateway cannot store
+ * research consent at all, so it is not asked for there either.
+ */
+const asksResearch = computed(() => !authStore.isGuest && consentStore.unified)
+
+const message = computed(() => asksResearch.value
+  ? t('consent.message')
+  : t('consent.messageGuest'))
+
+const note = computed(() => asksResearch.value
+  ? t('consent.purposesNote')
+  : t('consent.analyticsNote'))
 
 // A guest's first minute belongs to the preferences wizard; the bar comes
 // once that is answered, rather than stacked under a modal's footer.

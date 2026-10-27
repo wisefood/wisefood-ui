@@ -574,6 +574,39 @@
             >
               {{ t('myProfile.privacy.analyticsUnavailable') }}
             </p>
+            <!-- Research use: the third purpose of the one consent, withdrawn
+                 on its own here. Hidden on a gateway that cannot store it; a
+                 guest sees why it is not theirs to give rather than a switch
+                 that silently does nothing. -->
+            <div
+              v-if="researchSupported"
+              class="flex items-start justify-between gap-4 border-t border-gray-100 pt-4 dark:border-white/10"
+            >
+              <div class="min-w-0">
+                <p class="font-medium text-gray-900 dark:text-white">
+                  {{ t('myProfile.privacy.researchTitle') }}
+                </p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  {{ t('myProfile.privacy.researchDescription') }}
+                </p>
+                <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                  {{ researchAvailable ? t('myProfile.privacy.researchNote') : t('myProfile.privacy.researchGuest') }}
+                </p>
+              </div>
+              <USwitch
+                v-model="researchConsent"
+                :loading="researchSaving || researchLoading"
+                :disabled="!researchKnown || !researchAvailable || researchSaving"
+                :aria-label="t('myProfile.privacy.researchTitle')"
+                @update:model-value="saveResearchConsent"
+              />
+            </div>
+            <p
+              v-if="researchSupported && !researchKnown && !researchLoading"
+              class="text-xs text-amber-600 dark:text-amber-400"
+            >
+              {{ t('myProfile.privacy.analyticsUnavailable') }}
+            </p>
             <!-- Reminder emails. Hidden for a guest, who has no real address to
                  be reminded at, and before the deployment can store the answer:
                  a switch that cannot be saved is worse than none. -->
@@ -1336,6 +1369,47 @@ async function saveAnalyticsConsent(enabled: boolean) {
   }
 }
 
+// Research use of conversations, the third purpose of the one consent. Same
+// rules as the analytics switch: unknown until loaded, put back on a failed
+// save. A guest can never give it — their data is promised to expire.
+const researchConsent = ref(false)
+const researchAvailable = ref(true)
+const researchSupported = ref(true)
+const researchLoading = ref(false)
+const researchSaving = ref(false)
+const researchKnown = ref(false)
+
+async function loadResearchConsent() {
+  researchLoading.value = true
+  try {
+    const status = await consentApi.getConsents()
+    if (!status) {
+      // A gateway older than the single consent cannot store this answer.
+      researchSupported.value = false
+      return
+    }
+    researchConsent.value = status.purposes.research.enabled
+    researchAvailable.value = status.purposes.research.available
+    researchKnown.value = true
+  } catch {
+    researchKnown.value = false
+  } finally {
+    researchLoading.value = false
+  }
+}
+
+async function saveResearchConsent(enabled: boolean) {
+  researchSaving.value = true
+  try {
+    const status = await consentApi.setPurpose('research', enabled)
+    researchConsent.value = status.purposes.research.enabled
+  } catch {
+    researchConsent.value = !enabled
+  } finally {
+    researchSaving.value = false
+  }
+}
+
 // Reminder emails: the inactivity reminders an admin can switch on from the
 // console. Every reminder carries its own way out too; this is the place to
 // find it without one in hand.
@@ -2053,6 +2127,7 @@ onMounted(async () => {
   // Not awaited with the rest: the privacy switch settling a moment later is
   // better than the whole page waiting on it.
   void loadAnalyticsConsent()
+  void loadResearchConsent()
   void loadReminders()
 })
 

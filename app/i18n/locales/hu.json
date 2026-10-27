@@ -1613,6 +1613,10 @@
       "sessionLine": "Aktuális munkamenet azonosítója: {id}",
       "readMore": "Adatvédelmi tájékoztató",
       "analyticsUnavailable": "A jelenlegi beállítás nem tölthető be. Próbáld újra egy pillanat múlva.",
+      "researchTitle": "Segíts tesztelni a WiseFood válaszait",
+      "researchDescription": "Engedélyezd, hogy a FoodChattal és a FoodScholarral folytatott beszélgetéseidet – nevek és más azonosító adatok nélkül – a WiseFood válaszainak tesztelésére és összehasonlítására használjuk. MI-modellek tanítására soha.",
+      "researchNote": "Ha kikapcsolod, beszélgetéseid egyetlen ezután készülő tesztkészletbe sem kerülnek be.",
+      "researchGuest": "Vendégmunkamenetben nem érhető el – a vendégadatok a munkamenet lejártakor törlődnek.",
       "remindersTitle": "Emlékeztető e-mailek",
       "remindersDescription": "Ha egy ideig nem használod a WiseFoodot, küldhetünk egy rövid emlékeztetőt. Ha kikapcsolod, nem küldünk.",
       "remindersFailed": "Nem sikerült menteni. Próbáld újra."
@@ -1998,10 +2002,12 @@
     }
   },
   "consent": {
-    "message": "Sütiket használunk, és személyes adatait a WiseFood szolgáltatás nyújtásához kezeljük, valamint azért, hogy tevékenységét a fiókjához rendelve fejleszthessük a szolgáltatást.",
+    "message": "Sütiket használunk, és személyes adatait a WiseFood működtetéséhez kezeljük, valamint azért, hogy tevékenységét a fiókjához rendelve fejleszthessük a szolgáltatást, továbbá – nevek és más azonosító adatok nélkül – beszélgetései alapján teszteljük a WiseFood válaszait. MI-modellek tanítására soha nem használjuk.",
+    "messageGuest": "Sütiket használunk, és személyes adatait a WiseFood szolgáltatás nyújtásához kezeljük, valamint azért, hogy tevékenységét a fiókjához rendelve fejleszthessük a szolgáltatást.",
     "privacyPolicy": "Adatvédelmi irányelvek",
     "accept": "Elfogadom",
-    "analyticsNote": "A tevékenység hozzárendelését bármikor kikapcsolhatja a profiljában."
+    "analyticsNote": "A tevékenység hozzárendelését bármikor kikapcsolhatja a profiljában.",
+    "purposesNote": "A tevékenység hozzárendelését és a kutatási felhasználást a profiljában külön-külön kikapcsolhatja; a WiseFood nélkülük is ugyanúgy működik."
   },
   "featureGate": {
     "loading": "Betöltés...",

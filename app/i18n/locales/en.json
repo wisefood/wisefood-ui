@@ -1613,6 +1613,10 @@
       "sessionLine": "Current session reference: {id}",
       "readMore": "Read the privacy notice",
       "analyticsUnavailable": "Your current setting could not be loaded. Try again in a moment.",
+      "researchTitle": "Help test WiseFood's answers",
+      "researchDescription": "Let us use your conversations with FoodChat and FoodScholar, with names and other identifying details removed, to test and compare WiseFood's answers. Never to train AI models.",
+      "researchNote": "Turning this off keeps your conversations out of every test set made from now on.",
+      "researchGuest": "Not available in a guest session — guest data is deleted when it expires.",
       "remindersTitle": "Reminder emails",
       "remindersDescription": "If you stop using WiseFood for a while, we may send you a short reminder. Turn this off and we will not.",
       "remindersFailed": "We could not save that. Please try again."
@@ -2020,10 +2024,12 @@
     }
   },
   "consent": {
-    "message": "We use cookies and process your personal data to provide the WiseFood service, and to count your activity under your account so we can improve it.",
+    "message": "We use cookies and process your personal data to run WiseFood, to count your activity under your account so we can improve it, and — with names and other identifying details removed — to test WiseFood's answers using your conversations. Never to train AI models.",
+    "messageGuest": "We use cookies and process your personal data to provide the WiseFood service, and to count your activity under your account so we can improve it.",
     "privacyPolicy": "Privacy Policy",
     "accept": "Accept",
-    "analyticsNote": "You can turn activity attribution off at any time in your profile."
+    "analyticsNote": "You can turn activity attribution off at any time in your profile.",
+    "purposesNote": "Activity attribution and research use can each be switched off in your profile; WiseFood works the same without them."
   },
   "guidelines": {
     "facets": {

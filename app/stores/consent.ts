@@ -20,8 +20,16 @@ interface ConsentState {
    * shows sessions beside zero named people. Asking them once fixes that.
    * Somebody who turned it off in their profile HAS answered, and asking
    * again would be nagging them out of a decision they made.
+   *
+   * Only read on a gateway older than the single consent; the current one
+   * answers with the terms version alone, which already covers this.
    */
   analyticsDecided: boolean
+  /**
+   * Whether the gateway knows the single consent. Off on an older gateway,
+   * which cannot store research consent, so the banner does not ask for it.
+   */
+  unified: boolean
 }
 
 // sessionStorage cache so navigations within a session don't refetch or
@@ -39,7 +47,8 @@ export const useConsentStore = defineStore('consent', {
     loadedForUserId: null,
     // Assumed answered until we learn otherwise, so a failed lookup never
     // produces a banner somebody has already dealt with.
-    analyticsDecided: true
+    analyticsDecided: true,
+    unified: true
   }),
 
   getters: {
@@ -76,9 +85,26 @@ export const useConsentStore = defineStore('consent', {
 
       this.loading = true
       try {
+        // The single consent: one answer says which terms were accepted, and
+        // the version alone decides whether to ask — 2.0 covers every purpose.
+        const all = cachedTerms ? null : await consentApi.getConsents()
+        if (all) {
+          this.unified = true
+          this.grantedVersion = all.terms.current ? CONSENT_VERSION : all.terms.version
+          this.analyticsDecided = true
+          if (import.meta.client && all.terms.current) {
+            window.sessionStorage.setItem(storageKey(userId, CONSENT_VERSION), 'granted')
+          }
+          this.loaded = true
+          this.loadedForUserId = userId
+          return
+        }
+
         if (cachedTerms) {
           this.grantedVersion = CONSENT_VERSION
         } else {
+          // A gateway older than the single consent.
+          this.unified = false
           const status = await consentApi.getConsent()
           this.grantedVersion = status.granted ? status.version : null
           if (import.meta.client && status.granted && status.version === CONSENT_VERSION) {
@@ -109,7 +135,13 @@ export const useConsentStore = defineStore('consent', {
     },
 
     /**
-     * Record consent for the current version and hide the bar.
+     * Accept the current terms — every purpose they name — and hide the bar.
+     *
+     * One call and one transaction on the gateway: the terms, activity
+     * attribution and research use are recorded together, so the ledger never
+     * shows a person who accepted the text and only part of what it said. A
+     * guest's acceptance leaves research out, and the banner they saw did not
+     * mention it. Each purpose is withdrawn on its own from the profile.
      */
     async accept() {
       if (this.accepting) return
@@ -118,33 +150,10 @@ export const useConsentStore = defineStore('consent', {
 
       this.accepting = true
       try {
-        await consentApi.recordConsent()
+        await consentApi.acceptAll(CONSENT_VERSION)
         this.grantedVersion = CONSENT_VERSION
+        this.analyticsDecided = true
         this.loaded = true
-
-        /*
-         * Accepting here also turns analytics attribution on.
-         *
-         * The platform reads silence as "do not name me" (opt-in), so without
-         * this every per-person view stays empty however many people accept
-         * the banner — the console shows healthy session counts beside zero
-         * identified users, which reads as a fault rather than as a setting.
-         *
-         * It is a second, separate purpose, so the banner says so rather than
-         * folding it in quietly, and the profile toggle remains the way to
-         * withdraw it on its own. Recorded after the primary consent and
-         * never allowed to fail the accept: a person who clicked Accept has
-         * consented whether or not this second call succeeded, and blocking
-         * the banner on it would leave them unable to use the site.
-         */
-        try {
-          await consentApi.setAnalyticsConsent(true)
-          this.analyticsDecided = true
-        } catch (err) {
-          // Left undecided on failure, so the question is put again next time
-          // rather than silently lost.
-          console.warn('[ConsentStore] Analytics consent not recorded:', err)
-        }
         if (userId) {
           this.loadedForUserId = userId
           if (import.meta.client) {

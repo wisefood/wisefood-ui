@@ -6,8 +6,15 @@ import wisefoodRestApi from './wisefoodRestApi'
  * Tracks the user's consent to service-provision data processing.
  */
 
-/** Bump this in one place when the privacy terms change. */
-export const CONSENT_VERSION = '1.0'
+/**
+ * Bump this in one place when the privacy terms change.
+ *
+ * 2.0 is one consent for everything: running the service, naming the person
+ * on their activity, and using their conversations — identifying details
+ * removed — to test WiseFood. Everybody who accepted 1.0 is asked again,
+ * because 1.0 never mentioned the third.
+ */
+export const CONSENT_VERSION = '2.0'
 export const SERVICE_DATA_PROCESSING = 'service_data_processing'
 
 export interface ConsentStatus {
@@ -33,6 +40,35 @@ export interface AnalyticsConsentStatus {
   /** `opt_in` or `opt_out` — how the platform reads never having answered. */
   mode: string
 }
+
+/** One purpose of the consent, which can be withdrawn on its own. */
+export interface ConsentPurposeStatus {
+  enabled: boolean
+  /** False means never answered, which is different from "no". */
+  decided: boolean
+  decided_at: string | null
+}
+
+/** Everything one person has agreed to, from `/users/me/consents`. */
+export interface ConsentsStatus {
+  current_version: string
+  terms: {
+    granted: boolean
+    version: string | null
+    granted_at: string | null
+    /** The accepted terms cover everything asked today. */
+    current: boolean
+  }
+  purposes: {
+    analytics: ConsentPurposeStatus & { mode: string }
+    /** `available` is false for a guest, whose data is promised to expire. */
+    research: ConsentPurposeStatus & { available: boolean }
+  }
+}
+
+export type ConsentPurpose = 'analytics' | 'research'
+
+const isNotFound = (error: unknown) => (error as { status?: number } | null)?.status === 404
 
 class ConsentApiService {
   /**
@@ -86,6 +122,45 @@ class ConsentApiService {
   /** Allow or withdraw. Takes effect on the next recorded action. */
   async setAnalyticsConsent(enabled: boolean): Promise<AnalyticsConsentStatus> {
     return wisefoodRestApi.put<AnalyticsConsentStatus>('/users/me/analytics-consent', {
+      enabled,
+      version: CONSENT_VERSION
+    })
+  }
+
+  /**
+   * Everything this person has agreed to, in one answer. Null from a gateway
+   * older than the single consent, so the caller can fall back to asking the
+   * two questions the old way.
+   */
+  async getConsents(): Promise<ConsentsStatus | null> {
+    try {
+      return await wisefoodRestApi.get<ConsentsStatus>('/users/me/consents')
+    } catch (error) {
+      if (isNotFound(error)) return null
+      throw error
+    }
+  }
+
+  /**
+   * Accept the current terms, and with them every purpose they name, in one
+   * call and one transaction. On a gateway older than the single consent the
+   * two halves it knows about are recorded the old way; research is not,
+   * because that gateway cannot store it.
+   */
+  async acceptAll(version: string = CONSENT_VERSION): Promise<ConsentsStatus | null> {
+    try {
+      return await wisefoodRestApi.post<ConsentsStatus>('/users/me/consents', { version })
+    } catch (error) {
+      if (!isNotFound(error)) throw error
+      await this.recordConsent(SERVICE_DATA_PROCESSING, version)
+      await this.setAnalyticsConsent(true)
+      return null
+    }
+  }
+
+  /** Withdraw, or give again, one purpose. Takes effect on the next action. */
+  async setPurpose(purpose: ConsentPurpose, enabled: boolean): Promise<ConsentsStatus> {
+    return wisefoodRestApi.put<ConsentsStatus>(`/users/me/consents/${purpose}`, {
       enabled,
       version: CONSENT_VERSION
     })

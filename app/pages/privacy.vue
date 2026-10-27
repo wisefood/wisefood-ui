@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
     <main class="max-w-3xl mx-auto px-6 py-12">
       <h1 class="text-3xl font-semibold mb-2">Privacy notice</h1>
-      <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-8">Last updated: 12 August 2026</p>
+      <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-8">Last updated: 27 October 2026</p>
 
       <!-- Anything a lawyer must supply is marked, rather than invented. -->
       <div class="rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 mb-8 text-sm text-amber-900 dark:text-amber-200">
@@ -88,6 +88,39 @@
           changes after 30 minutes of inactivity, and changes again when you sign
           in or out, so it can never connect two accounts. Only administrators and
           nutrition experts can look up the activity behind it.
+        </p>
+      </section>
+
+      <section class="space-y-3 mb-10">
+        <h2 class="text-xl font-semibold">
+          Testing WiseFood with real conversations
+        </h2>
+        <p class="leading-7 text-zinc-700 dark:text-zinc-300">
+          If you agree — it is part of the one consent asked when you sign in, and
+          has its own switch under
+          <NuxtLink
+            to="/my-profile"
+            class="text-primary hover:underline"
+          >
+            Privacy &amp; Data
+          </NuxtLink>
+          — the WiseFood team may use your conversations with FoodChat and
+          FoodScholar to test and compare the answers WiseFood gives. Your choice
+          covers the profiles in the household you manage.
+        </p>
+        <p class="leading-7 text-zinc-700 dark:text-zinc-300">
+          Before a conversation is used, the names of the people in it — yours and
+          the people you cook for — email addresses, phone numbers, street addresses
+          and card or bank numbers are removed; account and profile ids are replaced
+          with codes made for that one test set; and times are reduced to the month.
+          What remains is what was asked and answered, with your diet, allergies and
+          goals as categories. It is never used to train AI models, and nothing from
+          a guest session is ever used.
+        </p>
+        <p class="leading-7 text-zinc-700 dark:text-zinc-300">
+          Switching it off keeps your conversations out of every test set made from
+          then on. A set made before that cannot be traced back to you, so it is not
+          changed.
         </p>
       </section>
 
@@ -184,8 +217,8 @@ const inventory = [
   },
   {
     data: 'Conversations in FoodChat, and Q&A sessions in FoodScholar',
-    why: 'To keep context within a conversation and let you return to it.',
-    removal: 'Chat threads are deleted with the profile; Q&A sessions expire on their own.'
+    why: 'To keep context within a conversation and let you return to it — and, if you agreed, to test WiseFood\'s answers with identifying details removed.',
+    removal: 'Chat threads are deleted with the profile; Q&A sessions expire on their own. A test set made earlier keeps its copy, which no longer identifies you.'
   },
   {
     data: 'Model request logs (prompt, response, tokens, cost, latency)',
@@ -193,7 +226,7 @@ const inventory = [
     removal: 'Held in our observability system, keyed to your member id. These are NOT removed by account deletion today. Retention period and erasure route: [TO BE COMPLETED].'
   },
   {
-    data: 'Consent record: date, version, IP address',
+    data: 'Consent record: date, version, IP address, and each purpose you allowed or withdrew',
     why: 'Evidence that we were permitted to process your data.',
     removal: 'Retained after account deletion, in a form that no longer identifies you.'
   }
