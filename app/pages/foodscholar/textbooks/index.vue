@@ -233,6 +233,7 @@
           <div class="mb-3 flex items-center justify-between gap-3">
             <button
               class="px-4 py-2 inline-flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+              data-flows="foodscholar-textbooks-filters-toggle"
               @click="showFilters = !showFilters"
             >
               <UIcon :name="showFilters ? 'i-lucide-panel-left-close' : 'i-lucide-panel-left-open'" class="w-4 h-4" />
@@ -246,7 +247,10 @@
 
           <!-- Search bar -->
           <div class="mb-4">
-            <div class="catalog-search-composer">
+            <div
+              class="catalog-search-composer"
+              data-flows="foodscholar-textbooks-search"
+            >
               <FoodscholarNLInput
                 v-model="nlQuery"
                 placeholder="Search textbooks by title, author, topic…"
@@ -316,6 +320,7 @@
               <FoodscholarTextbookCard
                 v-for="(book, index) in textbooks"
                 :key="book.urn"
+                :data-flows="index === 0 ? 'foodscholar-textbooks-first-card' : undefined"
                 :textbook="book"
                 :fade="false"
                 :index="index"

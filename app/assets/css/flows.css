@@ -67,3 +67,16 @@
      range and the tour must be able to point at anything they render. */
   --flows-basicsV2-zIndex: 1500;
 }
+
+/*
+ * An open UModal or UDropdownMenu (Reka) sets `pointer-events: none` on
+ * <body> so nothing outside it can be clicked. The Flows modal opts back in
+ * with `pointer-events: auto`; the tooltip does not, so a tour step pointing
+ * into an open dialog or menu showed buttons that ignored every click. Same
+ * opt-in for the tooltip. A click on it still counts as "outside" for the
+ * dialog, which closes, so steps inside dialogs move on by what the user does
+ * there (a wait) rather than by Next.
+ */
+.flows_basicsV2_tooltip_tooltip {
+  pointer-events: auto;
+}

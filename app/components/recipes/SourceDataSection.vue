@@ -52,8 +52,9 @@
       <template v-else>
         <div :class="gridClass">
           <RecipesCollectionCard
-            v-for="collection in collections"
+            v-for="(collection, index) in collections"
             :key="collection.urn"
+            :data-flows="index === 0 ? 'recipes-collections-first-card' : undefined"
             :collection="collection"
           />
         </div>
@@ -121,8 +122,9 @@
       <template v-else>
         <div :class="gridClass">
           <RecipesFCTableCard
-            v-for="table in tables"
+            v-for="(table, index) in tables"
             :key="table.urn"
+            :data-flows="index === 0 ? 'recipes-fctables-first-card' : undefined"
             :table="table"
           />
         </div>

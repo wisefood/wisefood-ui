@@ -89,6 +89,7 @@
           <button
             type="button"
             class="inline-flex items-center gap-1 rounded-lg border border-zinc-200 dark:border-zinc-700 px-2 py-1 text-[0.7rem] font-medium text-zinc-600 dark:text-zinc-300 transition-colors hover:border-brand-400 hover:text-brand-600 dark:hover:text-brand-400"
+            data-flows="foodscholar-graph-scope"
             @click="emit('scope', nodeId)"
           >
             <UIcon
@@ -398,6 +399,7 @@
               type="button"
               class="flex w-full items-center justify-between gap-2 text-left"
               :aria-expanded="evidenceOpen"
+              data-flows="foodscholar-graph-evidence"
               @click="toggleEvidence"
             >
               <h4 class="text-[0.6rem] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">

@@ -19,7 +19,9 @@ import { useTroubleSignal } from '~/composables/useTroubleSignal'
  * dialog is open — a fixed button above a modal's footer is a button over
  * the modal's Save. It also clears the safe area on a notched phone, and a
  * page whose bottom edge belongs to a composer lifts it with
- * `definePageMeta({ dock: 'raised' })`.
+ * `definePageMeta({ dock: 'raised' })`, or with `usePageDockMode()` when that
+ * depends on the page's state (a chat start screen keeps its composer near
+ * the top).
  *
  * Teleported to <body> and marked `.a11y-toolbar-root` so the grayscale mode
  * (a `filter` on #__nuxt, which would re-anchor anything fixed inside it) and
@@ -61,7 +63,8 @@ const showFeedback = computed(() => !props.minimal)
 const showBug = computed(() => !props.minimal && sentry.enabled.value)
 const showHelp = computed(() => !props.minimal && Boolean(help.pageTopic.value))
 
-const dockMode = computed(() => route.meta.dock ?? 'default')
+const dockModes = useDockModes()
+const dockMode = computed(() => dockModes.value[route.path] ?? route.meta.dock ?? 'default')
 const hidden = computed(() => dockMode.value === 'hidden' || overlayOpen.value)
 const dockBottom = computed(() =>
   dockMode.value === 'raised'

@@ -139,6 +139,7 @@
           <Transition name="qa-advanced-panel">
             <div
               v-if="isAdvancedMode"
+              data-flows="foodscholar-qa-advanced-panel"
               class="qa-advanced-panel mt-4 rounded-2xl border border-gray-200/80 dark:border-zinc-700/80 bg-white/60 dark:bg-zinc-900/40 backdrop-blur-sm p-4"
             >
               <div class="flex items-start justify-between gap-3 mb-4">
@@ -295,6 +296,7 @@
           <Transition name="qa-advanced-panel">
             <div
               v-if="isAdvancedMode"
+              data-flows="foodscholar-qa-advanced-panel"
               class="qa-advanced-panel mt-3 rounded-2xl border border-gray-200/80 dark:border-zinc-700/80 bg-white/60 dark:bg-zinc-900/40 backdrop-blur-sm p-4"
             >
               <div class="flex items-start justify-between gap-3 mb-3">
@@ -352,6 +354,7 @@
           <button
             type="button"
             class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 px-2.5 py-1 text-xs font-medium text-gray-700 dark:text-zinc-200 hover:border-brand-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+            data-flows="foodscholar-qa-new-thread"
             @click="startNewThread"
           >
             <UIcon name="i-lucide-plus" class="w-3.5 h-3.5 shrink-0" />
@@ -1349,7 +1352,6 @@ const { t, locale } = useI18n()
 const { hasHover } = useViewport()
 
 definePageMeta({
-  dock: 'raised',
   middleware: [
     // The graph was once a tab here and its links were shared as
     // `?tab=graph&node=…&view=…`; they now open the Hierarchy page, keeping
@@ -1437,6 +1439,9 @@ const CATEGORY_ALL = 'All'
 const CATEGORY_UNCATEGORIZED = 'Uncategorized'
 const pageTab = ref<'qa' | 'resources'>('qa')
 const hasActiveSession = computed(() => asking.value || !!qaResult.value || !!qaError.value || !!pendingClarification.value)
+// The composer only owns the bottom edge once a conversation is on screen;
+// on the start screen and the Library tab the dock stays in the corner.
+usePageDockMode(() => (pageTab.value === 'qa' && hasActiveSession.value ? 'raised' : 'default'))
 const advancedSelectContent = {
   side: 'bottom' as const,
   sideOffset: 6,

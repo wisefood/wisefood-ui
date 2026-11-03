@@ -124,6 +124,7 @@
           <div class="min-w-0 flex-1 lg:w-[28rem] lg:flex-none xl:w-[32rem]">
             <FoodscholarGraphTree
               ref="treeRef"
+              data-flows="foodscholar-graph-tree"
               :selected-id="selectedId"
               :facets="filters.facet || []"
               :under="filters.under"

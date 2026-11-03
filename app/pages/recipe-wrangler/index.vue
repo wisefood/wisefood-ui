@@ -150,6 +150,7 @@
           <div class="mt-4 flex items-center gap-3 flex-wrap">
             <button
               type="button"
+              data-flows="recipes-analyzer-analyze"
               @click="runRecipeAnalysis"
               :disabled="analysisLoading || !analysisInput.trim()"
               class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brandg-500 hover:bg-brandg-600 disabled:bg-zinc-300 dark:disabled:bg-zinc-700 text-white text-sm font-medium transition-colors disabled:cursor-not-allowed"
@@ -159,7 +160,10 @@
               <span>{{ analysisLoading ? t('recipeWrangler.analyzer.analyzing') : t('recipeWrangler.analyzer.analyze') }}</span>
             </button>
 
-            <div class="flex items-center rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/40 p-1 gap-1">
+            <div
+              class="flex items-center rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/40 p-1 gap-1"
+              data-flows="recipes-analyzer-region"
+            >
               <button
                 v-for="region in ANALYSIS_REGIONS"
                 :key="region"
@@ -192,7 +196,11 @@
             {{ analysisError }}
           </p>
 
-          <div v-if="analysisResult" class="mt-6">
+          <div
+            v-if="analysisResult"
+            class="mt-6"
+            data-flows="recipes-analyzer-results"
+          >
             <h3 class="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white mb-3">
               Analysis Results: {{ analysisResult.title }}
             </h3>

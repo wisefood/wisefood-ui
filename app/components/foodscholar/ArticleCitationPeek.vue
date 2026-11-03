@@ -1,6 +1,7 @@
 <template>
   <div
     v-if="open && citation"
+    data-flows="foodscholar-qa-passage-peek"
     ref="panelRef"
     class="fixed z-50 max-h-[70dvh] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto rounded-xl border border-gray-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-zinc-900"
     :style="panelStyle"

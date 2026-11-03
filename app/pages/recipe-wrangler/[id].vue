@@ -962,7 +962,10 @@
               v-if="originalServes"
               class="mb-4"
             >
-              <div class="flex flex-wrap items-center gap-3">
+              <div
+                class="flex flex-wrap items-center gap-3"
+                data-flows="recipes-detail-servings"
+              >
                 <span class="text-sm text-zinc-600 dark:text-zinc-300">
                   {{ t('recipeWrangler.detail.scale.label') }}
                 </span>
@@ -1131,6 +1134,7 @@
                   <UTooltip :text="t('recipeWrangler.detail.substitution.action')">
                     <button
                       type="button"
+                      data-flows="recipes-detail-substitute"
                       class="flex-shrink-0 mt-0.5 p-1 pointer-coarse:w-11 pointer-coarse:h-11 pointer-coarse:-my-2 pointer-coarse:-mr-2 pointer-coarse:flex pointer-coarse:items-center pointer-coarse:justify-center rounded-md text-zinc-300 dark:text-zinc-600 pointer-coarse:text-zinc-400 pointer-coarse:dark:text-zinc-500 hover:text-brandg-600 dark:hover:text-brandg-400 hover:bg-brandg-50 dark:hover:bg-brandg-900/20 transition-colors"
                       :aria-label="t('recipeWrangler.detail.substitution.action')"
                       @click.stop="openSubstituteModal(ingredient.name)"
@@ -1455,6 +1459,7 @@
             <div
               v-else-if="substituteResult"
               class="space-y-5"
+              data-flows="recipes-substitute-result"
             >
               <!-- Swap card -->
               <div class="rounded-2xl border border-zinc-200 dark:border-zinc-700 p-4">
@@ -1596,7 +1601,10 @@
             </div>
 
             <!-- Mode tabs -->
-            <div class="flex flex-wrap gap-2 mb-5">
+            <div
+              class="flex flex-wrap gap-2 mb-5"
+              data-flows="recipes-adapt-modes"
+            >
               <button
                 v-for="mode in adaptModes"
                 :key="mode.value"
@@ -1664,6 +1672,7 @@
             <div
               v-else-if="adaptResult"
               class="space-y-4"
+              data-flows="recipes-adapt-results"
             >
               <!-- Context line -->
               <div
@@ -1838,6 +1847,7 @@
                   </p>
                   <button
                     type="button"
+                    data-flows="recipes-adapt-save"
                     :disabled="adaptSavingRank !== null"
                     class="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-brandg-600 hover:bg-brandg-700 disabled:opacity-60 text-white transition-colors"
                     @click="saveAdaptedRecipe(suggestion)"

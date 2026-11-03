@@ -88,7 +88,7 @@
         </div>
 
         <!-- Profile Details Card -->
-        <UCard>
+        <UCard data-flows="card-profile-details">
           <template #header>
             <div class="flex items-center justify-between">
               <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t('myProfile.sections.profileDetails') }}</h2>
@@ -545,7 +545,7 @@
         </UCard>
 
         <!-- Privacy & Data -->
-        <UCard>
+        <UCard data-flows="card-privacy">
           <template #header>
             <div class="flex items-center gap-2">
               <UIcon name="i-lucide-shield-check" class="w-5 h-5 text-gray-400" />
@@ -648,6 +648,7 @@
 
         <!-- Danger Zone -->
         <UCard
+          data-flows="card-danger-zone"
           :ui="{
             root: 'ring-1 ring-red-200 dark:ring-red-900/50'
           }"
@@ -717,7 +718,7 @@
 
         <!-- What WiseFood keeps — the inventory, in the place where you can act
              on it. Sits next to the deletion controls on purpose. -->
-        <UCard>
+        <UCard data-flows="card-data-kept">
           <template #header>
             <div class="flex items-center gap-2">
               <UIcon name="i-lucide-shield" class="w-5 h-5 text-gray-500 dark:text-gray-400" />

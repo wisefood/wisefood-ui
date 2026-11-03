@@ -11,8 +11,18 @@
   <FloatingDock :minimal="isMaintenancePage" />
   <HelpCompanion v-if="!isMaintenancePage" />
 
-  <!-- Flows.js floating blocks (interactive walkthroughs) -->
-  <flows-floating-blocks />
+  <!--
+    Flows.js floating blocks (interactive walkthroughs), in <body> rather than
+    #__nuxt. Nuxt UI makes #__nuxt `isolate`, so whatever renders inside it
+    stacks below everything teleported to <body> (the docked help panel, menus,
+    modals) whatever its z-index: a tour step next to the help panel was drawn
+    under it, its Next button included.
+  -->
+  <ClientOnly>
+    <Teleport to="body">
+      <flows-floating-blocks />
+    </Teleport>
+  </ClientOnly>
 </template>
 
 <script setup lang="ts">

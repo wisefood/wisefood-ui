@@ -165,10 +165,11 @@ function argsFor(tool: FoodChatTool): Record<string, unknown> | null {
  */
 const menuItems = computed<DropdownMenuItem[][]>(() => {
   const toItem = (tool: FoodChatTool): DropdownMenuItem => ({
-    label: label(tool),
-    icon: props.running === tool.name ? 'i-lucide-loader-2' : icon(tool.name),
-    disabled: props.busy,
-    onSelect: () => {
+    'label': label(tool),
+    'icon': props.running === tool.name ? 'i-lucide-loader-2' : icon(tool.name),
+    'disabled': props.busy,
+    'data-flows': `foodchat-tool-${tool.name}`,
+    'onSelect': () => {
       const args = argsFor(tool)
       if (args) emit('invoke', tool, args)
     }

@@ -109,6 +109,7 @@
           </span>
           <button
             v-else
+            data-flows="foodchat-adapt-save"
             class="inline-flex items-center gap-1 px-2.5 py-1 pointer-coarse:min-h-11 pointer-coarse:px-4 text-[0.6875rem] pointer-coarse:text-xs rounded-full font-medium transition-colors
                    bg-brandp-500 text-white hover:bg-brandp-600
                    disabled:bg-gray-200 disabled:text-gray-400 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-500"

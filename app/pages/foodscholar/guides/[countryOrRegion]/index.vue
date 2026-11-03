@@ -319,6 +319,7 @@
                   v-model:guide="selectedGuide"
                   v-model:year="selectedYear"
                   v-model:sort="guidelineSort"
+                  data-flows="foodscholar-guideline-filters"
                   :topic-options="topicOptions"
                   :audience-options="audienceOptions"
                   :guide-options="guideOptions"
@@ -333,6 +334,7 @@
 
                 <GuidelineFacetFilters
                   :facets="guidelineOverviewFacets"
+                  data-flows="foodscholar-guideline-facets"
                   :selections="facetSelections"
                   :age-range="ageRange"
                   :include-unstated-age="includeUnstatedAge"

@@ -26,11 +26,11 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     match: p => p === '/dashboard',
     features: [
       { id: 'open-apps', icon: 'i-lucide-layout-grid', tour: 'tour-dashboard' },
-      { id: 'todays-meals', icon: 'i-lucide-calendar-days' },
+      { id: 'todays-meals', icon: 'i-lucide-calendar-days', tour: 'tour-dashboard' },
       { id: 'tips', icon: 'i-lucide-lightbulb' },
       { id: 'recommendations', icon: 'i-lucide-chef-hat' },
-      { id: 'switch-profile', icon: 'i-lucide-users' },
-      { id: 'guest', icon: 'i-lucide-user-round', audience: 'guest' }
+      { id: 'switch-profile', icon: 'i-lucide-users', tour: 'tour-dashboard' },
+      { id: 'guest', icon: 'i-lucide-user-round', tour: 'tour-guest', audience: 'guest' }
     ]
   },
   {
@@ -41,14 +41,14 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     match: p => p === '/foodchat',
     features: [
       { id: 'generate-plan', icon: 'i-lucide-sparkles', tour: 'tour-foodchat-plan', video: 'foodchat-generate-plan' },
-      { id: 'refine', icon: 'i-lucide-message-square-text', video: 'foodchat-refine' },
-      { id: 'tools', icon: 'i-lucide-wand-sparkles' },
-      { id: 'save-share', icon: 'i-lucide-bookmark' },
+      { id: 'refine', icon: 'i-lucide-message-square-text', tour: 'tour-foodchat-adapt', video: 'foodchat-refine' },
+      { id: 'tools', icon: 'i-lucide-wand-sparkles', tour: 'tour-foodchat-tools' },
+      { id: 'save-share', icon: 'i-lucide-bookmark', tour: 'tour-foodchat-plan' },
       { id: 'pantry', icon: 'i-lucide-refrigerator' },
-      { id: 'settings', icon: 'i-lucide-sliders-horizontal' },
+      { id: 'settings', icon: 'i-lucide-sliders-horizontal', tour: 'tour-foodchat-settings' },
       { id: 'diners', icon: 'i-lucide-users' },
       { id: 'compose', icon: 'i-lucide-list-plus' },
-      { id: 'adapt', icon: 'i-lucide-pencil-ruler' }
+      { id: 'adapt', icon: 'i-lucide-pencil-ruler', tour: 'tour-foodchat-adapt' }
     ]
   },
   {
@@ -59,11 +59,11 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     match: p => p === '/foodscholar',
     features: [
       { id: 'ask', icon: 'i-lucide-message-circle-question', tour: 'tour-foodscholar-ask', video: 'foodscholar-ask' },
-      { id: 'sources', icon: 'i-lucide-quote' },
-      { id: 'follow-up', icon: 'i-lucide-messages-square' },
-      { id: 'rate', icon: 'i-lucide-thumbs-up' },
-      { id: 'advanced', icon: 'i-lucide-settings-2' },
-      { id: 'library', icon: 'i-lucide-library' }
+      { id: 'sources', icon: 'i-lucide-quote', tour: 'tour-foodscholar-sources' },
+      { id: 'follow-up', icon: 'i-lucide-messages-square', tour: 'tour-foodscholar-sources' },
+      { id: 'rate', icon: 'i-lucide-thumbs-up', tour: 'tour-foodscholar-sources' },
+      { id: 'advanced', icon: 'i-lucide-settings-2', tour: 'tour-foodscholar-advanced' },
+      { id: 'library', icon: 'i-lucide-library', tour: 'tour-foodscholar-library' }
     ]
   },
   {
@@ -74,8 +74,8 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     match: p => p.startsWith('/foodscholar/catalog'),
     features: [
       { id: 'search', icon: 'i-lucide-search', tour: 'tour-foodscholar-catalog' },
-      { id: 'filters', icon: 'i-lucide-filter' },
-      { id: 'summary', icon: 'i-lucide-sparkles' }
+      { id: 'filters', icon: 'i-lucide-filter', tour: 'tour-foodscholar-catalog' },
+      { id: 'summary', icon: 'i-lucide-sparkles', tour: 'tour-foodscholar-catalog' }
     ]
   },
   {
@@ -87,7 +87,7 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     features: [
       { id: 'find', icon: 'i-lucide-search' },
       { id: 'map', icon: 'i-lucide-map-pin', tour: 'tour-foodscholar-guides', video: 'foodscholar-guides-map' },
-      { id: 'explorer', icon: 'i-lucide-list-filter' },
+      { id: 'explorer', icon: 'i-lucide-list-filter', tour: 'tour-foodscholar-explorer' },
       { id: 'read', icon: 'i-lucide-file-text' }
     ]
   },
@@ -98,7 +98,7 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/foodscholar/textbooks',
     match: p => p.startsWith('/foodscholar/textbooks'),
     features: [
-      { id: 'find', icon: 'i-lucide-search' },
+      { id: 'find', icon: 'i-lucide-search', tour: 'tour-foodscholar-textbooks' },
       { id: 'inside', icon: 'i-lucide-book-open-text' }
     ]
   },
@@ -109,9 +109,9 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/foodscholar/hierarchy',
     match: p => p === '/foodscholar/hierarchy',
     features: [
-      { id: 'search', icon: 'i-lucide-search' },
-      { id: 'browse', icon: 'i-lucide-list-tree' },
-      { id: 'ask', icon: 'i-lucide-message-circle-question' }
+      { id: 'search', icon: 'i-lucide-search', tour: 'tour-foodscholar-hierarchy' },
+      { id: 'browse', icon: 'i-lucide-list-tree', tour: 'tour-foodscholar-hierarchy' },
+      { id: 'ask', icon: 'i-lucide-message-circle-question', tour: 'tour-foodscholar-hierarchy' }
     ]
   },
   {
@@ -140,12 +140,12 @@ export const HELP_TOPICS: HelpTopicDef[] = [
       || p.startsWith('/recipe-wrangler/fctables/'),
     features: [
       { id: 'search', icon: 'i-lucide-search', tour: 'tour-recipes-search', video: 'recipes-search' },
-      { id: 'personalized', icon: 'i-lucide-user-check' },
-      { id: 'filters', icon: 'i-lucide-filter' },
+      { id: 'personalized', icon: 'i-lucide-user-check', tour: 'tour-recipes-search' },
+      { id: 'filters', icon: 'i-lucide-filter', tour: 'tour-recipes-search' },
       { id: 'compare', icon: 'i-lucide-columns-3', tour: 'tour-recipes-compare' },
-      { id: 'analyze', icon: 'i-lucide-scan-text', video: 'recipes-analyze' },
-      { id: 'favorites', icon: 'i-lucide-heart' },
-      { id: 'sources', icon: 'i-lucide-database' }
+      { id: 'analyze', icon: 'i-lucide-scan-text', tour: 'tour-recipes-analyze', video: 'recipes-analyze' },
+      { id: 'favorites', icon: 'i-lucide-heart', tour: 'tour-recipes-search' },
+      { id: 'sources', icon: 'i-lucide-database', tour: 'tour-recipes-sources' }
     ]
   },
   {
@@ -155,8 +155,8 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/recipe-wrangler/compare',
     match: p => p === '/recipe-wrangler/compare',
     features: [
-      { id: 'read', icon: 'i-lucide-table' },
-      { id: 'manage', icon: 'i-lucide-list-x' }
+      { id: 'read', icon: 'i-lucide-table', tour: 'tour-recipes-compare-page' },
+      { id: 'manage', icon: 'i-lucide-list-x', tour: 'tour-recipes-compare-page' }
     ]
   },
   {
@@ -168,11 +168,11 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     match: p => /^\/recipe-wrangler\/[^/]+$/.test(p),
     features: [
       { id: 'scores', icon: 'i-lucide-gauge', tour: 'tour-recipe-detail' },
-      { id: 'nutrition', icon: 'i-lucide-chart-pie' },
-      { id: 'servings', icon: 'i-lucide-replace' },
-      { id: 'improve', icon: 'i-lucide-wand-sparkles', video: 'recipe-improve' },
-      { id: 'save', icon: 'i-lucide-heart' },
-      { id: 'report', icon: 'i-lucide-flag' }
+      { id: 'nutrition', icon: 'i-lucide-chart-pie', tour: 'tour-recipe-detail' },
+      { id: 'servings', icon: 'i-lucide-replace', tour: 'tour-recipe-servings' },
+      { id: 'improve', icon: 'i-lucide-wand-sparkles', tour: 'tour-recipe-improve', video: 'recipe-improve' },
+      { id: 'save', icon: 'i-lucide-heart', tour: 'tour-recipe-detail' },
+      { id: 'report', icon: 'i-lucide-flag', tour: 'tour-recipe-detail' }
     ]
   },
   {
@@ -182,8 +182,8 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/library',
     match: p => p === '/library',
     features: [
-      { id: 'saved', icon: 'i-lucide-bookmark' },
-      { id: 'plans', icon: 'i-lucide-calendar-check' }
+      { id: 'saved', icon: 'i-lucide-bookmark', tour: 'tour-library' },
+      { id: 'plans', icon: 'i-lucide-calendar-check', tour: 'tour-library' }
     ]
   },
   {
@@ -194,11 +194,11 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     match: p => p === '/my-profile',
     features: [
       { id: 'quick-setup', icon: 'i-lucide-wand-sparkles', tour: 'tour-profile-preferences' },
-      { id: 'diet-allergies', icon: 'i-lucide-shield-alert' },
-      { id: 'likes', icon: 'i-lucide-thumbs-up' },
-      { id: 'memory', icon: 'i-lucide-brain' },
-      { id: 'details', icon: 'i-lucide-id-card' },
-      { id: 'privacy', icon: 'i-lucide-lock' }
+      { id: 'diet-allergies', icon: 'i-lucide-shield-alert', tour: 'tour-profile-preferences' },
+      { id: 'likes', icon: 'i-lucide-thumbs-up', tour: 'tour-profile-preferences' },
+      { id: 'memory', icon: 'i-lucide-brain', tour: 'tour-profile-privacy' },
+      { id: 'details', icon: 'i-lucide-id-card', tour: 'tour-profile-privacy' },
+      { id: 'privacy', icon: 'i-lucide-lock', tour: 'tour-profile-privacy' }
     ]
   },
   {
@@ -208,10 +208,10 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/profiles',
     match: p => p === '/profiles',
     features: [
-      { id: 'choose', icon: 'i-lucide-mouse-pointer-click' },
-      { id: 'add', icon: 'i-lucide-user-plus' },
-      { id: 'manage', icon: 'i-lucide-user-cog' },
-      { id: 'setup', icon: 'i-lucide-house' }
+      { id: 'choose', icon: 'i-lucide-mouse-pointer-click', tour: 'tour-profiles' },
+      { id: 'add', icon: 'i-lucide-user-plus', tour: 'tour-profiles' },
+      { id: 'manage', icon: 'i-lucide-user-cog', tour: 'tour-profiles' },
+      { id: 'setup', icon: 'i-lucide-house', tour: 'tour-profiles' }
     ]
   }
 ]

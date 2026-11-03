@@ -51,7 +51,10 @@
           aside-class="lg:w-80"
         >
             <div class="lg:sticky lg:top-24">
-              <div class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 shadow-sm">
+              <div
+                class="rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-900/90 shadow-sm"
+                data-flows="foodscholar-catalog-filters-panel"
+              >
                 <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-zinc-800">
                   <div>
                     <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Filters</h3>
@@ -565,6 +568,7 @@
               <FoodscholarArticleCard
                 v-for="(article, index) in displayArticles"
                 :key="article.urn"
+                :data-flows="index === 0 ? 'foodscholar-catalog-first-result' : undefined"
                 :article="article"
                 :fade="false"
                 :index="index"

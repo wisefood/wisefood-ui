@@ -53,6 +53,7 @@
             type="button"
             class="flex items-center justify-center w-6 h-6 pointer-coarse:w-11 pointer-coarse:h-11 pointer-coarse:-my-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
             :aria-label="t('foodChatHome.mealCard.menu')"
+            data-flows="foodchat-meal-menu"
           >
             <UIcon
               name="i-lucide-more-vertical"
@@ -346,15 +347,17 @@ const linkTarget = computed(() => isCoarsePointer.value ? undefined : '_blank')
 // ── Slot menu (replace / adapt) ──
 const menuItems = computed<DropdownMenuItem[]>(() => {
   const items: DropdownMenuItem[] = [{
-    label: t('foodChatHome.mealCard.replace'),
-    icon: 'i-lucide-replace',
-    onSelect: () => emit('replace')
+    'label': t('foodChatHome.mealCard.replace'),
+    'icon': 'i-lucide-replace',
+    'data-flows': 'foodchat-meal-replace',
+    'onSelect': () => emit('replace')
   }]
   if (props.recipe.recipe_id) {
     items.push({
-      label: t('foodChatHome.mealCard.adapt'),
-      icon: 'i-lucide-wand-sparkles',
-      onSelect: () => emit('adapt')
+      'label': t('foodChatHome.mealCard.adapt'),
+      'icon': 'i-lucide-wand-sparkles',
+      'data-flows': 'foodchat-meal-adapt',
+      'onSelect': () => emit('adapt')
     })
   }
   return items

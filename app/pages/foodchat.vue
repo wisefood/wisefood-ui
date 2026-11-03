@@ -732,6 +732,7 @@
                  rows of 20px pills on a phone, which is not a ribbon. -->
             <div v-show="settingsOpen && !isCompact">
               <FoodchatPlanSettingsRibbon
+                :data-flows="isCompact ? undefined : 'foodchat-plan-settings-panel'"
                 :card="latestParamCard"
                 :busy="sending || showEphemeralGenerating"
                 @apply="handleApplyPlanParameters"
@@ -747,6 +748,7 @@
               <template #body>
                 <FoodchatPlanSettingsRibbon
                   layout="stacked"
+                  data-flows="foodchat-plan-settings-panel"
                   :card="latestParamCard"
                   :busy="sending || showEphemeralGenerating"
                   @apply="handleApplyPlanParameters"
@@ -944,7 +946,11 @@
             <!-- Plan canvas — visible whenever a plan exists (idle, refining,
                  or awaiting clarification after a prior plan). -->
             <Transition name="plan-reveal">
-              <div v-if="hasAnyPlan && !draftMode" class="plan-card relative">
+              <div
+                v-if="hasAnyPlan && !draftMode"
+                class="plan-card relative"
+                :data-flows="sending ? 'foodchat-plan-updating' : 'foodchat-plan-ready'"
+              >
                 <div v-if="sending" class="fc-refining-overlay">
                   <div class="fc-refining-pill">
                     <UIcon name="i-lucide-loader-2" class="w-3.5 h-3.5 animate-spin" />
@@ -1078,6 +1084,7 @@
                      the plan itself: a summary is an answer, not a change. -->
                 <div
                   v-if="toolResult"
+                  data-flows="foodchat-tool-result"
                   class="mb-4 rounded-2xl border border-gray-200 dark:border-zinc-700/70 bg-white/70 dark:bg-zinc-900/40 overflow-hidden"
                 >
                   <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-100 dark:border-zinc-800">
@@ -1547,6 +1554,7 @@
                                   class="flex items-center justify-center w-5 h-5 pointer-coarse:w-11 pointer-coarse:h-11 pointer-coarse:-my-3 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors shrink-0"
                                   :class="{ 'ml-auto': !getWeeklyRecipeId(cellMain(cell)) }"
                                   :aria-label="t('foodChatHome.mealCard.menu')"
+                                  data-flows="foodchat-meal-menu"
                                 >
                                   <UIcon name="i-lucide-more-vertical" class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500" />
                                 </button>
@@ -1976,7 +1984,7 @@ import {
 import type { HouseholdMember } from '~/services/householdsApi'
 import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
 
-definePageMeta({ layout: 'app', middleware: ['auth'], dock: 'raised' })
+definePageMeta({ layout: 'app', middleware: ['auth'] })
 
 const { t, locale } = useI18n()
 useHead({ title: computed(() => t('foodChatHome.pageTitle')) })
@@ -2110,6 +2118,9 @@ const messagesScrollRef = ref<HTMLElement | null>(null)
 const inputFocused = ref(false)
 const sessionInputFocused = ref(false)
 const hasSentFirstMessage = ref(false)
+// The start screen keeps the composer in the middle; the chat view pins it
+// to the bottom edge, so only the chat view lifts the dock.
+usePageDockMode(() => (hasSentFirstMessage.value ? 'raised' : 'default'))
 const showEphemeralGenerating = ref(false)
 
 watch(sending, (now, prev) => {
@@ -3194,15 +3205,17 @@ function weeklyCellMenu(
 ): DropdownMenuItem[] {
   const recipeId = getWeeklyRecipeId(cellMain(cell))
   const items: DropdownMenuItem[] = [{
-    label: t('foodChatHome.mealCard.replace'),
-    icon: 'i-lucide-replace',
-    onSelect: () => prefillWeeklySlotReplace(dayIndex, cell.mealType)
+    'label': t('foodChatHome.mealCard.replace'),
+    'icon': 'i-lucide-replace',
+    'data-flows': 'foodchat-meal-replace',
+    'onSelect': () => prefillWeeklySlotReplace(dayIndex, cell.mealType)
   }]
   if (recipeId) {
     items.push({
-      label: t('foodChatHome.mealCard.adapt'),
-      icon: 'i-lucide-wand-sparkles',
-      onSelect: () => openAdaptRecipe(recipeId)
+      'label': t('foodChatHome.mealCard.adapt'),
+      'icon': 'i-lucide-wand-sparkles',
+      'data-flows': 'foodchat-meal-adapt',
+      'onSelect': () => openAdaptRecipe(recipeId)
     })
   }
   return items
