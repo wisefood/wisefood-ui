@@ -12,8 +12,13 @@
 #
 # ── How a tour starts ─────────────────────────────────────────────────────────
 #
-# Automatically: "Nutrition preferences setup" (workflow ce0988c9), a start
-# block with user-property targeting. See the end of this file.
+# Automatically:
+#   - "Welcome (automatic)" (workflow ea9ea99f): a start block that lets every
+#     signed-in user in, frequency ONCE. Its tour is the Dashboard tour below
+#     with a trigger: on the dashboard, and only while no dialog
+#     ([role="dialog"]), no other Flows step and no guest banner is on screen.
+#   - "Nutrition preferences setup" (workflow ce0988c9), a start block with
+#     user-property targeting. See the end of this file.
 #
 # On request: every page has a Help panel (the "Help" button in the header on
 # a desktop, the round button bottom right on a phone, or the ? key). A
@@ -22,12 +27,21 @@
 # app/help/topics.ts (`tour:` on each feature); several features can share a
 # tour. Every Help tour has frequency EVERY TIME, so the button always works.
 #
+# Flows lets nobody re-enter a workflow they have not left, so a Help tour
+# left halfway (walked off its page, a wait step that never came) used to make
+# its button do nothing. Before starting, the panel resets every EVERY TIME
+# workflow the user is still in (useWalkthroughs.ts); the automatic ones are
+# ONCE and are never reset. Keep that split: an automatic workflow set to
+# every time would be cut short whenever someone presses Show me.
+#
 # startWorkflow() resolves the same way whether or not a tour started, so the
 # panel waits ~3.5 s for a new block to appear. If none does it says "This
 # walkthrough isn't ready yet" and logs feature.used {feature: help, action:
 # tour_unavailable, topic, item}.
 #
-# Flows only runs for signed-in users, guests included (02.flows.client.ts).
+# Flows only runs for signed-in users, and not for guests: they get no tours
+# and no Show me (02.flows.client.ts). The "Guest account" tour below is kept
+# but no one can reach it.
 #
 # ── Environments and languages ────────────────────────────────────────────────
 #

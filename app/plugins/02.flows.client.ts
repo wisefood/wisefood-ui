@@ -113,8 +113,9 @@ export default defineNuxtPlugin(async (nuxtApp) => {
   const authStore = useAuthStore()
   await authStore.initialize()
 
-  // Only run walkthroughs for authenticated users (per design).
-  if (!authStore.isAuthenticated) return
+  // Only run walkthroughs for authenticated users (per design), and not for
+  // guests: no tour starts by itself for them and Help shows no "Show me".
+  if (!authStore.isAuthenticated || authStore.isGuest) return
 
   const userId = authStore.user?.id
   if (!userId) return
