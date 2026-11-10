@@ -3,7 +3,7 @@
 Each clip is one task, 20-40 s, with captions in the interface language.
 Texts live in texts.py; this file is only the choreography.
 """
-import asyncio, json, os, shutil, sys, time
+import asyncio, json, os, re, shutil, sys, time
 from lib import BASE, Browser, Director, Recorder, ensure_guest
 from texts import T
 
@@ -70,8 +70,9 @@ async def qa_input(page):
     return inner.first if await inner.count() else box
 
 
-async def wait_answer(d: Director, nth: int = 0, timeout=150):
-    """Wait for the nth answer to finish streaming, with at least one live citation."""
+async def wait_answer(d: Director, nth: int = 0, timeout=150, need_citation=True):
+    """Wait for the nth answer to finish streaming, with at least one live
+    citation unless `need_citation` is off."""
     page = d.page
     t0 = time.time()
     while await page.locator(ANSWER).count() <= nth:
@@ -99,7 +100,7 @@ async def wait_answer(d: Director, nth: int = 0, timeout=150):
         await d.wait(500)
     await d.wait(800)
     cites = await ans.locator('a[data-citation-urn]').count()
-    if not cites:
+    if need_citation and not cites:
         raise NoCitations()
     return ans
 
@@ -130,6 +131,56 @@ async def clip_ask(d: Director, t, lang, phone):
     else:
         d.rec.mark('poster')
         await d.wait(1600)
+
+
+# The memory nudge's buttons, per language (foodChatHome.chat.memory.*).
+MEMORY = {
+    'en': ('Remember', 'No thanks'),
+    'hu': ('Jegyezd meg', 'Köszönöm, nem'),
+    'sl': ('Zapomni si', 'Ne, hvala'),
+}
+
+
+class NoNudge(NoCitations):
+    """The answer came without anything to remember: try again."""
+
+
+async def clip_memory(d: Director, t, lang, phone):
+    page = d.page
+    remember, no_thanks = MEMORY[lang]
+    await d.title('FoodScholar', t['title'])
+    inp = await qa_input(page)
+    await d.caption(1, t['c1'], hold=600)
+    await d.type(inp, t['q'])
+    await page.keyboard.press('Enter')
+    await d.hide_caption()
+    await d.fast(True, t['fast'])
+    await wait_answer(d, need_citation=False)
+    keep = page.get_by_role('button', name=remember, exact=True)
+    for _ in range(10):   # the nudge comes with the settled answer
+        if await keep.count():
+            break
+        await d.wait(500)
+    await d.fast(False)
+    if not await keep.count():
+        raise NoNudge()
+    nudge = keep.first.locator('xpath=ancestor::div[contains(@class, "rounded-xl")][1]')
+    await d.caption(2, t['c2'], hold=300)
+    await scroll_to(d, nudge, offset=300)
+    await d.point(nudge.locator('span').first)
+    d.rec.mark('poster')
+    await d.wait(2200)
+    await d.caption(3, t['c3'], hold=900)
+    await d.click(keep.first)
+    await d.wait(2200)
+    await d.hide_caption()
+    await page.goto(f'{BASE}/my-profile', wait_until='domcontentloaded')
+    card = page.locator('[data-flows="card-memory"]').first
+    await card.wait_for(timeout=30000)
+    await d.caption(4, t['c4'], hold=300)
+    await scroll_to(d, card, offset=120)
+    await d.point(card.locator('li, [data-flows="memory-edit"]').first)
+    await d.wait(3000)
 
 
 async def prepare_sources(page, t):
@@ -181,7 +232,9 @@ async def clip_sources(d: Director, t, lang, phone):
         if await answer_clarification(d):
             await d.wait(800)
         await d.wait(500)
-    second = await wait_answer(d, nth=0)
+    # This step shows the conversation going on; the citations were the
+    # previous step, so the follow-up's answer only has to arrive.
+    second = await wait_answer(d, nth=0, need_citation=False)
     await d.fast(False)
     await second.evaluate('e => e.scrollIntoView({behavior: "smooth", block: "start"})')
     await d.wait(2500)
@@ -223,29 +276,47 @@ async def clip_catalog(d: Director, t, lang, phone):
 async def clip_article(d: Director, t, lang, phone):
     page = d.page
     await d.title('FoodScholar', t['title'])
-    simplify = page.get_by_role('button', name=t['simplify_label'])
+    # 1. The catalog's filters: a topic only enriched articles have.
     await d.caption(1, t['c1'], hold=600)
-    await d.click(simplify.first)
-    await d.fast(True, t.get('fast', ''))
-    try:
-        await page.get_by_role('button', name=t['original_label']).first.wait_for(timeout=60000)
-    finally:
-        await d.fast(False)
-    await d.wait(1500)
-    d.rec.mark('poster')
+    await d.click(page.get_by_role('button', name=t['filters_label']).first)
+    panel = page.locator('[data-flows="foodscholar-catalog-filters-panel"]').first
+    await panel.wait_for(timeout=20000)
+    await d.wait(900)
+    # The topic pills read "<topic> <count>"; the first is the largest topic.
+    topic = panel.locator('button').filter(has_text=re.compile(r'\d\s*$')).first
+    before = await page.get_by_text(re.compile(r'results?$')).first.inner_text()
+    await d.click(topic)
+    for _ in range(20):   # wait for the narrowed result count
+        if await page.get_by_text(re.compile(r'results?$')).first.inner_text() != before:
+            break
+        await d.wait(400)
     await d.wait(1800)
-    await d.caption(2, t['c2'], hold=300)
-    qa = page.get_by_text(t['qa_label'], exact=True).first
-    await qa.evaluate('e => e.scrollIntoView({behavior: "smooth", block: "start"})')
-    await page.evaluate('window.scrollBy({top: -110, behavior: "smooth"})')
+    # 2. Open the first study.
+    await d.caption(2, t['c2'], hold=500)
+    first = page.locator('a[href*="/foodscholar/urn:article:"]').first
+    await d.click(first.locator('h2, h3').first if await first.locator('h2, h3').count() else first)
+    simplify = page.get_by_role('button', name=t['simplify_label'])
+    await simplify.first.wait_for(timeout=30000)
+    await d.wait(1500)
+    # 3. The plain-language abstract.
+    await d.caption(3, t['c3'], hold=500)
+    await d.click(simplify.first)
     await d.wait(1200)
-    tabs = qa.locator('xpath=ancestor::section[1]').locator('button')
-    if await tabs.count() > 1:
-        await d.click(tabs.nth(1))
-        await d.wait(2200)
-    await d.caption(3, t['c3'], hold=300)
-    await d.click(page.locator('[data-flows="foodscholar-article-save"]').first)
-    await d.wait(2000)
+    d.rec.mark('poster')
+    await d.wait(2600)
+    # 4. How sure are we?
+    await d.caption(4, t['c4'], hold=300)
+    sure = page.locator('[data-flows="foodscholar-how-sure"]').first
+    await scroll_to(d, sure, offset=140)
+    await d.point(sure)
+    await d.wait(2800)
+    # 5. Questions and answers, per reader.
+    await d.caption(5, t['c5'], hold=300)
+    tab = page.get_by_role('button', name=t['tab2_label']).first
+    await scroll_to(d, tab, offset=220)
+    await d.wait(800)
+    await d.click(tab)
+    await d.wait(3000)
 
 
 async def clip_hierarchy(d: Director, t, lang, phone):
@@ -375,6 +446,9 @@ async def clip_guides_explorer(d: Director, t, lang, phone):
 
 
 CLIPS = {
+    'foodscholar-memory': {'path': '/foodscholar', 'ready': '[data-flows="foodscholar-qa-input"]', 'run': clip_memory},
+    'foodscholar-article': {'path': '/foodscholar/catalog', 'ready': '[data-flows="foodscholar-catalog-search"]',
+                            'run': clip_article},
     'foodscholar-guides-map': {'path': '/foodscholar/guides', 'ready': '[data-flows="foodscholar-guides-tab-map"]',
                                'run': clip_guides_map},
     'foodscholar-guides-explorer': {'path': '/foodscholar/guides/{slug}', 'ready': '[data-flows="foodscholar-guides-explorer-tabs"]',
