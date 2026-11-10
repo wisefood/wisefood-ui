@@ -231,6 +231,15 @@ const hu: HelpContent = {
             'Az összes forrást itt látod: [[foodScholarHome.qa.sidebar.cited]] és [[foodScholarHome.qa.sidebar.consulted]].'
           ]
         },
+        'remember': {
+          title: 'A FoodScholar megjegyezheti',
+          body: 'Ha megemlítesz egy célt, egy szokást vagy egy ételt, amit kerülsz, a FoodScholar felajánlhatja, hogy megjegyzi, így a későbbi válaszok és tervek hozzád igazodnak. Semmi sem mentődik a beleegyezésed nélkül.',
+          steps: [
+            'A válasz alatt olvasd el, mit ajánl fel a FoodScholar, hogy megjegyez.',
+            'Kattints: [[foodChatHome.chat.memory.remember]], vagy: [[foodChatHome.chat.memory.noThanks]].',
+            'A profilodban, itt: [[myProfile.sections.memory]], megnézheted, javíthatod vagy törölheted.'
+          ]
+        },
         'follow-up': {
           title: 'Kérdezz tovább, vagy kezdd újra',
           body: 'Folytasd a beszélgetést; a FoodScholar emlékszik a korábbi kérdéseidre.',
@@ -311,7 +320,7 @@ const hu: HelpContent = {
       features: {
         read: {
           title: 'A tanulmány megértése',
-          body: 'Kezdd a közérthető változattal, és ha szeretnéd, menj mélyebbre.',
+          body: 'Kezdd a közérthető változattal, és ha szeretnéd, menj mélyebbre. A témával ellátott cikkeknél érhető el: a cikkkeresésben nyisd meg a szűrőket, és válassz egy témát.',
           steps: [
             'Az összefoglaló egyszerűbb változata: [[foodScholarArticle.actions.simplify]].',
             'Olvasd el: [[foodScholarArticle.sections.keyTakeaways]].',

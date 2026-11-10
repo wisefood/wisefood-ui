@@ -648,7 +648,11 @@
 
           <!-- Memory nudges: consent-first, same pattern as FoodChat's chips.
                Writes happen only on "Remember" (source: foodscholar). -->
-          <div v-if="visibleMemorySuggestions.length" class="chat-flow-bubble chat-flow-bubble-muted space-y-1.5">
+          <div
+            v-if="visibleMemorySuggestions.length"
+            class="chat-flow-bubble chat-flow-bubble-muted space-y-1.5"
+            data-flows="foodscholar-qa-memory"
+          >
             <div
               v-for="sug in visibleMemorySuggestions"
               :key="sug.id"

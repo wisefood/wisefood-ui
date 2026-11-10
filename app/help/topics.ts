@@ -60,6 +60,7 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     features: [
       { id: 'ask', icon: 'i-lucide-message-circle-question', tour: 'tour-foodscholar-ask', video: 'foodscholar-ask' },
       { id: 'sources', icon: 'i-lucide-quote', tour: 'tour-foodscholar-sources', video: 'foodscholar-sources' },
+      { id: 'remember', icon: 'i-lucide-brain', video: 'foodscholar-memory' },
       { id: 'follow-up', icon: 'i-lucide-messages-square', tour: 'tour-foodscholar-sources' },
       { id: 'rate', icon: 'i-lucide-thumbs-up', tour: 'tour-foodscholar-sources' },
       { id: 'advanced', icon: 'i-lucide-settings-2', tour: 'tour-foodscholar-advanced' },
@@ -126,7 +127,7 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     },
     features: [
       { id: 'read', icon: 'i-lucide-book-open-text', video: 'foodscholar-article' },
-      { id: 'questions', icon: 'i-lucide-messages-square' },
+      { id: 'questions', icon: 'i-lucide-messages-square', video: 'foodscholar-article' },
       { id: 'save', icon: 'i-lucide-bookmark' }
     ]
   },

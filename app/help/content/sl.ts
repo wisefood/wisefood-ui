@@ -231,6 +231,15 @@ const sl: HelpContent = {
             'Vsi viri so tukaj: [[foodScholarHome.qa.sidebar.cited]] in [[foodScholarHome.qa.sidebar.consulted]].'
           ]
         },
+        'remember': {
+          title: 'Naj si FoodScholar zapomni',
+          body: 'Ko omeniš cilj, navado ali hrano, ki se ji izogibaš, ti FoodScholar lahko ponudi, da si to zapomni, da so poznejši odgovori in načrti prilagojeni tebi. Brez tvojega soglasja se nič ne shrani.',
+          steps: [
+            'Pod odgovorom preberi, kaj ti FoodScholar ponudi, da si zapomni.',
+            'Klikni [[foodChatHome.chat.memory.remember]], da to obdržiš, ali [[foodChatHome.chat.memory.noThanks]].',
+            'V profilu, v razdelku [[myProfile.sections.memory]], to vidiš, popraviš ali izbrišeš.'
+          ]
+        },
         'follow-up': {
           title: 'Vprašaj naprej ali začni znova',
           body: 'Nadaljuj pogovor; FoodScholar si zapomni prejšnja vprašanja.',
@@ -311,7 +320,7 @@ const sl: HelpContent = {
       features: {
         read: {
           title: 'Razumi raziskavo',
-          body: 'Začni s preprosto različico, nato po želji pojdi globlje.',
+          body: 'Začni s preprosto različico, nato po želji pojdi globlje. Na voljo je pri člankih s temo: v iskanju člankov odpri filtre in izberi temo.',
           steps: [
             'Lažja različica povzetka: [[foodScholarArticle.actions.simplify]].',
             'Preberi: [[foodScholarArticle.sections.keyTakeaways]].',

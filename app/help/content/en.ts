@@ -228,6 +228,15 @@ const en: HelpContent = {
             'See all sources under [[foodScholarHome.qa.sidebar.cited]] and [[foodScholarHome.qa.sidebar.consulted]].'
           ]
         },
+        'remember': {
+          title: 'Let FoodScholar remember',
+          body: 'When you mention a goal, a habit or a food you avoid, FoodScholar may offer to remember it, so later answers and plans fit you. Nothing is saved unless you agree.',
+          steps: [
+            'Under the answer, read what FoodScholar offers to remember.',
+            'Click [[foodChatHome.chat.memory.remember]] to keep it, or [[foodChatHome.chat.memory.noThanks]].',
+            'See, correct or remove it in [[myProfile.sections.memory]] on your profile.'
+          ]
+        },
         'follow-up': {
           title: 'Follow up or start over',
           body: 'Keep the conversation going; FoodScholar remembers what you asked before.',
@@ -308,7 +317,7 @@ const en: HelpContent = {
       features: {
         read: {
           title: 'Understand the study',
-          body: 'Start with the plain-language version, then go deeper if you want.',
+          body: 'Start with the plain-language version, then go deeper if you want. Articles with a topic have it: in the article search, open the filters and pick one under Topics.',
           steps: [
             'Click [[foodScholarArticle.actions.simplify]] for an easier version of the abstract.',
             'Read the [[foodScholarArticle.sections.keyTakeaways]].',
