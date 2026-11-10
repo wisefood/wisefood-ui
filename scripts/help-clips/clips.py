@@ -179,7 +179,13 @@ async def clip_memory(d: Director, t, lang, phone):
     await card.wait_for(timeout=30000)
     await d.caption(4, t['c4'], hold=300)
     await scroll_to(d, card, offset=120)
-    await d.point(card.locator('li, [data-flows="memory-edit"]').first)
+    # A remembered item is a row with a "why" button (and edit, for some kinds).
+    why = card.locator('[data-flows="memory-why"]').first
+    await why.wait_for(timeout=20000)
+    await d.point(why.locator('xpath=ancestor::div[contains(@class, "justify-between")][1]//span | '
+                              'ancestor::div[contains(@class, "justify-between")][1]//p').first)
+    await d.wait(800)
+    await d.point(why)
     await d.wait(3000)
 
 

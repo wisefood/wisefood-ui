@@ -77,7 +77,9 @@ T = {
         },
         'hu': {
             'title': 'A források ellenőrzése',
-            'q': 'Mennyi sót egyen naponta egy felnőtt?',
+            # Since the 10 Nov FoodScholar, the salt question cites nothing in
+            # Hungarian; the Hungarian guidelines answer this one directly.
+            'q': 'Hány adag zöldséget és gyümölcsöt egyek naponta?',
             # Naming an age: a bare "És a gyerekek?" always got a which-age question back.
             'q2': 'És a 4–8 éves gyerekeknek mennyi?',
             'c1': 'Kattints egy hivatkozásra a válaszban',
