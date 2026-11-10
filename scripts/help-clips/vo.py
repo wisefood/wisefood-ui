@@ -18,10 +18,12 @@ What is said: the caption text itself, unless texts.py gives a spoken version
 for that clip and language: `vo_title` for the title card, `vo1`, `vo2`, ... for
 captions 1, 2, ... An empty string keeps that cue silent.
 
-Sound and picture stay in sync: a line runs while its caption is on screen.
-A line too long for that is asked for again, a little faster (up to 1.12x);
-if it still runs over, the picture holds its frame just before the next
-caption until the line is done. `--no-fit` turns both off.
+Each clip's narration is ONE take: the whole script in one request, cut into
+lines at the character times ElevenLabs returns, so the voice stays the same
+from line to line and from clip to clip in a language (same voice, settings
+and seed). Sound and picture stay in sync: a line starts as its caption
+appears, and if it is still speaking when the next caption is due, the
+picture holds its frame until the line is done. `--no-fit` turns holds off.
 
 Audio is cached in $HELP_CLIPS_WORK/tts-cache by text, voice, model and
 settings, so re-running after a wording change only pays for changed lines.
@@ -49,7 +51,6 @@ VOICES = {
 LEAD = 0.25   # s after a caption appears before its line starts
 GAP = 0.25    # s of breath between two lines
 TAIL = 0.8    # s after the last line before the clip ends
-MAX_SPEED = 1.12   # faster than this stops sounding natural; a hold makes up the rest
 CPS = {'en': 15.0, 'hu': 14.0, 'sl': 14.0}   # characters per second, for --dry-run
 
 
@@ -100,33 +101,67 @@ def list_voices():
 
 
 # ----------------------------------------------------------------- speech
-def speak(text: str, lang: str, voice: str, speed: float, stability: float) -> str:
-    """A trimmed mono WAV of `text`, from the cache or from ElevenLabs."""
+def _sentence(text: str) -> str:
+    text = text.strip()
+    return text if text[-1:] in '.!?…' else text + '.'
+
+
+def speak_script(texts: list[str], lang: str, voice: str, stability: float) -> list[str]:
+    """One trimmed mono WAV per line, all cut from ONE take of the whole script.
+
+    Lines asked for one at a time drift in tone and pace (eleven_v3 performs
+    each request afresh); one request for the whole clip keeps the narrator
+    the same from the first line to the last. The timestamped endpoint gives
+    each character's time, which is where the take is cut.
+    """
+    parts = [_sentence(t) for t in texts]
+    script = '\n\n'.join(parts)
     settings = {'stability': stability, 'similarity_boost': 0.75, 'style': 0.0, 'use_speaker_boost': True}
-    if abs(speed - 1.0) > 0.005:
-        settings['speed'] = round(speed, 2)
-    body = {'text': text, 'model_id': MODEL, 'language_code': lang, 'voice_settings': settings, 'seed': 7}
-    key = hashlib.sha1(json.dumps([voice, body], sort_keys=True).encode()).hexdigest()[:16]
+    body = {'text': script, 'model_id': MODEL, 'language_code': lang, 'voice_settings': settings, 'seed': 7}
+    key = hashlib.sha1(json.dumps(['take', voice, body], sort_keys=True).encode()).hexdigest()[:16]
     cache = os.path.join(WORK, 'tts-cache')
     os.makedirs(cache, exist_ok=True)
-    mp3, wav = os.path.join(cache, key + '.mp3'), os.path.join(cache, key + '.wav')
-    if not os.path.exists(wav):
-        if not os.path.exists(mp3):
-            try:
-                audio = request('POST', f'/text-to-speech/{voice}?output_format=mp3_44100_128', body, 'audio/mpeg')
-            except urllib.error.HTTPError as e:
-                detail = e.read().decode(errors='replace')[:300]
-                if 'speed' in settings and e.code in (400, 422):
-                    print(f'    speed not accepted ({e.code}); asking at normal speed')
-                    return speak(text, lang, voice, 1.0, stability)
-                sys.exit(f'ElevenLabs {e.code}: {detail}')
-            open(mp3, 'wb').write(audio)
-            json.dump({'voice': voice, **body}, open(os.path.join(cache, key + '.json'), 'w'), ensure_ascii=False)
-        # Trim the silence ElevenLabs leaves at both ends, so timing is exact.
-        trim = 'silenceremove=start_periods=1:start_threshold=-50dB'
-        subprocess.run([FF, '-y', '-loglevel', 'error', '-i', mp3, '-af', f'{trim},areverse,{trim},areverse',
-                        '-ar', '44100', '-ac', '1', wav], check=True)
-    return wav
+    mp3, meta = os.path.join(cache, key + '.mp3'), os.path.join(cache, key + '.json')
+    if not os.path.exists(meta):
+        try:
+            r = json.loads(request('POST', f'/text-to-speech/{voice}/with-timestamps?output_format=mp3_44100_128', body))
+        except urllib.error.HTTPError as e:
+            sys.exit(f'ElevenLabs {e.code}: {e.read().decode(errors="replace")[:300]}')
+        import base64
+        open(mp3, 'wb').write(base64.b64decode(r['audio_base64']))
+        json.dump({'voice': voice, **body, 'alignment': r['alignment']}, open(meta, 'w'), ensure_ascii=False)
+    al = json.load(open(meta))['alignment']
+    chars, starts, ends = al['characters'], al['character_start_times_seconds'], al['character_end_times_seconds']
+    if ''.join(chars) != script:
+        sys.exit('ElevenLabs alignment does not match the script; cannot cut the take')
+    out, pos = [], 0
+    for i, p in enumerate(parts):
+        a, b = pos, pos + len(p) - 1
+        pos += len(p) + 2
+        t0 = max(starts[a] - 0.04, 0.0)
+        t1 = (starts[pos] - 0.02) if pos < len(starts) else ends[b] + 0.4   # up to the next line's first sound
+        wav = os.path.join(cache, f'{key}-{i}.wav')
+        if not os.path.exists(wav):
+            pcm = subprocess.run([FF, '-loglevel', 'error', '-i', mp3, '-ss', f'{t0:.3f}', '-to', f'{t1:.3f}',
+                                  '-f', 's16le', '-ar', '44100', '-ac', '1', '-'], check=True, capture_output=True).stdout
+            write_trimmed(pcm, wav)
+        out.append(wav)
+    return out
+
+
+def write_trimmed(pcm: bytes, path: str, threshold_db: float = -40.0, pad: float = 0.02):
+    """Write 44.1 kHz mono PCM as WAV without the quiet before the first sound
+    and after the last, so a line's first word lands exactly where planned."""
+    import array
+    samples = array.array('h', pcm)
+    limit = 32768 * 10 ** (threshold_db / 20)
+    loud = [i for i in range(0, len(samples), 64) if abs(samples[i]) > limit]
+    if loud:
+        p = int(pad * 44100)
+        samples = samples[max(loud[0] - p, 0):min(loud[-1] + p, len(samples))]
+    with wave.open(path, 'wb') as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(44100)
+        w.writeframes(samples.tobytes())
 
 
 def wav_seconds(path: str) -> float:
@@ -188,7 +223,7 @@ def report(name: str, lines: list[dict], end: float, video: float, holds=()):
         if ln['over'] > 0.3:
             where = 'past the end of the clip' if i == len(lines) - 1 else 'into the next caption'
             flag.append(f"runs {ln['over']:.1f} s {where}")
-        speed = f" @{ln['speed']:.2f}x" if ln.get('speed', 1.0) != 1.0 else ''
+        speed = ''
         if ln.get('held'):
             flag.append(f"picture holds {ln['held']:.1f} s for it")
         print(f"  {ln['start']:5.1f}-{ln['end']:5.1f}  {ln['label']:9}{speed:7} {ln['text'][:60]}"
@@ -241,10 +276,10 @@ def main():
     ap.add_argument('--lang', help='only these languages, e.g. en,hu')
     ap.add_argument('--src', default=os.path.join(WORK, 'out'))
     ap.add_argument('--dst', default=os.path.join(WORK, 'out-vo'))
-    ap.add_argument('--speed', type=float, default=1.0, help='speaking speed for every line (0.7-1.2)')
-    ap.add_argument('--stability', type=float, default=0.5, help='eleven_v3 takes 0.0, 0.5 or 1.0')
+    ap.add_argument('--stability', type=float, default=1.0,
+                    help='eleven_v3 takes 0.0 (creative), 0.5 (natural) or 1.0 (robust, the most even)')
     ap.add_argument('--no-fit', dest='fit', action='store_false',
-                    help="don't speed up lines that overrun their caption (they then push later lines)")
+                    help="don't hold the picture for long lines (they then push later lines)")
     ap.add_argument('--no-title', action='store_true', help="don't speak the title card")
     ap.add_argument('--dry-run', action='store_true', help='plan with estimated lengths; no API calls, no files')
     ap.add_argument('--voices', action='store_true', help='list the voices on the account and stop')
@@ -278,20 +313,13 @@ def main():
             sys.exit(f"No voice for {m['lang']}: add it to VOICES or set ELEVENLABS_VOICE_ID_{m['lang'].upper()}.")
         video = m.get('seconds', m['duration'])
         lines = lines_for(m, T, not a.no_title)
-        for ln in lines:
-            ln['speed'] = a.speed
-            if a.dry_run:
-                ln['dur'] = round(len(ln['text']) / CPS.get(m['lang'], 14.0) / a.speed, 2)
-            else:
-                ln['wav'] = speak(ln['text'], m['lang'], voice, a.speed, a.stability)
-                ln['dur'] = round(wav_seconds(ln['wav']), 2)
-        if a.fit and not a.dry_run:
-            for ln in lines[:-1]:
-                room = ln['until'] - ln['cue'] - LEAD - GAP
-                if ln['dur'] > room > 0:
-                    ln['speed'] = min(MAX_SPEED, round(a.speed * ln['dur'] / room + 0.02, 2))
-                    ln['wav'] = speak(ln['text'], m['lang'], voice, ln['speed'], a.stability)
-                    ln['dur'] = round(wav_seconds(ln['wav']), 2)
+        if a.dry_run:
+            for ln in lines:
+                ln['dur'] = round(len(ln['text']) / CPS.get(m['lang'], 14.0), 2)
+        elif lines:
+            wavs = speak_script([ln['text'] for ln in lines], m['lang'], voice, a.stability)
+            for ln, wav in zip(lines, wavs):
+                ln['wav'], ln['dur'] = wav, round(wav_seconds(wav), 2)
         end, holds = plan(lines, hold=a.fit)
         report(stem + (' (estimated)' if a.dry_run else ''), lines, end, video, holds)
         if a.dry_run or not lines:

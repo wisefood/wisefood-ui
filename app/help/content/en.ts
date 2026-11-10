@@ -67,7 +67,7 @@ const en: HelpContent = {
           body: '[[dashboard.spotlight.badge]] shows a short tip or fact about food and health, and changes from day to day.',
           steps: [
             'Read the tip on the card.',
-            'When the tip comes from a study, follow its link to read more in FoodScholar.'
+            'When the tip comes from an article, follow its link to read more in FoodScholar.'
           ]
         },
         'recommendations': {
@@ -206,7 +206,7 @@ const en: HelpContent = {
 
     'foodscholar': {
       title: 'FoodScholar: ask about food and nutrition',
-      summary: 'Ask a question and get an answer based on scientific studies and official dietary guidelines, with every source shown.',
+      summary: 'Ask a question and get an answer based on scientific literature and official dietary guidelines, with every source shown.',
       features: {
         'ask': {
           title: 'Ask a question',
@@ -221,10 +221,10 @@ const en: HelpContent = {
         },
         'sources': {
           title: 'Check the sources',
-          body: 'Every claim in an answer links to the study or guideline it comes from.',
+          body: 'Every claim in an answer links to the article or guideline it comes from.',
           steps: [
             'Click a number in the answer to see the passage it is based on.',
-            'Click [[foodScholarHome.qa.passagePeek.openArticle]] to read the whole study.',
+            'Click [[foodScholarHome.qa.passagePeek.openArticle]] to read the whole article.',
             'See all sources under [[foodScholarHome.qa.sidebar.cited]] and [[foodScholarHome.qa.sidebar.consulted]].'
           ]
         },
@@ -277,7 +277,7 @@ const en: HelpContent = {
 
     'foodscholar-catalog': {
       title: 'Search scientific articles',
-      summary: 'Find studies by describing what you are looking for, then narrow the list with filters.',
+      summary: 'Find articles by describing what you are looking for, then narrow the list with filters.',
       features: {
         search: {
           title: 'Search in plain words',
@@ -313,10 +313,10 @@ const en: HelpContent = {
 
     'foodscholar-article': {
       title: 'Reading an article',
-      summary: 'Each article page explains a study in plain language, with its key points and how strong the evidence is.',
+      summary: 'Each article page explains the article in plain language, with its key points and how strong the evidence is.',
       features: {
         read: {
-          title: 'Understand the study',
+          title: 'Understand the article',
           body: 'Start with the plain-language version, then go deeper if you want. Articles with a topic have it: in the article search, open the filters and pick one under Topics.',
           steps: [
             'Click [[foodScholarArticle.actions.simplify]] for an easier version of the abstract.',
@@ -326,7 +326,7 @@ const en: HelpContent = {
         },
         questions: {
           title: 'Questions and answers',
-          body: 'Common questions about the study, answered for different readers.',
+          body: 'Common questions about the article, answered for different readers.',
           steps: [
             'Go to [[foodScholarArticle.sections.qa]].',
             'Pick [[foodScholarArticle.qaTabs.forYou]], [[foodScholarArticle.qaTabs.forPractitioners]] or [[foodScholarArticle.qaTabs.forExperts]].'
