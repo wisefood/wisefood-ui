@@ -21,7 +21,9 @@ const en: HelpContent = {
       pause: 'Pause',
       replay: 'Watch again',
       close: 'Close video',
-      position: 'Video position'
+      position: 'Video position',
+      soundOn: 'Turn sound on',
+      soundOff: 'Turn sound off'
     },
     stillStuck: 'Still stuck?',
     stillStuckBody: 'Tell us what you were trying to do. Every message is read.',

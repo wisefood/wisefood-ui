@@ -165,6 +165,8 @@ export interface HelpClip {
   width?: number
   height?: number
   captions?: string
+  /** Has a voice-over. It still starts muted; the player offers sound. */
+  audio?: boolean
 }
 
 /** One recording: the file, its poster, its length and its frame size. */
@@ -174,6 +176,8 @@ interface ManifestRecording {
   duration?: number
   width?: number
   height?: number
+  /** The recording has a voice-over track. */
+  audio?: boolean
 }
 
 /** A clip in one layout, recorded in one or more interface languages. */
@@ -245,7 +249,10 @@ function pickRecording(variant: ManifestVariant, locale: string): HelpClip | nul
     duration: positive(from.duration ?? variant.duration),
     width: positive(from.width ?? variant.width),
     height: positive(from.height ?? variant.height),
-    captions: resolveMedia(variant.captions?.[locale] ?? variant.captions?.en)
+    captions: resolveMedia(variant.captions?.[locale] ?? variant.captions?.en),
+    // The file that plays decides: a language falling back to the default
+    // recording gets the default's sound, or none.
+    audio: (ownSrc ? own!.audio : variant.audio) === true
   }
 }
 

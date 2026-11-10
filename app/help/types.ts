@@ -99,6 +99,9 @@ export interface HelpUiText {
     close: string
     /** The scrubber's accessible name. */
     position: string
+    /** The sound button, on clips with a voice-over. */
+    soundOn: string
+    soundOff: string
   }
   stillStuck: string
   stillStuckBody: string

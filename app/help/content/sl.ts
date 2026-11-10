@@ -24,7 +24,9 @@ const sl: HelpContent = {
       pause: 'Premor',
       replay: 'Poglej znova',
       close: 'Zapri video',
-      position: 'Položaj v videu'
+      position: 'Položaj v videu',
+      soundOn: 'Vklopi zvok',
+      soundOff: 'Izklopi zvok'
     },
     stillStuck: 'Se ti je zataknilo?',
     stillStuckBody: 'Povej nam, kaj želiš narediti. Preberemo vsako sporočilo.',

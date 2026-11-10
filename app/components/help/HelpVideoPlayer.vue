@@ -20,8 +20,10 @@ import type { HelpUiText } from '~/help/types'
  *   closes the clip and leaves the sheet open. `z-[60]` puts it above the
  *   docked desktop panel (`z-40`) and the citation peeks (`z-50`).
  *
- * Clips are silent, so they start muted: that is what lets them start by
- * themselves on iOS. Space or K plays and pauses, the arrows skip 5 seconds.
+ * Every clip starts muted: that is what lets it start by itself, on iOS too.
+ * A clip with a voice-over (`clip.audio`) gets a sound button; once someone
+ * turns sound on, later clips start with sound where the browser allows it.
+ * Space or K plays and pauses, the arrows skip 5 seconds, M toggles sound.
  */
 const open = defineModel<boolean>('open', { default: false })
 
@@ -45,6 +47,9 @@ const waiting = ref(true)
 const current = ref(0)
 const total = ref(props.clip.duration ?? 0)
 const scrubbing = ref(false)
+const muted = ref(true)
+/** Whether sound was turned on; shared, so it carries to the next clip. */
+const wantSound = useState('help-clip-sound', () => false)
 let resumeAfterScrub = false
 
 watch(open, (isOpen) => {
@@ -54,6 +59,7 @@ watch(open, (isOpen) => {
   waiting.value = true
   current.value = 0
   total.value = props.clip.duration ?? 0
+  muted.value = true
 })
 
 const ratio = computed(() => {
@@ -100,6 +106,26 @@ function onTime() {
 function onMeta() {
   const d = video.value?.duration
   if (d && Number.isFinite(d)) total.value = d
+  restoreSound()
+}
+
+/** Turned on once, sound stays on for the next clips in this visit. */
+function restoreSound() {
+  const v = video.value
+  if (!v || !props.clip.audio || !wantSound.value) return
+  v.muted = false
+  void v.play().catch(() => {
+    // Sound without a fresh tap is refused here: play silently instead.
+    v.muted = true
+    void v.play().catch(() => {})
+  })
+}
+
+function toggleSound() {
+  const v = video.value
+  if (!v || !props.clip.audio) return
+  v.muted = !v.muted
+  wantSound.value = !v.muted
 }
 
 function onEnded() {
@@ -153,6 +179,11 @@ function onKey(event: KeyboardEvent) {
       break
     case 'End':
       seekTo(total.value)
+      break
+    case 'm':
+    case 'M':
+      if (!props.clip.audio) return
+      toggleSound()
       break
     default:
       return
@@ -216,6 +247,7 @@ function onKey(event: KeyboardEvent) {
               @ended="onEnded"
               @timeupdate="onTime"
               @loadedmetadata="onMeta"
+              @volumechange="muted = video?.muted ?? true"
               @waiting="waiting = true"
               @playing="waiting = false"
               @canplay="waiting = false"
@@ -295,6 +327,19 @@ function onKey(event: KeyboardEvent) {
             />
           </div>
           <span class="w-9 shrink-0 text-xs tabular-nums text-white/60">{{ fmt(total) }}</span>
+          <button
+            v-if="clip.audio"
+            type="button"
+            class="flex size-11 shrink-0 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            :aria-label="muted ? ui.soundOn : ui.soundOff"
+            :aria-pressed="!muted"
+            @click="toggleSound"
+          >
+            <UIcon
+              :name="muted ? 'i-lucide-volume-x' : 'i-lucide-volume-2'"
+              class="size-6"
+            />
+          </button>
         </div>
       </div>
     </template>

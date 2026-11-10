@@ -24,7 +24,9 @@ const hu: HelpContent = {
       pause: 'Szünet',
       replay: 'Újra',
       close: 'Videó bezárása',
-      position: 'Lejátszási pozíció'
+      position: 'Lejátszási pozíció',
+      soundOn: 'Hang bekapcsolása',
+      soundOff: 'Hang kikapcsolása'
     },
     stillStuck: 'Elakadtál?',
     stillStuckBody: 'Írd meg, mit szerettél volna csinálni. Minden üzenetet elolvasunk.',
