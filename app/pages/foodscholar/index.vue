@@ -3319,6 +3319,11 @@ const normalizeAnswerProse = (text: string): string =>
     // live stream mid-flight and answers cached before the backend fix.
     .replace(/<{2,}\s*END_ANSWER\s*>{2,}[\s\S]*$/, '')
     .replace(/\{\s*"cited_sources"[\s\S]*$/, '')
+    // "[G679]([G679](/guidelines/x))": a citation wrapped in a second copy of
+    // itself (the model's own link, linked again by a repair pass). Markdown
+    // cannot nest a link inside a link's URL, so it rendered as "[G679[G680"
+    // with nothing to click. Keep the inner, real link.
+    .replace(/\[([^[\]]+)\]\(\s*\[\1\]\(([^()\s]+)\)\s*\)/g, '[$1]($2)')
     .replace(/【/g, '[')
     .replace(/】/g, '')
     // A bare bracketed URN citation (a model quirk the backend now repairs
