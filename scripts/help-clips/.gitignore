@@ -1,0 +1,3 @@
+__pycache__/
+# Live guest tokens; lib.py keeps them in $HELP_CLIPS_WORK, this is a second guard.
+guest-*.json
