@@ -59,7 +59,7 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     match: p => p === '/foodscholar',
     features: [
       { id: 'ask', icon: 'i-lucide-message-circle-question', tour: 'tour-foodscholar-ask', video: 'foodscholar-ask' },
-      { id: 'sources', icon: 'i-lucide-quote', tour: 'tour-foodscholar-sources' },
+      { id: 'sources', icon: 'i-lucide-quote', tour: 'tour-foodscholar-sources', video: 'foodscholar-sources' },
       { id: 'follow-up', icon: 'i-lucide-messages-square', tour: 'tour-foodscholar-sources' },
       { id: 'rate', icon: 'i-lucide-thumbs-up', tour: 'tour-foodscholar-sources' },
       { id: 'advanced', icon: 'i-lucide-settings-2', tour: 'tour-foodscholar-advanced' },
@@ -73,7 +73,7 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/foodscholar/catalog',
     match: p => p.startsWith('/foodscholar/catalog'),
     features: [
-      { id: 'search', icon: 'i-lucide-search', tour: 'tour-foodscholar-catalog' },
+      { id: 'search', icon: 'i-lucide-search', tour: 'tour-foodscholar-catalog', video: 'foodscholar-catalog-search' },
       { id: 'filters', icon: 'i-lucide-filter', tour: 'tour-foodscholar-catalog' },
       { id: 'summary', icon: 'i-lucide-sparkles', tour: 'tour-foodscholar-catalog' }
     ]
@@ -87,7 +87,7 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     features: [
       { id: 'find', icon: 'i-lucide-search' },
       { id: 'map', icon: 'i-lucide-map-pin', tour: 'tour-foodscholar-guides', video: 'foodscholar-guides-map' },
-      { id: 'explorer', icon: 'i-lucide-list-filter', tour: 'tour-foodscholar-explorer' },
+      { id: 'explorer', icon: 'i-lucide-list-filter', tour: 'tour-foodscholar-explorer', video: 'foodscholar-guides-explorer' },
       { id: 'read', icon: 'i-lucide-file-text' }
     ]
   },
@@ -98,7 +98,7 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/foodscholar/textbooks',
     match: p => p.startsWith('/foodscholar/textbooks'),
     features: [
-      { id: 'find', icon: 'i-lucide-search', tour: 'tour-foodscholar-textbooks' },
+      { id: 'find', icon: 'i-lucide-search', tour: 'tour-foodscholar-textbooks', video: 'foodscholar-textbooks' },
       { id: 'inside', icon: 'i-lucide-book-open-text' }
     ]
   },
@@ -110,7 +110,7 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     match: p => p === '/foodscholar/hierarchy',
     features: [
       { id: 'search', icon: 'i-lucide-search', tour: 'tour-foodscholar-hierarchy' },
-      { id: 'browse', icon: 'i-lucide-list-tree', tour: 'tour-foodscholar-hierarchy' },
+      { id: 'browse', icon: 'i-lucide-list-tree', tour: 'tour-foodscholar-hierarchy', video: 'foodscholar-hierarchy' },
       { id: 'ask', icon: 'i-lucide-message-circle-question', tour: 'tour-foodscholar-hierarchy' }
     ]
   },
@@ -125,7 +125,7 @@ export const HELP_TOPICS: HelpTopicDef[] = [
       return Boolean(m && !FOODSCHOLAR_SECTIONS.has(m[1]!))
     },
     features: [
-      { id: 'read', icon: 'i-lucide-book-open-text' },
+      { id: 'read', icon: 'i-lucide-book-open-text', video: 'foodscholar-article' },
       { id: 'questions', icon: 'i-lucide-messages-square' },
       { id: 'save', icon: 'i-lucide-bookmark' }
     ]

@@ -19,6 +19,13 @@ const sl: HelpContent = {
     tourUnavailableBody: 'Za zdaj sledi korakom v pomoči.',
     watch: 'Video',
     videoLabel: 'Kratek video: {title}',
+    player: {
+      play: 'Predvajaj',
+      pause: 'Premor',
+      replay: 'Poglej znova',
+      close: 'Zapri video',
+      position: 'Položaj v videu'
+    },
     stillStuck: 'Se ti je zataknilo?',
     stillStuckBody: 'Povej nam, kaj želiš narediti. Preberemo vsako sporočilo.',
     sendFeedback: 'Pošlji mnenje',

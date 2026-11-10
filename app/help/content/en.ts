@@ -16,6 +16,13 @@ const en: HelpContent = {
     tourUnavailableBody: 'Follow the steps in the help panel for now.',
     watch: 'Watch',
     videoLabel: 'Short video: {title}',
+    player: {
+      play: 'Play',
+      pause: 'Pause',
+      replay: 'Watch again',
+      close: 'Close video',
+      position: 'Video position'
+    },
     stillStuck: 'Still stuck?',
     stillStuckBody: 'Tell us what you were trying to do. Every message is read.',
     sendFeedback: 'Send feedback',

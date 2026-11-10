@@ -19,6 +19,13 @@ const hu: HelpContent = {
     tourUnavailableBody: 'Addig kövesd a lépéseket a súgóban.',
     watch: 'Videó',
     videoLabel: 'Rövid videó: {title}',
+    player: {
+      play: 'Lejátszás',
+      pause: 'Szünet',
+      replay: 'Újra',
+      close: 'Videó bezárása',
+      position: 'Lejátszási pozíció'
+    },
     stillStuck: 'Elakadtál?',
     stillStuckBody: 'Írd meg, mit szerettél volna csinálni. Minden üzenetet elolvasunk.',
     sendFeedback: 'Visszajelzés küldése',

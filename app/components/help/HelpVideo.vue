@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useI18n } from 'vue-i18n'
 import type { HelpClip } from '~/composables/useHelp'
+import type { HelpUiText } from '~/help/types'
 
 /**
- * A short clip that loads nothing until asked.
+ * A short clip in the help panel: a poster that loads nothing else until
+ * pressed, then the clip full screen in `HelpVideoPlayer`.
  *
- * The poster is all that is fetched up front, and the video element only
- * exists after a click, so a help panel with six clips costs six small
- * images. The clip plays with controls and captions; it never starts by
- * itself, which also keeps it out of the way of reduced-motion settings.
+ * The poster keeps the clip's own shape, so a 16:9 desktop recording fills
+ * the panel's width and a portrait phone recording stands upright in the
+ * sheet, neither of them cropped. Played in place, a 1080p recording of a
+ * whole page is too small to read in a 26rem panel; full screen it is not.
  */
 const props = defineProps<{
   clip: HelpClip
   label: string
+  ui: HelpUiText
 }>()
 
 const emit = defineEmits<{
@@ -21,8 +23,13 @@ const emit = defineEmits<{
   failed: []
 }>()
 
-const { locale } = useI18n()
-const playing = ref(false)
+const open = ref(false)
+
+const ratio = computed(() => {
+  const { width, height } = props.clip
+  return width && height ? width / height : 16 / 9
+})
+const portrait = computed(() => ratio.value < 1)
 
 const durationLabel = computed(() => {
   const total = props.clip.duration
@@ -33,39 +40,25 @@ const durationLabel = computed(() => {
 })
 
 function play() {
-  playing.value = true
+  open.value = true
   emit('play')
+}
+
+function failed() {
+  open.value = false
+  emit('failed')
 }
 </script>
 
 <template>
-  <div class="relative aspect-video overflow-hidden rounded-lg bg-gray-900 ring-1 ring-gray-200 dark:ring-white/10">
-    <video
-      v-if="playing"
-      :src="clip.src"
-      :poster="clip.poster"
-      :aria-label="label"
-      class="h-full w-full"
-      controls
-      autoplay
-      playsinline
-      preload="metadata"
-      @error="emit('failed')"
-    >
-      <track
-        v-if="clip.captions"
-        kind="captions"
-        :src="clip.captions"
-        :srclang="locale"
-        default
-      >
-    </video>
-
+  <div>
     <button
-      v-else
       type="button"
-      class="group absolute inset-0 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500"
+      class="group relative block overflow-hidden rounded-lg bg-gray-900 ring-1 ring-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:ring-white/10"
+      :class="portrait ? 'mx-auto h-[min(22rem,50dvh)]' : 'w-full'"
+      :style="{ aspectRatio: String(ratio) }"
       :aria-label="label"
+      aria-haspopup="dialog"
       @click="play"
     >
       <img
@@ -73,19 +66,39 @@ function play() {
         :src="clip.poster"
         alt=""
         loading="lazy"
-        class="absolute inset-0 h-full w-full object-cover"
+        class="absolute inset-0 h-full w-full object-contain"
         @error="emit('failed')"
       >
-      <span class="relative flex size-12 items-center justify-center rounded-full bg-white/95 text-brand-600 shadow-lg transition-transform group-hover:scale-105">
-        <UIcon
-          name="i-lucide-play"
-          class="size-5 translate-x-px"
-        />
+      <span class="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+      <span class="absolute inset-0 flex items-center justify-center">
+        <span class="flex size-14 items-center justify-center rounded-full bg-white/95 text-brand-600 shadow-lg transition-transform group-hover:scale-105 group-active:scale-95">
+          <UIcon
+            name="i-lucide-play"
+            class="size-6 translate-x-px"
+          />
+        </span>
       </span>
-      <span
-        v-if="durationLabel"
-        class="absolute bottom-2 right-2 rounded bg-black/70 px-1.5 py-0.5 text-xs font-medium tabular-nums text-white"
-      >{{ durationLabel }}</span>
+      <span class="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2 text-xs font-medium text-white">
+        <span class="flex items-center gap-1.5 rounded bg-black/60 px-1.5 py-0.5">
+          <UIcon
+            name="i-lucide-maximize-2"
+            class="size-3"
+          />
+          {{ ui.watch }}
+        </span>
+        <span
+          v-if="durationLabel"
+          class="rounded bg-black/60 px-1.5 py-0.5 tabular-nums"
+        >{{ durationLabel }}</span>
+      </span>
     </button>
+
+    <HelpVideoPlayer
+      v-model:open="open"
+      :clip="clip"
+      :label="label"
+      :ui="ui.player"
+      @failed="failed"
+    />
   </div>
 </template>

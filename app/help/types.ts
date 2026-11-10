@@ -91,6 +91,15 @@ export interface HelpUiText {
   tourUnavailableBody: string
   watch: string
   videoLabel: string
+  /** The full-screen clip player. */
+  player: {
+    play: string
+    pause: string
+    replay: string
+    close: string
+    /** The scrubber's accessible name. */
+    position: string
+  }
   stillStuck: string
   stillStuckBody: string
   sendFeedback: string
