@@ -2211,6 +2211,7 @@ const handleMarkdownClick = (event: MouseEvent) => {
 
   const { url, urn: targetUrn, sourceType, path: targetPath } = resolvedSource
   const citation = getCitationForUrn(targetUrn)
+  const modified = event.metaKey || event.ctrlKey || event.shiftKey
 
   recordCitationOpened(targetUrn, sourceType, 'inline')
 
@@ -2224,20 +2225,33 @@ const handleMarkdownClick = (event: MouseEvent) => {
     // the guide page (rule highlighted, PDF page open) when the rule itself
     // is not publicly readable.
     const hintedQuery = { ...getGuidelineHintsForUrn(targetUrn), ...query }
-    // A plain click previews the rule in place; a modifier click keeps the
-    // familiar "open in a new tab" behaviour for people who want the guide.
-    if (event.metaKey || event.ctrlKey || event.shiftKey) {
+    // A plain click previews the rule in place; clicking the same citation
+    // again while its rule is showing opens the guide. A modifier click keeps
+    // the familiar "open in a new tab" behaviour for people who want the guide.
+    if (modified) {
       void navigateToGuideline(targetUrn, hintedQuery, true)
+    } else if (guidelinePeekOpen.value && guidelinePeekId.value === targetUrn) {
+      openGuidelineFromPeek()
     } else {
       void openGuidelinePeek(targetUrn, anchor, hintedQuery)
     }
   } else {
-    // A finger cannot hover, so on touch a plain tap previews the passage in
-    // place — as the guideline peek already does — and the article stays one
-    // deliberate tap away, inside the peek.
-    if (!hasHover.value && citation?.quote && !(event.metaKey || event.ctrlKey || event.shiftKey)) {
-      openArticlePeekNow(anchor, citation)
-      return
+    // A finger cannot hover, so on touch the first tap always previews the
+    // source in place, with the cited passage when the answer recorded one,
+    // and a second tap on the same citation opens it. Going straight to the
+    // article whenever there was no passage took people away from the answer
+    // mid-read on a phone.
+    if (!hasHover.value && !modified) {
+      const peekShowsThis = articlePeekOpen.value && articlePeekCitation.value?.article_urn === targetUrn
+      if (!peekShowsThis) {
+        openArticlePeekNow(anchor, citation ?? {
+          article_urn: targetUrn,
+          article_title: anchor.textContent?.trim() || targetUrn,
+          source_type: sourceType
+        })
+        return
+      }
+      articlePeekOpen.value = false
     }
     if (!('section' in query) && citation?.section) query.section = String(citation.section)
     if (!('hl' in query) && citation?.quote) query.hl = String(citation.quote)
@@ -2672,8 +2686,9 @@ const openArticleFromPeek = () => {
   const query: Record<string, string> = {}
   if (citation.section) query.section = String(citation.section)
   if (citation.quote) query.hl = String(citation.quote)
+  // A whole guide can be cited too; it opens on the guide page, not as an article.
   goToLocation(
-    { path: getQaSourcePath(citation.article_urn, 'article'), query },
+    { path: getQaSourcePath(citation.article_urn, getCitationSourceType(citation)), query },
     true
   )
 }
