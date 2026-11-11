@@ -58,52 +58,76 @@ but it reads badly.
 
 ## Videos
 
-Clips are optional. A feature names its clip (`video: 'foodchat-generate-plan'`),
+Clips are optional. A feature names its clip (`video: 'foodscholar-ask'`),
 and the panel shows it only if the media manifest lists it. So features can
 name clips before they are recorded, and clips can be published without a
 rebuild.
 
 - **Where clips live:** `<base>/manifest.json`. `<base>` is `HELP_MEDIA_BASE_URL`
   (runtime, via `docker-entrypoint.sh`) and defaults to `<app base>/help/media`,
-  which is `public/help/media/` in this repo. For more than a handful of clips,
-  put them in a bucket or CDN and point `HELP_MEDIA_BASE_URL` at it, rather than
-  committing binaries.
+  which is `public/help/media/` in this repo. On the demo it is the public
+  `help-media` bucket on MinIO (`https://s3.wisefood-project.eu/help-media`),
+  so clips are replaced with `mc cp` and no rebuild. MinIO's CORS rule must
+  allow the app's origin, because the manifest is fetched with `fetch()`.
 - **Manifest format:**
 
   ```json
   {
     "videos": {
-      "foodchat-generate-plan": {
-        "src": "foodchat-generate-plan.mp4",
-        "sources": { "hu": "foodchat-generate-plan.hu.mp4" },
-        "poster": "foodchat-generate-plan.jpg",
-        "duration": 32,
-        "captions": { "en": "foodchat-generate-plan.en.vtt", "hu": "foodchat-generate-plan.hu.vtt", "sl": "foodchat-generate-plan.sl.vtt" }
+      "foodscholar-ask": {
+        "src": "foodscholar-ask.en.mp4",
+        "poster": "foodscholar-ask.en.jpg",
+        "duration": 31, "width": 1920, "height": 1080,
+        "locales": {
+          "hu": { "src": "foodscholar-ask.hu.mp4", "poster": "foodscholar-ask.hu.jpg", "duration": 33 },
+          "sl": { "src": "foodscholar-ask.sl.mp4", "poster": "foodscholar-ask.sl.jpg", "duration": 32 }
+        },
+        "phone": {
+          "src": "foodscholar-ask.en.phone.mp4",
+          "poster": "foodscholar-ask.en.phone.jpg",
+          "duration": 30, "width": 780, "height": 1688,
+          "locales": { "hu": { "src": "foodscholar-ask.hu.phone.mp4", "poster": "foodscholar-ask.hu.phone.jpg" } }
+        }
       }
     }
   }
   ```
 
-  Relative names resolve against `<base>`. `sources` replaces `src` for one
-  language (a recording of the Hungarian interface). Captions fall back to
-  English when a language has none.
-- **Clip ids already named in `topics.ts`:**
-  - `foodchat-generate-plan`
-  - `foodchat-refine`
-  - `foodscholar-ask`
-  - `foodscholar-guides-map`
-  - `recipes-search`
-  - `recipes-analyze`
-  - `recipe-improve`
-- **Making clips:**
-  - Silent screen recordings with captions, 15–45 seconds, one task per clip.
-  - 1280×800 for desktop clips. H.264 MP4 under ~3 MB, plus a JPG poster taken
-    from a frame that shows the result.
-  - Without a voice-over, one recording works in every language through its
-    captions.
-  - Record from a scripted browser session (Playwright with `record_video_dir`)
-    against a demo account, so a clip can be re-recorded after the interface
-    changes instead of being redone by hand.
+  - Relative names resolve against `<base>`.
+  - `locales` is the same clip recorded with the interface in another
+    language. It brings its own poster and length; anything it leaves out
+    comes from the default recording.
+  - `phone` is a portrait recording of the phone layout. Phones (below
+    640 px) play it instead, because a desktop recording shrunk to a phone's
+    width can't be read. Without one, phones play the desktop clip.
+  - `width` and `height` give the frame its shape. Without them the player
+    assumes 16:9.
+  - The older `sources` (a file per language) and `captions` (WebVTT per
+    language, falling back to English) still work. Captions from another
+    origin need that origin's CORS, because the player then asks for the
+    video with `crossorigin`.
+- **The player:** the panel shows the poster in the clip's own shape, and
+  pressing it opens `HelpVideoPlayer` full screen: the frame as large as the
+  screen allows, 44 px controls, a scrubber you can drag, and tap to pause.
+  On a phone on its side the title row folds away. It is a Nuxt UI modal, so
+  it stacks above the help sheet on phones; Escape closes the clip only.
+- **Clip ids named in `topics.ts`:**
+  - FoodScholar: `foodscholar-ask`, `foodscholar-sources`,
+    `foodscholar-catalog-search`, `foodscholar-article`,
+    `foodscholar-guides-map`, `foodscholar-guides-explorer`,
+    `foodscholar-hierarchy`, `foodscholar-textbooks`
+  - FoodChat: `foodchat-generate-plan`, `foodchat-refine`
+  - RecipeWrangler: `recipes-search`, `recipes-analyze`, `recipe-improve`
+- **Making clips:** `scripts/help-clips/` records them against the demo
+  (see its README).
+  - Silent, one task per clip, 20–40 seconds.
+  - The instructions are drawn into the page in the interface language, so
+    each language is its own recording and plays the same in any player.
+  - Waiting for the AI stays in the clip, sped up, with a badge saying so.
+  - Desktop clips are 1920×1080 (a 1440×810 page). Phone clips are 780×1688
+    (a 390×844 page). Both are H.264 MP4 with a JPG poster of the result.
+  - The recorder uses one guest per language. The demo allows 5 new guests
+    per IP per hour and 20 FoodScholar questions per guest per day.
 - **Loading:** nothing is fetched until the panel opens. After that only the
   posters load, and a video loads when someone presses play.
 

@@ -19,6 +19,15 @@ const sl: HelpContent = {
     tourUnavailableBody: 'Za zdaj sledi korakom v pomoči.',
     watch: 'Video',
     videoLabel: 'Kratek video: {title}',
+    player: {
+      play: 'Predvajaj',
+      pause: 'Premor',
+      replay: 'Poglej znova',
+      close: 'Zapri video',
+      position: 'Položaj v videu',
+      soundOn: 'Vklopi zvok',
+      soundOff: 'Izklopi zvok'
+    },
     stillStuck: 'Se ti je zataknilo?',
     stillStuckBody: 'Povej nam, kaj želiš narediti. Preberemo vsako sporočilo.',
     sendFeedback: 'Pošlji mnenje',
@@ -61,7 +70,7 @@ const sl: HelpContent = {
           body: 'Kartica ([[dashboard.spotlight.badge]]) prikazuje kratek nasvet ali zanimivost o hrani in zdravju in se spreminja iz dneva v dan.',
           steps: [
             'Preberi nasvet na kartici.',
-            'Če nasvet izhaja iz raziskave, prek njene povezave bereš naprej v FoodScholarju.'
+            'Če nasvet izhaja iz članka, prek njene povezave bereš naprej v FoodScholarju.'
           ]
         },
         'recommendations': {
@@ -200,7 +209,7 @@ const sl: HelpContent = {
 
     'foodscholar': {
       title: 'FoodScholar: vprašaj o hrani in prehrani',
-      summary: 'Postavi vprašanje in dobi odgovor, ki temelji na znanstvenih raziskavah in uradnih prehranskih smernicah, z vsemi viri.',
+      summary: 'Postavi vprašanje in dobi odgovor, ki temelji na znanstveni literaturi in uradnih prehranskih smernicah, z vsemi viri.',
       features: {
         'ask': {
           title: 'Postavi vprašanje',
@@ -215,11 +224,20 @@ const sl: HelpContent = {
         },
         'sources': {
           title: 'Preveri vire',
-          body: 'Vsaka trditev v odgovoru vodi do raziskave ali smernice, iz katere izhaja.',
+          body: 'Vsaka trditev v odgovoru vodi do članka ali smernice, iz katere izhaja.',
           steps: [
             'Klikni številko v odgovoru, da vidiš odlomek, na katerem temelji.',
-            'Celotna raziskava: [[foodScholarHome.qa.passagePeek.openArticle]].',
+            'Celoten članek: [[foodScholarHome.qa.passagePeek.openArticle]].',
             'Vsi viri so tukaj: [[foodScholarHome.qa.sidebar.cited]] in [[foodScholarHome.qa.sidebar.consulted]].'
+          ]
+        },
+        'remember': {
+          title: 'Naj si FoodScholar zapomni',
+          body: 'Ko omeniš cilj, navado ali hrano, ki se ji izogibaš, ti FoodScholar lahko ponudi, da si to zapomni, da so poznejši odgovori in načrti prilagojeni tebi. Brez tvojega soglasja se nič ne shrani.',
+          steps: [
+            'Pod odgovorom preberi, kaj ti FoodScholar ponudi, da si zapomni.',
+            'Klikni [[foodChatHome.chat.memory.remember]], da to obdržiš, ali [[foodChatHome.chat.memory.noThanks]].',
+            'V profilu, v razdelku [[myProfile.sections.memory]], to vidiš, popraviš ali izbrišeš.'
           ]
         },
         'follow-up': {
@@ -262,7 +280,7 @@ const sl: HelpContent = {
 
     'foodscholar-catalog': {
       title: 'Iskanje znanstvenih člankov',
-      summary: 'Poišči raziskave tako, da opišeš, kaj iščeš, nato seznam zoži s filtri.',
+      summary: 'Poišči članke tako, da opišeš, kaj iščeš, nato seznam zoži s filtri.',
       features: {
         search: {
           title: 'Iskanje z navadnimi besedami',
@@ -298,11 +316,11 @@ const sl: HelpContent = {
 
     'foodscholar-article': {
       title: 'Branje članka',
-      summary: 'Vsaka stran članka razloži raziskavo v preprostem jeziku, s ključnimi ugotovitvami in tem, kako trdni so dokazi.',
+      summary: 'Vsaka stran članka razloži članek v preprostem jeziku, s ključnimi ugotovitvami in tem, kako trdni so dokazi.',
       features: {
         read: {
-          title: 'Razumi raziskavo',
-          body: 'Začni s preprosto različico, nato po želji pojdi globlje.',
+          title: 'Razumi članek',
+          body: 'Začni s preprosto različico, nato po želji pojdi globlje. Na voljo je pri člankih s temo: v iskanju člankov odpri filtre in izberi temo.',
           steps: [
             'Lažja različica povzetka: [[foodScholarArticle.actions.simplify]].',
             'Preberi: [[foodScholarArticle.sections.keyTakeaways]].',
@@ -311,7 +329,7 @@ const sl: HelpContent = {
         },
         questions: {
           title: 'Vprašanja in odgovori',
-          body: 'Pogosta vprašanja o raziskavi z odgovori za različne bralce.',
+          body: 'Pogosta vprašanja o članku z odgovori za različne bralce.',
           steps: [
             'Pojdi na: [[foodScholarArticle.sections.qa]].',
             'Izberi: [[foodScholarArticle.qaTabs.forYou]], [[foodScholarArticle.qaTabs.forPractitioners]] ali [[foodScholarArticle.qaTabs.forExperts]].'

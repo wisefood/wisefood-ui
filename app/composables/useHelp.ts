@@ -8,6 +8,7 @@ import sl from '~/help/content/sl'
 import { track } from '~/composables/useTelemetry'
 import { ignoreTroubleUnder } from '~/composables/useTroubleSignal'
 import { useAuthStore } from '~/stores/auth'
+import { useViewport } from '~/composables/useViewport'
 
 /**
  * The help companion's state, shared by the header button, the dock and the
@@ -160,17 +161,39 @@ export interface HelpClip {
   poster?: string
   /** Seconds, shown on the poster so nobody starts a five-minute video by accident. */
   duration?: number
+  /** Frame size in pixels. The player takes the clip's own shape; 16:9 when unknown. */
+  width?: number
+  height?: number
   captions?: string
+  /** Has a voice-over. It still starts muted; the player offers sound. */
+  audio?: boolean
 }
 
-interface ManifestClip {
-  src: string
-  /** A recording of the interface in another language, keyed by locale. */
-  sources?: Record<string, string>
+/** One recording: the file, its poster, its length and its frame size. */
+interface ManifestRecording {
+  src?: string
   poster?: string
   duration?: number
+  width?: number
+  height?: number
+  /** The recording has a voice-over track. */
+  audio?: boolean
+}
+
+/** A clip in one layout, recorded in one or more interface languages. */
+interface ManifestVariant extends ManifestRecording {
+  /** The same clip recorded with the interface in another language, keyed by locale. */
+  locales?: Record<string, ManifestRecording>
+  /** Older form of `locales`: only the file of another language's recording. */
+  sources?: Record<string, string>
   /** WebVTT files keyed by locale. */
   captions?: Record<string, string>
+}
+
+interface ManifestClip extends ManifestVariant {
+  src: string
+  /** A portrait recording of the phone layout, played instead on phones. */
+  phone?: ManifestVariant
 }
 
 const manifest = shallowRef<Record<string, ManifestClip> | null>(null)
@@ -206,16 +229,45 @@ export function loadHelpMedia(base: string): Promise<void> {
   return manifestLoad
 }
 
+const positive = (n: unknown): number | undefined =>
+  typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : undefined
+
+/**
+ * The recording to play from one variant: this language's own recording when
+ * there is one, the default otherwise. A language's recording brings its own
+ * poster and length, because its poster shows that language's interface.
+ */
+function pickRecording(variant: ManifestVariant, locale: string): HelpClip | null {
+  const own = variant.locales?.[locale]
+  const ownSrc = typeof own?.src === 'string' ? own.src : undefined
+  const src = ownSrc ?? variant.sources?.[locale] ?? variant.src
+  if (typeof src !== 'string' || !src) return null
+  const from = ownSrc ? own! : variant
+  return {
+    src: resolveMedia(src)!,
+    poster: resolveMedia(from.poster ?? variant.poster),
+    duration: positive(from.duration ?? variant.duration),
+    width: positive(from.width ?? variant.width),
+    height: positive(from.height ?? variant.height),
+    captions: resolveMedia(variant.captions?.[locale] ?? variant.captions?.en),
+    // The file that plays decides: a language falling back to the default
+    // recording gets the default's sound, or none.
+    audio: (ownSrc ? own!.audio : variant.audio) === true
+  }
+}
+
 export function useHelpClip() {
   const { locale } = useI18n()
+  const { isPhone } = useViewport()
   return (id: string | undefined): HelpClip | null => {
     const clip = id ? manifest.value?.[id] : undefined
     if (!clip) return null
-    return {
-      src: resolveMedia(clip.sources?.[locale.value] ?? clip.src)!,
-      poster: resolveMedia(clip.poster),
-      duration: typeof clip.duration === 'number' ? clip.duration : undefined,
-      captions: resolveMedia(clip.captions?.[locale.value] ?? clip.captions?.en)
+    // A phone gets the portrait recording of the phone layout when there is
+    // one: a desktop recording shrunk to a phone's width can't be read.
+    if (isPhone.value && clip.phone) {
+      const phone = pickRecording(clip.phone, locale.value)
+      if (phone) return phone
     }
+    return pickRecording(clip, locale.value)
   }
 }

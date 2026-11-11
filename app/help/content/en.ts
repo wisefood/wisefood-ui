@@ -16,6 +16,15 @@ const en: HelpContent = {
     tourUnavailableBody: 'Follow the steps in the help panel for now.',
     watch: 'Watch',
     videoLabel: 'Short video: {title}',
+    player: {
+      play: 'Play',
+      pause: 'Pause',
+      replay: 'Watch again',
+      close: 'Close video',
+      position: 'Video position',
+      soundOn: 'Turn sound on',
+      soundOff: 'Turn sound off'
+    },
     stillStuck: 'Still stuck?',
     stillStuckBody: 'Tell us what you were trying to do. Every message is read.',
     sendFeedback: 'Send feedback',
@@ -58,7 +67,7 @@ const en: HelpContent = {
           body: '[[dashboard.spotlight.badge]] shows a short tip or fact about food and health, and changes from day to day.',
           steps: [
             'Read the tip on the card.',
-            'When the tip comes from a study, follow its link to read more in FoodScholar.'
+            'When the tip comes from an article, follow its link to read more in FoodScholar.'
           ]
         },
         'recommendations': {
@@ -197,7 +206,7 @@ const en: HelpContent = {
 
     'foodscholar': {
       title: 'FoodScholar: ask about food and nutrition',
-      summary: 'Ask a question and get an answer based on scientific studies and official dietary guidelines, with every source shown.',
+      summary: 'Ask a question and get an answer based on scientific literature and official dietary guidelines, with every source shown.',
       features: {
         'ask': {
           title: 'Ask a question',
@@ -212,11 +221,20 @@ const en: HelpContent = {
         },
         'sources': {
           title: 'Check the sources',
-          body: 'Every claim in an answer links to the study or guideline it comes from.',
+          body: 'Every claim in an answer links to the article or guideline it comes from.',
           steps: [
             'Click a number in the answer to see the passage it is based on.',
-            'Click [[foodScholarHome.qa.passagePeek.openArticle]] to read the whole study.',
+            'Click [[foodScholarHome.qa.passagePeek.openArticle]] to read the whole article.',
             'See all sources under [[foodScholarHome.qa.sidebar.cited]] and [[foodScholarHome.qa.sidebar.consulted]].'
+          ]
+        },
+        'remember': {
+          title: 'Let FoodScholar remember',
+          body: 'When you mention a goal, a habit or a food you avoid, FoodScholar may offer to remember it, so later answers and plans fit you. Nothing is saved unless you agree.',
+          steps: [
+            'Under the answer, read what FoodScholar offers to remember.',
+            'Click [[foodChatHome.chat.memory.remember]] to keep it, or [[foodChatHome.chat.memory.noThanks]].',
+            'See, correct or remove it in [[myProfile.sections.memory]] on your profile.'
           ]
         },
         'follow-up': {
@@ -259,7 +277,7 @@ const en: HelpContent = {
 
     'foodscholar-catalog': {
       title: 'Search scientific articles',
-      summary: 'Find studies by describing what you are looking for, then narrow the list with filters.',
+      summary: 'Find articles by describing what you are looking for, then narrow the list with filters.',
       features: {
         search: {
           title: 'Search in plain words',
@@ -295,11 +313,11 @@ const en: HelpContent = {
 
     'foodscholar-article': {
       title: 'Reading an article',
-      summary: 'Each article page explains a study in plain language, with its key points and how strong the evidence is.',
+      summary: 'Each article page explains the article in plain language, with its key points and how strong the evidence is.',
       features: {
         read: {
-          title: 'Understand the study',
-          body: 'Start with the plain-language version, then go deeper if you want.',
+          title: 'Understand the article',
+          body: 'Start with the plain-language version, then go deeper if you want. Articles with a topic have it: in the article search, open the filters and pick one under Topics.',
           steps: [
             'Click [[foodScholarArticle.actions.simplify]] for an easier version of the abstract.',
             'Read the [[foodScholarArticle.sections.keyTakeaways]].',
@@ -308,7 +326,7 @@ const en: HelpContent = {
         },
         questions: {
           title: 'Questions and answers',
-          body: 'Common questions about the study, answered for different readers.',
+          body: 'Common questions about the article, answered for different readers.',
           steps: [
             'Go to [[foodScholarArticle.sections.qa]].',
             'Pick [[foodScholarArticle.qaTabs.forYou]], [[foodScholarArticle.qaTabs.forPractitioners]] or [[foodScholarArticle.qaTabs.forExperts]].'

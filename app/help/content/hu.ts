@@ -19,6 +19,15 @@ const hu: HelpContent = {
     tourUnavailableBody: 'Addig kövesd a lépéseket a súgóban.',
     watch: 'Videó',
     videoLabel: 'Rövid videó: {title}',
+    player: {
+      play: 'Lejátszás',
+      pause: 'Szünet',
+      replay: 'Újra',
+      close: 'Videó bezárása',
+      position: 'Lejátszási pozíció',
+      soundOn: 'Hang bekapcsolása',
+      soundOff: 'Hang kikapcsolása'
+    },
     stillStuck: 'Elakadtál?',
     stillStuckBody: 'Írd meg, mit szerettél volna csinálni. Minden üzenetet elolvasunk.',
     sendFeedback: 'Visszajelzés küldése',
@@ -61,7 +70,7 @@ const hu: HelpContent = {
           body: 'A kártya ([[dashboard.spotlight.badge]]) egy rövid tippet vagy érdekességet mutat az ételekről és az egészségről, és naponta változik.',
           steps: [
             'Olvasd el a tippet a kártyán.',
-            'Ha a tipp egy tanulmányból származik, a linkjén továbbolvashatsz a FoodScholarban.'
+            'Ha a tipp egy cikkből származik, a linkjén továbbolvashatsz a FoodScholarban.'
           ]
         },
         'recommendations': {
@@ -200,7 +209,7 @@ const hu: HelpContent = {
 
     'foodscholar': {
       title: 'FoodScholar: kérdezz az ételekről és a táplálkozásról',
-      summary: 'Tegyél fel egy kérdést, és tudományos tanulmányokon és hivatalos táplálkozási ajánlásokon alapuló választ kapsz, minden forrással együtt.',
+      summary: 'Tegyél fel egy kérdést, és tudományos szakirodalmon és hivatalos táplálkozási ajánlásokon alapuló választ kapsz, minden forrással együtt.',
       features: {
         'ask': {
           title: 'Kérdés feltevése',
@@ -215,11 +224,20 @@ const hu: HelpContent = {
         },
         'sources': {
           title: 'A források ellenőrzése',
-          body: 'A válasz minden állítása arra a tanulmányra vagy ajánlásra mutat, amelyből származik.',
+          body: 'A válasz minden állítása arra a cikkre vagy ajánlásra mutat, amelyből származik.',
           steps: [
             'Kattints egy számra a válaszban, és megjelenik a szakasz, amelyre épül.',
-            'A teljes tanulmány elolvasása: [[foodScholarHome.qa.passagePeek.openArticle]].',
+            'A teljes cikk elolvasása: [[foodScholarHome.qa.passagePeek.openArticle]].',
             'Az összes forrást itt látod: [[foodScholarHome.qa.sidebar.cited]] és [[foodScholarHome.qa.sidebar.consulted]].'
+          ]
+        },
+        'remember': {
+          title: 'A FoodScholar megjegyezheti',
+          body: 'Ha megemlítesz egy célt, egy szokást vagy egy ételt, amit kerülsz, a FoodScholar felajánlhatja, hogy megjegyzi, így a későbbi válaszok és tervek hozzád igazodnak. Semmi sem mentődik a beleegyezésed nélkül.',
+          steps: [
+            'A válasz alatt olvasd el, mit ajánl fel a FoodScholar, hogy megjegyez.',
+            'Kattints: [[foodChatHome.chat.memory.remember]], vagy: [[foodChatHome.chat.memory.noThanks]].',
+            'A profilodban, itt: [[myProfile.sections.memory]], megnézheted, javíthatod vagy törölheted.'
           ]
         },
         'follow-up': {
@@ -262,7 +280,7 @@ const hu: HelpContent = {
 
     'foodscholar-catalog': {
       title: 'Tudományos cikkek keresése',
-      summary: 'Keress tanulmányokat úgy, hogy leírod, mit keresel, majd szűkítsd a listát szűrőkkel.',
+      summary: 'Keress cikkeket úgy, hogy leírod, mit keresel, majd szűkítsd a listát szűrőkkel.',
       features: {
         search: {
           title: 'Keresés hétköznapi szavakkal',
@@ -298,11 +316,11 @@ const hu: HelpContent = {
 
     'foodscholar-article': {
       title: 'Egy cikk olvasása',
-      summary: 'Minden cikkoldal érthetően elmagyarázza a tanulmányt, a fő pontjaival és azzal, mennyire erős a bizonyíték.',
+      summary: 'Minden cikkoldal érthetően elmagyarázza a cikket, a fő pontjaival és azzal, mennyire erős a bizonyíték.',
       features: {
         read: {
-          title: 'A tanulmány megértése',
-          body: 'Kezdd a közérthető változattal, és ha szeretnéd, menj mélyebbre.',
+          title: 'A cikk megértése',
+          body: 'Kezdd a közérthető változattal, és ha szeretnéd, menj mélyebbre. A témával ellátott cikkeknél érhető el: a cikkkeresésben nyisd meg a szűrőket, és válassz egy témát.',
           steps: [
             'Az összefoglaló egyszerűbb változata: [[foodScholarArticle.actions.simplify]].',
             'Olvasd el: [[foodScholarArticle.sections.keyTakeaways]].',
@@ -311,7 +329,7 @@ const hu: HelpContent = {
         },
         questions: {
           title: 'Kérdések és válaszok',
-          body: 'Gyakori kérdések a tanulmányról, különböző olvasóknak megválaszolva.',
+          body: 'Gyakori kérdések a cikkről, különböző olvasóknak megválaszolva.',
           steps: [
             'Lépj ide: [[foodScholarArticle.sections.qa]].',
             'Válassz: [[foodScholarArticle.qaTabs.forYou]], [[foodScholarArticle.qaTabs.forPractitioners]] vagy [[foodScholarArticle.qaTabs.forExperts]].'

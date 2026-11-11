@@ -80,6 +80,7 @@ const panelId = computed(() => `help-feature-${props.def.id}`)
         v-if="clip && expanded"
         :clip="clip"
         :label="ui.videoLabel.replace('{title}', text.title.replace(/\[\[=?|\]\]/g, ''))"
+        :ui="ui"
         @play="emit('video-play')"
         @failed="videoFailed = true"
       />
