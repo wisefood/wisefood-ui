@@ -66,11 +66,11 @@ const showHelp = computed(() => !props.minimal && Boolean(help.pageTopic.value))
 const dockModes = useDockModes()
 const dockMode = computed(() => dockModes.value[route.path] ?? route.meta.dock ?? 'default')
 const hidden = computed(() => dockMode.value === 'hidden' || overlayOpen.value)
-const dockBottom = computed(() =>
-  dockMode.value === 'raised'
-    ? 'calc(5.75rem + var(--wf-safe-bottom))'
-    : 'calc(1.25rem + var(--wf-safe-bottom))'
-)
+const DOCK_BOTTOM: Record<string, string> = {
+  'raised': 'calc(5.75rem + var(--wf-safe-bottom))',
+  'raised-tall': 'calc(9.5rem + var(--wf-safe-bottom))'
+}
+const dockBottom = computed(() => DOCK_BOTTOM[dockMode.value] ?? 'calc(1.25rem + var(--wf-safe-bottom))')
 
 // Panels are exclusive; the dial folds once something is chosen.
 function openA11y() {

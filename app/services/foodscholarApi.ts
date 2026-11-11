@@ -22,6 +22,8 @@ export interface QaAskRequest {
   experience_group?: string
   qa_thread_id?: string
   clarification_response?: QaClarificationResponse | null
+  /** "claim_check": judge the question as a claim; the result carries claim_verdict. */
+  intent?: 'answer' | 'claim_check'
 }
 
 export interface QaCitation {
@@ -176,6 +178,13 @@ export interface QaAskResult {
   reasoning_steps?: QaReasoningStep[] | null
   /** What the thread carries into the next turn (summary + research notes). */
   conversation_context?: QaConversationContext | null
+  /**
+   * A claim check's verdict, once FoodScholar returns one itself. Until then
+   * the UI reads it from the answer's first line (utils/claimCheck).
+   */
+  claim_verdict?: { verdict?: string | null } | string | null
+  /** Set by the UI: this exchange checked a claim, and what it found. */
+  ui_claim?: { verdict: 'supported' | 'partly' | 'not_supported' | 'unclear' | null } | null
 }
 
 /** Consent nudge for a durable preference expressed in the question —
@@ -189,6 +198,8 @@ export interface QaMemorySuggestion {
   source_text?: string | null
   /** The profile already holds this value: shown pre-selected, nothing to answer. */
   already_known?: boolean
+  /** What the profile holds that accepting would replace (e.g. "omnivore"). */
+  contradicts?: string[] | null
 }
 
 export interface QaQuestionsResult {
@@ -215,6 +226,9 @@ export interface QaTipsResult {
       guide_urn?: string | null
       page_no?: number | null
       region?: string | null
+      /** Age window (months) when the rule is written for an age group. */
+      age_min_months?: number | null
+      age_max_months?: number | null
     }
   }>
   tips_detail?: Array<{
@@ -232,6 +246,9 @@ export interface QaTipsResult {
       guide_urn?: string | null
       page_no?: number | null
       region?: string | null
+      /** Age window (months) when the rule is written for an age group. */
+      age_min_months?: number | null
+      age_max_months?: number | null
     }
   }>
   generated_at?: string

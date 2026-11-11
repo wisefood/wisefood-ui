@@ -873,11 +873,9 @@
         "ragOn": "Include Articles",
         "ragOff": "Ask the Model Only",
         "retrievalMode": "Retrieval mode",
-        "retrieverRag": "RAG",
-        "retrieverLinearRag": "LinearRAG",
+        "retrieverRag": "AgenticQA",
         "retrieverModelOnly": "Model only",
         "retrieverRagDescription": "Use evidence retrieval from FoodScholar sources.",
-        "retrieverLinearRagDescription": "Use knowledge-graph informed LinearRAG retrieval.",
         "retrieverModelOnlyDescription": "Ask the model without retrieval.",
         "model": "Model",
         "sourceDepth": "Source Depth",
@@ -989,6 +987,13 @@
       "thread": {
         "new": "New conversation",
         "remembers": "What FoodScholar remembers"
+      },
+      "generalKnowledge": "General knowledge",
+      "generalKnowledgeTitle": "Not from the sources FoodScholar found: well-established general guidance",
+      "memory": {
+        "title": "Remember for next time?",
+        "toggle": "{count} to remember",
+        "contradicts": "Your profile says “{values}” now. Remember replaces it."
       }
     }
   },
@@ -1304,6 +1309,115 @@
     "notFound": {
       "title": "Article Not Found",
       "subtitle": "The article you're looking for doesn't exist."
+    }
+  },
+  "foodScholarLearn": {
+    "meterLabel": "Strength of evidence: {bars} of {total}",
+    "intents": {
+      "claim": "Check a claim",
+      "everyday": "Everyday questions",
+      "claimPlaceholder": "Type a claim you heard…",
+      "claimHint": "FoodScholar will say whether the evidence supports it, and how sure we can be."
+    },
+    "levels": {
+      "combined": {
+        "title": "Combines many studies",
+        "body": "A systematic review or meta-analysis: researchers gathered the good studies on this question and weighed them together. Usually the most reliable kind of evidence."
+      },
+      "trial": {
+        "title": "A fair test in people",
+        "body": "A randomised controlled trial: people were split into groups by chance, so a difference at the end is likely caused by what was tested. Still, one trial is one trial."
+      },
+      "intervention": {
+        "title": "A test in people, not randomised",
+        "body": "People were given something to try and followed up, but the groups were not chosen by chance, so other differences may play a part."
+      },
+      "observational": {
+        "title": "Shows a link, not a cause",
+        "body": "Researchers looked at what people already eat and do, and found a pattern. Other habits may explain it, so it cannot prove cause and effect."
+      },
+      "review": {
+        "title": "An expert overview",
+        "body": "Experts summarised what is known on the topic. Good background, but they chose which studies to discuss."
+      },
+      "qualitative": {
+        "title": "About people's experiences",
+        "body": "Interviews or focus groups about what people think and do. It explains views and habits, not health effects."
+      },
+      "early": {
+        "title": "An early clue",
+        "body": "Done in animals or cells. It helps explain how something might work, but results often do not carry over to people."
+      },
+      "opinion": {
+        "title": "Opinion or short report",
+        "body": "A commentary, conference summary or study plan, not a finished study of results."
+      },
+      "unknown": {
+        "title": "Kind of study not recorded",
+        "body": ""
+      }
+    },
+    "studiedIn": {
+      "people": "People",
+      "animals": "Animals",
+      "cells": "Cells in a lab",
+      "unknown": "Not recorded"
+    },
+    "howSure": {
+      "title": "How sure are we?",
+      "studiedIn": "Studied in",
+      "population": "Who took part",
+      "appliesNote": "Results may not apply to everyone: this study looked at {group}.",
+      "earlyNote": "Not tested in people yet. Treat it as a clue, not as advice.",
+      "unknownBody": "The kind of study is not recorded for this article yet. Three questions to ask as you read:",
+      "askWho": "Who was studied: people, animals or cells?",
+      "askLink": "Did it test a cause, or only spot a link?",
+      "askOthers": "Do other studies agree?"
+    },
+    "check": {
+      "verdict": {
+        "supported": "Supported by the evidence",
+        "partly": "Partly true",
+        "not_supported": "Not supported: a myth",
+        "unclear": "Not enough evidence yet"
+      },
+      "humanStudies": "{n} study in people | {n} studies in people",
+      "labStudies": "{n} in animals or cells",
+      "guidelines": "{n} official guideline | {n} official guidelines"
+    },
+    "composer": {
+      "send": "Ask",
+      "leaveClaim": "Stop checking a claim",
+      "tryTitle": "See what FoodScholar can do",
+      "try": "Try",
+      "followUpPlaceholder": "Ask a follow-up…",
+      "jumpToLatest": "Jump to the latest answer",
+      "disclaimer": "FoodScholar explains research. It is not medical advice.",
+      "cards": {
+        "claim": {
+          "title": "Check a food myth",
+          "body": "Find out whether something you heard is backed by evidence.",
+          "example": "Eating after 8 pm makes you gain weight."
+        },
+        "plain": {
+          "title": "Ask in plain words",
+          "body": "A simple answer with its sources, like: is fruit juice as good as fruit?",
+          "example": "Is fruit juice as healthy as whole fruit?"
+        }
+      }
+    },
+    "tools": {
+      "claimTitle": "Pick a claim to check, or type your own",
+      "everydayTitle": "Pick a question, or type your own",
+      "suggestedTitle": "Suggested for you",
+      "shuffle": "Show others",
+      "close": "Close"
+    },
+    "claim": {
+      "youChecked": "You checked",
+      "checking": "Checking the evidence…",
+      "noVerdict": "No clear verdict: see the answer below",
+      "mixBased": "{n} source | {n} sources"
     }
   },
   "myProfile": {

@@ -1,62 +1,32 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+  <!-- Exactly the screen below the site header (the `app` layout): the start
+       screen, the conversation and the library each scroll in their own
+       pane, so the header, the tabs and the question box stay in place. -->
+  <div class="flex min-h-0 flex-1 flex-col bg-gradient-to-br from-earth-1 via-white to-earth-2 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
     <AppPageHeader
       back-to="/dashboard"
       :back-label="t('foodScholarHome.backToDashboard')"
       brand-title="FoodScholar"
       brand-class="text-brand-500 dark:text-brand-400"
       :subtitle="t('foodScholarHome.subtitle')"
+      compact
     />
 
-    <!-- Page tab switcher -->
-    <div class="border-b border-zinc-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 flex justify-center">
-        <div class="flex gap-0">
-          <button
-            type="button"
-            :class="[
-              'px-5 py-3 text-sm font-medium border-b-2 transition-colors',
-              pageTab === 'qa'
-                ? 'border-brand-500 text-brand-600 dark:text-brand-400'
-                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
-            ]"
-            data-flows="foodscholar-tab-ask"
-            @click="pageTab = 'qa'"
-          >
-            <span class="flex items-center gap-1.5">
-              <UIcon name="i-lucide-sparkles" class="w-3.5 h-3.5" />
-              {{ t('foodScholarHome.qa.tabs.askQuestions') }}
-            </span>
-          </button>
-          <button
-            type="button"
-            :class="[
-              'px-5 py-3 text-sm font-medium border-b-2 transition-colors',
-              pageTab === 'resources'
-                ? 'border-brand-500 text-brand-600 dark:text-brand-400'
-                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
-            ]"
-            data-flows="foodscholar-tab-library"
-            @click="pageTab = 'resources'"
-          >
-            <span class="flex items-center gap-1.5">
-              <UIcon name="i-lucide-library" class="w-3.5 h-3.5" />
-              {{ t('foodScholarHome.qa.tabs.library') }}
-            </span>
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- Page tab switcher: Ask and Library switch in place -->
+    <FoodscholarSectionTabs
+      :active="pageTab"
+      @select="selectSection"
+    />
 
     <!-- QA tab -->
     <template v-if="pageTab === 'qa'">
       <!-- Idle state: composer centered vertically in remaining viewport -->
       <div
         v-if="!hasActiveSession"
-        class="qa-idle-shell flex-1 flex flex-col items-center justify-center px-4 pt-4 pb-24 sm:pb-48"
+        class="qa-idle-shell flex-1 min-h-0 overflow-y-auto flex flex-col items-center px-4 pt-10 sm:pt-14 pb-16 sm:pb-24"
       >
-        <div class="w-full max-w-2xl">
-          <div class="mb-8 text-center">
+        <div class="w-full max-w-2xl lg:max-w-3xl my-auto">
+          <div class="mb-10 text-center">
             <h2 class="text-3xl font-claude text-gray-900 dark:text-white mb-2 inline-flex items-center justify-center gap-2 flex-wrap">
               <img ref="figImgRef" src="/fig.png" alt="" aria-hidden="true" class="fig-mark inline-block h-[1.2em] w-auto align-[-0.05em] select-none cursor-pointer" draggable="false" @load="onFigLoad" @mouseenter="replayFigTilt" :class="{ 'fig-mark--animate': figLoaded }" />
               <span>{{ qaHeading }}</span>
@@ -66,74 +36,80 @@
             </p>
           </div>
 
-          <div class="relative">
-            <div
-              class="chat-composer"
-              :class="{ 'is-focused': composerFocused }"
-              data-flows="foodscholar-qa-input"
+          <!-- The question box, with its options in a tray beneath it. -->
+          <div class="qa-composer-stack">
+            <FoodscholarComposerBox
+              ref="idleComposerRef"
+              v-model="chatQuery"
+              :disabled="asking"
+              :busy="asking"
+              :placeholder="composerIntent === 'claim' ? t('foodScholarLearn.intents.claimPlaceholder') : qaPlaceholder"
+              :level-items="explanationLevelItems"
+              :level-label="selectedExpertiseOption.label"
+              :level-title="selectedExpertiseOption.description"
+              :level-icon="selectedExpertiseOption.icon"
+              :advanced-active="isAdvancedMode"
+              :advanced-label="t('foodScholarHome.qa.advanced.title')"
+              :send-label="t('foodScholarLearn.composer.send')"
+              class="relative z-10"
+              @submit="submitIdleComposer"
+              @toggle-advanced="toggleAdvancedMode"
+              @focus="composerFocused = true"
+              @blur="composerFocused = false"
             >
-              <FoodscholarNLInput
-                v-model="chatQuery"
-                :disabled="asking"
-                :placeholder="qaPlaceholder"
-                multiline
-                input-class="w-full min-h-12 py-3 pl-11 pr-[6.5rem] sm:pr-28 rounded-xl bg-transparent text-[0.9375rem] leading-6 text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
-                @enter="askScholarQA"
-                @focus="composerFocused = true"
-                @blur="composerFocused = false"
+              <template #leading>
+                <button
+                  v-if="composerIntent === 'claim'"
+                  type="button"
+                  class="qa-claim-pill"
+                  :aria-label="t('foodScholarLearn.composer.leaveClaim')"
+                  @click="clearClaimIntent"
+                >
+                  <UIcon name="i-lucide-search-check" class="w-4 h-4" />
+                  <span class="hidden min-[400px]:inline">{{ t('foodScholarLearn.intents.claim') }}</span>
+                  <UIcon name="i-lucide-x" class="w-3.5 h-3.5 opacity-70" />
+                </button>
+              </template>
+            </FoodscholarComposerBox>
+
+            <!-- What do you want to do? Options in a tray under the box, for
+                 people who do not arrive with a research question. Each
+                 opens a short list of things to ask. -->
+            <div
+              class="qa-composer-tray"
+              data-flows="foodscholar-qa-intents"
+            >
+              <button
+                type="button"
+                :aria-pressed="selectedTool === 'claim'"
+                :class="['qa-tray-item', { 'is-active': selectedTool === 'claim' }]"
+                @click="openTool('claim')"
               >
-                <template #left>
-                  <UIcon name="i-lucide-search" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                </template>
-                <template #right>
-                  <div class="flex items-center gap-2">
-                    <UDropdownMenu
-                      :items="chatSettingsItems"
-                      :content="chatSettingsContent"
-                      :ui="chatSettingsUi"
-                    >
-                      <!-- Was icon-only: the label lived in aria-label and
-                           title, so it reached a screen reader and a hovering
-                           mouse but not someone looking at the page. Reported
-                           as not obvious to users unfamiliar with the
-                           interface. The text shows from sm up; below that the
-                           composer has no room and the icon stands alone. -->
-                      <button
-                        type="button"
-                        class="chat-settings-button h-10 w-10 sm:w-auto sm:px-3 flex items-center justify-center gap-1.5 rounded-xl border border-gray-200/80 dark:border-zinc-700/80 bg-white/80 dark:bg-zinc-900/80 text-gray-700 dark:text-zinc-200 shadow-sm transition-colors hover:text-brand-600 dark:hover:text-brand-400"
-                        :class="{ 'is-active': isAdvancedMode }"
-                        :aria-label="t('foodScholarHome.qa.advanced.title')"
-                        :title="t('foodScholarHome.qa.advanced.title')"
-                        data-flows="foodscholar-qa-advanced"
-                      >
-                        <UIcon name="i-lucide-sliders-horizontal" class="w-4 h-4 shrink-0" />
-                        <span class="hidden sm:inline text-xs font-medium whitespace-nowrap">
-                          {{ t('foodScholarHome.qa.advanced.title') }}
-                        </span>
-                      </button>
-                    </UDropdownMenu>
-                    <button
-                      :disabled="asking"
-                      class="chat-send-button h-10 w-10 flex items-center justify-center rounded-xl bg-brand-500 text-white disabled:opacity-50 shadow-md shadow-brand-700/20"
-                      :class="{ 'chat-send-idle': !asking }"
-                      data-flows="foodscholar-qa-submit"
-                      @click="askScholarQA()"
-                    >
-                      <UIcon name="i-lucide-arrow-up" class="w-4 h-4 text-white" />
-                    </button>
-                  </div>
-                </template>
-              </FoodscholarNLInput>
-            </div>
-            <div class="mt-2 px-1 hidden items-center justify-between pointer-fine:flex">
-              <p class="text-[0.6875rem] text-gray-500 dark:text-gray-400">
-                {{ composerFocused ? t('foodScholarHome.qa.composer.focusedHint') : t('foodScholarHome.qa.composer.idleHint') }}
-              </p>
-              <span class="text-[0.625rem] uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                {{ t('foodScholarHome.qa.composer.enterKey') }}
-              </span>
+                <UIcon name="i-lucide-search-check" class="w-4 h-4" />
+                {{ t('foodScholarLearn.intents.claim') }}
+              </button>
+              <button
+                type="button"
+                :aria-pressed="selectedTool === 'everyday'"
+                :class="['qa-tray-item', { 'is-active': selectedTool === 'everyday' }]"
+                @click="openTool('everyday')"
+              >
+                <UIcon name="i-lucide-utensils" class="w-4 h-4" />
+                {{ t('foodScholarLearn.intents.everyday') }}
+              </button>
             </div>
           </div>
+
+          <Transition name="qa-advanced-panel">
+            <FoodscholarComposerToolPanel
+              v-if="activeTool"
+              :key="activeTool"
+              :tool="activeTool"
+              :suggested="quickQuestions"
+              @use="useSuggestion"
+              @close="closeTool"
+            />
+          </Transition>
 
           <!-- Advanced panel -->
           <Transition name="qa-advanced-panel">
@@ -191,9 +167,35 @@
             </div>
           </Transition>
 
+          <!-- See what FoodScholar can do: one card per kind of help. -->
+          <div class="mt-10" data-flows="foodscholar-qa-try">
+            <p class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 px-1">
+              <UIcon name="i-lucide-lightbulb" class="w-4 h-4 text-amber-500" />
+              {{ t('foodScholarLearn.composer.tryTitle') }}
+            </p>
+            <div class="mt-3 grid gap-3 sm:grid-cols-2">
+              <button
+                v-for="card in tryCards"
+                :key="card.id"
+                type="button"
+                class="qa-try-card group"
+                @click="card.run()"
+              >
+                <span class="flex items-start justify-between gap-2">
+                  <span :class="['w-9 h-9 rounded-xl flex items-center justify-center', card.accent]">
+                    <UIcon :name="card.icon" class="w-5 h-5" />
+                  </span>
+                  <span class="qa-try-pill">{{ t('foodScholarLearn.composer.try') }}</span>
+                </span>
+                <span class="mt-3 block text-[0.9375rem] font-semibold text-gray-900 dark:text-white">{{ card.title }}</span>
+                <span class="mt-1 block text-sm text-gray-600 dark:text-gray-400 font-light leading-snug">{{ card.body }}</span>
+              </button>
+            </div>
+          </div>
+
           <div
             v-if="quickQuestions.length"
-            class="mt-4 flex flex-wrap gap-2"
+            class="mt-6 flex flex-wrap justify-center gap-2"
             data-flows="foodscholar-qa-suggestions"
           >
             <button
@@ -209,95 +211,562 @@
         </div>
       </div>
 
-      <!-- Active session: centered answer + sidebar -->
-      <div v-else class="flex-1 w-full px-4 py-6">
-        <div ref="qaSessionGridRef" class="qa-session-layout relative max-w-7xl mx-auto">
-          <!-- SVG overlay for citation hover lines -->
-          <svg ref="citationSvgRef" class="pointer-events-none absolute inset-0 w-full h-full z-20 hidden xl:block" style="overflow:visible" aria-hidden="true">
-            <line
-              v-if="citationLine"
-              :key="`${citationLine.x1}-${citationLine.y1}-${citationLine.x2}-${citationLine.y2}`"
-              :x1="citationLine.x1" :y1="citationLine.y1"
-              :x2="citationLine.x2" :y2="citationLine.y2"
-              stroke="#60a5fa"
-              stroke-width="1.5"
-              stroke-dasharray="5 4"
-              opacity="0.7"
-              class="citation-hover-line"
-            />
-          </svg>
-
-        <!-- Center: composer + answer — same width as idle state -->
-        <div class="flex flex-col min-w-0 w-full max-w-2xl mx-auto">
-        <!-- Pinned composer -->
-        <div class="session-composer-wrap mb-6">
-          <div class="relative">
-            <div
-              class="chat-composer"
-              :class="{ 'is-focused': composerFocused }"
-              data-flows="foodscholar-qa-input"
-            >
-              <FoodscholarNLInput
-                v-model="chatQuery"
-                :disabled="asking"
-                :placeholder="qaPlaceholder"
-                multiline
-                input-class="w-full min-h-12 py-3 pl-11 pr-[6.5rem] rounded-xl bg-transparent text-[0.9375rem] leading-6 text-gray-900 dark:text-zinc-100 placeholder:text-gray-500 dark:placeholder:text-zinc-400 focus:outline-none transition-all duration-200"
-                @enter="askScholarQA"
-                @focus="composerFocused = true"
-                @blur="composerFocused = false"
+      <!-- Active session: the conversation scrolls in its own pane, the
+           question box stays below it -->
+      <div v-else class="flex-1 min-h-0 flex flex-col">
+        <!-- Thread bar: the memory made visible, and a fresh start. Pinned
+             above the conversation pane, so it is always in reach however
+             far down a long conversation the reader is. -->
+        <div v-if="(qaThreadId || threadMemorySuggestions.length) && hasActiveSession" class="qa-thread-bar px-4 pt-3" data-flows="foodscholar-qa-thread-bar">
+          <div class="max-w-2xl lg:max-w-3xl mx-auto">
+            <div class="flex items-center justify-between gap-2 px-1">
+              <button
+                v-if="hasCarriedContext"
+                type="button"
+                class="inline-flex items-center gap-1.5 min-h-8 text-[0.6875rem] text-gray-500 dark:text-zinc-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+                :aria-expanded="memoryPanelOpen"
+                @click="memoryPanelOpen = !memoryPanelOpen"
               >
-                <template #left>
-                  <UIcon name="i-lucide-search" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                </template>
-                <template #right>
-                  <div class="flex items-center gap-2">
-                    <UDropdownMenu
-                      :items="chatSettingsItems"
-                      :content="chatSettingsContent"
-                      :ui="chatSettingsUi"
-                    >
-                      <button
-                        type="button"
-                        class="chat-settings-button h-10 w-10 flex items-center justify-center rounded-xl border border-gray-200/80 dark:border-zinc-700/80 bg-white/80 dark:bg-zinc-900/80 text-gray-600 dark:text-zinc-300 shadow-sm transition-colors hover:text-brand-600 dark:hover:text-brand-400"
-                        :class="{ 'is-active': isAdvancedMode }"
-                        :aria-label="t('foodScholarHome.qa.advanced.title')"
-                        :title="t('foodScholarHome.qa.advanced.title')"
-                        data-flows="foodscholar-qa-advanced"
-                      >
-                        <UIcon name="i-lucide-sliders-horizontal" class="w-4 h-4" />
-                      </button>
-                    </UDropdownMenu>
-                    <button
-                      :disabled="asking"
-                      class="chat-send-button h-10 w-10 flex items-center justify-center rounded-xl bg-brand-500 text-white disabled:opacity-50 shadow-md shadow-brand-700/20"
-                      :class="{ 'chat-send-idle': !asking }"
-                      data-flows="foodscholar-qa-submit"
-                      @click="askScholarQA()"
-                    >
-                      <UIcon v-if="asking" name="i-lucide-loader-2" class="w-4 h-4 animate-spin text-white" />
-                      <UIcon v-else name="i-lucide-arrow-up" class="w-4 h-4 text-white" />
-                    </button>
-                  </div>
-                </template>
-              </FoodscholarNLInput>
-            </div>
-            <div class="mt-2 px-1 hidden items-center justify-between pointer-fine:flex">
-              <p class="text-[0.6875rem] text-gray-500 dark:text-gray-400">
-                {{ composerFocused ? t('foodScholarHome.qa.composer.focusedHint') : t('foodScholarHome.qa.composer.idleHint') }}
-              </p>
-              <span class="text-[0.625rem] uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                {{ t('foodScholarHome.qa.composer.enterKey') }}
+                <UIcon name="i-lucide-brain" class="w-3.5 h-3.5" />
+                {{ t('foodScholarHome.qa.thread.remembers') }}
+                <UIcon :name="memoryPanelOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3 h-3" />
+              </button>
+              <span v-else />
+              <span class="flex items-center gap-2">
+              <!-- Narrow screens have no left rail: the nudges open from here,
+                   in reach however far down the conversation the reader is. -->
+              <button
+                v-if="threadMemorySuggestions.length"
+                type="button"
+                class="xl:hidden inline-flex items-center gap-1.5 min-h-8 rounded-lg px-2.5 py-1 text-xs font-medium bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-900/50 transition-colors"
+                :aria-expanded="memoryNudgesOpen"
+                data-flows="foodscholar-qa-memory-toggle"
+                @click="memoryNudgesOpen = !memoryNudgesOpen"
+              >
+                <UIcon name="i-lucide-brain" class="w-3.5 h-3.5 shrink-0" />
+                {{ t('foodScholarHome.qa.memory.toggle', { count: pendingMemorySuggestions.length || threadMemorySuggestions.length }) }}
+                <UIcon :name="memoryNudgesOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3 h-3" />
+              </button>
+              <button
+                v-if="qaThreadId"
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs font-medium text-gray-700 dark:text-zinc-200 hover:border-brand-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+                data-flows="foodscholar-qa-new-thread"
+                @click="startNewThread"
+              >
+                <UIcon name="i-lucide-plus" class="w-3.5 h-3.5 shrink-0" />
+                {{ t('foodScholarHome.qa.thread.new') }}
+              </button>
               </span>
             </div>
+
+            <div v-if="memoryNudgesOpen && threadMemorySuggestions.length" class="xl:hidden mt-2 max-h-[35dvh] overflow-y-auto overscroll-contain" data-flows="foodscholar-qa-memory">
+              <FoodscholarMemoryNudges
+                :suggestions="threadMemorySuggestions"
+                :state="memoryChipState"
+                @decide="handleMemoryDecision"
+              />
+            </div>
+
+            <!-- What FoodScholar is carrying from this conversation: opens
+                 under the bar, scrolling on its own when long. -->
+            <div v-if="memoryPanelOpen && carriedContext" class="mt-2 max-h-[35dvh] overflow-y-auto overscroll-contain px-4 py-3 rounded-2xl border border-gray-200 dark:border-zinc-700/70 bg-white dark:bg-zinc-900 space-y-2">
+              <p v-if="carriedContext.summary" class="text-xs text-gray-600 dark:text-zinc-300 whitespace-pre-line">{{ carriedContext.summary }}</p>
+              <div v-if="carriedContext.notes?.length" class="flex flex-wrap gap-1.5">
+                <span
+                  v-for="(note, nIdx) in carriedContext.notes.slice(0, 8)"
+                  :key="`cnote-${nIdx}`"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 text-[0.6875rem] rounded-full border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300"
+                >
+                  <UIcon :name="note.kind === 'gap' ? 'i-lucide-circle-alert' : note.kind === 'lead' ? 'i-lucide-compass' : 'i-lucide-check'" class="w-2.5 h-2.5 opacity-70" />
+                  {{ note.text }}
+                </span>
+              </div>
+            </div>
           </div>
+        </div>
+        <div
+          ref="threadScrollRef"
+          :class="['qa-thread-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-2', qaThreadId && hasActiveSession ? 'pt-4' : 'pt-6']"
+          :style="{ '--qa-thread-h': `${threadPaneHeight}px` }"
+        >
+          <div ref="qaSessionGridRef" class="qa-session-layout relative max-w-7xl mx-auto">
+            <!-- SVG overlay for citation hover lines -->
+            <svg ref="citationSvgRef" class="pointer-events-none absolute inset-0 w-full h-full z-20 hidden xl:block" style="overflow:visible" aria-hidden="true">
+              <line
+                v-if="citationLine"
+                :key="`${citationLine.x1}-${citationLine.y1}-${citationLine.x2}-${citationLine.y2}`"
+                :x1="citationLine.x1" :y1="citationLine.y1"
+                :x2="citationLine.x2" :y2="citationLine.y2"
+                stroke="#60a5fa"
+                stroke-width="1.5"
+                stroke-dasharray="5 4"
+                opacity="0.7"
+                class="citation-hover-line"
+              />
+            </svg>
+
+          <!-- Center: composer + answer — same width as idle state -->
+          <div class="flex flex-col min-w-0 w-full max-w-2xl lg:max-w-3xl mx-auto">
+          <!-- Earlier exchanges of this thread, in full, in the page's own
+               scroll: one conversation reading top to bottom, like a chat. -->
+          <div v-if="threadTurns.length" class="space-y-5 mb-8">
+            <template v-for="(turn, tIdx) in threadTurns" :key="`turn-${turn.result.request_id || tIdx}`">
+              <div class="flex justify-end">
+                <div class="chat-flow-bubble chat-flow-bubble-user">
+                  <p v-if="turn.result.ui_claim" class="text-[0.625rem] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarLearn.claim.youChecked') }}</p>
+                  <p class="text-sm leading-relaxed">{{ turn.question }}</p>
+                </div>
+              </div>
+              <FoodscholarClaimVerdictRow
+                v-if="turn.result.ui_claim"
+                :verdict="turn.result.ui_claim.verdict"
+                :mix="sourceMix(turn.result.retrieved_sources ?? turn.result.retrieved_articles)"
+              />
+              <div class="chat-flow-bubble chat-flow-bubble-assistant">
+                <div class="qa-answer-markdown text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" @click="handleMarkdownClick" v-html="renderMarkdown(turn.result.primary_answer?.answer || '')" />
+              </div>
+            </template>
+          </div>
+
+          <!-- Error -->
+          <div v-if="qaError" class="mb-4 p-4 rounded-xl border border-red-200 dark:border-red-800 bg-red-50/90 dark:bg-red-900/20">
+            <p class="text-sm text-red-700 dark:text-red-300">{{ qaError }}</p>
+          </div>
+
+          <!-- Live pipeline: reasoning steps stream in, then the answer tokens -->
+          <div
+            v-if="asking"
+            data-qa-exchange="live"
+            :class="['space-y-4 session-answer-enter qa-exchange', { 'qa-exchange-fill': threadTurns.length > 0 }]"
+          >
+            <div class="flex justify-end">
+              <div class="chat-flow-bubble chat-flow-bubble-user">
+                <p class="text-[0.625rem] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ pendingClaim ? t('foodScholarLearn.claim.youChecked') : t('foodScholarHome.qa.youAsked') }}</p>
+                <p class="text-sm leading-relaxed">{{ pendingQuestion || chatQuery }}</p>
+              </div>
+            </div>
+            <FoodscholarClaimVerdictRow
+              v-if="pendingClaim"
+              :verdict="liveVerdict"
+              checking
+            />
+
+            <!-- Open while researching; folds away as the first words of the
+                 answer arrive, so the settled answer (steps folded) lands in
+                 the same place instead of jumping up. -->
+            <FoodscholarReasoningSteps
+              v-if="liveSteps.length"
+              :steps="liveSteps"
+              :live="!liveAnswerShown"
+              start-open
+            />
+
+            <!-- The answer as it streams: same markdown surface as the settled
+                 answer, minus the reveal animation (it would restart per token). -->
+            <div v-if="liveAnswerShown" class="chat-flow-bubble chat-flow-bubble-assistant">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.answer') }}</h4>
+                <UIcon name="i-lucide-loader-2" class="w-3.5 h-3.5 animate-spin text-gray-400 dark:text-zinc-500" />
+              </div>
+              <div class="qa-answer-markdown text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" @click="handleMarkdownClick" @mouseover="handleAnswerMouseOver" @mouseout="handleAnswerMouseOut" v-html="renderMarkdown(liveAnswerShown)" />
+            </div>
+
+            <!-- Skeleton only until the first pipeline event arrives (or when the
+                 gateway lacks the streaming route and we fell back to one-shot). -->
+            <div v-else-if="!liveSteps.length" class="chat-flow-bubble chat-flow-bubble-assistant">
+              <div class="flex items-center justify-between mb-3">
+                <div class="h-4 w-16 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+                <div class="h-3 w-24 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+              </div>
+              <div class="space-y-2.5">
+                <div class="h-3 w-full rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+                <div class="h-3 w-11/12 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+                <div class="h-3 w-4/5 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+                <div class="h-3 w-full rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+                <div class="h-3 w-3/4 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Clarification panel -->
+          <div v-if="pendingClarification && !asking" class="space-y-4 session-answer-enter">
+            <div class="flex justify-end">
+              <div class="chat-flow-bubble chat-flow-bubble-user">
+                <p class="text-[0.625rem] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
+                <p class="text-sm leading-relaxed">{{ pendingQuestion }}</p>
+              </div>
+            </div>
+
+            <div class="chat-flow-bubble chat-flow-bubble-assistant">
+              <div class="flex items-start gap-2 mb-4">
+                <UIcon name="i-lucide-help-circle" class="w-4 h-4 text-brand-500 dark:text-brand-400 mt-0.5 shrink-0" />
+                <div>
+                  <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ pendingClarification.question }}</p>
+                  <p v-if="pendingClarification.reason" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ pendingClarification.reason }}</p>
+                </div>
+              </div>
+
+              <!-- single_choice / boolean -->
+              <div
+                v-if="pendingClarification.input_type === 'single_choice' || pendingClarification.input_type === 'boolean'"
+                class="flex flex-wrap gap-2 mb-4"
+              >
+                <button
+                  v-for="opt in (pendingClarification.options ?? (pendingClarification.input_type === 'boolean' ? [{ label: t('foodScholarHome.qa.clarify.yes'), value: 'true' }, { label: t('foodScholarHome.qa.clarify.no'), value: 'false' }] : []))"
+                  :key="opt.value"
+                  type="button"
+                  :class="[
+                    'px-3.5 py-1.5 text-sm rounded-full border transition-colors',
+                    clarificationSelectedValues.includes(opt.value)
+                      ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 font-medium'
+                      : 'border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-400 dark:hover:border-brand-600'
+                  ]"
+                  @click="clarificationSelectedValues = [opt.value]"
+                >{{ opt.label }}</button>
+              </div>
+
+              <!-- multiple_choice -->
+              <div v-else-if="pendingClarification.input_type === 'multiple_choice'" class="flex flex-wrap gap-2 mb-4">
+                <button
+                  v-for="opt in (pendingClarification.options ?? [])"
+                  :key="opt.value"
+                  type="button"
+                  :class="[
+                    'px-3.5 py-1.5 text-sm rounded-full border transition-colors',
+                    clarificationSelectedValues.includes(opt.value)
+                      ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 font-medium'
+                      : 'border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-400 dark:hover:border-brand-600'
+                  ]"
+                  @click="clarificationSelectedValues.includes(opt.value)
+                    ? clarificationSelectedValues = clarificationSelectedValues.filter(v => v !== opt.value)
+                    : clarificationSelectedValues.push(opt.value)"
+                >{{ opt.label }}</button>
+              </div>
+
+              <!-- free_text / number -->
+              <div v-else-if="pendingClarification.input_type === 'free_text' || pendingClarification.input_type === 'number'" class="mb-4">
+                <input
+                  v-model="clarificationFreeText"
+                  :type="pendingClarification.input_type === 'number' ? 'number' : 'text'"
+                  class="w-full px-3 py-2 text-sm rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400"
+                  :placeholder="t('foodScholarHome.qa.clarify.yourAnswer')"
+                  @keydown.enter.prevent="submitClarification"
+                />
+              </div>
+
+              <!-- allow_free_text addon for choice types -->
+              <div
+                v-if="(pendingClarification.input_type === 'single_choice' || pendingClarification.input_type === 'multiple_choice') && pendingClarification.allow_free_text"
+                class="mb-4"
+              >
+                <input
+                  v-model="clarificationFreeText"
+                  type="text"
+                  class="w-full px-3 py-2 text-sm rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400"
+                  :placeholder="t('foodScholarHome.qa.clarify.otherOptional')"
+                  @keydown.enter.prevent="submitClarification"
+                />
+              </div>
+
+              <div class="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  class="px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                  @click="pendingClarification = null; qaError = null"
+                >{{ t('foodScholarHome.qa.clarify.skip') }}</button>
+                <button
+                  type="button"
+                  :disabled="clarificationSelectedValues.length === 0 && !String(clarificationFreeText ?? '').trim()"
+                  class="px-4 py-1.5 text-sm font-medium rounded-full bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  @click="submitClarification"
+                >{{ t('foodScholarHome.qa.clarify.continueBtn') }}</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Answer -->
+          <div
+            v-if="qaResult && primaryAnswer"
+            ref="latestExchangeRef"
+            data-qa-exchange="settled"
+            :class="['space-y-4 session-answer-enter qa-exchange', { 'qa-exchange-fill': threadTurns.length > 0, 'qa-settled-quiet': settledAfterStream }]"
+            data-flows="foodscholar-qa-answer"
+          >
+            <div class="flex justify-end">
+              <div class="chat-flow-bubble chat-flow-bubble-user">
+                <p class="text-[0.625rem] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ qaResult.ui_claim ? t('foodScholarLearn.claim.youChecked') : t('foodScholarHome.qa.youAsked') }}</p>
+                <p class="text-sm leading-relaxed">{{ qaResult.question }}</p>
+              </div>
+            </div>
+            <FoodscholarClaimVerdictRow
+              v-if="qaResult.ui_claim"
+              :verdict="qaResult.ui_claim.verdict"
+              :mix="sourceMix(qaResult.retrieved_sources ?? qaResult.retrieved_articles)"
+            />
+
+            <!-- How the answer was researched: collapsed once settled, reopenable -->
+            <FoodscholarReasoningSteps
+              v-if="answerReasoningSteps.length"
+              :steps="answerReasoningSteps"
+            />
+
+            <div v-if="hasDualAnswerMode" class="space-y-3">
+              <p v-if="!selectedPreferredAnswer" class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.feedback.choosePreferredAnswer') }}</p>
+              <div v-else class="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                <UIcon name="i-lucide-check" class="w-4 h-4" />
+                {{ t('foodScholarHome.qa.feedback.preferenceSaved') }}
+              </div>
+              <div :class="['grid gap-3', selectedPreferredAnswer ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2']">
+                <div
+                  v-if="!selectedPreferredAnswer || selectedPreferredAnswer === 'a'"
+                  :class="['chat-flow-bubble chat-flow-bubble-assistant p-5 rounded-2xl transition-all duration-200', selectedPreferredAnswer === 'a' ? 'ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900' : feedbackSubmitting ? 'opacity-70 pointer-events-none' : 'cursor-pointer hover:ring-2 hover:ring-brandp-300 hover:ring-offset-2 hover:ring-offset-white dark:hover:ring-brandp-600 dark:hover:ring-offset-zinc-900']"
+                  role="button" tabindex="0" :aria-pressed="selectedPreferredAnswer === 'a'"
+                  @click="submitDualAnswerFeedback('a')" @keydown.enter.prevent="submitDualAnswerFeedback('a')" @keydown.space.prevent="submitDualAnswerFeedback('a')"
+                >
+                  <div class="flex items-center justify-between gap-2 mb-3">
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPreferredAnswer ? t('foodScholarHome.qa.answer') : t('foodScholarHome.qa.answerA') }}</h4>
+                    <span v-if="!selectedPreferredAnswer" class="text-xs text-gray-500 dark:text-gray-400">{{ answerALabel }}</span>
+                  </div>
+                  <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" @click="handleMarkdownClick" @mouseover="handleAnswerMouseOver" @mouseout="handleAnswerMouseOut" style="--answer-reveal-delay: 40ms" v-html="renderMarkdown(primaryAnswer.answer)" />
+                </div>
+                <div
+                  v-if="(!selectedPreferredAnswer || selectedPreferredAnswer === 'b') && secondaryAnswer"
+                  :class="['chat-flow-bubble chat-flow-bubble-assistant p-5 rounded-2xl transition-all duration-200', selectedPreferredAnswer === 'b' ? 'ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900' : feedbackSubmitting ? 'opacity-70 pointer-events-none' : 'cursor-pointer hover:ring-2 hover:ring-brandp-300 hover:ring-offset-2 hover:ring-offset-white dark:hover:ring-brandp-600 dark:hover:ring-offset-zinc-900']"
+                  role="button" tabindex="0" :aria-pressed="selectedPreferredAnswer === 'b'"
+                  @click="submitDualAnswerFeedback('b')" @keydown.enter.prevent="submitDualAnswerFeedback('b')" @keydown.space.prevent="submitDualAnswerFeedback('b')"
+                >
+                  <div class="flex items-center justify-between gap-2 mb-3">
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPreferredAnswer ? t('foodScholarHome.qa.answer') : t('foodScholarHome.qa.answerB') }}</h4>
+                    <span v-if="!selectedPreferredAnswer" class="text-xs text-gray-500 dark:text-gray-400">{{ answerBLabel }}</span>
+                  </div>
+                  <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" @click="handleMarkdownClick" @mouseover="handleAnswerMouseOver" @mouseout="handleAnswerMouseOut" style="--answer-reveal-delay: 120ms" v-html="renderMarkdown(secondaryAnswer.answer)" />
+                </div>
+              </div>
+            </div>
+
+            <div v-else class="chat-flow-bubble chat-flow-bubble-assistant">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.answer') }}</h4>
+                <!-- A popover, not a tooltip: a tooltip never opens on tap. -->
+                <UPopover :mode="hasHover ? 'hover' : 'click'" :ui="{ content: 'max-w-xs px-3 py-2 text-xs leading-5 text-gray-700 dark:text-gray-200' }">
+                  <span role="button" tabindex="0" class="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 cursor-help">
+                    {{ t('foodScholarHome.qa.confidence') }}: {{ primaryAnswer.confidence || t('foodScholarHome.qa.notAvailable') }}
+                    <UIcon name="i-lucide-help-circle" class="w-3 h-3" />
+                  </span>
+                  <template #content>
+                    <p>{{ t('foodScholarHome.qa.confidenceExplainer') }}</p>
+                  </template>
+                </UPopover>
+              </div>
+              <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" style="--answer-reveal-delay: 40ms" @click="handleMarkdownClick" @mouseover="handleAnswerMouseOver" @mouseout="handleAnswerMouseOut" v-html="renderMarkdown(primaryAnswer.answer)" />
+
+              <!-- The boundary has to be on the answer itself: this is the surface
+                   where people ask health questions about their own bodies. -->
+              <p class="mt-3 flex items-start gap-1.5 text-[0.6875rem] text-gray-400 dark:text-gray-500">
+                <UIcon name="i-lucide-info" class="w-3 h-3 mt-0.5 shrink-0" />
+                {{ t('foodScholarHome.qa.medicalBoundary') }}
+              </p>
+
+              <div v-if="singleAnswerFeedbackEnabled" class="mt-4">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.feedback.helpfulQuestion') }}</span>
+                  <template v-if="!singleAnswerFeedbackSubmitted && !showNegativeFeedbackReasons">
+                    <button :disabled="feedbackSubmitting" class="px-3 py-1.5 text-xs rounded-full border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-300 transition-colors disabled:opacity-50" @click="submitSingleAnswerFeedback(true)">{{ t('foodScholarHome.common.yes') }}</button>
+                    <button :disabled="feedbackSubmitting" class="px-3 py-1.5 text-xs rounded-full border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-300 transition-colors disabled:opacity-50" @click="submitSingleAnswerFeedback(false)">{{ t('foodScholarHome.common.no') }}</button>
+                  </template>
+                  <template v-else-if="singleAnswerFeedbackSubmitted">
+                    <UIcon name="i-lucide-check" class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span class="text-xs font-medium text-emerald-700 dark:text-emerald-300">{{ t('foodScholarHome.qa.feedback.saved') }}</span>
+                  </template>
+                </div>
+                <div v-if="showNegativeFeedbackReasons && !singleAnswerFeedbackSubmitted" class="mt-3 space-y-3">
+                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.feedback.whatWentWrong') }}</p>
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      v-for="reason in negativeFeedbackReasons" :key="reason" :disabled="feedbackSubmitting"
+                      :class="['px-3 py-1.5 text-xs rounded-full border transition-colors disabled:opacity-50', selectedNegativeReason === reason ? 'border-red-500 bg-red-50 text-red-700 dark:border-red-400 dark:bg-red-900/30 dark:text-red-300' : 'border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-red-400 hover:bg-red-50 hover:text-red-700 dark:hover:border-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-300']"
+                      @click="selectNegativeReason(reason)"
+                    >{{ reason }}</button>
+                  </div>
+                  <div v-if="selectedNegativeReason">
+                    <textarea v-model="negativeFeedbackComment" :disabled="feedbackSubmitting" rows="2" :placeholder="t('foodScholarHome.qa.feedback.optionalComment')" class="w-full px-3 py-2 text-xs rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400 resize-none disabled:opacity-50" />
+                    <button :disabled="feedbackSubmitting" class="mt-2 px-4 py-1.5 text-xs font-medium rounded-full bg-brand-500 text-white hover:bg-brand-600 transition-colors disabled:opacity-50" @click="submitNegativeFeedback()">{{ t('foodScholarHome.qa.feedback.submit') }}</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Follow-up suggestions -->
+            <div
+              v-if="qaResult.follow_up_suggestions?.length"
+              class="chat-flow-bubble chat-flow-bubble-muted"
+              data-flows="foodscholar-qa-followups"
+            >
+              <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">{{ t('foodScholarHome.qa.followUpSuggestions') }}</h4>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="suggestion in qaResult.follow_up_suggestions" :key="suggestion" type="button"
+                  class="px-3 py-1.5 text-xs rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-200 hover:bg-brand-100 dark:hover:bg-brand-900/40 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
+                  @click="askScholarFollowUp(suggestion)"
+                >{{ suggestion }}</button>
+              </div>
+            </div>
+          </div>
+          <!-- end answer block -->
+
+          <!-- Sources, for the screens with no room for the rail beside the
+               answer: the same list the rail shows, folded under the answer
+               so it reads as a footnote rather than a second column. -->
+          <UCollapsible
+            v-if="qaResult && primaryAnswer && (primaryAnswer.citations?.length || uncitedRetrievedArticles.length)"
+            class="mt-4 xl:hidden"
+            data-flows="foodscholar-qa-sources-inline"
+          >
+            <button
+              type="button"
+              class="group flex w-full items-center justify-between rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white"
+            >
+              <span class="inline-flex items-center gap-2">
+                <UIcon name="i-lucide-library" class="w-4 h-4 text-gray-400" />
+                {{ t('foodScholarHome.qa.sidebar.inlineTitle', { count: (primaryAnswer.citations?.length || 0) + uncitedRetrievedArticles.length }) }}
+              </span>
+              <UIcon name="i-lucide-chevron-down" class="w-4 h-4 text-gray-400 transition-transform group-data-[state=open]:rotate-180" />
+            </button>
+            <template #content>
+              <div class="mt-2 flex flex-col gap-2">
+                <template v-if="primaryAnswer.citations?.length">
+                  <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1">{{ t('foodScholarHome.qa.sidebar.cited') }}</p>
+                  <NuxtLink
+                    v-for="(citation, idx) in primaryAnswer.citations"
+                    :key="`inline-${citation.article_urn}`"
+                    :to="getCitationSourcePath(citation)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 hover:border-brand-300 dark:hover:border-brand-700 transition-colors"
+                    @click="recordCitationOpened(citation.article_urn, getCitationSourceType(citation), 'sidebar')"
+                  >
+                    <UIcon :name="getQaSourceIcon(citation.article_urn, getCitationSourceType(citation))" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
+                    <span class="min-w-0 flex-1">
+                      <span class="block text-xs text-gray-800 dark:text-gray-200 leading-snug">{{ citation.article_title }}</span>
+                      <span v-if="citationMetaLine(citation)" class="block text-[0.625rem] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{{ citationMetaLine(citation) }}</span>
+                    </span>
+                    <span class="text-[0.6rem] font-bold text-brand-400 dark:text-brand-500 shrink-0 mt-0.5">[{{ idx + 1 }}]</span>
+                  </NuxtLink>
+                </template>
+                <template v-if="uncitedRetrievedArticles.length">
+                  <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mt-2">{{ t('foodScholarHome.qa.sidebar.consulted') }}</p>
+                  <NuxtLink
+                    v-for="article in uncitedRetrievedArticles"
+                    :key="`inline-${article.urn}`"
+                    :to="getRetrievedSourcePath(article)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-100 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/50 opacity-70 hover:opacity-100 transition-all"
+                  >
+                    <UIcon :name="getQaSourceIcon(article.urn, article.source_type)" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
+                    <span class="min-w-0 flex-1">
+                      <span class="block text-xs text-gray-700 dark:text-gray-300 leading-snug">{{ article.title }}</span>
+                      <span v-if="retrievedMetaLine(article)" class="block text-[0.625rem] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{{ retrievedMetaLine(article) }}</span>
+                    </span>
+                  </NuxtLink>
+                </template>
+              </div>
+            </template>
+          </UCollapsible>
+
+          <!-- Where the conversation ends: watched to offer "jump to latest". -->
+          <div ref="threadEndRef" class="qa-thread-end" aria-hidden="true" />
+
+          </div>
+          <!-- end center column -->
+
+          <!-- Left panel: what FoodScholar could remember about the asker,
+               from every answer of this conversation, beside the answers
+               rather than after them. -->
+          <aside v-if="threadMemorySuggestions.length" class="qa-memory-rail hidden xl:block pt-1">
+            <div class="qa-memory-rail-inner" data-flows="foodscholar-qa-memory">
+              <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mb-1">{{ t('foodScholarHome.qa.memory.title') }}</p>
+              <FoodscholarMemoryNudges
+                :suggestions="threadMemorySuggestions"
+                :state="memoryChipState"
+                @decide="handleMemoryDecision"
+              />
+            </div>
+          </aside>
+
+          <!-- Right panel: cited sources (titles only) -->
+          <aside class="qa-source-sidebar hidden xl:block pt-1">
+            <div
+              class="qa-source-sidebar-inner"
+              data-flows="foodscholar-qa-sources"
+            >
+            <template v-if="qaResult && primaryAnswer && primaryAnswer.citations?.length">
+              <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mb-1">{{ t('foodScholarHome.qa.sidebar.cited') }}</p>
+              <NuxtLink
+                v-for="(citation, idx) in primaryAnswer.citations"
+                :key="citation.article_urn"
+                :to="getCitationSourcePath(citation)"
+                :data-citation-urn="citation.article_urn"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="citation-source-card flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600 dark:hover:text-brand-400 transition-colors group"
+                @click="recordCitationOpened(citation.article_urn, getCitationSourceType(citation), 'sidebar')"
+              >
+                <UIcon :name="getQaSourceIcon(citation.article_urn, getCitationSourceType(citation))" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
+                <span class="min-w-0 flex-1">
+                  <span class="block text-xs text-gray-800 dark:text-gray-200 leading-snug line-clamp-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ citation.article_title }}</span>
+                  <span v-if="citationMetaLine(citation)" class="block text-[0.625rem] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{{ citationMetaLine(citation) }}</span>
+                </span>
+                <span class="text-[0.6rem] font-bold text-brand-400 dark:text-brand-500 shrink-0 mt-0.5 ml-auto">[{{ idx + 1 }}]</span>
+              </NuxtLink>
+
+              <template v-if="uncitedRetrievedArticles.length">
+                <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mt-3 mb-1">{{ t('foodScholarHome.qa.sidebar.consulted') }}</p>
+                <NuxtLink
+                  v-for="article in uncitedRetrievedArticles"
+                  :key="article.urn"
+                  :to="getRetrievedSourcePath(article)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-100 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/50 opacity-60 hover:opacity-100 hover:border-gray-300 dark:hover:border-zinc-700 transition-all group"
+                >
+                  <UIcon :name="getQaSourceIcon(article.urn, article.source_type)" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-xs text-gray-700 dark:text-gray-300 leading-snug line-clamp-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ article.title }}</span>
+                    <span v-if="retrievedMetaLine(article)" class="block text-[0.625rem] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{{ retrievedMetaLine(article) }}</span>
+                  </span>
+                </NuxtLink>
+              </template>
+            </template>
+            </div>
+          </aside>
+
+          </div><!-- end 3-col grid -->
+        </div><!-- end conversation pane -->
+
+        <!-- The question box, below the conversation pane. -->
+        <div class="qa-dock px-4">
+          <div class="relative max-w-2xl lg:max-w-3xl mx-auto">
+          <Transition name="qa-jump">
+            <button
+              v-if="showJumpToLatest"
+              type="button"
+              class="qa-jump-latest"
+              :aria-label="t('foodScholarLearn.composer.jumpToLatest')"
+              :title="t('foodScholarLearn.composer.jumpToLatest')"
+              @click="jumpToLatest"
+            >
+              <UIcon name="i-lucide-arrow-down" class="w-4 h-4" />
+            </button>
+          </Transition>
 
           <!-- Advanced panel in session -->
           <Transition name="qa-advanced-panel">
             <div
               v-if="isAdvancedMode"
               data-flows="foodscholar-qa-advanced-panel"
-              class="qa-advanced-panel mt-3 rounded-2xl border border-gray-200/80 dark:border-zinc-700/80 bg-white/60 dark:bg-zinc-900/40 backdrop-blur-sm p-4"
+              class="qa-advanced-panel mb-3 rounded-2xl border border-gray-200/80 dark:border-zinc-700/80 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm shadow-sm p-4"
             >
               <div class="flex items-start justify-between gap-3 mb-3">
                 <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.advanced.title') }}</p>
@@ -331,963 +800,517 @@
               </div>
             </div>
           </Transition>
-        </div>
 
-        <!-- Thread bar: the memory made visible, and a fresh start -->
-        <div v-if="qaThreadId && hasActiveSession" class="flex items-center justify-between gap-2 -mt-2 mb-4 px-1">
-          <button
-            v-if="hasCarriedContext"
-            type="button"
-            class="inline-flex items-center gap-1.5 text-[0.6875rem] text-gray-500 dark:text-zinc-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
-            :aria-expanded="memoryPanelOpen"
-            @click="memoryPanelOpen = !memoryPanelOpen"
+          <FoodscholarComposerBox
+            v-model="chatQuery"
+            docked
+            :disabled="asking"
+            :busy="asking"
+            :placeholder="composerIntent === 'claim' ? t('foodScholarLearn.intents.claimPlaceholder') : (threadTurns.length || qaResult ? t('foodScholarLearn.composer.followUpPlaceholder') : qaPlaceholder)"
+            :level-items="explanationLevelItems"
+            :level-label="selectedExpertiseOption.label"
+            :level-title="selectedExpertiseOption.description"
+            :level-icon="selectedExpertiseOption.icon"
+            :advanced-active="isAdvancedMode"
+            :advanced-label="t('foodScholarHome.qa.advanced.title')"
+            :send-label="t('foodScholarLearn.composer.send')"
+            @submit="submitDockedComposer"
+            @toggle-advanced="toggleAdvancedMode"
+            @focus="composerFocused = true"
+            @blur="composerFocused = false"
           >
-            <UIcon name="i-lucide-brain" class="w-3.5 h-3.5" />
-            {{ t('foodScholarHome.qa.thread.remembers') }}
-            <UIcon :name="memoryPanelOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3 h-3" />
-          </button>
-          <span v-else />
-          <!-- The label was always here, at 11px in gray-500 against a light
-               background — present and unreadable, which is why it was
-               reported as not obvious. Same words, given a button's outline
-               and enough contrast to find. -->
-          <button
-            type="button"
-            class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 px-2.5 py-1 text-xs font-medium text-gray-700 dark:text-zinc-200 hover:border-brand-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
-            data-flows="foodscholar-qa-new-thread"
-            @click="startNewThread"
-          >
-            <UIcon name="i-lucide-plus" class="w-3.5 h-3.5 shrink-0" />
-            {{ t('foodScholarHome.qa.thread.new') }}
-          </button>
-        </div>
-
-        <!-- What FoodScholar is carrying from this conversation -->
-        <div v-if="memoryPanelOpen && carriedContext" class="mb-4 px-4 py-3 rounded-2xl border border-gray-200 dark:border-zinc-700/70 bg-white/60 dark:bg-zinc-900/40 space-y-2">
-          <p v-if="carriedContext.summary" class="text-xs text-gray-600 dark:text-zinc-300 whitespace-pre-line">{{ carriedContext.summary }}</p>
-          <div v-if="carriedContext.notes?.length" class="flex flex-wrap gap-1.5">
-            <span
-              v-for="(note, nIdx) in carriedContext.notes.slice(0, 8)"
-              :key="`cnote-${nIdx}`"
-              class="inline-flex items-center gap-1 px-2 py-0.5 text-[0.6875rem] rounded-full border border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300"
-            >
-              <UIcon :name="note.kind === 'gap' ? 'i-lucide-circle-alert' : note.kind === 'lead' ? 'i-lucide-compass' : 'i-lucide-check'" class="w-2.5 h-2.5 opacity-70" />
-              {{ note.text }}
-            </span>
-          </div>
-        </div>
-
-        <!-- Sliding history: earlier exchanges of this thread live in a
-             bounded strip that scrolls internally and stays pinned to its
-             newest turn — the page never grows with the conversation, and the
-             latest exchange keeps its place at eye level below. The top fade
-             hints at what scrolling up reveals. -->
-        <div v-if="threadTurns.length" ref="historyScrollRef" class="qa-thread-history relative space-y-4 mb-6 max-h-[45vh] overflow-y-auto overscroll-contain pr-1">
-          <div class="sticky top-0 h-12 -mb-12 z-10 pointer-events-none bg-gradient-to-b from-white/95 dark:from-zinc-950/95 to-transparent" />
-          <template v-for="(turn, tIdx) in threadTurns" :key="`turn-${turn.result.request_id || tIdx}`">
-            <div class="flex justify-end qa-history-bubble">
-              <div class="chat-flow-bubble chat-flow-bubble-user">
-                <p class="text-sm leading-relaxed">{{ turn.question }}</p>
-              </div>
-            </div>
-            <div class="chat-flow-bubble chat-flow-bubble-assistant qa-history-bubble">
-              <div class="qa-answer-markdown text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" @click="handleMarkdownClick" v-html="renderMarkdown(turn.result.primary_answer?.answer || '')" />
-            </div>
-          </template>
-        </div>
-
-        <!-- Error -->
-        <div v-if="qaError" class="mb-4 p-4 rounded-xl border border-red-200 dark:border-red-800 bg-red-50/90 dark:bg-red-900/20">
-          <p class="text-sm text-red-700 dark:text-red-300">{{ qaError }}</p>
-        </div>
-
-        <!-- Live pipeline: reasoning steps stream in, then the answer tokens -->
-        <div v-if="asking" class="space-y-4 session-answer-enter">
-          <div class="flex justify-end">
-            <div class="chat-flow-bubble chat-flow-bubble-user">
-              <p class="text-[0.625rem] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
-              <p class="text-sm leading-relaxed">{{ pendingQuestion || chatQuery }}</p>
-            </div>
-          </div>
-
-          <FoodscholarReasoningSteps
-            v-if="liveSteps.length"
-            :steps="liveSteps"
-            live
-            start-open
-          />
-
-          <!-- The answer as it streams: same markdown surface as the settled
-               answer, minus the reveal animation (it would restart per token). -->
-          <div v-if="liveAnswer" class="chat-flow-bubble chat-flow-bubble-assistant">
-            <div class="flex items-center justify-between mb-3">
-              <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.answer') }}</h4>
-              <UIcon name="i-lucide-loader-2" class="w-3.5 h-3.5 animate-spin text-gray-400 dark:text-zinc-500" />
-            </div>
-            <div class="qa-answer-markdown text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" @click="handleMarkdownClick" @mouseover="handleAnswerMouseOver" @mouseout="handleAnswerMouseOut" v-html="renderMarkdown(liveAnswer)" />
-          </div>
-
-          <!-- Skeleton only until the first pipeline event arrives (or when the
-               gateway lacks the streaming route and we fell back to one-shot). -->
-          <div v-else-if="!liveSteps.length" class="chat-flow-bubble chat-flow-bubble-assistant">
-            <div class="flex items-center justify-between mb-3">
-              <div class="h-4 w-16 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-              <div class="h-3 w-24 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-            </div>
-            <div class="space-y-2.5">
-              <div class="h-3 w-full rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-              <div class="h-3 w-11/12 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-              <div class="h-3 w-4/5 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-              <div class="h-3 w-full rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-              <div class="h-3 w-3/4 rounded bg-gray-200 dark:bg-zinc-700 animate-pulse" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Clarification panel -->
-        <div v-if="pendingClarification && !asking" class="space-y-4 session-answer-enter">
-          <div class="flex justify-end">
-            <div class="chat-flow-bubble chat-flow-bubble-user">
-              <p class="text-[0.625rem] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
-              <p class="text-sm leading-relaxed">{{ pendingQuestion }}</p>
-            </div>
-          </div>
-
-          <div class="chat-flow-bubble chat-flow-bubble-assistant">
-            <div class="flex items-start gap-2 mb-4">
-              <UIcon name="i-lucide-help-circle" class="w-4 h-4 text-brand-500 dark:text-brand-400 mt-0.5 shrink-0" />
-              <div>
-                <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ pendingClarification.question }}</p>
-                <p v-if="pendingClarification.reason" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ pendingClarification.reason }}</p>
-              </div>
-            </div>
-
-            <!-- single_choice / boolean -->
-            <div
-              v-if="pendingClarification.input_type === 'single_choice' || pendingClarification.input_type === 'boolean'"
-              class="flex flex-wrap gap-2 mb-4"
-            >
-              <button
-                v-for="opt in (pendingClarification.options ?? (pendingClarification.input_type === 'boolean' ? [{ label: t('foodScholarHome.qa.clarify.yes'), value: 'true' }, { label: t('foodScholarHome.qa.clarify.no'), value: 'false' }] : []))"
-                :key="opt.value"
-                type="button"
-                :class="[
-                  'px-3.5 py-1.5 text-sm rounded-full border transition-colors',
-                  clarificationSelectedValues.includes(opt.value)
-                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 font-medium'
-                    : 'border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-400 dark:hover:border-brand-600'
-                ]"
-                @click="clarificationSelectedValues = [opt.value]"
-              >{{ opt.label }}</button>
-            </div>
-
-            <!-- multiple_choice -->
-            <div v-else-if="pendingClarification.input_type === 'multiple_choice'" class="flex flex-wrap gap-2 mb-4">
-              <button
-                v-for="opt in (pendingClarification.options ?? [])"
-                :key="opt.value"
-                type="button"
-                :class="[
-                  'px-3.5 py-1.5 text-sm rounded-full border transition-colors',
-                  clarificationSelectedValues.includes(opt.value)
-                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 font-medium'
-                    : 'border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-400 dark:hover:border-brand-600'
-                ]"
-                @click="clarificationSelectedValues.includes(opt.value)
-                  ? clarificationSelectedValues = clarificationSelectedValues.filter(v => v !== opt.value)
-                  : clarificationSelectedValues.push(opt.value)"
-              >{{ opt.label }}</button>
-            </div>
-
-            <!-- free_text / number -->
-            <div v-else-if="pendingClarification.input_type === 'free_text' || pendingClarification.input_type === 'number'" class="mb-4">
-              <input
-                v-model="clarificationFreeText"
-                :type="pendingClarification.input_type === 'number' ? 'number' : 'text'"
-                class="w-full px-3 py-2 text-sm rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400"
-                :placeholder="t('foodScholarHome.qa.clarify.yourAnswer')"
-                @keydown.enter.prevent="submitClarification"
-              />
-            </div>
-
-            <!-- allow_free_text addon for choice types -->
-            <div
-              v-if="(pendingClarification.input_type === 'single_choice' || pendingClarification.input_type === 'multiple_choice') && pendingClarification.allow_free_text"
-              class="mb-4"
-            >
-              <input
-                v-model="clarificationFreeText"
-                type="text"
-                class="w-full px-3 py-2 text-sm rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400"
-                :placeholder="t('foodScholarHome.qa.clarify.otherOptional')"
-                @keydown.enter.prevent="submitClarification"
-              />
-            </div>
-
-            <div class="flex items-center justify-end gap-2">
+            <template #leading>
               <button
                 type="button"
-                class="px-3 py-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-                @click="pendingClarification = null; qaError = null"
-              >{{ t('foodScholarHome.qa.clarify.skip') }}</button>
-              <button
-                type="button"
-                :disabled="clarificationSelectedValues.length === 0 && !String(clarificationFreeText ?? '').trim()"
-                class="px-4 py-1.5 text-sm font-medium rounded-full bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                @click="submitClarification"
-              >{{ t('foodScholarHome.qa.clarify.continueBtn') }}</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Answer -->
-        <div
-          v-if="qaResult && primaryAnswer"
-          ref="latestExchangeRef"
-          class="space-y-4 session-answer-enter"
-          data-flows="foodscholar-qa-answer"
-        >
-          <div class="flex justify-end">
-            <div class="chat-flow-bubble chat-flow-bubble-user">
-              <p class="text-[0.625rem] uppercase tracking-widest font-semibold text-brand-200 mb-1">{{ t('foodScholarHome.qa.youAsked') }}</p>
-              <p class="text-sm leading-relaxed">{{ qaResult.question }}</p>
-            </div>
-          </div>
-
-          <!-- How the answer was researched: collapsed once settled, reopenable -->
-          <FoodscholarReasoningSteps
-            v-if="answerReasoningSteps.length"
-            :steps="answerReasoningSteps"
-          />
-
-          <div v-if="hasDualAnswerMode" class="space-y-3">
-            <p v-if="!selectedPreferredAnswer" class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.feedback.choosePreferredAnswer') }}</p>
-            <div v-else class="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-              <UIcon name="i-lucide-check" class="w-4 h-4" />
-              {{ t('foodScholarHome.qa.feedback.preferenceSaved') }}
-            </div>
-            <div :class="['grid gap-3', selectedPreferredAnswer ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2']">
-              <div
-                v-if="!selectedPreferredAnswer || selectedPreferredAnswer === 'a'"
-                :class="['chat-flow-bubble chat-flow-bubble-assistant p-5 rounded-2xl transition-all duration-200', selectedPreferredAnswer === 'a' ? 'ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900' : feedbackSubmitting ? 'opacity-70 pointer-events-none' : 'cursor-pointer hover:ring-2 hover:ring-brandp-300 hover:ring-offset-2 hover:ring-offset-white dark:hover:ring-brandp-600 dark:hover:ring-offset-zinc-900']"
-                role="button" tabindex="0" :aria-pressed="selectedPreferredAnswer === 'a'"
-                @click="submitDualAnswerFeedback('a')" @keydown.enter.prevent="submitDualAnswerFeedback('a')" @keydown.space.prevent="submitDualAnswerFeedback('a')"
+                :class="composerIntent === 'claim' ? 'qa-claim-pill' : 'qa-claim-toggle'"
+                :aria-pressed="composerIntent === 'claim'"
+                :aria-label="t('foodScholarLearn.intents.claim')"
+                :title="t('foodScholarLearn.intents.claim')"
+                data-flows="foodscholar-qa-claim-toggle"
+                @click="composerIntent === 'claim' ? clearClaimIntent() : (composerIntent = 'claim')"
               >
-                <div class="flex items-center justify-between gap-2 mb-3">
-                  <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPreferredAnswer ? t('foodScholarHome.qa.answer') : t('foodScholarHome.qa.answerA') }}</h4>
-                  <span v-if="!selectedPreferredAnswer" class="text-xs text-gray-500 dark:text-gray-400">{{ answerALabel }}</span>
-                </div>
-                <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" @click="handleMarkdownClick" @mouseover="handleAnswerMouseOver" @mouseout="handleAnswerMouseOut" style="--answer-reveal-delay: 40ms" v-html="renderMarkdown(primaryAnswer.answer)" />
-              </div>
-              <div
-                v-if="(!selectedPreferredAnswer || selectedPreferredAnswer === 'b') && secondaryAnswer"
-                :class="['chat-flow-bubble chat-flow-bubble-assistant p-5 rounded-2xl transition-all duration-200', selectedPreferredAnswer === 'b' ? 'ring-2 ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900' : feedbackSubmitting ? 'opacity-70 pointer-events-none' : 'cursor-pointer hover:ring-2 hover:ring-brandp-300 hover:ring-offset-2 hover:ring-offset-white dark:hover:ring-brandp-600 dark:hover:ring-offset-zinc-900']"
-                role="button" tabindex="0" :aria-pressed="selectedPreferredAnswer === 'b'"
-                @click="submitDualAnswerFeedback('b')" @keydown.enter.prevent="submitDualAnswerFeedback('b')" @keydown.space.prevent="submitDualAnswerFeedback('b')"
-              >
-                <div class="flex items-center justify-between gap-2 mb-3">
-                  <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ selectedPreferredAnswer ? t('foodScholarHome.qa.answer') : t('foodScholarHome.qa.answerB') }}</h4>
-                  <span v-if="!selectedPreferredAnswer" class="text-xs text-gray-500 dark:text-gray-400">{{ answerBLabel }}</span>
-                </div>
-                <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" @click="handleMarkdownClick" @mouseover="handleAnswerMouseOver" @mouseout="handleAnswerMouseOut" style="--answer-reveal-delay: 120ms" v-html="renderMarkdown(secondaryAnswer.answer)" />
-              </div>
-            </div>
-          </div>
-
-          <div v-else class="chat-flow-bubble chat-flow-bubble-assistant">
-            <div class="flex items-center justify-between mb-3">
-              <h4 class="text-sm font-semibold text-gray-900 dark:text-white">{{ t('foodScholarHome.qa.answer') }}</h4>
-              <!-- A popover, not a tooltip: a tooltip never opens on tap. -->
-              <UPopover :mode="hasHover ? 'hover' : 'click'" :ui="{ content: 'max-w-xs px-3 py-2 text-xs leading-5 text-gray-700 dark:text-gray-200' }">
-                <span role="button" tabindex="0" class="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 cursor-help">
-                  {{ t('foodScholarHome.qa.confidence') }}: {{ primaryAnswer.confidence || t('foodScholarHome.qa.notAvailable') }}
-                  <UIcon name="i-lucide-help-circle" class="w-3 h-3" />
-                </span>
-                <template #content>
-                  <p>{{ t('foodScholarHome.qa.confidenceExplainer') }}</p>
-                </template>
-              </UPopover>
-            </div>
-            <div class="qa-answer-markdown answer-reveal-ltr text-sm text-gray-800 dark:text-gray-200 prose prose-sm dark:prose-invert max-w-none" style="--answer-reveal-delay: 40ms" @click="handleMarkdownClick" @mouseover="handleAnswerMouseOver" @mouseout="handleAnswerMouseOut" v-html="renderMarkdown(primaryAnswer.answer)" />
-
-            <!-- The boundary has to be on the answer itself: this is the surface
-                 where people ask health questions about their own bodies. -->
-            <p class="mt-3 flex items-start gap-1.5 text-[0.6875rem] text-gray-400 dark:text-gray-500">
-              <UIcon name="i-lucide-info" class="w-3 h-3 mt-0.5 shrink-0" />
-              {{ t('foodScholarHome.qa.medicalBoundary') }}
-            </p>
-
-            <div v-if="singleAnswerFeedbackEnabled" class="mt-4">
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.feedback.helpfulQuestion') }}</span>
-                <template v-if="!singleAnswerFeedbackSubmitted && !showNegativeFeedbackReasons">
-                  <button :disabled="feedbackSubmitting" class="px-3 py-1.5 text-xs rounded-full border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-300 transition-colors disabled:opacity-50" @click="submitSingleAnswerFeedback(true)">{{ t('foodScholarHome.common.yes') }}</button>
-                  <button :disabled="feedbackSubmitting" class="px-3 py-1.5 text-xs rounded-full border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-brand-500 hover:text-brand-600 dark:hover:text-brand-300 transition-colors disabled:opacity-50" @click="submitSingleAnswerFeedback(false)">{{ t('foodScholarHome.common.no') }}</button>
-                </template>
-                <template v-else-if="singleAnswerFeedbackSubmitted">
-                  <UIcon name="i-lucide-check" class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span class="text-xs font-medium text-emerald-700 dark:text-emerald-300">{{ t('foodScholarHome.qa.feedback.saved') }}</span>
-                </template>
-              </div>
-              <div v-if="showNegativeFeedbackReasons && !singleAnswerFeedbackSubmitted" class="mt-3 space-y-3">
-                <p class="text-xs text-gray-500 dark:text-gray-400">{{ t('foodScholarHome.qa.feedback.whatWentWrong') }}</p>
-                <div class="flex flex-wrap gap-2">
-                  <button
-                    v-for="reason in negativeFeedbackReasons" :key="reason" :disabled="feedbackSubmitting"
-                    :class="['px-3 py-1.5 text-xs rounded-full border transition-colors disabled:opacity-50', selectedNegativeReason === reason ? 'border-red-500 bg-red-50 text-red-700 dark:border-red-400 dark:bg-red-900/30 dark:text-red-300' : 'border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-200 hover:border-red-400 hover:bg-red-50 hover:text-red-700 dark:hover:border-red-500 dark:hover:bg-red-900/20 dark:hover:text-red-300']"
-                    @click="selectNegativeReason(reason)"
-                  >{{ reason }}</button>
-                </div>
-                <div v-if="selectedNegativeReason">
-                  <textarea v-model="negativeFeedbackComment" :disabled="feedbackSubmitting" rows="2" :placeholder="t('foodScholarHome.qa.feedback.optionalComment')" class="w-full px-3 py-2 text-xs rounded-xl border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-700 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-brand-500 dark:focus:border-brand-400 resize-none disabled:opacity-50" />
-                  <button :disabled="feedbackSubmitting" class="mt-2 px-4 py-1.5 text-xs font-medium rounded-full bg-brand-500 text-white hover:bg-brand-600 transition-colors disabled:opacity-50" @click="submitNegativeFeedback()">{{ t('foodScholarHome.qa.feedback.submit') }}</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Memory nudges: consent-first, same pattern as FoodChat's chips.
-               Writes happen only on "Remember" (source: foodscholar). -->
-          <div v-if="visibleMemorySuggestions.length" class="chat-flow-bubble chat-flow-bubble-muted space-y-1.5">
-            <div
-              v-for="sug in visibleMemorySuggestions"
-              :key="sug.id"
-              class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-700 dark:text-gray-200"
-              :class="sug.kind === 'allergy_hint' ? 'bg-amber-50 dark:bg-amber-900/20' : 'bg-gray-50 dark:bg-zinc-800/60'"
-            >
-              <template v-if="sug.already_known">
-                <!-- Already on the profile: recognised, pre-selected, nothing to answer. -->
-                <UIcon name="i-lucide-check" class="w-3.5 h-3.5 shrink-0 text-green-500" />
-                <span class="flex-1 min-w-0 text-xs font-light leading-snug">{{ sug.statement }}</span>
-                <span class="px-2.5 py-1 text-[0.6875rem] font-medium rounded-full bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300">{{ t('foodChatHome.chat.memory.alreadySaved') }}</span>
-              </template>
-              <template v-else-if="memoryChipState[sug.id] !== 'accepted'">
-                <UIcon
-                  name="i-lucide-brain"
-                  class="w-3.5 h-3.5 shrink-0"
-                  :class="sug.kind === 'allergy_hint' ? 'text-amber-500 dark:text-amber-400' : 'text-brand-500 dark:text-brand-300'"
-                />
-                <span class="flex-1 min-w-0 text-xs font-light leading-snug">{{ sug.statement }}</span>
-                <button
-                  type="button"
-                  class="px-2.5 py-1 text-[0.6875rem] font-medium rounded-full bg-brand-500 text-white hover:bg-brand-600 transition-colors disabled:opacity-50"
-                  :disabled="memoryChipState[sug.id] === 'pending'"
-                  @click="handleMemoryDecision(sug, 'accept')"
-                >
-                  <UIcon v-if="memoryChipState[sug.id] === 'pending'" name="i-lucide-loader-2" class="w-3 h-3 animate-spin" />
-                  <template v-else>{{ t('foodChatHome.chat.memory.remember') }}</template>
-                </button>
-                <button
-                  type="button"
-                  class="px-2.5 py-1 text-[0.6875rem] rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors disabled:opacity-50"
-                  :disabled="memoryChipState[sug.id] === 'pending'"
-                  @click="handleMemoryDecision(sug, 'decline')"
-                >{{ t('foodChatHome.chat.memory.noThanks') }}</button>
-              </template>
-              <template v-else>
-                <UIcon name="i-lucide-check" class="w-3.5 h-3.5 shrink-0 text-green-500" />
-                <span class="flex-1 min-w-0 text-xs font-light leading-snug">{{ t('foodChatHome.chat.memory.saved') }}</span>
-              </template>
-            </div>
-          </div>
-
-          <!-- Follow-up suggestions -->
-          <div
-            v-if="qaResult.follow_up_suggestions?.length"
-            class="chat-flow-bubble chat-flow-bubble-muted"
-            data-flows="foodscholar-qa-followups"
-          >
-            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">{{ t('foodScholarHome.qa.followUpSuggestions') }}</h4>
-            <div class="flex flex-wrap gap-2">
-              <button
-                v-for="suggestion in qaResult.follow_up_suggestions" :key="suggestion" type="button"
-                class="px-3 py-1.5 text-xs rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-200 hover:bg-brand-100 dark:hover:bg-brand-900/40 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
-                @click="askScholarFollowUp(suggestion)"
-              >{{ suggestion }}</button>
-            </div>
-          </div>
-        </div>
-        <!-- end answer block -->
-
-        <!-- Sources, for the screens with no room for the rail beside the
-             answer: the same list the rail shows, folded under the answer
-             so it reads as a footnote rather than a second column. -->
-        <UCollapsible
-          v-if="qaResult && primaryAnswer && (primaryAnswer.citations?.length || uncitedRetrievedArticles.length)"
-          class="mt-4 xl:hidden"
-          data-flows="foodscholar-qa-sources-inline"
-        >
-          <button
-            type="button"
-            class="group flex w-full items-center justify-between rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white"
-          >
-            <span class="inline-flex items-center gap-2">
-              <UIcon name="i-lucide-library" class="w-4 h-4 text-gray-400" />
-              {{ t('foodScholarHome.qa.sidebar.inlineTitle', { count: (primaryAnswer.citations?.length || 0) + uncitedRetrievedArticles.length }) }}
-            </span>
-            <UIcon name="i-lucide-chevron-down" class="w-4 h-4 text-gray-400 transition-transform group-data-[state=open]:rotate-180" />
-          </button>
-          <template #content>
-            <div class="mt-2 flex flex-col gap-2">
-              <template v-if="primaryAnswer.citations?.length">
-                <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1">{{ t('foodScholarHome.qa.sidebar.cited') }}</p>
-                <NuxtLink
-                  v-for="(citation, idx) in primaryAnswer.citations"
-                  :key="`inline-${citation.article_urn}`"
-                  :to="getCitationSourcePath(citation)"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 hover:border-brand-300 dark:hover:border-brand-700 transition-colors"
-                  @click="recordCitationOpened(citation.article_urn, getCitationSourceType(citation), 'sidebar')"
-                >
-                  <UIcon :name="getQaSourceIcon(citation.article_urn, getCitationSourceType(citation))" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
-                  <span class="min-w-0 flex-1">
-                    <span class="block text-xs text-gray-800 dark:text-gray-200 leading-snug">{{ citation.article_title }}</span>
-                    <span v-if="citationMetaLine(citation)" class="block text-[0.625rem] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{{ citationMetaLine(citation) }}</span>
-                  </span>
-                  <span class="text-[0.6rem] font-bold text-brand-400 dark:text-brand-500 shrink-0 mt-0.5">[{{ idx + 1 }}]</span>
-                </NuxtLink>
-              </template>
-              <template v-if="uncitedRetrievedArticles.length">
-                <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mt-2">{{ t('foodScholarHome.qa.sidebar.consulted') }}</p>
-                <NuxtLink
-                  v-for="article in uncitedRetrievedArticles"
-                  :key="`inline-${article.urn}`"
-                  :to="getRetrievedSourcePath(article)"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-100 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/50 opacity-70 hover:opacity-100 transition-all"
-                >
-                  <UIcon :name="getQaSourceIcon(article.urn, article.source_type)" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
-                  <span class="min-w-0 flex-1">
-                    <span class="block text-xs text-gray-700 dark:text-gray-300 leading-snug">{{ article.title }}</span>
-                    <span v-if="retrievedMetaLine(article)" class="block text-[0.625rem] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{{ retrievedMetaLine(article) }}</span>
-                  </span>
-                </NuxtLink>
-              </template>
-            </div>
-          </template>
-        </UCollapsible>
-        </div>
-        <!-- end center column -->
-
-        <!-- Right panel: cited sources (titles only) -->
-        <aside class="qa-source-sidebar hidden xl:block pt-1">
-          <div
-            class="qa-source-sidebar-inner"
-            data-flows="foodscholar-qa-sources"
-          >
-          <template v-if="qaResult && primaryAnswer && primaryAnswer.citations?.length">
-            <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mb-1">{{ t('foodScholarHome.qa.sidebar.cited') }}</p>
-            <NuxtLink
-              v-for="(citation, idx) in primaryAnswer.citations"
-              :key="citation.article_urn"
-              :to="getCitationSourcePath(citation)"
-              :data-citation-urn="citation.article_urn"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="citation-source-card flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600 dark:hover:text-brand-400 transition-colors group"
-              @click="recordCitationOpened(citation.article_urn, getCitationSourceType(citation), 'sidebar')"
-            >
-              <UIcon :name="getQaSourceIcon(citation.article_urn, getCitationSourceType(citation))" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
-              <span class="min-w-0 flex-1">
-                <span class="block text-xs text-gray-800 dark:text-gray-200 leading-snug line-clamp-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ citation.article_title }}</span>
-                <span v-if="citationMetaLine(citation)" class="block text-[0.625rem] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{{ citationMetaLine(citation) }}</span>
-              </span>
-              <span class="text-[0.6rem] font-bold text-brand-400 dark:text-brand-500 shrink-0 mt-0.5 ml-auto">[{{ idx + 1 }}]</span>
-            </NuxtLink>
-
-            <template v-if="uncitedRetrievedArticles.length">
-              <p class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500 px-1 mt-3 mb-1">{{ t('foodScholarHome.qa.sidebar.consulted') }}</p>
-              <NuxtLink
-                v-for="article in uncitedRetrievedArticles"
-                :key="article.urn"
-                :to="getRetrievedSourcePath(article)"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-gray-100 dark:border-zinc-800/60 bg-white/50 dark:bg-zinc-900/50 opacity-60 hover:opacity-100 hover:border-gray-300 dark:hover:border-zinc-700 transition-all group"
-              >
-                <UIcon :name="getQaSourceIcon(article.urn, article.source_type)" class="w-3 h-3 text-gray-400 shrink-0 mt-0.5" />
-                <span class="min-w-0 flex-1">
-                  <span class="block text-xs text-gray-700 dark:text-gray-300 leading-snug line-clamp-2 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">{{ article.title }}</span>
-                  <span v-if="retrievedMetaLine(article)" class="block text-[0.625rem] text-gray-400 dark:text-zinc-500 mt-0.5 truncate">{{ retrievedMetaLine(article) }}</span>
-                </span>
-              </NuxtLink>
+                <UIcon name="i-lucide-search-check" class="w-4 h-4" />
+                <span v-if="composerIntent === 'claim'" class="hidden min-[400px]:inline">{{ t('foodScholarLearn.intents.claim') }}</span>
+                <UIcon v-if="composerIntent === 'claim'" name="i-lucide-x" class="w-3.5 h-3.5 opacity-70" />
+              </button>
             </template>
-          </template>
-          </div>
-        </aside>
-
-        </div><!-- end 3-col grid -->
+          </FoodscholarComposerBox>
+          <p class="hidden sm:block mt-2 text-center text-[0.6875rem] text-gray-400 dark:text-zinc-500">
+            {{ t('foodScholarLearn.composer.disclaimer') }}
+          </p>
+        </div>
+        </div>
       </div>
     </template>
 
     <!-- Library tab -->
     <template v-else-if="pageTab === 'resources'">
-      <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 py-10 sm:py-14 space-y-16">
+      <div class="flex-1 min-h-0 overflow-y-auto">
+        <div class="max-w-6xl mx-auto w-full px-4 sm:px-6 py-10 sm:py-14 space-y-16">
 
-        <!-- Introduction + resource type row -->
-        <section class="grid lg:grid-cols-[1fr_auto] gap-10 items-start">
-          <div class="relative">
-            <!-- Subtle wavy grainient behind the intro copy -->
-            <div class="grainient-intro" aria-hidden="true">
-              <div class="grainient-intro__mesh" />
-              <div class="grainient-intro__grain" />
-            </div>
-            <h2 class="relative text-3xl sm:text-4xl font-claude text-gray-900 dark:text-white leading-tight mb-4">
-              Access the science of human nutrition
-            </h2>
-            <p class="relative text-sm text-gray-500 dark:text-zinc-400 leading-relaxed max-w-3xl mb-6">
-              FoodScholar consolidates peer-reviewed research, national dietary guidance, and academic reference material across the full breadth of nutritional science, for everyone.
-            </p>
-
-            <!-- Library search bar -->
-            <div ref="librarySearchBoxRef" class="relative max-w-xl">
-              <div
-                class="relative flex items-center"
-                data-flows="foodscholar-library-search"
-              >
-                <UIcon name="i-lucide-search" class="absolute left-3.5 w-4 h-4 text-gray-400 dark:text-zinc-500 pointer-events-none z-10" />
-                <input
-                  ref="librarySearchInputRef"
-                  v-model="librarySearchQuery"
-                  type="text"
-                  placeholder="Search articles, guides, textbooks…"
-                  class="w-full pl-10 pr-20 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-400 dark:focus:ring-brand-600 transition"
-                  autocomplete="off"
-                  @input="handleLibrarySearchInput"
-                  @keydown.enter.prevent="handleLibrarySearchEnter"
-                  @keydown.down.prevent="handleLibraryArrowDown"
-                  @keydown.up.prevent="handleLibraryArrowUp"
-                  @keydown.esc.prevent="closeLibraryDropdown"
-                  @focus="libraryDropdownOpen = !!librarySearchQuery.trim()"
-                />
-                <button
-                  v-if="librarySearchQuery"
-                  type="button"
-                  class="absolute right-10 text-gray-300 dark:text-zinc-600 hover:text-gray-500 dark:hover:text-zinc-300 transition-colors"
-                  @mousedown.prevent="clearLibrarySearch"
-                >
-                  <UIcon name="i-lucide-x" class="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  :disabled="!librarySearchQuery.trim()"
-                  class="absolute right-2 px-2 py-1 rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors"
-                  @mousedown.prevent="navigateToCatalogWithQuery"
-                >
-                  <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5" />
-                </button>
+          <!-- Introduction + resource type row -->
+          <section class="grid lg:grid-cols-[1fr_auto] gap-10 items-start">
+            <div class="relative">
+              <!-- Subtle wavy grainient behind the intro copy -->
+              <div class="grainient-intro" aria-hidden="true">
+                <div class="grainient-intro__mesh" />
+                <div class="grainient-intro__grain" />
               </div>
-
-              <!-- Dropdown: autocomplete suggestions -->
-              <div
-                v-if="libraryDropdownOpen && (libraryAutocompleting || libraryAutocompleteSuggestions.articles.length > 0 || libraryAutocompleteSuggestions.guides.length > 0 || libraryAutocompleteSuggestions.textbooks.length > 0)"
-                class="absolute left-0 right-0 mt-2 z-30 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl overflow-hidden"
-              >
-                <div v-if="libraryAutocompleting" class="px-4 py-3 text-sm text-gray-400 dark:text-zinc-500">
-                  Looking up suggestions…
-                </div>
-                <template v-else>
-                  <!-- Article suggestions -->
-                  <div v-if="libraryAutocompleteSuggestions.articles.length">
-                    <div class="px-4 pt-3 pb-1.5">
-                      <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Articles</span>
-                    </div>
-                    <NuxtLink
-                      v-for="(suggestion, i) in libraryAutocompleteSuggestions.articles"
-                      :key="suggestion.urn"
-                      :to="`/foodscholar/${suggestion.urn}`"
-                      :class="[
-                        'flex items-start gap-3 px-4 py-2.5 transition-colors',
-                        libraryActiveIndex === i ? 'bg-brand-50 dark:bg-brand-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
-                      ]"
-                      @click="closeLibraryDropdown"
-                      @mouseenter="libraryActiveIndex = i"
-                    >
-                      <UIcon name="i-lucide-file-text" class="w-4 h-4 text-brand-400 dark:text-brand-500 shrink-0 mt-0.5" />
-                      <div class="min-w-0">
-                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ suggestion.title }}</p>
-                        <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">{{ suggestion.venue || suggestion.ai_category || '' }}</p>
-                      </div>
-                    </NuxtLink>
-                  </div>
-
-                  <!-- Guide suggestions -->
-                  <div v-if="libraryAutocompleteSuggestions.guides.length" :class="libraryAutocompleteSuggestions.articles.length ? 'border-t border-gray-100 dark:border-zinc-800' : ''">
-                    <div class="px-4 pt-3 pb-1.5">
-                      <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Dietary Guides</span>
-                    </div>
-                    <NuxtLink
-                      v-for="(suggestion, i) in libraryAutocompleteSuggestions.guides"
-                      :key="suggestion.urn"
-                      :to="`/foodscholar/catalog/guides/${suggestion.urn}`"
-                      :class="[
-                        'flex items-start gap-3 px-4 py-2.5 transition-colors',
-                        libraryActiveIndex === libraryAutocompleteSuggestions.articles.length + i ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
-                      ]"
-                      @click="closeLibraryDropdown"
-                      @mouseenter="libraryActiveIndex = libraryAutocompleteSuggestions.articles.length + i"
-                    >
-                      <UIcon name="i-lucide-map" class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                      <div class="min-w-0">
-                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ suggestion.title }}</p>
-                        <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">{{ suggestion.region || '' }}</p>
-                      </div>
-                    </NuxtLink>
-                  </div>
-
-                  <!-- Textbook suggestions -->
-                  <div
-                    v-if="libraryAutocompleteSuggestions.textbooks.length"
-                    :class="(libraryAutocompleteSuggestions.articles.length || libraryAutocompleteSuggestions.guides.length) ? 'border-t border-gray-100 dark:border-zinc-800' : ''"
-                  >
-                    <div class="px-4 pt-3 pb-1.5 flex items-center justify-between">
-                      <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Textbooks</span>
-                    </div>
-                    <NuxtLink
-                      v-for="(suggestion, i) in libraryAutocompleteSuggestions.textbooks"
-                      :key="suggestion.urn"
-                      :to="`/foodscholar/textbooks/${suggestion.urn}`"
-                      :class="[
-                        'flex items-start gap-3 px-4 py-2.5 transition-colors',
-                        libraryActiveIndex === libraryAutocompleteSuggestions.articles.length + libraryAutocompleteSuggestions.guides.length + i ? 'bg-amber-50 dark:bg-amber-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
-                      ]"
-                      @click="closeLibraryDropdown"
-                      @mouseenter="libraryActiveIndex = libraryAutocompleteSuggestions.articles.length + libraryAutocompleteSuggestions.guides.length + i"
-                    >
-                      <UIcon name="i-lucide-book-open" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                      <div class="min-w-0">
-                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ suggestion.title }}</p>
-                        <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">
-                          {{ [suggestion.authors?.join(', '), suggestion.publication_year].filter(Boolean).join(' · ') || 'Textbook' }}
-                        </p>
-                      </div>
-                    </NuxtLink>
-                  </div>
-                </template>
-              </div>
-            </div>
-          </div>
-
-          <!-- Resource type pills -->
-          <div
-            class="flex lg:flex-col gap-3 flex-wrap"
-            data-flows="foodscholar-library-nav"
-          >
-            <NuxtLink
-              to="/foodscholar/hierarchy"
-              class="group inline-flex min-w-[14rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-violet-300 hover:bg-violet-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-violet-700 dark:hover:bg-violet-900/20"
-            >
-              <div class="w-8 h-8 rounded-lg bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center shrink-0">
-                <UIcon name="i-lucide-list-tree" class="w-4 h-4 text-violet-600 dark:text-violet-400" />
-              </div>
-              <div>
-                <p class="text-base font-semibold text-gray-900 dark:text-white">Hierarchy</p>
-                <p class="font-claude text-sm text-gray-400 dark:text-zinc-500">Browse by theme</p>
-              </div>
-              <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600 ml-2 group-hover:text-violet-500 group-hover:translate-x-0.5 transition-all" />
-            </NuxtLink>
-
-            <NuxtLink
-              to="/foodscholar/catalog"
-              class="group inline-flex min-w-[14rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-brand-300 hover:bg-brand-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-brand-700 dark:hover:bg-brand-900/20"
-            >
-              <div class="w-8 h-8 rounded-lg bg-brand-50 dark:bg-brand-900/40 flex items-center justify-center shrink-0">
-                <UIcon name="i-lucide-file-text" class="w-4 h-4 text-brand-600 dark:text-brand-400" />
-              </div>
-              <div>
-                <p class="text-base font-semibold text-gray-900 dark:text-white">Articles</p>
-                <p class="font-claude text-sm text-gray-400 dark:text-zinc-500">Browse by topic</p>
-              </div>
-              <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600 ml-2 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
-            </NuxtLink>
-
-            <NuxtLink
-              to="/foodscholar/guides"
-              class="group inline-flex min-w-[14rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-emerald-300 hover:bg-emerald-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20"
-            >
-              <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-                <UIcon name="i-lucide-map" class="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
-              </div>
-              <div>
-                <p class="text-base font-semibold text-gray-900 dark:text-white">Dietary Guides</p>
-                <p class="font-claude text-sm text-gray-400 dark:text-zinc-500">Official dietary rules</p>
-              </div>
-              <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600 ml-2 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
-            </NuxtLink>
-
-            <NuxtLink
-              to="/foodscholar/textbooks"
-              class="group inline-flex min-w-[14rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-amber-300 hover:bg-amber-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-amber-700 dark:hover:bg-amber-900/20"
-            >
-              <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
-                <UIcon name="i-lucide-book-open" class="w-4 h-4 text-amber-600 dark:text-amber-500" />
-              </div>
-              <div>
-                <p class="text-base font-semibold text-gray-900 dark:text-white">Textbooks</p>
-                <p class="font-claude text-sm text-gray-400 dark:text-zinc-500">Academic reference</p>
-              </div>
-              <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600 ml-2 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all" />
-            </NuxtLink>
-          </div>
-        </section>
-
-        <!-- Articles by topic -->
-        <section>
-          <div class="flex items-center justify-between gap-4 mb-4">
-            <div>
-              <p class="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">Articles</p>
-              <h2 class="font-claude text-2xl text-gray-900 dark:text-white">Browse articles</h2>
-            </div>
-            <NuxtLink
-              :to="librarySeeAllTo || '/foodscholar/catalog'"
-              class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 text-xs font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
-            >
-              <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
-              Browse articles
-            </NuxtLink>
-          </div>
-
-          <dl
-            v-if="!articlesLoading && (libraryTotalArticles || libraryTotalJournals || libraryTotalTopics)"
-            class="grid grid-cols-3 gap-3 border-b border-gray-100 dark:border-zinc-800 pb-4 mb-6 max-w-md"
-          >
-            <div>
-              <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">{{ t('foodScholarHome.library.articleStats.articles') }}</dt>
-              <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalArticles > 0 ? libraryTotalArticles.toLocaleString() : '—' }}</dd>
-            </div>
-            <div>
-              <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">{{ t('foodScholarHome.library.articleStats.journals') }}</dt>
-              <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalJournals > 0 ? libraryTotalJournals.toLocaleString() : '—' }}</dd>
-            </div>
-            <div>
-              <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">{{ t('foodScholarHome.library.articleStats.topics') }}</dt>
-              <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalTopics > 0 ? libraryTotalTopics.toLocaleString() : '—' }}</dd>
-            </div>
-          </dl>
-
-          <!-- Loading -->
-          <div v-if="articlesLoading" class="space-y-4">
-            <div class="flex gap-2 mb-4">
-              <div v-for="i in 5" :key="i" class="h-7 w-24 rounded-full bg-gray-100 dark:bg-zinc-800 animate-pulse" />
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div v-for="i in 6" :key="i" class="h-48 rounded-2xl bg-gray-100 dark:bg-zinc-800 animate-pulse" />
-            </div>
-          </div>
-
-          <template v-else-if="allArticles.length">
-            <!-- Browse axis toggle -->
-            <div class="inline-flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 p-0.5 mb-4">
-              <button
-                type="button"
-                :class="[
-                  'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors',
-                  libraryBrowseAxis === 'topic'
-                    ? 'bg-white dark:bg-zinc-900 text-brand-600 dark:text-brand-400 shadow-sm'
-                    : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200'
-                ]"
-                @click="setLibraryBrowseAxis('topic')"
-              >
-                <UIcon name="i-lucide-compass" class="w-3.5 h-3.5" />
-                Topic
-              </button>
-              <button
-                type="button"
-                :class="[
-                  'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors',
-                  libraryBrowseAxis === 'journal'
-                    ? 'bg-white dark:bg-zinc-900 text-brand-600 dark:text-brand-400 shadow-sm'
-                    : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200'
-                ]"
-                @click="setLibraryBrowseAxis('journal')"
-              >
-                <UIcon name="i-lucide-book-marked" class="w-3.5 h-3.5" />
-                Journal
-              </button>
-            </div>
-
-            <!-- Browse-axis pills -->
-            <div class="flex gap-1.5 flex-wrap mb-6">
-              <button
-                v-for="pill in libraryActivePills"
-                :key="pill.value"
-                type="button"
-                :class="[
-                  'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-colors',
-                  librarySelectedTopic === pill.value
-                    ? 'bg-brand-500 border-brand-500 text-white'
-                    : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600 dark:hover:text-brand-400'
-                ]"
-                @click="selectLibraryFacet(pill.value)"
-              >
-                {{ pill.value }}
-                <span
-                  v-if="pill.count"
-                  :class="[
-                    'rounded-full px-1.5 py-px text-[0.625rem] font-semibold tabular-nums',
-                    librarySelectedTopic === pill.value
-                      ? 'bg-white/20 text-white'
-                      : 'bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400'
-                  ]"
-                >{{ pill.count.toLocaleString() }}</span>
-              </button>
-            </div>
-
-            <div v-if="libraryTopicArticlesLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div v-for="i in 6" :key="i" class="h-48 rounded-2xl bg-gray-100 dark:bg-zinc-800 animate-pulse" />
-            </div>
-            <template v-else>
-              <!-- Article cards -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <FoodscholarArticleCard
-                  v-for="(article, i) in libraryFilteredArticles"
-                  :key="article.urn"
-                  :article="article"
-                  :index="i"
-                  :fade="false"
-                  :selected-topic="libraryBrowseAxis === 'topic' && librarySelectedTopic !== CATEGORY_ALL ? librarySelectedTopic : null"
-                  :hide-abstract="true"
-                />
-              </div>
-
-              <div v-if="librarySeeAllTo && libraryFilteredArticles.length" class="mt-5 flex justify-center">
-                <NuxtLink
-                  :to="librarySeeAllTo"
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 text-xs font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
-                >
-                  <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5" />
-                  <span v-if="librarySelectedCount">See all {{ librarySelectedCount.toLocaleString() }} in catalog</span>
-                  <span v-else>See all in catalog</span>
-                </NuxtLink>
-              </div>
-
-              <p v-if="!libraryFilteredArticles.length" class="py-10 text-center text-sm text-gray-400 dark:text-zinc-500">
-                {{ libraryEmptyMessage }}
+              <h2 class="relative text-3xl sm:text-4xl font-claude text-gray-900 dark:text-white leading-tight mb-4">
+                Access the science of human nutrition
+              </h2>
+              <p class="relative text-sm text-gray-500 dark:text-zinc-400 leading-relaxed max-w-3xl mb-6">
+                FoodScholar consolidates peer-reviewed research, national dietary guidance, and academic reference material across the full breadth of nutritional science, for everyone.
               </p>
+
+              <!-- Library search bar -->
+              <div ref="librarySearchBoxRef" class="relative max-w-xl">
+                <div
+                  class="relative flex items-center"
+                  data-flows="foodscholar-library-search"
+                >
+                  <UIcon name="i-lucide-search" class="absolute left-3.5 w-4 h-4 text-gray-400 dark:text-zinc-500 pointer-events-none z-10" />
+                  <input
+                    ref="librarySearchInputRef"
+                    v-model="librarySearchQuery"
+                    type="text"
+                    placeholder="Search articles, guides, textbooks…"
+                    class="w-full pl-10 pr-20 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-400 dark:focus:ring-brand-600 transition"
+                    autocomplete="off"
+                    @input="handleLibrarySearchInput"
+                    @keydown.enter.prevent="handleLibrarySearchEnter"
+                    @keydown.down.prevent="handleLibraryArrowDown"
+                    @keydown.up.prevent="handleLibraryArrowUp"
+                    @keydown.esc.prevent="closeLibraryDropdown"
+                    @focus="libraryDropdownOpen = !!librarySearchQuery.trim()"
+                  />
+                  <button
+                    v-if="librarySearchQuery"
+                    type="button"
+                    class="absolute right-10 text-gray-300 dark:text-zinc-600 hover:text-gray-500 dark:hover:text-zinc-300 transition-colors"
+                    @mousedown.prevent="clearLibrarySearch"
+                  >
+                    <UIcon name="i-lucide-x" class="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    :disabled="!librarySearchQuery.trim()"
+                    class="absolute right-2 px-2 py-1 rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed text-white transition-colors"
+                    @mousedown.prevent="navigateToCatalogWithQuery"
+                  >
+                    <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <!-- Dropdown: autocomplete suggestions -->
+                <div
+                  v-if="libraryDropdownOpen && (libraryAutocompleting || libraryAutocompleteSuggestions.articles.length > 0 || libraryAutocompleteSuggestions.guides.length > 0 || libraryAutocompleteSuggestions.textbooks.length > 0)"
+                  class="absolute left-0 right-0 mt-2 z-30 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-xl overflow-hidden"
+                >
+                  <div v-if="libraryAutocompleting" class="px-4 py-3 text-sm text-gray-400 dark:text-zinc-500">
+                    Looking up suggestions…
+                  </div>
+                  <template v-else>
+                    <!-- Article suggestions -->
+                    <div v-if="libraryAutocompleteSuggestions.articles.length">
+                      <div class="px-4 pt-3 pb-1.5">
+                        <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Articles</span>
+                      </div>
+                      <NuxtLink
+                        v-for="(suggestion, i) in libraryAutocompleteSuggestions.articles"
+                        :key="suggestion.urn"
+                        :to="`/foodscholar/${suggestion.urn}`"
+                        :class="[
+                          'flex items-start gap-3 px-4 py-2.5 transition-colors',
+                          libraryActiveIndex === i ? 'bg-brand-50 dark:bg-brand-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
+                        ]"
+                        @click="closeLibraryDropdown"
+                        @mouseenter="libraryActiveIndex = i"
+                      >
+                        <UIcon name="i-lucide-file-text" class="w-4 h-4 text-brand-400 dark:text-brand-500 shrink-0 mt-0.5" />
+                        <div class="min-w-0">
+                          <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ suggestion.title }}</p>
+                          <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">{{ suggestion.venue || suggestion.ai_category || '' }}</p>
+                        </div>
+                      </NuxtLink>
+                    </div>
+
+                    <!-- Guide suggestions -->
+                    <div v-if="libraryAutocompleteSuggestions.guides.length" :class="libraryAutocompleteSuggestions.articles.length ? 'border-t border-gray-100 dark:border-zinc-800' : ''">
+                      <div class="px-4 pt-3 pb-1.5">
+                        <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Dietary Guides</span>
+                      </div>
+                      <NuxtLink
+                        v-for="(suggestion, i) in libraryAutocompleteSuggestions.guides"
+                        :key="suggestion.urn"
+                        :to="`/foodscholar/catalog/guides/${suggestion.urn}`"
+                        :class="[
+                          'flex items-start gap-3 px-4 py-2.5 transition-colors',
+                          libraryActiveIndex === libraryAutocompleteSuggestions.articles.length + i ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
+                        ]"
+                        @click="closeLibraryDropdown"
+                        @mouseenter="libraryActiveIndex = libraryAutocompleteSuggestions.articles.length + i"
+                      >
+                        <UIcon name="i-lucide-map" class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                        <div class="min-w-0">
+                          <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ suggestion.title }}</p>
+                          <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">{{ suggestion.region || '' }}</p>
+                        </div>
+                      </NuxtLink>
+                    </div>
+
+                    <!-- Textbook suggestions -->
+                    <div
+                      v-if="libraryAutocompleteSuggestions.textbooks.length"
+                      :class="(libraryAutocompleteSuggestions.articles.length || libraryAutocompleteSuggestions.guides.length) ? 'border-t border-gray-100 dark:border-zinc-800' : ''"
+                    >
+                      <div class="px-4 pt-3 pb-1.5 flex items-center justify-between">
+                        <span class="text-[0.6rem] uppercase tracking-[0.18em] font-semibold text-gray-400 dark:text-zinc-500">Textbooks</span>
+                      </div>
+                      <NuxtLink
+                        v-for="(suggestion, i) in libraryAutocompleteSuggestions.textbooks"
+                        :key="suggestion.urn"
+                        :to="`/foodscholar/textbooks/${suggestion.urn}`"
+                        :class="[
+                          'flex items-start gap-3 px-4 py-2.5 transition-colors',
+                          libraryActiveIndex === libraryAutocompleteSuggestions.articles.length + libraryAutocompleteSuggestions.guides.length + i ? 'bg-amber-50 dark:bg-amber-900/20' : 'hover:bg-gray-50 dark:hover:bg-zinc-800'
+                        ]"
+                        @click="closeLibraryDropdown"
+                        @mouseenter="libraryActiveIndex = libraryAutocompleteSuggestions.articles.length + libraryAutocompleteSuggestions.guides.length + i"
+                      >
+                        <UIcon name="i-lucide-book-open" class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                        <div class="min-w-0">
+                          <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ suggestion.title }}</p>
+                          <p class="text-xs text-gray-400 dark:text-zinc-500 truncate">
+                            {{ [suggestion.authors?.join(', '), suggestion.publication_year].filter(Boolean).join(' · ') || 'Textbook' }}
+                          </p>
+                        </div>
+                      </NuxtLink>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+
+            <!-- Resource type pills -->
+            <div
+              class="flex lg:flex-col gap-3 flex-wrap"
+              data-flows="foodscholar-library-nav"
+            >
+              <NuxtLink
+                to="/foodscholar/hierarchy"
+                class="group inline-flex min-w-[14rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-violet-300 hover:bg-violet-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-violet-700 dark:hover:bg-violet-900/20"
+              >
+                <div class="w-8 h-8 rounded-lg bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center shrink-0">
+                  <UIcon name="i-lucide-list-tree" class="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                </div>
+                <div>
+                  <p class="text-base font-semibold text-gray-900 dark:text-white">Hierarchy</p>
+                  <p class="font-claude text-sm text-gray-400 dark:text-zinc-500">Browse by theme</p>
+                </div>
+                <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600 ml-2 group-hover:text-violet-500 group-hover:translate-x-0.5 transition-all" />
+              </NuxtLink>
+
+              <NuxtLink
+                to="/foodscholar/catalog"
+                class="group inline-flex min-w-[14rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-brand-300 hover:bg-brand-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-brand-700 dark:hover:bg-brand-900/20"
+              >
+                <div class="w-8 h-8 rounded-lg bg-brand-50 dark:bg-brand-900/40 flex items-center justify-center shrink-0">
+                  <UIcon name="i-lucide-file-text" class="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                </div>
+                <div>
+                  <p class="text-base font-semibold text-gray-900 dark:text-white">Articles</p>
+                  <p class="font-claude text-sm text-gray-400 dark:text-zinc-500">Browse by topic</p>
+                </div>
+                <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600 ml-2 group-hover:text-brand-500 group-hover:translate-x-0.5 transition-all" />
+              </NuxtLink>
+
+              <NuxtLink
+                to="/foodscholar/guides"
+                class="group inline-flex min-w-[14rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-emerald-300 hover:bg-emerald-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20"
+              >
+                <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                  <UIcon name="i-lucide-map" class="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <p class="text-base font-semibold text-gray-900 dark:text-white">Dietary Guides</p>
+                  <p class="font-claude text-sm text-gray-400 dark:text-zinc-500">Official dietary rules</p>
+                </div>
+                <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600 ml-2 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
+              </NuxtLink>
+
+              <NuxtLink
+                to="/foodscholar/textbooks"
+                class="group inline-flex min-w-[14rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-amber-300 hover:bg-amber-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-amber-700 dark:hover:bg-amber-900/20"
+              >
+                <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+                  <UIcon name="i-lucide-book-open" class="w-4 h-4 text-amber-600 dark:text-amber-500" />
+                </div>
+                <div>
+                  <p class="text-base font-semibold text-gray-900 dark:text-white">Textbooks</p>
+                  <p class="font-claude text-sm text-gray-400 dark:text-zinc-500">Academic reference</p>
+                </div>
+                <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600 ml-2 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all" />
+              </NuxtLink>
+            </div>
+          </section>
+
+          <!-- Articles by topic -->
+          <section>
+            <div class="flex items-center justify-between gap-4 mb-4">
+              <div>
+                <p class="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">Articles</p>
+                <h2 class="font-claude text-2xl text-gray-900 dark:text-white">Browse articles</h2>
+              </div>
+              <NuxtLink
+                :to="librarySeeAllTo || '/foodscholar/catalog'"
+                class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 text-xs font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
+              >
+                <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
+                Browse articles
+              </NuxtLink>
+            </div>
+
+            <dl
+              v-if="!articlesLoading && (libraryTotalArticles || libraryTotalJournals || libraryTotalTopics)"
+              class="grid grid-cols-3 gap-3 border-b border-gray-100 dark:border-zinc-800 pb-4 mb-6 max-w-md"
+            >
+              <div>
+                <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">{{ t('foodScholarHome.library.articleStats.articles') }}</dt>
+                <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalArticles > 0 ? libraryTotalArticles.toLocaleString() : '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">{{ t('foodScholarHome.library.articleStats.journals') }}</dt>
+                <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalJournals > 0 ? libraryTotalJournals.toLocaleString() : '—' }}</dd>
+              </div>
+              <div>
+                <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">{{ t('foodScholarHome.library.articleStats.topics') }}</dt>
+                <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalTopics > 0 ? libraryTotalTopics.toLocaleString() : '—' }}</dd>
+              </div>
+            </dl>
+
+            <!-- Loading -->
+            <div v-if="articlesLoading" class="space-y-4">
+              <div class="flex gap-2 mb-4">
+                <div v-for="i in 5" :key="i" class="h-7 w-24 rounded-full bg-gray-100 dark:bg-zinc-800 animate-pulse" />
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div v-for="i in 6" :key="i" class="h-48 rounded-2xl bg-gray-100 dark:bg-zinc-800 animate-pulse" />
+              </div>
+            </div>
+
+            <template v-else-if="allArticles.length">
+              <!-- Browse axis toggle -->
+              <div class="inline-flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 p-0.5 mb-4">
+                <button
+                  type="button"
+                  :class="[
+                    'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors',
+                    libraryBrowseAxis === 'topic'
+                      ? 'bg-white dark:bg-zinc-900 text-brand-600 dark:text-brand-400 shadow-sm'
+                      : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200'
+                  ]"
+                  @click="setLibraryBrowseAxis('topic')"
+                >
+                  <UIcon name="i-lucide-compass" class="w-3.5 h-3.5" />
+                  Topic
+                </button>
+                <button
+                  type="button"
+                  :class="[
+                    'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors',
+                    libraryBrowseAxis === 'journal'
+                      ? 'bg-white dark:bg-zinc-900 text-brand-600 dark:text-brand-400 shadow-sm'
+                      : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200'
+                  ]"
+                  @click="setLibraryBrowseAxis('journal')"
+                >
+                  <UIcon name="i-lucide-book-marked" class="w-3.5 h-3.5" />
+                  Journal
+                </button>
+              </div>
+
+              <!-- Browse-axis pills -->
+              <div class="flex gap-1.5 flex-wrap mb-6">
+                <button
+                  v-for="pill in libraryActivePills"
+                  :key="pill.value"
+                  type="button"
+                  :class="[
+                    'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-colors',
+                    librarySelectedTopic === pill.value
+                      ? 'bg-brand-500 border-brand-500 text-white'
+                      : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-700 text-gray-600 dark:text-zinc-300 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600 dark:hover:text-brand-400'
+                  ]"
+                  @click="selectLibraryFacet(pill.value)"
+                >
+                  {{ pill.value }}
+                  <span
+                    v-if="pill.count"
+                    :class="[
+                      'rounded-full px-1.5 py-px text-[0.625rem] font-semibold tabular-nums',
+                      librarySelectedTopic === pill.value
+                        ? 'bg-white/20 text-white'
+                        : 'bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400'
+                    ]"
+                  >{{ pill.count.toLocaleString() }}</span>
+                </button>
+              </div>
+
+              <div v-if="libraryTopicArticlesLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div v-for="i in 6" :key="i" class="h-48 rounded-2xl bg-gray-100 dark:bg-zinc-800 animate-pulse" />
+              </div>
+              <template v-else>
+                <!-- Article cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <FoodscholarArticleCard
+                    v-for="(article, i) in libraryFilteredArticles"
+                    :key="article.urn"
+                    :article="article"
+                    :index="i"
+                    :fade="false"
+                    :selected-topic="libraryBrowseAxis === 'topic' && librarySelectedTopic !== CATEGORY_ALL ? librarySelectedTopic : null"
+                    :hide-abstract="true"
+                  />
+                </div>
+
+                <div v-if="librarySeeAllTo && libraryFilteredArticles.length" class="mt-5 flex justify-center">
+                  <NuxtLink
+                    :to="librarySeeAllTo"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 text-xs font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
+                  >
+                    <UIcon name="i-lucide-arrow-right" class="w-3.5 h-3.5" />
+                    <span v-if="librarySelectedCount">See all {{ librarySelectedCount.toLocaleString() }} in catalog</span>
+                    <span v-else>See all in catalog</span>
+                  </NuxtLink>
+                </div>
+
+                <p v-if="!libraryFilteredArticles.length" class="py-10 text-center text-sm text-gray-400 dark:text-zinc-500">
+                  {{ libraryEmptyMessage }}
+                </p>
+              </template>
             </template>
-          </template>
 
-          <div v-else-if="articlesError" class="py-10 text-center text-sm text-red-500">{{ articlesError }}</div>
-        </section>
+            <div v-else-if="articlesError" class="py-10 text-center text-sm text-red-500">{{ articlesError }}</div>
+          </section>
 
-        <!-- Dietary Guides overview -->
-        <section>
-          <div class="flex items-start justify-between gap-6 mb-6">
-            <div>
-              <p class="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">Explore</p>
-              <h2 class="font-claude text-2xl text-gray-900 dark:text-white">Dietary guides by region</h2>
-              <p class="mt-1 text-sm text-gray-400 dark:text-zinc-500">Click a region to open its official guides →</p>
-            </div>
-            <NuxtLink
-              to="/foodscholar/guides"
-              class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 text-xs font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
-            >
-              <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
-              Browse Guides
-            </NuxtLink>
-          </div>
-
-          <div class="grid gap-5 xl:grid-cols-[minmax(0,0.82fr)_14rem] xl:items-start">
-            <div>
-              <div v-if="libraryMapLoading" class="library-map-wrap animate-pulse bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-center">
-                <p class="text-sm text-gray-400 dark:text-zinc-500">Loading map…</p>
+          <!-- Dietary Guides overview -->
+          <section>
+            <div class="flex items-start justify-between gap-6 mb-6">
+              <div>
+                <p class="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">Explore</p>
+                <h2 class="font-claude text-2xl text-gray-900 dark:text-white">Dietary guides by region</h2>
+                <p class="mt-1 text-sm text-gray-400 dark:text-zinc-500">Click a region to open its official guides →</p>
               </div>
-              <div v-else-if="libraryMapError" class="flex min-h-40 items-center justify-center px-6 py-10 text-center">
-                <p class="text-sm text-gray-400 dark:text-zinc-500">{{ libraryMapError }}</p>
-              </div>
-              <div v-else class="library-map-wrap">
-                <FoodscholarGuidesEuropeGuidesMap
-                  v-model:selected-region-code="librarySelectedRegion"
-                  :regions="libraryEuRegions"
-                  :hide-controls="true"
-                  :view-padding="0.015"
-                  :show-hint="true"
-                />
-              </div>
+              <NuxtLink
+                to="/foodscholar/guides"
+                class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 text-xs font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
+              >
+                <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
+                Browse Guides
+              </NuxtLink>
             </div>
 
-            <aside class="flex flex-col gap-5">
-              <dl class="grid grid-cols-3 gap-3 border-b border-gray-100 pb-4 dark:border-zinc-800">
-                <div>
-                  <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">Countries</dt>
-                  <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryEuRegions.length }}</dd>
+            <div class="grid gap-5 xl:grid-cols-[minmax(0,0.82fr)_14rem] xl:items-start">
+              <div>
+                <div v-if="libraryMapLoading" class="library-map-wrap animate-pulse bg-gray-50/70 dark:bg-zinc-800/40 flex items-center justify-center">
+                  <p class="text-sm text-gray-400 dark:text-zinc-500">Loading map…</p>
                 </div>
-                <div>
-                  <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">Guides</dt>
-                  <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalGuides.toLocaleString() }}</dd>
+                <div v-else-if="libraryMapError" class="flex min-h-40 items-center justify-center px-6 py-10 text-center">
+                  <p class="text-sm text-gray-400 dark:text-zinc-500">{{ libraryMapError }}</p>
                 </div>
-                <div>
-                  <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">Rules</dt>
-                  <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryRulesTotal > 0 ? libraryRulesTotal.toLocaleString() : (libraryTotalGuidelines > 0 ? libraryTotalGuidelines.toLocaleString() : '—') }}</dd>
+                <div v-else class="library-map-wrap">
+                  <FoodscholarGuidesEuropeGuidesMap
+                    v-model:selected-region-code="librarySelectedRegion"
+                    :regions="libraryEuRegions"
+                    :hide-controls="true"
+                    :view-padding="0.015"
+                    :show-hint="true"
+                  />
                 </div>
-              </dl>
-
-              <div v-if="librarySelectedRegionData" class="border-b border-gray-100 pb-4 dark:border-zinc-800">
-                <p class="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-                  {{ `${librarySelectedRegionData.flag || ''} ${librarySelectedRegionData.label}`.trim() }}
-                </p>
-                <p class="text-xs text-gray-400 dark:text-zinc-500 mb-3">
-                  {{ librarySelectedRegionData.guideCount }} guide{{ librarySelectedRegionData.guideCount === 1 ? '' : 's' }}<template v-if="librarySelectedRegionData.guidelineCount"> · {{ librarySelectedRegionData.guidelineCount }} rules</template><template v-if="librarySelectedRegionData.latestPublicationYear"> · {{ librarySelectedRegionData.latestPublicationYear }}</template>
-                </p>
-                <NuxtLink
-                  :to="`/foodscholar/guides/${librarySelectedRegionData.slug}`"
-                  class="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 transition-colors group"
-                >
-                  <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
-                  Open country guides
-                </NuxtLink>
               </div>
-              <div v-else class="border-b border-gray-100 pb-4 dark:border-zinc-800">
-                <p class="text-xs text-gray-400 dark:text-zinc-500 leading-relaxed">Select a country to see its dietary guidance records and available publications.</p>
-                <NuxtLink
-                  to="/foodscholar/guides"
-                  class="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 transition-colors group"
-                >
-                  <UIcon name="i-lucide-list" class="w-3.5 h-3.5" />
-                  Browse all guides
-                </NuxtLink>
-              </div>
-            </aside>
-          </div>
-        </section>
 
-        <!-- Textbooks section -->
-        <section>
-          <div class="flex items-center justify-between gap-4 mb-6">
-            <div>
-              <p class="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">Textbooks</p>
-              <h2 class="font-claude text-2xl text-gray-900 dark:text-white">Academic reference</h2>
+              <aside class="flex flex-col gap-5">
+                <dl class="grid grid-cols-3 gap-3 border-b border-gray-100 pb-4 dark:border-zinc-800">
+                  <div>
+                    <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">Countries</dt>
+                    <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryEuRegions.length }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">Guides</dt>
+                    <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryTotalGuides.toLocaleString() }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-[0.58rem] uppercase tracking-[0.15em] text-gray-400 dark:text-zinc-500 font-semibold">Rules</dt>
+                    <dd class="mt-0.5 text-xl font-semibold text-gray-900 dark:text-white">{{ libraryRulesTotal > 0 ? libraryRulesTotal.toLocaleString() : (libraryTotalGuidelines > 0 ? libraryTotalGuidelines.toLocaleString() : '—') }}</dd>
+                  </div>
+                </dl>
+
+                <div v-if="librarySelectedRegionData" class="border-b border-gray-100 pb-4 dark:border-zinc-800">
+                  <p class="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                    {{ `${librarySelectedRegionData.flag || ''} ${librarySelectedRegionData.label}`.trim() }}
+                  </p>
+                  <p class="text-xs text-gray-400 dark:text-zinc-500 mb-3">
+                    {{ librarySelectedRegionData.guideCount }} guide{{ librarySelectedRegionData.guideCount === 1 ? '' : 's' }}<template v-if="librarySelectedRegionData.guidelineCount"> · {{ librarySelectedRegionData.guidelineCount }} rules</template><template v-if="librarySelectedRegionData.latestPublicationYear"> · {{ librarySelectedRegionData.latestPublicationYear }}</template>
+                  </p>
+                  <NuxtLink
+                    :to="`/foodscholar/guides/${librarySelectedRegionData.slug}`"
+                    class="inline-flex items-center gap-1.5 text-xs font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 transition-colors group"
+                  >
+                    <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
+                    Open country guides
+                  </NuxtLink>
+                </div>
+                <div v-else class="border-b border-gray-100 pb-4 dark:border-zinc-800">
+                  <p class="text-xs text-gray-400 dark:text-zinc-500 leading-relaxed">Select a country to see its dietary guidance records and available publications.</p>
+                  <NuxtLink
+                    to="/foodscholar/guides"
+                    class="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 transition-colors group"
+                  >
+                    <UIcon name="i-lucide-list" class="w-3.5 h-3.5" />
+                    Browse all guides
+                  </NuxtLink>
+                </div>
+              </aside>
             </div>
-            <NuxtLink
-              to="/foodscholar/textbooks"
-              class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 text-xs font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
-            >
-              <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
-              Browse Textbooks
-            </NuxtLink>
-          </div>
+          </section>
 
-          <div v-if="libraryTextbooksLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div v-for="i in 3" :key="i" class="h-44 rounded-2xl bg-gray-100 dark:bg-zinc-800 animate-pulse" />
-          </div>
+          <!-- Textbooks section -->
+          <section>
+            <div class="flex items-center justify-between gap-4 mb-6">
+              <div>
+                <p class="mb-1 text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-zinc-500">Textbooks</p>
+                <h2 class="font-claude text-2xl text-gray-900 dark:text-white">Academic reference</h2>
+              </div>
+              <NuxtLink
+                to="/foodscholar/textbooks"
+                class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-zinc-700 text-xs font-medium text-gray-600 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors group"
+              >
+                <UIcon name="i-lucide-external-link" class="w-3.5 h-3.5" />
+                Browse Textbooks
+              </NuxtLink>
+            </div>
 
-          <div v-else-if="libraryTextbooks.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <FoodscholarTextbookCard
-              v-for="(book, i) in libraryTextbooks"
-              :key="book.urn"
-              :textbook="book"
-              :index="i"
-              :fade="false"
-            />
-          </div>
+            <div v-if="libraryTextbooksLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div v-for="i in 3" :key="i" class="h-44 rounded-2xl bg-gray-100 dark:bg-zinc-800 animate-pulse" />
+            </div>
 
-          <div v-else class="py-10 text-center text-sm text-gray-400 dark:text-zinc-500">
-            No textbooks available.
-          </div>
-        </section>
+            <div v-else-if="libraryTextbooks.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <FoodscholarTextbookCard
+                v-for="(book, i) in libraryTextbooks"
+                :key="book.urn"
+                :textbook="book"
+                :index="i"
+                :fade="false"
+              />
+            </div>
 
+            <div v-else class="py-10 text-center text-sm text-gray-400 dark:text-zinc-500">
+              No textbooks available.
+            </div>
+          </section>
+
+        </div>
       </div>
     </template>
 
@@ -1347,11 +1370,13 @@ import {
   type GuidesCatalogRegionSummary
 } from '~/utils/guidesCatalog'
 import { euCountryCodes } from '~/utils/countries'
+import { splitVerdict, verdictFromResult, sourceMix, type ComposerTool } from '~/utils/claimCheck'
 
 const { t, locale } = useI18n()
 const { hasHover } = useViewport()
 
 definePageMeta({
+  layout: 'app',
   middleware: [
     // The graph was once a tab here and its links were shared as
     // `?tab=graph&node=…&view=…`; they now open the Hierarchy page, keeping
@@ -1441,7 +1466,7 @@ const pageTab = ref<'qa' | 'resources'>('qa')
 const hasActiveSession = computed(() => asking.value || !!qaResult.value || !!qaError.value || !!pendingClarification.value)
 // The composer only owns the bottom edge once a conversation is on screen;
 // on the start screen and the Library tab the dock stays in the corner.
-usePageDockMode(() => (pageTab.value === 'qa' && hasActiveSession.value ? 'raised' : 'default'))
+usePageDockMode(() => (pageTab.value === 'qa' && hasActiveSession.value ? 'raised-tall' : 'default'))
 const advancedSelectContent = {
   side: 'bottom' as const,
   sideOffset: 6,
@@ -1453,15 +1478,6 @@ const advancedSelectUi = {
   content: 'z-[140] max-h-72 w-auto min-w-64 max-w-[calc(100vw-2rem)]',
   viewport: 'max-h-72',
   item: 'cursor-pointer'
-}
-const chatSettingsContent = {
-  align: 'end' as const,
-  side: 'bottom' as const,
-  sideOffset: 8,
-  collisionPadding: 12
-}
-const chatSettingsUi = {
-  content: 'w-52 z-[140]'
 }
 
 // ============================================================================
@@ -2276,20 +2292,76 @@ const asking = ref(false)
 const qaError = ref<string | null>(null)
 const qaResult = ref<QaAskResult | null>(null)
 
-// ── Sliding thread history: bounded strip, pinned to its newest turn ──
-const MAX_VISIBLE_TURNS = 6
+// ── Conversation thread: earlier turns read top to bottom in the page ──
+const MAX_VISIBLE_TURNS = 8
 const threadTurns = ref<QaThreadTurn[]>([])
-const historyScrollRef = ref<HTMLElement | null>(null)
 const latestExchangeRef = ref<HTMLElement | null>(null)
 const memoryPanelOpen = ref(false)
 
-const scrollHistoryToBottom = () => {
+/**
+ * A new follow-up rises to the top of the screen, and its answer grows below
+ * it, as in a chat. The page does not chase the streaming text: someone
+ * reading the start of an answer is not pulled away from it. The exchange
+ * keeps a screen's height (qa-exchange-fill) so there is room to rise into.
+ */
+// The conversation's own scroll pane, and its height for qa-exchange-fill.
+const threadScrollRef = ref<HTMLElement | null>(null)
+const threadPaneHeight = ref(0)
+let threadPaneObserver: ResizeObserver | null = null
+
+watch(threadScrollRef, (el) => {
+  threadPaneObserver?.disconnect()
+  threadPaneObserver = null
+  if (!el || typeof ResizeObserver === 'undefined') return
+  threadPaneHeight.value = el.clientHeight
+  threadPaneObserver = new ResizeObserver(() => {
+    threadPaneHeight.value = el.clientHeight
+  })
+  threadPaneObserver.observe(el)
+})
+
+const scrollToCurrentExchange = () => {
   void nextTick(() => {
-    const el = historyScrollRef.value
-    if (el) el.scrollTop = el.scrollHeight
+    const pane = threadScrollRef.value
+    const el = document.querySelector<HTMLElement>('[data-qa-exchange="live"]')
+    if (!pane || !el) return
+    // Measured where the block will rest, not where its slide-in animation
+    // (translateY 24px) has it now; scrollIntoView would land it short.
+    const style = getComputedStyle(el)
+    const shift = style.transform && style.transform !== 'none' ? new DOMMatrixReadOnly(style.transform).m42 : 0
+    const margin = parseFloat(style.scrollMarginTop) || 0
+    const top = el.getBoundingClientRect().top - pane.getBoundingClientRect().top - shift + pane.scrollTop - margin
+    pane.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
   })
 }
-watch(() => threadTurns.value.length, scrollHistoryToBottom)
+
+// "Jump to latest": shown while the end of the conversation is below the
+// docked question box.
+const threadEndRef = ref<HTMLElement | null>(null)
+const showJumpToLatest = ref(false)
+let threadEndObserver: IntersectionObserver | null = null
+
+watch(threadEndRef, (el) => {
+  threadEndObserver?.disconnect()
+  threadEndObserver = null
+  showJumpToLatest.value = false
+  if (!el || typeof IntersectionObserver === 'undefined') return
+  threadEndObserver = new IntersectionObserver(([entry]) => {
+    if (!entry) return
+    const below = entry.boundingClientRect.top > (entry.rootBounds?.bottom ?? window.innerHeight)
+    showJumpToLatest.value = !entry.isIntersecting && below
+  }, { root: threadScrollRef.value, rootMargin: '0px 0px -24px 0px' })
+  threadEndObserver.observe(el)
+})
+
+onUnmounted(() => {
+  threadEndObserver?.disconnect()
+  threadPaneObserver?.disconnect()
+})
+
+const jumpToLatest = () => {
+  threadEndRef.value?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+}
 
 const carriedContext = computed(() => qaResult.value?.conversation_context ?? null)
 const hasCarriedContext = computed(() => Boolean(
@@ -2305,6 +2377,17 @@ const {
   reset: resetStream
 } = useFoodScholarQaStream()
 
+// A claim's answer opens with its verdict line: shown as the verdict row
+// under the question, never as text.
+const liveSplit = computed(() => (pendingClaim.value ? splitVerdict(liveAnswer.value) : { verdict: null, body: liveAnswer.value }))
+const liveAnswerShown = computed(() => liveSplit.value.body)
+const liveVerdict = computed(() => liveSplit.value.verdict)
+// The settled answer replaces a streamed one that the reader has already
+// watched being written: it takes its place without the entrance animations
+// (slide-in, left-to-right reveal), which would draw the same text twice.
+// Those stay for an answer that arrives whole (no stream, or restored).
+const settledAfterStream = computed(() => Boolean(liveAnswer.value))
+
 // Steps shown with a settled answer: prefer the response's own record (it
 // survives the 30-min qaStore restore), fall back to what just streamed.
 const answerReasoningSteps = computed(() =>
@@ -2316,9 +2399,28 @@ const answerReasoningSteps = computed(() =>
 // ── Memory nudges (consent-first; mirrors FoodChat's chips) ──
 const memoryChipState = reactive<Record<string, 'pending' | 'accepted' | 'declined'>>({})
 
-const visibleMemorySuggestions = computed<QaMemorySuggestion[]>(() =>
-  (qaResult.value?.memory_suggestions ?? []).filter(s => memoryChipState[s.id] !== 'declined')
+/**
+ * Every nudge of this conversation, newest answer first, so one left
+ * unanswered under an earlier answer is still there after a follow-up.
+ */
+const threadMemorySuggestions = computed<QaMemorySuggestion[]>(() => {
+  const results = [qaResult.value, ...[...threadTurns.value].reverse().map(turn => turn.result)]
+  const seen = new Set<string>()
+  const out: QaMemorySuggestion[] = []
+  for (const result of results) {
+    for (const sug of result?.memory_suggestions ?? []) {
+      if (seen.has(sug.id) || memoryChipState[sug.id] === 'declined') continue
+      seen.add(sug.id)
+      out.push(sug)
+    }
+  }
+  return out
+})
+/** The ones still waiting for an answer (the count on the narrow-screen button). */
+const pendingMemorySuggestions = computed(() =>
+  threadMemorySuggestions.value.filter(s => !s.already_known && memoryChipState[s.id] !== 'accepted')
 )
+const memoryNudgesOpen = ref(false)
 
 const handleMemoryDecision = async (suggestion: QaMemorySuggestion, decision: 'accept' | 'decline') => {
   const memberId = householdStore.currentMember?.id
@@ -2337,6 +2439,8 @@ const handleMemoryDecision = async (suggestion: QaMemorySuggestion, decision: 'a
 const pendingClarification = ref<QaClarification | null>(null)
 const qaThreadId = ref<string | null>(null)
 const pendingQuestion = ref<string>('')
+/** The exchange in flight is a claim check: shown as "You checked", with a verdict row. */
+const pendingClaim = ref(false)
 const pendingPayload = ref<QaAskRequest | null>(null)
 const clarificationSelectedValues = ref<string[]>([])
 // number when the clarification input is type="number" (v-model coerces)
@@ -2383,12 +2487,6 @@ const retrievalOptions = computed<RetrievalOption[]>(() => [
     icon: 'i-lucide-library'
   },
   {
-    value: 'linearrag',
-    label: t('foodScholarHome.qa.advanced.retrieverLinearRag'),
-    description: t('foodScholarHome.qa.advanced.retrieverLinearRagDescription'),
-    icon: 'i-lucide-git-branch'
-  },
-  {
     value: 'model',
     label: t('foodScholarHome.qa.advanced.retrieverModelOnly'),
     description: t('foodScholarHome.qa.advanced.retrieverModelOnlyDescription'),
@@ -2401,10 +2499,6 @@ const selectedRetrievalOption = computed<RetrievalOption>(() => retrievalOptions
 const retrievalButtonClass = (value: QaRetrievalMode) => {
   if (retrievalMode.value !== value) {
     return 'text-gray-600 dark:text-gray-300 hover:text-brand-600 dark:hover:text-brand-400'
-  }
-
-  if (value === 'linearrag') {
-    return 'bg-brand-500 text-white shadow-sm'
   }
 
   if (value === 'model') {
@@ -2711,17 +2805,23 @@ const qaPlaceholder = computed(() => {
   return t('foodScholarHome.qa.placeholder.default')
 })
 
-const chatSettingsItems = computed<DropdownMenuItem[]>(() => [
-  {
-    label: t('foodScholarHome.qa.mode.advanced'),
-    icon: 'i-lucide-sliders-horizontal',
-    type: 'checkbox',
-    checked: isAdvancedMode.value,
-    onUpdateChecked: (checked: boolean) => {
-      qaMode.value = checked ? 'advanced' : 'simple'
-    }
+/**
+ * Ask and Library switch in place. Leaving Library drops `tab` from the
+ * address, so a reload stays on Ask instead of reopening Library.
+ */
+const selectSection = (id: 'qa' | 'resources') => {
+  pageTab.value = id
+  if (id === 'qa' && route.query.tab) {
+    const query = { ...route.query }
+    delete query.tab
+    router.replace({ query })
   }
-])
+}
+
+/** The "Advanced settings" button opens and closes the panel in one click. */
+const toggleAdvancedMode = () => {
+  qaMode.value = isAdvancedMode.value ? 'simple' : 'advanced'
+}
 
 const answerALabel = computed(() => qaResult.value?.dual_answer_feedback?.answer_a_label || t('foodScholarHome.qa.answerPrimaryModelResponse'))
 const answerBLabel = computed(() => qaResult.value?.dual_answer_feedback?.answer_b_label || t('foodScholarHome.qa.answerAlternativeModelResponse'))
@@ -2908,6 +3008,30 @@ const normalizeQaResult = (result: QaAskResult): QaAskResult => {
   }
 }
 
+/**
+ * A checked claim keeps the reader's words as its question and its verdict
+ * on the result (so earlier turns keep theirs); the verdict line is taken out
+ * of the answer text. A verdict from the backend, once it sends one, wins.
+ */
+const settleClaim = (result: QaAskResult): QaAskResult => {
+  if (!pendingClaim.value) return result
+  const fromBackend = verdictFromResult(result)
+  const strip = (answer: QaAskResult['primary_answer'] | null | undefined) => {
+    if (!answer?.answer) return { answer, verdict: null }
+    const { verdict, body } = splitVerdict(answer.answer)
+    return { answer: { ...answer, answer: body }, verdict }
+  }
+  const primary = strip(result.primary_answer)
+  const secondary = strip(result.secondary_answer)
+  return {
+    ...result,
+    question: pendingQuestion.value || result.question,
+    primary_answer: primary.answer ?? result.primary_answer,
+    secondary_answer: result.secondary_answer ? (secondary.answer ?? result.secondary_answer) : result.secondary_answer,
+    ui_claim: { verdict: fromBackend ?? primary.verdict }
+  }
+}
+
 const handleQaResponse = (result: QaAskResult, basePayload: QaAskRequest) => {
   if (result.needs_clarification && result.clarification) {
     pendingClarification.value = result.clarification
@@ -2925,7 +3049,13 @@ const handleQaResponse = (result: QaAskResult, basePayload: QaAskRequest) => {
     // A deliberate new question resets it in askScholarQA().
     qaThreadId.value = result.qa_thread_id ?? qaThreadId.value ?? null
     pendingPayload.value = null
-    qaResult.value = normalizeQaResult(result)
+    // The question bubble keeps the reader's own words: after a clarification
+    // the backend echoes the question with the clarification appended.
+    qaResult.value = settleClaim({
+      ...normalizeQaResult(result),
+      ...(pendingQuestion.value ? { question: pendingQuestion.value } : {})
+    })
+    pendingClaim.value = false
     qaStore.save({
       question: pendingQuestion.value,
       result: qaResult.value,
@@ -2933,11 +3063,8 @@ const handleQaResponse = (result: QaAskResult, basePayload: QaAskRequest) => {
       qaThreadId: qaThreadId.value,
       turns: threadTurns.value
     })
-    if (threadTurns.value.length) {
-      void nextTick(() => {
-        latestExchangeRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      })
-    }
+    // No scroll here: the settled answer takes the streaming one's place,
+    // so whatever the reader was looking at stays where it was.
   }
 }
 
@@ -2951,6 +3078,7 @@ const startNewThread = () => {
   pendingQuestion.value = ''
   chatQuery.value = ''
   memoryPanelOpen.value = false
+  memoryNudgesOpen.value = false
   resetStream()
   qaStore.clear()
 }
@@ -2963,10 +3091,11 @@ const startNewThread = () => {
 // existing layout — no new controls — while enabling threaded follow-ups.
 const askScholarQA = async (
   questionOverride?: string,
-  options?: { continueThread?: boolean, forceNew?: boolean }
+  options?: { continueThread?: boolean, forceNew?: boolean, claim?: boolean }
 ) => {
   const question = (questionOverride ?? chatQuery.value).trim()
   if (!question || asking.value) return
+  pendingClaim.value = Boolean(options?.claim)
 
   const autoContinue = hasActiveSession.value && !!qaThreadId.value
   const continueThread = options?.forceNew === true
@@ -3003,9 +3132,13 @@ const askScholarQA = async (
   negativeFeedbackComment.value = ''
 
   resetStream()
+  if (threadTurns.value.length) scrollToCurrentExchange()
 
   try {
+    // A claim goes to FoodScholar as itself, marked as a claim to check; the
+    // verdict comes back as claim_verdict on the result.
     const payload = buildBasePayload(question)
+    if (pendingClaim.value) payload.intent = 'claim_check'
     pendingQuestion.value = question
     const result = await askStreamed(payload)
     handleQaResponse(result, payload)
@@ -3139,6 +3272,110 @@ const askQuickQuestion = (question: string) => {
   // Starter questions always begin a fresh conversation.
   askScholarQA(question, { forceNew: true })
 }
+
+// ── Tools in the question box ──
+// "Check a claim" and "Everyday questions" open a short list under the box;
+// picking an item puts it in the box, and nothing is sent until the reader
+// sends it. A claim is then asked in the same conversation, and its verdict
+// is shown under the question (see askScholarQA / handleQaResponse).
+const composerIntent = ref<'claim' | null>(null)
+const activeTool = ref<ComposerTool | null>(null)
+const idleComposerRef = ref<{ focus: () => void } | null>(null)
+
+/** Focus the box on a desktop; on a phone that would throw up the keyboard. */
+const focusIdleComposer = () => {
+  if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: fine)').matches) {
+    idleComposerRef.value?.focus()
+  }
+}
+
+/**
+ * One tool at a time. Claim mode counts as the claim tool being selected even
+ * after its list has closed, so opening another tool leaves claim mode, and
+ * choosing the selected tool again turns it off.
+ */
+const selectedTool = computed<ComposerTool | null>(() => (composerIntent.value === 'claim' ? 'claim' : activeTool.value))
+
+const openTool = (tool: ComposerTool) => {
+  if (selectedTool.value === tool) {
+    activeTool.value = null
+    composerIntent.value = null
+    return
+  }
+  activeTool.value = tool
+  composerIntent.value = tool === 'claim' ? 'claim' : null
+}
+
+const closeTool = () => {
+  // Closing the claim list without picking one leaves claim mode too, unless
+  // a claim is already in the box.
+  if (activeTool.value === 'claim' && !chatQuery.value.trim()) composerIntent.value = null
+  activeTool.value = null
+}
+
+const clearClaimIntent = () => {
+  composerIntent.value = null
+  if (activeTool.value === 'claim') activeTool.value = null
+}
+
+const useSuggestion = (text: string, mode: 'claim' | 'question') => {
+  chatQuery.value = text
+  composerIntent.value = mode === 'claim' ? 'claim' : null
+  activeTool.value = null
+  focusIdleComposer()
+}
+
+/** The explanation level, chosen from the question box itself. */
+const explanationLevelItems = computed<DropdownMenuItem[]>(() => expertiseOptions.value.map(option => ({
+  label: option.label,
+  description: option.description,
+  icon: option.icon,
+  type: 'checkbox' as const,
+  checked: expertiseLevel.value === option.value,
+  onUpdateChecked: () => {
+    expertiseLevel.value = option.value
+  }
+})))
+
+/** "See what FoodScholar can do": each card opens its short list. */
+const tryCards = computed(() => [
+  {
+    id: 'claim',
+    icon: 'i-lucide-search-check',
+    accent: 'bg-brand-50 text-brand-600 dark:bg-brand-900/30 dark:text-brand-300',
+    title: t('foodScholarLearn.composer.cards.claim.title'),
+    body: t('foodScholarLearn.composer.cards.claim.body'),
+    run: () => openTool('claim')
+  },
+  {
+    id: 'plain',
+    icon: 'i-lucide-message-circle-question',
+    accent: 'bg-sky-50 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300',
+    title: t('foodScholarLearn.composer.cards.plain.title'),
+    body: t('foodScholarLearn.composer.cards.plain.body'),
+    run: () => {
+      expertiseLevel.value = 'beginner'
+      openTool('everyday')
+    }
+  }
+])
+
+/** The box sends a claim to be checked, or an ordinary question. */
+const submitComposer = (value: string | undefined, continueThread?: boolean) => {
+  const text = String(value ?? chatQuery.value).trim()
+  if (!text) return
+  if (composerIntent.value === 'claim') {
+    composerIntent.value = null
+    activeTool.value = null
+    void askScholarQA(text, { claim: true, ...(continueThread === false ? { forceNew: true } : {}) })
+    return
+  }
+  activeTool.value = null
+  void askScholarQA(text)
+}
+
+const submitIdleComposer = (value?: string) => submitComposer(value, false)
+const submitDockedComposer = (value?: string) => submitComposer(value)
 
 const normalizeQuestionList = (result: { questions?: unknown } | string[] | null | undefined): string[] => {
   if (Array.isArray(result)) {
@@ -3304,6 +3541,16 @@ const normalizeAnswerProse = (text: string): string =>
     // live stream mid-flight and answers cached before the backend fix.
     .replace(/<{2,}\s*END_ANSWER\s*>{2,}[\s\S]*$/, '')
     .replace(/\{\s*"cited_sources"[\s\S]*$/, '')
+    // "[G679]([G679](/guidelines/x))": a citation wrapped in a second copy of
+    // itself (the model's own link, linked again by a repair pass). Markdown
+    // cannot nest a link inside a link's URL, so it rendered as "[G679[G680"
+    // with nothing to click. Keep the inner, real link.
+    .replace(/\[([^[\]]+)\]\(\s*\[\1\]\(([^()\s]+)\)\s*\)/g, '[$1]($2)')
+    // 【label】, gpt-oss's citation brackets: square brackets, closed. Before a
+    // URL that is the link's label; on its own it stays readable, and
+    // "[general knowledge]" still becomes its badge. Dropping only 】 left
+    // "[Johnson et al. (2024)." open, with nothing to click.
+    .replace(/【\s*([^【】\n]{1,120}?)\s*】/g, '[$1]')
     .replace(/【/g, '[')
     .replace(/】/g, '')
     // A bare bracketed URN citation (a model quirk the backend now repairs
@@ -3340,7 +3587,19 @@ const renderMarkdown = (text: string): string => {
   }) as string
 
   const sanitized = DOMPurify.sanitize(rawHtml)
-  return annotateCitationAnchors(sanitized)
+  return markGeneralKnowledge(annotateCitationAnchors(sanitized))
+}
+
+// FoodScholar ends a sentence it could not source with the tag
+// "[general knowledge]" (always in English). Shown as a small badge, so the
+// reader sees which statements are not from the sources, instead of a stray
+// bracket that looks like a broken citation. Inserted after sanitizing, from
+// our own escaped strings.
+const escapeHtml = (value: string) => value.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', '\'': '&#39;' }[c] as string))
+const markGeneralKnowledge = (html: string): string => {
+  if (!/\[general knowledge\]/i.test(html)) return html
+  const badge = `<span class="qa-gk-badge" title="${escapeHtml(t('foodScholarHome.qa.generalKnowledgeTitle'))}">${escapeHtml(t('foodScholarHome.qa.generalKnowledge'))}</span>`
+  return html.replace(/\s?\[general knowledge\]/gi, ` ${badge}`)
 }
 
 // Inject data-citation-urn / data-citation-type onto each anchor whose href
@@ -3488,6 +3747,33 @@ onMounted(async () => {
     askScholarQA()
   }
 
+  // Links into the question box: ?claim= checks a claim straight away;
+  // ?draft= puts a question in the box, unsent (with ?tool=claim, as a claim);
+  // ?tool= opens a list under the box. All consumed from the address.
+  const take = (key: string) => {
+    const raw = route.query[key]
+    return typeof raw === 'string' ? raw.trim() : ''
+  }
+  const incomingClaim = take('claim')
+  const draft = take('draft')
+  const tool = take('tool')
+  if (incomingClaim || draft || tool) {
+    pageTab.value = 'qa'
+    const query = { ...route.query }
+    delete query.claim
+    delete query.draft
+    delete query.tool
+    router.replace({ query })
+    if (incomingClaim && !asking.value) {
+      void askScholarQA(incomingClaim, { claim: true, forceNew: true })
+    } else if (draft) {
+      chatQuery.value = draft
+      composerIntent.value = tool === 'claim' ? 'claim' : null
+    } else if (tool === 'claim' || tool === 'everyday') {
+      openTool(tool)
+    }
+  }
+
   // Restore a recent QA thread (within the store's TTL) so navigating away and
   // back to /foodscholar doesn't lose the question, answer, and citations.
   if (!qaResult.value && !asking.value) {
@@ -3537,14 +3823,6 @@ onUnmounted(() => {
 /* Earlier exchanges of the thread: present but receded — dimmed until the
    reader deliberately engages with them. The sticky gradient above the list
    adds the top fade while scrolling through history. */
-.qa-history-bubble {
-  opacity: 0.55;
-  transition: opacity 0.2s ease;
-}
-.qa-history-bubble:hover,
-.qa-history-bubble:focus-within {
-  opacity: 1;
-}
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap');
 
@@ -3577,8 +3855,313 @@ onUnmounted(() => {
   transform: translateY(0);
 }
 
+/* ── Question box: options tray, example cards, bottom dock ── */
+.qa-composer-tray {
+  /* One row: swiped sideways on a phone, wrapping from sm up. */
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  align-items: center;
+  gap: 0.125rem;
+  margin: -1.5rem 0.75rem 0;
+  padding: 1.875rem 0.5rem 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-top: 0;
+  border-radius: 0 0 1.25rem 1.25rem;
+  background: rgba(244, 244, 245, 0.85);
+}
+
+@media (min-width: 640px) {
+  .qa-composer-tray {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
+
+.dark .qa-composer-tray {
+  border-color: rgba(255, 255, 255, 0.06);
+  background: rgba(39, 39, 42, 0.65);
+}
+
+.qa-composer-tray::-webkit-scrollbar {
+  display: none;
+}
+
+.qa-tray-item {
+  display: inline-flex;
+  flex-shrink: 0;
+  white-space: nowrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  color: rgb(75 85 99);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.qa-tray-item:hover {
+  background: rgba(255, 255, 255, 0.9);
+  color: rgb(17 24 39);
+}
+
+.dark .qa-tray-item {
+  color: rgb(212 212 216);
+}
+
+.dark .qa-tray-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: white;
+}
+
+.qa-tray-item.is-active {
+  background: rgb(from var(--color-brand-500) r g b / 0.1);
+  color: var(--color-brand-600);
+}
+
+.dark .qa-tray-item.is-active {
+  color: rgb(251 113 133);
+}
+
+/* Claim mode inside the box: a pill that says so and takes it off. */
+.qa-claim-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 2.25rem;
+  padding: 0 0.5rem 0 0.75rem;
+  border-radius: 9999px;
+  background: rgb(from var(--color-brand-500) r g b / 0.1);
+  color: var(--color-brand-600);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.15s ease;
+}
+
+.qa-claim-pill:hover {
+  background: rgb(from var(--color-brand-500) r g b / 0.16);
+}
+
+.dark .qa-claim-pill {
+  background: rgb(from var(--color-brand-500) r g b / 0.22);
+  color: rgb(253 164 175);
+}
+
+/* The same switch, off, in the docked box: an icon like its neighbours. */
+.qa-claim-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  color: rgb(75 85 99);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.qa-claim-toggle:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgb(17 24 39);
+}
+
+.dark .qa-claim-toggle {
+  color: rgb(212 212 216);
+}
+
+.dark .qa-claim-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+}
+
+/* Keyboard focus in the brand colour, never the browser's blue on a click. */
+.qa-tray-item:focus,
+.qa-claim-pill:focus,
+.qa-claim-toggle:focus {
+  outline: none;
+}
+
+.qa-tray-item:focus-visible,
+.qa-claim-pill:focus-visible,
+.qa-claim-toggle:focus-visible {
+  outline: 2px solid rgb(from var(--color-brand-500) r g b / 0.55);
+  outline-offset: 2px;
+}
+
+.qa-tray-item.is-active {
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgb(from var(--color-brand-500) r g b / 0.25);
+}
+
+.qa-try-card {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  padding: 1rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  background: rgba(255, 255, 255, 0.75);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.qa-try-card:hover {
+  border-color: rgb(from var(--color-brand-500) r g b / 0.35);
+  box-shadow: 0 10px 28px -16px rgba(0, 0, 0, 0.25);
+  transform: translateY(-1px);
+}
+
+.dark .qa-try-card {
+  border-color: rgba(255, 255, 255, 0.07);
+  background: rgba(39, 39, 42, 0.55);
+}
+
+.qa-try-pill {
+  flex-shrink: 0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgb(55 65 81);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.qa-try-card:hover .qa-try-pill {
+  background: var(--color-brand-500);
+  border-color: var(--color-brand-500);
+  color: white;
+}
+
+.dark .qa-try-pill {
+  border-color: rgba(255, 255, 255, 0.14);
+  color: rgb(228 228 231);
+}
+
+/* In a conversation the box sits under the conversation pane; the fade
+   above it lets the thread scroll away beneath its top edge. */
+.qa-dock {
+  position: relative;
+  z-index: 30;
+  flex-shrink: 0;
+  /* Top and bottom only: the sides come from px-4 on the element. */
+  padding-top: 0.25rem;
+  padding-bottom: calc(0.75rem + var(--wf-safe-bottom, 0px));
+}
+
+/* Settling a streamed answer: no second entrance (see settledAfterStream). */
+.qa-exchange.qa-settled-quiet,
+.qa-settled-quiet .answer-reveal-ltr {
+  animation: none;
+  opacity: 1;
+  transform: none;
+  clip-path: none;
+}
+
+.qa-thread-bar {
+  position: relative;
+  z-index: 25;
+  flex-shrink: 0;
+}
+
+/* The conversation fades out under the pinned bar, as it does above the box. */
+.qa-thread-bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 1rem;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgb(255 255 255 / 0.9), rgb(255 255 255 / 0));
+}
+
+.dark .qa-thread-bar::after {
+  background: linear-gradient(to bottom, rgb(16 16 18 / 0.9), rgb(16 16 18 / 0));
+}
+
+.qa-dock::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 1.5rem;
+  pointer-events: none;
+  background: linear-gradient(to top, rgb(255 255 255 / 0.9), rgb(255 255 255 / 0));
+}
+
+.dark .qa-dock::before {
+  background: linear-gradient(to top, rgb(16 16 18 / 0.9), rgb(16 16 18 / 0));
+}
+
+.qa-jump-latest {
+  position: absolute;
+  top: -0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: white;
+  color: rgb(55 65 81);
+  box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.3);
+}
+
+.dark .qa-jump-latest {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgb(39 39 42);
+  color: rgb(228 228 231);
+}
+
+.qa-jump-enter-active,
+.qa-jump-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.qa-jump-enter-from,
+.qa-jump-leave-to {
+  opacity: 0;
+}
+
+/* A follow-up's question scrolls to the top of the screen: it lands a little
+   below the edge, and its exchange keeps a screen's height to rise into. */
+.qa-exchange {
+  scroll-margin-top: 1rem;
+}
+
+/* The pane's height, less a little air: room for the question to rise. */
+.qa-exchange-fill {
+  min-height: calc(var(--qa-thread-h, 70vh) - 2.5rem);
+}
+
+.qa-thread-end {
+  height: 1px;
+  scroll-margin-bottom: 1rem;
+}
+
 .qa-session-layout {
   min-height: 100%;
+  /* The answer column's width (max-w-2xl, lg:max-w-3xl); the source rail
+     takes what is left on the right. */
+  --qa-center-width: 42rem;
+}
+
+@media (min-width: 1024px) {
+  .qa-session-layout {
+    --qa-center-width: 48rem;
+  }
+}
+
+/* Answers read a touch larger than the 14px prose-sm default. */
+.qa-answer-markdown {
+  font-size: 0.9375rem;
+  line-height: 1.7;
 }
 
 .qa-source-sidebar {
@@ -3586,13 +4169,34 @@ onUnmounted(() => {
   right: 0;
   top: 0.25rem;
   bottom: 0.25rem;
-  width: clamp(12rem, calc((100% - 42rem) / 2 - 1.5rem), 18rem);
+  width: clamp(12rem, calc((100% - var(--qa-center-width)) / 2 - 1.5rem), 18rem);
   max-width: 18rem;
   /* Bound the rail to its container's height and scroll internally so a long
      source list never overruns the page footer. The sticky inner wrapper
      (.qa-source-sidebar-inner) keeps the visible sources pinned in the
      viewport as the answer scrolls. */
   overflow: visible;
+}
+
+/* The left rail mirrors the source rail on the right. */
+.qa-memory-rail {
+  position: absolute;
+  left: 0;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  width: clamp(12rem, calc((100% - var(--qa-center-width)) / 2 - 1.5rem), 18rem);
+  max-width: 18rem;
+}
+
+.qa-memory-rail-inner {
+  position: sticky;
+  top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  max-height: min(32rem, calc(100vh - 3rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 
 .qa-source-sidebar-inner {

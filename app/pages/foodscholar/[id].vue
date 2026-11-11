@@ -302,6 +302,14 @@
             </UPopover>
           </div>
 
+          <!-- How sure are we? The article's kind of evidence, in plain words -->
+          <FoodscholarHowSureCard
+            :study-type="displayStudyType"
+            :biological-model="article.biological_model"
+            :population-group="displayPopulationGroup"
+            :age-group="article.age_group"
+          />
+
           <!-- Key Takeaways -->
           <div
             v-if="displayTakeaways.length > 0"
