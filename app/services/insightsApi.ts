@@ -366,6 +366,202 @@ export interface SessionJourney {
   }
 }
 
+/** A rating as it rides on a story moment: the verdict and the words left with it. */
+export interface StoryRating {
+  /** The feedback row, for reading the exchange it was about. */
+  feedback_id: number | null
+  value: string | null
+  negative: boolean
+  reason: string | null
+  comment: string | null
+}
+
+/**
+ * One thing that happened in a session, wherever it was recorded.
+ *
+ * `kind` decides which of the optional fields are present; every one is
+ * optional so a moment the console does not know yet still renders as text.
+ */
+export interface StoryMoment {
+  id: number
+  kind: 'turn' | 'plan_generated' | 'plan_saved' | 'rating' | 'question' | 'search'
+    | 'page' | 'recipe_view' | 'result_opened' | 'compare' | 'favourite' | 'unfavourite'
+    | 'citation' | 'abandoned' | 'reading' | 'error' | 'client_error' | 'frustration'
+    | 'event' | string
+  product: string | null
+  occurred_at: string
+  /** Seconds since the session's first moment. */
+  offset_seconds: number
+  /** Seconds since the moment before. Null on the first. */
+  gap_seconds: number | null
+  // FoodChat
+  conversation_id?: string | null
+  number?: number
+  intent?: string | null
+  outcome?: string | null
+  opening_turn?: boolean
+  latency_ms?: number | null
+  llm_calls?: number
+  cost_usd?: number | null
+  plan?: ChatPlanMade | null
+  lookups?: ChatLookup[]
+  plan_id?: string | null
+  plan_type?: string | null
+  version?: number | null
+  refinement?: boolean
+  item_count?: number | null
+  // Ratings: the moment itself, or the rating a question carries
+  target_type?: string | null
+  target_id?: string | null
+  feedback_id?: number | null
+  value?: string | null
+  negative?: boolean
+  reason?: string | null
+  comment?: string | null
+  rating?: StoryRating | null
+  // FoodScholar
+  question?: string | null
+  answered?: boolean
+  mode?: string | null
+  confidence?: string | number | null
+  articles_consulted?: number | null
+  sources_found?: number | null
+  qa_request_id?: string | null
+  cache_hit?: boolean | null
+  // Searches and recipes
+  surface?: string | null
+  query?: string | null
+  results?: number | null
+  zero_result?: boolean
+  relaxed?: boolean
+  recipe_id?: string | null
+  position?: number | null
+  source?: string | null
+  entry_type?: string | null
+  urn?: string | null
+  // Pages, errors, clicks, everything else
+  path?: string | null
+  previous?: string | null
+  status?: number | null
+  route?: string | null
+  method?: string | null
+  duration_ms?: number | null
+  name?: string | null
+  message?: string | null
+  handled?: boolean | null
+  click_kind?: string | null
+  element_key?: string | null
+  element_label?: string | null
+  element_role?: string | null
+  area?: string | null
+  clicks?: number
+  event_type?: string | null
+  feature?: string | null
+  action?: string | null
+}
+
+export interface StoryChapter {
+  id: number
+  /** `foodchat` | `foodscholar` | `recipes` | `other` */
+  product: string
+  conversation_id: string | null
+  started_at: string
+  ended_at: string
+  offset_seconds: number
+  duration_seconds: number
+  counts: {
+    turns: number
+    failed_turns: number
+    plans: number
+    plans_saved: number
+    questions: number
+    unanswered: number
+    searches: number
+    found_nothing: number
+    recipes_opened: number
+    rated_up: number
+    rated_down: number
+    errors: number
+    frustration: number
+    pages: number
+  }
+  moments: StoryMoment[]
+}
+
+/** The session told once, in order, chapter by chapter. */
+export interface SessionStory {
+  chapters: StoryChapter[]
+  moments: number
+  total: number
+  truncated: boolean
+}
+
+/** One message of the exchange around a rated FoodChat reply. */
+export interface ExchangeMessage {
+  id: number
+  role: string
+  content: string
+  truncated: boolean
+  intent: string | null
+  plan_id: string | null
+  timestamp: string | null
+  is_rated: boolean
+}
+
+/** What a piece of feedback was about, read from the service that holds it. */
+export interface FeedbackContext {
+  feedback: FeedbackRow
+  kind: string
+  available: boolean
+  /** Why it is not available, when it is not. */
+  reason: string | null
+  exchange: {
+    message_id?: string
+    session_id?: string
+    messages?: ExchangeMessage[]
+    session_messages?: number
+    // A FoodScholar answer comes back as its review payload instead.
+    [key: string]: unknown
+  } | null
+}
+
+export interface PlanPlate {
+  recipe_id: string | null
+  title: string
+  role: string
+  kcal: number | null
+  match_reasons: string[]
+}
+
+/** What one FoodChat plan put on the table, and how it was judged. */
+export interface PlanReview {
+  plan_id: string
+  available: boolean
+  reason: string | null
+  plan: {
+    plan_id: string
+    session_id: string
+    plan_type: string
+    version: number
+    parent_id: string | null
+    saved: boolean
+    saved_at: string | null
+    created_at: string | null
+    meals: Array<{ day: number | null, meal_type: string, plates: PlanPlate[] }>
+    reasoning: string | null
+    scores: Array<{ name: string, score: number | null, reasoning: string | null }>
+    metrics: Record<string, unknown> | null
+    constraints_applied: Array<{
+      constraint?: string
+      type?: string
+      status?: string
+      source?: string
+      detail?: string
+      kind?: string
+    }>
+  } | null
+}
+
 export interface SessionSummary {
   session_id: string
   started_at: string | null
@@ -381,6 +577,8 @@ export interface SessionSummary {
   meal_plans_saved: number
   /** Absent from an API older than the journey report. */
   journey?: SessionJourney
+  /** Absent from an API older than the session story. */
+  story?: SessionStory
   recipes_viewed: number
   searches: number
   searches_with_no_results: number
@@ -568,6 +766,13 @@ export interface ClientSessionRow {
     recipes_viewed: number
     searches: number
     apps: string[]
+    // How it went. Absent from an API older than the session story.
+    rated_up?: number
+    rated_down?: number
+    /** The reason or comment left with up to two of the negative ratings. */
+    down_reasons?: string[]
+    frustrated_clicks?: number
+    failed_turns?: number
   }
 }
 
@@ -1251,6 +1456,36 @@ class InsightsApiService {
       // Missing is not broken: a stale link and a dead gateway must not read
       // the same. Only the latter is a failure.
       if (!isNotFound(error)) lastInsightsFailure.value++
+      return null
+    }
+  }
+
+  /**
+   * The exchange a rating was about. On demand, one at a time: it is a call to
+   * the service that holds the conversation, and the gateway records the read.
+   * A failure is the caller's to show in place; it does not fail the page.
+   */
+  async getFeedbackContext(feedbackId: number): Promise<FeedbackContext | null> {
+    try {
+      return asResult<FeedbackContext | null>(
+        await wisefoodRestApi.get<unknown>(`${this.basePath}/feedback/${feedbackId}/context`),
+        null
+      )
+    } catch {
+      return null
+    }
+  }
+
+  /** One FoodChat plan's dishes, scores and checks. On demand, like the above. */
+  async getPlanReview(planId: string): Promise<PlanReview | null> {
+    try {
+      return asResult<PlanReview | null>(
+        await wisefoodRestApi.get<unknown>(
+          `${this.basePath}/foodchat/plans/${encodeURIComponent(planId)}`
+        ),
+        null
+      )
+    } catch {
       return null
     }
   }

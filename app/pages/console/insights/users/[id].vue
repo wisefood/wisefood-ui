@@ -118,6 +118,7 @@
                 title="Their sessions"
                 subtitle="Newest first. Open one to see everything that happened in it."
                 :show-person="false"
+                :trail-query="{ user_id: userId }"
                 empty="No sessions recorded for this person in this period."
                 :empty-hint="totals
                   ? 'Their actions were counted, but no session carried their identity — only sessions started after they consented can be attributed.'
@@ -133,7 +134,7 @@
                       :to="boardLink"
                       class="text-xs text-brand-600 hover:underline dark:text-brand-300"
                     >
-                      Open on the session board
+                      Open in the session list
                     </NuxtLink>
                   </div>
                 </template>
@@ -147,7 +148,7 @@
                       :to="boardLink"
                       class="text-brand-600 hover:underline dark:text-brand-300"
                     >
-                      session board
+                      session list
                     </NuxtLink>
                     pages through the rest.
                   </p>

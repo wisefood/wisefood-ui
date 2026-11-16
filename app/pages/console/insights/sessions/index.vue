@@ -10,8 +10,8 @@
       @refresh="reload"
     />
     <UPageHeader
-      title="Session board"
-      description="Every session, the machine it ran on, and whether anything broke. The list a support conversation starts from."
+      title="Sessions"
+      description="Each visit, what it came to, and whether it went well. Open one to read it as a story."
       :ui="{ root: 'relative py-8 border-b-0' }"
     >
       <template #links>
@@ -20,101 +20,94 @@
     </UPageHeader>
 
     <UPageBody>
-      <div class="space-y-6">
+      <div class="space-y-4">
         <p
           v-if="customEndIgnored"
           class="text-xs text-amber-600 dark:text-amber-400"
         >
-          The board reads a window back from now, so the end date is not applied here — it is showing
+          The list reads a window back from now, so the end date is not applied here — it is showing
           the last {{ boardDays }} days.
         </p>
 
-        <UCard
-          :ui="{ body: 'p-4' }"
-          class="border border-gray-200/70 dark:border-white/10"
-        >
-          <div class="flex flex-col gap-3 xl:flex-row xl:items-center">
-            <div class="w-full xl:min-w-0 xl:flex-1">
-              <UInput
-                v-model="searchInput"
-                icon="i-lucide-search"
-                placeholder="Session reference, e.g. k3f9-2xa7 — matches from the start"
-                class="font-mono"
-                autocomplete="off"
-                aria-label="Search by session reference"
-                @keydown.enter="commitSearch"
-              />
+        <!-- Filters in the order people reach for them: which product, then
+             what happened — "the FoodChat visits somebody rated down" is the
+             question, far more often than a browser. The machine filters are
+             still here, folded away until wanted. -->
+        <div class="space-y-3">
+          <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div
+              class="inline-flex shrink-0 rounded-lg border border-gray-200 p-0.5 dark:border-white/10"
+              role="group"
+              aria-label="Product"
+            >
+              <button
+                v-for="product in PRODUCT_OPTIONS"
+                :key="product.value"
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                :class="filters.app === product.value
+                  ? 'bg-gray-100 font-medium text-gray-900 dark:bg-white/10 dark:text-white'
+                  : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'"
+                :aria-pressed="filters.app === product.value"
+                @click="filters.app = product.value"
+              >
+                <UIcon
+                  v-if="product.icon"
+                  :name="product.icon"
+                  class="h-3.5 w-3.5"
+                />
+                {{ product.label }}
+              </button>
             </div>
-
-            <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:flex xl:flex-none">
-              <!-- What the visit was for comes first: "the FoodChat sessions"
-                   and "the ones that made a plan" are what people come to this
-                   board looking for, far more often than a browser. -->
-              <USelectMenu
-                v-model="filters.app"
-                :items="productOptions"
-                value-key="value"
-                label-key="label"
-                leading-icon="i-lucide-layout-grid"
-                class="w-full xl:w-40"
-                aria-label="Product used"
-              />
-              <USelectMenu
-                v-model="filters.activity"
-                :items="activityOptions"
-                value-key="value"
-                label-key="label"
-                leading-icon="i-lucide-list-checks"
-                class="w-full xl:w-48"
-                aria-label="What the session did"
-              />
-              <USelectMenu
-                v-model="filters.deviceType"
-                :items="deviceOptions"
-                value-key="value"
-                label-key="label"
-                leading-icon="i-lucide-monitor-smartphone"
-                class="w-full xl:w-36"
-                aria-label="Device type"
-              />
-              <USelectMenu
-                v-model="filters.browser"
-                :items="browserOptions"
-                value-key="value"
-                label-key="label"
-                leading-icon="i-lucide-app-window"
-                class="w-full xl:w-36"
-                aria-label="Browser"
-              />
-              <USelectMenu
-                v-model="filters.os"
-                :items="osOptions"
-                value-key="value"
-                label-key="label"
-                leading-icon="i-lucide-cpu"
-                class="w-full xl:w-36"
-                aria-label="Operating system"
-              />
-              <USelectMenu
-                v-model="filters.country"
-                :items="countryOptions"
-                value-key="value"
-                label-key="label"
-                leading-icon="i-lucide-globe"
-                class="w-full xl:w-36"
-                aria-label="Country"
-              />
-            </div>
+            <UInput
+              v-model="searchInput"
+              icon="i-lucide-search"
+              placeholder="Session reference, e.g. k3f9-2xa7"
+              class="w-full font-mono lg:max-w-xs"
+              autocomplete="off"
+              aria-label="Search by session reference"
+              @keydown.enter="commitSearch"
+            />
+            <UButton
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              :icon="showMore ? 'i-lucide-chevron-up' : 'i-lucide-sliders-horizontal'"
+              class="lg:ml-auto"
+              :aria-expanded="showMore"
+              @click="showMore = !showMore"
+            >
+              More filters<template v-if="machineFilterCount">
+                ({{ machineFilterCount }})
+              </template>
+            </UButton>
           </div>
 
-          <div class="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-gray-100 pt-3 dark:border-zinc-800">
-            <!-- Arriving from a person's page narrows the board to them, and
-                 nothing else here would say so — a filter you cannot see is
-                 just a list that looks wrong. So it is shown as the filter it
-                 is, and clicking it is the way back to everybody. The id is a
-                 Keycloak sub; it wraps rather than clips, because a reference
-                 you cannot read to the end cannot be checked against the one
-                 in the support message. -->
+          <div
+            class="flex flex-wrap items-center gap-1.5"
+            role="group"
+            aria-label="What happened"
+          >
+            <button
+              v-for="quick in QUICK"
+              :key="quick.value"
+              type="button"
+              class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              :class="filters.activity === quick.value
+                ? 'border-brand-500 bg-brand-50 text-brand-700 dark:border-brand-400/50 dark:bg-brand-500/10 dark:text-brand-300'
+                : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5'"
+              :aria-pressed="filters.activity === quick.value"
+              @click="filters.activity = filters.activity === quick.value ? '' : quick.value"
+            >
+              <UIcon
+                :name="quick.icon"
+                class="h-3.5 w-3.5"
+              />
+              {{ quick.label }}
+            </button>
+
+            <!-- Arriving from a person's page narrows the list to them; a
+                 filter you cannot see is a list that looks wrong. -->
             <button
               v-if="filters.userId"
               type="button"
@@ -134,211 +127,157 @@
               />
             </button>
 
-            <UCheckbox
-              v-model="filters.hasErrors"
-              label="Errors only"
-            />
-            <UCheckbox
-              v-model="filters.includeBots"
-              label="Include crawlers"
-            />
             <UButton
+              v-if="hasActiveFilters"
               color="neutral"
-              variant="ghost"
+              variant="link"
               size="xs"
-              :disabled="!hasActiveFilters"
               @click="resetFilters"
             >
               Clear filters
             </UButton>
           </div>
-        </UCard>
 
-        <!-- The filters above stay full width because they are how the board is
-             driven. What falls out of them splits: the table is read row by row
-             and keeps two thirds, while the summaries are glanced at and clicked
-             to narrow, which is a rail job. -->
-        <div class="grid gap-6 lg:grid-cols-3">
-          <div class="min-w-0 space-y-6 lg:col-span-2">
-            <!-- The board table renders rows or an empty message and nothing
-                 else, so the two states it cannot tell apart from "no sessions
-                 match" are decided out here, in a card of the same shape. -->
-            <UCard
-              v-if="loading && !board"
-              :ui="{ body: 'p-0' }"
-              class="border border-gray-200/70 dark:border-white/10"
-            >
-              <div
-                class="animate-pulse divide-y divide-gray-100 px-5 dark:divide-zinc-800"
-                role="status"
-                aria-live="polite"
-                aria-label="Loading sessions"
-              >
-                <div
-                  v-for="n in 8"
-                  :key="n"
-                  class="flex gap-6 py-3"
-                >
-                  <span class="h-3 w-28 rounded bg-gray-200 dark:bg-zinc-800" />
-                  <span class="h-3 flex-1 rounded bg-gray-200 dark:bg-zinc-800" />
-                  <span class="h-3 w-16 rounded bg-gray-200 dark:bg-zinc-800" />
-                  <span class="h-3 w-12 rounded bg-gray-200 dark:bg-zinc-800" />
-                </div>
-              </div>
-            </UCard>
-
-            <UCard
-              v-else-if="failed"
-              :ui="{ body: 'p-0' }"
-              class="border border-gray-200/70 dark:border-white/10"
-            >
-              <ConsoleInsightsEmptyState
-                failed
-                title="The session board could not be loaded"
-                hint="The request to the API failed. This is not an empty period and not a filter with no matches — retry, and if it persists check the gateway."
+          <UCard
+            v-if="showMore"
+            :ui="{ body: 'p-4' }"
+            class="border border-gray-200/70 dark:border-white/10"
+          >
+            <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <USelectMenu
+                v-model="filters.deviceType"
+                :items="deviceOptions"
+                value-key="value"
+                label-key="label"
+                leading-icon="i-lucide-monitor-smartphone"
+                aria-label="Device type"
               />
-            </UCard>
-
-            <ConsoleInsightsSessionBoardTable
-              v-else
-              :rows="board?.sessions ?? []"
-              title="Sessions"
-              :subtitle="tableSubtitle"
-              :empty="board ? 'No sessions match these filters.' : 'No session records available.'"
-              :empty-hint="board
-                ? 'Widen the period, or clear a filter. Crawlers are excluded unless you ask for them.'
-                : 'Sessions appear once the analytics schema is applied and collection is switched on.'"
-            >
-              <template #actions>
-                <span class="text-xs text-gray-500 dark:text-gray-400">{{ showingLabel }}</span>
-              </template>
-
-              <template #footer>
-                <div
-                  v-if="board && board.total > pageSize"
-                  class="flex items-center justify-between gap-3 border-t border-gray-200/70 px-5 py-3 dark:border-white/10"
-                >
-                  <span class="text-xs text-gray-500 dark:text-gray-400">{{ showingLabel }}</span>
-                  <div class="flex gap-2">
-                    <UButton
-                      color="neutral"
-                      variant="outline"
-                      size="xs"
-                      icon="i-lucide-chevron-left"
-                      :disabled="offset <= 0 || loading"
-                      @click="page(-1)"
-                    >
-                      Previous
-                    </UButton>
-                    <UButton
-                      color="neutral"
-                      variant="outline"
-                      size="xs"
-                      trailing-icon="i-lucide-chevron-right"
-                      :disabled="offset + pageSize >= board.total || loading"
-                      @click="page(1)"
-                    >
-                      Next
-                    </UButton>
-                  </div>
-                </div>
-              </template>
-            </ConsoleInsightsSessionBoardTable>
-          </div>
-
-          <!-- Four tiles against fifty rows, and they are the thing you click to
-               narrow the table — so they follow the scroll instead of being
-               somewhere back up the page once you are into the rows. -->
-          <aside class="min-w-0 space-y-6 lg:sticky lg:top-6 lg:self-start">
-            <div
-              v-if="loading && !board"
-              class="grid animate-pulse gap-4 sm:grid-cols-2 lg:grid-cols-1"
-              role="status"
-              aria-live="polite"
-              aria-label="Loading the summaries"
-            >
-              <div
-                v-for="n in 4"
-                :key="n"
-                class="h-28 rounded-lg bg-gray-200 dark:bg-zinc-800"
+              <USelectMenu
+                v-model="filters.browser"
+                :items="browserOptions"
+                value-key="value"
+                label-key="label"
+                leading-icon="i-lucide-app-window"
+                aria-label="Browser"
+              />
+              <USelectMenu
+                v-model="filters.os"
+                :items="osOptions"
+                value-key="value"
+                label-key="label"
+                leading-icon="i-lucide-cpu"
+                aria-label="Operating system"
+              />
+              <USelectMenu
+                v-model="filters.country"
+                :items="countryOptions"
+                value-key="value"
+                label-key="label"
+                leading-icon="i-lucide-globe"
+                aria-label="Country"
               />
             </div>
-
-            <!-- One notice for the four tiles, not four copies of it: they all
-                 come from the one request that did not come back. -->
-            <UCard
-              v-else-if="failed"
-              :ui="{ body: 'p-0' }"
-              class="border border-gray-200/70 dark:border-white/10"
-            >
-              <ConsoleInsightsEmptyState
-                failed
-                title="Summaries could not be loaded"
-                hint="They come from the same request as the table."
+            <div class="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+              <UCheckbox
+                v-model="filters.hasErrors"
+                label="Errors only"
               />
-            </UCard>
-
-            <div
-              v-else
-              class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1"
-            >
-              <UCard
-                v-for="tile in tiles"
-                :key="tile.key"
-                :ui="{ body: 'p-4' }"
-                class="border border-gray-200/70 dark:border-white/10"
-              >
-                <div class="flex items-center gap-2">
-                  <UIcon
-                    :name="tile.icon"
-                    class="h-4 w-4 text-gray-400 dark:text-gray-500"
-                  />
-                  <p class="text-sm font-medium text-gray-900 dark:text-white">
-                    {{ tile.label }}
-                  </p>
-                </div>
-
-                <p
-                  v-if="!tile.chips.length"
-                  class="mt-3 text-xs text-gray-400 dark:text-gray-500"
-                >
-                  Nothing recorded in this period.
-                </p>
-                <div
-                  v-else
-                  class="mt-3 flex flex-wrap gap-1.5"
-                >
-                  <button
-                    v-for="chip in tile.chips"
-                    :key="chip.key"
-                    type="button"
-                    class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                    :class="chip.active
-                      ? 'border-brand-500 bg-brand-50 text-brand-700 dark:border-brand-400/50 dark:bg-brand-500/10 dark:text-brand-300'
-                      : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5'"
-                    :aria-pressed="chip.active"
-                    @click="chip.apply()"
-                  >
-                    <span class="capitalize">{{ chip.label }}</span>
-                    <span class="tabular-nums text-gray-400 dark:text-gray-500">{{ chip.count.toLocaleString() }}</span>
-                  </button>
-                </div>
-
-                <p class="mt-2 text-xs text-gray-400 dark:text-gray-500">
-                  {{ tile.caption }}
-                </p>
-              </UCard>
+              <UCheckbox
+                v-model="filters.includeBots"
+                label="Include crawlers"
+              />
             </div>
-
             <p
               v-if="board && board.bots"
-              class="text-xs text-gray-400 dark:text-gray-500"
+              class="mt-2 text-xs text-gray-400 dark:text-gray-500"
             >
               {{ board.bots.toLocaleString() }} crawler session{{ board.bots === 1 ? '' : 's' }} in this period
-              {{ filters.includeBots ? 'are included above.' : 'are excluded from every figure above.' }}
+              {{ filters.includeBots ? 'are included.' : 'are left out.' }}
             </p>
-          </aside>
+          </UCard>
         </div>
+
+        <UCard
+          v-if="loading && !board"
+          :ui="{ body: 'p-0' }"
+          class="border border-gray-200/70 dark:border-white/10"
+        >
+          <div
+            class="animate-pulse divide-y divide-gray-100 px-5 dark:divide-zinc-800"
+            role="status"
+            aria-live="polite"
+            aria-label="Loading sessions"
+          >
+            <div
+              v-for="n in 8"
+              :key="n"
+              class="flex gap-6 py-4"
+            >
+              <span class="h-3 w-20 rounded bg-gray-200 dark:bg-zinc-800" />
+              <span class="h-3 flex-1 rounded bg-gray-200 dark:bg-zinc-800" />
+              <span class="h-3 w-24 rounded bg-gray-200 dark:bg-zinc-800" />
+            </div>
+          </div>
+        </UCard>
+
+        <UCard
+          v-else-if="failed"
+          :ui="{ body: 'p-0' }"
+          class="border border-gray-200/70 dark:border-white/10"
+        >
+          <ConsoleInsightsEmptyState
+            failed
+            title="The sessions could not be loaded"
+            hint="The request to the API failed. This is not an empty period and not a filter with no matches — retry, and if it persists check the gateway."
+          />
+        </UCard>
+
+        <ConsoleInsightsSessionBoardTable
+          v-else
+          :rows="board?.sessions ?? []"
+          title="Visits"
+          :subtitle="tableSubtitle"
+          :trail-query="trailQuery"
+          :empty="board ? 'No sessions match these filters.' : 'No session records available.'"
+          :empty-hint="board
+            ? 'Widen the period, or clear a filter. Crawlers are left out unless you ask for them.'
+            : 'Sessions appear once the analytics schema is applied and collection is switched on.'"
+        >
+          <template #actions>
+            <span class="text-xs text-gray-500 dark:text-gray-400">{{ showingLabel }}</span>
+          </template>
+
+          <template #footer>
+            <div
+              v-if="board && board.total > pageSize"
+              class="flex items-center justify-between gap-3 border-t border-gray-200/70 px-5 py-3 dark:border-white/10"
+            >
+              <span class="text-xs text-gray-500 dark:text-gray-400">{{ showingLabel }}</span>
+              <div class="flex gap-2">
+                <UButton
+                  color="neutral"
+                  variant="outline"
+                  size="xs"
+                  icon="i-lucide-chevron-left"
+                  :disabled="offset <= 0 || loading"
+                  @click="page(-1)"
+                >
+                  Previous
+                </UButton>
+                <UButton
+                  color="neutral"
+                  variant="outline"
+                  size="xs"
+                  trailing-icon="i-lucide-chevron-right"
+                  :disabled="offset + pageSize >= board.total || loading"
+                  @click="page(1)"
+                >
+                  Next
+                </UButton>
+              </div>
+            </div>
+          </template>
+        </ConsoleInsightsSessionBoardTable>
       </div>
     </UPageBody>
   </UPage>
@@ -366,11 +305,11 @@ import { consoleBreadcrumb } from '~/utils/consoleBreadcrumbs'
  */
 
 definePageMeta({ layout: 'default' })
-useHead({ title: 'Session board · Console' })
+useHead({ title: 'Sessions · Console' })
 
 const breadcrumbItems = consoleBreadcrumb(
   { label: 'Analytics', icon: 'i-lucide-chart-column', to: '/console/insights' },
-  { label: 'Session board', icon: 'i-lucide-monitor-smartphone' }
+  { label: 'Sessions', icon: 'i-lucide-monitor-smartphone' }
 )
 
 const route = useRoute()
@@ -487,21 +426,28 @@ const customEndIgnored = computed(() => {
 
 const option = (value: string, label: string) => ({ value, label })
 
-const productOptions = [
-  option('', 'Any product'),
-  option('foodchat', 'FoodChat'),
-  option('foodscholar', 'FoodScholar'),
-  option('recipewrangler', 'Recipes'),
-  option('catalog', 'Catalogue')
+const PRODUCT_OPTIONS = [
+  { value: '', label: 'Every product', icon: '' },
+  { value: 'foodchat', label: 'FoodChat', icon: 'i-lucide-messages-square' },
+  { value: 'foodscholar', label: 'FoodScholar', icon: 'i-lucide-graduation-cap' },
+  { value: 'recipewrangler', label: 'Recipes', icon: 'i-lucide-chef-hat' }
 ]
-const activityOptions = [
-  option('', 'Did anything'),
-  option('plans', 'Made a meal plan'),
-  option('saved_plans', 'Saved a meal plan'),
-  option('chat', 'Chatted with FoodChat'),
-  option('questions', 'Asked FoodScholar'),
-  option('searches', 'Searched'),
-  option('recipes', 'Opened a recipe')
+
+/*
+ * What happened, one at a time. The first three are where somebody reviewing
+ * starts: a person said an answer was wrong, clicked something that would not
+ * respond, or hit an error. "Needs a look" is any of them.
+ */
+const QUICK = [
+  { value: 'needs_look', label: 'Needs a look', icon: 'i-lucide-flag' },
+  { value: 'rated_down', label: 'Rated something down', icon: 'i-lucide-thumbs-down' },
+  { value: 'frustrated', label: 'Frustrated clicks', icon: 'i-lucide-mouse-pointer-click' },
+  { value: 'plans', label: 'Made a meal plan', icon: 'i-lucide-utensils' },
+  { value: 'saved_plans', label: 'Saved a meal plan', icon: 'i-lucide-bookmark-check' },
+  { value: 'chat', label: 'Chatted with FoodChat', icon: 'i-lucide-messages-square' },
+  { value: 'questions', label: 'Asked FoodScholar', icon: 'i-lucide-message-circle-question' },
+  { value: 'searches', label: 'Searched', icon: 'i-lucide-search' },
+  { value: 'recipes', label: 'Opened a recipe', icon: 'i-lucide-chef-hat' }
 ]
 
 const deviceOptions = computed(() => [
@@ -521,94 +467,15 @@ const countryOptions = computed(() => [
   ...(board.value?.by_country ?? []).map(row => option(row.country, `${row.country} (${row.sessions})`))
 ])
 
-interface Chip { key: string, label: string, count: number, active: boolean, apply: () => void }
+/** How many of the folded-away filters are on, so folding them never hides one. */
+const machineFilterCount = computed(() =>
+  [filters.deviceType, filters.browser, filters.os, filters.country, filters.hasErrors, filters.includeBots]
+    .filter(Boolean).length
+)
+const showMore = ref(false)
 
-/** Clicking a chip that is already on clears it — the tile is a toggle, not a one-way trip. */
-const toggle = (field: 'deviceType' | 'browser' | 'os', value: string) => () => {
-  filters[field] = filters[field] === value ? '' : value
-}
-
-/*
- * Viewport buckets are a measurement, not a column: the board filters on the
- * device, not on the window it was resized to. Clicking narrows to the device
- * that width usually means, and the caption says so — a tile that only reports
- * would be decoration on a page whose whole job is narrowing.
- */
-const VIEWPORT_DEVICE: Record<string, string> = {
-  phone: 'mobile',
-  tablet: 'tablet',
-  laptop: 'desktop',
-  desktop: 'desktop'
-}
-
-const tiles = computed(() => {
-  const data = board.value
-  const deviceChips: Chip[] = (data?.by_device ?? []).slice(0, 6).map(row => ({
-    key: row.device_type,
-    label: row.device_type,
-    count: row.sessions,
-    active: filters.deviceType === row.device_type,
-    apply: toggle('deviceType', row.device_type)
-  }))
-  const osChips: Chip[] = (data?.by_os ?? []).slice(0, 6).map(row => ({
-    key: row.os,
-    label: row.os,
-    count: row.sessions,
-    active: filters.os === row.os,
-    apply: toggle('os', row.os)
-  }))
-  const browserChips: Chip[] = (data?.by_browser ?? []).slice(0, 6).map(row => ({
-    key: row.browser,
-    label: row.browser,
-    count: row.sessions,
-    active: filters.browser === row.browser,
-    apply: toggle('browser', row.browser)
-  }))
-  const viewportChips: Chip[] = (['phone', 'tablet', 'laptop', 'desktop'] as const)
-    .map(bucket => ({
-      key: bucket,
-      label: bucket,
-      count: data?.viewports?.[bucket] ?? 0,
-      active: filters.deviceType === VIEWPORT_DEVICE[bucket],
-      apply: toggle('deviceType', VIEWPORT_DEVICE[bucket] ?? '')
-    }))
-    .filter(chip => chip.count > 0)
-
-  const median = data?.viewports?.median_width
-
-  return [
-    {
-      key: 'device',
-      label: 'Form factor',
-      icon: 'i-lucide-monitor-smartphone',
-      chips: deviceChips,
-      caption: 'Sessions per device across the whole filtered set, not this page.'
-    },
-    {
-      key: 'os',
-      label: 'Operating system',
-      icon: 'i-lucide-cpu',
-      chips: osChips,
-      caption: 'Click one to keep only those sessions.'
-    },
-    {
-      key: 'browser',
-      label: 'Browser',
-      icon: 'i-lucide-app-window',
-      chips: browserChips,
-      caption: 'Click one to keep only those sessions.'
-    },
-    {
-      key: 'viewport',
-      label: 'Window width',
-      icon: 'i-lucide-ruler',
-      chips: viewportChips,
-      caption: median
-        ? `Median ${median}px. Clicking narrows to the device that width usually means.`
-        : 'Clicking narrows to the device that width usually means.'
-    }
-  ]
-})
+/** The list's query as the session page will lead back to it. */
+const trailQuery = computed(() => ({ ...rangeQuery(), ...buildRouteQuery() }))
 
 const showingLabel = computed(() => {
   const total = board.value?.total ?? 0
@@ -619,8 +486,8 @@ const showingLabel = computed(() => {
 
 const tableSubtitle = computed(() =>
   hasActiveFilters.value
-    ? 'Narrowed by the filters above. Open one to see everything that happened in it.'
-    : 'Newest first. Open one to see everything that happened in it.'
+    ? 'Narrowed by the filters above, newest first.'
+    : 'Newest first.'
 )
 
 function page(direction: number) {
@@ -701,6 +568,7 @@ watch([filters, range], () => {
 watch(offset, syncAndLoad)
 
 hydrateFromRoute()
+showMore.value = machineFilterCount.value > 0
 onMounted(() => {
   void reload()
 })

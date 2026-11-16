@@ -114,7 +114,7 @@
               :loading="loading"
               :failed="failed"
               to="/console/insights/sessions"
-              link-label="Session board"
+              link-label="Sessions"
               empty="No sessions recorded."
               empty-hint="A session is created the first time somebody does anything."
               empty-icon="i-lucide-monitor-smartphone"
