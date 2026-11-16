@@ -31,6 +31,13 @@ interface FoodChatState {
   nextBeforeId: number | null
   mealPlans: MealPlan[]
   weeklyMealPlans: WeeklyMealPlan[]
+  /**
+   * The version FoodChat's canvas points at, per kind, as of opening the
+   * session. The lists come oldest first, so without this a reopened session
+   * showed version 1; and the newest is not always current either, because
+   * "go back to the first version" moves the pointer without making one.
+   */
+  currentPlanIds: { daily: string | null, weekly: string | null }
   lastResponse: UnifiedChatResponse | null
   /** Diner selection ("cooking for") persisted per session, client-side */
   dinersBySession: Record<string, SessionDiners>
@@ -73,6 +80,7 @@ export const useFoodChatStore = defineStore('foodchat', {
     runningTool: null,
     mealPlans: [],
     weeklyMealPlans: [],
+    currentPlanIds: { daily: null, weekly: null },
     lastResponse: null,
     dinersBySession: {},
     sessionsLoading: false,
@@ -289,12 +297,25 @@ export const useFoodChatStore = defineStore('foodchat', {
       this.nextBeforeId = null
       this.mealPlans = []
       this.weeklyMealPlans = []
+      this.currentPlanIds = { daily: null, weekly: null }
       this.lastResponse = null
       await Promise.all([
         this.fetchConversation(sessionId, memberId),
         this.fetchMealPlans(sessionId, memberId),
-        this.fetchWeeklyMealPlans(sessionId, memberId)
+        this.fetchWeeklyMealPlans(sessionId, memberId),
+        this.fetchCurrentPlanIds(sessionId, memberId)
       ])
+    },
+
+    /** Which versions are current. Unknown (null) falls back to the newest. */
+    async fetchCurrentPlanIds(sessionId: string, memberId: string) {
+      const [daily, weekly] = await Promise.all([
+        foodchatApi.getCurrentMealPlan(sessionId, memberId).catch(() => null),
+        foodchatApi.getCurrentWeeklyMealPlan(sessionId, memberId).catch(() => null)
+      ])
+      // A slow answer for a session the member has already left is dropped.
+      if (this.activeSessionId !== sessionId) return
+      this.currentPlanIds = { daily: daily?.id ?? null, weekly: weekly?.id ?? null }
     },
 
     // ----------------------------------------------------------------
@@ -682,6 +703,7 @@ export const useFoodChatStore = defineStore('foodchat', {
         nextBeforeId: null,
         mealPlans: [],
         weeklyMealPlans: [],
+        currentPlanIds: { daily: null, weekly: null },
         lastResponse: null,
         dinersBySession: {},
         planningState: null,

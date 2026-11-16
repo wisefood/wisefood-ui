@@ -1650,7 +1650,8 @@
       "unsavePlan": "Odstrani iz shranjenih",
       "dayN": "{n}. dan",
       "savedPlan": "Shranjeno",
-      "version": "različica {n}"
+      "version": "različica {n}",
+      "versions": "Različice načrta"
     },
     "tooltips": {
       "planWorksWell": "Ta načrt deluje dobro",
@@ -1978,6 +1979,99 @@
     },
     "checkPlan": {
       "intro": "To je moj načrt. Kako se ti zdi?"
+    },
+    "builtAround": {
+      "label": "Zgrajeno okoli",
+      "adjust": "Prilagodi",
+      "nothing": "Samo tvoj profil. S Prilagodi dodaš več.",
+      "using": "Porabi: {list}",
+      "andMore": "{list} in še {count}",
+      "underMinutes": "Do {minutes} min"
+    },
+    "adjust": {
+      "title": "Prilagodi načrt",
+      "subtitle": "Nič se ne spremeni, dokler ne pritisneš Posodobi načrt.",
+      "who": "Kdo bo jedel?",
+      "whoHint": "Njihove alergije in diete se upoštevajo samodejno.",
+      "time": "Koliko časa imaš za kuhanje?",
+      "timeHint": "Minut na obrok.",
+      "timeUnset": "Minut na obrok. Omejitev še ni nastavljena.",
+      "simple": "Naj bo preprosto",
+      "simpleHint": "Recepti z največ 5 sestavinami",
+      "goal": "Kaj želiš doseči?",
+      "goalUnset": "Še ni izbrano.",
+      "kitchen": "V tvoji kuhinji",
+      "kitchenEmpty": "Še nič. Dodaj, kar želiš porabiti.",
+      "add": "Dodaj",
+      "pickFromList": "Raje izberi s seznama",
+      "more": "Več možnosti",
+      "tastes": "Omenjeni okusi",
+      "stated": "Povedano v pogovoru",
+      "statedHint": "Če želiš to spremeniti, povej v pogovoru.",
+      "shapeHint": "Dneve in obroke spremeniš v pogovoru.",
+      "waiting": "Čakajoče spremembe: {count}",
+      "noChanges": "Še ni sprememb",
+      "cancel": "Prekliči",
+      "update": "Posodobi načrt"
+    },
+    "why": {
+      "title": "Zakaj ta načrt",
+      "rulesTitle": "Tvoja pravila",
+      "rulesHint": "preverjeno na samih jedeh",
+      "always": "Vedno upoštevano",
+      "preferred": "Po možnosti",
+      "checkedOnMeals": "Preverjeno na jedeh",
+      "sources": {
+        "diet": "dieta",
+        "allergy": "alergija",
+        "dislikes": "izogibanje živilu",
+        "feedback": "tvoje ocene",
+        "goal": "cilj",
+        "household": "gospodinjstvo"
+      },
+      "status": {
+        "satisfied": "Izpolnjeno",
+        "relaxed": "Delno izpolnjeno",
+        "violated": "Ni izpolnjeno",
+        "unsupported": "Ni bilo mogoče preveriti"
+      },
+      "checks": {
+        "allergens": "Alergije",
+        "diet": "Dieta",
+        "claims": "Želeni hranilni cilj",
+        "calories": "Tvoj kalorični cilj",
+        "calorieReference": "Kalorije",
+        "cookingTime": "Čas kuhanja",
+        "nutriScore": "Nutri-Score",
+        "pantry": "Poraba tvoje kuhinje",
+        "picks": "Jedi, ki si jih izbral",
+        "tastes": "Želeni okusi"
+      },
+      "guidelinesTitle": "Prehranske smernice: izpolnjenih {met} od {total}",
+      "guidelinesPlain": "Prehranske smernice",
+      "guideline": {
+        "met": "Izpolnjeno",
+        "unmet": "Ni izpolnjeno",
+        "unchecked": "Ni preverjeno"
+      },
+      "showAll": "Pokaži vse ({count})",
+      "showFewer": "Pokaži manj",
+      "scoresTitle": "Ocena načrta",
+      "scoreWhy": "Zakaj: {name}",
+      "personalTitle": "Pripravljeno zate",
+      "usesFavourites": "Uporabljene priljubljene jedi: {count}.",
+      "usesMemories": "Upoštevani spomini: {count}.",
+      "usesRatings": "Ocenjeni načrti, iz katerih se uči: {count}.",
+      "manageMemory": "Upravljaj, kaj si FoodChat zapomni",
+      "howTitle": "Kako je FoodChat izbral",
+      "summaryAllMet": "vsa tvoja pravila izpolnjena ({count})",
+      "summaryMet": "izpolnjenih {met} od {total} tvojih pravil",
+      "summaryGuidelines": "smernice {met}/{total}",
+      "summaryFavourites": "priljubljene: {count}"
+    },
+    "unmet": {
+      "seeWhy": "Zakaj?",
+      "more": "Še {count} v razdelku Zakaj ta načrt"
     }
   },
   "a11y": {

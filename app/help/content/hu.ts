@@ -125,7 +125,7 @@ const hu: HelpContent = {
           body: 'Kérj változtatást egyszerű szavakkal: könnyebb vacsorák, hétfőn ne legyen hal, legyen desszert.',
           steps: [
             'Írd be a változtatást a beszélgetés alatti mezőbe, és küldd el.',
-            'Egy étkezés cseréjéhez nyisd meg a kártyáján a ⋮ menüt ([[foodChatHome.mealCard.menu]]), és válaszd ezt: [[foodChatHome.mealCard.replace]].',
+            'Egy étkezés cseréjéhez kattints a kártyáján erre: [[foodChatHome.mealCard.swap]].',
             'Ha szeretnéd, módosítsd a javasolt üzenetet, majd küldd el.',
             'A válasz felsorolja, mi változott.'
           ]
@@ -155,26 +155,26 @@ const hu: HelpContent = {
           body: 'Mondd el, mi van a konyhádban, és a FoodChat erre építi a tervet, így kevesebb étel megy kárba.',
           steps: [
             'Írd meg a beszélgetésben, például: „van spenótom és fél üveg olívabogyóm”.',
-            'Vagy nyisd meg ezt: [[foodChatHome.planningState.title]], és itt ([[foodChatHome.planningState.pantryLabel]]) használd ezt: [[foodChatHome.planningState.pantryAdd]].',
-            'Ha már vannak tételek: [[foodChatHome.pantryPicker.open]], jelöld be, mit használnál, majd: [[foodChatHome.pantryPicker.cook]].'
+            'Vagy kattints a terv felett erre: [[foodChatHome.builtAround.adjust]], és add hozzá itt: [[foodChatHome.adjust.kitchen]], vagy válaszd ezt: [[foodChatHome.adjust.pickFromList]].',
+            'Kattints erre: [[foodChatHome.adjust.update]]. A terv itt mutatja, mit használt fel: [[foodChatHome.builtAround.label]].'
           ]
         },
         'settings': {
-          title: 'A terv beállításai',
-          body: 'Állítsd be, mennyit főznél, mennyi munkával, mi a célod, és milyen gyakran ismétlődhetnek az ételek.',
+          title: 'Amire a terv épül',
+          body: 'Ki eszik, mennyi időd van főzni, mi a célod és mi van a konyhádban, mind egy helyen.',
           steps: [
-            'Nyisd meg a terv felett: [[foodChatHome.planSettings.title]].',
-            'Módosítsd: [[foodChatHome.chat.planParams.params.cooking_time]], [[foodChatHome.chat.planParams.params.difficulty]], [[foodChatHome.chat.planParams.params.goal]], [[foodChatHome.chat.planParams.params.food_waste]] vagy [[foodChatHome.chat.planParams.params.repeat_meals]].',
-            'Minden változtatás azonnal érvényes.'
+            'Kattints a terv felett erre: [[foodChatHome.builtAround.adjust]].',
+            'Módosítsd: [[foodChatHome.adjust.who]], [[foodChatHome.adjust.time]], [[foodChatHome.adjust.simple]], [[foodChatHome.adjust.goal]] vagy [[foodChatHome.adjust.kitchen]]. Az élelmiszer-pazarlás és az ismétlődő ételek itt vannak: [[foodChatHome.adjust.more]].',
+            'Semmi nem változik, amíg rá nem kattintasz erre: [[foodChatHome.adjust.update]]; akkor minden módosításból egy új terv készül.'
           ]
         },
         'diners': {
           title: 'Tervezés több személyre',
           body: 'Ha a háztartásodban több profil van, válaszd ki, kik esznek, és a terv mindenki igényeit figyelembe veszi.',
           steps: [
-            'Itt kapcsold be, kik esznek: [[foodChatHome.diners.label]].',
-            'A saját profilod mindig benne van.',
-            'Küldd el a kérésedet a szokásos módon.'
+            'Az első üzenet előtt itt kapcsold be, kik esznek: [[foodChatHome.diners.label]].',
+            'Ha már van terv, kattints erre: [[foodChatHome.builtAround.adjust]], és válassz itt: [[foodChatHome.adjust.who]].',
+            'A saját profilod mindig benne van.'
           ],
           note: 'Csak akkor látszik, ha a háztartásban egynél több profil van.'
         },

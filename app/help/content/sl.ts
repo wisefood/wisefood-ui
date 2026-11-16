@@ -125,7 +125,7 @@ const sl: HelpContent = {
           body: 'Spremembe zahtevaj z navadnimi besedami: lažje večerje, v ponedeljek brez rib, dodaj sladico.',
           steps: [
             'Spremembo vpiši v polje pod pogovorom in jo pošlji.',
-            'Za zamenjavo enega obroka odpri meni ⋮ na njegovi kartici ([[foodChatHome.mealCard.menu]]) in izberi: [[foodChatHome.mealCard.replace]].',
+            'Za zamenjavo enega obroka na njegovi kartici klikni: [[foodChatHome.mealCard.swap]].',
             'Predlagano sporočilo po želji uredi in ga pošlji.',
             'Odgovor našteje, kaj se je spremenilo.'
           ]
@@ -155,26 +155,26 @@ const sl: HelpContent = {
           body: 'Povej FoodChatu, kaj je v tvoji kuhinji, in načrt bo zgrajen okoli tega, zato manj hrane konča v smeteh.',
           steps: [
             'Povej v pogovoru, na primer »imam špinačo in pol kozarca oliv«.',
-            'Ali odpri [[foodChatHome.planningState.title]] in tukaj ([[foodChatHome.planningState.pantryLabel]]) uporabi: [[foodChatHome.planningState.pantryAdd]].',
-            'Ko imaš sestavine: [[foodChatHome.pantryPicker.open]], označi, kaj uporabiti, nato: [[foodChatHome.pantryPicker.cook]].'
+            'Ali nad načrtom klikni [[foodChatHome.builtAround.adjust]] in dodaj tukaj: [[foodChatHome.adjust.kitchen]], ali uporabi: [[foodChatHome.adjust.pickFromList]].',
+            'Klikni [[foodChatHome.adjust.update]]. Načrt pri [[foodChatHome.builtAround.label]] pokaže, kaj je uporabil.'
           ]
         },
         'settings': {
-          title: 'Nastavitve načrta',
-          body: 'Nastavi, koliko časa želiš kuhati, koliko truda, svoj cilj in kako pogosto se obroki lahko ponovijo.',
+          title: 'Spremeni, okoli česa je načrt zgrajen',
+          body: 'Kdo bo jedel, koliko časa imaš za kuhanje, tvoj cilj in kaj je v kuhinji, vse na enem mestu.',
           steps: [
-            'Nad načrtom odpri: [[foodChatHome.planSettings.title]].',
-            'Spremeni: [[foodChatHome.chat.planParams.params.cooking_time]], [[foodChatHome.chat.planParams.params.difficulty]], [[foodChatHome.chat.planParams.params.goal]], [[foodChatHome.chat.planParams.params.food_waste]] ali [[foodChatHome.chat.planParams.params.repeat_meals]].',
-            'Vsaka sprememba velja takoj.'
+            'Nad načrtom klikni: [[foodChatHome.builtAround.adjust]].',
+            'Spremeni: [[foodChatHome.adjust.who]], [[foodChatHome.adjust.time]], [[foodChatHome.adjust.simple]], [[foodChatHome.adjust.goal]] ali [[foodChatHome.adjust.kitchen]]. Zavržena hrana in ponavljanje jedi sta pod: [[foodChatHome.adjust.more]].',
+            'Nič se ne spremeni, dokler ne klikneš [[foodChatHome.adjust.update]]; takrat iz vseh sprememb nastane en nov načrt.'
           ]
         },
         'diners': {
           title: 'Načrtuj za več oseb',
           body: 'Ko ima gospodinjstvo več profilov, izberi, kdo bo jedel, in načrt upošteva potrebe vseh.',
           steps: [
-            'Tukaj vklopi osebe, ki bodo jedle: [[foodChatHome.diners.label]].',
-            'Tvoj profil je vedno vključen.',
-            'Zahtevo pošlji kot običajno.'
+            'Pred prvim sporočilom tukaj vklopi osebe, ki bodo jedle: [[foodChatHome.diners.label]].',
+            'Ko načrt že obstaja, klikni [[foodChatHome.builtAround.adjust]] in izberi pod: [[foodChatHome.adjust.who]].',
+            'Tvoj profil je vedno vključen.'
           ],
           note: 'Prikazano le, ko ima gospodinjstvo več kot en profil.'
         },

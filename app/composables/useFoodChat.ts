@@ -28,6 +28,7 @@ export function useFoodChat() {
   const hasAnyPlan = computed(() => store.hasAnyPlan)
   const clarificationPending = computed(() => store.clarificationPending)
   const currentPlanType = computed(() => store.currentPlanType)
+  const currentPlanIds = computed(() => store.currentPlanIds)
   const hasMoreMessages = computed(() => store.hasMoreMessages)
   const loadingMoreMessages = computed(() => store.loadingMoreMessages)
 
@@ -244,6 +245,7 @@ export function useFoodChat() {
     hasAnyPlan,
     clarificationPending,
     currentPlanType,
+    currentPlanIds,
     hasMoreMessages,
     loadingMoreMessages,
     sessionsLoading,

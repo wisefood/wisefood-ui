@@ -122,7 +122,7 @@ const en: HelpContent = {
           body: 'Ask for changes in plain words: lighter dinners, no fish on Monday, add a dessert.',
           steps: [
             'Type the change in the box under the chat and send it.',
-            'To swap one meal, open the ⋮ menu on its card ([[foodChatHome.mealCard.menu]]) and choose [[foodChatHome.mealCard.replace]].',
+            'To swap one meal, click [[foodChatHome.mealCard.swap]] on its card.',
             'Edit the suggested message if you like, then send it.',
             'The reply lists what changed.'
           ]
@@ -152,26 +152,26 @@ const en: HelpContent = {
           body: 'Tell FoodChat what is in your kitchen and it plans around it, so less food goes to waste.',
           steps: [
             'Say it in the chat, for example “I have spinach and half a jar of olives”.',
-            'Or open [[foodChatHome.planningState.title]] and use [[foodChatHome.planningState.pantryAdd]] under [[foodChatHome.planningState.pantryLabel]].',
-            'Once you have items, click [[foodChatHome.pantryPicker.open]], tick what to use and click [[foodChatHome.pantryPicker.cook]].'
+            'Or click [[foodChatHome.builtAround.adjust]] above the plan and add it under [[foodChatHome.adjust.kitchen]], or use [[foodChatHome.adjust.pickFromList]].',
+            'Click [[foodChatHome.adjust.update]]. The plan shows what it used next to [[foodChatHome.builtAround.label]].'
           ]
         },
         'settings': {
-          title: 'Plan settings',
-          body: 'Set how long you want to cook, how much effort, your goal and how often meals may repeat.',
+          title: 'Change what the plan is built around',
+          body: 'Who is eating, how long you can cook, your goal and what is in your kitchen, all in one place.',
           steps: [
-            'Open [[foodChatHome.planSettings.title]] above the plan.',
-            'Change [[foodChatHome.chat.planParams.params.cooking_time]], [[foodChatHome.chat.planParams.params.difficulty]], [[foodChatHome.chat.planParams.params.goal]], [[foodChatHome.chat.planParams.params.food_waste]] or [[foodChatHome.chat.planParams.params.repeat_meals]].',
-            'Each change applies straight away.'
+            'Click [[foodChatHome.builtAround.adjust]] above the plan.',
+            'Change [[foodChatHome.adjust.who]], [[foodChatHome.adjust.time]], [[foodChatHome.adjust.simple]], [[foodChatHome.adjust.goal]] or [[foodChatHome.adjust.kitchen]]. Food waste and repeated meals are under [[foodChatHome.adjust.more]].',
+            'Nothing changes until you click [[foodChatHome.adjust.update]]; then all your changes make one new plan.'
           ]
         },
         'diners': {
           title: 'Plan for more than one person',
           body: 'When your household has several profiles, choose who is eating and the plan respects everyone’s needs.',
           steps: [
-            'Under [[foodChatHome.diners.label]], turn on the people who are eating.',
-            'Your own profile is always included.',
-            'Send your request as usual.'
+            'Before your first message, turn on the people who are eating under [[foodChatHome.diners.label]].',
+            'Once there is a plan, click [[foodChatHome.builtAround.adjust]] and choose under [[foodChatHome.adjust.who]].',
+            'Your own profile is always included.'
           ],
           note: 'Only shown when the household has more than one profile.'
         },

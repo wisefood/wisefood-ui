@@ -201,8 +201,8 @@
 #       page: ^/app/foodchat/?(\?.*)?$
 #       “Your answer” — It stays above the plan until you close it with ×. In a week plan, each day has its own menu to summarise or replace that day.
 #
-# ══ FoodChat: plan settings ═══════════════════════════════════════════════
-#   Block key: tour-foodchat-settings    Help: FoodChat → Plan settings
+# ══ FoodChat: what the plan is built around ═══════════════════════════════
+#   Block key: tour-foodchat-settings    Help: FoodChat → Change what the plan is built around
 #
 #    1  tooltip on [data-flows="foodchat-composer"] (top)
 #       page: ^/app/foodchat/?(\?.*)?$
@@ -211,10 +211,10 @@
 #    2  tooltip on [data-flows="foodchat-plan-settings"] (bottom)
 #       page: ^/app/foodchat/?(\?.*)?$
 #       waits for a click on [data-flows="foodchat-plan-settings"]
-#       “Plan settings” — Open the settings of this plan.
-#    3  tooltip on [data-flows="foodchat-plan-settings-panel"] (bottom)
+#       “Adjust” — The line beside it says what this plan is built around. Adjust changes it.
+#    3  tooltip on [data-flows="foodchat-plan-settings-panel"] (left)
 #       page: (any page)
-#       “Tune the plan” — Cooking time, effort, goal, food waste and repeated meals. Each change updates the plan straight away.
+#       “Change what you need” — Who is eating, cooking time, goal and your kitchen. Nothing changes until you press Update my plan; then it all goes into one new plan.
 #
 # ══ FoodScholar: ask a question ═══════════════════════════════════════════
 #   Block key: tour-foodscholar-ask    Help: FoodScholar → Ask a question

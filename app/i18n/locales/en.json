@@ -1787,7 +1787,8 @@
       "unsavePlan": "Remove from saved plans",
       "dayN": "Day {n}",
       "savedPlan": "Saved",
-      "version": "version {n}"
+      "version": "version {n}",
+      "versions": "Plan versions"
     },
     "tooltips": {
       "planWorksWell": "This plan works well",
@@ -2115,6 +2116,99 @@
     },
     "checkPlan": {
       "intro": "Here's my plan. How does it look?"
+    },
+    "builtAround": {
+      "label": "Built around",
+      "adjust": "Adjust",
+      "nothing": "Your profile only. Use Adjust to add more.",
+      "using": "Using {list}",
+      "andMore": "{list} and {count} more",
+      "underMinutes": "Under {minutes} min"
+    },
+    "adjust": {
+      "title": "Adjust your plan",
+      "subtitle": "Nothing changes until you press Update my plan.",
+      "who": "Who's eating?",
+      "whoHint": "Their allergies and diets come along automatically.",
+      "time": "How long can you cook?",
+      "timeHint": "Minutes per meal.",
+      "timeUnset": "Minutes per meal. No limit is set yet.",
+      "simple": "Keep it simple",
+      "simpleHint": "Recipes with 5 ingredients or fewer",
+      "goal": "What are you after?",
+      "goalUnset": "None chosen yet.",
+      "kitchen": "In your kitchen",
+      "kitchenEmpty": "Nothing yet. Add what you want to use up.",
+      "add": "Add",
+      "pickFromList": "Pick from a list instead",
+      "more": "More options",
+      "tastes": "Tastes you mentioned",
+      "stated": "Said in the chat",
+      "statedHint": "To change these, say so in the chat.",
+      "shapeHint": "To change the days and meals, say so in the chat.",
+      "waiting": "{count} change waiting | {count} changes waiting",
+      "noChanges": "No changes yet",
+      "cancel": "Cancel",
+      "update": "Update my plan"
+    },
+    "why": {
+      "title": "Why this plan",
+      "rulesTitle": "Your rules",
+      "rulesHint": "checked on the meals themselves",
+      "always": "Always applied",
+      "preferred": "Preferred",
+      "checkedOnMeals": "Checked on the meals",
+      "sources": {
+        "diet": "diet",
+        "allergy": "allergy",
+        "dislikes": "food avoided",
+        "feedback": "your ratings",
+        "goal": "goal",
+        "household": "household"
+      },
+      "status": {
+        "satisfied": "Met",
+        "relaxed": "Partly met",
+        "violated": "Not met",
+        "unsupported": "Couldn't check"
+      },
+      "checks": {
+        "allergens": "Allergies",
+        "diet": "Diet",
+        "claims": "Nutrition you asked for",
+        "calories": "Your calorie target",
+        "calorieReference": "Calories",
+        "cookingTime": "Cooking time",
+        "nutriScore": "Nutri-Score",
+        "pantry": "Using your kitchen",
+        "picks": "Meals you picked",
+        "tastes": "Tastes you asked for"
+      },
+      "guidelinesTitle": "Dietary guidelines: {met} of {total} met",
+      "guidelinesPlain": "Dietary guidelines",
+      "guideline": {
+        "met": "Met",
+        "unmet": "Not met",
+        "unchecked": "Not checked"
+      },
+      "showAll": "Show all {count}",
+      "showFewer": "Show fewer",
+      "scoresTitle": "How it scores",
+      "scoreWhy": "Why: {name}",
+      "personalTitle": "Made for you",
+      "usesFavourites": "Uses one of your favourites. | Uses {count} of your favourites.",
+      "usesMemories": "Remembers one thing you told FoodChat. | Remembers {count} things you told FoodChat.",
+      "usesRatings": "Learns from one plan you rated. | Learns from {count} plans you rated.",
+      "manageMemory": "Manage what FoodChat remembers",
+      "howTitle": "How FoodChat chose these",
+      "summaryAllMet": "your rule met | all {count} of your rules met",
+      "summaryMet": "{met} of {total} of your rules met",
+      "summaryGuidelines": "guidelines {met} of {total}",
+      "summaryFavourites": "uses a favourite | uses {count} favourites"
+    },
+    "unmet": {
+      "seeWhy": "See why",
+      "more": "{count} more in Why this plan"
     }
   },
   "a11y": {

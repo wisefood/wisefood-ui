@@ -223,24 +223,6 @@
         key="split"
         class="flex-1 flex flex-col items-center min-h-0 sm:px-6 sm:py-6 lg:pt-12"
       >
-        <!-- The rail's panel, defined once and placed three times: in the
-             rail at `lg`, in a sheet on a phone, in a side panel on a tablet.
-             Same props, same events, whichever shell it is in. -->
-        <DefinePlanningPanel>
-          <FoodchatPlanningStatePanel
-            :state="planningState"
-            :facets="facetChips"
-            :pending-changes="pendingStateChanges"
-            :busy="sending"
-            :vocabularies="vocabularies"
-            @add-facet="handleAddFacet"
-            @add-pantry="handleAddPantry"
-            @remove-pantry="handleRemovePantry"
-            @remove-facet="handleRemoveFacet"
-            @replan="handleReplan"
-          />
-        </DefinePlanningPanel>
-
         <!-- ── One pane at a time below `lg` ──
              A phone cannot show the conversation and the plan side by side,
              so it shows one and names the other. The switch sits where a tab
@@ -279,20 +261,6 @@
               </span>
             </button>
           </div>
-          <button
-            v-if="planningState"
-            type="button"
-            class="fc-pane-btn ml-auto"
-            data-flows="foodchat-planning-rail-phone"
-            :aria-label="t('foodChatHome.planningState.title')"
-            @click="planningOpen = true"
-          >
-            <UIcon name="i-lucide-clipboard-list" class="w-5 h-5 text-brandp-500" />
-            <span
-              v-if="standingCount"
-              class="fc-pane-count"
-            >{{ standingCount }}</span>
-          </button>
         </div>
 
         <div
@@ -589,95 +557,6 @@
                The bottom padding is the home indicator's height on a phone
                that has one, and the same 1rem as before everywhere else. -->
           <div class="fc-composer-wrap shrink-0 px-3 sm:px-4 pt-2 pb-[max(1rem,var(--wf-safe-bottom))]">
-            <!-- ── What's in the kitchen, settled here ──
-                 Saying "I've got spinach and half a jar of olives" already
-                 reaches the plan — the extractor hears it and the planner uses
-                 it. What was missing was any way to SEE it or correct it
-                 without opening a panel, right where the member said it.
-
-                 So it sits above the box they typed into: what was heard, one
-                 tap to drop a wrong item, one field to add a missed one. It
-                 writes immediately and does NOT re-plan — the next plan uses
-                 it, and re-planning on every tick would spend a turn per
-                 vegetable. -->
-            <div v-if="pantryStripOpen || pantryItems.length" class="mb-2 px-1">
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <UIcon name="i-lucide-refrigerator" class="w-3 h-3 text-emerald-500 shrink-0" />
-                <span
-                  v-for="item in pantryItems"
-                  :key="`strip-${item}`"
-                  class="group inline-flex items-center gap-1 pl-2 pr-1 py-0.5 text-[0.6875rem] rounded-full border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
-                >
-                  {{ item }}
-                  <button
-                    class="w-3.5 h-3.5 pointer-coarse:w-8 pointer-coarse:h-8 pointer-coarse:-my-2 flex items-center justify-center rounded-full text-emerald-500/70 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-800/40 disabled:opacity-40"
-                    :aria-label="t('foodChatHome.planningState.removeItem', { value: item })"
-                    :disabled="sending"
-                    @click="handleRemovePantry(item)"
-                  >
-                    <UIcon name="i-lucide-x" class="w-2.5 h-2.5" />
-                  </button>
-                </span>
-                <form
-                  v-if="pantryStripOpen"
-                  class="inline-flex items-center gap-1"
-                  @submit.prevent="submitPantryStrip"
-                >
-                  <input
-                    v-model="pantryDraft"
-                    class="fc-pantry-input"
-                    :placeholder="t('foodChatHome.planningState.pantryAddPlaceholder')"
-                    :aria-label="t('foodChatHome.planningState.pantryAdd')"
-                    :disabled="sending"
-                  >
-                  <button
-                    type="submit"
-                    class="w-4 h-4 pointer-coarse:w-9 pointer-coarse:h-9 pointer-coarse:-my-2.5 flex items-center justify-center rounded text-gray-400 hover:text-emerald-600 disabled:opacity-40"
-                    :disabled="sending || !pantryDraft.trim()"
-                    :aria-label="t('foodChatHome.planningState.pantryAdd')"
-                  >
-                    <UIcon name="i-lucide-check" class="w-3 h-3" />
-                  </button>
-                </form>
-                <button
-                  v-else
-                  class="inline-flex items-center gap-1 px-1.5 py-0.5 pointer-coarse:min-h-9 pointer-coarse:px-2.5 pointer-coarse:text-xs text-[0.6875rem] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
-                  @click="pantryStripOpen = true"
-                >
-                  <UIcon name="i-lucide-plus" class="w-2.5 h-2.5" />
-                  {{ t('foodChatHome.planningState.pantryAdd') }}
-                </button>
-                <!-- Typing is fine for one thing. Picking is what you want when
-                     you are standing in front of the fridge. -->
-                <button
-                  class="inline-flex items-center gap-1 px-1.5 py-0.5 pointer-coarse:min-h-9 pointer-coarse:px-2.5 pointer-coarse:text-xs text-[0.6875rem] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-400 dark:text-zinc-500 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
-                  @click="pantryPickerOpen = true"
-                >
-                  <UIcon name="i-lucide-refrigerator" class="w-2.5 h-2.5" />
-                  {{ t('foodChatHome.pantryPicker.open') }}
-                </button>
-              </div>
-            </div>
-
-            <!-- Diner picker (multi-member households only) -->
-            <div v-if="showDinerPicker" class="mb-2 px-1 flex items-center gap-1.5 flex-wrap" data-rum-region="foodchat.diners" data-rum-private>
-              <UIcon name="i-lucide-users" class="w-3 h-3 text-gray-400 dark:text-zinc-500 shrink-0" />
-              <UTooltip v-for="member in householdMembers" :key="member.id" :text="dinerTooltip(member)">
-                <button
-                  type="button"
-                  class="fc-diner-chip fc-diner-chip-sm"
-                  :class="{ 'fc-diner-chip-active': isDinerSelected(member.id), 'fc-diner-chip-locked': member.id === currentMemberId }"
-                  :disabled="dinersUpdating && member.id !== currentMemberId"
-                  :aria-pressed="isDinerSelected(member.id)"
-                  :aria-label="dinerTooltip(member)"
-                  @click="toggleDiner(member)"
-                >
-                  <ProfileAvatar :avatar="getMemberAvatarForDisplay(member)" size="xs" />
-                  <span class="text-[0.6875rem] max-w-20 truncate">{{ member.name }}</span>
-                  <UIcon v-if="member.id === currentMemberId" name="i-lucide-lock" class="w-2.5 h-2.5 opacity-50" />
-                </button>
-              </UTooltip>
-            </div>
             <div class="relative">
               <div
                 class="chat-composer"
@@ -751,72 +630,6 @@
           data-rum-region="foodchat.plan"
           data-rum-private
         >
-          <!-- Plan settings, behind a disclosure and closed by default.
-               Four groups of pills across the top of the canvas is the first
-               thing a member sees and the last thing they came for: it reads
-               as a control panel bolted above their dinner. Every control
-               still commits on interaction — this only decides whether they
-               are on screen when nobody asked. -->
-          <div
-            v-if="latestParamCard && hasAnyPlan"
-            class="fc-settings-shell shrink-0"
-            data-rum-region="foodchat.settings"
-          >
-            <button
-              class="w-full flex items-center gap-2 px-4 sm:px-6 py-2 min-h-11 lg:min-h-0 text-xs text-gray-500 dark:text-zinc-400 hover:bg-gray-50/70 dark:hover:bg-zinc-800/40 transition-colors"
-              :aria-expanded="isCompact ? undefined : settingsOpen"
-              data-flows="foodchat-plan-settings"
-              @click="toggleSettings"
-            >
-              <UIcon name="i-lucide-settings-2" class="w-3.5 h-3.5 text-gray-400 dark:text-zinc-500 shrink-0" />
-              <span>{{ t('foodChatHome.planSettings.title') }}</span>
-              <span
-                v-if="(isCompact || !settingsOpen) && appliedSettingsSummary"
-                class="text-[0.6875rem] text-gray-400 dark:text-zinc-500 font-light truncate"
-              >· {{ appliedSettingsSummary }}</span>
-              <UIcon
-                :name="isCompact ? 'i-lucide-chevron-right' : (settingsOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down')"
-                class="w-3.5 h-3.5 ml-auto shrink-0"
-              />
-            </button>
-            <!-- Inline at `lg`. Below it the same controls open as a sheet,
-                 one per row and sized for a thumb: the ribbon wrapped to six
-                 rows of 20px pills on a phone, which is not a ribbon. -->
-            <div v-show="settingsOpen && !isCompact">
-              <FoodchatPlanSettingsRibbon
-                :data-flows="isCompact ? undefined : 'foodchat-plan-settings-panel'"
-                :card="latestParamCard"
-                :busy="sending || showEphemeralGenerating"
-                @apply="handleApplyPlanParameters"
-              />
-            </div>
-            <UDrawer
-              v-if="isCompact"
-              v-model:open="settingsSheetOpen"
-              :title="t('foodChatHome.planSettings.title')"
-              :description="appliedSettingsSummary || undefined"
-              :ui="sheetUi"
-            >
-              <template #body>
-                <FoodchatPlanSettingsRibbon
-                  layout="stacked"
-                  data-flows="foodchat-plan-settings-panel"
-                  :card="latestParamCard"
-                  :busy="sending || showEphemeralGenerating"
-                  @apply="handleApplyPlanParameters"
-                />
-              </template>
-            </UDrawer>
-          </div>
-          <!-- "Cooking for" banner (when more than one diner) -->
-          <Transition name="chips-fade">
-            <div v-if="showCookingForBanner" class="px-4 sm:px-6 pt-3 shrink-0">
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[0.6875rem] rounded-full border border-brandp-100 dark:border-brandp-900/60 bg-brandp-50 dark:bg-brandp-950/40 text-brandp-600 dark:text-brandp-300">
-                <UIcon name="i-lucide-users" class="w-3 h-3" />
-                {{ t('foodChatHome.diners.cookingFor', { names: cookingForNames.join(', ') }) }}
-              </span>
-            </div>
-          </Transition>
           <div class="flex-1 p-4 sm:p-6 flex flex-col justify-center">
 
             <!-- Generating (fresh plan, nothing to show yet) -->
@@ -1039,7 +852,8 @@
                     size="xs"
                     color="neutral"
                     variant="outline"
-                    class="w-44"
+                    class="w-auto max-w-56"
+                    :aria-label="t('foodChatHome.planHeader.versions')"
                     @update:model-value="selectedDailyPlanIdx = $event"
                   />
                   <USelect
@@ -1049,7 +863,8 @@
                     size="xs"
                     color="neutral"
                     variant="outline"
-                    class="w-44"
+                    class="w-auto max-w-56"
+                    :aria-label="t('foodChatHome.planHeader.versions')"
                     @update:model-value="selectedWeeklyPlanIdx = $event"
                   />
                   <span v-else class="text-xs text-gray-400 font-light">
@@ -1128,11 +943,22 @@
                   </div>
                 </div>
 
-                <!-- "What FoodChat is planning around" used to sit here, above
-                     the meals. It describes the NEXT plan, not this one, so it
-                     pushed the plan the member asked for down the page to make
-                     room for a panel about the one they had not asked for yet.
-                     It lives in the right rail now. -->
+                <!-- What this plan is built around, in one line, and the one
+                     way to change it. Then only what was not fully met: the
+                     rest of "why" is folded under the meals. -->
+                <div class="mb-4 flex flex-col gap-3">
+                  <FoodchatBuiltAround
+                    :compact="isPhone"
+                    :diners="builtAroundDiners"
+                    :pantry="pantryItems"
+                    :rules="builtAroundRuleRows"
+                    :stated-tags="statedTags"
+                    :facets="facetChips"
+                    :card="latestParamCard"
+                    @adjust="adjustOpen = true"
+                  />
+                  <FoodchatUnmetNotice :ledger="displayedLedger" @why="openWhy" />
+                </div>
 
                 <!-- The last tool result. Dismissible, and never mistaken for
                      the plan itself: a summary is an answer, not a change. -->
@@ -1183,70 +1009,6 @@
 
                 <!-- ── Daily plan content ── -->
                 <template v-if="canvasMode === 'daily' && displayedMealPlan">
-                  <!-- Constraint ledger -->
-                  <div v-if="displayedMealPlan.constraints_applied?.length" class="mb-3 px-1 flex items-center gap-1.5 flex-wrap">
-                    <span class="inline-flex items-center gap-1 text-[0.625rem] uppercase tracking-wide text-gray-400 dark:text-zinc-500 shrink-0">
-                      <UIcon name="i-lucide-sliders-horizontal" class="w-3 h-3" />
-                      {{ t('foodChatHome.constraints.label') }}
-                    </span>
-                    <FoodchatInfoPopover
-                      v-for="(constraint, cIdx) in ownRows(displayedMealPlan.constraints_applied)"
-                      :key="cIdx"
-                      :text="constraint.detail || constraintTooltip(constraint)"
-                    >
-                      <button
-                        type="button"
-                        class="inline-flex items-center gap-1 px-2 py-0.5 pointer-coarse:min-h-8 pointer-coarse:text-[0.6875rem] text-[0.625rem] rounded-full border cursor-help"
-                        :class="ledgerRowClass(constraint)"
-                      >
-                        <UIcon v-if="ledgerRowIcon(constraint)" :name="ledgerRowIcon(constraint) || ''" class="w-3 h-3 shrink-0" />
-                        {{ constraint.constraint }}
-                        <span
-                          v-if="constraintMembers(constraint)"
-                          class="opacity-70"
-                        >— {{ constraintMembers(constraint) }}</span>
-                      </button>
-                    </FoodchatInfoPopover>
-                    <!-- Guidance from the member's dietary guidelines folds into
-                         one chip. A guide writes a rule per audience and two
-                         guides say the same thing, so as chips of their own
-                         they buried what the member actually asked for. -->
-                    <button
-                      v-if="guidelineRows(displayedMealPlan.constraints_applied).length"
-                      type="button"
-                      class="inline-flex items-center gap-1 px-2 py-0.5 pointer-coarse:min-h-8 pointer-coarse:text-[0.6875rem] text-[0.625rem] rounded-full border border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
-                      :aria-expanded="guidelinesOpen"
-                      @click="guidelinesOpen = !guidelinesOpen"
-                    >
-                      <UIcon name="i-lucide-book-open" class="w-3 h-3 shrink-0" />
-                      {{ guidelineSummary(guidelineRows(displayedMealPlan.constraints_applied)) }}
-                      <UIcon :name="guidelinesOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3 h-3 shrink-0" />
-                    </button>
-                    <div
-                      v-if="guidelinesOpen && guidelineRows(displayedMealPlan.constraints_applied).length"
-                      class="basis-full flex items-center gap-1.5 flex-wrap pt-0.5"
-                    >
-                      <FoodchatInfoPopover
-                        v-for="(constraint, cIdx) in guidelineRows(displayedMealPlan.constraints_applied)"
-                        :key="cIdx"
-                        :text="constraint.detail || constraintTooltip(constraint)"
-                      >
-                        <button
-                          type="button"
-                          class="inline-flex items-center gap-1 px-2 py-0.5 pointer-coarse:min-h-8 pointer-coarse:text-[0.6875rem] text-[0.625rem] rounded-full border cursor-help"
-                          :class="ledgerRowClass(constraint)"
-                        >
-                          <UIcon v-if="ledgerRowIcon(constraint)" :name="ledgerRowIcon(constraint) || ''" class="w-3 h-3 shrink-0" />
-                          {{ constraint.constraint }}
-                          <span
-                            v-if="constraintMembers(constraint)"
-                            class="opacity-70"
-                          >— {{ constraintMembers(constraint) }}</span>
-                        </button>
-                      </FoodchatInfoPopover>
-                    </div>
-                  </div>
-
                   <!-- One card per meal, from `planMeals`, which reads both the
                        legacy breakfast/lunch/dinner shape and the flexible
                        `meals` array. Three hardcoded blocks lived here, so a
@@ -1351,24 +1113,17 @@
                     >{{ t('foodChatHome.dayTotal.partial') }}</span>
                   </div>
 
-                  <div v-if="displayedMealPlan.reasoning" class="flex items-start gap-2 mb-4 px-1">
-                    <UIcon name="i-lucide-lightbulb" class="w-3.5 h-3.5 text-brandp-400 mt-0.5 shrink-0" />
-                    <p class="text-xs text-gray-500 dark:text-gray-400 font-light leading-relaxed">{{ displayedMealPlan.reasoning }}</p>
-                  </div>
-
-                  <!-- Personalization line -->
-                  <div v-if="personalizationParts.length" class="mb-4 px-1">
-                    <NuxtLink
-                      to="/my-profile"
-                      class="inline-flex items-center gap-1.5 text-[0.6875rem] font-light text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:underline transition-colors"
-                    >
-                      <UIcon name="i-lucide-sparkles" class="w-3 h-3 shrink-0" />
-                      {{ t('foodChatHome.personalization.prefix') }} {{ personalizationParts.join(' · ') }}
-                    </NuxtLink>
-                  </div>
-
-                  <!-- Plan quality panel -->
-                  <FoodchatPlanQualityPanel :metrics="qualityMetrics" />
+                  <!-- Everything else about why, behind one fold. The daily
+                       plan's `reasoning` is the judge's note on how it ranked
+                       the candidates ("highest score among the batch"), so it
+                       is not shown, for the same reason its raw score is not. -->
+                  <FoodchatWhyThisPlan
+                    v-model:open="whyOpen"
+                    class="mb-4"
+                    :rows="displayedMealPlan.constraints_applied ?? []"
+                    :metrics="qualityMetrics"
+                    :personalization="displayedMealPlan.personalization_summary"
+                  />
 
                   <!-- Plan vote -->
                   <div class="mb-5 px-1">
@@ -1421,77 +1176,6 @@
 
                 <!-- ── Weekly plan content ── -->
                 <template v-else-if="canvasMode === 'weekly' && displayedWeeklyPlan">
-                  <!-- The same quality panel the daily canvas has. Weekly is the
-                       deepest plan the product makes and said the least about
-                       it: the graders were instance attributes on the daily
-                       service, so no variety, diversity or adherence score ever
-                       reached a week. -->
-                  <FoodchatPlanQualityPanel :metrics="weeklyQualityMetrics" />
-
-                  <!-- Measured constraint ledger (weekly rows can be relaxed/violated) -->
-                  <div v-if="weeklyLedger.length" class="mb-3 px-1 flex items-center gap-1.5 flex-wrap">
-                    <span class="inline-flex items-center gap-1 text-[0.625rem] uppercase tracking-wide text-gray-400 dark:text-zinc-500 shrink-0">
-                      <UIcon name="i-lucide-sliders-horizontal" class="w-3 h-3" />
-                      {{ t('foodChatHome.constraints.label') }}
-                    </span>
-                    <FoodchatInfoPopover
-                      v-for="(constraint, cIdx) in ownRows(weeklyLedger)"
-                      :key="cIdx"
-                      :text="constraint.detail || constraintTooltip(constraint)"
-                    >
-                      <button
-                        type="button"
-                        class="inline-flex items-center gap-1 px-2 py-0.5 pointer-coarse:min-h-8 pointer-coarse:text-[0.6875rem] text-[0.625rem] rounded-full border cursor-help"
-                        :class="ledgerRowClass(constraint)"
-                      >
-                        <UIcon v-if="ledgerRowIcon(constraint)" :name="ledgerRowIcon(constraint) || ''" class="w-3 h-3 shrink-0" />
-                        {{ constraint.constraint }}
-                        <span
-                          v-if="constraintMembers(constraint)"
-                          class="opacity-70"
-                        >— {{ constraintMembers(constraint) }}</span>
-                      </button>
-                    </FoodchatInfoPopover>
-                    <!-- Guidance from the member's dietary guidelines folds into
-                         one chip. A guide writes a rule per audience and two
-                         guides say the same thing, so as chips of their own
-                         they buried what the member actually asked for. -->
-                    <button
-                      v-if="guidelineRows(weeklyLedger).length"
-                      type="button"
-                      class="inline-flex items-center gap-1 px-2 py-0.5 pointer-coarse:min-h-8 pointer-coarse:text-[0.6875rem] text-[0.625rem] rounded-full border border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800"
-                      :aria-expanded="guidelinesOpen"
-                      @click="guidelinesOpen = !guidelinesOpen"
-                    >
-                      <UIcon name="i-lucide-book-open" class="w-3 h-3 shrink-0" />
-                      {{ guidelineSummary(guidelineRows(weeklyLedger)) }}
-                      <UIcon :name="guidelinesOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3 h-3 shrink-0" />
-                    </button>
-                    <div
-                      v-if="guidelinesOpen && guidelineRows(weeklyLedger).length"
-                      class="basis-full flex items-center gap-1.5 flex-wrap pt-0.5"
-                    >
-                      <FoodchatInfoPopover
-                        v-for="(constraint, cIdx) in guidelineRows(weeklyLedger)"
-                        :key="cIdx"
-                        :text="constraint.detail || constraintTooltip(constraint)"
-                      >
-                        <button
-                          type="button"
-                          class="inline-flex items-center gap-1 px-2 py-0.5 pointer-coarse:min-h-8 pointer-coarse:text-[0.6875rem] text-[0.625rem] rounded-full border cursor-help"
-                          :class="ledgerRowClass(constraint)"
-                        >
-                          <UIcon v-if="ledgerRowIcon(constraint)" :name="ledgerRowIcon(constraint) || ''" class="w-3 h-3 shrink-0" />
-                          {{ constraint.constraint }}
-                          <span
-                            v-if="constraintMembers(constraint)"
-                            class="opacity-70"
-                          >— {{ constraintMembers(constraint) }}</span>
-                        </button>
-                      </FoodchatInfoPopover>
-                    </div>
-                  </div>
-
                   <!-- Collapsible days — one row per day, meals reviewable inline -->
                   <div class="flex justify-end mb-1.5 px-1">
                     <button
@@ -1775,80 +1459,17 @@
                     </div>
                   </div>
 
-                  <!-- Whole-week justification -->
-                  <div v-if="displayedWeeklyPlan.reasoning" class="flex items-start gap-2 mb-4 px-1">
-                    <UIcon name="i-lucide-lightbulb" class="w-3.5 h-3.5 text-brandp-400 mt-0.5 shrink-0" />
-                    <p class="text-xs text-gray-500 dark:text-gray-400 font-light leading-relaxed">{{ displayedWeeklyPlan.reasoning }}</p>
-                  </div>
-
-                  <!-- Week at a glance: guideline checklist, variety, nutrition -->
-                  <div
-                    v-if="weeklyChecklist.length || weeklyVariety || weeklyNutrition"
-                    class="mb-4 rounded-xl border border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-800/40 overflow-hidden"
-                  >
-                    <button
-                      class="w-full flex items-center justify-between px-3 py-2 text-xs text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800/60 transition-colors"
-                      @click="weekGlanceOpen = !weekGlanceOpen"
-                    >
-                      <span class="inline-flex items-center gap-1.5">
-                        <UIcon name="i-lucide-gauge" class="w-3.5 h-3.5 text-brandp-400" />
-                        {{ t('foodChatHome.weekly.glanceTitle') }}
-                        <span
-                          v-if="weeklyChecklist.length"
-                          class="px-1.5 py-0.5 text-[0.6875rem] rounded-full font-medium tabular-nums"
-                          :class="weeklyChecklistMet === weeklyChecklist.length
-                            ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400'
-                            : 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400'"
-                        >{{ weeklyChecklistMet }}/{{ weeklyChecklist.length }}</span>
-                      </span>
-                      <UIcon :name="weekGlanceOpen ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="w-3.5 h-3.5" />
-                    </button>
-                    <div v-show="weekGlanceOpen" class="px-3 pb-3 pt-1 space-y-2">
-                      <div v-for="check in weeklyChecklist" :key="check.rule" class="flex items-center gap-2">
-                        <UIcon
-                          :name="check.met ? 'i-lucide-check-circle-2' : 'i-lucide-alert-circle'"
-                          :class="check.met ? 'text-emerald-500' : 'text-amber-500'"
-                          class="w-3.5 h-3.5 shrink-0"
-                        />
-                        <span class="flex-1 text-[0.6875rem] font-light text-gray-500 dark:text-zinc-400">
-                          {{ check.rule }}
-                          <!-- Whose rule this is. Absent on the built-in
-                               fallbacks, which are not anyone's national
-                               guidance and need no byline. -->
-                          <span
-                            v-if="check.source"
-                            class="text-gray-400 dark:text-zinc-500"
-                          >· {{ check.source }}</span>
-                        </span>
-                        <span class="shrink-0 text-[0.6875rem] font-medium text-gray-700 dark:text-zinc-200 tabular-nums">{{ check.actual }} · {{ check.target }}</span>
-                      </div>
-                      <div v-if="weeklyVariety?.reasoning" class="flex items-start gap-2 pt-1.5 border-t border-gray-100 dark:border-zinc-800">
-                        <UIcon name="i-lucide-shuffle" class="w-3.5 h-3.5 text-brandp-400 mt-0.5 shrink-0" />
-                        <span class="text-[0.6875rem] font-light text-gray-500 dark:text-zinc-400 leading-relaxed">{{ weeklyVariety.reasoning }}</span>
-                      </div>
-                      <div v-if="weeklyNutrition?.daily_average_kcal != null" class="flex items-start gap-2">
-                        <UIcon name="i-lucide-flame" class="w-3.5 h-3.5 text-brandp-400 mt-0.5 shrink-0" />
-                        <span class="text-[0.6875rem] font-light text-gray-500 dark:text-zinc-400 leading-relaxed">
-                          {{ t('foodChatHome.weekly.dailyAverage', { kcal: Math.round(weeklyNutrition.daily_average_kcal) }) }}
-                          <template v-if="weeklyNutrition.budget_used_pct != null">
-                            · {{ t('foodChatHome.weekly.budgetUsed', { pct: weeklyNutrition.budget_used_pct }) }}
-                          </template>
-                          <span v-if="weeklyNutrition.note" class="text-gray-400 dark:text-zinc-500"> ({{ weeklyNutrition.note }})</span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Personalization line -->
-                  <div v-if="weeklyPersonalizationParts.length" class="mb-4 px-1">
-                    <NuxtLink
-                      to="/my-profile"
-                      class="inline-flex items-center gap-1.5 text-[0.6875rem] font-light text-gray-400 dark:text-zinc-500 hover:text-brandp-500 dark:hover:text-brandp-400 hover:underline transition-colors"
-                    >
-                      <UIcon name="i-lucide-sparkles" class="w-3 h-3 shrink-0" />
-                      {{ t('foodChatHome.personalization.prefix') }} {{ weeklyPersonalizationParts.join(' · ') }}
-                    </NuxtLink>
-                  </div>
+                  <!-- The week's own summary, its checklist, scores and what it
+                       used about the member, behind one fold. -->
+                  <FoodchatWhyThisPlan
+                    v-model:open="whyOpen"
+                    class="mb-4"
+                    :rows="weeklyLedger"
+                    :metrics="weeklyQualityMetrics"
+                    :personalization="displayedWeeklyPlan.personalization_summary"
+                    :checklist="weeklyChecklist"
+                    :notes="weeklyWhyNotes"
+                  />
 
                   <!-- Plan vote -->
                   <div class="mb-5 px-1">
@@ -1905,88 +1526,40 @@
           </div>
         </div>
 
-        <!-- ── RIGHT RAIL: what the NEXT plan is being built around ──
-             A rail rather than a block above the meals, and collapsed by
-             default. It describes the next plan, not the one on screen, so
-             above the meals it pushed what the member asked for down the page
-             to make room for what they had not asked for yet.
-
-             Collapsed it is a spine of icons with a count, so a member can see
-             at a glance that three things are standing without opening
-             anything. -->
-        <div
-          v-if="planningState"
-          class="fc-rail shrink-0 flex flex-col"
-          :class="railOpen ? 'fc-rail-open' : 'fc-rail-shut'"
-        >
-          <button
-            class="flex items-center gap-2 px-2 py-2.5 text-gray-500 dark:text-zinc-400 hover:bg-gray-100/70 dark:hover:bg-zinc-800/50 transition-colors shrink-0"
-            :class="railOpen ? 'justify-between' : 'flex-col gap-1.5'"
-            :aria-expanded="railOpen"
-            :title="t('foodChatHome.planningState.title')"
-            data-flows="foodchat-planning-rail"
-            @click="railOpen = !railOpen"
-          >
-            <span class="inline-flex items-center gap-2">
-              <UIcon name="i-lucide-clipboard-list" class="w-4 h-4 text-brandp-500 shrink-0" />
-              <span v-if="railOpen" class="text-xs font-medium whitespace-nowrap">
-                {{ t('foodChatHome.planningState.title') }}
-              </span>
-            </span>
-            <span
-              v-if="standingCount"
-              class="text-[0.625rem] px-1.5 py-0.5 rounded-full bg-brandp-50 dark:bg-brandp-900/30 text-brandp-600 dark:text-brandp-300 tabular-nums shrink-0"
-            >{{ standingCount }}</span>
-            <UIcon
-              v-if="railOpen"
-              name="i-lucide-chevrons-right"
-              class="w-3.5 h-3.5 shrink-0"
-            />
-          </button>
-          <div v-if="railOpen" class="flex-1 overflow-y-auto px-2 pb-3">
-            <ReusePlanningPanel />
-          </div>
-        </div>
-
         </div><!-- end fc-split-wrap -->
 
-        <!-- The rail's panel below `lg`: a sheet on a phone, a side panel on
-             a tablet. The rail itself is hidden there. -->
-        <UDrawer
-          v-if="isPhone && planningState"
-          v-model:open="planningOpen"
-          :title="t('foodChatHome.planningState.title')"
-          :ui="sheetUi"
-        >
-          <template #body>
-            <ReusePlanningPanel />
-          </template>
-        </UDrawer>
-        <USlideover
-          v-else-if="isCompact && planningState"
-          v-model:open="planningOpen"
-          :title="t('foodChatHome.planningState.title')"
-          side="right"
-          :ui="{ content: 'max-w-sm' }"
-        >
-          <template #body>
-            <ReusePlanningPanel />
-          </template>
-        </USlideover>
+        <!-- The one place to change what the next plan is built around:
+             a side panel beside the plan, a sheet on a phone. -->
+        <FoodchatAdjustPanel
+          v-model:open="adjustOpen"
+          :sheet="isPhone"
+          :busy="sending"
+          :members="showDinerPicker ? householdMembers : []"
+          :current-member-id="currentMemberId"
+          :selected-diners="selectedDinerIds"
+          :pantry="pantryItems"
+          :card="latestParamCard"
+          :facets="facetChips"
+          :vocabularies="vocabularies"
+          :stated-tags="statedTags"
+          :shape-summary="planningState && !planningState.plan_shape_is_default ? planningState.plan_shape_summary : ''"
+          :favorites-declined="planningState?.use_favorites === false"
+          @apply="handleAdjustApply"
+        />
       </div>
     </Transition>
 
-    <!-- Cook from what is in the kitchen: pick, then one action plans from it.
-         The start page opens the same picker over its staged list: from the
-         kitchen row it only keeps the picks ("Use these"), from the kitchen
-         card it plans from them. -->
+    <!-- The start page's picker over its staged list: from the kitchen row
+         it only keeps the picks ("Use these"), from the kitchen card it plans
+         from them. Once a plan exists the kitchen is changed in Adjust, which
+         opens its own. -->
     <FoodchatPantryPicker
-      v-if="pantryPickerOpen || startPickerMode"
-      :items="startPickerMode ? stagedPantry : pantryItems"
+      v-if="startPickerMode"
+      :items="stagedPantry"
       :busy="sending"
       :action="startPickerMode === 'stage' ? 'keep' : 'cook'"
       @close="closePantryPicker"
-      @cook="startPickerMode ? handleStartPicked($event) : handleCookFromPantry($event)"
+      @cook="handleStartPicked"
     />
 
     <!-- Adapt popup -->
@@ -2035,14 +1608,13 @@
 <script setup lang="ts">
 import { ref, reactive, computed, nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { createReusableTemplate } from '@vueuse/core'
 import type { DropdownMenuItem } from '@nuxt/ui'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { useFoodChat } from '~/composables/useFoodChat'
 import { useHouseholdStore } from '~/stores/household'
 import { useRecipeStore } from '~/stores/recipe'
-import type { AttributionCitation, ChangedSlot, ChatMessage, ConstraintApplied, FoodChatTool, MealPlan, MealRecipe, MemorySuggestion, PlanParameterValues, WeeklyDayBreakdown, WeeklyMealEntry } from '~/services/foodchatApi'
+import type { AttributionCitation, ChangedSlot, ChatMessage, FoodChatTool, MealPlan, MealRecipe, MemorySuggestion, WeeklyDayBreakdown, WeeklyMealEntry } from '~/services/foodchatApi'
 import recipeApi from '~/services/recipeApi'
 import {
   humaniseSlot,
@@ -2057,6 +1629,8 @@ import {
   slotKind,
   type NormalisedMeal
 } from '~/utils/planMeals'
+import { builtAroundRules } from '~/utils/planLedger'
+import type { AdjustChanges } from '~/components/foodchat/AdjustPanel.vue'
 import type { HouseholdMember } from '~/services/householdsApi'
 import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
 
@@ -2077,6 +1651,7 @@ const {
   hasAnyPlan,
   clarificationPending,
   currentPlanType,
+  currentPlanIds,
   hasMoreMessages,
   loadingMoreMessages,
   sending,
@@ -2099,11 +1674,8 @@ const {
   clearError,
   planningState,
   facetChips,
-  pendingStateChanges,
   loadPlanningState,
-  addPantryItems,
   setPantry,
-  removePantryItem,
   addFacets,
   removeFacet,
   replan,
@@ -2128,7 +1700,6 @@ const { isPhone, isCompact, isDesktop, isCoarsePointer } = useViewport()
 // from under them.
 const mobilePane = ref<'chat' | 'plan'>('chat')
 const planBadge = ref(false)
-const planningOpen = ref(false)
 
 function showPane(pane: 'chat' | 'plan') {
   mobilePane.value = pane
@@ -2154,18 +1725,6 @@ watch(
     else showPane('plan')
   }
 )
-
-/**
- * Sheets below `lg`: as tall as their content and never taller than the
- * screen, clear of the home indicator, with the body scrolling inside.
- */
-const sheetUi = {
-  content: 'max-h-[88dvh]',
-  container: 'min-h-0 overflow-hidden pb-[max(1rem,var(--wf-safe-bottom))]',
-  body: 'min-h-0 overflow-y-auto -mx-4 px-4'
-}
-
-const [DefinePlanningPanel, ReusePlanningPanel] = createReusableTemplate()
 
 /**
  * Recipe links open beside the plan under a mouse and in place on a finger:
@@ -2264,21 +1823,6 @@ function isActiveParamCard(msg: ChatMessage): boolean {
 
 function dismissParamCard(msg: ChatMessage) {
   dismissedParamCards.value = new Set([...dismissedParamCards.value, messageKey(msg)])
-}
-
-async function handleApplyPlanParameters(
-  values: PlanParameterValues,
-  planType?: 'daily' | 'weekly'
-) {
-  showEphemeralGenerating.value = true
-  try {
-    // planType is the card's own address — without it the backend would
-    // refine whichever canvas is newest, which may not be this card's plan
-    await applyPlanParameters(values, planType)
-    scrollToBottom()
-  } catch {
-    showEphemeralGenerating.value = false
-  }
 }
 
 // ── Manual mode: blank canvas, hand-picked slots, FoodChat fills the rest ──
@@ -2448,6 +1992,26 @@ watch(currentPlanType, (type) => {
   else if (type === 'daily') { selectedDailyPlanIdx.value = 0; canvasMode.value = 'daily' }
 }, { immediate: true })
 
+/**
+ * A reopened session shows its current version, not its first.
+ *
+ * The lists come oldest first, and the watcher above points both canvases at
+ * index 0, so coming back to a conversation with three versions showed version
+ * 1. Only on a load: after a turn, the response names its plan and the
+ * watchers further down follow that instead.
+ */
+watch(
+  [currentPlanIds, () => mealPlans.value.length, () => weeklyMealPlans.value.length],
+  () => {
+    if (lastResponse.value) return
+    const daily = mealPlans.value.findIndex(plan => plan.id === currentPlanIds.value.daily)
+    if (mealPlans.value.length) selectedDailyPlanIdx.value = daily !== -1 ? daily : mealPlans.value.length - 1
+    const weekly = weeklyMealPlans.value.findIndex(plan => plan.id === currentPlanIds.value.weekly)
+    if (weeklyMealPlans.value.length) selectedWeeklyPlanIdx.value = weekly !== -1 ? weekly : weeklyMealPlans.value.length - 1
+  },
+  { flush: 'post' }
+)
+
 // A new plan arriving dismisses the compose panel. Draft mode hid the plan
 // card outright (`hasAnyPlan && !draftMode`), so a member who opened compose
 // and then asked the chat for a plan got the plan generated, announced in the
@@ -2567,10 +2131,6 @@ const cookingForNames = computed(() => {
     .map(id => householdMembers.value.find(m => m.id === id)?.name)
     .filter((n): n is string => !!n)
 })
-
-const showCookingForBanner = computed(() =>
-  showDinerPicker.value && selectedDinerIds.value.length > 1
-)
 
 // Keep the selection in sync with the active session (persisted per session
 // in the foodchat store) and the household roster; current member is always in.
@@ -2732,7 +2292,6 @@ const weeklyDays = computed(() => {
 
 // ── Weekly explainability (M7 — collapsible days, measured ledger, metrics) ──
 const expandedWeeklyDays = ref<Set<number>>(new Set())
-const weekGlanceOpen = ref(false)
 
 function toggleWeeklyDay(dayIndex: number) {
   const next = new Set(expandedWeeklyDays.value)
@@ -2762,73 +2321,8 @@ watch(displayedWeeklyPlan, (now, prev) => {
 
 const weeklyLedger = computed(() => displayedWeeklyPlan.value?.constraints_applied ?? [])
 
-// Both ledgers share these: the daily plan now carries the same relaxed /
-// violated states the weekly one does, since a goal demoted to a soft signal
-// during household reconciliation is exactly a relaxed row.
-/**
- * Four states, and `unsupported` is the one that matters most.
- *
- * It means FoodChat could NOT enforce this constraint and is saying so —
- * a dietary group with no filter behind it, or a facet the recipe details
- * carry no annotation to check. It used to fall through to the branch below
- * and render as a hard constraint WITH a shield-check, which is precisely the
- * guarantee it exists to withhold. A member selecting `peanut_free` saw a
- * green shield over an unenforced rule.
- *
- * Grey and informational: not an alarm (nothing was violated), not a promise.
- */
-function ledgerRowClass(row: ConstraintApplied): string {
-  if (row.status === 'violated') {
-    return 'border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-300'
-  }
-  if (row.status === 'relaxed') {
-    return 'border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-300'
-  }
-  if (row.status === 'unsupported') {
-    return 'border-gray-300 dark:border-zinc-600 bg-gray-50 dark:bg-zinc-800/60 text-gray-500 dark:text-zinc-400 border-dashed'
-  }
-  return row.type === 'hard'
-    ? 'border-brandp-200 dark:border-brandp-800/70 bg-brandp-50 dark:bg-brandp-950/40 text-brandp-600 dark:text-brandp-300 ring-1 ring-brandp-200/60 dark:ring-brandp-800/40'
-    : 'border-gray-200 dark:border-zinc-700 text-gray-500 dark:text-zinc-400'
-}
-
-/**
- * Guidance from the member's dietary guidelines, as against what they asked for.
- *
- * Rows say so since guideline rows were tagged; a plan saved before that is
- * read by the same signs — soft, and sourced from a guide.
- */
-function isGuidelineRow(row: ConstraintApplied): boolean {
-  if (row.kind) return row.kind === 'guideline'
-  return row.type === 'soft' && /guid/i.test(row.source || '')
-}
-
-const ownRows = (rows?: ConstraintApplied[] | null) => (rows ?? []).filter(row => !isGuidelineRow(row))
-const guidelineRows = (rows?: ConstraintApplied[] | null) => (rows ?? []).filter(isGuidelineRow)
-
-/** Folded by default: the member's own constraints are what the row is for. */
-const guidelinesOpen = ref(false)
-
-function guidelineSummary(rows: ConstraintApplied[]): string {
-  const met = rows.filter(row => row.status === 'satisfied').length
-  const checked = rows.filter(row => row.status === 'satisfied' || row.status === 'relaxed').length
-  return checked
-    ? t('foodChatHome.constraints.guidelinesMet', { met, total: checked })
-    : t('foodChatHome.constraints.guidelinesCount', { count: rows.length })
-}
-
-function ledgerRowIcon(row: ConstraintApplied): string | null {
-  if (row.status === 'violated') return 'i-lucide-alert-triangle'
-  if (row.status === 'relaxed') return 'i-lucide-alert-circle'
-  // Never the shield here — the shield is the claim that a hard constraint was
-  // enforced, and `unsupported` is the admission that it was not.
-  if (row.status === 'unsupported') return 'i-lucide-info'
-  return row.type === 'hard' ? 'i-lucide-shield-check' : null
-}
-
 const weeklyMetrics = computed(() => displayedWeeklyPlan.value?.metrics ?? {})
 const weeklyChecklist = computed(() => weeklyMetrics.value.guideline_checklist ?? [])
-const weeklyChecklistMet = computed(() => weeklyChecklist.value.filter(c => c.met).length)
 const weeklyVariety = computed(() => weeklyMetrics.value.variety)
 const weeklyNutrition = computed(() => weeklyMetrics.value.nutrition)
 
@@ -3014,46 +2508,6 @@ function flashChangedSlots(slots?: ChangedSlot[]) {
   if (slotFlashTimer) clearTimeout(slotFlashTimer)
   slotFlashTimer = setTimeout(() => { highlightedSlots.value = new Set() }, 2600)
 }
-
-/**
- * The diners a ledger row is there for. Empty on a solo plan — naming yourself
- * on your own constraints is noise — and empty on rows that belong to the plan
- * rather than a person (feedback exclusions, the weekly meat limit).
- */
-function constraintMembers(constraint: ConstraintApplied): string {
-  return (constraint.members || []).join(', ')
-}
-
-function constraintTooltip(constraint: ConstraintApplied): string {
-  // An unsupported row's own `detail` names what could not be enforced and
-  // why; the generic hard/soft wording would overwrite that with a claim.
-  if (constraint.status === 'unsupported') {
-    return t('foodChatHome.constraints.unsupportedTooltip')
-  }
-  return constraint.type === 'hard'
-    ? t('foodChatHome.constraints.hardTooltip', { source: constraint.source })
-    : t('foodChatHome.constraints.softTooltip', { source: constraint.source })
-}
-
-const personalizationParts = computed(() => {
-  const summary = displayedMealPlan.value?.personalization_summary
-  if (!summary) return []
-  const parts: string[] = []
-  if (summary.memories_used > 0) parts.push(t('foodChatHome.personalization.memories', { count: summary.memories_used }))
-  if (summary.favorites_used > 0) parts.push(t('foodChatHome.personalization.favorites', { count: summary.favorites_used }))
-  if (summary.feedback_signals > 0) parts.push(t('foodChatHome.personalization.feedback', { count: summary.feedback_signals }))
-  return parts
-})
-
-const weeklyPersonalizationParts = computed(() => {
-  const summary = displayedWeeklyPlan.value?.personalization_summary
-  if (!summary) return []
-  const parts: string[] = []
-  if (summary.memories_used > 0) parts.push(t('foodChatHome.personalization.memories', { count: summary.memories_used }))
-  if (summary.favorites_used > 0) parts.push(t('foodChatHome.personalization.favorites', { count: summary.favorites_used }))
-  if (summary.feedback_signals > 0) parts.push(t('foodChatHome.personalization.feedback', { count: summary.feedback_signals }))
-  return parts
-})
 
 // The panel owns its own open/closed state now that it is a component.
 interface QualityMetric {
@@ -3573,11 +3027,6 @@ function resetSplit() {
   persistSplit()
 }
 
-// ── The pantry strip above the composer ──────────────────────────────────
-const pantryStripOpen = ref(false)
-const pantryPickerOpen = ref(false)
-const pantryDraft = ref('')
-
 // ── The start page's kitchen row ──────────────────────────────────────────
 // Kept here, not in the session, until the first message: the pantry lives on
 // a session, and creating one per visit to the start page would fill the
@@ -3595,7 +3044,6 @@ function openStartPicker(mode: 'stage' | 'plan') {
 }
 
 function closePantryPicker() {
-  pantryPickerOpen.value = false
   startPickerMode.value = null
 }
 
@@ -3637,73 +3085,97 @@ async function flushStagedPantry() {
 
 const pantryItems = computed(() => planningState.value?.pantry ?? [])
 
-/**
- * "ground beef, feta" and "ground beef" both work.
- *
- * A comma is how people list things, and splitting here means one round trip
- * instead of three — the endpoint takes a list precisely so it can.
- */
-function submitPantryStrip() {
-  const items = pantryDraft.value
-    .split(',')
-    .map(part => part.trim())
-    .filter(Boolean)
-  if (!items.length) return
-  pantryDraft.value = ''
-  handleAddPantry(items)
-}
+// ── What the plan is built around, and the one way to change it ──────────
 
-// ── The right rail ───────────────────────────────────────────────────────
-const railOpen = ref(false)
+/** The Adjust panel. Nothing in it is sent until "Update my plan". */
+const adjustOpen = ref(false)
+/** "Why this plan", shared by both canvases so "See why" can open it. */
+const whyOpen = ref(false)
 
-/** How many things are standing, for the collapsed rail's badge. */
-const standingCount = computed(() => {
-  const state = planningState.value
-  if (!state) return 0
-  return (state.pantry?.length ?? 0)
-    + facetChips.value.length
-    + (state.diet_tags?.length ?? 0)
-    + (state.claim_tags?.length ?? 0)
-    + (state.max_minutes ? 1 : 0)
-})
+/** The ledger of whichever plan is on screen. */
+const displayedLedger = computed(() =>
+  canvasMode.value === 'weekly'
+    ? weeklyLedger.value
+    : (displayedMealPlan.value?.constraints_applied ?? [])
+)
 
-// The settings disclosure. Closed by default: four groups of pills across the
-// top of the canvas is the first thing a member sees and the last thing they
-// came for.
-const settingsOpen = ref(false)
-const settingsSheetOpen = ref(false)
+/** Who is eating, by name, once it is more than the member. */
+const builtAroundDiners = computed(() =>
+  showDinerPicker.value && selectedDinerIds.value.length > 1 ? cookingForNames.value : []
+)
 
-/** The disclosure at `lg`; below it, the same row opens the sheet. */
-function toggleSettings() {
-  if (isCompact.value) settingsSheetOpen.value = true
-  else settingsOpen.value = !settingsOpen.value
-}
+const builtAroundRuleRows = computed(() => builtAroundRules(displayedLedger.value, {
+  sessionGoalSet: latestParamCard.value?.parameters.some(p => p.key === 'goal' && p.value != null) ?? false
+}))
 
-/**
- * What is currently set, in one line, for the collapsed header.
- *
- * So closing the panel does not hide the fact that a 20-minute ceiling or a
- * high-protein goal is in force. A disclosure that hides state is worse than a
- * ribbon that shows it.
- */
-const appliedSettingsSummary = computed(() => {
-  const card = latestParamCard.value
-  if (!card) return ''
-  const parts: string[] = []
-  for (const param of card.parameters) {
-    const value = param.value
-    if (value == null || value === '') continue
-    if (param.kind === 'scale') {
-      parts.push(`${value}${param.unit ? ` ${param.unit}` : ''}`)
-      continue
-    }
-    const option = param.options?.find(o => o.value === value)
-    const key = `foodChatHome.chat.planParams.options.${value}`
-    const translated = t(key)
-    parts.push(translated === key ? (option?.label ?? String(value)) : translated)
+/** Diet and nutrition said in this conversation ("vegetarian", "high protein"). */
+const statedTags = computed(() => [
+  ...(planningState.value?.diet_tags ?? []),
+  ...(planningState.value?.claim_tags ?? [])
+])
+
+/** A week explains itself in sentences; a day's ranking note is not one. */
+const weeklyWhyNotes = computed(() => {
+  const notes: string[] = []
+  const plan = displayedWeeklyPlan.value
+  if (plan?.reasoning) notes.push(plan.reasoning)
+  if (weeklyVariety.value?.reasoning) notes.push(weeklyVariety.value.reasoning)
+  const nutrition = weeklyNutrition.value
+  if (nutrition?.daily_average_kcal != null) {
+    let line = t('foodChatHome.weekly.dailyAverage', { kcal: Math.round(nutrition.daily_average_kcal) })
+    if (nutrition.budget_used_pct != null) line += ` · ${t('foodChatHome.weekly.budgetUsed', { pct: nutrition.budget_used_pct })}`
+    if (nutrition.note) line += ` (${nutrition.note})`
+    notes.push(line)
   }
-  return parts.join(' · ')
+  return notes
 })
+
+function openWhy() {
+  whyOpen.value = true
+  nextTick(() => {
+    document.getElementById('foodchat-why')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
+}
+
+/**
+ * Everything the Adjust panel collected, as one plan.
+ *
+ * The writes go first and none of them re-plans: diners, the kitchen and the
+ * tastes are standing state that every plan reads. Then exactly one turn:
+ * applying the settings when any changed (that call stores them and plans in
+ * one go, from the same standing state), otherwise a re-plan from it.
+ */
+async function handleAdjustApply(changes: AdjustChanges) {
+  adjustOpen.value = false
+  const planType = canvasMode.value
+  try {
+    if (changes.diners) {
+      const previous = [...selectedDinerIds.value]
+      selectedDinerIds.value = changes.diners
+      try {
+        await updateDiners(changes.diners)
+      } catch (err) {
+        selectedDinerIds.value = previous
+        throw err
+      }
+    }
+    if (changes.pantry) await setPantry(changes.pantry)
+    for (const value of changes.removeFacets) await removeFacet(value)
+    if (changes.addFacets.length) await addFacets(changes.addFacets)
+    showEphemeralGenerating.value = true
+    if (Object.keys(changes.params).length) {
+      await applyPlanParameters(changes.params, latestParamCard.value?.plan_type ?? planType)
+    } else {
+      await replan(planType)
+    }
+    scrollToBottom()
+  } catch {
+    // The store surfaces the error in the toast; nothing half-applied is
+    // hidden, because the line above the plan reads the stored state.
+    showEphemeralGenerating.value = false
+  }
+}
 
 /** The plan's meals, whichever shape the backend sent. */
 const displayedPlanMeals = computed(() => planMeals(displayedMealPlan.value))
@@ -3754,62 +3226,6 @@ function planHistoryLabel(plan: { created_at: string, version?: number | null })
   return plan.version
     ? `${when} · ${t('foodChatHome.planHeader.version', { n: plan.version })}`
     : when
-}
-
-// ── Standing planning state: pantry, inferred facets ──────────────────────
-// The panel writes immediately (so a tick-off is not lost to a reload) but does
-// not re-plan — `pendingStateChanges` is what the member commits.
-
-async function handleAddPantry(items: string[]) {
-  try {
-    await addPantryItems(items)
-  } catch { /* the store surfaces the error */ }
-}
-
-/**
- * Replace the pantry with exactly what was picked, then plan from it.
- *
- * Two calls rather than one endpoint, because both already exist and mean
- * exactly this: `setPantry` REPLACES (a picker whose deselection did not
- * remove anything is a picker that lies), and `replan` runs one turn from the
- * standing state through the same funnel every other turn uses — so the
- * canvas, the message list and the plan history all update the way they do
- * after a chat turn.
- *
- * One turn, not one per ingredient. The strip adds items without re-planning
- * for the same reason: a member ticking eight things wants one plan.
- */
-async function handleCookFromPantry(items: string[]) {
-  pantryPickerOpen.value = false
-  try {
-    await setPantry(items)
-    await replan(canvasMode.value)
-    scrollToBottom()
-  } catch { /* the store surfaces the error */ }
-}
-
-async function handleRemovePantry(item: string) {
-  try {
-    await removePantryItem(item)
-  } catch { /* the store surfaces the error */ }
-}
-
-async function handleAddFacet(value: string) {
-  try {
-    await addFacets([value])
-  } catch { /* the store surfaces the error */ }
-}
-
-async function handleRemoveFacet(value: string) {
-  try {
-    await removeFacet(value)
-  } catch { /* the store surfaces the error */ }
-}
-
-async function handleReplan() {
-  try {
-    await replan(canvasMode.value)
-  } catch { /* the store surfaces the error */ }
 }
 
 // ── Tools ─────────────────────────────────────────────────────────────────

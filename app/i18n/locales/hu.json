@@ -1649,7 +1649,8 @@
       "unsavePlan": "Eltávolítás a mentettek közül",
       "dayN": "{n}. nap",
       "savedPlan": "Elmentve",
-      "version": "{n}. változat"
+      "version": "{n}. változat",
+      "versions": "A terv változatai"
     },
     "tooltips": {
       "planWorksWell": "Ez a terv jól működik",
@@ -1977,6 +1978,99 @@
     },
     "checkPlan": {
       "intro": "Ez a tervem. Mit szólsz hozzá?"
+    },
+    "builtAround": {
+      "label": "Erre épül",
+      "adjust": "Módosítás",
+      "nothing": "Csak a profilodra. A Módosítás gombbal adhatsz hozzá többet.",
+      "using": "Felhasználva: {list}",
+      "andMore": "{list} és még {count}",
+      "underMinutes": "{minutes} perc alatt"
+    },
+    "adjust": {
+      "title": "Terv módosítása",
+      "subtitle": "Semmi nem változik, amíg meg nem nyomod a Terv frissítése gombot.",
+      "who": "Ki eszik?",
+      "whoHint": "Az allergiáik és az étrendjük automatikusan számít.",
+      "time": "Mennyi időd van főzni?",
+      "timeHint": "Perc étkezésenként.",
+      "timeUnset": "Perc étkezésenként. Még nincs időkorlát.",
+      "simple": "Legyen egyszerű",
+      "simpleHint": "Legfeljebb 5 hozzávalós receptek",
+      "goal": "Mi a célod?",
+      "goalUnset": "Még nincs kiválasztva.",
+      "kitchen": "A konyhádban",
+      "kitchenEmpty": "Még semmi. Add hozzá, amit fel szeretnél használni.",
+      "add": "Hozzáadás",
+      "pickFromList": "Inkább listából választok",
+      "more": "További beállítások",
+      "tastes": "Említett ízek",
+      "stated": "A beszélgetésben mondtad",
+      "statedHint": "Ha ezen változtatnál, írd meg a beszélgetésben.",
+      "shapeHint": "A napokat és az étkezéseket a beszélgetésben módosíthatod.",
+      "waiting": "Várakozó módosítások: {count}",
+      "noChanges": "Még nincs módosítás",
+      "cancel": "Mégse",
+      "update": "Terv frissítése"
+    },
+    "why": {
+      "title": "Miért ez a terv",
+      "rulesTitle": "A te szabályaid",
+      "rulesHint": "magukon az ételeken ellenőrizve",
+      "always": "Mindig érvényes",
+      "preferred": "Lehetőség szerint",
+      "checkedOnMeals": "Az ételeken ellenőrizve",
+      "sources": {
+        "diet": "étrend",
+        "allergy": "allergia",
+        "dislikes": "került étel",
+        "feedback": "értékeléseid",
+        "goal": "cél",
+        "household": "háztartás"
+      },
+      "status": {
+        "satisfied": "Teljesül",
+        "relaxed": "Részben teljesül",
+        "violated": "Nem teljesül",
+        "unsupported": "Nem ellenőrizhető"
+      },
+      "checks": {
+        "allergens": "Allergiák",
+        "diet": "Étrend",
+        "claims": "Kért tápanyagcél",
+        "calories": "Kalóriacélod",
+        "calorieReference": "Kalória",
+        "cookingTime": "Főzési idő",
+        "nutriScore": "Nutri-Score",
+        "pantry": "A konyhád felhasználása",
+        "picks": "Általad választott ételek",
+        "tastes": "Kért ízek"
+      },
+      "guidelinesTitle": "Táplálkozási irányelvek: {total}-ből {met} teljesül",
+      "guidelinesPlain": "Táplálkozási irányelvek",
+      "guideline": {
+        "met": "Teljesül",
+        "unmet": "Nem teljesül",
+        "unchecked": "Nincs ellenőrizve"
+      },
+      "showAll": "Összes ({count})",
+      "showFewer": "Kevesebb",
+      "scoresTitle": "Hogyan teljesít",
+      "scoreWhy": "Miért: {name}",
+      "personalTitle": "Neked készült",
+      "usesFavourites": "Felhasznált kedvencek: {count}.",
+      "usesMemories": "Amire emlékszik rólad: {count}.",
+      "usesRatings": "Értékelt tervek, amelyekből tanult: {count}.",
+      "manageMemory": "Mire emlékezzen a FoodChat",
+      "howTitle": "Hogyan választott a FoodChat",
+      "summaryAllMet": "minden szabályod teljesül ({count})",
+      "summaryMet": "{total} szabályodból {met} teljesül",
+      "summaryGuidelines": "irányelvek: {met}/{total}",
+      "summaryFavourites": "kedvencek: {count}"
+    },
+    "unmet": {
+      "seeWhy": "Miért?",
+      "more": "További {count} a „Miért ez a terv” részben"
     }
   },
   "a11y": {
