@@ -114,6 +114,17 @@
       {{ t('foodChatHome.pantryPicker.clear') }}
     </UButton>
     <UButton
+      v-if="action === 'keep'"
+      size="sm"
+      color="primary"
+      class="pointer-coarse:min-h-11"
+      icon="i-lucide-check"
+      @click="cook"
+    >
+      {{ t('foodChatHome.pantryPicker.keep') }}
+    </UButton>
+    <UButton
+      v-else
       size="sm"
       color="primary"
       class="pointer-coarse:min-h-11"
@@ -206,11 +217,17 @@ const props = defineProps<{
   /** What is already standing, so the picker opens on the member's own state. */
   items?: string[]
   busy?: boolean
+  /**
+   * What the one button does. `cook` (the default) plans from the picks.
+   * `keep` only hands them back — the start page's kitchen row, where there
+   * is no plan to make yet and choosing nothing is a valid answer.
+   */
+  action?: 'cook' | 'keep'
 }>()
 
 const emit = defineEmits<{
   close: []
-  /** Replace the pantry with exactly these, then plan from them. */
+  /** The picks: replace the pantry with exactly these (and, for `cook`, plan). */
   cook: [items: string[]]
 }>()
 
@@ -327,7 +344,9 @@ function cook() {
   // meant the feta, and losing it to an unpressed Enter is the kind of thing
   // nobody reports and everybody notices.
   addTyped()
-  if (!selected.value.length) return
+  // Keeping nothing is an answer (every chip deselected); cooking from nothing
+  // is not.
+  if (!selected.value.length && props.action !== 'keep') return
   // The parent unmounts this on `cook`, so the sheet is released first: the
   // scroll lock is undone on the way to closed, not on unmount.
   closed = true

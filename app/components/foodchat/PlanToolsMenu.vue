@@ -12,38 +12,58 @@
     tool that is offered exists. Each entry declares whether it changes the plan,
     which is what separates the confirm-first items from the rest.
   -->
-  <UDropdownMenu
-    :items="menuItems"
-    :content="{ align: 'end' }"
-  >
-    <!-- Labelled at plan level, an icon on a day row.
-         A bare wand icon is not discoverable: it reads as decoration, and the
-         member has to click it to find out that "replace this day" and "what
-         to buy" live behind it. The day rows keep the icon because there is
-         one per day and seven labelled buttons is a toolbar, not a plan. -->
+  <span class="inline-flex flex-wrap items-center justify-end gap-2">
+    <!-- The tools worth a button of their own, in front of the menu.
+         "What to buy" is what people come back to a plan for; behind a menu
+         labelled with a wand it was one of seven things nobody opened. -->
     <UButton
-      v-if="showLabel"
+      v-for="tool in promoted"
+      :key="tool.name"
       size="xs"
       color="neutral"
       variant="subtle"
-      :icon="running ? 'i-lucide-loader-2' : 'i-lucide-wand-sparkles'"
-      :ui="{ leadingIcon: running ? 'animate-spin' : '' }"
-      trailing-icon="i-lucide-chevron-down"
-      :disabled="busy || !available.length"
+      :icon="props.running === tool.name ? 'i-lucide-loader-2' : icon(tool.name)"
+      :ui="{ leadingIcon: props.running === tool.name ? 'animate-spin' : '' }"
+      :disabled="busy"
+      :data-flows="`foodchat-tool-${tool.name}`"
+      @click="invoke(tool)"
     >
-      {{ t('foodChatHome.tools.label') }}
+      {{ label(tool) }}
     </UButton>
-    <UButton
-      v-else
-      size="xs"
-      color="neutral"
-      variant="ghost"
-      :icon="running ? 'i-lucide-loader-2' : 'i-lucide-wand-sparkles'"
-      :class="running ? 'animate-spin' : ''"
-      :disabled="busy || !available.length"
-      :aria-label="t('foodChatHome.tools.label')"
-    />
-  </UDropdownMenu>
+    <UDropdownMenu
+      v-if="menuItems.length"
+      :items="menuItems"
+      :content="{ align: 'end' }"
+    >
+      <!-- Labelled at plan level, an icon on a day row.
+           A bare wand icon is not discoverable: it reads as decoration, and the
+           member has to click it to find out that "replace this day" lives
+           behind it. The day rows keep the icon because there is one per day
+           and seven labelled buttons is a toolbar, not a plan. -->
+      <UButton
+        v-if="showLabel"
+        size="xs"
+        color="neutral"
+        variant="subtle"
+        :icon="menuRunning ? 'i-lucide-loader-2' : 'i-lucide-wand-sparkles'"
+        :ui="{ leadingIcon: menuRunning ? 'animate-spin' : '' }"
+        trailing-icon="i-lucide-chevron-down"
+        :disabled="busy"
+      >
+        {{ t('foodChatHome.tools.label') }}
+      </UButton>
+      <UButton
+        v-else
+        size="xs"
+        color="neutral"
+        variant="ghost"
+        :icon="menuRunning ? 'i-lucide-loader-2' : 'i-lucide-wand-sparkles'"
+        :class="menuRunning ? 'animate-spin' : ''"
+        :disabled="busy"
+        :aria-label="t('foodChatHome.tools.label')"
+      />
+    </UDropdownMenu>
+  </span>
 </template>
 
 <script setup lang="ts">
@@ -84,12 +104,21 @@ const props = withDefaults(defineProps<{
   /** Name of the tool currently running, so only its own button spins. */
   running?: string | null
   busy?: boolean
+  /** Tools shown as their own labelled buttons in front of the menu. */
+  promote?: string[]
+  /**
+   * Tools not offered here at all, because the page already has a control
+   * for them — `save_plan` beside a Save button is the same action twice.
+   */
+  exclude?: string[]
 }>(), {
   day: null,
   scope: 'plan',
   showLabel: false,
   running: null,
-  busy: false
+  busy: false,
+  promote: () => [],
+  exclude: () => []
 })
 
 const emit = defineEmits<{
@@ -100,8 +129,18 @@ const { t } = useI18n()
 
 /** A tool is offered only when this canvas can supply its required arguments. */
 const available = computed(() => props.tools.filter(
-  tool => argsFor(tool) !== null && onThisCanvas(tool) && inScope(tool)
+  tool => !props.exclude.includes(tool.name)
+    && argsFor(tool) !== null && onThisCanvas(tool) && inScope(tool)
 ))
+
+/** The available tools that get a button; the rest go in the menu. */
+const promoted = computed(() => available.value.filter(tool => props.promote.includes(tool.name)))
+const menuTools = computed(() => available.value.filter(tool => !props.promote.includes(tool.name)))
+
+function invoke(tool: FoodChatTool) {
+  const args = argsFor(tool)
+  if (args) emit('invoke', tool, args)
+}
 
 /**
  * Whether the tool runs on the canvas this menu sits on.
@@ -124,8 +163,9 @@ function inScope(tool: FoodChatTool): boolean {
   return 'day' in (tool.parameters?.properties ?? {})
 }
 
-const running = computed(() =>
-  Boolean(props.running && available.value.some(tool => tool.name === props.running))
+/** Whether the running tool is one of the menu's, so only the menu spins for it. */
+const menuRunning = computed(() =>
+  Boolean(props.running && menuTools.value.some(tool => tool.name === props.running))
 )
 
 /**
@@ -169,13 +209,10 @@ const menuItems = computed<DropdownMenuItem[][]>(() => {
     'icon': props.running === tool.name ? 'i-lucide-loader-2' : icon(tool.name),
     'disabled': props.busy,
     'data-flows': `foodchat-tool-${tool.name}`,
-    'onSelect': () => {
-      const args = argsFor(tool)
-      if (args) emit('invoke', tool, args)
-    }
+    'onSelect': () => invoke(tool)
   })
-  const readers = available.value.filter(tool => !tool.mutates).map(toItem)
-  const mutators = available.value.filter(tool => tool.mutates).map(toItem)
+  const readers = menuTools.value.filter(tool => !tool.mutates).map(toItem)
+  const mutators = menuTools.value.filter(tool => tool.mutates).map(toItem)
   return [readers, mutators].filter(group => group.length > 0)
 })
 

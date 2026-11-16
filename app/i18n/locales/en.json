@@ -1786,7 +1786,8 @@
       "savePlan": "Save this plan",
       "unsavePlan": "Remove from saved plans",
       "dayN": "Day {n}",
-      "savedPlan": "Saved"
+      "savedPlan": "Saved",
+      "version": "version {n}"
     },
     "tooltips": {
       "planWorksWell": "This plan works well",
@@ -1811,15 +1812,14 @@
       "weeklyPlan": "Plan my week",
       "shape": "Three days, dinner with a salad on the side",
       "taste": "Something comforting and Thai tonight",
-      "pantry": "I've got spinach and half a jar of olives to use up",
-      "quick": "Dinner under 20 minutes",
       "diet": "A gluten-free week, high protein",
       "science": "Is keto safe for teenagers?",
-      "thenWhat": "Once there's a plan you can swap a meal, add a course, ask what it adds up to, get a shopping list, or keep it in your library."
+      "thenWhat": "Once there's a plan you can swap a meal, add a course, ask what it adds up to, get a shopping list, or keep it in your library.",
+      "kitchen": "Cook from what's in my kitchen",
+      "checkPlan": "Check a plan I already have"
     },
     "mealCard": {
       "menu": "Meal options",
-      "replace": "Replace…",
       "adapt": "Adapt recipe",
       "replacePrefill": "Swap the {meal} for something lighter",
       "replacePrefillDay": "Swap the {meal} on day {day} for something lighter",
@@ -1849,12 +1849,14 @@
         "dessert": "Dessert",
         "drink": "Drink"
       },
-      "macroRing": "Nutrient breakdown: {value} {label}. Tap to see the next."
+      "macroRing": "Nutrient breakdown: {value} {label}. Tap to see the next.",
+      "swap": "Swap",
+      "swapMeal": "Swap {meal}"
     },
     "constraints": {
-      "label": "Constraints",
-      "hardTooltip": "Hard constraint · Source: {source}",
-      "softTooltip": "Soft constraint · Source: {source}",
+      "label": "Your rules",
+      "hardTooltip": "Always applied · {source}",
+      "softTooltip": "Preferred · {source}",
       "unsupportedTooltip": "We couldn't enforce this one — it's shown so you know it wasn't applied, not because it was.",
       "guidelinesMet": "Dietary guidelines · {met} of {total} met",
       "guidelinesCount": "Dietary guidelines · {count}"
@@ -1863,7 +1865,7 @@
       "prefix": "Personalized with",
       "memories": "{count} memories",
       "favorites": "{count} favorites",
-      "feedback": "{count} feedback signals"
+      "feedback": "{count} ratings"
     },
     "adaptModal": {
       "title": "Adapt this recipe",
@@ -1901,10 +1903,10 @@
     "quality": {
       "title": "Plan quality",
       "llmMatch": "LLM match",
-      "variety": "Variety",
+      "variety": "Different ingredients",
       "varietyValue": "{count} ingredients",
-      "diversity": "Diversity",
-      "guidelines": "Guidelines"
+      "diversity": "Nutritional variety",
+      "guidelines": "Dietary guidelines"
     },
     "canvas": {
       "placeholderTitle": "Your meal plan will appear here",
@@ -1942,14 +1944,14 @@
         "touchedHint": "{n} setting adjusted | {n} settings adjusted",
         "params": {
           "cooking_time": "Cooking time",
-          "difficulty": "Effort",
+          "difficulty": "Recipes",
           "goal": "Goal",
           "food_waste": "Food waste",
           "repeat_meals": "Repeat meals"
         },
         "options": {
-          "easy": "Simple",
-          "medium": "Any",
+          "easy": "5 ingredients or fewer",
+          "medium": "Any recipe",
           "weight_loss": "Lose weight",
           "balanced": "Balanced",
           "high_protein": "High protein",
@@ -2012,11 +2014,11 @@
       "pantryAdd": "Add an ingredient",
       "pantryAddPlaceholder": "zucchini, feta, leftover chicken…",
       "pantryEmpty": "No ingredients yet.",
-      "facetsLabel": "Heard from you",
+      "facetsLabel": "You mentioned",
       "facetsHint": "Read from what you said. Removing one takes it out of the next plan.",
       "dietLabel": "Diet you stated",
       "dietHint": "Stated in this conversation. It outranks your saved profile until the session ends.",
-      "claimsLabel": "Asked for",
+      "claimsLabel": "Nutrition you asked for",
       "removeItem": "Remove {value}",
       "family": {
         "cuisines": "Cuisine",
@@ -2029,15 +2031,15 @@
       "replanning": "Updating the plan…",
       "pendingChanges": "{count} unapplied change(s)",
       "favoritesDeclined": "Not using your favourites, as you asked.",
-      "shapeLabel": "Plan shape",
+      "shapeLabel": "Days and meals",
       "facetsAdd": "Add a taste…",
       "facetsEmpty": "Nothing heard yet.",
       "timeLabel": "Cooking time",
       "timeValue": "Under {minutes} minutes a meal",
-      "timeHint": "change it on the settings card"
+      "timeHint": "change it in Plan settings"
     },
     "tools": {
-      "label": "Actions",
+      "label": "More",
       "weekSummary": "Summarise the week",
       "planSummary": "Summarise the plan",
       "daySummary": "Summarise this day",
@@ -2095,7 +2097,8 @@
         "fruit": "Fruit",
         "herbs": "Herbs & spices",
         "yours": "Yours"
-      }
+      },
+      "keep": "Use these"
     },
     "planScore": {
       "title": "Your plan, scored",
@@ -2104,6 +2107,14 @@
       "howRead": "How we read it ({n})",
       "approximate": "{n} approximate",
       "unparsed": "{n} line(s) we couldn't read:"
+    },
+    "startKitchen": {
+      "label": "In your kitchen",
+      "pick": "Pick what you have",
+      "planMessage": "Plan my day from what's in my kitchen: {items}"
+    },
+    "checkPlan": {
+      "intro": "Here's my plan. How does it look?"
     }
   },
   "a11y": {

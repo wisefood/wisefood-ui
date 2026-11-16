@@ -41,10 +41,11 @@
           v-if="time"
           class="text-xs text-gray-400 font-light"
         >{{ time }}</span>
-        <!-- Slot menu: replace via chat, adapt in RecipeWrangler.
-             A real menu rather than a box that closed when the mouse left it,
-             which on a finger meant a menu that never closed. -->
+        <!-- What is left: adapt in RecipeWrangler. A real menu rather than a
+             box that closed when the mouse left it, which on a finger meant a
+             menu that never closed. -->
         <UDropdownMenu
+          v-if="menuItems.length"
           :items="menuItems"
           :content="{ align: 'end' }"
           :ui="{ content: 'min-w-40' }"
@@ -228,6 +229,25 @@
       </FoodchatInfoPopover>
     </div>
 
+    <!-- Swap, said in a word and on the card. It was the first item of the
+         three-dot menu, and the most common thing anyone does to a plan was
+         the one a member had to go looking for. Bottom left, clear of the
+         donut in the right corner, so it never crowds the heading row. -->
+    <div class="mt-auto pr-16">
+      <UButton
+        size="xs"
+        color="neutral"
+        variant="subtle"
+        icon="i-lucide-repeat"
+        class="pointer-coarse:min-h-11"
+        :aria-label="t('foodChatHome.mealCard.swapMeal', { meal: type })"
+        data-flows="foodchat-meal-replace"
+        @click="emit('replace')"
+      >
+        {{ t('foodChatHome.mealCard.swap') }}
+      </UButton>
+    </div>
+
     <!-- Nutrient donut — bottom right corner.
          A tap steps the centre through the macros, because the only other way
          to read carbs or fat was to hover a segment, and a finger cannot. -->
@@ -344,14 +364,9 @@ const { isCoarsePointer } = useViewport()
  */
 const linkTarget = computed(() => isCoarsePointer.value ? undefined : '_blank')
 
-// ── Slot menu (replace / adapt) ──
+// ── Slot menu (adapt; swap is its own button) ──
 const menuItems = computed<DropdownMenuItem[]>(() => {
-  const items: DropdownMenuItem[] = [{
-    'label': t('foodChatHome.mealCard.replace'),
-    'icon': 'i-lucide-replace',
-    'data-flows': 'foodchat-meal-replace',
-    'onSelect': () => emit('replace')
-  }]
+  const items: DropdownMenuItem[] = []
   if (props.recipe.recipe_id) {
     items.push({
       'label': t('foodChatHome.mealCard.adapt'),

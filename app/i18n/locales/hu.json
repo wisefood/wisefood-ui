@@ -1648,7 +1648,8 @@
       "savePlan": "Terv mentése",
       "unsavePlan": "Eltávolítás a mentettek közül",
       "dayN": "{n}. nap",
-      "savedPlan": "Elmentve"
+      "savedPlan": "Elmentve",
+      "version": "{n}. változat"
     },
     "tooltips": {
       "planWorksWell": "Ez a terv jól működik",
@@ -1673,15 +1674,14 @@
       "weeklyPlan": "Tervezd meg a hetem",
       "shape": "Három nap, vacsora salátával",
       "taste": "Valami vigasztaló és thai ma este",
-      "pantry": "Van itthon spenót és egy fél üveg olívabogyó",
-      "quick": "Vacsora 20 perc alatt",
       "diet": "Gluténmentes hét, sok proteinnel",
       "science": "Biztonságos a keto tinédzsereknek?",
-      "thenWhat": "Ha már van terv, kicserélhetsz egy fogást, hozzáadhatsz egy köretet, megkérdezheted az összesítést, kérhetsz bevásárlólistát, vagy elmentheted a könyvtáradba."
+      "thenWhat": "Ha már van terv, kicserélhetsz egy fogást, hozzáadhatsz egy köretet, megkérdezheted az összesítést, kérhetsz bevásárlólistát, vagy elmentheted a könyvtáradba.",
+      "kitchen": "Főzz abból, ami a konyhámban van",
+      "checkPlan": "Nézd át a saját tervemet"
     },
     "mealCard": {
       "menu": "Étkezés menü",
-      "replace": "Csere…",
       "adapt": "Recept átalakítása",
       "replacePrefill": "Cseréld le a {meal} valami könnyebbre",
       "replacePrefillDay": "Cseréld le a {day}. nap {meal} étkezését valami könnyebbre",
@@ -1711,12 +1711,14 @@
         "dessert": "Desszert",
         "drink": "Ital"
       },
-      "macroRing": "Tápanyag-megoszlás: {value} {label}. Koppints a következőhöz."
+      "macroRing": "Tápanyag-megoszlás: {value} {label}. Koppints a következőhöz.",
+      "swap": "Csere",
+      "swapMeal": "{meal} cseréje"
     },
     "constraints": {
-      "label": "Feltételek",
-      "hardTooltip": "Kötelező feltétel · Forrás: {source}",
-      "softTooltip": "Rugalmas feltétel · Forrás: {source}",
+      "label": "A te szabályaid",
+      "hardTooltip": "Mindig érvényes · {source}",
+      "softTooltip": "Lehetőség szerint · {source}",
       "unsupportedTooltip": "Ezt nem tudtuk érvényesíteni — azért látod, hogy tudd: nem lett alkalmazva.",
       "guidelinesMet": "Táplálkozási irányelvek · {total}-ből {met} teljesül",
       "guidelinesCount": "Táplálkozási irányelvek · {count}"
@@ -1725,7 +1727,7 @@
       "prefix": "Személyre szabva:",
       "memories": "{count} emlék",
       "favorites": "{count} kedvenc",
-      "feedback": "{count} visszajelzés"
+      "feedback": "{count} értékelés"
     },
     "adaptModal": {
       "title": "Recept átalakítása",
@@ -1763,10 +1765,10 @@
     "quality": {
       "title": "Terv minősége",
       "llmMatch": "LLM egyezés",
-      "variety": "Változatosság",
+      "variety": "Különböző hozzávalók",
       "varietyValue": "{count} hozzávaló",
-      "diversity": "Sokféleség",
-      "guidelines": "Irányelvek"
+      "diversity": "Tápanyag-változatosság",
+      "guidelines": "Táplálkozási irányelvek"
     },
     "canvas": {
       "placeholderTitle": "A menüterved itt fog megjelenni",
@@ -1804,14 +1806,14 @@
         "touchedHint": "{n} beállítás módosítva",
         "params": {
           "cooking_time": "Főzési idő",
-          "difficulty": "Ráfordítás",
+          "difficulty": "Receptek",
           "goal": "Cél",
           "food_waste": "Élelmiszer-pazarlás",
           "repeat_meals": "Ismétlődő ételek"
         },
         "options": {
-          "easy": "Egyszerű",
-          "medium": "Bármi",
+          "easy": "Legfeljebb 5 hozzávaló",
+          "medium": "Bármilyen recept",
           "weight_loss": "Fogyás",
           "balanced": "Kiegyensúlyozott",
           "high_protein": "Fehérjedús",
@@ -1874,11 +1876,11 @@
       "pantryAdd": "Hozzávaló hozzáadása",
       "pantryAddPlaceholder": "cukkini, feta, maradék csirke…",
       "pantryEmpty": "Még nincs hozzávaló.",
-      "facetsLabel": "Amit tőled hallottam",
+      "facetsLabel": "Amit említettél",
       "facetsHint": "A szavaidból olvastam ki. A törlés kiveszi a következő tervből.",
       "dietLabel": "Az általad megadott étrend",
       "dietHint": "Ebben a beszélgetésben adtad meg. A mentett profilod felett áll, míg a beszélgetés tart.",
-      "claimsLabel": "Amit kértél",
+      "claimsLabel": "Kért tápanyagcélok",
       "removeItem": "{value} eltávolítása",
       "family": {
         "cuisines": "Konyha",
@@ -1891,15 +1893,15 @@
       "replanning": "Terv frissítése…",
       "pendingChanges": "{count} nem alkalmazott módosítás",
       "favoritesDeclined": "Kérésedre nem használom a kedvenceidet.",
-      "shapeLabel": "Terv felépítése",
+      "shapeLabel": "Napok és étkezések",
       "facetsAdd": "Ízlés hozzáadása…",
       "facetsEmpty": "Még nem hallottam semmit.",
       "timeLabel": "Elkészítési idő",
       "timeValue": "Fogásonként {minutes} perc alatt",
-      "timeHint": "a beállítások kártyán módosítható"
+      "timeHint": "a Terv beállításainál módosítható"
     },
     "tools": {
-      "label": "Műveletek",
+      "label": "Továbbiak",
       "weekSummary": "Hét összegzése",
       "planSummary": "A terv összegzése",
       "daySummary": "Nap összegzése",
@@ -1957,7 +1959,8 @@
         "fruit": "Gyümölcs",
         "herbs": "Fűszerek",
         "yours": "A tieid"
-      }
+      },
+      "keep": "Ezeket használd"
     },
     "planScore": {
       "title": "A terved, pontozva",
@@ -1966,6 +1969,14 @@
       "howRead": "Így olvastuk ({n})",
       "approximate": "{n} közelítő",
       "unparsed": "{n} sort nem tudtunk értelmezni:"
+    },
+    "startKitchen": {
+      "label": "A konyhádban",
+      "pick": "Válaszd ki, mi van itthon",
+      "planMessage": "Tervezd meg a napom abból, ami a konyhámban van: {items}"
+    },
+    "checkPlan": {
+      "intro": "Ez a tervem. Mit szólsz hozzá?"
     }
   },
   "a11y": {

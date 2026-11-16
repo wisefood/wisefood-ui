@@ -1649,7 +1649,8 @@
       "savePlan": "Shrani načrt",
       "unsavePlan": "Odstrani iz shranjenih",
       "dayN": "{n}. dan",
-      "savedPlan": "Shranjeno"
+      "savedPlan": "Shranjeno",
+      "version": "različica {n}"
     },
     "tooltips": {
       "planWorksWell": "Ta načrt deluje dobro",
@@ -1674,15 +1675,14 @@
       "weeklyPlan": "Načrtuj moj teden",
       "shape": "Trije dnevi, večerja s solato",
       "taste": "Nekaj tolažilnega in tajskega za večer",
-      "pantry": "Doma imam špinačo in pol kozarca oliv",
-      "quick": "Večerja v manj kot 20 minutah",
       "diet": "Brezglutenski teden z veliko beljakovin",
       "science": "Je keto varen za najstnike?",
-      "thenWhat": "Ko načrt obstaja, lahko zamenjaš jed, dodaš hod, vprašaš za seštevke, dobiš nakupovalni seznam ali ga shraniš v knjižnico."
+      "thenWhat": "Ko načrt obstaja, lahko zamenjaš jed, dodaš hod, vprašaš za seštevke, dobiš nakupovalni seznam ali ga shraniš v knjižnico.",
+      "kitchen": "Kuhaj iz tega, kar imam v kuhinji",
+      "checkPlan": "Preveri moj načrt"
     },
     "mealCard": {
       "menu": "Možnosti obroka",
-      "replace": "Zamenjaj…",
       "adapt": "Prilagodi recept",
       "replacePrefill": "Zamenjaj {meal} za kaj lažjega",
       "replacePrefillDay": "Zamenjaj {meal} na {day}. dan za kaj lažjega",
@@ -1712,12 +1712,14 @@
         "dessert": "Sladica",
         "drink": "Napitek"
       },
-      "macroRing": "Razčlenitev hranil: {value} {label}. Tapni za naslednje."
+      "macroRing": "Razčlenitev hranil: {value} {label}. Tapni za naslednje.",
+      "swap": "Zamenjaj",
+      "swapMeal": "Zamenjaj: {meal}"
     },
     "constraints": {
-      "label": "Omejitve",
-      "hardTooltip": "Stroga omejitev · Vir: {source}",
-      "softTooltip": "Mehka omejitev · Vir: {source}",
+      "label": "Tvoja pravila",
+      "hardTooltip": "Vedno upoštevano · {source}",
+      "softTooltip": "Po možnosti · {source}",
       "unsupportedTooltip": "Tega nismo mogli uveljaviti — prikazano je, da veš, da ni bilo upoštevano.",
       "guidelinesMet": "Prehranske smernice · izpolnjenih {met} od {total}",
       "guidelinesCount": "Prehranske smernice · {count}"
@@ -1726,7 +1728,7 @@
       "prefix": "Prilagojeno na podlagi:",
       "memories": "{count} spominov",
       "favorites": "{count} priljubljenih",
-      "feedback": "{count} povratnih informacij"
+      "feedback": "{count} ocen"
     },
     "adaptModal": {
       "title": "Prilagodi ta recept",
@@ -1764,10 +1766,10 @@
     "quality": {
       "title": "Kakovost načrta",
       "llmMatch": "LLM ujemanje",
-      "variety": "Raznolikost",
+      "variety": "Različne sestavine",
       "varietyValue": "{count} sestavin",
-      "diversity": "Pestrost",
-      "guidelines": "Smernice"
+      "diversity": "Hranilna pestrost",
+      "guidelines": "Prehranske smernice"
     },
     "canvas": {
       "placeholderTitle": "Tvoj jedilnik se bo pojavil tukaj",
@@ -1805,14 +1807,14 @@
         "touchedHint": "Prilagojene nastavitve: {n}",
         "params": {
           "cooking_time": "Čas kuhanja",
-          "difficulty": "Zahtevnost",
+          "difficulty": "Recepti",
           "goal": "Cilj",
           "food_waste": "Zavržena hrana",
           "repeat_meals": "Ponavljanje jedi"
         },
         "options": {
-          "easy": "Preprosto",
-          "medium": "Karkoli",
+          "easy": "Največ 5 sestavin",
+          "medium": "Katerikoli recept",
           "weight_loss": "Hujšanje",
           "balanced": "Uravnoteženo",
           "high_protein": "Veliko beljakovin",
@@ -1875,11 +1877,11 @@
       "pantryAdd": "Dodaj sestavino",
       "pantryAddPlaceholder": "bučka, feta, ostanki piščanca…",
       "pantryEmpty": "Še ni sestavin.",
-      "facetsLabel": "Slišano od tebe",
+      "facetsLabel": "Kar si omenil",
       "facetsHint": "Razbrano iz tvojih besed. Odstranitev to izloči iz naslednjega načrta.",
       "dietLabel": "Dieta, ki si jo navedel",
       "dietHint": "Navedena v tem pogovoru. Do konca seje ima prednost pred shranjenim profilom.",
-      "claimsLabel": "Kar si želel",
+      "claimsLabel": "Želeni hranilni cilji",
       "removeItem": "Odstrani {value}",
       "family": {
         "cuisines": "Kuhinja",
@@ -1892,15 +1894,15 @@
       "replanning": "Posodabljam načrt…",
       "pendingChanges": "{count} neuporabljenih sprememb",
       "favoritesDeclined": "Priljubljenih ne uporabljam, kot si želel.",
-      "shapeLabel": "Oblika načrta",
+      "shapeLabel": "Dnevi in obroki",
       "facetsAdd": "Dodaj okus…",
       "facetsEmpty": "Zaenkrat nič slišanega.",
       "timeLabel": "Čas priprave",
       "timeValue": "Manj kot {minutes} minut na obrok",
-      "timeHint": "spremeni na kartici z nastavitvami"
+      "timeHint": "spremeni v nastavitvah načrta"
     },
     "tools": {
-      "label": "Dejanja",
+      "label": "Več",
       "weekSummary": "Povzemi teden",
       "planSummary": "Povzemi načrt",
       "daySummary": "Povzemi ta dan",
@@ -1958,7 +1960,8 @@
         "fruit": "Sadje",
         "herbs": "Zelišča in začimbe",
         "yours": "Tvoje"
-      }
+      },
+      "keep": "Uporabi te"
     },
     "planScore": {
       "title": "Tvoj načrt, ocenjen",
@@ -1967,6 +1970,14 @@
       "howRead": "Kako smo ga prebrali ({n})",
       "approximate": "{n} približnih",
       "unparsed": "{n} vrstic nismo mogli prebrati:"
+    },
+    "startKitchen": {
+      "label": "V tvoji kuhinji",
+      "pick": "Izberi, kar imaš",
+      "planMessage": "Načrtuj moj dan iz tega, kar imam v kuhinji: {items}"
+    },
+    "checkPlan": {
+      "intro": "To je moj načrt. Kako se ti zdi?"
     }
   },
   "a11y": {

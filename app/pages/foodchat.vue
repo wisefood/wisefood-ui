@@ -134,6 +134,57 @@
                 </UTooltip>
               </div>
             </div>
+
+            <!-- What's in the kitchen, before there is a plan.
+                 The same posture as "Cooking for" above it: a quiet row of chips,
+                 not a form. Staged here and written to the session just before
+                 the first message goes, so a member who adds three things and
+                 then leaves does not leave an empty session behind them. Both
+                 planners read the session's pantry, so the first plan uses it
+                 whether the request was typed or a card. -->
+            <div
+              class="mt-2 px-1 flex items-center gap-2 flex-wrap"
+              data-flows="foodchat-start-kitchen"
+            >
+              <span class="inline-flex items-center gap-1 text-[0.6875rem] text-gray-400 dark:text-zinc-500 shrink-0">
+                <UIcon
+                  name="i-lucide-refrigerator"
+                  class="w-3 h-3"
+                />
+                {{ t('foodChatHome.startKitchen.label') }}
+              </span>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span
+                  v-for="item in stagedPantry"
+                  :key="`staged-${item}`"
+                  class="inline-flex items-center gap-1 pl-2 pr-1 py-0.5 text-[0.6875rem] rounded-full border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300"
+                >
+                  {{ item }}
+                  <button
+                    type="button"
+                    class="w-3.5 h-3.5 pointer-coarse:w-8 pointer-coarse:h-8 pointer-coarse:-my-2 flex items-center justify-center rounded-full text-emerald-500/70 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-800/40"
+                    :aria-label="t('foodChatHome.planningState.removeItem', { value: item })"
+                    @click="unstagePantry(item)"
+                  >
+                    <UIcon
+                      name="i-lucide-x"
+                      class="w-2.5 h-2.5"
+                    />
+                  </button>
+                </span>
+                <button
+                  type="button"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 pointer-coarse:min-h-9 pointer-coarse:px-2.5 pointer-coarse:text-xs text-[0.6875rem] rounded-full border border-dashed border-gray-300 dark:border-zinc-600 text-gray-500 dark:text-zinc-400 hover:border-emerald-300 hover:text-emerald-600 transition-colors"
+                  @click="openStartPicker('stage')"
+                >
+                  <UIcon
+                    name="i-lucide-plus"
+                    class="w-2.5 h-2.5"
+                  />
+                  {{ t('foodChatHome.startKitchen.pick') }}
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Suggested questions -->
@@ -146,7 +197,8 @@
               :key="q.text"
               class="group p-4 rounded-2xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/30 text-left hover:border-brandp-200 dark:hover:border-brandp-800 hover:bg-brandp-50/50 dark:hover:bg-brandp-900/10 hover:-translate-y-0.5 hover:shadow-md hover:shadow-brandp-500/5 transition-all duration-200 suggestion-card"
               :style="{ animationDelay: `${idx * 0.08}s` }"
-              @click="handleQuickAsk(q.text)"
+              :data-flows="q.action ? `foodchat-suggestion-${q.action}` : undefined"
+              @click="handleSuggestion(q)"
             >
               <UIcon :name="q.icon" class="w-4 h-4 mb-2.5 text-brandp-500" />
               <p class="text-xs text-gray-600 dark:text-gray-400 font-light leading-relaxed group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors">{{ q.text }}</p>
@@ -983,7 +1035,7 @@
                   <USelect
                     v-if="canvasMode === 'daily' && mealPlans.length > 1"
                     :model-value="selectedDailyPlanIdx"
-                    :items="mealPlans.map((p, i) => ({ label: formatPlanDate(p.created_at) + (p.version ? ' · v' + p.version : ''), value: i }))"
+                    :items="mealPlans.map((p, i) => ({ label: planHistoryLabel(p), value: i }))"
                     size="xs"
                     color="neutral"
                     variant="outline"
@@ -993,7 +1045,7 @@
                   <USelect
                     v-else-if="canvasMode === 'weekly' && weeklyMealPlans.length > 1"
                     :model-value="selectedWeeklyPlanIdx"
-                    :items="weeklyMealPlans.map((p, i) => ({ label: formatPlanDate(p.created_at) + (p.version ? ' · v' + p.version : ''), value: i }))"
+                    :items="weeklyMealPlans.map((p, i) => ({ label: planHistoryLabel(p), value: i }))"
                     size="xs"
                     color="neutral"
                     variant="outline"
@@ -1067,6 +1119,8 @@
                         :day="toolsMenuDay"
                         :running="runningTool"
                         :busy="sending"
+                        :promote="['shopping_list']"
+                        :exclude="displayedPlanId ? ['save_plan'] : []"
                         show-label
                         @invoke="handleToolInvoke"
                       />
@@ -1540,19 +1594,37 @@
                                   ]"
                                 />
                               </button>
-                              <!-- Slot menu: replace via chat, adapt in the popup.
-                                   A real menu, so it opens on a tap and closes
-                                   on a tap outside rather than when a mouse
-                                   leaves a box a finger never entered. -->
+                              <!-- Swap on the cell itself, as on the daily
+                                   cards. An icon here, not a word: seven days
+                                   of three labelled buttons is a toolbar. -->
+                              <UTooltip :text="t('foodChatHome.mealCard.swapMeal', { meal: cell.label })">
+                                <button
+                                  type="button"
+                                  class="flex items-center justify-center w-5 h-5 pointer-coarse:w-11 pointer-coarse:h-11 pointer-coarse:-my-3 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors shrink-0"
+                                  :class="{ 'ml-auto': !getWeeklyRecipeId(cellMain(cell)) }"
+                                  :aria-label="t('foodChatHome.mealCard.swapMeal', { meal: cell.label })"
+                                  data-flows="foodchat-meal-replace"
+                                  @click="prefillWeeklySlotReplace(day.dayIndex, cell.mealType)"
+                                >
+                                  <UIcon
+                                    name="i-lucide-repeat"
+                                    class="w-3.5 h-3.5 text-brandp-400 dark:text-brandp-300"
+                                  />
+                                </button>
+                              </UTooltip>
+                              <!-- What is left: adapt in the popup. A real
+                                   menu, so it opens on a tap and closes on a
+                                   tap outside rather than when a mouse leaves
+                                   a box a finger never entered. -->
                               <UDropdownMenu
-                                :items="weeklyCellMenu(day.dayIndex, cell)"
+                                v-if="weeklyCellMenu(cell).length"
+                                :items="weeklyCellMenu(cell)"
                                 :content="{ align: 'end' }"
                                 :ui="{ content: 'min-w-40' }"
                               >
                                 <button
                                   type="button"
                                   class="flex items-center justify-center w-5 h-5 pointer-coarse:w-11 pointer-coarse:h-11 pointer-coarse:-my-3 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors shrink-0"
-                                  :class="{ 'ml-auto': !getWeeklyRecipeId(cellMain(cell)) }"
                                   :aria-label="t('foodChatHome.mealCard.menu')"
                                   data-flows="foodchat-meal-menu"
                                 >
@@ -1904,13 +1976,17 @@
       </div>
     </Transition>
 
-    <!-- Cook from what is in the kitchen: pick, then one action plans from it -->
+    <!-- Cook from what is in the kitchen: pick, then one action plans from it.
+         The start page opens the same picker over its staged list: from the
+         kitchen row it only keeps the picks ("Use these"), from the kitchen
+         card it plans from them. -->
     <FoodchatPantryPicker
-      v-if="pantryPickerOpen"
-      :items="pantryItems"
+      v-if="pantryPickerOpen || startPickerMode"
+      :items="startPickerMode ? stagedPantry : pantryItems"
       :busy="sending"
-      @close="pantryPickerOpen = false"
-      @cook="handleCookFromPantry"
+      :action="startPickerMode === 'stage' ? 'keep' : 'cook'"
+      @close="closePantryPicker"
+      @cook="startPickerMode ? handleStartPicked($event) : handleCookFromPantry($event)"
     />
 
     <!-- Adapt popup -->
@@ -2308,6 +2384,10 @@ function pickDraftRecipe(slotKey: string, suggestion: RecipeAutocompleteSuggesti
 async function submitDraft(message?: string) {
   if (!draftPickCount.value || sending.value) return
   if (!activeSession.value) await newSession(cookingForForNewSession())
+  // Compose is reached from the start page too ("compose it yourself"), and
+  // "fill out the rest" should fill it from what the kitchen row said. Only
+  // into a conversation that has not started: an old one keeps its pantry.
+  if (!messages.value.length) await flushStagedPantry()
   const picks = Object.entries(draftPicks)
     .filter((e): e is [string, { recipe_id: string, title: string }] =>
       !!e[1] && isDraftKeyForCurrentType(e[0]))
@@ -2559,13 +2639,29 @@ const activeDateLocale = computed(() => {
  * hand someone a button that answers "there is no plan yet". They are named in
  * the line underneath instead.
  */
-const suggestedQuestions = computed(() => [
+interface StartSuggestion {
+  text: string
+  icon: string
+  /**
+   * A card that opens something instead of sending its text: `kitchen` opens
+   * the picker and plans from what is ticked, `check` puts a plan template in
+   * the box to be filled in. Without one, the card's text is the message.
+   */
+  action?: 'kitchen' | 'check'
+}
+
+const suggestedQuestions = computed<StartSuggestion[]>(() => [
   { text: t('foodChatHome.suggestedQuestions.dailyPlan'), icon: 'i-lucide-calendar-days' },
   { text: t('foodChatHome.suggestedQuestions.weeklyPlan'), icon: 'i-lucide-calendar-range' },
   { text: t('foodChatHome.suggestedQuestions.shape'), icon: 'i-lucide-layout-grid' },
   { text: t('foodChatHome.suggestedQuestions.taste'), icon: 'i-lucide-sparkles' },
-  { text: t('foodChatHome.suggestedQuestions.pantry'), icon: 'i-lucide-refrigerator' },
-  { text: t('foodChatHome.suggestedQuestions.quick'), icon: 'i-lucide-timer' },
+  // "I've got spinach and olives" sent the example's own vegetables, which
+  // are nobody's kitchen. The card now asks what is actually in.
+  { text: t('foodChatHome.suggestedQuestions.kitchen'), icon: 'i-lucide-refrigerator', action: 'kitchen' },
+  // Scoring a plan the member already has works by pasting it, and nothing on
+  // screen said so. It takes the place of "Dinner under 20 minutes", which
+  // any other card or the box can say.
+  { text: t('foodChatHome.suggestedQuestions.checkPlan'), icon: 'i-lucide-clipboard-check', action: 'check' },
   { text: t('foodChatHome.suggestedQuestions.diet'), icon: 'i-lucide-leaf' },
   { text: t('foodChatHome.suggestedQuestions.science'), icon: 'i-lucide-graduation-cap' }
 ])
@@ -3200,16 +3296,11 @@ function openAdaptRecipe(recipeId?: string | null) {
 
 /** A weekly cell's menu, for `UDropdownMenu`: replace via chat, adapt in the popup. */
 function weeklyCellMenu(
-  dayIndex: number,
   cell: { key: string, mealType: string, plates: WeeklyMealEntry[] }
 ): DropdownMenuItem[] {
+  // Swap is its own button on the cell now; this menu is what is left.
   const recipeId = getWeeklyRecipeId(cellMain(cell))
-  const items: DropdownMenuItem[] = [{
-    'label': t('foodChatHome.mealCard.replace'),
-    'icon': 'i-lucide-replace',
-    'data-flows': 'foodchat-meal-replace',
-    'onSelect': () => prefillWeeklySlotReplace(dayIndex, cell.mealType)
-  }]
+  const items: DropdownMenuItem[] = []
   if (recipeId) {
     items.push({
       'label': t('foodChatHome.mealCard.adapt'),
@@ -3229,11 +3320,16 @@ async function ensureSessionAndSend(content: string) {
     await submitDraft(content)
     return
   }
+  // Only a message sent FROM the start page carries its kitchen row. A member
+  // who staged a few things and then opened an old conversation must not have
+  // that conversation's pantry replaced by them.
+  const fromStart = !hasSentFirstMessage.value
   if (!hasSentFirstMessage.value) {
     hasSentFirstMessage.value = true
     await nextTick()
   }
   if (!activeSession.value) await newSession(cookingForForNewSession())
+  if (fromStart) await flushStagedPantry()
   showEphemeralGenerating.value = true
   try {
     const response = await sendMessage(content)
@@ -3272,6 +3368,41 @@ async function handleSend() {
 
 async function handleQuickAsk(question: string) {
   await ensureSessionAndSend(question)
+}
+
+async function handleSuggestion(suggestion: StartSuggestion) {
+  if (suggestion.action === 'kitchen') {
+    openStartPicker('plan')
+    return
+  }
+  if (suggestion.action === 'check') {
+    prefillCheckPlan()
+    return
+  }
+  await handleQuickAsk(suggestion.text)
+}
+
+/**
+ * Put a plan template in the box, the cursor after "Breakfast: ".
+ *
+ * The scorer is reached by the message containing the member's own meal list,
+ * so the template IS the instruction: one line per meal, theirs to fill. It is
+ * not sent — a template sent empty would be scored as an empty plan.
+ */
+function prefillCheckPlan() {
+  const intro = t('foodChatHome.checkPlan.intro')
+  const lines = ['breakfast', 'lunch', 'dinner'].map(slot => `${t(`foodChatHome.meals.${slot}`)}: `)
+  inputText.value = [intro, ...lines].join('\n')
+  nextTick(() => {
+    const el = sessionInputRef.value ?? idleInputRef.value
+    if (!el) return
+    // The box grows on input; a value set from here never fires one.
+    el.style.height = 'auto'
+    el.style.height = Math.min(el.scrollHeight, 112) + 'px'
+    el.focus()
+    const caret = intro.length + 1 + lines[0]!.length
+    el.setSelectionRange(caret, caret)
+  })
 }
 
 async function handleStartOver() {
@@ -3447,6 +3578,63 @@ const pantryStripOpen = ref(false)
 const pantryPickerOpen = ref(false)
 const pantryDraft = ref('')
 
+// ── The start page's kitchen row ──────────────────────────────────────────
+// Kept here, not in the session, until the first message: the pantry lives on
+// a session, and creating one per visit to the start page would fill the
+// "Previous sessions" list with conversations nobody had.
+const stagedPantry = ref<string[]>([])
+/** Which start-page control opened the picker: the row keeps, the card plans. */
+const startPickerMode = ref<'stage' | 'plan' | null>(null)
+
+function unstagePantry(item: string) {
+  stagedPantry.value = stagedPantry.value.filter(staged => staged !== item)
+}
+
+function openStartPicker(mode: 'stage' | 'plan') {
+  startPickerMode.value = mode
+}
+
+function closePantryPicker() {
+  pantryPickerOpen.value = false
+  startPickerMode.value = null
+}
+
+/**
+ * The start page's picks. From the row they are only kept; from the kitchen
+ * card they are kept and planned from at once.
+ *
+ * The message names the items as well as the pantry holding them, so the plan
+ * still uses them if writing the pantry fails — the extractor hears the list.
+ */
+async function handleStartPicked(items: string[]) {
+  const mode = startPickerMode.value
+  startPickerMode.value = null
+  stagedPantry.value = [...items]
+  if (mode === 'plan' && items.length) {
+    await ensureSessionAndSend(
+      t('foodChatHome.startKitchen.planMessage', { items: items.join(', ') })
+    )
+  }
+}
+
+/**
+ * Write the staged kitchen to the session about to plan.
+ *
+ * REPLACES, like the picker does: the row is the whole kitchen for this
+ * conversation. A failed write keeps the chips (the store surfaces the error)
+ * and does not hold up the message.
+ */
+async function flushStagedPantry() {
+  const items = stagedPantry.value
+  if (!items.length || !activeSession.value) return
+  stagedPantry.value = []
+  try {
+    await setPantry(items)
+  } catch {
+    stagedPantry.value = items
+  }
+}
+
 const pantryItems = computed(() => planningState.value?.pantry ?? [])
 
 /**
@@ -3558,6 +3746,14 @@ function formatPlanDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString(activeDateLocale.value, {
     month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
   })
+}
+
+/** "16 Nov, 09:12 · version 3" — "v3" is a developer's word for it. */
+function planHistoryLabel(plan: { created_at: string, version?: number | null }): string {
+  const when = formatPlanDate(plan.created_at)
+  return plan.version
+    ? `${when} · ${t('foodChatHome.planHeader.version', { n: plan.version })}`
+    : when
 }
 
 // ── Standing planning state: pantry, inferred facets ──────────────────────
