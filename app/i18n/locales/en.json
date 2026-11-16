@@ -2209,6 +2209,107 @@
     "unmet": {
       "seeWhy": "See why",
       "more": "{count} more in Why this plan"
+    },
+    "ledger": {
+      "name": {
+        "allergy": "No {allergen}",
+        "dislike": "Avoiding {item}",
+        "diet": "{diet}",
+        "goal": "{goal}",
+        "downvoted": "Leaving out {count} recipes you rated down",
+        "profileMissing": "{who}'s profile could not be loaded",
+        "pantry": "Using {used} of {total} ingredients you have",
+        "sharedIngredients": "{meals} meals reuse an ingredient from an earlier day"
+      },
+      "detail": {
+        "allergens": {
+          "found": "Found {found}",
+          "clear": "No {allergens} in any of the {dishes} dishes"
+        },
+        "diet": {
+          "offenders": "{count} of the {checked} labelled dishes are not {diets}",
+          "unlabelled": "Filtered for {diets}, but none of the {dishes} dishes carry dietary labels to check against",
+          "partial": "{checked} of {dishes} dishes are labelled {diets}; the rest carry no dietary labels",
+          "all": "All {dishes} dishes are labelled {diets}",
+          "notAFilter": "A description of how you eat, not a recipe filter: no dishes were excluded for it",
+          "noFilter": "The recipe catalogue has no filter for this, so it did not narrow the search",
+          "noFilterBackstop": "The recipe catalogue has no filter for this, but {backstop} are screened out of every dish by ingredient name"
+        },
+        "claims": {
+          "unknown": "Asked for {tags}; no dish details were available to check",
+          "none": "None of the {observed} dishes are tagged {tags}",
+          "some": "{matching} of {observed} dishes are tagged {tags}",
+          "all": "All {observed} dishes are tagged {tags}"
+        },
+        "kcal": {
+          "unknown": "Nothing to compare against {against}: no dish has nutrition data",
+          "ok": "Averaging {average} kcal a day against {against}",
+          "miss": "{misses} of {days} days miss {against}: day {day} is {delta} kcal {direction}."
+        },
+        "time": {
+          "unknown": "Asked for {limit} minutes or less; no dish records a cooking time",
+          "over": "{count} of {observed} dishes take longer than {limit} minutes; the longest takes {longest}",
+          "ok": "All {observed} timed dishes take {limit} minutes or less"
+        },
+        "nutri": {
+          "unknown": "Asked for Nutri-Score {minimum} or better; no dish has a Nutri-Score",
+          "below": "{count} of {observed} scored dishes are below {minimum}",
+          "ok": "All {observed} scored dishes are {minimum} or better"
+        },
+        "pantry": {
+          "none": "None of {items} is used by this plan",
+          "some": "Uses {used} across {dishes} dishes; {unused} went unused",
+          "all": "Uses all of {used} across {dishes} dishes"
+        },
+        "picks": {
+          "missing": "Missing a dish you asked for: {slots}",
+          "all": "All {count} dishes you asked for are on the plan"
+        },
+        "tastes": {
+          "unverified": "Searched for {values}; the recipe search filtered on these, but the dishes carry no labels to check them against"
+        },
+        "profileMissing": "This plan does not account for {who}'s allergies or diet. Select them again to retry.",
+        "goal": {
+          "preference": "Applied as a preference, not a target: another diner's goal sets this plan's numbers",
+          "target": "Sets this plan's numbers"
+        },
+        "sharedIngredients": "Shares {items}"
+      },
+      "against": {
+        "own": "your {target} kcal target",
+        "reference": "a {target} kcal reference"
+      },
+      "direction": {
+        "under": "under",
+        "over": "over"
+      },
+      "andMore": "and {count} more",
+      "heaviest": "The heaviest dish is “{dish}” at {kcal} kcal: ask for a lighter one there.",
+      "floor": "Some dishes have no nutrition data, so this is a minimum.",
+      "terms": {
+        "omnivore": "omnivore",
+        "vegetarian": "vegetarian",
+        "vegan": "vegan",
+        "pescatarian": "pescatarian",
+        "flexitarian": "flexitarian",
+        "mediterranean": "Mediterranean",
+        "gluten_free": "gluten-free",
+        "lactose_free": "lactose-free",
+        "high_protein": "high protein",
+        "low_fat": "low fat",
+        "high_fibre": "high fibre",
+        "low_calorie": "low calorie",
+        "healthy_and_nutritious": "healthy and nutritious",
+        "30_minutes_or_less": "30 minutes or less",
+        "5_ingredients_or_less": "5 ingredients or fewer",
+        "weight_loss": "weight loss",
+        "balanced": "balanced",
+        "energy": "energy",
+        "muscle_gain": "muscle gain",
+        "heart_health": "heart health",
+        "low_sugar": "low sugar",
+        "low_salt": "low salt"
+      }
     }
   },
   "a11y": {

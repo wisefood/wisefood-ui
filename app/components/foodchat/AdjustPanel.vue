@@ -298,7 +298,7 @@
                 v-for="tag in statedTags"
                 :key="tag"
                 class="inline-flex items-center px-3 min-h-8 text-sm rounded-full border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-zinc-200"
-              >{{ capitalise(tag) }}</span>
+              >{{ ledger.tag(tag) }}</span>
             </div>
             <p class="fc-adj-hint">
               {{ t('foodChatHome.adjust.statedHint') }}
@@ -459,6 +459,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const { paramLabel, optionLabel, param, applied } = usePlanParamLabels()
+const ledger = useLedgerText()
 const [DefineBody, ReuseBody] = createReusableTemplate()
 const [DefineFooter, ReuseFooter] = createReusableTemplate()
 const simpleId = useId()

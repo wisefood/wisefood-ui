@@ -32,7 +32,7 @@
         :class="serious ? 'text-red-900 dark:text-red-100' : 'text-amber-950 dark:text-amber-100'"
       >
         <strong class="font-semibold">{{ name(row) }}<template v-if="row.members?.length"> · {{ row.members.join(', ') }}</template>:</strong>
-        {{ ' ' }}{{ row.detail || t(`foodChatHome.why.status.${row.status}`) }}
+        {{ ' ' }}{{ ledgerText.detail(row) || t(`foodChatHome.why.status.${row.status}`) }}
       </p>
       <p
         v-if="rows.length > shown.length"
@@ -60,6 +60,7 @@ import { capitalise, checkKey, isUnmet, ledgerGroup } from '~/utils/planLedger'
 const props = defineProps<{ ledger?: ConstraintApplied[] | null }>()
 const emit = defineEmits<{ why: [] }>()
 const { t } = useI18n()
+const ledgerText = useLedgerText()
 
 /** Rules and checks not fully met; guidelines stay in the fold. */
 const rows = computed(() =>
@@ -77,6 +78,8 @@ const serious = computed(() =>
 )
 
 function name(row: ConstraintApplied): string {
+  const named = ledgerText.name(row)
+  if (named) return named
   if (ledgerGroup(row) === 'check') {
     const key = checkKey(row.constraint)
     if (key) return t(`foodChatHome.why.checks.${key}`)

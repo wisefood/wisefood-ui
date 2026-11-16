@@ -2072,6 +2072,107 @@
     "unmet": {
       "seeWhy": "Zakaj?",
       "more": "Še {count} v razdelku Zakaj ta načrt"
+    },
+    "ledger": {
+      "name": {
+        "allergy": "Brez: {allergen}",
+        "dislike": "Izogibanje: {item}",
+        "diet": "{diet}",
+        "goal": "{goal}",
+        "downvoted": "Izpuščeni slabo ocenjeni recepti: {count}",
+        "profileMissing": "Profila ni bilo mogoče naložiti: {who}",
+        "pantry": "Porabljene sestavine, ki jih imaš: {used} od {total}",
+        "sharedIngredients": "Obroki s sestavino iz prejšnjega dne: {meals}"
+      },
+      "detail": {
+        "allergens": {
+          "found": "Najdeno: {found}",
+          "clear": "Nobena jed (od {dishes}) ne vsebuje: {allergens}"
+        },
+        "diet": {
+          "offenders": "Označene jedi, ki niso {diets}: {count} od {checked}",
+          "unlabelled": "Filtrirano za: {diets}, vendar nobena jed (od {dishes}) nima prehranskih oznak za preverjanje",
+          "partial": "Jedi z oznako {diets}: {checked} od {dishes}; ostale nimajo prehranskih oznak",
+          "all": "Vse jedi ({dishes}) imajo oznako: {diets}",
+          "notAFilter": "Opis tega, kako ješ, ne filter receptov: nobena jed ni bila izločena",
+          "noFilter": "Zbirka receptov nima filtra za to, zato iskanja ni zožila",
+          "noFilterBackstop": "Zbirka receptov nima filtra za to, vendar po imenih sestavin iz vseh jedi izločimo: {backstop}"
+        },
+        "claims": {
+          "unknown": "Želeno: {tags}; podatkov o jedeh za preverjanje ni bilo",
+          "none": "Nobena od jedi ({observed}) nima oznake: {tags}",
+          "some": "Jedi z oznako {tags}: {matching} od {observed}",
+          "all": "Vse jedi ({observed}) imajo oznako: {tags}"
+        },
+        "kcal": {
+          "unknown": "Primerjava ni mogoča (cilj {target} kcal): nobena jed nima hranilnih podatkov",
+          "ok": "Povprečno {average} kcal na dan (cilj {target} kcal)",
+          "miss": "Dnevi, ki odstopajo od {against}: {misses} od {days}. {day}. dan je {delta} kcal {direction}."
+        },
+        "time": {
+          "unknown": "Želeno: največ {limit} minut; nobena jed nima zapisanega časa priprave",
+          "over": "Jedi, ki trajajo dlje kot {limit} minut: {count} od {observed}; najdaljša traja {longest} minut",
+          "ok": "Vse jedi z zapisanim časom ({observed}) so pripravljene v največ {limit} minutah"
+        },
+        "nutri": {
+          "unknown": "Želeno: Nutri-Score {minimum} ali boljši; nobena jed nima Nutri-Score",
+          "below": "Ocenjene jedi pod {minimum}: {count} od {observed}",
+          "ok": "Vse ocenjene jedi ({observed}) imajo {minimum} ali bolje"
+        },
+        "pantry": {
+          "none": "Načrt ne uporabi ničesar od: {items}",
+          "some": "Porabljeno: {used} (jedi: {dishes}); neporabljeno: {unused}",
+          "all": "Porabljeno vse: {used} (jedi: {dishes})"
+        },
+        "picks": {
+          "missing": "Manjka, kar si želel: {slots}",
+          "all": "Vse jedi, ki si jih želel ({count}), so v načrtu"
+        },
+        "tastes": {
+          "unverified": "Iskano: {values}; iskalnik receptov je filtriral po tem, vendar jedi nimajo oznak za preverjanje"
+        },
+        "profileMissing": "Ta načrt ne upošteva alergij in diete osebe {who}. Izberi jo znova za ponovni poskus.",
+        "goal": {
+          "preference": "Upoštevano po možnosti, ne kot cilj: številke načrta določa cilj druge osebe",
+          "target": "Določa številke načrta"
+        },
+        "sharedIngredients": "Skupne sestavine: {items}"
+      },
+      "against": {
+        "own": "tvojega cilja {target} kcal",
+        "reference": "reference {target} kcal"
+      },
+      "direction": {
+        "under": "premalo",
+        "over": "preveč"
+      },
+      "andMore": "in še {count}",
+      "heaviest": "Najbolj kalorična jed je »{dish}« ({kcal} kcal); prosi za lažjo.",
+      "floor": "Nekatere jedi nimajo hranilnih podatkov, zato je to spodnja meja.",
+      "terms": {
+        "omnivore": "vsejed",
+        "vegetarian": "vegetarijansko",
+        "vegan": "vegansko",
+        "pescatarian": "peskatarijansko",
+        "flexitarian": "fleksitarijansko",
+        "mediterranean": "sredozemsko",
+        "gluten_free": "brez glutena",
+        "lactose_free": "brez laktoze",
+        "high_protein": "veliko beljakovin",
+        "low_fat": "malo maščob",
+        "high_fibre": "veliko vlaknin",
+        "low_calorie": "malo kalorij",
+        "healthy_and_nutritious": "zdravo in hranljivo",
+        "30_minutes_or_less": "30 minut ali manj",
+        "5_ingredients_or_less": "največ 5 sestavin",
+        "weight_loss": "hujšanje",
+        "balanced": "uravnoteženo",
+        "energy": "energija",
+        "muscle_gain": "pridobivanje mišic",
+        "heart_health": "zdravje srca",
+        "low_sugar": "malo sladkorja",
+        "low_salt": "malo soli"
+      }
     }
   },
   "a11y": {

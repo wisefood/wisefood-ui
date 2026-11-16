@@ -71,7 +71,7 @@
                 class="w-3 h-3"
               />
               <span
-                v-if="row.detail"
+                v-if="row.detail || row.code"
                 class="sr-only"
               >{{ statusWord(row) }}</span>
             </span>
@@ -115,7 +115,7 @@
             class="flex items-start gap-2 text-sm"
           >
             <span
-              class="shrink-0 w-16 text-xs font-semibold pt-0.5"
+              class="shrink-0 min-w-16 whitespace-nowrap text-xs font-semibold pt-0.5"
               :class="g.state === 'met' ? 'text-emerald-700 dark:text-emerald-400' : g.state === 'unmet' ? 'text-amber-700 dark:text-amber-400' : 'text-gray-500 dark:text-zinc-400'"
             >{{ t(`foodChatHome.why.guideline.${g.state}`) }}</span>
             <span class="flex-1 min-w-0 text-gray-700 dark:text-zinc-200">
@@ -247,6 +247,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ 'update:open': [open: boolean] }>()
 
 const { t } = useI18n()
+const ledger = useLedgerText()
 const allGuidelines = ref(false)
 
 // ── Rules and checks, the not-met ones first ─────────────────────────────
@@ -260,6 +261,8 @@ const ruleRows = computed(() =>
 )
 
 function rowName(row: ConstraintApplied): string {
+  const named = ledger.name(row)
+  if (named) return named
   if (ledgerGroup(row) === 'check') {
     const key = checkKey(row.constraint)
     if (key) return t(`foodChatHome.why.checks.${key}`)
@@ -282,7 +285,8 @@ function statusWord(row: ConstraintApplied): string {
 function rowResult(row: ConstraintApplied): string {
   // An unsupported rule's own detail says what could not be enforced; the
   // generic sentence is only for rows with nothing of their own to say.
-  if (row.detail) return row.detail
+  const said = ledger.detail(row)
+  if (said) return said
   if (row.status === 'unsupported') return t('foodChatHome.constraints.unsupportedTooltip')
   return statusWord(row)
 }
@@ -314,7 +318,7 @@ const guidelines = computed<GuidelineLine[]>(() => {
   }
   return rowsOf(props.rows, 'guideline').map(row => ({
     text: capitalise(row.constraint),
-    extra: row.detail || undefined,
+    extra: ledger.detail(row) || undefined,
     state: row.status === 'satisfied' ? 'met' : isUnmet(row) ? 'unmet' : 'unchecked'
   }))
 })

@@ -81,7 +81,7 @@
           name="i-lucide-shield-check"
           class="w-3 h-3 shrink-0"
         />
-        {{ capitalise(rule.constraint) }}
+        {{ ruleName(rule) }}
         <span
           v-if="rule.members?.length"
           class="opacity-70"
@@ -94,7 +94,7 @@
       :key="`stated-${tag}`"
       :class="[chip, chosen]"
     >
-      {{ capitalise(tag) }}
+      {{ ledger.tag(tag) }}
     </span>
 
     <span
@@ -174,6 +174,12 @@ const chosen = 'border-brandp-100 dark:border-brandp-800/70 bg-brandp-50 dark:bg
 const kitchen = 'border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300'
 
 const { t, locale } = useI18n()
+const ledger = useLedgerText()
+
+/** "No peanut", in this language when FoodChat sent a code for it. */
+function ruleName(rule: ConstraintApplied): string {
+  return ledger.name(rule) ?? capitalise(rule.constraint)
+}
 const { appliedPhrases } = usePlanParamLabels()
 
 function listOf(items: string[]): string {
@@ -201,8 +207,10 @@ const pantryText = computed(() => {
  * chat and "High protein" picked as the goal are one fact, not two chips.
  */
 const settingPhrases = computed(() => {
-  const named = new Set([...props.statedTags, ...props.facets.map(f => f.value)]
-    .map(v => capitalise(v).toLowerCase()))
+  const named = new Set([
+    ...props.statedTags.map(v => ledger.tag(v).toLowerCase()),
+    ...props.facets.map(f => capitalise(f.value).toLowerCase())
+  ])
   return appliedPhrases(props.card).filter(p => !named.has(p.text.toLowerCase()))
 })
 
@@ -216,8 +224,8 @@ const summary = computed(() => {
   const parts: string[] = []
   if (dinerText.value) parts.push(dinerText.value)
   if (props.pantry.length) parts.push(props.pantry.slice(0, 4).join(', '))
-  for (const rule of props.rules) parts.push(capitalise(rule.constraint).toLowerCase())
-  for (const tag of props.statedTags) parts.push(capitalise(tag).toLowerCase())
+  for (const rule of props.rules) parts.push(ruleName(rule).toLowerCase())
+  for (const tag of props.statedTags) parts.push(ledger.tag(tag).toLowerCase())
   for (const chip of props.facets) parts.push(capitalise(chip.value).toLowerCase())
   for (const phrase of settingPhrases.value) parts.push(phrase.text.toLowerCase())
   return parts.join(' · ')
@@ -230,6 +238,6 @@ function ruleHint(rule: ConstraintApplied): string {
     : t('foodChatHome.why.preferred')
   const key = sourceKey(rule.source)
   const from = key ? t(`foodChatHome.why.sources.${key}`) : (rule.source || '')
-  return [strength, from, rule.detail].filter(Boolean).join(' · ')
+  return [strength, from, ledger.detail(rule)].filter(Boolean).join(' · ')
 }
 </script>

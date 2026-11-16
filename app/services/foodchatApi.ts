@@ -294,6 +294,15 @@ export interface ConstraintApplied {
    * goal or allergy can be seen for what it is.
    */
   members?: string[]
+  /**
+   * The row's sentence (`detail`) as a key and its numbers, so it can be said
+   * in the reader's language. `detail` is English and stays the fallback.
+   */
+  code?: string
+  params?: Record<string, unknown>
+  /** The row's name (`constraint`) the same way: "No {allergen}". */
+  name_code?: string
+  name_params?: Record<string, unknown>
 }
 
 /** Counts of personalization signals used to build a plan */

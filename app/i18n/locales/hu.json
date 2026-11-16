@@ -2071,6 +2071,107 @@
     "unmet": {
       "seeWhy": "Miért?",
       "more": "További {count} a „Miért ez a terv” részben"
+    },
+    "ledger": {
+      "name": {
+        "allergy": "{allergen} nélkül",
+        "dislike": "{item} kerülése",
+        "diet": "{diet}",
+        "goal": "{goal}",
+        "downvoted": "Kihagyott, lepontozott receptek: {count}",
+        "profileMissing": "{who} profilja nem tölthető be",
+        "pantry": "{total} meglévő hozzávalóból {used} felhasználva",
+        "sharedIngredients": "Korábbi nap hozzávalóját újrahasznosító étkezések: {meals}"
+      },
+      "detail": {
+        "allergens": {
+          "found": "Találat: {found}",
+          "clear": "Egyik ételben ({dishes}) sincs: {allergens}"
+        },
+        "diet": {
+          "offenders": "{checked} címkézett ételből {count} nem ilyen: {diets}",
+          "unlabelled": "Szűrés erre: {diets}, de az ételeken ({dishes}) nincs étrendi címke az ellenőrzéshez",
+          "partial": "{dishes} ételből {checked} címkéje: {diets}; a többin nincs étrendi címke",
+          "all": "Mind a(z) {dishes} étel címkéje: {diets}",
+          "notAFilter": "Ez azt írja le, hogyan étkezel, nem receptszűrő: egy ételt sem zárt ki",
+          "noFilter": "A receptgyűjteményben nincs erre szűrő, így nem szűkítette a keresést",
+          "noFilterBackstop": "A receptgyűjteményben nincs erre szűrő, de a hozzávalók neve alapján minden ételből kiszűrjük ezt: {backstop}"
+        },
+        "claims": {
+          "unknown": "Kérés: {tags}; nem volt elérhető ételadat az ellenőrzéshez",
+          "none": "A(z) {observed} étel egyikén sincs ez a címke: {tags}",
+          "some": "{observed} ételből {matching} címkéje: {tags}",
+          "all": "Mind a(z) {observed} étel címkéje: {tags}"
+        },
+        "kcal": {
+          "unknown": "Nincs mihez mérni ({against}): egyik ételhez sincs tápértékadat",
+          "ok": "Napi átlag {average} kcal; viszonyítás: {against}",
+          "miss": "{days} napból {misses} eltér ettől: {against}. A(z) {day}. napon {delta} kcal-lal {direction}."
+        },
+        "time": {
+          "unknown": "Kérés: legfeljebb {limit} perc; egyik ételnél sincs megadva elkészítési idő",
+          "over": "{observed} ételből {count} tovább tart {limit} percnél; a leghosszabb {longest} perc",
+          "ok": "Mind a(z) {observed} időzített étel legfeljebb {limit} perc"
+        },
+        "nutri": {
+          "unknown": "Kérés: legalább {minimum} Nutri-Score; egyik ételnek sincs Nutri-Score-ja",
+          "below": "{observed} pontozott ételből {count} gyengébb ennél: {minimum}",
+          "ok": "Mind a(z) {observed} pontozott étel legalább {minimum}"
+        },
+        "pantry": {
+          "none": "A terv nem használja ezeket: {items}",
+          "some": "Felhasználva: {used} (ételek: {dishes}); kimaradt: {unused}",
+          "all": "Mind felhasználva: {used} (ételek: {dishes})"
+        },
+        "picks": {
+          "missing": "Hiányzik, amit kértél: {slots}",
+          "all": "Mind a(z) {count} kért étel szerepel a tervben"
+        },
+        "tastes": {
+          "unverified": "Keresés erre: {values}; a receptkereső ezek szerint szűrt, de az ételeken nincs címke az ellenőrzéshez"
+        },
+        "profileMissing": "Ez a terv nem veszi figyelembe {who} allergiáit és étrendjét. Válaszd ki újra, és újrapróbáljuk.",
+        "goal": {
+          "preference": "Lehetőség szerint figyelembe véve, nem célként: egy másik étkező célja adja a terv számait",
+          "target": "Ez adja a terv számait"
+        },
+        "sharedIngredients": "Közös hozzávalók: {items}"
+      },
+      "against": {
+        "own": "a(z) {target} kcal-os célod",
+        "reference": "a(z) {target} kcal-os irányérték"
+      },
+      "direction": {
+        "under": "kevesebb",
+        "over": "több"
+      },
+      "andMore": "és még {count}",
+      "heaviest": "A legkalóriadúsabb étel: „{dish}” ({kcal} kcal); kérj helyette könnyebbet.",
+      "floor": "Néhány ételhez nincs tápértékadat, ez tehát alsó becslés.",
+      "terms": {
+        "omnivore": "mindenevő",
+        "vegetarian": "vegetáriánus",
+        "vegan": "vegán",
+        "pescatarian": "pescetáriánus",
+        "flexitarian": "flexitáriánus",
+        "mediterranean": "mediterrán",
+        "gluten_free": "gluténmentes",
+        "lactose_free": "laktózmentes",
+        "high_protein": "fehérjedús",
+        "low_fat": "zsírszegény",
+        "high_fibre": "rostban gazdag",
+        "low_calorie": "alacsony kalóriatartalmú",
+        "healthy_and_nutritious": "egészséges és tápláló",
+        "30_minutes_or_less": "legfeljebb 30 perc",
+        "5_ingredients_or_less": "legfeljebb 5 hozzávaló",
+        "weight_loss": "fogyás",
+        "balanced": "kiegyensúlyozott",
+        "energy": "energia",
+        "muscle_gain": "izomépítés",
+        "heart_health": "szív egészsége",
+        "low_sugar": "cukorszegény",
+        "low_salt": "sószegény"
+      }
     }
   },
   "a11y": {
