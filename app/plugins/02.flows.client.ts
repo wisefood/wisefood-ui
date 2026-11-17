@@ -10,7 +10,7 @@ import * as surveyComponents from '@flows/js-components/survey-components'
 import '@flows/js-components/index.css'
 
 import { getFlowsApiUrl, getFlowsEnvironment, getFlowsOrgId } from '~/utils/runtimeConfig'
-import { markWalkthroughsReady } from '~/composables/useWalkthroughs'
+import { leaveRetiredTours } from '~/utils/retiredTours'
 import { isClickmapBackdrop } from '~/utils/clickmapBackdrop'
 
 // Guard so init()/setupJsComponents() never run twice (HMR, re-invocation).
@@ -47,54 +47,14 @@ function tourLanguage(locale: unknown): Locale {
 // That plugin runs after this one, so its provide is untyped here.
 type ProvidedI18n = { global: { locale: { value: string } } }
 
-// Computes Flows user properties describing the selected member's nutrition
-// profile, used to target the preferences-setup tour. Returns an empty object
-// on any failure so Flows still initializes.
-async function resolveNutritionProfileProperties(): Promise<Record<string, boolean>> {
-  try {
-    const householdStore = useHouseholdStore()
-    await householdStore.initialize()
-
-    const member = householdStore.currentMember
-    if (!member?.id) return {}
-
-    // A member with no profile row yet returns 404 from GET .../profile, which
-    // the API service throws. That 404 IS the "nothing set up" signal, so treat
-    // it as an empty profile rather than letting it fall to the catch below
-    // (which would set no properties and the start-block targeting nothing).
-    let profile
-    try {
-      profile = await householdStore.getMemberProfile(member.id)
-    } catch (err) {
-      const status = (err as { status?: number })?.status
-      if (status === 404) {
-        return { hasDietGroup: false, nutritionProfileComplete: false }
-      }
-      throw err
-    }
-    if (!profile) {
-      // No profile row yet => nothing set up.
-      return { hasDietGroup: false, nutritionProfileComplete: false }
-    }
-
-    const hasDietGroup = (profile.dietary_groups?.length ?? 0) > 0
-    const prefs = profile.nutritional_preferences
-    const hasPreferences =
-      (profile.allergies?.length ?? 0) > 0 ||
-      (prefs?.food_likes?.length ?? 0) > 0 ||
-      (prefs?.food_dislikes?.length ?? 0) > 0
-
-    return {
-      hasDietGroup,
-      // "Complete enough" to not re-prompt: the user has added at least one
-      // allergy, like, or dislike. The tour targets hasDietGroup && !complete.
-      nutritionProfileComplete: hasPreferences
-    }
-  } catch (err) {
-    console.warn('[Flows] Could not resolve nutrition-profile properties:', err)
-    return {}
-  }
-}
+// The automatic "Let's finish your food profile" tour starts for members with
+// hasDietGroup = true and nutritionProfileComplete = false. It is switched off
+// (2026-11-17): its second step followed people onto every page but My
+// Profile until they clicked their picture, visit after visit. These two
+// properties existed only to start it, and Flows keeps the last values a user
+// was sent, so every user is now sent values that match no one. The profile
+// page and Help still walk people through their preferences.
+const PROFILE_TOUR_OFF = { hasDietGroup: false, nutritionProfileComplete: true }
 
 export default defineNuxtPlugin(async (nuxtApp) => {
   // Read via the runtime-config helper so the org id resolves from the
@@ -113,8 +73,8 @@ export default defineNuxtPlugin(async (nuxtApp) => {
   const authStore = useAuthStore()
   await authStore.initialize()
 
-  // Only run walkthroughs for authenticated users (per design), and not for
-  // guests: no tour starts by itself for them and Help shows no "Show me".
+  // Only run tours for authenticated users (per design), and not for guests:
+  // no tour starts by itself for them.
   if (!authStore.isAuthenticated || authStore.isGuest) return
 
   const userId = authStore.user?.id
@@ -122,18 +82,11 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
   flowsInitialized = true
 
-  // Derive nutrition-profile targeting properties for the selected member.
-  // The "set up your preferences" tour targets members who have a diet group
-  // but no other preferences yet; these flags let the workflow start block
-  // target the right users and stop replaying once preferences are filled.
-  // Best-effort only: any failure here must never block Flows init.
-  const userProperties = await resolveNutritionProfileProperties()
-
   let options: FlowsOptions = {
     organizationId,
     userId,
     environment: getFlowsEnvironment(),
-    userProperties,
+    userProperties: PROFILE_TOUR_OFF,
     language: tourLanguage(useCookie<string | undefined>('wisefood_locale').value),
     // Route the data API through our own origin (proxy) so privacy browsers
     // (Brave Shields, Firefox ETP) don't block it as a third-party tracker.
@@ -144,6 +97,11 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     }
   }
   init(options)
+
+  // Take the user out of any retired tour still in progress, so its steps stop
+  // coming back on their own (utils/retiredTours.ts). The welcome tour, the
+  // one tour left, is not touched.
+  void leaveRetiredTours()
 
   // Switching language in the header switches the tours too: init() again
   // reconnects and fetches the blocks in the new language, and a tour in
@@ -167,8 +125,4 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     addFloatingBlocksChangeListener: listener =>
       addFloatingBlocksChangeListener(blocks => listener(keyStepsByOwnId(blocks)))
   })
-
-  // The help panel's "Show me" buttons start tours from their manual start
-  // blocks; they stay hidden until this point.
-  markWalkthroughsReady()
 })

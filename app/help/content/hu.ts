@@ -13,10 +13,6 @@ const hu: HelpContent = {
     allTopics: 'Minden súgótéma',
     backToPage: 'Vissza ehhez az oldalhoz',
     thisPage: 'Ez az oldal',
-    showMe: 'Mutasd meg',
-    tourStarting: 'Indul a bemutató…',
-    tourUnavailable: 'Ez a bemutató még nem érhető el',
-    tourUnavailableBody: 'Addig kövesd a lépéseket a súgóban.',
     watch: 'Videó',
     videoLabel: 'Rövid videó: {title}',
     player: {
@@ -188,6 +184,7 @@ const hu: HelpContent = {
             'A terv kiegészítése: [[foodChatHome.manual.fillRest]].'
           ]
         },
+        // Not shown: topics.ts leaves 'adapt' out until adapting reaches the plan.
         'adapt': {
           title: 'Recept átalakítása a tervben',
           body: 'Tedd egészségesebbé az ételt, vagy cserélj ki egy hozzávalót anélkül, hogy elhagynád a tervet.',

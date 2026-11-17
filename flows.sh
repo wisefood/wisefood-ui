@@ -10,38 +10,36 @@
 # live on each step in Flows. The tour sections below are generated from the
 # same definitions that built the workflows; change both together.
 #
-# ── How a tour starts ─────────────────────────────────────────────────────────
+# ── What still runs (since 2026-11-17) ───────────────────────────────────────
 #
-# Automatically:
-#   - "Welcome (automatic)" (workflow ea9ea99f): a start block that lets every
-#     signed-in user in, frequency ONCE. Its tour is the Dashboard tour below
-#     with a trigger: on the dashboard, and only while no dialog
-#     ([role="dialog"]), no other Flows step and no guest banner is on screen.
-#   - "Nutrition preferences setup" (workflow ce0988c9), a start block with
-#     user-property targeting. See the end of this file.
+# One tour: "Welcome (automatic)" (workflow ea9ea99f), a start block that lets
+# every signed-in user in, frequency ONCE. Its tour is the Dashboard tour below
+# with a trigger: on the dashboard, and only while no dialog ([role="dialog"]),
+# no other Flows step and no guest banner is on screen. Its last step still
+# says "Most topics have a Show me button like this one": change that text in
+# Flows.
 #
-# On request: every page has a Help panel (the "Help" button in the header on
-# a desktop, the round button bottom right on a phone, or the ? key). A
-# feature with a tour shows "Show me", which calls startWorkflow(<block key>)
-# from @flows/js. The block key is the contract between this file and
-# app/help/topics.ts (`tour:` on each feature); several features can share a
-# tour. Every Help tour has frequency EVERY TIME, so the button always works.
+# RETIRED on 2026-11-17, kept below as a record until they are deleted in
+# Flows:
+#   - Help's "Show me" tours: every workflow behind a block key below (the
+#     Dashboard tour's steps live on in the welcome tour). Help now offers its
+#     videos and written steps instead. The tours waited on clicks and AI results, so steps
+#     vanished and reappeared elsewhere, the progress dots promised steps Next
+#     could not reach, and a tour left halfway came back by itself whenever
+#     its page or its wait came round again. app/help/topics.ts no longer
+#     names any tour and nothing calls startWorkflow().
+#   - "Nutrition preferences setup" (workflow ce0988c9, end of this file).
+#     Its second step showed on every page but My Profile until the user
+#     clicked their picture, visit after visit. 02.flows.client.ts now sends
+#     hasDietGroup = false and nutritionProfileComplete = true to everyone, so
+#     its targeting matches no one.
 #
-# Flows lets nobody re-enter a workflow they have not left, so a Help tour
-# left halfway (walked off its page, a wait step that never came) used to make
-# its button do nothing. Before starting, the panel resets every EVERY TIME
-# workflow the user is still in (useWalkthroughs.ts); the automatic ones are
-# ONCE and are never reset. Keep that split: an automatic workflow set to
-# every time would be cut short whenever someone presses Show me.
+# On every load, app/utils/retiredTours.ts resets each of these the user is
+# still in (every EVERY TIME workflow, plus ce0988c9), so leftover steps stop
+# reappearing. Keep the welcome tour ONCE: set to every time, it would be
+# reset on every load.
 #
-# startWorkflow() resolves the same way whether or not a tour started, so the
-# panel waits ~3.5 s for a new block to appear. If none does it says "This
-# walkthrough isn't ready yet" and logs feature.used {feature: help, action:
-# tour_unavailable, topic, item}.
-#
-# Flows only runs for signed-in users, and not for guests: they get no tours
-# and no Show me (02.flows.client.ts). The "Guest account" tour below is kept
-# but no one can reach it.
+# Flows only runs for signed-in users, and not for guests (02.flows.client.ts).
 #
 # ── Environments and languages ────────────────────────────────────────────────
 #
@@ -76,6 +74,22 @@
 #   create. Tours that need something to exist first (a plan, an answer) start
 #   with a step that waits for it, which skips itself when it is already there.
 #
+# TYPE AND SEND IS ONE STEP. A wait must be something the user can do from the
+#   step itself. "Type it" with a Next, then "Send it" waiting for the send,
+#   is a dead end: Next skips the typing, the send button is disabled (or does
+#   nothing) on an empty box, and the only way out is Back. On FoodChat's plan
+#   tour people clicked Next, Back, Next, Back until they closed the tour, and
+#   the click recorder logged it as rage clicks (2026-11-17). Point the step
+#   at the box, say "type ..., then press Enter or the arrow", and wait for
+#   the send there, with no Next. (tour-foodchat-plan steps 1-2,
+#   tour-foodscholar-ask 2-3 and tour-recipes-analyze 2-4 broke this rule
+#   when they were retired.)
+#
+# BACK AND NEXT NEVER SHARE A SPOT. flows.css lays the tooltip footer out as
+#   Back left, dots centre, Next right; the packaged layout put every button
+#   on the right, so Next on one step and a lone Back on the next sat on the
+#   same pixels. Keep that if the theme changes.
+#
 # INSIDE APP DIALOGS, NO NEXT BUTTONS. An open UModal / UDropdownMenu makes
 #   <body> pointer-events:none (flows.css opts the tooltip back in) and closes
 #   on any click outside it, a tour button included. Steps inside dialogs move
@@ -91,11 +105,7 @@
 #
 # ── Verify before publishing to production ────────────────────────────────────
 #   - Publish to development and point a local or test build at it.
-#   - For each Help tour: open the page, Help, the feature, "Show me". The
-#     tour must start within a couple of seconds.
-#   - Walk interactive tours to the end (FoodChat plan/adapt, FoodScholar
-#     ask/sources, recipe improve/servings, analyzer): their steps wait on
-#     real results.
+#   - Walk the welcome tour to the end with a user who has not seen it.
 #   - Desktop and phone width; switch language to hu and sl once.
 #
 # ══ Dashboard tour ════════════════════════════════════════════════════════

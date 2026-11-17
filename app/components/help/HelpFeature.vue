@@ -5,22 +5,17 @@ import { useHelpClip } from '~/composables/useHelp'
 
 /**
  * One thing a person can do on the page: a title they can scan, and behind
- * it a sentence, an optional clip, numbered steps and a "Show me" that runs
- * the guided tour on the page itself.
+ * it a sentence, an optional clip and numbered steps.
  */
 const props = defineProps<{
   def: HelpFeatureDef
   text: HelpFeatureText
   ui: HelpUiText
   expanded: boolean
-  /** The tour can run: Flows is up and the feature's page is reachable. */
-  canTour: boolean
-  starting: boolean
 }>()
 
 const emit = defineEmits<{
   'toggle': []
-  'show-me': []
   'video-play': []
 }>()
 
@@ -109,18 +104,6 @@ const panelId = computed(() => `help-feature-${props.def.id}`)
         />
         <span><HelpText :text="text.note" /></span>
       </p>
-
-      <UButton
-        v-if="def.tour && canTour"
-        size="sm"
-        color="primary"
-        variant="soft"
-        icon="i-lucide-mouse-pointer-click"
-        :loading="starting"
-        @click="emit('show-me')"
-      >
-        {{ ui.showMe }}
-      </UButton>
     </div>
   </section>
 </template>

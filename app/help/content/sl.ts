@@ -13,10 +13,6 @@ const sl: HelpContent = {
     allTopics: 'Vse teme pomoči',
     backToPage: 'Nazaj na to stran',
     thisPage: 'Ta stran',
-    showMe: 'Pokaži mi',
-    tourStarting: 'Vodeni ogled se začenja …',
-    tourUnavailable: 'Ta vodeni ogled še ni na voljo',
-    tourUnavailableBody: 'Za zdaj sledi korakom v pomoči.',
     watch: 'Video',
     videoLabel: 'Kratek video: {title}',
     player: {
@@ -188,6 +184,7 @@ const sl: HelpContent = {
             'Za dopolnitev načrta: [[foodChatHome.manual.fillRest]].'
           ]
         },
+        // Not shown: topics.ts leaves 'adapt' out until adapting reaches the plan.
         'adapt': {
           title: 'Prilagodi recept v načrtu',
           body: 'Naredi obrok bolj zdrav ali zamenjaj sestavino, ne da bi zapustil načrt.',

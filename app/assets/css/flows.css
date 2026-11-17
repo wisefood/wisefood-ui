@@ -80,3 +80,53 @@
 .flows_basicsV2_tooltip_tooltip {
   pointer-events: auto;
 }
+
+/*
+ * Back on the left, the progress dots in the middle, Next on the right.
+ *
+ * The packaged footer puts the dots on the left and every button on the
+ * right, and each step mounts a tooltip of its own. A step with only Next
+ * followed by a step with only Back (one that waits for the user to do
+ * something) put both buttons on the same pixels: on FoodChat's "Get a meal
+ * plan", Next led to "Send it" with an empty message box, and people clicked
+ * Next, Back, Next, Back without moving the pointer until they closed the
+ * tour. The click recorder filed that as rage clicks. On opposite sides, a
+ * second click where Next was lands on nothing, and the dots stay put from
+ * step to step.
+ *
+ * The buttons sit inside two wrapper divs; `display: contents` lets the grid
+ * place each button itself. The package's Lit template spells those
+ * wrappers' class as `className`, which renders a `classname` attribute and
+ * no class, so they are matched by position rather than by name. Every rule
+ * is scoped under the tooltip (0,2,0) to beat the packaged (0,1,0) footer
+ * whichever sheet loads last, and sets `grid-row` because grid auto-placement
+ * would otherwise drop Back, which comes after the dots in the markup, onto a
+ * second row.
+ */
+.flows_basicsV2_tooltip_tooltip .flows_basicsV2_tooltip_footer {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.flows_basicsV2_tooltip_tooltip .flows_basicsV2_tooltip_footer > :not(.flows_basicsV2_dots),
+.flows_basicsV2_tooltip_tooltip .flows_basicsV2_tooltip_footer > :not(.flows_basicsV2_dots) > * {
+  display: contents;
+}
+
+.flows_basicsV2_tooltip_tooltip .flows_basicsV2_tooltip_footer .flows_basicsV2_dots {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+.flows_basicsV2_tooltip_tooltip .flows_basicsV2_tooltip_footer .flows_basicsV2_button_secondary {
+  grid-row: 1;
+  grid-column: 1;
+  justify-self: start;
+}
+
+.flows_basicsV2_tooltip_tooltip .flows_basicsV2_tooltip_footer .flows_basicsV2_button_primary {
+  grid-row: 1;
+  grid-column: 3;
+  justify-self: end;
+}
