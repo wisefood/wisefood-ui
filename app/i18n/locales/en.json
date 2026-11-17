@@ -2194,7 +2194,8 @@
         "nutriScore": "Nutri-Score",
         "pantry": "Using your kitchen",
         "picks": "Meals you picked",
-        "tastes": "Tastes you asked for"
+        "tastes": "Tastes you asked for",
+        "dislikes": "Foods you dislike"
       },
       "guidelinesTitle": "Dietary guidelines: {met} of {total} met",
       "guidelinesPlain": "Dietary guidelines",
@@ -2285,7 +2286,11 @@
           "preference": "Applied as a preference, not a target: another diner's goal sets this plan's numbers",
           "target": "Sets this plan's numbers"
         },
-        "sharedIngredients": "Shares {items}"
+        "sharedIngredients": "Shares {items}",
+        "dislikes": {
+          "found": "Found {hits}",
+          "clear": "None of the {count} foods you dislike in any of the {dishes} dishes"
+        }
       },
       "against": {
         "own": "your {target} kcal target",

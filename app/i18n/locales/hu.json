@@ -2056,7 +2056,8 @@
         "nutriScore": "Nutri-Score",
         "pantry": "A konyhád felhasználása",
         "picks": "Általad választott ételek",
-        "tastes": "Kért ízek"
+        "tastes": "Kért ízek",
+        "dislikes": "Amit nem szeretsz"
       },
       "guidelinesTitle": "Táplálkozási irányelvek: {total}-ből {met} teljesül",
       "guidelinesPlain": "Táplálkozási irányelvek",
@@ -2147,7 +2148,11 @@
           "preference": "Lehetőség szerint figyelembe véve, nem célként: egy másik étkező célja adja a terv számait",
           "target": "Ez adja a terv számait"
         },
-        "sharedIngredients": "Közös hozzávalók: {items}"
+        "sharedIngredients": "Közös hozzávalók: {items}",
+        "dislikes": {
+          "found": "Találat: {hits}",
+          "clear": "Egyik ételben ({dishes}) sincs a nem kedvelt ételeid közül ({count})"
+        }
       },
       "against": {
         "own": "a(z) {target} kcal-os célod",

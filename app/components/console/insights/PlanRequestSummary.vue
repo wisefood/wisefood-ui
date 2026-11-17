@@ -17,14 +17,18 @@
       class="mt-1.5 space-y-1.5"
     >
       <div
-        v-if="request.message"
+        v-if="asked.length"
         class="grid grid-cols-[7.5rem_1fr] gap-2"
       >
         <dt class="text-gray-500 dark:text-gray-400">
           They wrote
         </dt>
-        <dd class="min-w-0 whitespace-pre-line break-words text-gray-900 dark:text-white">
-          “{{ request.message }}”
+        <dd class="min-w-0 space-y-1 text-gray-900 dark:text-white">
+          <span
+            v-for="(text, index) in asked"
+            :key="index"
+            class="block whitespace-pre-line break-words"
+          >“{{ text }}”</span>
         </dd>
       </div>
       <div class="grid grid-cols-[7.5rem_1fr] gap-2">
@@ -77,6 +81,12 @@ import { profileLines, readingLines } from '~/utils/turnExchange'
 
 const props = defineProps<{ request: PlanRequest | null | undefined }>()
 
+/** Every message since the previous plan; older plans kept only the last. */
+const asked = computed(() => {
+  const messages = props.request?.messages?.filter(Boolean) ?? []
+  if (messages.length) return messages
+  return props.request?.message ? [props.request.message] : []
+})
 const reading = computed(() => readingLines(props.request))
 const profile = computed(() => profileLines(props.request))
 </script>

@@ -63,7 +63,8 @@ const CHECK_KEYS: Record<string, string> = {
   'nutri-score': 'nutriScore',
   'pantry': 'pantry',
   'your picks': 'picks',
-  'taste preferences': 'tastes'
+  'taste preferences': 'tastes',
+  'dislikes': 'dislikes'
 }
 
 export function checkKey(name: string): string | null {

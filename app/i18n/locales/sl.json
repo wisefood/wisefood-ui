@@ -2057,7 +2057,8 @@
         "nutriScore": "Nutri-Score",
         "pantry": "Poraba tvoje kuhinje",
         "picks": "Jedi, ki si jih izbral",
-        "tastes": "Želeni okusi"
+        "tastes": "Želeni okusi",
+        "dislikes": "Česar ne maraš"
       },
       "guidelinesTitle": "Prehranske smernice: izpolnjenih {met} od {total}",
       "guidelinesPlain": "Prehranske smernice",
@@ -2148,7 +2149,11 @@
           "preference": "Upoštevano po možnosti, ne kot cilj: številke načrta določa cilj druge osebe",
           "target": "Določa številke načrta"
         },
-        "sharedIngredients": "Skupne sestavine: {items}"
+        "sharedIngredients": "Skupne sestavine: {items}",
+        "dislikes": {
+          "found": "Najdeno: {hits}",
+          "clear": "Nobena jed (od {dishes}) ne vsebuje živil, ki jih ne maraš ({count})"
+        }
       },
       "against": {
         "own": "tvojega cilja {target} kcal",

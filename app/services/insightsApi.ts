@@ -570,7 +570,10 @@ export interface PlanReview {
  * fields it planned around.
  */
 export interface PlanRequest {
+  /** The latest message before the plan. */
   message: string | null
+  /** Everything the member wrote since the previous plan, oldest first. */
+  messages?: string[]
   reading: {
     spec?: {
       num_days?: number

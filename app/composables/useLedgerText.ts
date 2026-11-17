@@ -44,7 +44,11 @@ export function useLedgerText() {
         if (key === 'allergens') out[key] = list(value.map(allergen))
         else if (key === 'tags' || key === 'diets' || key === 'values') out[key] = list(value.map(term))
         else if (key === 'slots') out[key] = list(value.map(slot => slotName(String(slot))))
-        else if (key === 'found') {
+        else if (key === 'hits') {
+          // A disliked food on a dish: the member's own word, not a slug.
+          out[key] = list(value.map((hit: { dish?: string, dislike?: string }) =>
+            `${hit.dish ?? ''} (${hit.dislike ?? ''})`))
+        } else if (key === 'found') {
           out[key] = list(value.map((hit: { dish?: string, allergen?: string }) =>
             `${hit.dish ?? ''} (${allergen(hit.allergen)})`))
         } else out[key] = list(value)
@@ -88,7 +92,7 @@ export function useLedgerText() {
     const params = row.params ?? {}
     const parts = [t(key, words(params))]
     const more = Number(params.more ?? 0)
-    if (row.code === 'allergens.found' && more > 0) {
+    if ((row.code === 'allergens.found' || row.code === 'dislikes.found') && more > 0) {
       parts.push(t('foodChatHome.ledger.andMore', { count: more }))
     }
     const heaviest = params.heaviest as { dish?: string, kcal?: number } | undefined
