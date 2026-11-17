@@ -2153,6 +2153,9 @@
         "dislikes": {
           "found": "Najdeno: {hits}",
           "clear": "Nobena jed (od {dishes}) ne vsebuje živil, ki jih ne maraš ({count})"
+        },
+        "dislike": {
+          "found": "V načrtu: {dishes}"
         }
       },
       "against": {

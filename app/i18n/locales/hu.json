@@ -2152,6 +2152,9 @@
         "dislikes": {
           "found": "Találat: {hits}",
           "clear": "Egyik ételben ({dishes}) sincs a nem kedvelt ételeid közül ({count})"
+        },
+        "dislike": {
+          "found": "A tervben: {dishes}"
         }
       },
       "against": {

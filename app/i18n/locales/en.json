@@ -2290,6 +2290,9 @@
         "dislikes": {
           "found": "Found {hits}",
           "clear": "None of the {count} foods you dislike in any of the {dishes} dishes"
+        },
+        "dislike": {
+          "found": "On the plan: {dishes}"
         }
       },
       "against": {
