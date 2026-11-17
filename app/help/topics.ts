@@ -7,10 +7,10 @@ import type { HelpTopicDef, HelpTopicId } from './types'
  * `topicForPath` takes the first match, so a pattern that would swallow its
  * neighbours (`/foodscholar/<anything>` is an article) is tried after them.
  *
- * `tour` is the block key of a Flows manual-start block; flows.sh is the spec
- * for every one of them. `video` names a clip in the media manifest, and a
- * clip the manifest does not list simply is not shown — features can name
- * their clip before it is recorded.
+ * `video` names a clip in the media manifest, and a clip the manifest does
+ * not list simply is not shown — features can name their clip before it is
+ * recorded. (Features also named a Flows "Show me" tour until 2026-11-17,
+ * when Help dropped them for the clips; flows.sh keeps their spec.)
  */
 
 const normalise = (path: string) => (path.length > 1 ? path.replace(/\/+$/, '') : path)
@@ -25,12 +25,12 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/dashboard',
     match: p => p === '/dashboard',
     features: [
-      { id: 'open-apps', icon: 'i-lucide-layout-grid', tour: 'tour-dashboard' },
-      { id: 'todays-meals', icon: 'i-lucide-calendar-days', tour: 'tour-dashboard' },
+      { id: 'open-apps', icon: 'i-lucide-layout-grid' },
+      { id: 'todays-meals', icon: 'i-lucide-calendar-days' },
       { id: 'tips', icon: 'i-lucide-lightbulb' },
       { id: 'recommendations', icon: 'i-lucide-chef-hat' },
-      { id: 'switch-profile', icon: 'i-lucide-users', tour: 'tour-dashboard' },
-      { id: 'guest', icon: 'i-lucide-user-round', tour: 'tour-guest', audience: 'guest' }
+      { id: 'switch-profile', icon: 'i-lucide-users' },
+      { id: 'guest', icon: 'i-lucide-user-round', audience: 'guest' }
     ]
   },
   {
@@ -40,15 +40,18 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/foodchat',
     match: p => p === '/foodchat',
     features: [
-      { id: 'generate-plan', icon: 'i-lucide-sparkles', tour: 'tour-foodchat-plan', video: 'foodchat-generate-plan' },
-      { id: 'refine', icon: 'i-lucide-message-square-text', tour: 'tour-foodchat-adapt', video: 'foodchat-refine' },
-      { id: 'tools', icon: 'i-lucide-wand-sparkles', tour: 'tour-foodchat-tools', video: 'foodchat-tools' },
-      { id: 'save-share', icon: 'i-lucide-bookmark', tour: 'tour-foodchat-plan', video: 'foodchat-save-share' },
+      { id: 'generate-plan', icon: 'i-lucide-sparkles', video: 'foodchat-generate-plan' },
+      { id: 'refine', icon: 'i-lucide-message-square-text', video: 'foodchat-refine' },
+      { id: 'tools', icon: 'i-lucide-wand-sparkles', video: 'foodchat-tools' },
+      { id: 'save-share', icon: 'i-lucide-bookmark', video: 'foodchat-save-share' },
       { id: 'pantry', icon: 'i-lucide-refrigerator', video: 'foodchat-pantry' },
-      { id: 'settings', icon: 'i-lucide-sliders-horizontal', tour: 'tour-foodchat-settings', video: 'foodchat-settings' },
+      { id: 'settings', icon: 'i-lucide-sliders-horizontal', video: 'foodchat-settings' },
       { id: 'diners', icon: 'i-lucide-users', video: 'foodchat-diners' },
-      { id: 'compose', icon: 'i-lucide-list-plus', video: 'foodchat-compose' },
-      { id: 'adapt', icon: 'i-lucide-pencil-ruler', tour: 'tour-foodchat-adapt', video: 'foodchat-adapt' }
+      { id: 'compose', icon: 'i-lucide-list-plus', video: 'foodchat-compose' }
+      // 'adapt' (icon i-lucide-pencil-ruler, video foodchat-adapt) is left out
+      // until adapting reaches the plan: most plan meals get "already in great
+      // shape", and a saved version changes no plan already made. It returns
+      // with RecipeWrangler PR #13; its text is still in content/<locale>.ts.
     ]
   },
   {
@@ -58,13 +61,13 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/foodscholar',
     match: p => p === '/foodscholar',
     features: [
-      { id: 'ask', icon: 'i-lucide-message-circle-question', tour: 'tour-foodscholar-ask', video: 'foodscholar-ask' },
-      { id: 'sources', icon: 'i-lucide-quote', tour: 'tour-foodscholar-sources', video: 'foodscholar-sources' },
+      { id: 'ask', icon: 'i-lucide-message-circle-question', video: 'foodscholar-ask' },
+      { id: 'sources', icon: 'i-lucide-quote', video: 'foodscholar-sources' },
       { id: 'remember', icon: 'i-lucide-brain', video: 'foodscholar-memory' },
-      { id: 'follow-up', icon: 'i-lucide-messages-square', tour: 'tour-foodscholar-sources' },
-      { id: 'rate', icon: 'i-lucide-thumbs-up', tour: 'tour-foodscholar-sources' },
-      { id: 'advanced', icon: 'i-lucide-settings-2', tour: 'tour-foodscholar-advanced' },
-      { id: 'library', icon: 'i-lucide-library', tour: 'tour-foodscholar-library' }
+      { id: 'follow-up', icon: 'i-lucide-messages-square' },
+      { id: 'rate', icon: 'i-lucide-thumbs-up' },
+      { id: 'advanced', icon: 'i-lucide-settings-2' },
+      { id: 'library', icon: 'i-lucide-library' }
     ]
   },
   {
@@ -74,9 +77,9 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/foodscholar/catalog',
     match: p => p.startsWith('/foodscholar/catalog'),
     features: [
-      { id: 'search', icon: 'i-lucide-search', tour: 'tour-foodscholar-catalog', video: 'foodscholar-catalog-search' },
-      { id: 'filters', icon: 'i-lucide-filter', tour: 'tour-foodscholar-catalog' },
-      { id: 'summary', icon: 'i-lucide-sparkles', tour: 'tour-foodscholar-catalog' }
+      { id: 'search', icon: 'i-lucide-search', video: 'foodscholar-catalog-search' },
+      { id: 'filters', icon: 'i-lucide-filter' },
+      { id: 'summary', icon: 'i-lucide-sparkles' }
     ]
   },
   {
@@ -87,8 +90,8 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     match: p => p.startsWith('/foodscholar/guides'),
     features: [
       { id: 'find', icon: 'i-lucide-search' },
-      { id: 'map', icon: 'i-lucide-map-pin', tour: 'tour-foodscholar-guides', video: 'foodscholar-guides-map' },
-      { id: 'explorer', icon: 'i-lucide-list-filter', tour: 'tour-foodscholar-explorer', video: 'foodscholar-guides-explorer' },
+      { id: 'map', icon: 'i-lucide-map-pin', video: 'foodscholar-guides-map' },
+      { id: 'explorer', icon: 'i-lucide-list-filter', video: 'foodscholar-guides-explorer' },
       { id: 'read', icon: 'i-lucide-file-text' }
     ]
   },
@@ -99,7 +102,7 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/foodscholar/textbooks',
     match: p => p.startsWith('/foodscholar/textbooks'),
     features: [
-      { id: 'find', icon: 'i-lucide-search', tour: 'tour-foodscholar-textbooks', video: 'foodscholar-textbooks' },
+      { id: 'find', icon: 'i-lucide-search', video: 'foodscholar-textbooks' },
       { id: 'inside', icon: 'i-lucide-book-open-text' }
     ]
   },
@@ -110,9 +113,9 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/foodscholar/hierarchy',
     match: p => p === '/foodscholar/hierarchy',
     features: [
-      { id: 'search', icon: 'i-lucide-search', tour: 'tour-foodscholar-hierarchy' },
-      { id: 'browse', icon: 'i-lucide-list-tree', tour: 'tour-foodscholar-hierarchy', video: 'foodscholar-hierarchy' },
-      { id: 'ask', icon: 'i-lucide-message-circle-question', tour: 'tour-foodscholar-hierarchy' }
+      { id: 'search', icon: 'i-lucide-search' },
+      { id: 'browse', icon: 'i-lucide-list-tree', video: 'foodscholar-hierarchy' },
+      { id: 'ask', icon: 'i-lucide-message-circle-question' }
     ]
   },
   {
@@ -140,13 +143,13 @@ export const HELP_TOPICS: HelpTopicDef[] = [
       || p.startsWith('/recipe-wrangler/collections/')
       || p.startsWith('/recipe-wrangler/fctables/'),
     features: [
-      { id: 'search', icon: 'i-lucide-search', tour: 'tour-recipes-search', video: 'recipes-search' },
-      { id: 'personalized', icon: 'i-lucide-user-check', tour: 'tour-recipes-search' },
-      { id: 'filters', icon: 'i-lucide-filter', tour: 'tour-recipes-search' },
-      { id: 'compare', icon: 'i-lucide-columns-3', tour: 'tour-recipes-compare' },
-      { id: 'analyze', icon: 'i-lucide-scan-text', tour: 'tour-recipes-analyze', video: 'recipes-analyze' },
-      { id: 'favorites', icon: 'i-lucide-heart', tour: 'tour-recipes-search' },
-      { id: 'sources', icon: 'i-lucide-database', tour: 'tour-recipes-sources' }
+      { id: 'search', icon: 'i-lucide-search', video: 'recipes-search' },
+      { id: 'personalized', icon: 'i-lucide-user-check' },
+      { id: 'filters', icon: 'i-lucide-filter' },
+      { id: 'compare', icon: 'i-lucide-columns-3' },
+      { id: 'analyze', icon: 'i-lucide-scan-text', video: 'recipes-analyze' },
+      { id: 'favorites', icon: 'i-lucide-heart' },
+      { id: 'sources', icon: 'i-lucide-database' }
     ]
   },
   {
@@ -156,8 +159,8 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/recipe-wrangler/compare',
     match: p => p === '/recipe-wrangler/compare',
     features: [
-      { id: 'read', icon: 'i-lucide-table', tour: 'tour-recipes-compare-page' },
-      { id: 'manage', icon: 'i-lucide-list-x', tour: 'tour-recipes-compare-page' }
+      { id: 'read', icon: 'i-lucide-table' },
+      { id: 'manage', icon: 'i-lucide-list-x' }
     ]
   },
   {
@@ -168,12 +171,12 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/recipe-wrangler',
     match: p => /^\/recipe-wrangler\/[^/]+$/.test(p),
     features: [
-      { id: 'scores', icon: 'i-lucide-gauge', tour: 'tour-recipe-detail' },
-      { id: 'nutrition', icon: 'i-lucide-chart-pie', tour: 'tour-recipe-detail' },
-      { id: 'servings', icon: 'i-lucide-replace', tour: 'tour-recipe-servings' },
-      { id: 'improve', icon: 'i-lucide-wand-sparkles', tour: 'tour-recipe-improve', video: 'recipe-improve' },
-      { id: 'save', icon: 'i-lucide-heart', tour: 'tour-recipe-detail' },
-      { id: 'report', icon: 'i-lucide-flag', tour: 'tour-recipe-detail' }
+      { id: 'scores', icon: 'i-lucide-gauge' },
+      { id: 'nutrition', icon: 'i-lucide-chart-pie' },
+      { id: 'servings', icon: 'i-lucide-replace' },
+      { id: 'improve', icon: 'i-lucide-wand-sparkles', video: 'recipe-improve' },
+      { id: 'save', icon: 'i-lucide-heart' },
+      { id: 'report', icon: 'i-lucide-flag' }
     ]
   },
   {
@@ -183,8 +186,8 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/library',
     match: p => p === '/library',
     features: [
-      { id: 'saved', icon: 'i-lucide-bookmark', tour: 'tour-library' },
-      { id: 'plans', icon: 'i-lucide-calendar-check', tour: 'tour-library' }
+      { id: 'saved', icon: 'i-lucide-bookmark' },
+      { id: 'plans', icon: 'i-lucide-calendar-check' }
     ]
   },
   {
@@ -194,12 +197,12 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/my-profile',
     match: p => p === '/my-profile',
     features: [
-      { id: 'quick-setup', icon: 'i-lucide-wand-sparkles', tour: 'tour-profile-preferences' },
-      { id: 'diet-allergies', icon: 'i-lucide-shield-alert', tour: 'tour-profile-preferences' },
-      { id: 'likes', icon: 'i-lucide-thumbs-up', tour: 'tour-profile-preferences' },
-      { id: 'memory', icon: 'i-lucide-brain', tour: 'tour-profile-privacy' },
-      { id: 'details', icon: 'i-lucide-id-card', tour: 'tour-profile-privacy' },
-      { id: 'privacy', icon: 'i-lucide-lock', tour: 'tour-profile-privacy' }
+      { id: 'quick-setup', icon: 'i-lucide-wand-sparkles' },
+      { id: 'diet-allergies', icon: 'i-lucide-shield-alert' },
+      { id: 'likes', icon: 'i-lucide-thumbs-up' },
+      { id: 'memory', icon: 'i-lucide-brain' },
+      { id: 'details', icon: 'i-lucide-id-card' },
+      { id: 'privacy', icon: 'i-lucide-lock' }
     ]
   },
   {
@@ -209,10 +212,10 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     home: '/profiles',
     match: p => p === '/profiles',
     features: [
-      { id: 'choose', icon: 'i-lucide-mouse-pointer-click', tour: 'tour-profiles' },
-      { id: 'add', icon: 'i-lucide-user-plus', tour: 'tour-profiles' },
-      { id: 'manage', icon: 'i-lucide-user-cog', tour: 'tour-profiles' },
-      { id: 'setup', icon: 'i-lucide-house', tour: 'tour-profiles' }
+      { id: 'choose', icon: 'i-lucide-mouse-pointer-click' },
+      { id: 'add', icon: 'i-lucide-user-plus' },
+      { id: 'manage', icon: 'i-lucide-user-cog' },
+      { id: 'setup', icon: 'i-lucide-house' }
     ]
   }
 ]

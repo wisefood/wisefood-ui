@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import type { HelpArea, HelpFeatureDef, HelpFeatureText, HelpTopicDef } from '~/help/types'
-import { topicForPath } from '~/help/topics'
 import { requestDockPanel, useHelp } from '~/composables/useHelp'
-import { useWalkthroughs } from '~/composables/useWalkthroughs'
 
 /**
  * What the help panel says, shared by the desktop side panel and the phone
@@ -11,9 +9,7 @@ import { useWalkthroughs } from '~/composables/useWalkthroughs'
  * the list of every topic.
  */
 const help = useHelp()
-const walkthroughs = useWalkthroughs()
 const sentry = useSentryFeedback()
-const toast = useToast()
 const { isCompact } = useViewport()
 
 const ui = computed(() => help.content.value.ui)
@@ -27,7 +23,6 @@ function featureText(id: string): HelpFeatureText {
 }
 
 const expanded = ref<Set<string>>(new Set())
-const starting = ref<string | null>(null)
 
 // A new topic opens on its first feature, or on the one somebody linked to.
 watch([() => topic.value?.id, () => help.focusFeature.value], async ([, focus]) => {
@@ -49,41 +44,6 @@ function toggle(def: HelpFeatureDef) {
     help.emit('expand', { topic: topic.value?.id, item: def.id })
   }
   expanded.value = next
-}
-
-/**
- * A tour runs on the page it explains. From the page's own topic that is
- * here; from a topic picked in the list it is the topic's home page — unless
- * the topic is about a page that has no fixed address (one recipe, one
- * article), where there is nowhere to send anyone.
- */
-const canTour = computed(() => {
-  if (!walkthroughs.ready.value || !topic.value) return false
-  return help.isPageTopic.value || topicForPath(topic.value.home)?.id === topic.value.id
-})
-
-async function showMe(def: HelpFeatureDef) {
-  if (!def.tour || !topic.value || starting.value) return
-  starting.value = def.id
-  help.emit('tour', { topic: topic.value.id, item: def.id })
-  try {
-    if (!help.isPageTopic.value) await navigateTo(topic.value.home)
-    // The sheet covers the page on a phone, and the panel overlaps it below
-    // the docking width; the tour needs to point at what is underneath.
-    if (isCompact.value || !window.matchMedia('(min-width: 80rem)').matches) help.closeHelp()
-    const started = await walkthroughs.start(def.tour)
-    if (!started) {
-      help.emit('tour_unavailable', { topic: topic.value?.id, item: def.id })
-      toast.add({
-        title: ui.value.tourUnavailable,
-        description: ui.value.tourUnavailableBody,
-        icon: 'i-lucide-route',
-        color: 'neutral'
-      })
-    }
-  } finally {
-    starting.value = null
-  }
 }
 
 const groupedTopics = computed(() => {
@@ -226,10 +186,7 @@ function openBugReport() {
             :text="featureText(def.id)"
             :ui="ui"
             :expanded="expanded.has(def.id)"
-            :can-tour="canTour"
-            :starting="starting === def.id"
             @toggle="toggle(def)"
-            @show-me="showMe(def)"
             @video-play="help.emit('video', { topic: topic?.id, item: def.id })"
           />
         </div>
