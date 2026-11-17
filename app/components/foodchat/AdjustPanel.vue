@@ -254,11 +254,11 @@
                 class="inline-flex items-center gap-0.5 pl-3 pr-0.5 min-h-9 text-sm rounded-full border"
                 :class="pillOn"
               >
-                {{ capitalise(taste) }}
+                {{ facetLabel(taste) }}
                 <button
                   type="button"
                   class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-brandp-100 dark:hover:bg-brandp-900/40"
-                  :aria-label="t('foodChatHome.planningState.removeItem', { value: capitalise(taste) })"
+                  :aria-label="t('foodChatHome.planningState.removeItem', { value: facetLabel(taste) })"
                   @click="removeTaste(taste)"
                 >
                   <UIcon
@@ -409,7 +409,6 @@ import { useI18n } from 'vue-i18n'
 import { createReusableTemplate } from '@vueuse/core'
 import type { FacetChip, PlanParameterCard, PlanParameterValues, Vocabularies } from '~/services/foodchatApi'
 import type { HouseholdMember } from '~/services/householdsApi'
-import { capitalise } from '~/utils/planLedger'
 
 export interface AdjustChanges {
   /** The whole new diner list, or null when it did not change. */
@@ -458,6 +457,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { label: facetLabel } = useFacetLabels()
 const { paramLabel, optionLabel, param, applied } = usePlanParamLabels()
 const ledger = useLedgerText()
 const [DefineBody, ReuseBody] = createReusableTemplate()
@@ -587,7 +587,7 @@ const tasteOptions = computed(() => {
   return FAMILIES.flatMap(family =>
     (vocab[family] || [])
       .filter(v => !standing.has(v))
-      .map(v => ({ value: v, label: `${capitalise(v)} · ${t(`foodChatHome.planningState.family.${family}`)}` }))
+      .map(v => ({ value: v, label: `${facetLabel(v)} · ${t(`foodChatHome.planningState.family.${family}`)}` }))
   )
 })
 

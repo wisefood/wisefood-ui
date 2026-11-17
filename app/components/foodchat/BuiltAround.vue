@@ -102,7 +102,7 @@
       :key="`taste-${facet.value}`"
       :class="[chip, chosen]"
     >
-      {{ capitalise(facet.value) }}
+      {{ facetLabel(facet.value) }}
     </span>
 
     <span
@@ -175,6 +175,7 @@ const kitchen = 'border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dar
 
 const { t, locale } = useI18n()
 const ledger = useLedgerText()
+const { label: facetLabel } = useFacetLabels()
 
 /** "No peanut", in this language when FoodChat sent a code for it. */
 function ruleName(rule: ConstraintApplied): string {
@@ -209,7 +210,7 @@ const pantryText = computed(() => {
 const settingPhrases = computed(() => {
   const named = new Set([
     ...props.statedTags.map(v => ledger.tag(v).toLowerCase()),
-    ...props.facets.map(f => capitalise(f.value).toLowerCase())
+    ...props.facets.map(f => facetLabel(f.value).toLowerCase())
   ])
   return appliedPhrases(props.card).filter(p => !named.has(p.text.toLowerCase()))
 })
@@ -226,7 +227,7 @@ const summary = computed(() => {
   if (props.pantry.length) parts.push(props.pantry.slice(0, 4).join(', '))
   for (const rule of props.rules) parts.push(ruleName(rule).toLowerCase())
   for (const tag of props.statedTags) parts.push(ledger.tag(tag).toLowerCase())
-  for (const chip of props.facets) parts.push(capitalise(chip.value).toLowerCase())
+  for (const chip of props.facets) parts.push(facetLabel(chip.value).toLowerCase())
   for (const phrase of settingPhrases.value) parts.push(phrase.text.toLowerCase())
   return parts.join(' · ')
 })
