@@ -127,8 +127,10 @@ class Browser:
         # Without this flag the screencast starts at CSS size (1440x810) and only
         # later switches to device pixels; the flag makes every frame full size.
         scale = FORMATS[self.fmt]['dpr']
-        self.browser = await self.pw.chromium.launch(
-            executable_path=EXE, args=[f'--force-device-scale-factor={scale:.7f}'])
+        args = [f'--force-device-scale-factor={scale:.7f}']
+        if os.environ.get('HELP_CLIPS_PROXY'):   # set by isolated.py
+            args.append(f"--proxy-server={os.environ['HELP_CLIPS_PROXY']}")
+        self.browser = await self.pw.chromium.launch(executable_path=EXE, args=args)
         return self
 
     async def __aexit__(self, *a):
@@ -338,7 +340,15 @@ class Director:
 
     async def point(self, locator, steps=28):
         await locator.scroll_into_view_if_needed()
-        box = await locator.bounding_box()
+        # Wait until the element stops moving (a dialog animating in, a button
+        # re-rendered): a box read mid-transition sends the cursor elsewhere.
+        box, prev = None, None
+        for _ in range(25):
+            box = await locator.bounding_box()
+            if box and prev and all(abs(box[k] - prev[k]) < 0.5 for k in ('x', 'y', 'width', 'height')):
+                break
+            prev = box
+            await self.page.wait_for_timeout(80)
         x, y = box['x'] + box['width'] / 2, box['y'] + box['height'] / 2
         if not self.phone:
             await self.page.mouse.move(x, y, steps=steps)

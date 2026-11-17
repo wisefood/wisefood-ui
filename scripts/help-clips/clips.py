@@ -472,6 +472,8 @@ CLIPS = {
 
 
 async def record(clip, lang, fmt='desktop', attempts=3):
+    if clip.startswith('foodchat-'):
+        import foodchat_clips  # noqa: F401  registers the FoodChat clips into CLIPS
     spec = CLIPS[clip]
     t = T[clip][lang]
     LANG_HINT['lang'] = lang
@@ -536,4 +538,5 @@ async def record(clip, lang, fmt='desktop', attempts=3):
 if __name__ == '__main__':
     clip, lang = sys.argv[1], sys.argv[2]
     fmt = sys.argv[3] if len(sys.argv) > 3 else 'desktop'
-    asyncio.run(record(clip, lang, fmt))
+    import clips as _self   # one module whether run or imported, so foodchat_clips registers where record() looks
+    asyncio.run(_self.record(clip, lang, fmt))

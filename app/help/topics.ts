@@ -42,13 +42,13 @@ export const HELP_TOPICS: HelpTopicDef[] = [
     features: [
       { id: 'generate-plan', icon: 'i-lucide-sparkles', tour: 'tour-foodchat-plan', video: 'foodchat-generate-plan' },
       { id: 'refine', icon: 'i-lucide-message-square-text', tour: 'tour-foodchat-adapt', video: 'foodchat-refine' },
-      { id: 'tools', icon: 'i-lucide-wand-sparkles', tour: 'tour-foodchat-tools' },
-      { id: 'save-share', icon: 'i-lucide-bookmark', tour: 'tour-foodchat-plan' },
-      { id: 'pantry', icon: 'i-lucide-refrigerator' },
-      { id: 'settings', icon: 'i-lucide-sliders-horizontal', tour: 'tour-foodchat-settings' },
-      { id: 'diners', icon: 'i-lucide-users' },
-      { id: 'compose', icon: 'i-lucide-list-plus' },
-      { id: 'adapt', icon: 'i-lucide-pencil-ruler', tour: 'tour-foodchat-adapt' }
+      { id: 'tools', icon: 'i-lucide-wand-sparkles', tour: 'tour-foodchat-tools', video: 'foodchat-tools' },
+      { id: 'save-share', icon: 'i-lucide-bookmark', tour: 'tour-foodchat-plan', video: 'foodchat-save-share' },
+      { id: 'pantry', icon: 'i-lucide-refrigerator', video: 'foodchat-pantry' },
+      { id: 'settings', icon: 'i-lucide-sliders-horizontal', tour: 'tour-foodchat-settings', video: 'foodchat-settings' },
+      { id: 'diners', icon: 'i-lucide-users', video: 'foodchat-diners' },
+      { id: 'compose', icon: 'i-lucide-list-plus', video: 'foodchat-compose' },
+      { id: 'adapt', icon: 'i-lucide-pencil-ruler', tour: 'tour-foodchat-adapt', video: 'foodchat-adapt' }
     ]
   },
   {

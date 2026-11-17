@@ -255,3 +255,6 @@ T = {
         },
     },
 }
+
+from texts_foodchat import T as _FOODCHAT  # noqa: E402
+T.update(_FOODCHAT)

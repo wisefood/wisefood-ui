@@ -10,6 +10,7 @@ playwright install chromium-headless-shell
 
 python clips.py foodscholar-ask en        # → $HELP_CLIPS_WORK/out/foodscholar-ask.en.{mp4,jpg,json}
 python clips.py foodscholar-ask hu
+python isolated.py clips.py foodchat-generate-plan en   # FoodChat: in a network namespace of its own (below)
 python vo.py                              # voiced copies → $HELP_CLIPS_WORK/out-vo/ (see Voice-over)
 python manifest.py $HELP_CLIPS_WORK/out-vo
 mc cp --recursive $HELP_CLIPS_WORK/out-vo/ wisefood/help-media/   # the demo's clips (public read)
@@ -38,8 +39,10 @@ binary). On a server without Chrome's system libraries, point
 
 | File | What it holds |
 |---|---|
-| `clips.py` | The choreography of each clip: what to click, when to caption. |
-| `texts.py` | Every word on screen, per language, and optional spoken versions (`vo_title`, `vo1`, …). |
+| `clips.py` | The FoodScholar clips' choreography (what to click, when to caption) and the recorder loop. |
+| `foodchat_clips.py` | The FoodChat clips' choreography, registered into the same recorder. |
+| `texts.py`, `texts_foodchat.py` | Every word on screen, per language, and optional spoken versions (`vo_title`, `vo1`, …). |
+| `isolated.py` | Runs a recording in a network namespace of its own (see FoodChat). |
 | `lib.py` | Browser, guest login, the overlay, the screencast recorder, the encoder. |
 | `vo.py` | The ElevenLabs voice-over: speaks each cue, mixes, writes voiced copies. |
 | `manifest.py` | Builds `manifest.json`: English is the default, other languages go under `locales`; voiced clips get `audio: true`. |
@@ -60,9 +63,12 @@ python vo.py                 # every clip, each line in sync with its caption
   Noémi (Hungarian, from the voice library) and a Slovenian voice made with
   Voice Design, because the library has no Slovenian voice. Only Alice is on
   every account; the other two live on the WiseFood ElevenLabs account.
-- Each line starts just after its caption appears. A line that runs long
-  pushes the next one later, and the report says by how much; if the voice
-  outlasts the picture, the last frame is held.
+- Each clip's narration is one take: the whole script in one request, cut
+  into lines at the character times ElevenLabs returns, so a language's
+  narrator sounds the same in every line and every clip.
+- Each line starts just after its caption appears. If a line is still
+  speaking when the next caption is due, the picture holds its frame until it
+  ends; if the voice outlasts the picture, the last frame is held.
 - By default a line is the caption's own text. Add `vo1`, `vo2`, … (and
   `vo_title`) to a clip's language in `texts.py` for a fuller spoken version;
   an empty string keeps that cue silent.
@@ -77,13 +83,47 @@ python vo.py                 # every clip, each line in sync with its caption
 - **5 new guests per IP per hour.** The recorder keeps one guest per language
   in `$HELP_CLIPS_WORK/guest-<lang>.json` (readable only by you: it holds a live
   token) and reuses it until its token runs out.
-- **20 FoodScholar questions per guest per day.** A clip that asks a question
-  and gets no clickable citation, or no answer at all, tries again (3 times by
-  default), which uses more.
+- **Per guest per day** (wisefood-api `src/budget.py`): 20 FoodScholar
+  questions, 30 chat turns, 10 new FoodChat conversations, 60 searches. Over
+  budget the API answers 429, which the page shows as a toast in the clip. A
+  clip that gets no clickable citation, or no answer, tries again (3 times by
+  default), which uses more; for a fresh budget, move `guest-<lang>.json` aside.
 - **25 requests per second per IP.** Run one recording at a time.
 
 Recording blocks analytics, Sentry and Flows requests, so test sessions don't
 show up in the demo's insights.
+
+## FoodChat
+
+- Record with `isolated.py`. Chrome drops every open connection when the
+  host's network interfaces change (`net::ERR_NETWORK_CHANGED`); where tests
+  start and stop Docker containers every few seconds, a plan, which streams
+  for a minute or two, rarely survives. In its own namespace Chrome sees only
+  loopback and goes out through a proxy over a Unix socket. Needs unprivileged
+  user namespaces (`unshare --user --net`).
+- Plan clips (tools, save and share, change by chatting, adjust) open a plan
+  the language's guest already has, made once off camera and kept in
+  `fc-plan-<lang>.json`. Start-screen clips (get a plan, build a day, cook from
+  your kitchen, plan for more people) and adapt open an empty conversation from
+  the dashboard, reusing one a failed take left behind before starting a new
+  one: a guest has 10 a day.
+- One fresh guest per language, in this order: generate-plan first (its plan
+  becomes the fixture), then tools, save-share, refine, settings, compose,
+  adapt, pantry, diners (last: it adds a second profile to the household, after
+  which the dashboard first asks "Who's eating?").
+- Avoid the word "swap" in a request: FoodChat reads it as moving a meal and
+  asks which one. FoodChat's Swap button suggests exactly such a message, so the
+  refine clip edits it.
+- Adapt needs a meal graded C or worse (A and B are "already in great shape"),
+  and FoodChat will not put one in a plan when asked. So the clip composes its
+  day off camera with BBQ Chicken Pizza (C) as dinner and lets FoodChat fill the
+  rest.
+- Cook from what you have: tick the ingredients, "Use these" (keeps them and
+  closes the picker), "Cook from what's in my kitchen" (opens it again), then
+  "Plan from these". On a re-take they are already kept and ticked.
+- The cursor waits until a target stops moving before it goes there: dialogs
+  animate in and buttons re-render, and a position read mid-way sends the click
+  to whatever lies underneath.
 
 ## Hungarian and Slovenian
 
@@ -91,5 +131,6 @@ The captions, and so the voice-over, use the informal address of the help text
 and need a native speaker's read, like the help text itself. Some pages still
 have English text in every language (the textbook page, the guides map's
 country panel, FoodScholar's follow-up box); those show in English in the clips
-too. Article search finds nothing for Hungarian or Slovenian queries, so the
-catalog clip is English only and those languages fall back to it.
+too, as do FoodChat's kitchen ingredients. Article search finds nothing for
+Hungarian or Slovenian queries, so those catalog clips type an English query
+and say why: the articles are in English.
