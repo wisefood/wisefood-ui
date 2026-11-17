@@ -7,20 +7,20 @@
     <svg
       viewBox="0 0 100 100"
       class="w-full h-full"
-      :style="{ backgroundColor: avatar.bgColor }"
+      :style="{ backgroundColor: face.bgColor }"
     >
       <!-- Face background circle -->
-      <circle cx="50" cy="50" r="50" :fill="avatar.bgColor" />
+      <circle cx="50" cy="50" r="50" :fill="face.bgColor" />
 
       <!-- Face -->
-      <circle cx="50" cy="52" r="35" :fill="avatar.skinColor" />
+      <circle cx="50" cy="52" r="35" :fill="face.skinColor" />
 
       <!-- Eyes -->
-      <g :fill="avatar.eyeColor">
+      <g :fill="face.eyeColor">
         <!-- Left eye -->
-        <ellipse :cx="38" cy="45" :rx="avatar.eyeStyle === 'round' ? 5 : 4" :ry="avatar.eyeStyle === 'round' ? 6 : 5" />
+        <ellipse :cx="38" cy="45" :rx="face.eyeStyle === 'round' ? 5 : 4" :ry="face.eyeStyle === 'round' ? 6 : 5" />
         <!-- Right eye -->
-        <ellipse :cx="62" cy="45" :rx="avatar.eyeStyle === 'round' ? 5 : 4" :ry="avatar.eyeStyle === 'round' ? 6 : 5" />
+        <ellipse :cx="62" cy="45" :rx="face.eyeStyle === 'round' ? 5 : 4" :ry="face.eyeStyle === 'round' ? 6 : 5" />
         <!-- Pupils -->
         <circle cx="38" cy="46" r="2.5" fill="#1a1a2e" />
         <circle cx="62" cy="46" r="2.5" fill="#1a1a2e" />
@@ -30,69 +30,69 @@
       </g>
 
       <!-- Eyebrows -->
-      <g :stroke="avatar.hairColor" stroke-width="2.5" stroke-linecap="round" fill="none">
-        <path :d="avatar.eyebrowStyle === 'arched' ? 'M32 38 Q38 35 44 38' : 'M32 37 L44 37'" />
-        <path :d="avatar.eyebrowStyle === 'arched' ? 'M56 38 Q62 35 68 38' : 'M56 37 L68 37'" />
+      <g :stroke="face.hairColor" stroke-width="2.5" stroke-linecap="round" fill="none">
+        <path :d="face.eyebrowStyle === 'arched' ? 'M32 38 Q38 35 44 38' : 'M32 37 L44 37'" />
+        <path :d="face.eyebrowStyle === 'arched' ? 'M56 38 Q62 35 68 38' : 'M56 37 L68 37'" />
       </g>
 
       <!-- Mouth -->
       <g>
         <path
-          v-if="avatar.mouthStyle === 'smile'"
+          v-if="face.mouthStyle === 'smile'"
           d="M38 62 Q50 72 62 62"
-          :stroke="avatar.mouthColor"
+          :stroke="face.mouthColor"
           stroke-width="3"
           stroke-linecap="round"
           fill="none"
         />
         <path
-          v-else-if="avatar.mouthStyle === 'grin'"
+          v-else-if="face.mouthStyle === 'grin'"
           d="M36 60 Q50 75 64 60"
-          :fill="avatar.mouthColor"
+          :fill="face.mouthColor"
         />
         <ellipse
-          v-else-if="avatar.mouthStyle === 'open'"
+          v-else-if="face.mouthStyle === 'open'"
           cx="50"
           cy="64"
           rx="8"
           ry="6"
-          :fill="avatar.mouthColor"
+          :fill="face.mouthColor"
         />
         <circle
           v-else
           cx="50"
           cy="63"
           r="4"
-          :fill="avatar.mouthColor"
+          :fill="face.mouthColor"
         />
       </g>
 
       <!-- Cheeks (blush) -->
-      <g v-if="avatar.hasBlush" fill="#ffb5b5" opacity="0.4">
+      <g v-if="face.hasBlush" fill="#ffb5b5" opacity="0.4">
         <ellipse cx="28" cy="55" rx="6" ry="4" />
         <ellipse cx="72" cy="55" rx="6" ry="4" />
       </g>
 
       <!-- Hair -->
-      <g :fill="avatar.hairColor">
+      <g :fill="face.hairColor">
         <!-- Different hair styles -->
-        <template v-if="avatar.hairStyle === 'short'">
+        <template v-if="face.hairStyle === 'short'">
           <ellipse cx="50" cy="22" rx="30" ry="15" />
           <rect x="22" y="15" width="56" height="15" rx="5" />
         </template>
-        <template v-else-if="avatar.hairStyle === 'curly'">
+        <template v-else-if="face.hairStyle === 'curly'">
           <circle cx="30" cy="25" r="12" />
           <circle cx="50" cy="20" r="14" />
           <circle cx="70" cy="25" r="12" />
           <circle cx="25" cy="35" r="8" />
           <circle cx="75" cy="35" r="8" />
         </template>
-        <template v-else-if="avatar.hairStyle === 'long'">
+        <template v-else-if="face.hairStyle === 'long'">
           <ellipse cx="50" cy="22" rx="32" ry="14" />
           <rect x="18" y="20" width="14" height="45" rx="7" />
           <rect x="68" y="20" width="14" height="45" rx="7" />
         </template>
-        <template v-else-if="avatar.hairStyle === 'spiky'">
+        <template v-else-if="face.hairStyle === 'spiky'">
           <polygon points="50,5 45,25 55,25" />
           <polygon points="35,10 35,28 45,25" />
           <polygon points="65,10 65,28 55,25" />
@@ -100,7 +100,7 @@
           <polygon points="75,18 72,35 62,28" />
           <ellipse cx="50" cy="28" rx="28" ry="10" />
         </template>
-        <template v-else-if="avatar.hairStyle === 'bald'">
+        <template v-else-if="face.hairStyle === 'bald'">
           <!-- No hair, just a slight highlight -->
           <ellipse cx="50" cy="25" rx="20" ry="8" fill="white" opacity="0.1" />
         </template>
@@ -112,26 +112,30 @@
       </g>
 
       <!-- Accessories -->
-      <g v-if="avatar.accessory === 'glasses'">
+      <g v-if="face.accessory === 'glasses'">
         <circle cx="38" cy="45" r="10" fill="none" stroke="#333" stroke-width="2" />
         <circle cx="62" cy="45" r="10" fill="none" stroke="#333" stroke-width="2" />
         <path d="M48 45 L52 45" stroke="#333" stroke-width="2" />
         <path d="M28 43 L20 40" stroke="#333" stroke-width="2" />
         <path d="M72 43 L80 40" stroke="#333" stroke-width="2" />
       </g>
-      <g v-else-if="avatar.accessory === 'hat'">
-        <ellipse cx="50" cy="18" rx="35" ry="8" :fill="avatar.bgColor" />
-        <rect x="30" y="5" width="40" height="15" rx="3" :fill="avatar.bgColor" />
+      <g v-else-if="face.accessory === 'hat'">
+        <ellipse cx="50" cy="18" rx="35" ry="8" :fill="face.bgColor" />
+        <rect x="30" y="5" width="40" height="15" rx="3" :fill="face.bgColor" />
       </g>
     </svg>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { AvatarConfig } from '~/utils/avatarPresets'
+import { type AvatarConfig, FALLBACK_AVATAR } from '~/utils/avatarPresets'
 
 interface Props {
-  avatar: AvatarConfig
+  /**
+   * Null draws the neutral face: a member saved without a picture must not
+   * take the page down with it (FoodChat's diner chips once did).
+   */
+  avatar: AvatarConfig | null
   /** `full` fills whatever box the parent gives it, for grids of avatars. */
   size?: 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'full'
   selected?: boolean
@@ -141,6 +145,8 @@ const props = withDefaults(defineProps<Props>(), {
   size: 'md',
   selected: false
 })
+
+const face = computed<AvatarConfig>(() => props.avatar ?? FALLBACK_AVATAR)
 
 const sizeClasses = computed(() => {
   switch (props.size) {

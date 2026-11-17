@@ -1632,7 +1632,7 @@ import {
 import { builtAroundRules } from '~/utils/planLedger'
 import type { AdjustChanges } from '~/components/foodchat/AdjustPanel.vue'
 import type { HouseholdMember } from '~/services/householdsApi'
-import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
+import { avatarForMember, type AvatarConfig } from '~/utils/avatarPresets'
 
 definePageMeta({ layout: 'app', middleware: ['auth'] })
 
@@ -2927,16 +2927,10 @@ async function handleFeedbackReason(messageId: number, reason: string) {
 }
 
 // ── Member helpers ──
-function getMemberAvatar(member: HouseholdMember): AvatarConfig | null {
-  if (!member.image_url) return null
-  return stringToAvatarConfig(member.image_url)
-}
-
 function getMemberAvatarForDisplay(member: HouseholdMember): AvatarConfig {
-  // `stringToAvatarConfig` is declared as possibly-undefined but is total over
-  // a non-empty string — it hashes into a fixed preset table. The member id is
-  // never empty, so this branch always yields a config.
-  return getMemberAvatar(member) ?? (stringToAvatarConfig(member.id) as AvatarConfig)
+  // A diner saved without a picture still gets a face; this used to return
+  // null for them and the page fell over with a 500.
+  return avatarForMember(member)
 }
 
 /** Grid width for however many meals the plan turned out to have.

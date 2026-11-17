@@ -66,6 +66,15 @@ const MAX_PER_LOAD = 3
 
 const MEDIA_PATH = /\.(?:png|jpe?g|gif|webp|avif|svg|ico|mp4|webm|vtt|woff2?|ttf|css|js|map)$/i
 const FLOWS_PROXY_PATH = /^\/v2\/sdk\//
+/**
+ * The page-view batches (`POST …/analytics/events`), the one part of the
+ * analytics ingest `isRumUrl` leaves out. Nobody asked for them; ad blockers
+ * refuse them by name, and the batch sent on `pagehide` can fail as the page
+ * goes. A failure here was telling people "We lost contact with WiseFood".
+ * The console still records it (useErrorCapture), which is where it belongs.
+ * POST only: a screen that reads events back is somebody's request.
+ */
+const INGEST_BATCH_PATH = /\/analytics\/events$/
 
 const NOISE = [
   /ResizeObserver loop/i,
@@ -126,7 +135,7 @@ function methodOf(input: RequestInfo | URL, init?: RequestInit): string {
 }
 
 /** Whether a failure of this request is ours to own. */
-function isWatched(url: string): boolean {
+function isWatched(url: string, method = 'GET'): boolean {
   if (!url || isRumUrl(url)) return false
   let parsed: URL
   try {
@@ -136,6 +145,7 @@ function isWatched(url: string): boolean {
   }
   if (!ownOrigins.has(parsed.origin)) return false
   if (FLOWS_PROXY_PATH.test(parsed.pathname)) return false
+  if (method === 'POST' && INGEST_BATCH_PATH.test(parsed.pathname)) return false
   if (ignoredPrefixes.some(prefix => parsed.href.startsWith(prefix))) return false
   return !MEDIA_PATH.test(parsed.pathname)
 }
@@ -221,8 +231,9 @@ function patchFetch(): void {
       try {
         const url = urlOf(input)
         const aborted = (error as { name?: string })?.name === 'AbortError' || init?.signal?.aborted
-        if (!aborted && isWatched(url)) {
-          const request = `${methodOf(input, init)} ${urlPathOnly(url)}`
+        const method = methodOf(input, init)
+        if (!aborted && isWatched(url, method)) {
+          const request = `${method} ${urlPathOnly(url)}`
           settleThenRaise(request, { kind: 'network', request })
         }
       } catch {
@@ -233,8 +244,9 @@ function patchFetch(): void {
 
     try {
       const url = urlOf(input)
-      if (isWatched(url)) {
-        const request = `${methodOf(input, init)} ${urlPathOnly(url)}`
+      const method = methodOf(input, init)
+      if (isWatched(url, method)) {
+        const request = `${method} ${urlPathOnly(url)}`
         if (response.ok) {
           recovered(request)
         } else if (response.status >= 500) {

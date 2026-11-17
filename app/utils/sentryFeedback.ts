@@ -31,8 +31,11 @@ export const sentryFeedbackOptions = {
   formTitle: 'Report a Bug',
   submitButtonLabel: 'Send Report',
   cancelButtonLabel: 'Cancel',
-  messageLabel: 'What happened?',
-  messagePlaceholder: 'Describe what happened and how to reproduce it...',
+  // People who hit an error rarely know what it was, and asking how to
+  // reproduce it left them with nothing to write. The error itself, the page
+  // and the failed request are attached to the report; we only need their side.
+  messageLabel: 'What were you doing?',
+  messagePlaceholder: 'For example: I opened FoodChat and asked for a plan for my family. One line is enough; the technical details are attached.',
   successMessageText: 'Thanks, your report was sent.',
   themeLight: sentryFeedbackThemeLight,
   themeDark: sentryFeedbackThemeDark

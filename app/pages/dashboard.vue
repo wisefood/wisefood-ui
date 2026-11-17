@@ -393,7 +393,7 @@ import recipeApi, { type RecipeSearchResult } from '~/services/recipeApi'
 import foodchatApi, { type MealPlan, type MealRecipe, type MemberCurrentPlans, type PlanMeal, type WeeklyMealEntry } from '~/services/foodchatApi'
 import { humaniseSlot, mealGridColumns, planMealsBySlot, plateRoleBadgeClass, slotKind } from '~/utils/planMeals'
 import type { HouseholdMember } from '~/services/householdsApi'
-import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
+import { avatarForMember, stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
 import { buildGuideDetailPath } from '~/utils/guidesCatalog'
 
 const { t, te, locale } = useI18n()
@@ -702,11 +702,7 @@ const getMemberAvatar = (member: HouseholdMember): AvatarConfig | null => {
   return stringToAvatarConfig(member.image_url)
 }
 
-const getMemberAvatarForDisplay = (member: HouseholdMember): AvatarConfig => {
-  // `stringToAvatarConfig` is declared as possibly-undefined but is total over
-  // a non-empty string — it hashes into a fixed preset table.
-  return getMemberAvatar(member) ?? (stringToAvatarConfig(member.id) as AvatarConfig)
-}
+const getMemberAvatarForDisplay = (member: HouseholdMember): AvatarConfig => avatarForMember(member)
 
 const todayMealPlan = computed<MealPlan | null>(() => {
   if (!currentMemberId.value) return null

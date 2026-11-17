@@ -203,20 +203,44 @@ export function stringToAvatarConfig(str: string): AvatarConfig | null {
   // Try parsing as index first (new format)
   const index = parseInt(value, 10)
   if (!isNaN(index) && index >= 0 && index < avatarPresets.length) {
-    return avatarPresets[index]
+    return avatarPresets[index] ?? null
   }
 
-  // Try parsing as JSON (legacy format)
+  // Try parsing as JSON (legacy format). `avatar:null` or `avatar:42` parse
+  // too, and are not a face.
   try {
-    return JSON.parse(value) as AvatarConfig
+    const parsed: unknown = JSON.parse(value)
+    if (parsed && typeof parsed === 'object' && typeof (parsed as AvatarConfig).bgColor === 'string') {
+      return parsed as AvatarConfig
+    }
+    return null
   } catch {
     return null
   }
 }
 
+/** The neutral face drawn when there is nothing better (the last preset). */
+export const FALLBACK_AVATAR: AvatarConfig = avatarPresets[avatarPresets.length - 1]!
+
+/**
+ * A member's face, always: their chosen avatar, else a preset picked by their
+ * id, so a member saved without a picture keeps the same face wherever it is
+ * used (FoodChat's diner chips; other pages show initials instead).
+ * `stringToAvatarConfig(member.id)` is NOT this — it only reads `avatar:`
+ * strings and returns null for an id.
+ */
+export function avatarForMember(member: { id: string, image_url?: string | null }): AvatarConfig {
+  const chosen = member.image_url ? stringToAvatarConfig(member.image_url) : null
+  if (chosen) return chosen
+  let hash = 0
+  for (const ch of member.id || '') hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
+  return avatarPresets[hash % avatarPresets.length] ?? FALLBACK_AVATAR
+}
+
 // Get avatar config by preset index
 export function getAvatarByIndex(index: number): AvatarConfig {
-  return avatarPresets[index % avatarPresets.length]
+  const n = avatarPresets.length
+  return avatarPresets[((Math.trunc(index) % n) + n) % n] ?? FALLBACK_AVATAR
 }
 
 // Get preset index from config (for display purposes)
