@@ -1636,7 +1636,7 @@ import { stringToAvatarConfig, type AvatarConfig } from '~/utils/avatarPresets'
 
 definePageMeta({ layout: 'app', middleware: ['auth'] })
 
-const { t, locale } = useI18n()
+const { t, te, locale } = useI18n()
 useHead({ title: computed(() => t('foodChatHome.pageTitle')) })
 
 const {
@@ -3285,7 +3285,7 @@ async function handleToolInvoke(tool: FoodChatTool, args: Record<string, unknown
  * which beats rendering `[object Object]`.
  */
 function renderToolResult(tool: FoodChatTool, result?: Record<string, any>): ToolResultView {
-  const view: ToolResultView = { title: tool.summary, lines: [] }
+  const view: ToolResultView = { title: toolResultTitle(tool), lines: [] }
   if (!result) return view
 
   const totals = result.week_totals ?? result.total ?? result.totals
@@ -3295,7 +3295,7 @@ function renderToolResult(tool: FoodChatTool, result?: Record<string, any>): Too
     }
     for (const [key, label] of [['protein_g', 'protein'], ['carbs_g', 'carbs'], ['fat_g', 'fat']] as const) {
       if (typeof totals[key] === 'number') {
-        view.lines.push({ label, value: `${Math.round(totals[key])} g` })
+        view.lines.push({ label: t(`foodChatHome.tools.nutrients.${label}`), value: `${Math.round(totals[key])} g` })
       }
     }
     // The tool says how many meals it could actually see; a bare total would
@@ -3319,12 +3319,12 @@ function renderToolResult(tool: FoodChatTool, result?: Record<string, any>): Too
       const meals = Array.isArray(day?.meals)
         ? day.meals.map((m: any) => m?.title).filter(Boolean).join(' · ')
         : ''
-      if (meals) view.lines.push({ label: String(day?.name ?? day?.day ?? ''), value: meals })
+      if (meals) view.lines.push({ label: toolDayLabel(day), value: meals })
     }
   } else if (Array.isArray(result.meals)) {
     for (const meal of result.meals) {
       if (meal?.title) {
-        view.lines.push({ label: String(meal.meal_type ?? ''), value: String(meal.title) })
+        view.lines.push({ label: toolMealLabel(meal.meal_type), value: String(meal.title) })
       }
     }
   }
@@ -3333,7 +3333,7 @@ function renderToolResult(tool: FoodChatTool, result?: Record<string, any>): Too
     for (const day of result.per_day) {
       if (typeof day?.calories === 'number') {
         view.lines.push({
-          label: String(day.name ?? `day ${day.day ?? ''}`),
+          label: toolDayLabel(day),
           value: `${Math.round(day.calories)} kcal`
         })
       }
@@ -3355,7 +3355,7 @@ function renderToolResult(tool: FoodChatTool, result?: Record<string, any>): Too
         label: String(row.item),
         value: uses > 1
           ? t('foodChatHome.tools.shoppingForMany', { count: uses })
-          : String((row.for ?? [])[0] ?? '')
+          : shoppingUse(row)
       })
     }
     // Said rather than silently truncated: a list that stops at 25 and looks
@@ -3384,6 +3384,55 @@ function renderToolResult(tool: FoodChatTool, result?: Record<string, any>): Too
 
 /** How many shopping rows the panel shows before it says how many it did not. */
 const SHOPPING_ROWS = 25
+
+/*
+ * FoodChat's tool results name days, meals and the tool itself in English:
+ * the plan analyst reads the same results, so they stay that way, and the card
+ * names them in the reader's language here. Anything not recognised is shown
+ * as FoodChat sent it rather than hidden.
+ */
+const TOOL_TITLE_KEYS: Record<string, string> = {
+  shopping_list: 'foodChatHome.tools.titles.shopping',
+  plan_totals: 'foodChatHome.tools.totalsTitle',
+  summarize_day: 'foodChatHome.tools.titles.day',
+  summarize_week: 'foodChatHome.tools.summaryTitle'
+}
+const WEEKDAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+
+function toolResultTitle(tool: FoodChatTool): string {
+  // A multi-day plan on the daily canvas is not a week.
+  const key = tool.name === 'summarize_week' && canvasMode.value === 'daily'
+    ? 'foodChatHome.tools.titles.plan'
+    : TOOL_TITLE_KEYS[tool.name]
+  return key && te(key) ? t(key) : tool.summary
+}
+
+function toolMealLabel(mealType: unknown): string {
+  const type = String(mealType ?? '').toLowerCase()
+  const key = `foodChatHome.meals.${type}`
+  return type && te(key) ? t(key) : String(mealType ?? '')
+}
+
+/** "Monday" (a weekly plan's day) or "Day 2" (a plan with no weekdays). */
+function toolDayLabel(day: { name?: unknown, day?: unknown } | undefined): string {
+  const name = String(day?.name ?? '').toLowerCase()
+  if (name && te(`dashboard.schedule.days.${name}`)) return t(`dashboard.schedule.days.${name}`)
+  const n = Number(day?.day ?? String(day?.name ?? '').replace(/\D+/g, ''))
+  if (Number.isInteger(n) && n > 0) return t('foodChatHome.planHeader.dayN', { n })
+  return String(day?.name ?? day?.day ?? '')
+}
+
+/** The one meal a shopping item is for, from FoodChat's codes when it sends them. */
+function shoppingUse(row: { for?: unknown[], uses?: Array<{ day?: number | null, meal_type?: string, weekdays?: boolean }> }): string {
+  const use = row.uses?.[0]
+  if (!use) return String((row.for ?? [])[0] ?? '')
+  const meal = toolMealLabel(use.meal_type)
+  if (!use.day) return meal
+  const day = use.weekdays && use.day >= 1 && use.day <= 7
+    ? t(`dashboard.schedule.days.${WEEKDAYS[use.day - 1]}`)
+    : t('foodChatHome.planHeader.dayN', { n: use.day })
+  return `${day} · ${meal}`
+}
 
 /**
  * Open a specific session and plan when the URL names them.

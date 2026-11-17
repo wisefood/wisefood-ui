@@ -1926,7 +1926,17 @@
       "shoppingMore": "további {count} nem látható",
       "saved": "Elmentve a terveid közé",
       "savedAs": "Elmentve „{title}” néven",
-      "unsaved": "Eltávolítva a terveid közül"
+      "unsaved": "Eltávolítva a terveid közül",
+      "titles": {
+        "shopping": "Bevásárlólista",
+        "day": "A nap összegzése",
+        "plan": "A terv összegzése"
+      },
+      "nutrients": {
+        "protein": "fehérje",
+        "carbs": "szénhidrát",
+        "fat": "zsír"
+      }
     },
     "planSettings": {
       "title": "Terv beállításai"

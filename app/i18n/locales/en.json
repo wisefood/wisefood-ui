@@ -2064,7 +2064,17 @@
       "shoppingMore": "{count} more not shown",
       "saved": "Kept in your plans",
       "savedAs": "Kept as “{title}”",
-      "unsaved": "Taken off your plans"
+      "unsaved": "Taken off your plans",
+      "titles": {
+        "shopping": "Shopping list",
+        "day": "Day summary",
+        "plan": "Plan summary"
+      },
+      "nutrients": {
+        "protein": "protein",
+        "carbs": "carbs",
+        "fat": "fat"
+      }
     },
     "planSettings": {
       "title": "Plan settings"

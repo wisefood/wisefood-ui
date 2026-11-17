@@ -1927,7 +1927,17 @@
       "shoppingMore": "{count} jih ni prikazanih",
       "saved": "Shranjeno med tvoje načrte",
       "savedAs": "Shranjeno kot »{title}«",
-      "unsaved": "Odstranjeno iz tvojih načrtov"
+      "unsaved": "Odstranjeno iz tvojih načrtov",
+      "titles": {
+        "shopping": "Nakupovalni seznam",
+        "day": "Povzetek dneva",
+        "plan": "Povzetek načrta"
+      },
+      "nutrients": {
+        "protein": "beljakovine",
+        "carbs": "ogljikovi hidrati",
+        "fat": "maščobe"
+      }
     },
     "planSettings": {
       "title": "Nastavitve načrta"
