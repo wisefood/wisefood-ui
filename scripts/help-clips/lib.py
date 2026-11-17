@@ -340,7 +340,15 @@ class Director:
 
     async def point(self, locator, steps=28):
         await locator.scroll_into_view_if_needed()
-        box = await locator.bounding_box()
+        # Wait until the element stops moving (a dialog animating in, a button
+        # re-rendered): a box read mid-transition sends the cursor elsewhere.
+        box, prev = None, None
+        for _ in range(25):
+            box = await locator.bounding_box()
+            if box and prev and all(abs(box[k] - prev[k]) < 0.5 for k in ('x', 'y', 'width', 'height')):
+                break
+            prev = box
+            await self.page.wait_for_timeout(80)
         x, y = box['x'] + box['width'] / 2, box['y'] + box['height'] / 2
         if not self.phone:
             await self.page.mouse.move(x, y, steps=steps)

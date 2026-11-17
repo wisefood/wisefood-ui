@@ -257,26 +257,66 @@ async def worst_meal(page) -> tuple[int, str]:
     return i, grades[i]
 
 
+# A dinner graded C (checked 2026-11-17 through recipe details): a normal meal
+# with room to improve. Recipe titles are English in every language.
+ADAPT_PICKS = (('bbq chicken pizza', 'BBQ Chicken Pizza'),)
+
+
 async def prepare_adapt(page, t):
-    """Off camera: the plan, with a meal that has room to improve. FoodChat
-    calls an A- or B-graded recipe "already in great shape" and offers nothing,
-    so ask for a hearty breakfast until a meal grades C or worse."""
-    await prepare_plan(page, t)
-    for _ in range(2):
-        if (await worst_meal(page))[1] >= 'C':
+    """Off camera: a plan with a meal that has room to improve. FoodChat calls
+    an A- or B-graded recipe "already in great shape" and offers nothing, and
+    it will not put a richer meal in a plan when asked (its own matching keeps
+    to healthy recipes). So compose the day: pick a rich dinner yourself, let
+    FoodChat fill the rest, and check a meal grades C or worse."""
+    lang = LANG_HINT['lang']
+    await prepare_start(page, t)
+    busy = Busy(page)
+    d = type('D', (), {'busy': busy, 'page': page, 'wait': lambda self, ms: page.wait_for_timeout(ms)})()
+    await page.get_by_text(L(lang, 'foodChatHome.manual.entry'), exact=True).first.click()
+    await page.wait_for_timeout(1200)
+    picked = False
+    for term, title in ADAPT_PICKS:
+        await page.get_by_role('button', name=L(lang, 'foodChatHome.manual.addRecipe')).last.click()   # dinner
+        search = page.get_by_placeholder(L(lang, 'foodChatHome.manual.searchPlaceholder')).first
+        await search.wait_for(timeout=20000)
+        await search.fill(term)
+        await page.wait_for_timeout(2500)
+        option = page.get_by_text(title, exact=True).first
+        if await option.count():
+            await option.click()
+            picked = True
             break
-        busy = Busy(page)
-        before = await plan_text(page)
-        d = type('D', (), {'busy': busy, 'page': page, 'wait': lambda self, ms: page.wait_for_timeout(ms)})()
-        mark = busy.started
-        await page.locator(COMPOSER).first.fill(t['prep'])
-        await page.locator('[data-flows="foodchat-send"]:visible').first.click()
-        await wait_ai(d, mark)
-        await wait_plan(d, before)
+        await page.keyboard.press('Escape')
+    if not picked:
+        raise TimeoutError('no rich dinner to pick')
+    await page.wait_for_timeout(1000)
+    mark = busy.started
+    await page.get_by_role('button', name=L(lang, 'foodChatHome.manual.fillRest')).first.click()
+    await wait_ai(d, mark)
+    await wait_plan(d)
     if (await worst_meal(page))[1] < 'C':
         raise TimeoutError('no meal with room to improve')
     await page.evaluate('window.scrollTo(0, 0)')
     await page.wait_for_timeout(1500)
+
+
+async def settle_on_dashboard(page, timeout: float = 30):
+    """The dashboard, with the guest's own profile chosen. A household with a
+    second profile sends the dashboard to "Who's eating?" (/profiles) first."""
+    t0 = time.time()
+    while time.time() - t0 < timeout:
+        await page.wait_for_timeout(1500)
+        if '/profiles' in page.url:
+            g = await guest(page)
+            card = page.get_by_text(g.get('username') or 'Guest', exact=True)
+            if not await card.count():
+                card = page.get_by_text('Guest', exact=True)
+            await card.first.click()
+            continue
+        if '/dashboard' in page.url:
+            await page.wait_for_function("document.getElementById('__nuxt')?.__vue_app__", timeout=60000)
+            return
+    raise TimeoutError(f'not on the dashboard: {page.url}')
 
 
 async def prepare_start(page, t):
@@ -290,8 +330,8 @@ async def prepare_start(page, t):
     """
     if '/dashboard' not in page.url:
         await page.goto(f'{BASE}/dashboard', wait_until='domcontentloaded')
-        await page.wait_for_function("document.getElementById('__nuxt')?.__vue_app__", timeout=60000)
-    await page.wait_for_timeout(4000)
+    await settle_on_dashboard(page)
+    await page.wait_for_timeout(3000)
     g = await guest(page)
     # A guest may start 10 conversations a day: reuse an empty one (a failed
     # take leaves one behind) before starting another.
@@ -322,7 +362,6 @@ async def prepare_diners(page, t):
             raise RuntimeError(f'could not add {t["diner"]}: {r}')
         # A fresh dashboard, so the household list the page keeps includes them.
         await page.goto(f'{BASE}/dashboard', wait_until='domcontentloaded')
-        await page.wait_for_function("document.getElementById('__nuxt')?.__vue_app__", timeout=60000)
     await prepare_start(page, t)
 
 
@@ -526,15 +565,23 @@ async def clip_pantry(d: Director, t, lang, phone):
             await d.click(chips.nth(i), pause=250)
     await d.wait(500)
     await d.caption(2, t['c2'], hold=300)
-    mark = d.busy.started
-    # With a conversation going the picker offers "Plan from these"; on a new
-    # one, "Use these" keeps the ingredients and the kitchen card plans.
-    main = picker.locator('button:visible').last   # the picker's main button
-    plans_now = (await main.inner_text()).strip() == L(lang, 'foodChatHome.pantryPicker.cook')
-    await d.click(main)
-    if not plans_now:   # "Use these": the kitchen is kept, the kitchen card plans
-        await d.wait(900)
+    # "Use these" keeps the ingredients and closes the picker; the kitchen card
+    # ("Cook from what's in my kitchen") opens it again to plan, where the
+    # button reads "Plan from these". With them kept already, it reads that now.
+    cook_label = L(lang, 'foodChatHome.pantryPicker.cook')
+    main = picker.locator('button:visible').last
+    if (await main.inner_text()).strip() != cook_label:
+        await d.click(main)
+        await d.wait(1000)
         await d.click(page.locator('[data-flows="foodchat-suggestion-kitchen"]').first)
+        await d.wait(1000)
+    cook = page.locator('button:visible', has_text=cook_label)
+    for _ in range(25):
+        if await cook.count():
+            break
+        await d.wait(200)
+    mark = d.busy.started
+    await d.click(cook.last)
     await think(d, t, mark)
     await d.fast(True, t['fast'])
     await wait_plan(d)
@@ -582,8 +629,8 @@ async def clip_diners(d: Director, t, lang, phone):
     await d.click(diner)
     await d.wait(900)
     await d.caption(2, t['c2'], hold=300)
-    mark = d.busy.started
-    await d.click(page.locator('[data-flows="foodchat-suggestions"] button').first)   # "Plan my day"
+    # A specific request: "Plan my day" alone makes FoodChat ask about cravings.
+    mark = await send(d, t['q'])
     await think(d, t, mark)
     if not await has_plan(page):
         raise TimeoutError('no plan')

@@ -101,19 +101,29 @@ show up in the demo's insights.
   for a minute or two, rarely survives. In its own namespace Chrome sees only
   loopback and goes out through a proxy over a Unix socket. Needs unprivileged
   user namespaces (`unshare --user --net`).
-- Plan clips (tools, save and share, adapt, change by chatting, adjust) open a
-  plan the language's guest already has, made once off camera and kept in
+- Plan clips (tools, save and share, change by chatting, adjust) open a plan
+  the language's guest already has, made once off camera and kept in
   `fc-plan-<lang>.json`. Start-screen clips (get a plan, build a day, cook from
-  your kitchen, plan for more people) open a new, empty conversation from the
-  dashboard: each uses one of the guest's 10 daily conversations.
+  your kitchen, plan for more people) and adapt open an empty conversation from
+  the dashboard, reusing one a failed take left behind before starting a new
+  one: a guest has 10 a day.
 - One fresh guest per language, in this order: generate-plan first (its plan
-  becomes the fixture), then tools, save-share, adapt, refine, settings, then
-  compose, pantry, diners.
+  becomes the fixture), then tools, save-share, refine, settings, compose,
+  adapt, pantry, diners (last: it adds a second profile to the household, after
+  which the dashboard first asks "Who's eating?").
 - Avoid the word "swap" in a request: FoodChat reads it as moving a meal and
-  asks which one. Adapt needs a meal graded C or worse (A and B are "already
-  in great shape"); the clip asks for a hearty breakfast off camera if needed.
-- "Cook from what you have" is a first-take clip: the kitchen is kept per
-  member, and on a re-take the picker offers "Plan from these" instead.
+  asks which one. FoodChat's Swap button suggests exactly such a message, so the
+  refine clip edits it.
+- Adapt needs a meal graded C or worse (A and B are "already in great shape"),
+  and FoodChat will not put one in a plan when asked. So the clip composes its
+  day off camera with BBQ Chicken Pizza (C) as dinner and lets FoodChat fill the
+  rest.
+- Cook from what you have: tick the ingredients, "Use these" (keeps them and
+  closes the picker), "Cook from what's in my kitchen" (opens it again), then
+  "Plan from these". On a re-take they are already kept and ticked.
+- The cursor waits until a target stops moving before it goes there: dialogs
+  animate in and buttons re-render, and a position read mid-way sends the click
+  to whatever lies underneath.
 
 ## Hungarian and Slovenian
 

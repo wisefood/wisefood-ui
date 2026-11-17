@@ -177,6 +177,9 @@ T = {
         'en': {
             'title': 'Plan for more than one person',
             'diner': 'Anna',
+            'q': 'Plan our day: simple family meals with a light dinner',
+            'ask': 'If FoodChat asks something, just answer',
+            'answer': 'No other preferences, surprise us',
             'c1': 'Choose who is eating',
             'c2': 'Ask for a plan',
             'c3': 'The plan fits everyone at the table',
@@ -185,6 +188,9 @@ T = {
         'hu': {
             'title': 'Tervezés több személyre',
             'diner': 'Anna',
+            'q': 'Tervezd meg a napunkat: egyszerű családi ételek, könnyű vacsorával',
+            'ask': 'Ha a FoodChat kérdez, csak válaszolj',
+            'answer': 'Nincs más kérésünk, lepj meg',
             'c1': 'Válaszd ki, ki eszik',
             'c2': 'Kérj tervet',
             'c3': 'A terv mindenkinek megfelel az asztalnál',
@@ -193,6 +199,9 @@ T = {
         'sl': {
             'title': 'Načrtuj za več oseb',
             'diner': 'Ana',
+            'q': 'Načrtuj najin dan: preprosti družinski obroki in lahka večerja',
+            'ask': 'Če te FoodChat kaj vpraša, samo odgovori',
+            'answer': 'Nimava drugih želja, preseneti naju',
             'c1': 'Izberi, kdo bo jedel',
             'c2': 'Prosi za načrt',
             'c3': 'Načrt ustreza vsem za mizo',
@@ -228,7 +237,6 @@ T = {
     'foodchat-adapt': {
         'en': {
             'title': 'Adapt a recipe in your plan',
-            'prep': 'Make the breakfast a full English fry-up with bacon and sausages',   # off camera, only if no meal grades C or worse; not "swap": FoodChat reads it as moving a meal
             'c1': 'Open a meal’s menu and choose {adapt}',
             'c2': 'FoodChat suggests healthier tweaks',
             'c3': 'Save the adapted version',
@@ -236,7 +244,6 @@ T = {
         },
         'hu': {
             'title': 'Recept átalakítása a tervben',
-            'prep': 'Legyen a reggeli egy bőséges angol reggeli szalonnával és kolbásszal',   # off camera, only if no meal grades C or worse; not "swap": FoodChat reads it as moving a meal
             'c1': 'Nyisd meg egy étkezés menüjét, és válaszd ezt: {adapt}',
             'c2': 'A FoodChat egészségesebb változtatásokat javasol',
             'c3': 'Mentsd el az átalakított változatot',
@@ -244,7 +251,6 @@ T = {
         },
         'sl': {
             'title': 'Prilagodi recept v načrtu',
-            'prep': 'Za zajtrk naj bo bogat angleški zajtrk s slanino in klobasami',   # off camera, only if no meal grades C or worse; not "swap": FoodChat reads it as moving a meal
             'c1': 'Odpri meni obroka in izberi {adapt}',
             'c2': 'FoodChat predlaga bolj zdrave spremembe',
             'c3': 'Shrani prilagojeno različico',
