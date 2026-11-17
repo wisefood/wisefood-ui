@@ -4,7 +4,7 @@
  * Two halves, kept apart on purpose:
  *
  * - `topics.ts` is the structure: which pages a topic covers, its features,
- *   and which of them have a guided tour or a video. One file, no language.
+ *   and which of them have a video. One file, no language.
  * - `content/<locale>.ts` is the words. One file per interface language, each
  *   typed against `HelpContent`, so a translation that skips a topic or a
  *   feature does not compile.
@@ -42,8 +42,6 @@ export interface HelpFeatureDef {
   id: string
   /** Lucide icon. */
   icon: string
-  /** Block key of the Flows manual-start block for this feature's tour. */
-  tour?: string
   /** Id of the clip in the help media manifest (`<media base>/manifest.json`). */
   video?: string
   /** Shown only to guests, or only to people with a real account. */
@@ -54,7 +52,7 @@ export interface HelpTopicDef {
   id: HelpTopicId
   area: HelpArea
   icon: string
-  /** The page a tour for this topic starts on, and where the topic list links to. */
+  /** Where the topic list links to. */
   home: string
   /** Route paths (no base URL) this topic explains. */
   match: (path: string) => boolean
@@ -85,10 +83,6 @@ export interface HelpUiText {
   allTopics: string
   backToPage: string
   thisPage: string
-  showMe: string
-  tourStarting: string
-  tourUnavailable: string
-  tourUnavailableBody: string
   watch: string
   videoLabel: string
   /** The full-screen clip player. */

@@ -1,8 +1,9 @@
-# Help companion, guided tours and the bug-report nudge
+# Help companion and the bug-report nudge
 
-Three things that help people during the evaluation: a help panel for every
-page, guided tours started from it, and a bug report offered when something
-actually breaks.
+Two things that help people during the evaluation: a help panel for every
+page, with short clips, and a bug report offered when something actually
+breaks. (Guided tours started from the panel were retired on 2026-11-17; see
+below.)
 
 ## The help panel
 
@@ -23,7 +24,7 @@ actually breaks.
 
 | File | What it holds |
 |---|---|
-| `app/help/topics.ts` | Which pages each topic covers, its features, and which features have a tour (`tour:`) or a video (`video:`). No language. |
+| `app/help/topics.ts` | Which pages each topic covers, its features, and which features have a video (`video:`). No language. |
 | `app/help/content/en.ts`, `hu.ts`, `sl.ts` | The text, one file per interface language. Each file is typed against `HelpContent`, so a missing topic or feature fails the type check. |
 | `app/help/types.ts` | The shapes and the writing conventions. |
 
@@ -131,21 +132,20 @@ rebuild.
 - **Loading:** nothing is fetched until the panel opens. After that only the
   posters load, and a video loads when someone presses play.
 
-## Guided tours (Flows)
+## Guided tours (Flows): retired from Help
 
-`flows.sh` is the spec for every tour: steps, anchors, and the rules that
-keep a tour from stalling. Tours are built in the Flows dashboard.
+Help had a **Show me** button on most features that started a Flows tour on
+the page. It was removed on 2026-11-17; the clips and written steps cover the
+same ground. The tours waited on clicks and AI results, so steps vanished and
+reappeared elsewhere on screen, the progress dots promised steps that Next
+could not reach, and a tour left halfway came back by itself later.
 
-- **"Show me" buttons.** A feature with `tour: '<key>'` gets a **Show me**
-  button that calls `startWorkflow('<key>')`. The workflow needs a *manual
-  start* block with exactly that key and frequency *every time*.
-- **Missing tours.** If no tour appears within ~3.5 s, the panel says the
-  walkthrough isn't ready, and logs `feature.used {feature: 'help', action:
-  'tour_unavailable'}`. Those events list the keys still missing in the
-  dashboard.
-- **Anchors.** Anchors are `data-flows="…"` attributes. The table in
-  `flows.sh` says which page each one is on and when it exists (some appear
-  only after a plan, an answer or a search).
+What is left of Flows: the automatic welcome tour on the dashboard. On every
+load, `app/utils/retiredTours.ts` takes the user out of any retired tour they
+are still in. `flows.sh` keeps the spec of every tour, the retired ones
+included, and the rules that keep a tour from stalling, should tours come
+back. The `data-flows="…"` anchors stay: the welcome tour and the help-clip
+recordings use them.
 
 ## The bug-report nudge
 
@@ -194,6 +194,6 @@ event carries `{feature: 'help', action, …}`:
 | `topic` | A topic was picked from the list. |
 | `expand` | A feature was opened. |
 | `video` | A clip was played. |
-| `tour` | **Show me** was pressed. |
-| `tour_unavailable` | **Show me** was pressed but no tour appeared. |
+| `tour` | **Show me** was pressed (until 2026-11-17). |
+| `tour_unavailable` | **Show me** was pressed but no tour appeared (until 2026-11-17). |
 | `still_stuck` | **Send feedback** or **Report a bug** was used from the panel. |

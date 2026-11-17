@@ -10,10 +10,6 @@ const en: HelpContent = {
     allTopics: 'All help topics',
     backToPage: 'Back to this page',
     thisPage: 'This page',
-    showMe: 'Show me',
-    tourStarting: 'Starting the walkthrough…',
-    tourUnavailable: 'This walkthrough isn’t ready yet',
-    tourUnavailableBody: 'Follow the steps in the help panel for now.',
     watch: 'Watch',
     videoLabel: 'Short video: {title}',
     player: {
@@ -185,6 +181,7 @@ const en: HelpContent = {
             'Click [[foodChatHome.manual.fillRest]] to complete the plan.'
           ]
         },
+        // Not shown: topics.ts leaves 'adapt' out until adapting reaches the plan.
         'adapt': {
           title: 'Adapt a recipe in your plan',
           body: 'Make a meal healthier or change an ingredient without leaving the plan.',
