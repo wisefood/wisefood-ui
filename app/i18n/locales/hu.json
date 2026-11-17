@@ -1650,7 +1650,8 @@
       "dayN": "{n}. nap",
       "savedPlan": "Elmentve",
       "version": "{n}. változat",
-      "versions": "A terv változatai"
+      "versions": "A terv változatai",
+      "adjustPlan": "Terv módosítása"
     },
     "tooltips": {
       "planWorksWell": "Ez a terv jól működik",
@@ -1948,7 +1949,9 @@
       "newPlan": "Új terv"
     },
     "splitter": {
-      "hint": "Húzd az átméretezéshez · dupla kattintás a visszaállításhoz"
+      "hint": "Húzd az átméretezéshez · dupla kattintás a visszaállításhoz",
+      "label": "A beszélgetés szélessége",
+      "width": "Beszélgetés: {px} px"
     },
     "pantryPicker": {
       "open": "A konyhámból",
@@ -2258,6 +2261,40 @@
       "legumes": "Hüvelyesek",
       "herbs_and_spices": "Fűszerek",
       "sugars": "Cukrok"
+    },
+    "shopping": {
+      "title": "A bevásárlólistád",
+      "subtitle": "{items} tétel {dishes} ételhez",
+      "progress": "{got} / {total} a kosárban",
+      "groupBy": "Lista csoportosítása",
+      "byAisle": "Részlegenként",
+      "byMeal": "Étkezésenként",
+      "cheer": {
+        "ready": "Indulhatsz, ha készen állsz 🛒",
+        "start": "Jó kezdés 👍",
+        "almost": "Mindjárt kész 🏃",
+        "done": "Minden a kosárban! 🎉"
+      },
+      "allDone": "Minden a kosárban. Jöhet a főzés!",
+      "kitchenTitle": "Már megvan otthon",
+      "kitchenNote": "Azt mondtad a FoodChatnek, hogy ezek megvannak, ezért lekerültek a listáról.",
+      "amounts": "A mennyiségeket a receptekben találod.",
+      "copy": "Lista másolása",
+      "copied": "Kimásolva",
+      "copyFailed": "Nem sikerült kimásolni a listát. Próbáld újra.",
+      "done": "Kész",
+      "toGet": "{count} hiányzik",
+      "things": "{count} tétel",
+      "forMeals": "{count} étkezéshez",
+      "aisles": {
+        "produce": "Zöldség és gyümölcs",
+        "protein": "Hús, hal és hüvelyesek",
+        "dairy": "Tejtermék és tojás",
+        "grains": "Pékáru és gabona",
+        "cupboard": "Kamra",
+        "herbs": "Fűszerek",
+        "other": "Egyéb"
+      }
     }
   },
   "a11y": {

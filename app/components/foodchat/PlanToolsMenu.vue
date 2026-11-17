@@ -12,24 +12,53 @@
     tool that is offered exists. Each entry declares whether it changes the plan,
     which is what separates the confirm-first items from the rest.
   -->
-  <span class="inline-flex flex-wrap items-center justify-end gap-2">
+  <span
+    class="inline-flex flex-wrap items-center justify-end"
+    :class="iconOnly ? 'gap-0.5' : 'gap-2'"
+  >
     <!-- The tools worth a button of their own, in front of the menu.
          "What to buy" is what people come back to a plan for; behind a menu
          labelled with a wand it was one of seven things nobody opened. -->
-    <UButton
-      v-for="tool in promoted"
-      :key="tool.name"
-      size="xs"
-      color="neutral"
-      variant="subtle"
-      :icon="props.running === tool.name ? 'i-lucide-loader-2' : icon(tool.name)"
-      :ui="{ leadingIcon: props.running === tool.name ? 'animate-spin' : '' }"
-      :disabled="busy"
-      :data-flows="`foodchat-tool-${tool.name}`"
-      @click="invoke(tool)"
-    >
-      {{ label(tool) }}
-    </UButton>
+    <template v-if="iconOnly">
+      <UTooltip
+        v-for="tool in promoted"
+        :key="tool.name"
+        :text="label(tool)"
+      >
+        <UButton
+          color="neutral"
+          variant="ghost"
+          square
+          class="size-10 rounded-full justify-center text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800"
+          :aria-label="label(tool)"
+          :disabled="busy"
+          :data-flows="`foodchat-tool-${tool.name}`"
+          @click="invoke(tool)"
+        >
+          <UIcon
+            :name="props.running === tool.name ? 'i-lucide-loader-2' : icon(tool.name)"
+            class="size-5"
+            :class="props.running === tool.name ? 'animate-spin' : ''"
+          />
+        </UButton>
+      </UTooltip>
+    </template>
+    <template v-else>
+      <UButton
+        v-for="tool in promoted"
+        :key="tool.name"
+        size="xs"
+        color="neutral"
+        variant="subtle"
+        :icon="props.running === tool.name ? 'i-lucide-loader-2' : icon(tool.name)"
+        :ui="{ leadingIcon: props.running === tool.name ? 'animate-spin' : '' }"
+        :disabled="busy"
+        :data-flows="`foodchat-tool-${tool.name}`"
+        @click="invoke(tool)"
+      >
+        {{ label(tool) }}
+      </UButton>
+    </template>
     <UDropdownMenu
       v-if="menuItems.length"
       :items="menuItems"
@@ -40,8 +69,25 @@
            member has to click it to find out that "replace this day" lives
            behind it. The day rows keep the icon because there is one per day
            and seven labelled buttons is a toolbar, not a plan. -->
+      <!-- A toolbar of icons: the menu is "⋯", named by its label. -->
       <UButton
-        v-if="showLabel"
+        v-if="iconOnly"
+        color="neutral"
+        variant="ghost"
+        square
+        class="size-10 rounded-full justify-center text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800"
+        :disabled="busy"
+        :aria-label="t('foodChatHome.tools.label')"
+        :title="t('foodChatHome.tools.label')"
+      >
+        <UIcon
+          :name="menuRunning ? 'i-lucide-loader-2' : 'i-lucide-ellipsis'"
+          class="size-5"
+          :class="menuRunning ? 'animate-spin' : ''"
+        />
+      </UButton>
+      <UButton
+        v-else-if="showLabel"
         size="xs"
         color="neutral"
         variant="subtle"
@@ -101,6 +147,11 @@ const props = withDefaults(defineProps<{
    * a toolbar, not a plan.
    */
   showLabel?: boolean
+  /**
+   * Round icon buttons, each named by its tooltip, and "⋯" for the menu: the
+   * plan toolbar, where Adjust is the one labelled button.
+   */
+  iconOnly?: boolean
   /** Name of the tool currently running, so only its own button spins. */
   running?: string | null
   busy?: boolean
@@ -115,6 +166,7 @@ const props = withDefaults(defineProps<{
   day: null,
   scope: 'plan',
   showLabel: false,
+  iconOnly: false,
   running: null,
   busy: false,
   promote: () => [],

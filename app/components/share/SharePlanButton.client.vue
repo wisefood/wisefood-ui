@@ -8,7 +8,29 @@
 -->
 <template>
   <div>
+    <!-- Icon-only where a toolbar names its actions by tooltip. -->
+    <UTooltip
+      v-if="iconOnly"
+      :text="t('share.button')"
+    >
+      <UButton
+        variant="ghost"
+        color="neutral"
+        square
+        class="cursor-pointer size-10 rounded-full justify-center text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800"
+        :aria-label="t('share.button')"
+        :loading="creating"
+        @click="open"
+      >
+        <UIcon
+          v-if="!creating"
+          name="i-lucide-share-2"
+          class="size-5"
+        />
+      </UButton>
+    </UTooltip>
     <UButton
+      v-else
       :size="size"
       :variant="variant"
       color="neutral"
@@ -151,12 +173,15 @@ const props = withDefaults(defineProps<{
   title?: string
   size?: 'xs' | 'sm' | 'md'
   variant?: 'solid' | 'soft' | 'ghost' | 'outline' | 'subtle'
+  /** A round icon button with a tooltip, for a toolbar of icons. */
+  iconOnly?: boolean
 }>(), {
   kind: 'meal_plan',
   memberId: '',
   title: '',
   size: 'sm',
-  variant: 'ghost'
+  variant: 'ghost',
+  iconOnly: false
 })
 
 const { t } = useI18n()

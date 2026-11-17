@@ -11,6 +11,7 @@
       brand-class="text-brandp-500 dark:text-brandp-400"
       :subtitle="t('foodChatHome.subtitle')"
       compact
+      dense
     />
 
     <AppFeatureGate feature="foodchat">
@@ -221,14 +222,14 @@
       <div
         v-if="hasSentFirstMessage"
         key="split"
-        class="flex-1 flex flex-col items-center min-h-0 sm:px-6 sm:py-6 lg:pt-12"
+        class="flex-1 flex flex-col items-center min-h-0 sm:px-6 lg:px-8 sm:pt-5 sm:pb-6"
       >
         <!-- ── One pane at a time below `lg` ──
              A phone cannot show the conversation and the plan side by side,
              so it shows one and names the other. The switch sits where a tab
              bar would, and the button beside it opens the rail's panel as a
              sheet, with the same count the rail's spine shows. -->
-        <div class="fc-pane-bar lg:hidden w-full max-w-7xl 2xl:max-w-[100rem] shrink-0 flex items-center gap-2 px-3 py-2 sm:px-0 sm:pt-0 sm:pb-3">
+        <div class="fc-pane-bar lg:hidden w-full max-w-[100rem] shrink-0 flex items-center gap-2 px-3 py-2 sm:px-0 sm:pt-0 sm:pb-3">
           <div
             class="fc-segmented flex-1 sm:flex-none"
             data-flows="foodchat-pane-switch"
@@ -265,7 +266,7 @@
 
         <div
           ref="splitWrap"
-          class="fc-split-wrap flex w-full max-w-7xl 2xl:max-w-[100rem] flex-1 min-h-0"
+          class="fc-split-wrap flex w-full max-w-[100rem] flex-1 min-h-0"
         >
 
         <!-- ── LEFT: Chat column (FoodScholar-style floating) ── -->
@@ -607,19 +608,30 @@
              session. Double-click restores the default. -->
         <div
           class="fc-splitter shrink-0 group"
+          :class="{ 'is-dragging': splitDragging }"
           data-track="foodchat.splitter"
           data-rum-label="Panel splitter"
           role="separator"
           aria-orientation="vertical"
+          :aria-label="t('foodChatHome.splitter.label')"
           :aria-valuenow="Math.round(chatWidth)"
+          :aria-valuemin="SPLIT_MIN"
+          :aria-valuemax="SPLIT_MAX"
           tabindex="0"
           :title="t('foodChatHome.splitter.hint')"
           @pointerdown="beginDrag"
           @dblclick="resetSplit"
-          @keydown.left.prevent="nudgeSplit(-24)"
-          @keydown.right.prevent="nudgeSplit(24)"
+          @keydown.left.prevent="nudgeSplit($event.shiftKey ? -96 : -24)"
+          @keydown.right.prevent="nudgeSplit($event.shiftKey ? 96 : 24)"
+          @keydown.home.prevent="nudgeSplit(-SPLIT_MAX)"
+          @keydown.end.prevent="nudgeSplit(SPLIT_MAX)"
         >
           <span class="fc-splitter-grip" />
+          <span
+            v-if="splitDragging"
+            class="fc-splitter-width"
+            aria-hidden="true"
+          >{{ t('foodChatHome.splitter.width', { px: Math.round(chatWidth) }) }}</span>
         </div>
 
         <!-- ── RIGHT: Canvas column ── -->
@@ -873,36 +885,39 @@
                   </span>
 
                   <!-- What you can DO with this plan, at the end of its own
-                       heading and said in words.
-                       A bookmark glyph and a wand glyph wedged between the
-                       title and the version picker read as decoration; nothing
-                       about them says "keep this" or "there are seven things
-                       here". Grouped, labelled, and pushed right so the row
-                       reads: what this is · when it was made · what you can do
-                       with it. -->
-                  <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
-                    <UButton
+                       heading. Adjust is the one thing most people come here
+                       to do, so it is the one filled, labelled button; save,
+                       share, what to buy and the rest are icons people already
+                       know, each named by its tooltip and its aria-label. -->
+                  <div class="ml-auto flex flex-wrap items-center justify-end gap-0.5">
+                    <UTooltip
                       v-if="displayedPlanId"
-                      size="xs"
-                      :color="displayedPlanSaved ? 'primary' : 'neutral'"
-                      :variant="displayedPlanSaved ? 'soft' : 'subtle'"
-                      :icon="displayedPlanSaved ? 'i-lucide-bookmark-check' : 'i-lucide-bookmark'"
-                      :disabled="sending"
-                      data-flows="foodchat-save-plan"
-                      @click="handleTogglePlanSaved"
+                      :text="displayedPlanSaved
+                        ? t('foodChatHome.planHeader.savedPlan')
+                        : t('foodChatHome.planHeader.savePlan')"
                     >
-                      <template #leading>
+                      <UButton
+                        color="neutral"
+                        variant="ghost"
+                        square
+                        class="size-10 rounded-full justify-center hover:bg-gray-100 dark:hover:bg-zinc-800"
+                        :class="displayedPlanSaved ? 'text-brandp-500 dark:text-brandp-300' : 'text-gray-600 dark:text-zinc-300'"
+                        :aria-label="displayedPlanSaved
+                          ? t('foodChatHome.planHeader.savedPlan')
+                          : t('foodChatHome.planHeader.savePlan')"
+                        :aria-pressed="displayedPlanSaved"
+                        :disabled="sending"
+                        data-flows="foodchat-save-plan"
+                        @click="handleTogglePlanSaved"
+                      >
                         <BurstIcon
                           name="i-lucide-bookmark"
                           active-name="i-lucide-bookmark-check"
                           :active="displayedPlanSaved"
-                          class="size-4"
+                          class="size-5"
                         />
-                      </template>
-                      {{ displayedPlanSaved
-                        ? t('foodChatHome.planHeader.savedPlan')
-                        : t('foodChatHome.planHeader.savePlan') }}
-                    </UButton>
+                      </UButton>
+                    </UTooltip>
                     <!-- Sharing belongs here rather than only on the
                          dashboard: this is where a plan is made and refined,
                          so it is where somebody decides it is worth sending. -->
@@ -919,8 +934,7 @@
                       :title="canvasMode === 'weekly'
                         ? t('foodChatHome.planHeader.weeklyPlan')
                         : t('foodChatHome.planHeader.dailyPlan')"
-                      size="xs"
-                      variant="subtle"
+                      icon-only
                       data-flows="foodchat-share-plan"
                     />
                     <span
@@ -936,10 +950,23 @@
                         :busy="sending"
                         :promote="['shopping_list']"
                         :exclude="displayedPlanId ? ['save_plan'] : []"
-                        show-label
+                        icon-only
                         @invoke="handleToolInvoke"
                       />
                     </span>
+                    <!-- On a phone the "built around" line below is itself
+                         the Adjust button; one door per screen. -->
+                    <template v-if="!isPhone">
+                      <span class="mx-2 h-6 w-px bg-gray-200 dark:bg-zinc-700" aria-hidden="true" />
+                      <UButton
+                        icon="i-lucide-sliders-horizontal"
+                        class="fc-adjust-button"
+                        data-flows="foodchat-plan-adjust"
+                        @click="adjustOpen = true"
+                      >
+                        {{ t('foodChatHome.planHeader.adjustPlan') }}
+                      </UButton>
+                    </template>
                   </div>
                 </div>
 
@@ -949,6 +976,7 @@
                 <div class="mb-4 flex flex-col gap-3">
                   <FoodchatBuiltAround
                     :compact="isPhone"
+                    :hide-adjust="!isPhone"
                     :diners="builtAroundDiners"
                     :pantry="pantryItems"
                     :rules="builtAroundRuleRows"
@@ -959,6 +987,17 @@
                   />
                   <FoodchatUnmetNotice :ledger="displayedLedger" @why="openWhy" />
                 </div>
+
+                <!-- What to buy: a checklist dialog, not a card above the meals. -->
+                <FoodchatShoppingListDialog
+                  v-if="shoppingList"
+                  v-model:open="shoppingOpen"
+                  :items="shoppingList.items"
+                  :dishes="shoppingList.dishes"
+                  :storage-key="shoppingList.key"
+                  :pantry="pantryItems"
+                  :use-label="shoppingUseLabel"
+                />
 
                 <!-- The last tool result. Dismissible, and never mistaken for
                      the plan itself: a summary is an answer, not a change. -->
@@ -1630,6 +1669,7 @@ import {
   type NormalisedMeal
 } from '~/utils/planMeals'
 import { builtAroundRules } from '~/utils/planLedger'
+import type { ShoppingItem, ShoppingUse } from '~/utils/shoppingAisles'
 import type { AdjustChanges } from '~/components/foodchat/AdjustPanel.vue'
 import type { HouseholdMember } from '~/services/householdsApi'
 import { avatarForMember, type AvatarConfig } from '~/utils/avatarPresets'
@@ -2972,6 +3012,8 @@ const SPLIT_DEFAULT = 420
 
 const splitWrap = ref<HTMLElement | null>(null)
 const chatWidth = ref(SPLIT_DEFAULT)
+/** While the handle is held: it shows the chat's width beside the grip. */
+const splitDragging = ref(false)
 
 function clampSplit(px: number): number {
   // Never wider than half: past that the "chat column" is the page and the
@@ -2994,6 +3036,7 @@ function beginDrag(event: PointerEvent) {
   document.body.style.cursor = 'col-resize'
   // Dragging over the canvas selects its text otherwise, which looks broken.
   document.body.style.userSelect = 'none'
+  splitDragging.value = true
 
   const move = (e: PointerEvent) => {
     chatWidth.value = clampSplit(startWidth + (e.clientX - startX))
@@ -3004,6 +3047,7 @@ function beginDrag(event: PointerEvent) {
     target.removeEventListener('pointercancel', up)
     document.body.style.cursor = ''
     document.body.style.userSelect = ''
+    splitDragging.value = false
     persistSplit()
   }
   target.addEventListener('pointermove', move)
@@ -3236,6 +3280,13 @@ interface ToolResultView {
 const toolResult = ref<ToolResultView | null>(null)
 
 /**
+ * The shopping list opens as its own dialog: a checklist to take to the shop,
+ * not a grey card above the meals. Kept here so reopening shows the same list.
+ */
+const shoppingList = ref<{ items: ShoppingItem[], dishes: number, key: string } | null>(null)
+const shoppingOpen = ref(false)
+
+/**
  * The day a day-scoped tool would act on.
  *
  * The toolbar menu sits above the whole canvas, so on a weekly plan it can only
@@ -3258,6 +3309,15 @@ async function handleToolInvoke(tool: FoodChatTool, args: Record<string, unknown
   toolResult.value = null
   try {
     const result = await invokeTool<Record<string, any>>(tool, args)
+    if (tool.name === 'shopping_list' && Array.isArray(result?.items)) {
+      shoppingList.value = {
+        items: result.items as ShoppingItem[],
+        dishes: Number(result.dishes) || 0,
+        key: `${canvasMode.value}:${displayedPlanId.value ?? 'current'}`
+      }
+      shoppingOpen.value = true
+      return
+    }
     toolResult.value = renderToolResult(tool, result)
   } catch (err: any) {
     // A ToolError is a 400 carrying member-facing prose — "this plan covers
@@ -3417,9 +3477,14 @@ function toolDayLabel(day: { name?: unknown, day?: unknown } | undefined): strin
 }
 
 /** The one meal a shopping item is for, from FoodChat's codes when it sends them. */
-function shoppingUse(row: { for?: unknown[], uses?: Array<{ day?: number | null, meal_type?: string, weekdays?: boolean }> }): string {
+function shoppingUse(row: { for?: unknown[], uses?: ShoppingUse[] }): string {
   const use = row.uses?.[0]
   if (!use) return String((row.for ?? [])[0] ?? '')
+  return shoppingUseLabel(use)
+}
+
+/** One use of a shopping item in the reader's words: "Lunch", "Mon · Dinner". */
+function shoppingUseLabel(use: ShoppingUse): string {
   const meal = toolMealLabel(use.meal_type)
   if (!use.day) return meal
   const day = use.weekdays && use.day >= 1 && use.day <= 7
@@ -3592,15 +3657,31 @@ watch(() => latestMealPlan.value?.id, (id) => {
      the fold and the keyboard put it further. */
   flex: 1 1 auto;
   min-height: 0;
-  border-radius: 1.25rem;
+  border-radius: 1.375rem;
   overflow: hidden;
   border: 1px solid rgb(228 228 231 / 0.8);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.06);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.06), 0 12px 32px rgb(26 19 32 / 0.06);
 }
 .dark .fc-split-wrap {
   border-color: rgb(63 63 70 / 0.6);
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.2);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.2), 0 12px 32px rgb(0 0 0 / 0.25);
 }
+
+/* The plan's one filled button. Plum like the chat's send button, a pill like
+   the icons beside it. */
+.fc-adjust-button {
+  height: 2.5rem;
+  border-radius: 9999px;
+  padding-inline: 0.875rem 1.125rem;
+  background: var(--color-brandp-500);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgb(45 20 61 / 0.25);
+}
+.fc-adjust-button:hover { background: var(--color-brandp-600); }
+.fc-adjust-button:focus-visible { outline: 2px solid var(--color-brandp-500); outline-offset: 2px; }
+.dark .fc-adjust-button { background: var(--color-brandp-400); }
+.dark .fc-adjust-button:hover { background: var(--color-brandp-300); color: var(--color-brandp-900); }
 @media (width < 40rem) {
   /* Edge to edge on a phone: a rounded card inside a 375px screen spends
      its border on nothing. */
@@ -3635,30 +3716,65 @@ watch(() => latestMealPlan.value?.id, (id) => {
 }
 
 /* ── The drag handle between chat and canvas ──
-   Six pixels of hit area with a two-pixel grip: wide enough to grab without
-   aiming, narrow enough not to read as a border. */
+   Twelve pixels of hit area, a hairline, and a grip that grows and turns plum
+   under the pointer: easy to find, quiet until wanted. */
 .fc-splitter {
-  width: 0.5rem;
+  position: relative;
+  width: 0.75rem;
   cursor: col-resize;
   display: flex;
   align-items: center;
   justify-content: center;
   touch-action: none;
+  background: white;
+}
+.fc-splitter::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: 50%;
+  width: 1px;
+  background: rgb(239 237 242);
 }
 .fc-splitter-grip {
-  width: 2px;
-  height: 2.5rem;
+  position: relative;
+  width: 4px;
+  height: 2.75rem;
   border-radius: 9999px;
-  background: rgb(212 212 216);
+  background: rgb(217 212 222);
   transition: background-color 150ms, height 150ms;
 }
 .fc-splitter:hover .fc-splitter-grip,
-.fc-splitter:focus-visible .fc-splitter-grip {
-  background: var(--ui-primary, rgb(99 102 241));
-  height: 4rem;
+.fc-splitter:focus-visible .fc-splitter-grip,
+.fc-splitter.is-dragging .fc-splitter-grip {
+  background: var(--color-brandp-500);
+  height: 4.25rem;
 }
 .fc-splitter:focus-visible { outline: none; }
+.fc-splitter-width {
+  position: absolute;
+  top: 50%;
+  left: 1.125rem;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+  padding: 0.375rem 0.625rem;
+  border-radius: 0.5rem;
+  background: rgb(26 19 32);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.dark .fc-splitter { background: rgb(24 24 27); }
+.dark .fc-splitter::before { background: rgb(39 39 42); }
 .dark .fc-splitter-grip { background: rgb(63 63 70); }
+.dark .fc-splitter:hover .fc-splitter-grip,
+.dark .fc-splitter:focus-visible .fc-splitter-grip,
+.dark .fc-splitter.is-dragging .fc-splitter-grip { background: var(--color-brandp-300); }
+@media (prefers-reduced-motion: reduce) {
+  .fc-splitter-grip { transition: none; }
+}
 
 /* ── The right rail ──
    A spine when shut, a column when open. Fixed widths rather than a second

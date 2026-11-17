@@ -27,8 +27,11 @@
     </div>
 
     <div
-      class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6"
-      :class="compact ? 'hidden sm:block' : ''"
+      class="mx-auto px-4 sm:px-6"
+      :class="[
+        compact ? 'hidden sm:block' : '',
+        dense ? 'max-w-[100rem] lg:px-10 py-3 sm:py-3.5' : 'max-w-7xl py-4 sm:py-6'
+      ]"
     >
       <div class="flex items-center justify-between gap-3">
         <!-- A 44px hit box that does not change the row's height. -->
@@ -44,9 +47,9 @@
           <slot name="actions" />
         </div>
       </div>
-      <div class="mt-1">
+      <div :class="dense ? 'mt-0.5' : 'mt-1'">
         <h1 class="font-light text-zinc-900 dark:text-white tracking-tight">
-          <span :class="['font-serif italic text-2xl sm:text-3xl md:text-4xl', brandClass]">{{ brandTitle }}</span>
+          <span :class="['font-serif italic', dense ? 'text-2xl sm:text-3xl' : 'text-2xl sm:text-3xl md:text-4xl', brandClass]">{{ brandTitle }}</span>
         </h1>
         <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 font-light">{{ subtitle }}</p>
       </div>
@@ -63,5 +66,11 @@ defineProps<{
   subtitle: string
   /** One row below `sm`. For pages that own the whole screen. */
   compact?: boolean
+  /**
+   * Less height above the work, in the page's wide column: for a page whose
+   * content is one tall workspace (FoodChat), where every pixel of header is
+   * a pixel the chat and the plan do not get.
+   */
+  dense?: boolean
 }>()
 </script>

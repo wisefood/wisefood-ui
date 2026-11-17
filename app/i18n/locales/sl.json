@@ -1651,7 +1651,8 @@
       "dayN": "{n}. dan",
       "savedPlan": "Shranjeno",
       "version": "različica {n}",
-      "versions": "Različice načrta"
+      "versions": "Različice načrta",
+      "adjustPlan": "Prilagodi načrt"
     },
     "tooltips": {
       "planWorksWell": "Ta načrt deluje dobro",
@@ -1949,7 +1950,9 @@
       "newPlan": "Nov načrt"
     },
     "splitter": {
-      "hint": "Povleci za spremembo velikosti · dvojni klik za ponastavitev"
+      "hint": "Povleci za spremembo velikosti · dvojni klik za ponastavitev",
+      "label": "Širina klepeta",
+      "width": "Klepet: {px} px"
     },
     "pantryPicker": {
       "open": "Iz moje kuhinje",
@@ -2259,6 +2262,40 @@
       "legumes": "Stročnice",
       "herbs_and_spices": "Zelišča in začimbe",
       "sugars": "Sladkorji"
+    },
+    "shopping": {
+      "title": "Tvoj nakupovalni seznam",
+      "subtitle": "{items} stvari za {dishes} jedi",
+      "progress": "{got} od {total} v košarici",
+      "groupBy": "Razvrsti seznam",
+      "byAisle": "Po oddelkih",
+      "byMeal": "Po obrokih",
+      "cheer": {
+        "ready": "Pripravljeno, ko boš ti 🛒",
+        "start": "Dober začetek 👍",
+        "almost": "Skoraj končano 🏃",
+        "done": "Vse je v košarici! 🎉"
+      },
+      "allDone": "Vse je v košarici. Čas je za kuhanje!",
+      "kitchenTitle": "Že imaš doma",
+      "kitchenNote": "FoodChatu si povedal, da to imaš, zato tega ni na seznamu.",
+      "amounts": "Količine so v posameznih receptih.",
+      "copy": "Kopiraj seznam",
+      "copied": "Kopirano",
+      "copyFailed": "Seznama ni bilo mogoče kopirati. Poskusi znova.",
+      "done": "Končano",
+      "toGet": "še {count}",
+      "things": "{count} stvari",
+      "forMeals": "{count} obrokov",
+      "aisles": {
+        "produce": "Sadje in zelenjava",
+        "protein": "Meso, ribe in stročnice",
+        "dairy": "Mlečni izdelki in jajca",
+        "grains": "Kruh in žita",
+        "cupboard": "Shramba",
+        "herbs": "Zelišča in začimbe",
+        "other": "Drugo"
+      }
     }
   },
   "a11y": {

@@ -124,6 +124,7 @@
     >{{ t('foodChatHome.builtAround.nothing') }}</span>
 
     <UButton
+      v-if="!hideAdjust"
       size="xs"
       color="neutral"
       variant="subtle"
@@ -155,6 +156,8 @@ const props = withDefaults(defineProps<{
   card?: PlanParameterCard | null
   /** One button instead of a row of chips. */
   compact?: boolean
+  /** Leave out the line's own Adjust button: the plan's toolbar carries it. */
+  hideAdjust?: boolean
 }>(), {
   diners: () => [],
   pantry: () => [],
@@ -162,7 +165,8 @@ const props = withDefaults(defineProps<{
   statedTags: () => [],
   facets: () => [],
   card: null,
-  compact: false
+  compact: false,
+  hideAdjust: false
 })
 
 const emit = defineEmits<{ adjust: [] }>()

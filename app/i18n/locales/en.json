@@ -1788,7 +1788,8 @@
       "dayN": "Day {n}",
       "savedPlan": "Saved",
       "version": "version {n}",
-      "versions": "Plan versions"
+      "versions": "Plan versions",
+      "adjustPlan": "Adjust plan"
     },
     "tooltips": {
       "planWorksWell": "This plan works well",
@@ -2086,7 +2087,9 @@
       "newPlan": "New plan"
     },
     "splitter": {
-      "hint": "Drag to resize · double-click to reset"
+      "hint": "Drag to resize · double-click to reset",
+      "label": "Resize the chat",
+      "width": "Chat {px} px"
     },
     "pantryPicker": {
       "open": "From my kitchen",
@@ -2396,6 +2399,40 @@
       "legumes": "Legumes",
       "herbs_and_spices": "Herbs and spices",
       "sugars": "Sugars"
+    },
+    "shopping": {
+      "title": "Your shopping list",
+      "subtitle": "{items} things for {dishes} dishes",
+      "progress": "{got} of {total} in the basket",
+      "groupBy": "Group the list",
+      "byAisle": "By aisle",
+      "byMeal": "By meal",
+      "cheer": {
+        "ready": "Ready when you are 🛒",
+        "start": "Off to a good start 👍",
+        "almost": "Almost there 🏃",
+        "done": "All in the basket! 🎉"
+      },
+      "allDone": "Everything's in the basket. Time to cook something good!",
+      "kitchenTitle": "Already in your kitchen",
+      "kitchenNote": "You told FoodChat you have these, so they're off the list.",
+      "amounts": "Amounts are in each recipe.",
+      "copy": "Copy list",
+      "copied": "Copied",
+      "copyFailed": "Couldn't copy the list. Try again.",
+      "done": "Done",
+      "toGet": "{count} to get",
+      "things": "{count} items",
+      "forMeals": "{count} meals",
+      "aisles": {
+        "produce": "Fruit & veg",
+        "protein": "Meat, fish & beans",
+        "dairy": "Dairy & eggs",
+        "grains": "Bread & grains",
+        "cupboard": "Cupboard",
+        "herbs": "Herbs & spices",
+        "other": "Other"
+      }
     }
   },
   "a11y": {
