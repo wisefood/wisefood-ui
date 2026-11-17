@@ -559,6 +559,82 @@ export interface PlanReview {
       detail?: string
       kind?: string
     }>
+    /** What the plan was asked for; null for plans made before it was kept. */
+    request?: PlanRequest | null
+  } | null
+}
+
+/**
+ * What a FoodChat plan was asked for, kept with the plan: the member's
+ * message, FoodChat's reading of it (the planning state) and the profile
+ * fields it planned around.
+ */
+export interface PlanRequest {
+  message: string | null
+  reading: {
+    spec?: {
+      num_days?: number
+      meals?: string[]
+      plates?: Record<string, unknown>
+      slot_food_groups?: Record<string, unknown>
+    }
+    anchors?: Record<string, unknown>
+    excluded_recipe_ids?: string[]
+    use_favorites?: boolean | null
+    pantry?: string[]
+    diet_tags?: string[]
+    claim_tags?: string[]
+    max_minutes?: number | null
+    cuisines?: string[]
+    moods?: string[]
+    flavor_profiles?: string[]
+    food_groups?: string[]
+  } | null
+  profile: {
+    diet?: string[]
+    allergies?: string[]
+    calorie_target?: number | null
+    dietary_goals?: string[]
+    min_nutri_score?: string | null
+    food_likes?: string[]
+    food_dislikes?: string[]
+    preferences?: string[]
+    age_group?: string | null
+  } | null
+}
+
+/** One message of a FoodChat conversation, as a reviewer reads it. */
+export interface TranscriptMessage {
+  id: number
+  role: 'user' | 'assistant' | string
+  content: string
+  truncated: boolean
+  /** How FoodChat read the turn; stamped since 2026-11-17, null before. */
+  intent: string | null
+  /** The plan this reply made; stamped since 2026-11-17, null before. */
+  plan_id: string | null
+  timestamp: string | null
+}
+
+/** One FoodChat conversation: every message, and every plan with its request. */
+export interface ConversationReview {
+  session_id: string
+  available: boolean
+  reason: string | null
+  transcript: {
+    session_id: string
+    created_at: string | null
+    truncated: boolean
+    messages: TranscriptMessage[]
+    plans: Array<{
+      plan_id: string
+      plan_type: string
+      version: number
+      parent_id: string | null
+      saved: boolean
+      created_at: string | null
+      request: PlanRequest | null
+    }>
   } | null
 }
 
@@ -1254,6 +1330,9 @@ function isNotFound(error: unknown): boolean {
   return (error as { status?: number } | null)?.status === 404
 }
 
+/** In-flight and finished conversation reads, by FoodChat conversation id. */
+const conversationReads = new Map<string, Promise<ConversationReview | null>>()
+
 class InsightsApiService {
   private readonly basePath = '/analytics'
 
@@ -1488,6 +1567,35 @@ class InsightsApiService {
     } catch {
       return null
     }
+  }
+
+  /**
+   * One FoodChat conversation, turn by turn. Several turns of a session share
+   * a conversation, so one read serves them all: kept per id for the page's
+   * life (each read is recorded as expert activity, so it is not repeated).
+   */
+  getConversation(conversationId: string): Promise<ConversationReview | null> {
+    const cached = conversationReads.get(conversationId)
+    if (cached) return cached
+    const read = (async () => {
+      try {
+        const result = asResult<ConversationReview | null>(
+          await wisefoodRestApi.get<unknown>(
+            `${this.basePath}/foodchat/conversations/${encodeURIComponent(conversationId)}`
+          ),
+          null
+        )
+        // Only a conversation that came back is kept; "FoodChat did not
+        // answer" should be tried again on the next open.
+        if (!result?.available) conversationReads.delete(conversationId)
+        return result
+      } catch {
+        conversationReads.delete(conversationId)
+        return null
+      }
+    })()
+    conversationReads.set(conversationId, read)
+    return read
   }
 
   async getRecentSessions(limit = 50, days = 30): Promise<Array<{

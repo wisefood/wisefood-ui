@@ -32,6 +32,9 @@
         </template>
       </p>
 
+      <!-- What it was asked for, before what it gave: the comparison a reviewer makes. -->
+      <ConsoleInsightsPlanRequestSummary :request="plan.request" />
+
       <!-- The dishes, per meal and per day: what the member actually got. -->
       <div class="space-y-3">
         <div

@@ -97,6 +97,14 @@
         </UButton>
       </div>
 
+      <ConsoleInsightsSessionTurnPeek
+        v-if="open === 'said' && moment.conversation_id"
+        :conversation-id="moment.conversation_id"
+        :occurred-at="moment.occurred_at"
+        :number="moment.number"
+        :plan-id="planId"
+        class="mt-2"
+      />
       <ConsoleInsightsSessionPlanPeek
         v-if="open === 'plan' && planId"
         :plan-id="planId"
@@ -119,8 +127,8 @@ import { areaLabel, qaModeLabel, surfaceLabel, targetLink } from '~/utils/labels
 import { formatOffset, momentIcon, momentTitle, momentTone, type Tone } from '~/utils/sessionStory'
 
 /**
- * One line of a session's story, and whatever it can open in place: the plan
- * a turn made, the exchange a rating was about. Opened here rather than on
+ * One line of a session's story, and whatever it can open in place: what was
+ * said in a turn, the plan a turn made, the exchange a rating was about. Opened here rather than on
  * another page, because the question is always about this moment in this visit.
  */
 
@@ -220,6 +228,11 @@ const details = computed(() => {
 const actions = computed(() => {
   const m = props.moment
   const list: Array<{ key: string, show: string, hide: string, icon: string }> = []
+  // What the person typed and what FoodChat answered: the first thing anyone
+  // reading a turn wants, and the one thing the row cannot show by itself.
+  if (m.kind === 'turn' && m.conversation_id) {
+    list.push({ key: 'said', show: 'Show what was said', hide: 'Hide what was said', icon: 'i-lucide-message-square-quote' })
+  }
   if (planId.value && ['turn', 'plan_generated', 'plan_saved'].includes(m.kind)) {
     list.push({ key: 'plan', show: 'Show the plan', hide: 'Hide the plan', icon: 'i-lucide-utensils' })
   }
