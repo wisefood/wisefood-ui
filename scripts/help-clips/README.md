@@ -131,6 +131,12 @@ The captions, and so the voice-over, use the informal address of the help text
 and need a native speaker's read, like the help text itself. Some pages still
 have English text in every language (the textbook page, the guides map's
 country panel, FoodScholar's follow-up box); those show in English in the clips
-too, as do FoodChat's kitchen ingredients. Article search finds nothing for
-Hungarian or Slovenian queries, so those catalog clips type an English query
-and say why: the articles are in English.
+too. Article search finds nothing for Hungarian or Slovenian queries, so those
+catalog clips type an English query and say why: the articles are in English.
+
+FoodChat answers in the interface language (the page sends `X-Locale`, the
+gateway forwards it, FoodChat's `reply_language` tells every reader-facing
+prompt). Before that reached production (2026-11-17) its replies in these clips
+were English, so clips recorded earlier show English replies. What is still
+English is catalogue data: recipe titles, ingredient names (the shopping list,
+the kitchen picker) and Adapt's suggestions, which come from RecipeWrangler.

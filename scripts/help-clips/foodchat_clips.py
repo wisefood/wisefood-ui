@@ -230,7 +230,10 @@ async def prepare_plan(page, t):
     sid = await ensure_plan_session(page, lang)
     if '/dashboard' not in page.url:
         await page.goto(f'{BASE}/dashboard', wait_until='domcontentloaded')
-        await page.wait_for_function("document.getElementById('__nuxt')?.__vue_app__", timeout=60000)
+    # After the diners clip the household has a second profile, and the
+    # dashboard asks "Who's eating?" first; a plan clip re-taken after it
+    # must choose the guest, or FoodChat opens with no member.
+    await settle_on_dashboard(page)
     await page.wait_for_timeout(4000)   # the member is known
     await navigate(page, f'/foodchat?session={sid}')
     await page.wait_for_selector('[data-flows="foodchat-save-plan"]', timeout=60000)

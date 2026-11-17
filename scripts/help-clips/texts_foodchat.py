@@ -57,7 +57,7 @@ T = {
         'hu': {
             'title': 'Módosítás beszélgetéssel',
             'q': 'Legyen a vacsora vegetáriánus',
-            'edit': 'Cseréld le a reggelit egy könnyebbre',
+            'edit': 'Cseréld le a reggelit valami másra',
             'c1': 'Kérj változtatást egyszerű szavakkal',
             'c2': 'A válasz elmondja, mi változott',
             'c3': 'Egy étkezés cseréjéhez kattints erre: {swap}',
@@ -67,7 +67,7 @@ T = {
         'sl': {
             'title': 'Spremeni načrt s pogovorom',
             'q': 'Naj bo večerja vegetarijanska',
-            'edit': 'Zajtrk zamenjaj z lažjim',
+            'edit': 'Zajtrk zamenjaj z nečim drugim',
             'c1': 'Za spremembo prosi s preprostimi besedami',
             'c2': 'Odgovor pove, kaj se je spremenilo',
             'c3': 'Za zamenjavo enega obroka klikni {swap}',
