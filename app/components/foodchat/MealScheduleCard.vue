@@ -1,324 +1,267 @@
 <template>
-  <!-- Same surface whatever the meal is made of. A multi-plate meal was
-       tinted and ringed to read as one thing; it does not need to be. The
-       divider, the role badges and the single nutrition line already say a
-       main and a salad are one lunch, and colouring one card differently from
-       its neighbours reads as a state — selected, flagged, needing attention —
-       rather than as a fact about the food. -->
-  <div class="relative flex flex-col gap-3 p-5 bg-white dark:bg-zinc-800/50 transition-all hover:bg-gray-50 dark:hover:bg-zinc-700/30">
-    <!-- Meal type + time -->
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2.5">
+  <!-- One meal, led by its picture.
+       The card used to be a heading row, a small round photo, two lines of
+       chips, a nutrient donut and a small "Swap" box: a lot to read before
+       knowing what the meal is. Now the photo says what it is, one line says
+       how much, and Swap says what you want instead. Carbs and fat are a hover
+       away; the meal's full numbers are in the day's bar under the cards. -->
+  <article
+    class="relative flex flex-col min-w-0 rounded-[1.375rem] border border-gray-200/80 dark:border-zinc-700/70 bg-white dark:bg-zinc-800/60"
+    :aria-label="type"
+  >
+    <!-- The photo, with the meal and its time on it -->
+    <div class="relative h-36 rounded-t-[1.3rem] overflow-hidden bg-gradient-to-br from-brandp-50 to-earth-1 dark:from-zinc-800 dark:to-zinc-900">
+      <NuxtLink
+        v-if="recipe.recipe_id"
+        :to="`/recipe-wrangler/${recipe.recipe_id}`"
+        :target="linkTarget"
+        class="block w-full h-full"
+        :aria-label="t('foodChatHome.mealCard.viewRecipe')"
+        tabindex="-1"
+      >
+        <img
+          v-if="recipeImage"
+          :src="recipeImage"
+          alt=""
+          class="w-full h-full object-cover transition-transform duration-300 pointer-fine:hover:scale-[1.03] motion-reduce:transition-none"
+          loading="lazy"
+        >
+        <span
+          v-else
+          class="w-full h-full flex items-center justify-center"
+        >
+          <UIcon
+            :name="icon"
+            class="w-10 h-10 text-brandp-300 dark:text-brandp-700"
+          />
+        </span>
+      </NuxtLink>
+      <span
+        class="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white/92 dark:bg-zinc-900/85 px-2.5 py-1 text-xs font-semibold text-gray-900 dark:text-white shadow-sm"
+      >
         <UIcon
           :name="icon"
-          class="w-5 h-5 text-brandp-500"
+          class="w-3.5 h-3.5 text-brandp-500 dark:text-brandp-300"
         />
-        <span class="text-xs font-semibold uppercase tracking-wider text-brandp-600 dark:text-brandp-400">{{ type }}</span>
-        <!-- Which plate of the meal this is. Shown only for multi-course meals,
-             where two cards otherwise share a heading and look like a bug. -->
-        <span
-          v-if="courseLabel"
-          class="text-[0.6875rem] font-medium px-2 py-0.5 rounded-full bg-brandp-50 dark:bg-brandp-900/30 text-brandp-600 dark:text-brandp-400"
-        >{{ courseLabel }}</span>
+        {{ type }}<template v-if="time"> · {{ time }}</template>
+        <template v-if="courseLabel"> · {{ courseLabel }}</template>
+      </span>
+      <button
+        v-if="recipe.recipe_id"
+        type="button"
+        class="absolute right-2.5 top-2.5 flex items-center justify-center size-9 pointer-coarse:size-11 rounded-full bg-white/92 dark:bg-zinc-900/85 shadow-sm pointer-fine:hover:scale-110 transition-transform"
+        :aria-label="isFavorite ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
+        :aria-pressed="isFavorite"
+        @click.prevent.stop="toggleFavorite"
+      >
+        <FavoriteHeart
+          :active="isFavorite"
+          :class="['w-4.5 h-4.5', isFavorite ? 'text-red-500' : 'text-gray-500 dark:text-zinc-400']"
+        />
+      </button>
+    </div>
+
+    <div class="flex flex-col gap-2.5 p-4 flex-1">
+      <!-- FoodChat is finding another dish for this meal -->
+      <div
+        v-if="busy"
+        class="flex flex-col gap-2.5 py-1"
+        role="status"
+      >
+        <span class="text-[0.8125rem] font-semibold text-gray-500 dark:text-zinc-400">
+          {{ t('foodChatHome.mealCard.swapping', { meal: type.toLowerCase() }) }}
+        </span>
+        <span class="fc-shimmer h-3.5 w-11/12 rounded-full" />
+        <span class="fc-shimmer h-3.5 w-3/5 rounded-full" />
       </div>
-      <div class="flex items-center gap-1.5">
-        <button
-          v-if="recipe.recipe_id"
-          type="button"
-          class="flex items-center justify-center w-6 h-6 pointer-coarse:w-11 pointer-coarse:h-11 pointer-coarse:-my-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 pointer-fine:hover:scale-110 transition-all duration-200"
-          :aria-label="isFavorite ? t('recipeWrangler.recipe.removeFromFavorites') : t('recipeWrangler.recipe.addToFavorites')"
-          @click.prevent.stop="toggleFavorite"
+
+      <template v-else>
+        <!-- The dish -->
+        <div class="min-w-0">
+          <span
+            v-if="isMultiPlate"
+            class="inline-flex items-center px-1.5 py-0.5 mb-1 text-[0.625rem] font-semibold uppercase tracking-wide rounded"
+            :class="roleBadgeClass(recipe)"
+          >{{ roleLabel(recipe) }}</span>
+          <NuxtLink
+            v-if="recipe.recipe_id"
+            :to="`/recipe-wrangler/${recipe.recipe_id}`"
+            :target="linkTarget"
+            class="block text-[1.0625rem] font-bold leading-snug text-gray-900 dark:text-white line-clamp-2 hover:text-brandp-600 dark:hover:text-brandp-300 transition-colors"
+            :title="recipe.title"
+          >{{ recipe.title }}</NuxtLink>
+          <h3
+            v-else
+            class="text-[1.0625rem] font-bold leading-snug text-gray-900 dark:text-white line-clamp-2"
+          >
+            {{ recipe.title }}
+          </h3>
+        </div>
+
+        <!-- The rest of the meal, a line each -->
+        <ul
+          v-if="extraPlates?.length"
+          class="flex flex-col gap-1.5"
         >
-          <FavoriteHeart
-            :active="isFavorite"
-            :class="[
-              'w-4 h-4 transition-colors duration-200',
-              isFavorite ? 'text-red-500' : 'text-gray-400 dark:text-zinc-500'
-            ]"
-          />
-        </button>
+          <li
+            v-for="(plate, pIdx) in extraPlates"
+            :key="plate.recipe_id || `plate-${pIdx}`"
+            class="flex items-center gap-2 min-w-0"
+          >
+            <span
+              class="inline-flex items-center px-1.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide rounded shrink-0"
+              :class="roleBadgeClass(plate)"
+            >{{ roleLabel(plate) }}</span>
+            <NuxtLink
+              v-if="plate.recipe_id"
+              :to="`/recipe-wrangler/${plate.recipe_id}`"
+              :target="linkTarget"
+              class="truncate text-sm font-semibold text-gray-800 dark:text-zinc-100 hover:text-brandp-600 dark:hover:text-brandp-300"
+            >{{ plate.title }}</NuxtLink>
+            <span
+              v-else
+              class="truncate text-sm font-semibold text-gray-800 dark:text-zinc-100"
+            >{{ plate.title }}</span>
+          </li>
+        </ul>
+
+        <!-- How much: one line; carbs and fat on hover -->
+        <div
+          v-if="metaLine"
+          class="flex items-center gap-2 flex-wrap"
+        >
+          <UTooltip
+            :text="detailLine"
+            :disabled="!detailLine"
+          >
+            <span
+              class="text-[0.8125rem] font-semibold text-gray-600 dark:text-zinc-300 tabular-nums"
+              :class="detailLine ? 'border-b border-dotted border-gray-300 dark:border-zinc-600 cursor-help' : ''"
+              :tabindex="detailLine ? 0 : undefined"
+            >{{ metaLine }}</span>
+          </UTooltip>
+          <span
+            v-if="nutriScoreGrade"
+            class="inline-flex items-center justify-center size-5.5 rounded-md text-[0.6875rem] font-bold leading-none"
+            :class="nutriScoreClass"
+            :title="t('foodChatHome.mealCard.nutriScore', { label: nutriScoreGrade })"
+            :aria-label="t('foodChatHome.mealCard.nutriScore', { label: nutriScoreGrade })"
+          >{{ nutriScoreGrade }}</span>
+          <span
+            v-if="isMultiPlate && mealMacros && !mealMacros.complete"
+            class="text-[0.6875rem] text-amber-600 dark:text-amber-400"
+          >{{ t('foodChatHome.mealCard.partialMeal') }}</span>
+        </div>
+
+        <!-- What just changed, or the one reason this dish is here -->
         <span
-          v-if="time"
-          class="text-xs text-gray-400 font-light"
-        >{{ time }}</span>
-        <!-- What is left: adapt in RecipeWrangler. A real menu rather than a
-             box that closed when the mouse left it, which on a finger meant a
-             menu that never closed. -->
+          v-if="tag"
+          class="self-start inline-flex items-center gap-1.5 rounded-full bg-brandg-50 dark:bg-brandg-900/30 px-2.5 py-1 text-xs font-semibold text-brandg-800 dark:text-brandg-200"
+        >
+          <UIcon
+            name="i-lucide-sparkles"
+            class="w-3.5 h-3.5"
+          />
+          {{ tag }}
+        </span>
+        <FoodchatInfoPopover
+          v-else-if="firstReason"
+          :text="reasonTooltip(firstReason.kind)"
+        >
+          <button
+            type="button"
+            class="self-start inline-flex items-center gap-1.5 rounded-full bg-brandp-50/80 dark:bg-brandp-950/40 px-2.5 py-1 pointer-coarse:min-h-8 text-xs font-semibold text-brandp-600 dark:text-brandp-300"
+          >
+            <UIcon
+              :name="reasonIcon(firstReason.kind)"
+              class="w-3.5 h-3.5 shrink-0"
+            />
+            <span class="max-w-44 truncate">{{ firstReason.label }}</span>
+          </button>
+        </FoodchatInfoPopover>
+      </template>
+
+      <!-- Swap: say what you want instead. Bottom of the card, always in the
+           same place, so a week of cards reads as one row of the same button. -->
+      <div class="mt-auto flex items-center gap-1 pt-1">
+        <UPopover
+          v-model:open="swapOpen"
+          :content="{ align: 'start', side: 'bottom', sideOffset: 6 }"
+          :ui="{ content: 'w-[19rem] rounded-2xl p-3.5' }"
+        >
+          <button
+            type="button"
+            class="inline-flex items-center gap-2 h-10 pointer-coarse:h-11 rounded-full pl-3 pr-4 bg-brandp-50 hover:bg-brandp-100 dark:bg-brandp-950/50 dark:hover:bg-brandp-900/60 text-brandp-600 dark:text-brandp-200 text-sm font-bold transition-colors disabled:opacity-50"
+            :disabled="busy"
+            :aria-label="t('foodChatHome.mealCard.swapMeal', { meal: type })"
+            data-flows="foodchat-meal-replace"
+          >
+            <UIcon
+              name="i-lucide-repeat"
+              class="w-4.5 h-4.5"
+            />
+            {{ t('foodChatHome.mealCard.swap') }}
+          </button>
+          <template #content>
+            <div class="flex flex-col gap-2.5">
+              <p class="text-[0.9375rem] font-bold text-gray-900 dark:text-white">
+                {{ t('foodChatHome.mealCard.swapFor', { meal: type.toLowerCase() }) }}
+              </p>
+              <div class="flex flex-wrap gap-1.5">
+                <button
+                  v-for="option in SWAP_OPTIONS"
+                  :key="option.key"
+                  type="button"
+                  class="inline-flex items-center gap-1.5 h-9 rounded-full border border-gray-200 dark:border-zinc-700 px-3 text-[0.8125rem] font-semibold text-gray-900 dark:text-white hover:border-brandp-400 hover:bg-brandp-50/60 dark:hover:bg-brandp-950/40 transition-colors"
+                  @click="chooseSwap(option)"
+                >
+                  <span aria-hidden="true">{{ option.emoji }}</span>
+                  {{ t(`foodChatHome.mealCard.swapOptions.${option.key}`) }}
+                </button>
+              </div>
+              <button
+                type="button"
+                class="flex items-center gap-2 h-10 rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 px-3 text-left text-[0.8125rem] text-gray-500 dark:text-zinc-400 hover:border-brandp-300"
+                @click="swapOpen = false; emit('replace')"
+              >
+                <UIcon
+                  name="i-lucide-message-square-text"
+                  class="w-4 h-4 shrink-0"
+                />
+                {{ t('foodChatHome.mealCard.swapOwn') }}
+              </button>
+              <p class="text-xs text-gray-500 dark:text-zinc-400">
+                {{ t('foodChatHome.mealCard.swapOnly', { meal: type.toLowerCase() }) }}
+              </p>
+            </div>
+          </template>
+        </UPopover>
+        <span class="flex-1" />
         <UDropdownMenu
           v-if="menuItems.length"
           :items="menuItems"
           :content="{ align: 'end' }"
-          :ui="{ content: 'min-w-40' }"
+          :ui="{ content: 'min-w-44' }"
         >
           <button
             type="button"
-            class="flex items-center justify-center w-6 h-6 pointer-coarse:w-11 pointer-coarse:h-11 pointer-coarse:-my-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+            class="flex items-center justify-center size-10 pointer-coarse:size-11 rounded-full text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
             :aria-label="t('foodChatHome.mealCard.menu')"
             data-flows="foodchat-meal-menu"
           >
             <UIcon
-              name="i-lucide-more-vertical"
-              class="w-4 h-4 text-gray-400 dark:text-zinc-500"
+              name="i-lucide-ellipsis"
+              class="w-5 h-5"
             />
           </button>
         </UDropdownMenu>
       </div>
     </div>
-
-    <!-- Recipe info row -->
-    <div class="flex items-center gap-3 pr-16">
-      <!-- Circular image bubble -->
-      <NuxtLink
-        :to="recipe.recipe_id ? `/recipe-wrangler/${recipe.recipe_id}` : ''"
-        :target="recipe.recipe_id ? linkTarget : undefined"
-        class="w-10 h-10 rounded-full shrink-0 overflow-hidden bg-gray-100 dark:bg-zinc-700 transition-transform duration-200 pointer-fine:hover:scale-150 block"
-      >
-        <img
-          v-if="recipeImage"
-          :src="recipeImage"
-          class="w-full h-full object-cover"
-          loading="lazy"
-        >
-        <div
-          v-else-if="nutritionLoading"
-          class="w-full h-full animate-pulse bg-gray-200 dark:bg-zinc-600"
-        />
-        <div
-          v-else
-          class="w-full h-full flex items-center justify-center"
-        >
-          <UIcon
-            name="i-lucide-utensils"
-            class="w-4 h-4 text-gray-300 dark:text-zinc-600"
-          />
-        </div>
-      </NuxtLink>
-
-      <div class="flex-1 min-w-0">
-        <!-- The plate's role, as a badge on the dish rather than in the meal
-             heading: on a two-plate lunch the heading says "LUNCH" once, and
-             what distinguishes the dishes is which plate each one is. -->
-        <span
-          v-if="isMultiPlate"
-          class="inline-flex items-center px-1.5 py-0.5 mb-1 text-[0.625rem] font-semibold uppercase tracking-wide rounded"
-          :class="roleBadgeClass(recipe)"
-        >{{ roleLabel(recipe) }}</span>
-        <NuxtLink
-          v-if="recipe.recipe_id"
-          :to="`/recipe-wrangler/${recipe.recipe_id}`"
-          :target="linkTarget"
-          class="block font-medium text-base sm:text-lg text-gray-900 dark:text-white leading-snug break-words hover:text-brandp-500 dark:hover:text-brandp-300 transition-colors"
-        >{{ recipe.title }}</NuxtLink>
-        <h3
-          v-else
-          class="font-medium text-base sm:text-lg text-gray-900 dark:text-white leading-snug"
-        >
-          {{ recipe.title }}
-        </h3>
-      </div>
-    </div>
-
-    <!-- The rest of the meal. Compact rows under the main, divided from it:
-         a salad beside a main is part of that lunch, not another lunch. -->
-    <div
-      v-if="extraPlates?.length"
-      class="border-t border-gray-100 dark:border-zinc-700/60 pt-3 space-y-2.5"
-    >
-      <div
-        v-for="(plate, pIdx) in extraPlates"
-        :key="plate.recipe_id || `plate-${pIdx}`"
-        class="flex items-center gap-3 pr-16"
-      >
-        <NuxtLink
-          :to="plate.recipe_id ? `/recipe-wrangler/${plate.recipe_id}` : ''"
-          :target="plate.recipe_id ? linkTarget : undefined"
-          class="w-9 h-9 rounded-full shrink-0 overflow-hidden bg-gray-100 dark:bg-zinc-700 transition-transform duration-200 pointer-fine:hover:scale-150 block"
-        >
-          <img
-            v-if="plate.image_url"
-            :src="plate.image_url"
-            class="w-full h-full object-cover"
-            loading="lazy"
-          >
-          <div
-            v-else
-            class="w-full h-full flex items-center justify-center"
-          >
-            <UIcon
-              name="i-lucide-salad"
-              class="w-3.5 h-3.5 text-gray-300 dark:text-zinc-600"
-            />
-          </div>
-        </NuxtLink>
-        <div class="flex-1 min-w-0">
-          <span
-            class="inline-flex items-center px-1.5 py-0.5 mb-0.5 text-[0.625rem] font-semibold uppercase tracking-wide rounded"
-            :class="roleBadgeClass(plate)"
-          >{{ roleLabel(plate) }}</span>
-          <NuxtLink
-            v-if="plate.recipe_id"
-            :to="`/recipe-wrangler/${plate.recipe_id}`"
-            :target="linkTarget"
-            class="block text-sm font-medium text-gray-800 dark:text-zinc-100 leading-snug break-words hover:text-brandp-500 dark:hover:text-brandp-300 transition-colors"
-          >{{ plate.title }}</NuxtLink>
-          <span
-            v-else
-            class="block text-sm font-medium text-gray-800 dark:text-zinc-100 leading-snug"
-          >{{ plate.title }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- One line for the whole MEAL when it has more than one plate.
-         Two calorie figures side by side ask the member to add up their own
-         lunch; the main's figure alone understates it. -->
-    <div
-      v-if="isMultiPlate && mealMacros"
-      class="flex items-center gap-2 flex-wrap pr-16 border-t border-gray-100 dark:border-zinc-700/60 pt-3"
-    >
-      <UIcon name="i-lucide-flame" class="w-3.5 h-3.5 text-brandp-400 shrink-0" />
-      <span class="text-[0.6875rem] text-gray-600 dark:text-zinc-300 tabular-nums font-light">
-        {{ mealMacroLine }}
-      </span>
-      <span
-        v-if="!mealMacros.complete"
-        class="text-[0.625rem] text-amber-600 dark:text-amber-400"
-      >{{ t('foodChatHome.mealCard.partialMeal') }}</span>
-    </div>
-
-    <!-- Nutrition summary + Nutri-Score (M4 transparency) -->
-    <div
-      v-if="!isMultiPlate && recipe.nutrition"
-      class="flex items-center gap-1.5 flex-wrap pr-16 -mt-1"
-    >
-      <span class="inline-flex items-center px-2 py-1 text-[0.6875rem] rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-300 font-light">
-        {{ nutritionSummary }}
-      </span>
-      <span
-        v-if="macroSummary"
-        class="inline-flex items-center px-2 py-1 text-[0.6875rem] rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-300 font-light"
-      >{{ macroSummary }}</span>
-      <span
-        v-if="nutriScoreGrade"
-        class="inline-flex items-center justify-center w-[18px] h-[18px] rounded text-[0.625rem] font-bold leading-none"
-        :class="nutriScoreClass"
-        :title="t('foodChatHome.mealCard.nutriScore', { label: nutriScoreGrade })"
-      >{{ nutriScoreGrade }}</span>
-    </div>
-
-    <!-- Match-reason chips (M4 transparency) -->
-    <div
-      v-if="recipe.match_reasons?.length"
-      class="flex flex-wrap gap-1 pr-14"
-    >
-      <FoodchatInfoPopover
-        v-for="(reason, rIdx) in recipe.match_reasons"
-        :key="rIdx"
-        :text="reasonTooltip(reason.kind)"
-      >
-        <button
-          type="button"
-          class="inline-flex items-center gap-1 px-1.5 py-0.5 pointer-coarse:min-h-8 pointer-coarse:px-2 text-[0.6875rem] rounded-full border border-gray-200/80 dark:border-zinc-700/70 text-gray-400 dark:text-zinc-500 font-light"
-        >
-          <UIcon
-            :name="reasonIcon(reason.kind)"
-            class="w-2.5 h-2.5 shrink-0"
-          />
-          <span class="max-w-24 truncate">{{ reason.label }}</span>
-        </button>
-      </FoodchatInfoPopover>
-    </div>
-
-    <!-- Swap, said in a word and on the card. It was the first item of the
-         three-dot menu, and the most common thing anyone does to a plan was
-         the one a member had to go looking for. Bottom left, clear of the
-         donut in the right corner, so it never crowds the heading row. -->
-    <div class="mt-auto pr-16">
-      <UButton
-        size="xs"
-        color="neutral"
-        variant="subtle"
-        icon="i-lucide-repeat"
-        class="pointer-coarse:min-h-11"
-        :aria-label="t('foodChatHome.mealCard.swapMeal', { meal: type })"
-        data-flows="foodchat-meal-replace"
-        @click="emit('replace')"
-      >
-        {{ t('foodChatHome.mealCard.swap') }}
-      </UButton>
-    </div>
-
-    <!-- Nutrient donut — bottom right corner.
-         A tap steps the centre through the macros, because the only other way
-         to read carbs or fat was to hover a segment, and a finger cannot. -->
-    <button
-      type="button"
-      class="absolute bottom-4 right-4 rounded-full cursor-pointer focus-visible:outline-2 focus-visible:outline-brandp-400"
-      :aria-label="t('foodChatHome.mealCard.macroRing', { value: centerValue, label: centerLabel })"
-      @click="cycleSegment"
-      @mouseleave="hoveredSegment = null"
-    >
-      <svg
-        width="60"
-        height="60"
-        viewBox="0 0 60 60"
-        style="transform: rotate(-90deg)"
-      >
-        <!-- Track -->
-        <circle
-          cx="30"
-          cy="30"
-          r="23"
-          stroke="#e5e7eb"
-          stroke-width="6"
-          fill="none"
-          class="dark:stroke-zinc-700"
-        />
-        <!-- Segments -->
-        <circle
-          v-for="seg in segments"
-          :key="seg.key"
-          cx="30"
-          cy="30"
-          r="23"
-          :stroke="seg.color"
-          stroke-width="6"
-          fill="none"
-          :stroke-dasharray="`${seg.dash} ${circumference}`"
-          :stroke-dashoffset="-seg.offset"
-          stroke-linecap="butt"
-          :style="{ opacity: hoveredSegment && hoveredSegment !== seg.key ? 0.25 : 1, transition: 'opacity 0.15s' }"
-          @mouseenter="hoveredSegment = seg.key"
-        />
-      </svg>
-      <!-- Center label.
-           Gated on `macros` — the same thing the segments are drawn from. It
-           used to be gated on `nutritionData`, which is only set when this
-           component FETCHED the recipe, and it stopped fetching as soon as
-           plans began carrying macros of their own. So the ring was drawn from
-           real numbers while the middle of it showed "···": the data was
-           there, and the label was asking a variable that had been left
-           behind. -->
-      <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-        <span
-          v-if="nutritionLoading && !macros"
-          class="text-[0.6875rem] text-gray-400"
-        >···</span>
-        <template v-else-if="macros">
-          <span class="text-[0.6875rem] font-bold text-gray-700 dark:text-gray-200 leading-none">{{ centerValue }}</span>
-          <span class="text-[0.625rem] text-gray-400 dark:text-zinc-500 leading-none mt-0.5">{{ centerLabel }}</span>
-        </template>
-        <span
-          v-else
-          class="text-[0.6875rem] text-gray-300"
-        >—</span>
-      </div>
-    </button>
-  </div>
+  </article>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { DropdownMenuItem } from '@nuxt/ui'
 import type { MealRecipe } from '~/services/foodchatApi'
@@ -337,21 +280,21 @@ const props = defineProps<{
   recipe: MealRecipe
   /**
    * The rest of this meal's plates — the salad beside the main, the dessert
-   * after it.
-   *
-   * A multi-plate meal used to be rendered as several SIBLING cards sharing a
-   * heading, which reads as three meals rather than one, and which totalled
-   * each plate separately so a two-plate lunch showed two calorie figures and
-   * no meal figure. One card per MEAL is what a plate actually is: the main
-   * leads, the rest sit under it, and the numbers are the meal's.
-   *
-   * Absent or empty keeps the single-plate card byte for byte.
+   * after it. One card per MEAL: the main leads, the rest sit under it, and
+   * the numbers are the meal's.
    */
   extraPlates?: MealRecipe[]
+  /** FoodChat is replacing this meal right now. */
+  busy?: boolean
+  /** What just changed here ("New · lighter"); replaces the reason tag. */
+  tag?: string
 }>()
 
 const emit = defineEmits<{
+  /** "Or say what you'd like": the chat takes it from here. */
   replace: []
+  /** One of the swap choices, as the directive FoodChat's swap tool reads. */
+  swap: [directive: string, label: string]
   adapt: []
 }>()
 
@@ -359,15 +302,42 @@ const { t } = useI18n()
 const { isCoarsePointer } = useViewport()
 
 /**
+ * Swap choices, and what each asks FoodChat for. The directives are English
+ * on purpose: FoodChat's swap tool reads and verifies them ("lighter" is checked
+ * against real calories), whatever language the reader uses.
+ */
+const SWAP_OPTIONS = [
+  { key: 'lighter', emoji: '🪶', directive: 'lighter' },
+  { key: 'quicker', emoji: '⏱️', directive: 'quicker' },
+  { key: 'vegetarian', emoji: '🥦', directive: 'vegetarian' },
+  { key: 'protein', emoji: '💪', directive: 'more protein' },
+  { key: 'surprise', emoji: '🎲', directive: 'something different' }
+] as const
+
+const swapOpen = ref(false)
+
+function chooseSwap(option: typeof SWAP_OPTIONS[number]) {
+  swapOpen.value = false
+  // "New · surprise me" says nothing; that one is just "New".
+  emit('swap', option.directive, option.key === 'surprise' ? '' : t(`foodChatHome.mealCard.swapOptions.${option.key}`))
+}
+
+/**
  * Recipe links open beside the plan under a mouse and in place on a finger:
  * a phone has no "beside", and a second tab is where a plan goes to be lost.
  */
 const linkTarget = computed(() => isCoarsePointer.value ? undefined : '_blank')
 
-// ── Slot menu (adapt; swap is its own button) ──
+// ── The ⋯ menu: the recipe, and adapting it ──
 const menuItems = computed<DropdownMenuItem[]>(() => {
   const items: DropdownMenuItem[] = []
   if (props.recipe.recipe_id) {
+    items.push({
+      label: t('foodChatHome.mealCard.viewRecipe'),
+      icon: 'i-lucide-book-open',
+      to: `/recipe-wrangler/${props.recipe.recipe_id}`,
+      target: linkTarget.value
+    })
     items.push({
       'label': t('foodChatHome.mealCard.adapt'),
       'icon': 'i-lucide-wand-sparkles',
@@ -388,63 +358,108 @@ const toggleFavorite = () => {
 }
 
 const nutritionData = ref<Recipe | null>(null)
-const nutritionLoading = ref(false)
 // Prefer the image the plan already carries; fall back to the fetched recipe
 const recipeImage = ref<string | null>(props.recipe.image_url ?? null)
-const hoveredSegment = ref<string | null>(null)
 
 /**
- * Fetch the full recipe only when the plan did not already carry what we need.
+ * Fetch the full recipe only when the plan did not already carry what we need:
+ * old stored plans without macros, or a plan without the photo.
  *
- * Every card used to do this unconditionally, to fill a macro donut from
- * `total_*_g_per_serving` — data the plan response now carries per meal. On a
- * weekly plan that was 21 extra requests for numbers already in hand.
- *
- * Still fetched when the plan predates carried macros, or when it has no image,
- * so old stored plans render exactly as before.
+ * Keyed on the recipe, not the mount: cards are keyed by meal slot, so a Swap
+ * hands this same card a new dish, and it must not keep the old one's photo.
  */
-onMounted(async () => {
+let loadSeq = 0
+async function loadRecipeExtras() {
+  const seq = ++loadSeq
+  nutritionData.value = null
+  recipeImage.value = props.recipe.image_url ?? null
   if (!props.recipe.recipe_id) return
-
   const nutrition = props.recipe.nutrition
   const hasMacros = Boolean(nutrition && typeof nutrition.protein_g === 'number')
   if (hasMacros && recipeImage.value) return
-
-  nutritionLoading.value = true
   try {
     const r = await recipeApi.getRecipe(props.recipe.recipe_id)
+    if (seq !== loadSeq) return
     if (!hasMacros) nutritionData.value = r
     if (!recipeImage.value) recipeImage.value = r.image_url ?? null
   } catch {
     // non-critical
-  } finally {
-    nutritionLoading.value = false
   }
+}
+
+onMounted(loadRecipeExtras)
+watch(() => props.recipe.recipe_id, (now, before) => {
+  if (now !== before) void loadRecipeExtras()
 })
 
-// ── M4 transparency: nutrition chips, Nutri-Score badge, reason chips ──
-const nutritionSummary = computed(() => {
-  const n = props.recipe.nutrition
-  if (!n) return ''
-  return t('foodChatHome.mealCard.nutritionSummary', {
-    kcal: Math.round(n.kcal),
-    protein: Math.round(n.protein_g)
-  })
-})
+/** Every plate of this meal, main first. */
+const plates = computed<MealRecipe[]>(() => [props.recipe, ...(props.extraPlates ?? [])])
+
+const isMultiPlate = computed(() => plates.value.length > 1)
+
+/** A plate's role, humanised — "Main", "Salad", "Dessert". */
+function roleLabel(plate: MealRecipe): string {
+  const key = `foodChatHome.mealCard.roles.${String(plate.role || 'main').toLowerCase()}`
+  const translated = t(key)
+  return translated === key ? humaniseSlot(String(plate.role || 'main')) : translated
+}
+
+function roleBadgeClass(plate: MealRecipe): string {
+  return plateRoleBadgeClass(plate.role)
+}
 
 /**
- * Carbs and fat, which the plan has always carried and nothing ever read.
- *
- * Kept as a second chip rather than folded into `nutritionSummary` so the
- * existing kcal/protein line keeps its wording and its translation.
+ * The MEAL's macros — every plate added up. `complete` is false when a plate
+ * carries no profile, and the card says so rather than presenting a partial
+ * sum as the whole.
  */
-const macroSummary = computed(() => {
-  const n = props.recipe.nutrition
-  if (!n || typeof n.carbs_g !== 'number') return ''
-  return t('foodChatHome.mealCard.macroSummary', {
-    carbs: Math.round(n.carbs_g),
-    fat: Math.round(n.fat_g ?? 0)
-  })
+const mealMacros = computed(() => {
+  let kcal = 0, protein = 0, carbs = 0, fat = 0
+  let counted = 0
+  for (const plate of plates.value) {
+    const n = plate.nutrition
+    if (!n || typeof n.kcal !== 'number') continue
+    counted += 1
+    kcal += n.kcal ?? 0
+    protein += n.protein_g ?? 0
+    carbs += n.carbs_g ?? 0
+    fat += n.fat_g ?? 0
+  }
+  if (!counted) return null
+  return { kcal, protein, carbs, fat, complete: counted === plates.value.length }
+})
+
+/** "459 kcal · 24 g protein": the meal's, or the dish's, or what the recipe says. */
+const metaLine = computed(() => {
+  const m = mealMacros.value
+  if (m) {
+    return t('foodChatHome.mealCard.nutritionSummary', {
+      kcal: Math.round(m.kcal),
+      protein: Math.round(m.protein)
+    })
+  }
+  const d = nutritionData.value
+  if (d && typeof d.total_kcal_per_serving === 'number') {
+    return t('foodChatHome.mealCard.nutritionSummary', {
+      kcal: Math.round(d.total_kcal_per_serving),
+      protein: Math.round(d.total_protein_g_per_serving ?? 0)
+    })
+  }
+  return ''
+})
+
+/** Carbs and fat, for the tooltip on the line above. */
+const detailLine = computed(() => {
+  const m = mealMacros.value
+  if (m) return t('foodChatHome.mealCard.macroSummary', { carbs: Math.round(m.carbs), fat: Math.round(m.fat) })
+  const d = nutritionData.value
+  if (d && typeof d.total_carbs_g_per_serving === 'number') {
+    return t('foodChatHome.mealCard.macroSummary', {
+      carbs: Math.round(d.total_carbs_g_per_serving),
+      fat: Math.round(d.total_fat_g_per_serving ?? 0)
+    })
+  }
+  return ''
 })
 
 const nutriScoreGrade = computed(() => {
@@ -477,6 +492,9 @@ const REASON_ICONS: Record<string, string> = {
   guideline: 'i-lucide-book-open'
 }
 
+/** The one reason shown on the card; the rest are in "Why this plan". */
+const firstReason = computed(() => props.recipe.match_reasons?.[0] ?? null)
+
 function reasonIcon(kind: string): string {
   return REASON_ICONS[kind] ?? 'i-lucide-sparkles'
 }
@@ -486,139 +504,24 @@ function reasonTooltip(kind: string): string {
     ? t(`foodChatHome.mealCard.reasons.${kind}`)
     : kind
 }
-
-// Brand palette colours (matching main.css vars)
-// brandp-300 #a25ece  protein
-// terracotta  #D98A6B  fat
-// brandg-400  #b8c455  fiber
-// earth-2     #CAD5B2  carbs
-const SEGMENT_DEFS = [
-  { key: 'protein', label: 'prot', color: '#a25ece' },
-  { key: 'carbs', label: 'carbs', color: '#CAD5B2' },
-  { key: 'fat', label: 'fat', color: '#D98A6B' },
-  { key: 'fiber', label: 'fiber', color: '#b8c455' }
-]
-
-const circumference = 2 * Math.PI * 23
-
-/** Every plate of this meal, main first. */
-const plates = computed<MealRecipe[]>(() => [props.recipe, ...(props.extraPlates ?? [])])
-
-const isMultiPlate = computed(() => plates.value.length > 1)
-
-/** A plate's role, humanised — "Main", "Salad", "Dessert". */
-function roleLabel(plate: MealRecipe): string {
-  const key = `foodChatHome.mealCard.roles.${String(plate.role || 'main').toLowerCase()}`
-  const translated = t(key)
-  return translated === key ? humaniseSlot(String(plate.role || 'main')) : translated
-}
-
-function roleBadgeClass(plate: MealRecipe): string {
-  return plateRoleBadgeClass(plate.role)
-}
-
-/**
- * The MEAL's macros — every plate added up, with what it could not see.
- *
- * A main plus a salad is one meal and one calorie figure. Reporting the main
- * alone understates what the member eats; reporting two figures side by side
- * asks them to add. `complete` is false when a plate carries no profile, and
- * the card says so rather than presenting a partial sum as the whole.
- */
-const mealMacros = computed(() => {
-  let kcal = 0, protein = 0, carbs = 0, fat = 0
-  let counted = 0
-  for (const plate of plates.value) {
-    const n = plate.nutrition
-    if (!n || typeof n.kcal !== 'number') continue
-    counted += 1
-    kcal += n.kcal ?? 0
-    protein += n.protein_g ?? 0
-    carbs += n.carbs_g ?? 0
-    fat += n.fat_g ?? 0
-  }
-  if (!counted) return null
-  return { kcal, protein, carbs, fat, complete: counted === plates.value.length }
-})
-
-const mealMacroLine = computed(() => {
-  const m = mealMacros.value
-  if (!m) return ''
-  return t('foodChatHome.mealCard.mealMacros', {
-    kcal: Math.round(m.kcal),
-    protein: Math.round(m.protein),
-    carbs: Math.round(m.carbs),
-    fat: Math.round(m.fat)
-  })
-})
-
-const macros = computed(() => {
-  // On a multi-plate meal the donut is the MEAL's balance, not the main's —
-  // a main and a salad split differently from the main alone, which is the
-  // whole reason the two plates are on one plate.
-  if (isMultiPlate.value) {
-    const m = mealMacros.value
-    if (m) {
-      return {
-        protein: Math.max(m.protein, 0),
-        carbs: Math.max(m.carbs, 0),
-        fat: Math.max(m.fat, 0),
-        fiber: 0
-      }
-    }
-  }
-  // The plan's own per-serving macros, when it carries them. Same numbers, same
-  // source (the recipe's Postgres profile) — just already delivered.
-  const n = props.recipe.nutrition
-  if (n && typeof n.protein_g === 'number') {
-    return {
-      protein: Math.max(n.protein_g ?? 0, 0),
-      carbs: Math.max(n.carbs_g ?? 0, 0),
-      fat: Math.max(n.fat_g ?? 0, 0),
-      fiber: Math.max(n.fiber_g ?? 0, 0)
-    }
-  }
-  const d = nutritionData.value
-  if (!d) return null
-  return {
-    protein: Math.max(d.total_protein_g_per_serving ?? 0, 0),
-    carbs: Math.max(d.total_carbs_g_per_serving ?? 0, 0),
-    fat: Math.max(d.total_fat_g_per_serving ?? 0, 0),
-    fiber: Math.max(d.total_fiber_g_per_serving ?? 0, 0)
-  }
-})
-
-const segments = computed(() => {
-  const m = macros.value
-  if (!m) return []
-  const values: Record<string, number> = { protein: m.protein, carbs: m.carbs, fat: m.fat, fiber: m.fiber }
-  const total = Object.values(values).reduce((s, v) => s + v, 0) || 1
-  let offset = 0
-  return SEGMENT_DEFS.map((d) => {
-    const dash = ((values[d.key] ?? 0) / total) * circumference
-    const seg = { ...d, dash, offset }
-    offset += dash
-    return seg
-  })
-})
-
-const centerValue = computed(() => {
-  const m = macros.value
-  if (!m) return '—'
-  const key = hoveredSegment.value ?? 'protein'
-  const val = (m as Record<string, number>)[key] ?? 0
-  return `${Math.round(val)}g`
-})
-
-const centerLabel = computed(() => {
-  const def = SEGMENT_DEFS.find(d => d.key === (hoveredSegment.value ?? 'protein'))
-  return def?.label ?? 'prot'
-})
-
-/** The next macro round the ring, for a tap. */
-function cycleSegment() {
-  const keys = SEGMENT_DEFS.map(d => d.key)
-  const current = keys.indexOf(hoveredSegment.value ?? 'protein')
-  hoveredSegment.value = keys[(current + 1) % keys.length] ?? 'protein'
-}
 </script>
+
+<style scoped>
+.fc-shimmer {
+  display: block;
+  background: linear-gradient(90deg, rgb(241 239 243) 25%, rgb(230 226 234) 50%, rgb(241 239 243) 75%);
+  background-size: 200% 100%;
+  animation: fc-shimmer 1.1s linear infinite;
+}
+:global(.dark) .fc-shimmer {
+  background: linear-gradient(90deg, rgb(39 39 42) 25%, rgb(52 52 56) 50%, rgb(39 39 42) 75%);
+  background-size: 200% 100%;
+}
+@keyframes fc-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fc-shimmer { animation: none; }
+}
+</style>

@@ -674,9 +674,13 @@ export const useFoodChatStore = defineStore('foodchat', {
         const result = await foodchatApi.invokeTool<T>(toolName, memberId, args)
         const sessionId = opts.sessionId ?? (args.session_id as string | undefined)
         if (opts.mutates && sessionId) {
+          // A tool that changes the plan (a swap) saves a new version and
+          // makes it current; without the current ids the canvas stayed on
+          // the version it was showing and the change looked like it failed.
           await Promise.all([
             this.fetchMealPlans(sessionId, memberId),
-            this.fetchWeeklyMealPlans(sessionId, memberId)
+            this.fetchWeeklyMealPlans(sessionId, memberId),
+            this.fetchCurrentPlanIds(sessionId, memberId)
           ])
         }
         return result

@@ -1716,7 +1716,21 @@
       },
       "macroRing": "Razčlenitev hranil: {value} {label}. Tapni za naslednje.",
       "swap": "Zamenjaj",
-      "swapMeal": "Zamenjaj: {meal}"
+      "swapMeal": "Zamenjaj: {meal}",
+      "swapFor": "Zamenjaj {meal} z…",
+      "swapOwn": "Ali povej, kaj bi rad…",
+      "swapOnly": "Spremeni se samo ta obrok.",
+      "swapping": "Iščem nov obrok: {meal}…",
+      "newTag": "Novo · {what}",
+      "swapNoChange": "FoodChat je obdržal ta obrok: nič ni ustrezalo bolje.",
+      "swapOptions": {
+        "lighter": "Lažje",
+        "quicker": "Hitreje",
+        "vegetarian": "Vegetarijansko",
+        "protein": "Več beljakovin",
+        "surprise": "Preseneti me"
+      },
+      "newPlain": "Novo"
     },
     "constraints": {
       "label": "Tvoja pravila",
@@ -1870,7 +1884,12 @@
     "dayTotal": {
       "label": "Skupaj na dan",
       "macros": "{kcal} kcal · {protein}g beljakovin · {carbs}g OH · {fat}g maščob",
-      "partial": "delno — nekateri obroki nimajo podatkov"
+      "partial": "delno — nekateri obroki nimajo podatkov",
+      "today": "Danes {kcal} kcal",
+      "split": "Beljakovine {protein} g, ogljikovi hidrati {carbs} g, maščobe {fat} g",
+      "protein": "{g} g beljakovin",
+      "carbs": "{g} g ogljikovih hidratov",
+      "fat": "{g} g maščob"
     },
     "planningState": {
       "title": "Kaj FoodChat upošteva",
@@ -2296,6 +2315,15 @@
         "herbs": "Zelišča in začimbe",
         "other": "Drugo"
       }
+    },
+    "view": {
+      "label": "Prikaz klepeta in načrta",
+      "chat": "Klepet",
+      "split": "Oboje",
+      "plan": "Načrt",
+      "openPlan": "Odpri ob klepetu",
+      "showChat": "Pokaži klepet",
+      "askPlaceholder": "Prosi FoodChat za spremembo…"
     }
   },
   "a11y": {

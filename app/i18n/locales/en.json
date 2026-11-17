@@ -1823,9 +1823,9 @@
     "mealCard": {
       "menu": "Meal options",
       "adapt": "Adapt recipe",
-      "replacePrefill": "Swap the {meal} for something lighter",
-      "replacePrefillDay": "Swap the {meal} on day {day} for something lighter",
-      "replacePrefillWeekly": "Swap the {meal} on {day} for something lighter",
+      "replacePrefill": "Replace the {meal} with something lighter",
+      "replacePrefillDay": "Replace the {meal} on day {day} with something lighter",
+      "replacePrefillWeekly": "Replace the {meal} on {day} with something lighter",
       "viewRecipe": "View recipe",
       "loadingNutrition": "Loading nutrition...",
       "nutritionSummary": "{kcal} kcal · {protein}g protein",
@@ -1853,7 +1853,21 @@
       },
       "macroRing": "Nutrient breakdown: {value} {label}. Tap to see the next.",
       "swap": "Swap",
-      "swapMeal": "Swap {meal}"
+      "swapMeal": "Swap {meal}",
+      "swapFor": "Swap {meal} for…",
+      "swapOwn": "Or say what you'd like…",
+      "swapOnly": "Only this {meal} changes.",
+      "swapping": "Finding a new {meal}…",
+      "newTag": "New · {what}",
+      "swapNoChange": "FoodChat kept this meal: nothing fitted better.",
+      "swapOptions": {
+        "lighter": "Lighter",
+        "quicker": "Quicker",
+        "vegetarian": "Vegetarian",
+        "protein": "More protein",
+        "surprise": "Surprise me"
+      },
+      "newPlain": "New"
     },
     "constraints": {
       "label": "Your rules",
@@ -2007,7 +2021,12 @@
     "dayTotal": {
       "label": "Day total",
       "macros": "{kcal} kcal · {protein}g protein · {carbs}g carbs · {fat}g fat",
-      "partial": "partial — some meals have no nutrition data"
+      "partial": "partial — some meals have no nutrition data",
+      "today": "Today {kcal} kcal",
+      "split": "Protein {protein} g, carbs {carbs} g, fat {fat} g",
+      "protein": "{g} g protein",
+      "carbs": "{g} g carbs",
+      "fat": "{g} g fat"
     },
     "planningState": {
       "title": "What FoodChat is planning around",
@@ -2433,6 +2452,15 @@
         "herbs": "Herbs & spices",
         "other": "Other"
       }
+    },
+    "view": {
+      "label": "How to show chat and plan",
+      "chat": "Chat",
+      "split": "Both",
+      "plan": "Plan",
+      "openPlan": "Open beside the chat",
+      "showChat": "Show the chat",
+      "askPlaceholder": "Ask FoodChat to change something…"
     }
   },
   "a11y": {

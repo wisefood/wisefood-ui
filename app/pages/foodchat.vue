@@ -12,7 +12,38 @@
       :subtitle="t('foodChatHome.subtitle')"
       compact
       dense
-    />
+    >
+      <!-- How chat and plan share the box. Desktop only: a phone shows one
+           pane at a time and has its own switch. -->
+      <template
+        v-if="isDesktop && hasSentFirstMessage"
+        #actions
+      >
+        <div
+          class="inline-flex gap-0.5 p-0.5 rounded-full bg-gray-100 dark:bg-zinc-800"
+          role="group"
+          :aria-label="t('foodChatHome.view.label')"
+        >
+          <button
+            v-for="option in viewOptions"
+            :key="option.value"
+            type="button"
+            class="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[0.8125rem] font-semibold transition-colors"
+            :class="viewShown === option.value
+              ? 'bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white'"
+            :aria-pressed="viewShown === option.value"
+            @click="setViewMode(option.value)"
+          >
+            <UIcon
+              :name="option.icon"
+              class="w-4 h-4"
+            />
+            {{ option.label }}
+          </button>
+        </div>
+      </template>
+    </AppPageHeader>
 
     <AppFeatureGate feature="foodchat">
 
@@ -271,10 +302,28 @@
 
         <!-- ── LEFT: Chat column (FoodScholar-style floating) ── -->
         <div
-          v-show="isDesktop || mobilePane === 'chat'"
+          v-show="showChatCol"
           class="fc-chat-col flex flex-col min-w-0 relative"
-          :style="isDesktop ? { width: `${chatWidth}px` } : undefined"
+          :class="{ 'fc-chat-solo': isDesktop && viewShown === 'chat' }"
+          :style="isDesktop && viewShown !== 'chat' ? { width: `${chatWidth}px` } : undefined"
         >
+
+          <!-- Chat only: the plan is one click away rather than gone. -->
+          <button
+            v-if="isDesktop && viewShown === 'chat' && hasAnyPlan"
+            type="button"
+            class="order-first mx-3 mt-3 flex items-center gap-3 rounded-2xl border border-gray-200/80 dark:border-zinc-700/70 bg-brandp-50/40 dark:bg-brandp-950/20 px-4 py-2.5 text-left hover:border-brandp-300 transition-colors"
+            @click="setViewMode('split')"
+          >
+            <UIcon
+              name="i-lucide-calendar-days"
+              class="w-5 h-5 text-brandp-500 dark:text-brandp-300 shrink-0"
+            />
+            <span class="flex-1 min-w-0 text-sm font-semibold text-gray-900 dark:text-white">
+              {{ canvasMode === 'weekly' ? t('foodChatHome.planHeader.weeklyPlan') : t('foodChatHome.planHeader.dailyPlan') }}
+            </span>
+            <span class="text-[0.8125rem] font-semibold text-brandp-600 dark:text-brandp-300">{{ t('foodChatHome.view.openPlan') }}</span>
+          </button>
 
           <!-- Session bar -->
           <!-- Click maps: private, session titles are the member's own words. -->
@@ -607,6 +656,7 @@
              a member who widened the canvas once does not widen it every
              session. Double-click restores the default. -->
         <div
+          v-show="viewShown === 'split'"
           class="fc-splitter shrink-0 group"
           :class="{ 'is-dragging': splitDragging }"
           data-track="foodchat.splitter"
@@ -636,13 +686,20 @@
 
         <!-- ── RIGHT: Canvas column ── -->
         <div
-          v-show="isDesktop || mobilePane === 'plan'"
-          class="fc-canvas-col flex flex-col overflow-y-auto"
+          v-show="showCanvasCol"
+          class="fc-canvas-col flex flex-col overflow-y-auto relative"
           data-flows="foodchat-plan"
           data-rum-region="foodchat.plan"
           data-rum-private
         >
-          <div class="flex-1 p-4 sm:p-6 flex flex-col justify-center">
+          <div
+            class="flex-1 p-4 sm:p-6 lg:px-7 lg:pt-5 flex flex-col"
+            :class="[
+              hasAnyPlan && !draftMode && !showCookingAnimation && !showPausedPanel ? 'justify-start' : 'justify-center',
+              // Plan only: room under the plan to scroll clear of the composer.
+              isDesktop && viewShown === 'plan' ? 'pb-40' : ''
+            ]"
+          >
 
             <!-- Generating (fresh plan, nothing to show yet) -->
             <Transition name="plan-reveal">
@@ -973,7 +1030,10 @@
                 <!-- What this plan is built around, in one line, and the one
                      way to change it. Then only what was not fully met: the
                      rest of "why" is folded under the meals. -->
-                <div class="mb-4 flex flex-col gap-3">
+                <div
+                  class="mb-5 flex gap-3"
+                  :class="isPhone ? 'flex-col' : 'flex-row flex-wrap items-center justify-between gap-x-6'"
+                >
                   <FoodchatBuiltAround
                     :compact="isPhone"
                     :hide-adjust="!isPhone"
@@ -1055,7 +1115,7 @@
                        plates silently at the template. -->
                   <div
                     v-if="displayedPlanDayGroups.length <= 1"
-                    class="rounded-2xl overflow-hidden mb-4"
+                    class="gap-4 mb-5"
                     :class="mealGridCols(displayedMealPlan)"
                   >
                     <FoodchatMealScheduleCard
@@ -1066,8 +1126,11 @@
                       :icon="meal.icon"
                       :recipe="meal.plates[0]!.recipe"
                       :extra-plates="meal.plates.slice(1).map(p => p.recipe)"
+                      :busy="swappingSlot === swapKey(meal.slot)"
+                      :tag="swapTagFor(meal.plates[0]!.recipe.recipe_id)"
                       :class="{ 'fc-slot-flash': highlightedSlots.has(meal.slot) }"
                       @replace="prefillSlotReplace(meal.slot)"
+                      @swap="(directive, label) => swapMeal(meal.slot, null, directive, label)"
                       @adapt="openAdaptRecipe(meal.plates[0]!.recipe.recipe_id)"
                     />
                   </div>
@@ -1104,7 +1167,7 @@
                         />
                       </div>
                       <div
-                        class="rounded-2xl overflow-hidden"
+                        class="gap-4"
                         :class="mealGridColumns(groupBySlot(group.meals).length)"
                       >
                         <FoodchatMealScheduleCard
@@ -1115,8 +1178,11 @@
                           :icon="meal.icon"
                           :recipe="meal.plates[0]!.recipe"
                           :extra-plates="meal.plates.slice(1).map(p => p.recipe)"
+                          :busy="swappingSlot === swapKey(meal.slot, group.day)"
+                          :tag="swapTagFor(meal.plates[0]!.recipe.recipe_id)"
                           :class="{ 'fc-slot-flash': highlightedSlots.has(`${group.day}-${meal.slot}`) }"
                           @replace="prefillSlotReplace(meal.slot, group.day)"
+                          @swap="(directive, label) => swapMeal(meal.slot, group.day, directive, label)"
                           @adapt="openAdaptRecipe(meal.plates[0]!.recipe.recipe_id)"
                         />
                       </div>
@@ -1129,26 +1195,38 @@
                        nothing, which is worth saying rather than hiding. -->
                   <div
                     v-if="displayedPlanTotals && displayedPlanDayGroups.length <= 1"
-                    class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-gray-50 dark:bg-zinc-800/50 px-3 py-2"
+                    class="mb-5 flex flex-wrap items-center gap-x-5 gap-y-2.5 rounded-2xl border border-gray-200/80 dark:border-zinc-700/70 bg-white dark:bg-zinc-800/60 px-5 py-3.5"
                   >
-                    <UIcon
-                      name="i-lucide-flame"
-                      class="w-3.5 h-3.5 text-brandp-400 shrink-0"
-                    />
-                    <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
-                      {{ t('foodChatHome.dayTotal.label') }}
+                    <span class="text-[0.9375rem] font-bold text-gray-900 dark:text-white tabular-nums">
+                      {{ t('foodChatHome.dayTotal.today', { kcal: Math.round(displayedPlanTotals.calories).toLocaleString(locale) }) }}
                     </span>
-                    <span class="text-xs text-gray-600 dark:text-gray-400 tabular-nums">
-                      {{ t('foodChatHome.dayTotal.macros', {
-                        kcal: Math.round(displayedPlanTotals.calories),
-                        protein: Math.round(displayedPlanTotals.protein_g),
-                        carbs: Math.round(displayedPlanTotals.carbs_g),
-                        fat: Math.round(displayedPlanTotals.fat_g)
-                      }) }}
+                    <div
+                      class="flex-1 min-w-40 flex h-2.5 rounded-full overflow-hidden bg-gray-100 dark:bg-zinc-700"
+                      role="img"
+                      :aria-label="t('foodChatHome.dayTotal.split', dayMacroGrams)"
+                    >
+                      <span
+                        v-for="part in dayMacroParts"
+                        :key="part.key"
+                        :style="{ width: part.pct, background: part.color }"
+                      />
+                    </div>
+                    <span class="flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[0.8125rem] font-semibold text-gray-600 dark:text-zinc-300 tabular-nums">
+                      <span
+                        v-for="part in dayMacroParts"
+                        :key="part.key"
+                        class="inline-flex items-center gap-1.5"
+                      >
+                        <span
+                          class="size-2.5 rounded-full"
+                          :style="{ background: part.color }"
+                        />
+                        {{ part.label }}
+                      </span>
                     </span>
                     <span
                       v-if="!displayedPlanTotals.complete"
-                      class="text-[0.625rem] text-amber-600 dark:text-amber-400"
+                      class="text-[0.6875rem] text-amber-600 dark:text-amber-400"
                     >{{ t('foodChatHome.dayTotal.partial') }}</span>
                   </div>
 
@@ -1562,6 +1640,52 @@
               </div>
             </Transition>
 
+          </div>
+
+          <!-- Plan only: the chat is folded away, not out of reach. FoodChat's
+               last word above a composer that sends through the same chat. -->
+          <div
+            v-if="isDesktop && viewShown === 'plan'"
+            class="sticky bottom-0 z-10 px-6 pb-5 pt-2 flex flex-col items-center gap-2 pointer-events-none"
+          >
+            <button
+              v-if="lastAssistantText"
+              type="button"
+              class="pointer-events-auto w-full max-w-2xl flex items-center gap-2.5 rounded-2xl border border-gray-200/80 dark:border-zinc-700/70 bg-white/95 dark:bg-zinc-900/95 px-4 py-2 text-left shadow-sm backdrop-blur hover:border-brandp-300"
+              @click="setViewMode('split')"
+            >
+              <UIcon
+                name="i-lucide-message-circle"
+                class="w-4 h-4 shrink-0 text-brandp-500 dark:text-brandp-300"
+              />
+              <span class="flex-1 min-w-0 truncate text-[0.8125rem] text-gray-700 dark:text-zinc-200">{{ lastAssistantText }}</span>
+              <span class="shrink-0 text-xs font-semibold text-brandp-600 dark:text-brandp-300">{{ t('foodChatHome.view.showChat') }}</span>
+            </button>
+            <form
+              class="pointer-events-auto w-full max-w-2xl flex items-center gap-2 rounded-[1.75rem] border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 py-1.5 pl-5 pr-1.5 shadow-[0_10px_30px_rgb(26_19_32/0.16)]"
+              @submit.prevent="handleSend"
+            >
+              <input
+                v-model="inputText"
+                type="text"
+                :disabled="sending"
+                :placeholder="t('foodChatHome.view.askPlaceholder')"
+                :aria-label="t('foodChatHome.view.askPlaceholder')"
+                class="flex-1 min-w-0 bg-transparent text-sm text-gray-900 dark:text-zinc-100 placeholder-gray-500 dark:placeholder-zinc-400 focus:outline-none"
+              >
+              <button
+                type="submit"
+                :disabled="!canSend"
+                class="chat-send-button size-10 flex items-center justify-center rounded-full bg-brandp-500 text-white disabled:opacity-40"
+                :aria-label="t('foodChatHome.input.generate')"
+              >
+                <UIcon
+                  :name="sending ? 'i-lucide-loader-2' : 'i-lucide-arrow-up'"
+                  class="w-4 h-4"
+                  :class="sending ? 'animate-spin' : ''"
+                />
+              </button>
+            </form>
           </div>
         </div>
 
@@ -2773,6 +2897,152 @@ function prefillSlotReplace(slot: string, day?: number) {
   )
 }
 
+// ── How chat and plan share the box ─────────────────────────────────────
+// Plan + chat side by side, the plan alone (the chat folds to a composer at
+// the bottom of the plan), or the chat alone (the plan one click away). On a
+// desktop only, and remembered: a phone already shows one pane at a time.
+
+type ViewMode = 'split' | 'plan' | 'chat'
+const VIEW_KEY = 'foodchat:view'
+const viewMode = ref<ViewMode>('split')
+
+function setViewMode(mode: ViewMode) {
+  viewMode.value = mode
+  try {
+    localStorage.setItem(VIEW_KEY, mode)
+  } catch { /* private mode: the view lasts this visit */ }
+}
+
+onMounted(() => {
+  try {
+    const stored = localStorage.getItem(VIEW_KEY)
+    if (stored === 'split' || stored === 'plan' || stored === 'chat') viewMode.value = stored
+  } catch { /* the default view, then */ }
+})
+
+const viewOptions = computed(() => [
+  { value: 'chat' as const, icon: 'i-lucide-message-square', label: t('foodChatHome.view.chat') },
+  { value: 'split' as const, icon: 'i-lucide-columns-2', label: t('foodChatHome.view.split') },
+  { value: 'plan' as const, icon: 'i-lucide-calendar-days', label: t('foodChatHome.view.plan') }
+])
+
+/**
+ * What the box shows. "Plan" with no plan yet (a new conversation, FoodChat
+ * asking a question first) would hide the only thing worth reading, so it
+ * shows both until a plan arrives; the choice itself is kept.
+ */
+const viewShown = computed<ViewMode>(() =>
+  viewMode.value === 'plan' && !hasAnyPlan.value ? 'split' : viewMode.value
+)
+
+const showChatCol = computed(() => isDesktop.value ? viewShown.value !== 'plan' : mobilePane.value === 'chat')
+const showCanvasCol = computed(() => isDesktop.value ? viewShown.value !== 'chat' : mobilePane.value === 'plan')
+
+/** FoodChat's latest reply, one line, for the plan-only view. */
+const lastAssistantText = computed(() => {
+  const list = messages.value ?? []
+  for (let i = list.length - 1; i >= 0; i--) {
+    const message = list[i]
+    if (message?.role === 'assistant' && message.content) return String(message.content).replace(/\s+/g, ' ').trim()
+  }
+  return ''
+})
+
+// ── Swap, from the card ──────────────────────────────────────────────────
+//
+// The card's Swap offers choices ("lighter", "quicker", ...) and asks
+// FoodChat's swap_meal tool for exactly that. It used to type "Swap the
+// breakfast for something lighter" into the chat, which FoodChat's router read
+// as moving a meal and answered with a question. The tool verifies the change
+// ("lighter" against real calories) and reports what it did. "Or say what you
+// would like" still hands the chat a prefilled sentence.
+
+const SWAPPABLE = new Set(['breakfast', 'lunch', 'dinner'])
+const swappingSlot = ref<string | null>(null)
+/** Recipe id → "New · lighter", for the dishes a swap just put on the plan. */
+const swapTags = ref<Record<string, string>>({})
+const swapToast = useToast()
+
+/**
+ * After a tool changed the plan, show the version FoodChat now calls current.
+ * The swap is saved as a new version; the canvas was left on the old one, so
+ * a swap that worked looked like it had not. After a tick, so this runs after
+ * the watchers that follow the last chat turn's plan.
+ */
+async function followCurrentPlan() {
+  await nextTick()
+  const daily = mealPlans.value.findIndex(plan => plan.id === currentPlanIds.value.daily)
+  if (mealPlans.value.length) selectedDailyPlanIdx.value = daily !== -1 ? daily : mealPlans.value.length - 1
+  const weekly = weeklyMealPlans.value.findIndex(plan => plan.id === currentPlanIds.value.weekly)
+  if (weeklyMealPlans.value.length) selectedWeeklyPlanIdx.value = weekly !== -1 ? weekly : weeklyMealPlans.value.length - 1
+  await nextTick()
+}
+
+function swapKey(slot: string, day?: number | null): string {
+  return `${day ?? 0}:${slot}`
+}
+
+function swapTagFor(recipeId?: string | null): string | undefined {
+  return recipeId ? swapTags.value[recipeId] : undefined
+}
+
+async function swapMeal(slot: string, day: number | null, directive: string, label: string) {
+  const tool = tools.value.find(entry => entry.name === 'swap_meal')
+  if (!tool || !SWAPPABLE.has(slot)) {
+    // A snack, or a FoodChat without the tool: the chat can still do it.
+    prefillSlotReplace(slot, day ?? undefined)
+    return
+  }
+  swappingSlot.value = swapKey(slot, day)
+  try {
+    const args: Record<string, unknown> = { meal_type: slot, directive }
+    if (day != null && displayedPlanDayGroups.value.length > 1) args.day = day
+    const result = await invokeTool<{ text?: string, changed?: boolean, changed_slots?: ChangedSlot[] }>(tool, args)
+    if (!result?.changed) {
+      swapToast.add({ title: result?.text || t('foodChatHome.mealCard.swapNoChange'), color: 'warning' })
+      return
+    }
+    await followCurrentPlan()
+    const group = day != null
+      ? displayedPlanDayGroups.value.find(g => g.day === day)?.meals
+      : null
+    const meals = group ? groupBySlot(group) : displayedPlanBySlot.value
+    const fresh = meals.find(meal => meal.slot === slot)?.plates[0]?.recipe.recipe_id
+    if (fresh) {
+      swapTags.value = {
+        ...swapTags.value,
+        [fresh]: label ? t('foodChatHome.mealCard.newTag', { what: label.toLowerCase() }) : t('foodChatHome.mealCard.newPlain')
+      }
+    }
+    flashChangedSlots(result.changed_slots)
+    if (result.text) swapToast.add({ title: result.text, color: 'success', icon: 'i-lucide-repeat' })
+  } catch {
+    // The store has put FoodChat's own sentence in the page's error toast.
+  } finally {
+    swappingSlot.value = null
+  }
+}
+
+/** The day's protein, carbs and fat as parts of one bar, by weight. */
+const dayMacroGrams = computed(() => {
+  const totals = displayedPlanTotals.value
+  return {
+    protein: Math.round(totals?.protein_g ?? 0),
+    carbs: Math.round(totals?.carbs_g ?? 0),
+    fat: Math.round(totals?.fat_g ?? 0)
+  }
+})
+
+const dayMacroParts = computed(() => {
+  const grams = dayMacroGrams.value
+  const sum = grams.protein + grams.carbs + grams.fat || 1
+  return [
+    { key: 'protein', color: '#a25ece', grams: grams.protein, label: t('foodChatHome.dayTotal.protein', { g: grams.protein }) },
+    { key: 'carbs', color: '#c8d39a', grams: grams.carbs, label: t('foodChatHome.dayTotal.carbs', { g: grams.carbs }) },
+    { key: 'fat', color: '#e0a284', grams: grams.fat, label: t('foodChatHome.dayTotal.fat', { g: grams.fat }) }
+  ].map(part => ({ ...part, pct: `${Math.round(part.grams / sum * 100)}%` }))
+})
+
 function prefillWeeklySlotReplace(dayIndex: number, slot: string) {
   focusChatInputWith(t('foodChatHome.mealCard.replacePrefillWeekly', {
     meal: t(`foodChatHome.meals.${slot}`).toLowerCase(),
@@ -3309,6 +3579,7 @@ async function handleToolInvoke(tool: FoodChatTool, args: Record<string, unknown
   toolResult.value = null
   try {
     const result = await invokeTool<Record<string, any>>(tool, args)
+    if (tool.mutates) await followCurrentPlan()
     if (tool.name === 'shopping_list' && Array.isArray(result?.items)) {
       shoppingList.value = {
         items: result.items as ShoppingItem[],
@@ -3661,8 +3932,11 @@ watch(() => latestMealPlan.value?.id, (id) => {
   overflow: hidden;
   border: 1px solid rgb(228 228 231 / 0.8);
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.06), 0 12px 32px rgb(26 19 32 / 0.06);
+  /* Under a centred chat (chat only) the box is still the box. */
+  background: white;
 }
 .dark .fc-split-wrap {
+  background: rgb(24 24 27);
   border-color: rgb(63 63 70 / 0.6);
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.2), 0 12px 32px rgb(0 0 0 / 0.25);
 }
@@ -3705,6 +3979,12 @@ watch(() => latestMealPlan.value?.id, (id) => {
 }
 .dark .fc-chat-col {
   background: rgb(24 24 27);
+}
+/* Chat only: the conversation centred in the box, at a reading width. */
+.fc-chat-col.fc-chat-solo {
+  width: 100%;
+  max-width: 54rem;
+  margin-inline: auto;
 }
 .fc-canvas-col {
   flex: 1;

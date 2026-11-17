@@ -1715,7 +1715,21 @@
       },
       "macroRing": "Tápanyag-megoszlás: {value} {label}. Koppints a következőhöz.",
       "swap": "Csere",
-      "swapMeal": "{meal} cseréje"
+      "swapMeal": "{meal} cseréje",
+      "swapFor": "A(z) {meal} cseréje erre…",
+      "swapOwn": "Vagy írd le, mit szeretnél…",
+      "swapOnly": "Csak ez az étkezés változik.",
+      "swapping": "Új étel keresése: {meal}…",
+      "newTag": "Új · {what}",
+      "swapNoChange": "A FoodChat megtartotta ezt az ételt: nem talált jobbat.",
+      "swapOptions": {
+        "lighter": "Könnyebb",
+        "quicker": "Gyorsabb",
+        "vegetarian": "Vegetáriánus",
+        "protein": "Több fehérje",
+        "surprise": "Lepj meg"
+      },
+      "newPlain": "Új"
     },
     "constraints": {
       "label": "A te szabályaid",
@@ -1869,7 +1883,12 @@
     "dayTotal": {
       "label": "Napi összesen",
       "macros": "{kcal} kcal · {protein}g fehérje · {carbs}g szénhidrát · {fat}g zsír",
-      "partial": "részleges — egyes ételekhez nincs tápérték"
+      "partial": "részleges — egyes ételekhez nincs tápérték",
+      "today": "Ma {kcal} kcal",
+      "split": "Fehérje {protein} g, szénhidrát {carbs} g, zsír {fat} g",
+      "protein": "{g} g fehérje",
+      "carbs": "{g} g szénhidrát",
+      "fat": "{g} g zsír"
     },
     "planningState": {
       "title": "Amit a FoodChat figyelembe vesz",
@@ -2295,6 +2314,15 @@
         "herbs": "Fűszerek",
         "other": "Egyéb"
       }
+    },
+    "view": {
+      "label": "A beszélgetés és a terv elrendezése",
+      "chat": "Beszélgetés",
+      "split": "Mindkettő",
+      "plan": "Terv",
+      "openPlan": "Megnyitás a beszélgetés mellett",
+      "showChat": "Beszélgetés mutatása",
+      "askPlaceholder": "Kérj változtatást a FoodChattől…"
     }
   },
   "a11y": {

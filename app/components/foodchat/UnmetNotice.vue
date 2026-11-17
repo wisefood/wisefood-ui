@@ -10,26 +10,23 @@
     It used to be a red chip reading "claims" or "calories", with the sentence
     that explained it in a tooltip.
   -->
+  <!-- A broken safety rule (an allergy, a diet) keeps its box: it is the one
+       thing on the plan that must not be missed. -->
   <div
-    v-if="rows.length"
+    v-if="rows.length && serious"
     role="status"
-    class="rounded-xl border px-3.5 py-2.5 flex items-start gap-2.5"
-    :class="serious
-      ? 'border-red-200 dark:border-red-900/60 bg-red-50/80 dark:bg-red-950/30'
-      : 'border-amber-200 dark:border-amber-900/60 bg-amber-50/80 dark:bg-amber-950/30'"
+    class="rounded-xl border px-3.5 py-2.5 flex items-start gap-2.5 border-red-200 dark:border-red-900/60 bg-red-50/80 dark:bg-red-950/30"
     data-flows="foodchat-unmet"
   >
     <UIcon
       name="i-lucide-alert-triangle"
-      class="w-4 h-4 mt-0.5 shrink-0"
-      :class="serious ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'"
+      class="w-4 h-4 mt-0.5 shrink-0 text-red-600 dark:text-red-400"
     />
     <div class="flex-1 min-w-0 flex flex-col gap-1">
       <p
         v-for="(row, idx) in shown"
         :key="idx"
-        class="text-sm leading-snug"
-        :class="serious ? 'text-red-900 dark:text-red-100' : 'text-amber-950 dark:text-amber-100'"
+        class="text-sm leading-snug text-red-900 dark:text-red-100"
       >
         <strong class="font-semibold">{{ name(row) }}<template v-if="row.members?.length"> · {{ row.members.join(', ') }}</template>:</strong>
         {{ ' ' }}{{ ledgerText.detail(row) || t(`foodChatHome.why.status.${row.status}`) }}
@@ -44,6 +41,38 @@
     <button
       type="button"
       class="shrink-0 text-sm font-semibold text-brandp-600 dark:text-brandp-300 hover:underline whitespace-nowrap min-h-8 pointer-coarse:min-h-11"
+      @click="emit('why')"
+    >
+      {{ t('foodChatHome.unmet.seeWhy') }}
+    </button>
+  </div>
+
+  <!-- Anything else not fully met is a note, not an alarm: one quiet pill
+       each, beside what the plan is built around, and a way to see why. -->
+  <div
+    v-else-if="rows.length"
+    role="status"
+    class="flex flex-wrap items-center gap-2"
+    data-flows="foodchat-unmet"
+  >
+    <span
+      v-for="(row, idx) in shown"
+      :key="idx"
+      class="inline-flex items-start gap-2 rounded-2xl border border-amber-200/80 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/25 px-3 py-1.5 text-[0.8125rem] leading-snug text-amber-950 dark:text-amber-100"
+    >
+      <UIcon
+        name="i-lucide-circle-alert"
+        class="w-4 h-4 mt-px shrink-0 text-amber-600 dark:text-amber-400"
+      />
+      <span><strong class="font-semibold">{{ name(row) }}<template v-if="row.members?.length"> · {{ row.members.join(', ') }}</template>:</strong>{{ ' ' }}{{ ledgerText.detail(row) || t(`foodChatHome.why.status.${row.status}`) }}</span>
+    </span>
+    <span
+      v-if="rows.length > shown.length"
+      class="text-xs text-gray-500 dark:text-zinc-400"
+    >{{ t('foodChatHome.unmet.more', { count: rows.length - shown.length }) }}</span>
+    <button
+      type="button"
+      class="text-[0.8125rem] font-semibold text-brandp-600 dark:text-brandp-300 underline-offset-2 hover:underline whitespace-nowrap min-h-8 pointer-coarse:min-h-11 px-1"
       @click="emit('why')"
     >
       {{ t('foodChatHome.unmet.seeWhy') }}
