@@ -1776,7 +1776,9 @@
       "placeholderSubtitle": "Kérj napi vagy heti tervet a kezdéshez",
       "rateThisPlan": "Értékeld ezt a tervet:",
       "feedbackCommentPlaceholder": "Mondd el, min lehetne javítani...",
-      "feedbackCommentSend": "Küldés"
+      "feedbackCommentSend": "Küldés",
+      "paused": "Szünetel — a folytatáshoz válaszolj a kérdésre",
+      "replyInChat": "Válaszolj a beszélgetésben"
     },
     "chat": {
       "loadEarlier": "Korábbi üzenetek betöltése",

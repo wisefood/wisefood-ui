@@ -1777,7 +1777,9 @@
       "placeholderSubtitle": "Zahtevaj dnevni ali tedenski načrt za začetek",
       "rateThisPlan": "Oceni ta načrt:",
       "feedbackCommentPlaceholder": "Povej nam, kaj bi lahko izboljšali...",
-      "feedbackCommentSend": "Pošlji"
+      "feedbackCommentSend": "Pošlji",
+      "paused": "Ustavljeno — za nadaljevanje odgovori na vprašanje",
+      "replyInChat": "Odgovori v klepetu"
     },
     "chat": {
       "loadEarlier": "Naloži prejšnja sporočila",

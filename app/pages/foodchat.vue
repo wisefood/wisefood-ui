@@ -656,10 +656,10 @@
                     <UIcon name="i-lucide-pause" class="w-3.5 h-3.5 text-brandp-500 dark:text-brandp-400" />
                   </div>
                 </div>
-                <p class="text-base font-light text-gray-500 dark:text-zinc-400 mb-2">Paused — answer the question to continue</p>
+                <p class="text-base font-light text-gray-500 dark:text-zinc-400 mb-2">{{ t('foodChatHome.canvas.paused') }}</p>
                 <div class="flex items-center gap-1.5 text-xs text-brandp-500 dark:text-brandp-400">
                   <UIcon name="i-lucide-arrow-left" class="w-3.5 h-3.5" />
-                  <span class="font-light">Reply in the chat</span>
+                  <span class="font-light">{{ t('foodChatHome.canvas.replyInChat') }}</span>
                 </div>
               </div>
             </Transition>
@@ -3475,6 +3475,31 @@ onMounted(async () => {
   window.visualViewport?.addEventListener('resize', onVisualViewportResize)
 
   recipeStore.initialize()
+  // An unreachable tool surface hides the menu; fire-and-forget.
+  loadTools()
+  // The corpus vocabulary, so the panel can offer tastes that exist. Fetched
+  // once and kept — it is the same for every member.
+  loadVocabularies()
+  if (currentMemberId.value) {
+    await restoreForMember()
+    return
+  }
+  // A guest's profile is restored after the page mounts. Everything below
+  // needs the member, so wait for it rather than run once with nobody — which
+  // ignored a link to a conversation (?session=) and left the saved-plan
+  // marks, the planning state and the household unloaded.
+  const stop = watch(currentMemberId, (id) => {
+    if (!id) return
+    stop()
+    void restoreForMember()
+  })
+})
+
+/** What the page loads for the member, once their profile is known. */
+let restored = false
+async function restoreForMember() {
+  if (restored) return
+  restored = true
   await loadSessions()
   await openFromQuery()
   // Bookmark states on the canvas need the saved-plan ids; fire-and-forget,
@@ -3487,14 +3512,9 @@ onMounted(async () => {
   if (!householdMembers.value.length && householdStore.currentHousehold?.id) {
     await householdStore.fetchMembers()
   }
-  // Both are fire-and-forget: an unreachable tool surface hides the menu, and
-  // an unreadable planning state hides the panel. Neither should hold the page.
-  loadTools()
+  // An unreadable planning state hides the panel; fire-and-forget.
   loadPlanningState()
-  // The corpus vocabulary, so the panel can offer tastes that exist. Fetched
-  // once and kept — it is the same for every member.
-  loadVocabularies()
-})
+}
 
 onBeforeUnmount(() => {
   window.visualViewport?.removeEventListener('resize', onVisualViewportResize)

@@ -1914,7 +1914,9 @@
       "placeholderSubtitle": "Ask for a daily or weekly plan to get started",
       "rateThisPlan": "Rate this plan:",
       "feedbackCommentPlaceholder": "Tell us what could be improved...",
-      "feedbackCommentSend": "Send"
+      "feedbackCommentSend": "Send",
+      "paused": "Paused — answer the question to continue",
+      "replyInChat": "Reply in the chat"
     },
     "chat": {
       "loadEarlier": "Load earlier messages",
