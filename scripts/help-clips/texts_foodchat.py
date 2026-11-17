@@ -1,0 +1,254 @@
+"""Every word on screen in the FoodChat clips, per language.
+
+Titles are the help panel's feature titles (app/help/content/<lang>.ts).
+`{name}` in a caption is a button's label, taken from the UI's own locale file
+at recording time (foodchat_clips.LABELS), so a caption always names the button
+exactly as the screen shows it. Like the FoodScholar captions, the Hungarian and
+Slovenian ones need a native speaker's read.
+"""
+
+T = {
+    'foodchat-generate-plan': {
+        'en': {
+            'title': 'Get a meal plan',
+            'q': 'Plan my day: Mediterranean, high in protein, with a light dinner',
+            'answer': 'No other preferences, surprise me',
+            'c1': 'Describe what you would like, in your own words',
+            'c2': 'FoodChat builds the plan around your profile',
+            'ask': 'If FoodChat asks something, just answer',
+            'c3': 'Your day, meal by meal',
+            'c4': 'It says what the plan is built around',
+            'fast': 'Sped up',
+        },
+        'hu': {
+            'title': 'Étrend készítése',
+            'q': 'Tervezd meg a napomat: mediterrán, sok fehérjével, könnyű vacsorával',
+            'answer': 'Nincs más kérésem, lepj meg',
+            'c1': 'Írd le a saját szavaiddal, mit szeretnél',
+            'c2': 'A FoodChat a profilodhoz igazítja a tervet',
+            'ask': 'Ha a FoodChat kérdez, csak válaszolj',
+            'c3': 'A napod, étkezésről étkezésre',
+            'c4': 'Azt is látod, mire épül a terv',
+            'fast': 'Gyorsítva',
+        },
+        'sl': {
+            'title': 'Pridobi načrt obrokov',
+            'q': 'Načrtuj moj dan: sredozemsko, z veliko beljakovin in z lahko večerjo',
+            'answer': 'Nimam drugih želja, preseneti me',
+            'c1': 'S svojimi besedami opiši, kaj želiš',
+            'c2': 'FoodChat načrt prilagodi tvojemu profilu',
+            'ask': 'Če te FoodChat kaj vpraša, samo odgovori',
+            'c3': 'Tvoj dan, obrok za obrokom',
+            'c4': 'Vidiš tudi, okoli česa je načrt zgrajen',
+            'fast': 'Pospešeno',
+        },
+    },
+    'foodchat-refine': {
+        'en': {
+            'title': 'Change the plan by chatting',
+            'q': 'Make the dinner vegetarian',
+            'edit': 'Replace the breakfast with a lighter one',
+            'c1': 'Ask for a change in plain words',
+            'c2': 'The reply says what changed',
+            'c3': 'To change one meal, click {swap}',
+            'c4': 'Edit the message if you like, then send it',
+            'fast': 'Sped up',
+        },
+        'hu': {
+            'title': 'Módosítás beszélgetéssel',
+            'q': 'Legyen a vacsora vegetáriánus',
+            'edit': 'Cseréld le a reggelit egy könnyebbre',
+            'c1': 'Kérj változtatást egyszerű szavakkal',
+            'c2': 'A válasz elmondja, mi változott',
+            'c3': 'Egy étkezés cseréjéhez kattints erre: {swap}',
+            'c4': 'Ha szeretnéd, írd át az üzenetet, majd küldd el',
+            'fast': 'Gyorsítva',
+        },
+        'sl': {
+            'title': 'Spremeni načrt s pogovorom',
+            'q': 'Naj bo večerja vegetarijanska',
+            'edit': 'Zajtrk zamenjaj z lažjim',
+            'c1': 'Za spremembo prosi s preprostimi besedami',
+            'c2': 'Odgovor pove, kaj se je spremenilo',
+            'c3': 'Za zamenjavo enega obroka klikni {swap}',
+            'c4': 'Po želji uredi sporočilo in ga pošlji',
+            'fast': 'Pospešeno',
+        },
+    },
+    'foodchat-tools': {
+        'en': {
+            'title': 'Summaries, totals and a shopping list',
+            'c1': '{buy} lists everything the plan needs',
+            'c2': '{more} answers common questions about the plan',
+            'c3': 'Close the card when you are done',
+            'fast': 'Sped up',
+        },
+        'hu': {
+            'title': 'Összefoglalók, összesítések és bevásárlólista',
+            'c1': '{buy}: minden, ami a tervhez kell',
+            'c2': '{more}: válaszok a tervvel kapcsolatos gyakori kérdésekre',
+            'c3': 'Ha végeztél, zárd be a kártyát',
+            'fast': 'Gyorsítva',
+        },
+        'sl': {
+            'title': 'Povzetki, seštevki in nakupovalni seznam',
+            'c1': '{buy} našteje vse, kar načrt potrebuje',
+            'c2': '{more} odgovori na pogosta vprašanja o načrtu',
+            'c3': 'Ko končaš, zapri kartico',
+            'fast': 'Pospešeno',
+        },
+    },
+    'foodchat-save-share': {
+        'en': {
+            'title': 'Save or share a plan',
+            'c1': 'Save it to your library',
+            'c2': 'Or share it: anyone with the link can see it',
+            'c3': 'Copy the link, or send it by email',
+            'c4': 'You can turn the link off any time',
+            'fast': 'Sped up',
+        },
+        'hu': {
+            'title': 'Terv mentése vagy megosztása',
+            'c1': 'Mentsd el a könyvtáradba',
+            'c2': 'Vagy oszd meg: a linkkel bárki megnézheti',
+            'c3': 'Másold ki a linket, vagy küldd el e-mailben',
+            'c4': 'A linket bármikor kikapcsolhatod',
+            'fast': 'Gyorsítva',
+        },
+        'sl': {
+            'title': 'Shrani ali deli načrt',
+            'c1': 'Shrani ga v svojo knjižnico',
+            'c2': 'Ali ga deli: s povezavo ga lahko vidi kdorkoli',
+            'c3': 'Kopiraj povezavo ali jo pošlji po e-pošti',
+            'c4': 'Povezavo lahko kadar koli izklopiš',
+            'fast': 'Pospešeno',
+        },
+    },
+    'foodchat-pantry': {
+        'en': {
+            'title': 'Cook from what you have',
+            'c1': 'Pick what is in your kitchen',
+            'c2': 'FoodChat plans around it',
+            'c3': 'The plan shows what it used',
+            'fast': 'Sped up',
+        },
+        'hu': {
+            'title': 'Főzz abból, amid van',
+            'c1': 'Válaszd ki, mi van otthon',
+            'c2': 'A FoodChat erre építi a tervet',
+            'c3': 'A terv megmutatja, mit használt fel',
+            'fast': 'Gyorsítva',
+        },
+        'sl': {
+            'title': 'Kuhaj iz tega, kar imaš',
+            'c1': 'Izberi, kaj imaš doma',
+            'c2': 'FoodChat načrt zgradi okoli tega',
+            'c3': 'Načrt pokaže, kaj je porabil',
+            'fast': 'Pospešeno',
+        },
+    },
+    'foodchat-settings': {
+        'en': {
+            'title': 'Change what the plan is built around',
+            'c1': 'Click {adjust}',
+            'c2': 'Change how long you can cook, your goal or what is in your kitchen',
+            'c3': 'Nothing changes until you click {update}',
+            'c4': 'The new plan shows what it is built around',
+            'fast': 'Sped up',
+        },
+        'hu': {
+            'title': 'Amire a terv épül',
+            'c1': 'Kattints erre: {adjust}',
+            'c2': 'Állítsd be a főzési időt, a célodat vagy azt, mi van otthon',
+            'c3': 'Semmi sem változik, amíg nem kattintasz erre: {update}',
+            'c4': 'Az új terv megmutatja, mire épül',
+            'fast': 'Gyorsítva',
+        },
+        'sl': {
+            'title': 'Spremeni, okoli česa je načrt zgrajen',
+            'c1': 'Klikni {adjust}',
+            'c2': 'Spremeni čas kuhanja, svoj cilj ali to, kar imaš doma',
+            'c3': 'Nič se ne spremeni, dokler ne klikneš {update}',
+            'c4': 'Nov načrt pokaže, okoli česa je zgrajen',
+            'fast': 'Pospešeno',
+        },
+    },
+    'foodchat-diners': {
+        'en': {
+            'title': 'Plan for more than one person',
+            'diner': 'Anna',
+            'c1': 'Choose who is eating',
+            'c2': 'Ask for a plan',
+            'c3': 'The plan fits everyone at the table',
+            'fast': 'Sped up',
+        },
+        'hu': {
+            'title': 'Tervezés több személyre',
+            'diner': 'Anna',
+            'c1': 'Válaszd ki, ki eszik',
+            'c2': 'Kérj tervet',
+            'c3': 'A terv mindenkinek megfelel az asztalnál',
+            'fast': 'Gyorsítva',
+        },
+        'sl': {
+            'title': 'Načrtuj za več oseb',
+            'diner': 'Ana',
+            'c1': 'Izberi, kdo bo jedel',
+            'c2': 'Prosi za načrt',
+            'c3': 'Načrt ustreza vsem za mizo',
+            'fast': 'Pospešeno',
+        },
+    },
+    'foodchat-compose': {
+        'en': {
+            'title': 'Build a day yourself',
+            'search': 'oat',
+            'c1': 'Rather choose yourself? Compose the day meal by meal',
+            'c2': 'Add the meals you already know',
+            'c3': 'FoodChat fills out the rest',
+            'fast': 'Sped up',
+        },
+        'hu': {
+            'title': 'Rakd össze magad a napot',
+            'search': 'oat',
+            'c1': 'Inkább te választanál? Rakd össze a napot étkezésenként',
+            'c2': 'Add hozzá az étkezéseket, amelyeket már tudsz',
+            'c3': 'A többit a FoodChat tölti ki',
+            'fast': 'Gyorsítva',
+        },
+        'sl': {
+            'title': 'Sestavi dan sam',
+            'search': 'oat',
+            'c1': 'Sestavi dan sam, obrok za obrokom',
+            'c2': 'Dodaj obroke, ki jih že poznaš',
+            'c3': 'Ostalo dopolni FoodChat',
+            'fast': 'Pospešeno',
+        },
+    },
+    'foodchat-adapt': {
+        'en': {
+            'title': 'Adapt a recipe in your plan',
+            'prep': 'Make the breakfast a full English fry-up with bacon and sausages',   # off camera, only if no meal grades C or worse; not "swap": FoodChat reads it as moving a meal
+            'c1': 'Open a meal’s menu and choose {adapt}',
+            'c2': 'FoodChat suggests healthier tweaks',
+            'c3': 'Save the adapted version',
+            'fast': 'Sped up',
+        },
+        'hu': {
+            'title': 'Recept átalakítása a tervben',
+            'prep': 'Legyen a reggeli egy bőséges angol reggeli szalonnával és kolbásszal',   # off camera, only if no meal grades C or worse; not "swap": FoodChat reads it as moving a meal
+            'c1': 'Nyisd meg egy étkezés menüjét, és válaszd ezt: {adapt}',
+            'c2': 'A FoodChat egészségesebb változtatásokat javasol',
+            'c3': 'Mentsd el az átalakított változatot',
+            'fast': 'Gyorsítva',
+        },
+        'sl': {
+            'title': 'Prilagodi recept v načrtu',
+            'prep': 'Za zajtrk naj bo bogat angleški zajtrk s slanino in klobasami',   # off camera, only if no meal grades C or worse; not "swap": FoodChat reads it as moving a meal
+            'c1': 'Odpri meni obroka in izberi {adapt}',
+            'c2': 'FoodChat predlaga bolj zdrave spremembe',
+            'c3': 'Shrani prilagojeno različico',
+            'fast': 'Pospešeno',
+        },
+    },
+}

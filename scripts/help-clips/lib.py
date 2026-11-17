@@ -127,8 +127,10 @@ class Browser:
         # Without this flag the screencast starts at CSS size (1440x810) and only
         # later switches to device pixels; the flag makes every frame full size.
         scale = FORMATS[self.fmt]['dpr']
-        self.browser = await self.pw.chromium.launch(
-            executable_path=EXE, args=[f'--force-device-scale-factor={scale:.7f}'])
+        args = [f'--force-device-scale-factor={scale:.7f}']
+        if os.environ.get('HELP_CLIPS_PROXY'):   # set by isolated.py
+            args.append(f"--proxy-server={os.environ['HELP_CLIPS_PROXY']}")
+        self.browser = await self.pw.chromium.launch(executable_path=EXE, args=args)
         return self
 
     async def __aexit__(self, *a):
