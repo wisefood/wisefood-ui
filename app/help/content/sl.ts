@@ -557,7 +557,7 @@ const sl: HelpContent = {
           body: 'Dobi predloge za izboljšavo recepta in shrani svojo različico.',
           steps: [
             'Ob sestavinah klikni: [[recipeWrangler.detail.adaptation.improve]].',
-            'Izberi: [[recipeWrangler.detail.adaptation.modeNutrition]], [[recipeWrangler.detail.adaptation.modeSustainability]] ali [[recipeWrangler.detail.adaptation.modeReduce]].',
+            'Izberi: [[recipeWrangler.detail.adaptation.modeNutrition]], [[recipeWrangler.detail.adaptation.modeSustainability]], [[recipeWrangler.detail.adaptation.modeCost]] ali [[recipeWrangler.detail.adaptation.modeTime]].',
             'Preglej predlagane spremembe.',
             'Klikni: [[recipeWrangler.detail.adaptation.save]].'
           ],

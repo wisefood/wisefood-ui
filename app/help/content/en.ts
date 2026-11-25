@@ -554,7 +554,7 @@ const en: HelpContent = {
           body: 'Get suggestions to improve the recipe and save your own version.',
           steps: [
             'Click [[recipeWrangler.detail.adaptation.improve]] next to the ingredients.',
-            'Choose [[recipeWrangler.detail.adaptation.modeNutrition]], [[recipeWrangler.detail.adaptation.modeSustainability]] or [[recipeWrangler.detail.adaptation.modeReduce]].',
+            'Choose [[recipeWrangler.detail.adaptation.modeNutrition]], [[recipeWrangler.detail.adaptation.modeSustainability]], [[recipeWrangler.detail.adaptation.modeCost]] or [[recipeWrangler.detail.adaptation.modeTime]].',
             'Review the suggested changes.',
             'Click [[recipeWrangler.detail.adaptation.save]].'
           ],

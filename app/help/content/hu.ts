@@ -557,7 +557,7 @@ const hu: HelpContent = {
           body: 'Kérj javaslatokat a recept javítására, és mentsd el a saját változatodat.',
           steps: [
             'Kattints a hozzávalók mellett: [[recipeWrangler.detail.adaptation.improve]].',
-            'Válassz: [[recipeWrangler.detail.adaptation.modeNutrition]], [[recipeWrangler.detail.adaptation.modeSustainability]] vagy [[recipeWrangler.detail.adaptation.modeReduce]].',
+            'Válassz: [[recipeWrangler.detail.adaptation.modeNutrition]], [[recipeWrangler.detail.adaptation.modeSustainability]], [[recipeWrangler.detail.adaptation.modeCost]] vagy [[recipeWrangler.detail.adaptation.modeTime]].',
             'Nézd át a javasolt változtatásokat.',
             'Kattints ide: [[recipeWrangler.detail.adaptation.save]].'
           ],

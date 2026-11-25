@@ -32,3 +32,15 @@ const gradeFromPoints = (points: number): string => {
   if (points <= 18) return 'D'
   return 'E'
 }
+
+/** Official Nutri-Score badge colours, for a letter grade. */
+export const getNutriScoreColorBg = (grade: string): string => {
+  const colors: Record<string, string> = {
+    A: 'bg-[#038141]',
+    B: 'bg-[#85BB2F]',
+    C: 'bg-[#FECB02]',
+    D: 'bg-[#EE8100]',
+    E: 'bg-[#E63E11]'
+  }
+  return colors[grade] || 'bg-zinc-400'
+}

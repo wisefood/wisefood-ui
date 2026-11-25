@@ -9,6 +9,33 @@
     out rather than the instant it was asked to.
   -->
   <DefineBody>
+    <!-- Modes -->
+    <div
+      class="flex flex-wrap gap-1.5 mb-3"
+      data-flows="foodchat-adapt-modes"
+    >
+      <button
+        v-for="m in modes"
+        :key="m.value"
+        type="button"
+        :disabled="loading"
+        :class="[
+          'inline-flex items-center gap-1 px-2.5 py-1 pointer-coarse:min-h-11 pointer-coarse:px-4 rounded-full text-[0.6875rem] pointer-coarse:text-xs font-medium border transition-colors',
+          mode === m.value
+            ? 'bg-brandp-500 text-white border-brandp-500'
+            : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 border-gray-200 dark:border-zinc-700 hover:border-brandp-400',
+          loading ? 'opacity-60 cursor-not-allowed' : ''
+        ]"
+        @click="setMode(m.value)"
+      >
+        <UIcon
+          :name="m.icon"
+          class="w-3 h-3"
+        />
+        {{ m.label }}
+      </button>
+    </div>
+
     <!-- Loading -->
     <div
       v-if="loading"
@@ -35,96 +62,55 @@
       <p class="text-xs text-gray-500 dark:text-zinc-400">
         {{ error }}
       </p>
-    </div>
-
-    <!-- Already optimal -->
-    <div
-      v-else-if="result?.status === 'already_optimal' || (result && !suggestions.length)"
-      class="py-6 text-center space-y-2"
-    >
-      <UIcon
-        name="i-lucide-badge-check"
-        class="w-7 h-7 text-emerald-500 mx-auto"
-      />
-      <p class="text-sm font-medium text-gray-700 dark:text-zinc-200">
-        {{ t('foodChatHome.adaptModal.alreadyOptimal') }}
-      </p>
-      <p
-        v-if="currentGrade"
-        class="text-[0.6875rem] text-gray-400 dark:text-zinc-500"
+      <button
+        type="button"
+        class="min-h-11 px-3 text-[0.6875rem] pointer-coarse:text-xs text-brandp-500 hover:underline"
+        @click="loadAdaptation"
       >
-        Nutri-Score {{ currentGrade }}
-      </p>
+        {{ t('recipeWrangler.detail.adaptation.retry') }}
+      </button>
     </div>
 
-    <!-- Suggestions -->
+    <!-- Result -->
     <div
-      v-else
+      v-else-if="result"
       class="space-y-2"
     >
-      <div
-        v-for="suggestion in suggestions"
-        :key="suggestion.rank"
-        class="rounded-xl border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-800/40 p-3 space-y-1.5"
-      >
-        <div class="flex items-start gap-2">
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-medium text-gray-800 dark:text-gray-200 leading-snug">
-              {{ suggestion.explanation?.headline || suggestionFallbackLine(suggestion) }}
-            </p>
-            <p
-              v-if="suggestion.explanation?.reason"
-              class="mt-0.5 text-[0.6875rem] font-light text-gray-500 dark:text-zinc-400 leading-snug"
-            >
-              {{ suggestion.explanation.reason }}
-            </p>
-          </div>
-          <span
-            v-if="formatGrade(suggestion.simulated_nutri_score)"
-            class="shrink-0 px-1.5 py-0.5 text-[0.625rem] rounded font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"
-          >
-            → {{ formatGrade(suggestion.simulated_nutri_score) }}
-          </span>
-        </div>
-        <p
-          v-if="suggestion.introduces_allergen && suggestion.new_allergens?.length"
-          class="flex items-center gap-1 text-[0.625rem] text-amber-600 dark:text-amber-400"
+      <RecipesAdaptationResult :adaptation="result">
+        <template
+          v-if="canSaveAdaptation(result) && householdStore.currentMember?.id"
+          #actions
         >
-          <UIcon
-            name="i-lucide-alert-triangle"
-            class="w-3 h-3 shrink-0"
-          />
-          {{ t('foodChatHome.adaptModal.allergenWarning', { list: suggestion.new_allergens.map(a => allergenLabel(a, t, te)).join(', ') }) }}
-        </p>
-        <div class="flex justify-end">
-          <span
-            v-if="savedRank === suggestion.rank"
-            class="inline-flex items-center gap-1 text-[0.6875rem] text-emerald-600 dark:text-emerald-400"
-          >
-            <UIcon
-              name="i-lucide-check"
-              class="w-3 h-3"
-            />
-            {{ t('foodChatHome.adaptModal.saved') }}
-          </span>
-          <button
-            v-else
-            data-flows="foodchat-adapt-save"
-            class="inline-flex items-center gap-1 px-2.5 py-1 pointer-coarse:min-h-11 pointer-coarse:px-4 text-[0.6875rem] pointer-coarse:text-xs rounded-full font-medium transition-colors
-                   bg-brandp-500 text-white hover:bg-brandp-600
-                   disabled:bg-gray-200 disabled:text-gray-400 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-500"
-            :disabled="savingRank !== null || savedRank !== null"
-            @click="save(suggestion)"
-          >
-            <UIcon
-              v-if="savingRank === suggestion.rank"
-              name="i-lucide-loader-2"
-              class="w-3 h-3 animate-spin"
-            />
-            {{ t('foodChatHome.adaptModal.save') }}
-          </button>
-        </div>
-      </div>
+          <div class="flex justify-end">
+            <span
+              v-if="savedMode === mode"
+              class="inline-flex items-center gap-1 text-[0.6875rem] text-emerald-600 dark:text-emerald-400"
+            >
+              <UIcon
+                name="i-lucide-check"
+                class="w-3 h-3"
+              />
+              {{ t('foodChatHome.adaptModal.saved') }}
+            </span>
+            <button
+              v-else
+              data-flows="foodchat-adapt-save"
+              class="inline-flex items-center gap-1 px-2.5 py-1 pointer-coarse:min-h-11 pointer-coarse:px-4 text-[0.6875rem] pointer-coarse:text-xs rounded-full font-medium transition-colors
+                     bg-brandp-500 text-white hover:bg-brandp-600
+                     disabled:bg-gray-200 disabled:text-gray-400 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-500"
+              :disabled="saving"
+              @click="save(result)"
+            >
+              <UIcon
+                v-if="saving"
+                name="i-lucide-loader-2"
+                class="w-3 h-3 animate-spin"
+              />
+              {{ t('foodChatHome.adaptModal.save') }}
+            </button>
+          </div>
+        </template>
+      </RecipesAdaptationResult>
       <p
         v-if="saveError"
         class="text-[0.6875rem] text-red-500 dark:text-red-400"
@@ -132,7 +118,7 @@
         {{ saveError }}
       </p>
       <p
-        v-if="savedRank !== null"
+        v-if="savedMode === mode"
         class="text-[0.6875rem] font-light text-gray-400 dark:text-zinc-500 leading-snug"
       >
         {{ t('foodChatHome.adaptModal.savedHint') }}
@@ -204,18 +190,19 @@
 </template>
 
 <script setup lang="ts">
-import { allergenLabel } from '~/utils/allergens'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { createReusableTemplate } from '@vueuse/core'
-import recipeApi, { resolveRecipeRegion, type Recipe, type RecipeAdaptSuggestion, type RecipeAdaptSuggestionsResult, type RecipeIngredient } from '~/services/recipeApi'
-import memberAdaptedRecipesApi, { type AdaptedRecipeNutrition } from '~/services/memberAdaptedRecipesApi'
+import recipeApi, { resolveRecipeRegion, type Recipe, type RecipeAdaptation, type RecipeAdaptationMode } from '~/services/recipeApi'
+import memberAdaptedRecipesApi from '~/services/memberAdaptedRecipesApi'
+import { useMemberRestrictions } from '~/composables/useMemberRestrictions'
+import { adaptedRecipeTitle, buildAdaptedRecipePayload, canSaveAdaptation } from '~/utils/adaptation'
 import { useHouseholdStore } from '~/stores/household'
 
 const props = defineProps<{ recipeId: string }>()
 const emit = defineEmits<{ close: [], saved: [] }>()
 
-const { t, te } = useI18n()
+const { t } = useI18n()
 const householdStore = useHouseholdStore()
 const { isPhone, isCoarsePointer } = useViewport()
 
@@ -259,116 +246,80 @@ onBeforeUnmount(() => {
 const loading = ref(true)
 const error = ref<string | null>(null)
 const recipe = ref<Recipe | null>(null)
-const result = ref<RecipeAdaptSuggestionsResult | null>(null)
-const savingRank = ref<number | null>(null)
-const savedRank = ref<number | null>(null)
+const mode = ref<RecipeAdaptationMode>('nutrition')
+const results = ref<Partial<Record<RecipeAdaptationMode, RecipeAdaptation>>>({})
+const saving = ref(false)
+const savedMode = ref<RecipeAdaptationMode | null>(null)
 const saveError = ref<string | null>(null)
 
 const region = computed(() => resolveRecipeRegion(householdStore.currentHousehold?.region))
+const result = computed(() => results.value[mode.value] || null)
 
-const suggestions = computed<RecipeAdaptSuggestion[]>(() => result.value?.suggestions ?? [])
-const formatGrade = (raw?: string | null): string => String(raw || '').replace('Nutriscore_', '')
-const currentGrade = computed(() => formatGrade(result.value?.current_nutri_score))
+const modes = computed(() => ([
+  { value: 'nutrition' as RecipeAdaptationMode, label: t('recipeWrangler.detail.adaptation.modeNutrition'), icon: 'i-lucide-heart-pulse' },
+  { value: 'sustainability' as RecipeAdaptationMode, label: t('recipeWrangler.detail.adaptation.modeSustainability'), icon: 'i-lucide-leaf' },
+  { value: 'cost' as RecipeAdaptationMode, label: t('recipeWrangler.detail.adaptation.modeCost'), icon: 'i-lucide-piggy-bank' },
+  { value: 'time' as RecipeAdaptationMode, label: t('recipeWrangler.detail.adaptation.modeTime'), icon: 'i-lucide-timer' }
+]))
 
-function suggestionFallbackLine(s: RecipeAdaptSuggestion): string {
-  if (s.action === 'reduce') return t('foodChatHome.adaptModal.reduceLine', { ingredient: s.original_ingredient })
-  return t('foodChatHome.adaptModal.swapLine', { from: s.original_ingredient, to: s.substitute_name || '' })
-}
+const { loadRestrictions } = useMemberRestrictions()
 
-onMounted(async () => {
+async function loadAdaptation() {
+  const current = mode.value
+  loading.value = true
+  error.value = null
   try {
-    const [r, res] = await Promise.all([
-      recipeApi.getRecipe(props.recipeId),
-      recipeApi.getAdaptSuggestions(props.recipeId, { region: region.value })
-    ])
-    recipe.value = r
-    result.value = res
+    const { allergens, diet } = await loadRestrictions()
+    results.value = {
+      ...results.value,
+      [current]: await recipeApi.getAdaptation(props.recipeId, { mode: current, region: region.value, allergens, diet })
+    }
   } catch (err: unknown) {
     error.value = (err as { message?: string })?.message || t('foodChatHome.adaptModal.error')
   } finally {
     loading.value = false
   }
-})
-
-// Mirrors the RecipeWrangler detail page's save flow (buildAdaptedIngredients
-// + simulate-backed nutrition) so both entry points produce identical
-// adapted-version records.
-function buildAdaptedIngredients(suggestion: RecipeAdaptSuggestion): RecipeIngredient[] {
-  const target = String(suggestion.original_ingredient || '').trim().toLowerCase()
-  return (recipe.value?.ingredients || []).map((ing) => {
-    if (String(ing.name || '').trim().toLowerCase() !== target) {
-      return { name: ing.name, measurement: ing.measurement }
-    }
-    if (suggestion.action === 'reduce' && suggestion.reduced_to_weight_g) {
-      return { name: ing.name, measurement: `${Math.round(suggestion.reduced_to_weight_g)} g` }
-    }
-    if (suggestion.substitute_name) {
-      return { name: suggestion.substitute_name, measurement: ing.measurement }
-    }
-    return { name: ing.name, measurement: ing.measurement }
-  })
 }
 
-const toNullableNumber = (v: unknown): number | null =>
-  typeof v === 'number' && Number.isFinite(v) ? v : null
-
-async function save(suggestion: RecipeAdaptSuggestion) {
-  const memberId = householdStore.currentMember?.id
-  if (!memberId || !recipe.value || savingRank.value !== null) return
+function setMode(next: RecipeAdaptationMode) {
+  if (loading.value || next === mode.value) return
+  mode.value = next
   saveError.value = null
-  savingRank.value = suggestion.rank
-  try {
-    let nutrition: AdaptedRecipeNutrition = {
-      nutri_score_label: formatGrade(suggestion.simulated_nutri_score) || null
-    }
-    if (suggestion.action !== 'reduce' && suggestion.substitute_name) {
-      try {
-        const simulation = await recipeApi.adaptSimulate(recipe.value.recipe_id, {
-          region: region.value,
-          originalIngredient: suggestion.original_ingredient,
-          substituteIngredient: suggestion.substitute_name
-        }) as Record<string, unknown>
-        const totals = (simulation.simulated_total_nutrients_per_serving || {}) as Record<string, unknown>
-        nutrition = {
-          kcal: toNullableNumber(totals.energy_kcal),
-          protein_g: toNullableNumber(totals.protein_g),
-          carbs_g: toNullableNumber(totals.carbs_g),
-          fat_g: toNullableNumber(totals.fat_g),
-          nutri_score_label: formatGrade(String(simulation.simulated_nutri_score || '')) || nutrition.nutri_score_label
-        }
-      } catch { /* fall back to the suggestion's own grade */ }
-    }
+  error.value = null
+  if (!results.value[next]) void loadAdaptation()
+}
 
+onMounted(async () => {
+  // The recipe is only the title and picture of the saved record; a failure to
+  // load it must not hide the suggestion.
+  void recipeApi.getRecipe(props.recipeId).then((r) => { recipe.value = r }).catch(() => {})
+  await loadAdaptation()
+})
+
+// Same payload as the RecipeWrangler detail page, so both entry points
+// produce identical adapted-version records.
+async function save(adaptation: RecipeAdaptation) {
+  const memberId = householdStore.currentMember?.id
+  if (!memberId || saving.value) return
+  saveError.value = null
+  saving.value = true
+  try {
+    const baseTitle = recipe.value?.title || adaptation.original?.title || ''
     await memberAdaptedRecipesApi.saveAdaptedRecipe(
       memberId,
-      recipe.value.recipe_id,
-      `${recipe.value.title} ${t('recipeWrangler.detail.adaptation.adaptedSuffix')}`,
-      {
-        mode: result.value?.mode || 'nutrition',
-        action: suggestion.action,
-        original_ingredient: suggestion.original_ingredient,
-        substitute_ingredient: suggestion.substitute_name || null,
-        reduction_pct: suggestion.reduction_pct ?? null,
-        ingredients: buildAdaptedIngredients(suggestion),
-        nutrition,
+      props.recipeId,
+      adaptedRecipeTitle(adaptation, baseTitle, t('recipeWrangler.detail.adaptation.adaptedSuffix')),
+      buildAdaptedRecipePayload(adaptation, {
         region: region.value,
-        suggestion: {
-          headline: suggestion.explanation?.headline || '',
-          reason: suggestion.explanation?.reason || ''
-        },
-        base: {
-          title: recipe.value.title,
-          image_url: recipe.value.image_url,
-          nutri_score_label: null
-        }
-      }
+        base: { title: baseTitle, image_url: recipe.value?.image_url, nutri_score_label: null }
+      })
     )
-    savedRank.value = suggestion.rank
+    savedMode.value = adaptation.mode
     emit('saved')
   } catch (err: unknown) {
     saveError.value = (err as { message?: string })?.message || t('foodChatHome.adaptModal.error')
   } finally {
-    savingRank.value = null
+    saving.value = false
   }
 }
 </script>
