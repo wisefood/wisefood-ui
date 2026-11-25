@@ -22,7 +22,8 @@ export interface AdaptedRecipeNutrition {
 
 export interface AdaptedRecipePayload {
   mode?: string
-  action?: 'swap' | 'reduce'
+  /** 'swap' or 'reduce' from the old routes; a swap operation name (e.g. SWAP_FOOD) from the adaptation route. */
+  action?: string
   original_ingredient?: string
   substitute_ingredient?: string | null
   reduction_pct?: number | null

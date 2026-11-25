@@ -558,84 +558,99 @@ export interface RecipeProfileResult {
   cost_profile?: RecipeCostProfile | null
 }
 
-export type RecipeAdaptMode = 'nutrition' | 'sustainability' | 'reduce_quantity'
+export type RecipeAdaptationMode = 'nutrition' | 'sustainability' | 'cost' | 'time'
 
-export interface RecipeAdaptExplanation {
-  headline: string
-  reason: string
-  warning?: string | null
+/**
+ * 'adapted': a change was found. 'no_suggestion' / 'not_scored': nothing to
+ * offer (see `reason`). 'not_suitable_for_user': the recipe already breaks the
+ * member's allergies or diet, so no swap can fix it (see `offending`).
+ */
+export type RecipeAdaptationStatus =
+  | 'adapted'
+  | 'no_suggestion'
+  | 'not_scored'
+  | 'not_suitable_for_user'
+  | (string & {})
+
+export interface RecipeAdaptationOriginal {
+  title: string
+  lines: string[]
+  steps: string[]
 }
 
-export interface RecipeAdaptSuggestion {
-  rank: number
-  action: 'swap' | 'reduce'
-  original_ingredient: string
-  substitute_name?: string | null
-  source?: string | null
-  category_distance?: string | null
-  flavor_similarity?: number | null
-  introduces_allergen?: boolean
-  new_allergens?: string[]
-  explanation: RecipeAdaptExplanation
-  llm_justification?: string | null
-  reduced_from_weight_g?: number | null
-  reduced_to_weight_g?: number | null
-  reduction_pct?: number | null
-  simulated_nutri_score?: string | null
-  nutri_score_points_saved?: number | null
-  relative_improvement?: number | null
-  nutrient_delta_per_serving?: Record<string, number> | null
-  simulated_co2e_per_serving_kg?: number | null
-  co2e_reduction_per_serving_kg?: number | null
-  co2e_reduction_pct?: number | null
+export interface RecipeAdaptationAdapted extends RecipeAdaptationOriginal {
+  /** Indexes into `lines` that were swapped. */
+  changed_positions?: number[]
+  /** Indexes into `steps` that were rewritten (time mode). */
+  changed_steps?: number[]
 }
 
-export interface RecipeAdaptSuggestionsResult {
-  recipe_id: string
-  region: string
-  mode: RecipeAdaptMode
-  /** 'already_optimal': nothing to improve; 'no_suggestions': no viable swap found. Both successes. */
-  status?: 'ok' | 'already_optimal' | 'no_suggestions' | string
-  message?: string | null
-  offending_ingredient?: string | null
-  offending_ingredient_contribution_pct?: number | null
-  current_nutri_score?: string | null
-  target_nutrient?: string | null
-  target_nutrient_label?: string | null
-  current_co2e_per_serving_kg?: number | null
-  suggestions: RecipeAdaptSuggestion[]
-  llm_used?: boolean
-  llm_model?: string | null
-  llm_rejected?: Array<{ substitute_name: string, reason?: string | null }>
+export interface RecipeAdaptationMetric {
+  name: string
+  unit: string
+  before: number | null
+  after: number | null
+  change: number | null
+  grade_before?: string | null
+  grade_after?: string | null
 }
 
-export interface RecipeAdaptSuggestionsOptions {
-  region?: string
-  mode?: RecipeAdaptMode
-  maxSwaps?: number
-  useLlm?: boolean
-  /** Member dietary-goal slugs (e.g. 'reduce_fat') biasing the targeted nutrient. */
-  goalNutrients?: string[]
+export interface RecipeAdaptationBenefit {
+  tip: string
+  tip_source?: string | null
+  facet?: string | null
+  notes?: string[]
+  swap?: Array<{ from?: string, to?: string, from_record?: string, to_record?: string }>
+  metric?: RecipeAdaptationMetric | null
 }
 
-export interface RecipeAdaptSimulateOptions {
-  region?: string
-  originalIngredient: string
-  substituteIngredient: string
-  weightG?: number | null
-}
-
-export interface RecipeAdaptSimulateResult {
-  recipe_id: string
-  region: string
-  original_nutri_score?: string | null
-  simulated_nutri_score?: string | null
-  nutri_score_points_delta?: number | null
-  simulated_total_nutrients_per_serving?: Record<string, number>
-  original_total_nutrients_per_serving?: Record<string, number>
-  simulated_co2e_per_serving_kg?: number | null
-  co2e_reduction_per_serving_kg?: number | null
+export interface RecipeAdaptationSwap {
+  operation?: string
+  position?: number
+  source_line?: string
+  candidate_label?: string
   [key: string]: unknown
+}
+
+export interface RecipeAdaptationProvenance {
+  source?: string | null
+  text?: string | null
+  flags?: {
+    indicative?: boolean
+    unreviewed?: boolean
+    start_only?: boolean
+    cross_database?: boolean
+    changes_dish_identity?: boolean
+    [key: string]: unknown
+  } | null
+  [key: string]: unknown
+}
+
+export interface RecipeAdaptation {
+  recipe_id?: string
+  mode: RecipeAdaptationMode
+  region?: string
+  version?: string | null
+  status: RecipeAdaptationStatus
+  is_adapted?: boolean
+  reason_code?: string | null
+  reason?: string | null
+  original?: RecipeAdaptationOriginal | null
+  adapted?: RecipeAdaptationAdapted | null
+  /** An object for sustainability, cost and time; a list for nutrition. */
+  swap?: RecipeAdaptationSwap | RecipeAdaptationSwap[] | null
+  benefit?: RecipeAdaptationBenefit | null
+  provenance?: RecipeAdaptationProvenance | null
+  /** Lines of the recipe that break the member's restrictions. */
+  offending?: string[]
+  applied_restrictions?: { allergens?: string[], diet?: string | null } | null
+}
+
+export interface RecipeAdaptationOptions {
+  mode: RecipeAdaptationMode
+  region?: string
+  allergens?: string[]
+  diet?: 'vegan' | 'vegetarian' | 'pescatarian' | null
 }
 
 export interface RecipeSubstituteResult {
@@ -1376,65 +1391,32 @@ class RecipeApiService {
   }
 
   /**
-   * Get ranked ingredient-swap suggestions to improve a recipe's Nutri-Score,
-   * carbon footprint, or portion size of its worst contributor.
+   * One adaptation of a recipe for one mode, with the member's allergies and
+   * diet applied. Stored rows answer in ~0.1 s; a live nutrition run takes up
+   * to a minute, hence the long timeout.
    */
-  async getAdaptSuggestions(
+  async getAdaptation(
     recipeId: string,
-    options: RecipeAdaptSuggestionsOptions = {}
-  ): Promise<RecipeAdaptSuggestionsResult> {
-    const safeRegion = resolveRecipeRegion(options.region)
+    options: RecipeAdaptationOptions
+  ): Promise<RecipeAdaptation> {
+    const params = new URLSearchParams()
+    params.set('mode', options.mode)
+    params.set('region', resolveRecipeRegion(options.region))
+    for (const allergen of options.allergens ?? []) {
+      if (allergen) params.append('allergens', allergen)
+    }
+    if (options.diet) params.set('diet', options.diet)
     try {
       const transport = this.resolveTransport()
-      return await this.fetchWithTimeout<RecipeAdaptSuggestionsResult>(
-        `${this.getRecipeBasePath(transport)}/${encodeURIComponent(recipeId)}/adapt/suggestions`,
-        'POST',
-        {
-          region: safeRegion,
-          mode: options.mode || 'nutrition',
-          max_swaps: Math.min(Math.max(options.maxSwaps ?? 3, 1), 3),
-          use_llm: options.useLlm ?? true,
-          ...(options.goalNutrients?.length ? { goal_nutrients: options.goalNutrients } : {})
-        },
+      return await this.fetchWithTimeout<RecipeAdaptation>(
+        `${this.getRecipeBasePath(transport)}/${encodeURIComponent(recipeId)}/adaptations?${params.toString()}`,
+        'GET',
+        undefined,
         PROFILE_TIMEOUT,
         transport
       )
     } catch (error) {
       throw this.handleError(error, 'Failed to load improvement suggestions')
-    }
-  }
-
-  /**
-   * Simulate one specific ingredient swap and return the full nutrition deltas.
-   */
-  async adaptSimulate(
-    recipeId: string,
-    options: RecipeAdaptSimulateOptions
-  ): Promise<RecipeAdaptSimulateResult> {
-    const original = String(options.originalIngredient || '').trim()
-    const substitute = String(options.substituteIngredient || '').trim()
-    if (!original || !substitute) {
-      throw new Error('Both the original and substitute ingredients are required')
-    }
-    const safeRegion = resolveRecipeRegion(options.region)
-    try {
-      const transport = this.resolveTransport()
-      return await this.fetchWithTimeout<RecipeAdaptSimulateResult>(
-        `${this.getRecipeBasePath(transport)}/${encodeURIComponent(recipeId)}/adapt/simulate`,
-        'POST',
-        {
-          region: safeRegion,
-          swap: {
-            original_ingredient: original,
-            substitute_ingredient: substitute,
-            weight_g: options.weightG ?? null
-          }
-        },
-        PROFILE_TIMEOUT,
-        transport
-      )
-    } catch (error) {
-      throw this.handleError(error, 'Failed to simulate the ingredient swap')
     }
   }
 
